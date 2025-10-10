@@ -30,21 +30,6 @@ I have very little coding knowledge so I am relying on ChatGPT a lot for the bas
 - **Balance HUD** - Always-visible currency display (configurable position)
 - **Animated Balance** - Smooth transitions when balance changes
 
-## 📦 Installation
-
-### For Players
-1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
-2. Install [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api) 0.92.6 or newer
-3. Download the latest mod JAR from [Releases](https://github.com/FugginBeenus/notch-currency-fabric/releases)
-4. Place the JAR in your `mods` folder
-5. Launch Minecraft!
-
-### For Server Administrators
-1. Install Fabric server for 1.20.1
-2. Add Fabric API and Notch Currency mod to the server's `mods` folder
-3. Configure settings in `config/notch-currency.json` after first launch
-4. Set appropriate permissions for admin commands
-
 ## 📸 Screenshots - COMING SOON 
 
 ![ATM Interface](https://via.placeholder.com/400x300?text=ATM+Interface)
@@ -61,25 +46,6 @@ I have very little coding knowledge so I am relying on ChatGPT a lot for the bas
 2. Run `./gradlew genEclipseRuns` or `./gradlew genSources`
 3. Refresh the Gradle project
 4. Run the `Minecraft Client` configuration
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 🐛 Bug Reports & Feature Requests
-
-Please use the [GitHub Issues](https://github.com/FugginBeenus/notch-currency-fabric/issues) page to report bugs or request features.
-
-When reporting bugs, please include:
-- Minecraft version
-- Fabric version
-- Mod version
-- Crash log (if applicable)
-- Steps to reproduce
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👏 Credits
 
