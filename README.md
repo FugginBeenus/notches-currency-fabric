@@ -101,6 +101,7 @@ If you enjoy this mod, consider:
 - 🐛 Reporting bugs and issues
 - 💡 Suggesting new features
 - 🤝 Contributing code
+- - ☕ [Buying me a coffee](https://ko-fi.com/fugginbeenus)
 
 ---
 
