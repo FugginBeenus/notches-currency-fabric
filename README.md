@@ -56,7 +56,7 @@ I have very little coding knowledge so I am relying on ChatGPT a lot for the bas
 ## 📚 Links
 
 - [CurseForge Page](COMING SOON)
-- [Modrinth Page](COMING SOON)
+- [Modrinth Page](https://modrinth.com/project/notches-currency)]
 - [Discord Server](COMING SOON)
 - [Wiki](COMING SOON)
 
