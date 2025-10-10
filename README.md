@@ -45,17 +45,7 @@ I have very little coding knowledge so I am relying on ChatGPT a lot for the bas
 3. Configure settings in `config/notch-currency.json` after first launch
 4. Set appropriate permissions for admin commands
 
-### Notch Chip
-```
-[G] [G] [G]
-[G] [E] [G]
-[G] [G] [G]
-
-G = Gold Nugget
-E = Emerald
-```
-
-## 📸 Screenshots
+## 📸 Screenshots - COMING SOON 
 
 ![ATM Interface](https://via.placeholder.com/400x300?text=ATM+Interface)
 *Clean ATM interface for managing your Notches*
