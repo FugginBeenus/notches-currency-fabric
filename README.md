@@ -55,7 +55,7 @@ I have very little coding knowledge so I am relying on ChatGPT a lot for the bas
 
 ## 📚 Links
 
-- [CurseForge Page](COMING SOON)
+- [CurseForge Page](https://legacy.curseforge.com/minecraft/mc-mods/notches-currency)
 - [Modrinth Page](https://modrinth.com/project/notches-currency)
 - [Discord Server](https://discord.gg/fMpb6retYA)
 - [Wiki](https://github.com/FugginBeenus/notches-currency-fabric/wiki))
