@@ -1,88 +1,85 @@
 package net.fugginbeenus.notchcurrency.ui;
 
+import net.fugginbeenus.notchcurrency.core.BalanceStore;
+import net.fugginbeenus.notchcurrency.net.NotchPackets;
+import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * 5 input slots across the top + player inventory/hotbar.
- * Exposes a tracked "balance" property to the client for UI display.
- */
 public class ATMTestScreenHandler extends ScreenHandler {
 
-    // Indices / layout constants
-    private static final int ATM_SLOTS = 5;
-    private static final int PLAYER_INV_ROWS = 3;
-    private static final int PLAYER_INV_COLS = 9;
-    private static final int PLAYER_INV_SLOTS = PLAYER_INV_ROWS * PLAYER_INV_COLS; // 27
-    private static final int HOTBAR_SLOTS = 9;
+    // Layout (relative to 176x166 GUI panel)
+    private static final int BANK_X = 8;
+    private static final int BANK_Y = 17;
+    private static final int PLAYER_X = 8;
+    private static final int PLAYER_Y = 84;
+    private static final int HOTBAR_Y = PLAYER_Y + 58;
 
-    // Slot pixel positions (match your background texture)
-    private static final int ATM_X = 46; // you dialed this in
-    private static final int ATM_Y = 18;
-    private static final int SLOT_SPACING = 18;
+    private final PlayerInventory playerInv;
+    private final PropertyDelegate props = new ArrayPropertyDelegate(1);
 
-    private static final int PLAYER_INV_X = 8;
-    private static final int PLAYER_INV_Y = 84;
-    private static final int HOTBAR_Y = PLAYER_INV_Y + (SLOT_SPACING * 3) + 4;
-
-    private final Inventory atmInv;
-    private final ArrayPropertyDelegate props; // index 0 == balance
+    // Top 5 slots inventory
+    private final Inventory bankInv = new SimpleInventory(5) {
+        @Override
+        public void markDirty() {
+            super.markDirty();
+            if (!playerInv.player.getWorld().isClient && playerInv.player instanceof ServerPlayerEntity sp) {
+                depositAllCoins(sp);
+            }
+        }
+    };
 
     public ATMTestScreenHandler(int syncId, PlayerInventory playerInv) {
         super(ModScreenHandlers.ATM, syncId);
+        this.playerInv = playerInv;
 
-        this.atmInv = new SimpleInventory(ATM_SLOTS);
-        this.atmInv.onOpen(playerInv.player);
+        // Sync property (balance) to client
+        this.addProperties(props);
 
-        // Property delegate with one int for balance
-        this.props = new ArrayPropertyDelegate(1);
-        this.addProperties(this.props); // ensures client sync
-
-        // --- ATM input row (5 slots) ---
-        for (int i = 0; i < ATM_SLOTS; i++) {
-            int x = ATM_X + i * SLOT_SPACING;
-            addSlot(new Slot(this.atmInv, i, x, ATM_Y));
+        // Seed client with current balance on open (server only)
+        if (!playerInv.player.getWorld().isClient && playerInv.player instanceof ServerPlayerEntity sp) {
+            props.set(0, BalanceStore.get(sp));
         }
 
-        // --- Player inventory (3 rows) ---
-        for (int row = 0; row < PLAYER_INV_ROWS; row++) {
-            for (int col = 0; col < PLAYER_INV_COLS; col++) {
-                int x = PLAYER_INV_X + col * SLOT_SPACING;
-                int y = PLAYER_INV_Y + row * SLOT_SPACING;
-                addSlot(new Slot(playerInv, col + row * 9 + 9, x, y));
+        // ----- Top 5 slots -----
+        for (int i = 0; i < 5; i++) {
+            this.addSlot(new CurrencySlot(bankInv, i, BANK_X + i * 18, BANK_Y));
+        }
+
+        // ----- Player inventory -----
+        for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 9; ++col) {
+                this.addSlot(new Slot(playerInv, col + row * 9 + 9,
+                        PLAYER_X + col * 18,
+                        PLAYER_Y + row * 18));
             }
         }
 
-        // --- Hotbar ---
-        for (int i = 0; i < HOTBAR_SLOTS; i++) {
-            int x = PLAYER_INV_X + i * SLOT_SPACING;
-            addSlot(new Slot(playerInv, i, x, HOTBAR_Y));
+        // ----- Hotbar -----
+        for (int col = 0; col < 9; ++col) {
+            this.addSlot(new Slot(playerInv, col, PLAYER_X + col * 18, HOTBAR_Y));
         }
     }
 
-    // === Balance accessors (tracked & synced) ===
-    public int getBalance() {
-        return this.props.get(0);
-    }
-    public void setBalance(int value) {
-        this.props.set(0, value);
+    /** Server updates the property; Fabric syncs it to the client screen. */
+    public void setSyncedBalance(int value) {
+        if (!playerInv.player.getWorld().isClient) {
+            props.set(0, value);
+        }
     }
 
-    /**
-     * Kept for compatibility if something still calls it.
-     * You can wire auto-deposit logic here later or in onContentChanged.
-     */
-    public void depositAll(ServerPlayerEntity player) {
-        // no-op for now
+    /** Screen reads this on both sides */
+    public int getSyncedBalance() {
+        return props.get(0);
     }
 
     @Override
@@ -90,45 +87,63 @@ public class ATMTestScreenHandler extends ScreenHandler {
         return true;
     }
 
+    /** Shift-click: if it's currency, consume it into the balance immediately. */
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
-        ItemStack newStack = ItemStack.EMPTY;
+        ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot != null && slot.hasStack()) {
-            ItemStack stackInSlot = slot.getStack();
-            newStack = stackInSlot.copy();
-
-            int atmStart = 0;
-            int atmEnd = atmStart + ATM_SLOTS;                 // 0..4
-            int invStart = atmEnd;                             // 5
-            int invEnd = invStart + PLAYER_INV_SLOTS;          // 5..31
-            int hotbarStart = invEnd;                          // 32
-            int hotbarEnd = hotbarStart + HOTBAR_SLOTS;        // 32..40 (exclusive)
-
-            if (index < atmEnd) {
-                // Move from ATM to player (inv+hotbar)
-                if (!this.insertItem(stackInSlot, invStart, hotbarEnd, true)) {
-                    return ItemStack.EMPTY;
+            ItemStack stack = slot.getStack();
+            if (isCurrency(stack)) {
+                int count = stack.getCount();
+                if (!player.getWorld().isClient && player instanceof ServerPlayerEntity sp) {
+                    slot.setStack(ItemStack.EMPTY);
+                    slot.markDirty();
+                    depositAmount(sp, count);
                 }
-            } else {
-                // Move from player/hotbar into ATM inputs
-                if (!this.insertItem(stackInSlot, atmStart, atmEnd, false)) {
-                    return ItemStack.EMPTY;
-                }
-            }
-
-            if (stackInSlot.isEmpty()) {
-                slot.setStack(ItemStack.EMPTY);
-            } else {
-                slot.markDirty();
             }
         }
-        return newStack;
+        return result;
     }
 
-    @Override
-    public void onClosed(PlayerEntity player) {
-        super.onClosed(player);
-        this.atmInv.onClose(player);
+    // -------------------
+    // Deposit mechanics
+    // -------------------
+
+    private boolean isCurrency(ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.isOf(ModItems.NOTCH_COIN);
+    }
+
+    /** Called when the user places/removes items in the top 5 slots (server-side). */
+    private void depositAllCoins(ServerPlayerEntity sp) {
+        int total = 0;
+        for (int i = 0; i < bankInv.size(); i++) {
+            ItemStack s = bankInv.getStack(i);
+            if (isCurrency(s)) {
+                total += s.getCount();
+                bankInv.setStack(i, ItemStack.EMPTY);
+            }
+        }
+        if (total > 0) {
+            depositAmount(sp, total);
+        }
+    }
+
+    /** Add to player balance, update ATM property, and ping HUD immediately. */
+    private void depositAmount(ServerPlayerEntity sp, int amount) {
+        int newBal = BalanceStore.add(sp, amount); // returns new total
+        setSyncedBalance(newBal);                  // updates ATM screen property
+        NotchPackets.sendBalance(sp, newBal);      // updates HUD now
+    }
+
+    // Only allow the coin in the top 5 slots
+    private class CurrencySlot extends Slot {
+        public CurrencySlot(Inventory inv, int index, int x, int y) {
+            super(inv, index, x, y);
+        }
+        @Override
+        public boolean canInsert(ItemStack stack) {
+            return isCurrency(stack);
+        }
     }
 }

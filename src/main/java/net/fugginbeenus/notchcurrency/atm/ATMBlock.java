@@ -28,6 +28,11 @@ public class ATMBlock extends Block {
                               Hand hand,
                               BlockHitResult hit) {
 
+        if (player instanceof net.minecraft.server.network.ServerPlayerEntity spe) {
+            int bal = net.fugginbeenus.notchcurrency.core.BalanceStore.get(spe);
+            net.fugginbeenus.notchcurrency.net.NotchPackets.sendBalance(spe, bal);
+        }
+
         if (world.isClient) {
             // client side: return success so the hand animates immediately
             return ActionResult.SUCCESS;

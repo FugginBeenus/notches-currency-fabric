@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "notchcurrency",
+  "version": "0.1.0",
+  "name": "Notch Currency",
+  "entrypoints": {
+    "main": ["net.fugginbeenus.notchcurrency.core.NotchCurrency"],
+    "client": ["net.fugginbeenus.notchcurrency.client.ClientInit"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "fabric-api": "*",
+    "minecraft": "1.20.1"
+  }
+}
