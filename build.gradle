@@ -3,6 +3,14 @@ plugins {
     id 'maven-publish'
 }
 
+group = 'net.fugginbeenus'
+version = '0.1.0'
+
+base {
+    // Gradle 8+: archivesBaseName -> base.archivesName
+    archivesName = 'notchcurrency'
+}
+
 repositories {
     mavenCentral()
     maven { url "https://maven.fabricmc.net/" }
@@ -16,8 +24,32 @@ dependencies {
 }
 
 java {
-    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    // MC 1.20.1 expects Java 17 bytecode
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
     withSourcesJar()
+}
+
+loom {
+    runs {
+        server {
+            server()
+            name "Dev Server"
+            programArgs "--port", "25565"
+            // workingDirectory file("run/server")
+        }
+        clientA {
+            client()
+            name "Client A"
+            programArgs "--username", "Alice"
+            // workingDirectory file("run/clientA")
+        }
+        clientB {
+            client()
+            name "Client B"
+            programArgs "--username", "Bob"
+            // workingDirectory file("run/clientB")
+        }
+    }
 }
 
 tasks.named("processResources") {
@@ -26,3 +58,18 @@ tasks.named("processResources") {
         expand "version": project.version
     }
 }
+
+tasks.withType(JavaCompile).configureEach {
+    // Ensure Java 17 classfile target even if building with newer JDK
+    options.release = 17
+}
+
+/* If/when you publish, uncomment:
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+*/

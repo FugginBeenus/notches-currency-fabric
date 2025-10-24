@@ -22,7 +22,7 @@ public final class NotchHud implements HudRenderCallback {
     private static final boolean USE_ITEM_ICON = false; // true = draw 16px item icon
 
     private static final Identifier COIN_HUD_TEX =
-            new Identifier(NotchCurrency.MOD_ID, "textures/gui/hud_coin.png");
+            new Identifier(NotchCurrency.MOD_ID, "textures/items/coin.png");
 
     public static void setBalance(int value) {
         BALANCE = value;

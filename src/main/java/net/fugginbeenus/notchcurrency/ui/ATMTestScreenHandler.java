@@ -17,9 +17,17 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 public class ATMTestScreenHandler extends ScreenHandler {
 
-    // Layout (relative to 176x166 GUI panel)
-    private static final int BANK_X = 8;
-    private static final int BANK_Y = 17;
+    // ===== Top 5 slots baseline (relative to 176x166 panel) =====
+    // Vanilla-like baseline puts rows at (8, 17). Keep spacing = 18px.
+    private static final int BANK_BASE_X = 8;
+    private static final int BANK_BASE_Y = 17;
+    private static final int BANK_SPACING = 18;
+
+    // Pixel nudges to line up with your painted frames (adjust these!)
+    public static int BANK_NUDGE_X = 38; // +right / -left
+    public static int BANK_NUDGE_Y = 1; // +down  / -up
+
+    // ===== Player inv / hotbar (leave these unless your texture differs) =====
     private static final int PLAYER_X = 8;
     private static final int PLAYER_Y = 84;
     private static final int HOTBAR_Y = PLAYER_Y + 58;
@@ -27,7 +35,6 @@ public class ATMTestScreenHandler extends ScreenHandler {
     private final PlayerInventory playerInv;
     private final PropertyDelegate props = new ArrayPropertyDelegate(1);
 
-    // Top 5 slots inventory
     private final Inventory bankInv = new SimpleInventory(5) {
         @Override
         public void markDirty() {
@@ -42,17 +49,17 @@ public class ATMTestScreenHandler extends ScreenHandler {
         super(ModScreenHandlers.ATM, syncId);
         this.playerInv = playerInv;
 
-        // Sync property (balance) to client
         this.addProperties(props);
 
-        // Seed client with current balance on open (server only)
         if (!playerInv.player.getWorld().isClient && playerInv.player instanceof ServerPlayerEntity sp) {
             props.set(0, BalanceStore.get(sp));
         }
 
-        // ----- Top 5 slots -----
+        // ----- Top 5 slots (with nudges) -----
+        final int rowY = BANK_BASE_Y + BANK_NUDGE_Y;
         for (int i = 0; i < 5; i++) {
-            this.addSlot(new CurrencySlot(bankInv, i, BANK_X + i * 18, BANK_Y));
+            int x = BANK_BASE_X + BANK_NUDGE_X + (i * BANK_SPACING);
+            this.addSlot(new CurrencySlot(bankInv, i, x, rowY));
         }
 
         // ----- Player inventory -----
@@ -70,14 +77,12 @@ public class ATMTestScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Server updates the property; Fabric syncs it to the client screen. */
     public void setSyncedBalance(int value) {
         if (!playerInv.player.getWorld().isClient) {
             props.set(0, value);
         }
     }
 
-    /** Screen reads this on both sides */
     public int getSyncedBalance() {
         return props.get(0);
     }
@@ -87,7 +92,6 @@ public class ATMTestScreenHandler extends ScreenHandler {
         return true;
     }
 
-    /** Shift-click: if it's currency, consume it into the balance immediately. */
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
         ItemStack result = ItemStack.EMPTY;
@@ -106,15 +110,10 @@ public class ATMTestScreenHandler extends ScreenHandler {
         return result;
     }
 
-    // -------------------
-    // Deposit mechanics
-    // -------------------
-
     private boolean isCurrency(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.isOf(ModItems.NOTCH_COIN);
     }
 
-    /** Called when the user places/removes items in the top 5 slots (server-side). */
     private void depositAllCoins(ServerPlayerEntity sp) {
         int total = 0;
         for (int i = 0; i < bankInv.size(); i++) {
@@ -129,14 +128,12 @@ public class ATMTestScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Add to player balance, update ATM property, and ping HUD immediately. */
     private void depositAmount(ServerPlayerEntity sp, int amount) {
-        int newBal = BalanceStore.add(sp, amount); // returns new total
-        setSyncedBalance(newBal);                  // updates ATM screen property
-        NotchPackets.sendBalance(sp, newBal);      // updates HUD now
+        int newBal = BalanceStore.add(sp, amount);
+        setSyncedBalance(newBal);
+        NotchPackets.sendBalance(sp, newBal);
     }
 
-    // Only allow the coin in the top 5 slots
     private class CurrencySlot extends Slot {
         public CurrencySlot(Inventory inv, int index, int x, int y) {
             super(inv, index, x, y);
