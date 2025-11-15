@@ -23,17 +23,15 @@ public class TradeScreenHandler extends ScreenHandler {
 
     private final PlayerEntity player;
     /** Null on client stub; non-null on the server. */
-    TradeManager.TradeSession session = null;  // <-- initialize here (not final)
+    TradeManager.TradeSession session = null;
     private final boolean leftSideSelf;
 
-    // 3x3 inventories for each side (these are THIS client’s view)
     private final SimpleInventory selfInv  = new SimpleInventory(9);
     private final SimpleInventory otherInv = new SimpleInventory(9);
 
     // [0]=selfMoney, [1]=otherMoney, [2]=selfReady(0/1), [3]=otherReady(0/1), [4]=stage (unused)
     private final PropertyDelegate props = new ArrayPropertyDelegate(5);
 
-    // --- Layout (must match your texture / screen) ---
     private static final int SELF_GRID_X  = 34;
     private static final int SELF_GRID_Y  = 25;
     private static final int OTHER_GRID_X = 142;
@@ -43,13 +41,11 @@ public class TradeScreenHandler extends ScreenHandler {
     private static final int PLAYER_INV_Y = 135;
     private static final int HOTBAR_Y     = PLAYER_INV_Y + 58;
 
-    // slot counts
-    private static final int SELF_SIZE   = 9;   // 3x3
-    private static final int OTHER_SIZE  = 9;   // 3x3
-    private static final int INV_SIZE    = 27;  // player main (3x9)
-    private static final int HOTBAR_SIZE = 9;   // hotbar
+    private static final int SELF_SIZE   = 9;
+    private static final int OTHER_SIZE  = 9;
+    private static final int INV_SIZE    = 27;
+    private static final int HOTBAR_SIZE = 9;
 
-    // index ranges (set in buildSlots)
     private int selfStart, selfEnd;
     private int otherStart, otherEnd;
     private int invStart, invEnd;
@@ -58,54 +54,62 @@ public class TradeScreenHandler extends ScreenHandler {
     /** Fires whenever the 3×3 "self" grid changes; mirrors to partner (server-side). */
     private final InventoryChangedListener selfListener = inv -> {
         if (session != null && inv == selfInv) {
+            unreadySelfAndSync();   // <-- NEW
             mirrorSelfToPartner();
         }
     };
 
-    /* ---------- CLIENT constructor (registerSimple uses this) ---------- */
+    // ---------- CLIENT constructor ----------
     public TradeScreenHandler(int syncId, PlayerInventory inv) {
         super(ModScreenHandlers.TRADE, syncId);
         this.player = inv.player;
-        this.leftSideSelf = true;    // doesn’t matter on client
-        // session remains null on client
-        hookInventories();           // register listeners
+        this.leftSideSelf = true;
+        hookInventories();
         buildSlots();
         this.addProperties(props);
     }
 
-    /* ---------- SERVER constructor (called from TradeManager.openScreens) ---------- */
+    // ---------- SERVER constructor ----------
     public TradeScreenHandler(int syncId, PlayerInventory inv, PlayerEntity player,
                               TradeManager.TradeSession session, boolean selfOnLeft) {
         super(ModScreenHandlers.TRADE, syncId);
         this.player = player;
-        this.session = session;      // now set on server
+        this.session = session;
         this.leftSideSelf = selfOnLeft;
-        hookInventories();           // register listeners
+        hookInventories();
         buildSlots();
         this.addProperties(props);
         syncState();
     }
 
-    /** Register inventory listeners (no double-registration). */
     private void hookInventories() {
         selfInv.addListener(selfListener);
     }
 
     /** Build slots for both 3×3 panes and the embedded player inventory/hotbar. */
     private void buildSlots() {
-        // --- Your (self) 3x3 offer grid on the left ---
+        // --- Self 3x3 offer grid (locked when ready) ---
         int leftX = SELF_GRID_X, leftY = SELF_GRID_Y;
         selfStart = this.slots.size();
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                this.addSlot(new Slot(selfInv, r * 3 + c, leftX + c * 18, leftY + r * 18) {
-                    @Override public boolean canInsert(ItemStack stack) { return true; }
+                int index = r * 3 + c;
+                this.addSlot(new Slot(selfInv, index, leftX + c * 18, leftY + r * 18) {
+                    @Override
+                    public boolean canInsert(ItemStack stack) {
+                        // Disable when player has clicked "ready"
+                        return TradeScreenHandler.this.getProperties().get(2) == 0;
+                    }
+                    @Override
+                    public boolean canTakeItems(PlayerEntity player) {
+                        return TradeScreenHandler.this.getProperties().get(2) == 0;
+                    }
                 });
             }
         }
         selfEnd = selfStart + SELF_SIZE;
 
-        // --- Other (read-only) 3x3 grid on the right ---
+        // --- Other (read-only) 3x3 grid ---
         int rightX = OTHER_GRID_X, rightY = OTHER_GRID_Y;
         otherStart = this.slots.size();
         for (int r = 0; r < 3; r++) {
@@ -118,7 +122,7 @@ public class TradeScreenHandler extends ScreenHandler {
         }
         otherEnd = otherStart + OTHER_SIZE;
 
-        // --- Player inventory (3 rows of 9) ---
+        // --- Player inventory ---
         invStart = this.slots.size();
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
@@ -129,7 +133,7 @@ public class TradeScreenHandler extends ScreenHandler {
         }
         invEnd = invStart + INV_SIZE;
 
-        // --- Hotbar (1 row of 9) ---
+        // --- Hotbar ---
         hotbarStart = this.slots.size();
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(this.player.getInventory(), col,
@@ -139,19 +143,18 @@ public class TradeScreenHandler extends ScreenHandler {
         hotbarEnd = hotbarStart + HOTBAR_SIZE;
     }
 
-    /* ======================== MIRRORING LOGIC ======================== */
+    // ======================== MIRRORING LOGIC ========================
 
-    /** Vanilla callback when any bound inventory changes. Extra safety in addition to the listener. */
     @Override
     public void onContentChanged(Inventory inv) {
         super.onContentChanged(inv);
-        if (session == null) return; // client stub; server only does mirroring
+        if (session == null) return;
         if (inv == selfInv) {
+            unreadySelfAndSync();   // <-- NEW
             mirrorSelfToPartner();
         }
     }
 
-    /** Copy our self 3x3 into the other handler’s read-only 3x3 and push updates. */
     private void mirrorSelfToPartner() {
         TradeScreenHandler partner =
                 (player == session.a) ? session.bHandler : session.aHandler;
@@ -160,11 +163,9 @@ public class TradeScreenHandler extends ScreenHandler {
         for (int i = 0; i < 9; i++) {
             partner.receiveMirrorFromPartner(i, selfInv.getStack(i));
         }
-        // Push updates so the partner's client sees changes immediately
         partner.sendContentUpdates();
     }
 
-    /** Set one “other side” slot from our partner (server-side). */
     void receiveMirrorFromPartner(int index, ItemStack stack) {
         if (index >= 0 && index < otherInv.size()) {
             otherInv.setStack(index, stack == null ? ItemStack.EMPTY : stack.copy());
@@ -172,11 +173,27 @@ public class TradeScreenHandler extends ScreenHandler {
         }
     }
 
-    /* ======================== MONEY / STATE SYNC ======================== */
-
-    /** Server pushes session state into properties so client can render it. */
-    public void syncState() {
+    private void unreadySelfAndSync() {
         if (session == null) return; // client stub
+        boolean changed = false;
+
+        if (player == session.a) {
+            if (session.aReady) { session.aReady = false; changed = true; }
+        } else {
+            if (session.bReady) { session.bReady = false; changed = true; }
+        }
+
+        if (changed) {
+            // Refresh both handlers' property delegates so buttons/labels update
+            if (session.aHandler != null) session.aHandler.syncState();
+            if (session.bHandler != null) session.bHandler.syncState();
+        }
+    }
+
+    // ======================== MONEY / STATE SYNC ========================
+
+    public void syncState() {
+        if (session == null) return;
         if (player == session.a) {
             props.set(0, session.aMoney);
             props.set(1, session.bMoney);
@@ -192,15 +209,12 @@ public class TradeScreenHandler extends ScreenHandler {
         sendContentUpdates();
     }
 
-    /** Expose properties to the screen (to show the other player’s money). */
     public PropertyDelegate getProperties() { return props; }
 
-    /* ======================== COMPLETE / CANCEL ======================== */
+    // ======================== COMPLETE / CANCEL ========================
 
-    /** Return any items in the self grid back to the owner (server-side). */
     void returnItems() { dump(selfInv, player); }
 
-    /** Take items from self grid for completion (server-side). */
     List<ItemStack> takeItemsForCompletion() {
         List<ItemStack> out = new ArrayList<>();
         for (int i = 0; i < selfInv.size(); i++) {
@@ -225,11 +239,10 @@ public class TradeScreenHandler extends ScreenHandler {
         inv.markDirty();
     }
 
-    /* ======================== VANILLA PLUMBING ======================== */
+    // ======================== VANILLA PLUMBING ========================
 
     @Override public boolean canUse(PlayerEntity player) { return true; }
 
-    /** Shift-click routing: player inv <-> self grid (other grid is read-only). */
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
         ItemStack empty = ItemStack.EMPTY;
@@ -239,16 +252,11 @@ public class TradeScreenHandler extends ScreenHandler {
         ItemStack stack = slot.getStack();
         ItemStack original = stack.copy();
 
-        // From self offer -> back to player inventory/hotbar
         if (index >= selfStart && index < selfEnd) {
             if (!this.insertItem(stack, invStart, hotbarEnd, true)) return ItemStack.EMPTY;
-        }
-        // From other offer -> nowhere (read-only)
-        else if (index >= otherStart && index < otherEnd) {
+        } else if (index >= otherStart && index < otherEnd) {
             return ItemStack.EMPTY;
-        }
-        // From player inventory/hotbar -> into self offer grid
-        else {
+        } else {
             if (!this.insertItem(stack, selfStart, selfEnd, false)) return ItemStack.EMPTY;
         }
 
@@ -258,13 +266,13 @@ public class TradeScreenHandler extends ScreenHandler {
         if (stack.getCount() == original.getCount()) return ItemStack.EMPTY;
         slot.onTakeItem(player, stack);
 
-        // If we changed our offer, mirror it right away (server-side)
         if (session != null && index >= selfStart && index < selfEnd) {
             mirrorSelfToPartner();
         }
 
         return original;
     }
+
     @Override
     public void onClosed(PlayerEntity player) {
         super.onClosed(player);
@@ -273,4 +281,3 @@ public class TradeScreenHandler extends ScreenHandler {
         }
     }
 }
-

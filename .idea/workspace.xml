@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="16de2025-af2e-42cd-929c-6e03225ec127" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/Notch-Currency.client.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/Notch-Currency.main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/Notch-Currency.test.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/Client_A.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/Client_B.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/Integrated_Test_Server.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/client/BalloonRenderer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/net/NotchPacketsClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/BalloonConfigState.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/BalloonEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/BarrelCleanupManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/CrateDropManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/DailyCrateManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/crate/GoldenCacheManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/registry/ModEntities.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/data/notchcurrency/loot_tables/balloon_crate.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/data/notchcurrency/loot_tables/golden_cache.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/checksums.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/md5-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/sha1-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/resourceHashesCache.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/loom-cache/launch.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/loom-cache/launch.cfg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/loom-cache/remapClasspath.txt" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/loom-cache/remapClasspath.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/atm/ATMBlock.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/atm/ATMBlock.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/client/ClientInit.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/client/hud/NotchHud.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/core/NotchCurrency.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/core/NotchCurrency.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/net/NotchPackets.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/net/NotchPackets.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/registry/ModBlocks.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/registry/ModBlocks.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/registry/ModItems.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/registry/ModItems.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/net/fugginbeenus/notchcurrency/ui/ATMScreen.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/build/reports/problems/problems-report.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/blockstates/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/blockstates/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/lang/en_us.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/lang/en_us.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/block/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/block/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/item/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/item/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/item/notch_coin.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/models/item/notch_coin.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/gui/atm.png" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/gui/atm.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/gui/hud/notch_icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/gui/hud/notch_icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/items/coin.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/notch_icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/assets/notchcurrency/textures/notch_icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/fabric.mod.json" beforeDir="false" afterPath="$PROJECT_DIR$/build/resources/main/fabric.mod.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" afterPath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/config/fabric/indigo-renderer.properties" beforeDir="false" afterPath="$PROJECT_DIR$/run/config/fabric/indigo-renderer.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-1.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-1.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-2.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-2.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-3.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-3.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-4.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-4.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-5.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-5.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-6.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/2025-10-24-6.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/2025-10-24-7.log.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug-1.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug-1.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug-2.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug-2.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug-3.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug-3.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug-4.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug-4.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug-5.log.gz" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug-5.log.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/debug.log" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/debug.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/logs/latest.log" beforeDir="false" afterPath="$PROJECT_DIR$/run/logs/latest.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/DIM-1/data/raids.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/DIM-1/data/raids.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/DIM1/data/raids_end.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/DIM1/data/raids_end.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/advancements/10920508-d5d8-3eed-93d2-92f193afe7d7.json" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/advancements/10920508-d5d8-3eed-93d2-92f193afe7d7.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/advancements/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.json" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/advancements/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/data/notchcurrency_balances.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/data/notchcurrency_balances.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/data/raids.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/data/raids.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/entities/r.-1.-1.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/entities/r.-1.-1.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/entities/r.-1.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/entities/r.-1.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/entities/r.0.-1.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/entities/r.0.-1.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/entities/r.0.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/entities/r.0.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/level.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/level.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/level.dat_old" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/level.dat_old" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/playerdata/10920508-d5d8-3eed-93d2-92f193afe7d7.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/playerdata/10920508-d5d8-3eed-93d2-92f193afe7d7.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/playerdata/10920508-d5d8-3eed-93d2-92f193afe7d7.dat_old" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/playerdata/10920508-d5d8-3eed-93d2-92f193afe7d7.dat_old" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/playerdata/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.dat" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/playerdata/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/playerdata/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.dat_old" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/playerdata/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.dat_old" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/poi/r.-1.-1.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/poi/r.-1.-1.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/poi/r.-1.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/poi/r.-1.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/poi/r.0.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/poi/r.0.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/region/r.-1.-1.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/region/r.-1.-1.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/region/r.-1.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/region/r.-1.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/region/r.0.-1.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/region/r.0.-1.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/region/r.0.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/region/r.0.0.mca" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/stats/10920508-d5d8-3eed-93d2-92f193afe7d7.json" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/stats/10920508-d5d8-3eed-93d2-92f193afe7d7.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/saves/New World/stats/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.json" beforeDir="false" afterPath="$PROJECT_DIR$/run/saves/New World/stats/faa5dca3-c3d4-354b-ae1b-dde9e5a14b3b.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/server.properties" beforeDir="false" afterPath="$PROJECT_DIR$/run/server.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run/usercache.json" beforeDir="false" afterPath="$PROJECT_DIR$/run/usercache.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/atm/ATMBlock.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/atm/ATMBlock.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/client/ClientInit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/client/ClientInit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/client/hud/NotchHud.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/client/NotchHud.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/core/NotchCurrency.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/core/NotchCurrency.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/net/NotchPackets.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/net/NotchPackets.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/registry/ModBlocks.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/registry/ModBlocks.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/registry/ModItems.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/registry/ModItems.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/trade/TradeScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/trade/TradeScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/trade/TradeScreenHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/trade/TradeScreenHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/ui/ATMScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/ui/ATMScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/blockstates/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/blockstates/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/lang/en_us.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/lang/en_us.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/block/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/block/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/item/atm.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/item/atm.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/item/notch_coin.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/models/item/notch_coin.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui/atm.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui/atm.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui/hud/notch_icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui/hud/notch_icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/items/coin.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/notch_icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/notch_icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/fabric.mod.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fabric.mod.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Notch-Currency" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency/core/NotchCurrency.java" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="33nJfA7SYz74xLy4zHo3gPYIzUI" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Gradle./Users/bjpelicano/Desktop/NEW MODS/Notch Currency - Test [wrapper].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/bjpelicano/Desktop/NEW MODS/Notch Currency - Test 2/src/main/resources/assets/notchcurrency/textures/gui&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui" />
+      <recent name="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/items" />
+      <recent name="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui/hud" />
+      <recent name="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures" />
+      <recent name="$PROJECT_DIR$/src/main/java/net/fugginbeenus/notchcurrency" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/ui" />
+      <recent name="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/trade" />
+      <recent name="$PROJECT_DIR$/src/client/java/net/fugginbeenus/notchcurrency/client" />
+      <recent name="$PROJECT_DIR$/src/main/resources/assets/notchcurrency/textures/gui" />
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.Minecraft Client">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="Notch Currency - Test 2" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="Notch Currency - Test 2" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="16de2025-af2e-42cd-929c-6e03225ec127" name="Changes" comment="" />
+      <created>1759947005877</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1759947005877</updated>
+    </task>
+    <servers />
+  </component>
+</project>

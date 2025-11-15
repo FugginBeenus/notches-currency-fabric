@@ -1,75 +1,193 @@
 plugins {
-    id 'fabric-loom' version '1.10.5'
-    id 'maven-publish'
+    id "java"
+    id "fabric-loom" version "1.10.5"
+    id "com.modrinth.minotaur" version "2.+"
 }
 
-group = 'net.fugginbeenus'
-version = '0.1.0'
+group   = (findProperty("group") ?: "net.fugginbeenus.notchcurrency")
+version = (findProperty("version") ?: "0.1.0")
 
 base {
-    // Gradle 8+: archivesBaseName -> base.archivesName
-    archivesName = 'notchcurrency'
-}
-
-repositories {
-    mavenCentral()
-    maven { url "https://maven.fabricmc.net/" }
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings "net.fabricmc:yarn:${yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    archivesName.set((findProperty("archives_base_name") ?: "notchcurrency").toString())
 }
 
 java {
-    // MC 1.20.1 expects Java 17 bytecode
     toolchain { languageVersion = JavaLanguageVersion.of(17) }
     withSourcesJar()
 }
 
+repositories {
+    mavenCentral()
+    maven { url = "https://maven.fabricmc.net/" }
+}
+
+dependencies {
+    // Core
+    minecraft        "com.mojang:minecraft:${property('minecraft_version')}"
+    mappings         "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${property('loader_version')}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}"
+    // Optional (uncomment only if used)
+    // modImplementation("com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
+    // modImplementation("me.shedaniel.cloth:cloth-config-fabric:${property('cloth_config_version')}") {
+    //     exclude group: "net.fabricmc.fabric-api"
+    // }
+}
+
 loom {
+    splitEnvironmentSourceSets()
     runs {
-        server {
-            server()
-            name "Dev Server"
-            programArgs "--port", "25565"
-            // workingDirectory file("run/server")
-        }
         clientA {
             client()
             name "Client A"
-            programArgs "--username", "Alice"
-            // workingDirectory file("run/clientA")
+            programArgs "--username", "PlayerA"
+            runDir "runs/clientA"
         }
         clientB {
             client()
             name "Client B"
-            programArgs "--username", "Bob"
-            // workingDirectory file("run/clientB")
+            programArgs "--username", "PlayerB"
+            runDir "runs/clientB"
+        }
+        server {
+            server()
+            name "Integrated Test Server"
+            runDir "runs/server"
         }
     }
 }
 
-tasks.named("processResources") {
+tasks.processResources {
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand("version": project.version)
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    // Ensure Java 17 classfile target even if building with newer JDK
+    options.encoding = "UTF-8"
     options.release = 17
 }
 
-/* If/when you publish, uncomment:
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
+jar {
+    from("LICENSE") { rename { "${it}_${project.base.archivesName.get()}" } }
+}
+
+/* ---------------------------
+   Unique build info (prevents Modrinth “duplicate file”)
+   --------------------------- */
+import java.util.UUID
+def buildInfoDir = layout.buildDirectory.dir("generated/buildinfo")
+
+tasks.register("generateBuildInfo") {
+    outputs.file(buildInfoDir.map { it.file("META-INF/${project.base.archivesName.get()}-build.id") })
+    doLast {
+        def outFile = buildInfoDir.get().file("META-INF/${project.base.archivesName.get()}-build.id").asFile
+        outFile.parentFile.mkdirs()
+        outFile.text = """buildId=${UUID.randomUUID()}
+buildTime=${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}
+"""
+    }
+}
+
+// Make sure sourcesJar has the build info before it runs
+tasks.named("sourcesJar").configure { dependsOn("generateBuildInfo") }
+
+// (Loom) remapped sources can also touch resources — make it safe too
+tasks.matching { it.name == "remapSourcesJar" }.configureEach { dependsOn("generateBuildInfo") }
+
+
+sourceSets {
+    main {
+        resources {
+            srcDir(buildInfoDir)
         }
     }
 }
-*/
+
+tasks.named("processResources").configure { dependsOn("generateBuildInfo") }
+tasks.named("jar").configure {
+    dependsOn("generateBuildInfo")
+    doFirst {
+        manifest.attributes(
+                "Implementation-Title": project.base.archivesName.get(),
+                "Implementation-Version": project.version,
+                "Implementation-Build": new Date().format("yyyyMMddHHmmss")
+        )
+    }
+}
+
+/* ---------------------------
+   Stamped, remapped Jar (the artifact we upload)
+   --------------------------- */
+import net.fabricmc.loom.task.RemapJarTask
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.bundling.ZipEntryCompression
+
+def remapped = tasks.named("remapJar", RemapJarTask)
+def stampFileProvider = layout.buildDirectory.file("tmp/stamp/build.stamp")
+
+tasks.register("generateStamp") {
+    outputs.file(stampFileProvider)
+    doLast {
+        def f = stampFileProvider.get().asFile
+        f.parentFile.mkdirs()
+        f.text = "id=${UUID.randomUUID()}\n" +
+                "time=${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}\n"
+    }
+}
+
+tasks.register("stampRemappedJar", Jar) {
+    dependsOn(remapped, "generateStamp", "processResources", "generateBuildInfo")
+
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    entryCompression = ZipEntryCompression.DEFLATED
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // 1) Unpack remapped jar but drop any fabric.mod.json that snuck in
+    from(remapped.flatMap { it.archiveFile }.map { zipTree(it.asFile) }) {
+        exclude("fabric.mod.json")
+    }
+    // 2) Re-add the single filtered fabric.mod.json from resources
+    from(layout.buildDirectory.dir("resources/main")) {
+        include("fabric.mod.json")
+        into("")
+    }
+    // 3) Add a tiny stamp so SHA always changes
+    from(stampFileProvider) {
+        into("META-INF")
+        rename { "build.stamp" }
+    }
+
+    destinationDirectory.set(layout.buildDirectory.dir("libs"))
+    archiveBaseName.set(project.base.archivesName.get())
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("stamped")
+}
+
+/* ---------------------------
+   Modrinth configuration
+   --------------------------- */
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")                  // set in your shell/CI
+    projectId     = (findProperty("modrinth_project") ?: "gGHT7Irr").toString()
+    versionNumber = project.version.toString()
+    versionName   = "Notch Currency ${project.version}"
+    versionType   = (findProperty("modrinth_release_type") ?: "release").toString()
+    uploadFile    = tasks.named("stampRemappedJar").flatMap { it.archiveFile }
+    gameVersions  = [project.property("minecraft_version").toString()]
+    loaders       = ["fabric"]
+
+    // optional, if you keep per-version notes:
+    def cl = file("changelogs/${project.version}.md")
+    changelog = cl.exists() ? cl.text : "See commits."
+
+    dependencies {
+        required.project "fabric-api"
+    }
+}
+
+tasks.named("modrinth").configure {
+    dependsOn("stampRemappedJar")
+}

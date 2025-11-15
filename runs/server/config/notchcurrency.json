@@ -1,0 +1,22 @@
+{
+  "balloon": {
+    "centerX": 0,
+    "centerY": 80,
+    "centerZ": 0,
+    "radius": 25,
+    "minY": 110,
+    "maxY": 150,
+    "perDay": 3,
+    "announce": true,
+    "windowStart": 1000,
+    "windowEnd": 2000
+  },
+  "cache": {
+    "announce": true,
+    "cooldownMinutes": 60,
+    "currencyStacksMin": 1,
+    "currencyStacksMax": 3,
+    "currencyPerStackMin": 100,
+    "currencyPerStackMax": 250
+  }
+}

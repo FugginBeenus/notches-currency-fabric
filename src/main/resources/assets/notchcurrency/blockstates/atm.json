@@ -1,1 +1,8 @@
-{ "variants": { "": { "model": "notchcurrency:block/atm" } } }
+{
+  "variants": {
+    "facing=north": { "model": "notchcurrency:block/atm" },
+    "facing=south": { "model": "notchcurrency:block/atm", "y": 180 },
+    "facing=west":  { "model": "notchcurrency:block/atm", "y": 270 },
+    "facing=east":  { "model": "notchcurrency:block/atm", "y": 90 }
+  }
+}

@@ -1,4 +1,6 @@
 {
   "block.notchcurrency.atm": "ATM",
-  "screen.notchcurrency.atm": "ATM"
+  "screen.notchcurrency.atm": "ATM",
+  "item.notchcurrency.notch_coin": "Notch Coin",
+  "item.notchcurrency.atm": "ATM"
 }

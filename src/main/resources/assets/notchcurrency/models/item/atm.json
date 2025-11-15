@@ -1,1 +1,3 @@
-{ "parent": "notchcurrency:block/atm" }
+{
+  "parent": "notchcurrency:block/atm"
+}
