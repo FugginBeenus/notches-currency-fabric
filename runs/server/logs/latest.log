@@ -1,5 +1,5 @@
-[16:25:22] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.16.10
-[16:25:22] [main/INFO] (FabricLoader) Loading 46 mods:
+[10:02:51] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.16.10
+[10:02:51] [main/INFO] (FabricLoader) Loading 46 mods:
 	- fabric-api 0.92.2+1.20.1
 	- fabric-api-base 0.4.31+1802ada577
 	- fabric-api-lookup-api-v1 1.6.36+1802ada577
@@ -46,9 +46,9 @@
 	- minecraft 1.20.1
 	- mixinextras 0.4.1
 	- notchcurrency 0.1.0
-[16:25:22] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/bjpelicano/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[16:25:22] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[16:25:22] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
-[16:25:22] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[16:25:23] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
-[16:25:27] [main/INFO] (Minecraft) You need to agree to the EULA in order to run the server. Go to eula.txt for more info.
+[10:02:51] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/bjpelicano/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[10:02:51] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[10:02:51] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
+[10:02:51] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[10:02:52] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
+[10:02:54] [main/INFO] (Minecraft) You need to agree to the EULA in order to run the server. Go to eula.txt for more info.

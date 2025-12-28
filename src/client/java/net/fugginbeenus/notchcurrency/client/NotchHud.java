@@ -5,17 +5,24 @@ import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
-/** Balance HUD anchored to the right edge of the hotbar; text grows left and pushes the icon left. */
+/**
+ * Balance HUD anchored to the right edge of the hotbar; text grows left and pushes the icon left.
+ *
+ * It auto-hides when vanilla HUD elements would overlap it, like:
+ * - Underwater air bubbles
+ * - Mounted on a creature with lots of hearts (e.g. horses with > 1 row of HP)
+ */
 public final class NotchHud implements HudRenderCallback {
 
     private static int BALANCE = 0;
 
     // Nudges
     private static final int X_NUDGE = 0;     // +right / -left
-    private static final int Y_NUDGE = -30;   // relative to hotbar top; ~-10 sits over hunger row
+    private static final int Y_NUDGE = -27;   // relative to hotbar top; ~-10 sits over hunger row
 
     private static final int GAP = 4;         // between text and icon
     private static final int ICON_PX = 9;     // 9px HUD sprite size (for texture mode)
@@ -32,7 +39,8 @@ public final class NotchHud implements HudRenderCallback {
     @Override
     public void onHudRender(DrawContext ctx, float tickDelta) {
         final MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc == null || mc.player == null || mc.options.hudHidden) return;
+        if (mc == null || mc.player == null) return;
+        if (shouldHide(mc)) return;
 
         final int sw = mc.getWindow().getScaledWidth();
         final int sh = mc.getWindow().getScaledHeight();
@@ -72,5 +80,34 @@ public final class NotchHud implements HudRenderCallback {
         }
 
         ctx.drawText(mc.textRenderer, s, textX, textY, 0xFFFFFF, true);
+    }
+
+    /**
+     * Decide when the balance HUD should hide to avoid overlapping vanilla HUD bars.
+     */
+    private static boolean shouldHide(MinecraftClient mc) {
+        if (mc.options.hudHidden) return true;
+
+        var player = mc.player;
+        if (player == null) return true;
+
+        // Underwater bubbles: hide while air bar is visible
+        // (non-creative, non-spectator, actually losing air)
+        if (!player.getAbilities().creativeMode
+                && !player.isSpectator()
+                && player.getAir() < player.getMaxAir()) {
+            return true;
+        }
+
+        // Riding a mount with a lot of HP (horse hearts row)
+        if (player.hasVehicle() && player.getVehicle() instanceof LivingEntity mount) {
+            float hp = mount.getMaxHealth();
+            // Each row is 20 HP (10 hearts); hide if > 1 row
+            if (hp > 20.0f) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

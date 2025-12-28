@@ -4,57 +4,81 @@ plugins {
     id "com.modrinth.minotaur" version "2.+"
 }
 
-group   = (findProperty("group") ?: "net.fugginbeenus.notchcurrency")
-version = (findProperty("version") ?: "0.1.0")
+// ===== Project Info =====
+group = findProperty("group") ?: "net.fugginbeenus.notchcurrency"
+version = findProperty("version") ?: "0.1.0"
 
 base {
-    archivesName.set((findProperty("archives_base_name") ?: "notchcurrency").toString())
+    archivesName = (findProperty("archives_base_name") ?: "notchcurrency").toString()
 }
 
+// ===== Java Configuration =====
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(17) }
     withSourcesJar()
 }
 
+// ===== Repositories =====
 repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
 }
 
+// ===== Dependencies =====
 dependencies {
-    // Core
-    minecraft        "com.mojang:minecraft:${property('minecraft_version')}"
-    mappings         "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
+    // Minecraft & Fabric
+    minecraft "com.mojang:minecraft:${property('minecraft_version')}"
+    mappings "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
     modImplementation "net.fabricmc:fabric-loader:${property('loader_version')}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}"
-    // Optional (uncomment only if used)
+
+    // Local mod dependencies (place jars in /libs folder)
+    // Using runtimeOnly to avoid remapping issues with pre-compiled mods
+    fileTree(dir: 'libs', include: '*.jar').each { file ->
+        runtimeOnly files(file)
+    }
+
+    // Optional dependencies (uncomment as needed)
     // modImplementation("com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
     // modImplementation("me.shedaniel.cloth:cloth-config-fabric:${property('cloth_config_version')}") {
     //     exclude group: "net.fabricmc.fabric-api"
     // }
 }
 
+// ===== Loom Configuration =====
 loom {
     splitEnvironmentSourceSets()
+
     runs {
+        client {
+            client()
+            name "Minecraft Client"
+            runDir "run"
+        }
         clientA {
             client()
-            name "Client A"
+            name "Client A (Multiplayer Test)"
             programArgs "--username", "PlayerA"
             runDir "runs/clientA"
         }
         clientB {
             client()
-            name "Client B"
+            name "Client B (Multiplayer Test)"
             programArgs "--username", "PlayerB"
             runDir "runs/clientB"
         }
         server {
             server()
-            name "Integrated Test Server"
+            name "Dedicated Server"
             runDir "runs/server"
         }
     }
+}
+
+// ===== Build Tasks =====
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 17
 }
 
 tasks.processResources {
@@ -64,130 +88,72 @@ tasks.processResources {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-    options.release = 17
-}
-
-jar {
-    from("LICENSE") { rename { "${it}_${project.base.archivesName.get()}" } }
-}
-
-/* ---------------------------
-   Unique build info (prevents Modrinth “duplicate file”)
-   --------------------------- */
-import java.util.UUID
-def buildInfoDir = layout.buildDirectory.dir("generated/buildinfo")
-
-tasks.register("generateBuildInfo") {
-    outputs.file(buildInfoDir.map { it.file("META-INF/${project.base.archivesName.get()}-build.id") })
-    doLast {
-        def outFile = buildInfoDir.get().file("META-INF/${project.base.archivesName.get()}-build.id").asFile
-        outFile.parentFile.mkdirs()
-        outFile.text = """buildId=${UUID.randomUUID()}
-buildTime=${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}
-"""
-    }
-}
-
-// Make sure sourcesJar has the build info before it runs
-tasks.named("sourcesJar").configure { dependsOn("generateBuildInfo") }
-
-// (Loom) remapped sources can also touch resources — make it safe too
-tasks.matching { it.name == "remapSourcesJar" }.configureEach { dependsOn("generateBuildInfo") }
-
-
-sourceSets {
-    main {
-        resources {
-            srcDir(buildInfoDir)
-        }
-    }
-}
-
-tasks.named("processResources").configure { dependsOn("generateBuildInfo") }
-tasks.named("jar").configure {
-    dependsOn("generateBuildInfo")
-    doFirst {
-        manifest.attributes(
-                "Implementation-Title": project.base.archivesName.get(),
-                "Implementation-Version": project.version,
-                "Implementation-Build": new Date().format("yyyyMMddHHmmss")
+tasks.jar {
+    from("LICENSE") { rename { "${it}_${base.archivesName.get()}" } }
+    manifest {
+        attributes(
+                "Implementation-Title": base.archivesName.get(),
+                "Implementation-Version": version,
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         )
     }
 }
 
-/* ---------------------------
-   Stamped, remapped Jar (the artifact we upload)
-   --------------------------- */
-import net.fabricmc.loom.task.RemapJarTask
-import org.gradle.api.file.DuplicatesStrategy
-import org.gradle.api.tasks.bundling.ZipEntryCompression
+// ===== Modrinth Publishing =====
+// Creates a unique build stamp to prevent "duplicate file" errors
+def stampFile = layout.buildDirectory.file("tmp/modrinth-stamp.txt")
 
-def remapped = tasks.named("remapJar", RemapJarTask)
-def stampFileProvider = layout.buildDirectory.file("tmp/stamp/build.stamp")
-
-tasks.register("generateStamp") {
-    outputs.file(stampFileProvider)
+tasks.register("generateModrinthStamp") {
+    outputs.file(stampFile)
     doLast {
-        def f = stampFileProvider.get().asFile
+        def f = stampFile.get().asFile
         f.parentFile.mkdirs()
-        f.text = "id=${UUID.randomUUID()}\n" +
-                "time=${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}\n"
+        f.text = "build-id=${UUID.randomUUID()}\ntimestamp=${System.currentTimeMillis()}\n"
     }
 }
 
-tasks.register("stampRemappedJar", Jar) {
-    dependsOn(remapped, "generateStamp", "processResources", "generateBuildInfo")
+tasks.register("stampedJar", Jar) {
+    dependsOn(tasks.remapJar, "generateModrinthStamp")
 
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-    entryCompression = ZipEntryCompression.DEFLATED
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // 1) Unpack remapped jar but drop any fabric.mod.json that snuck in
-    from(remapped.flatMap { it.archiveFile }.map { zipTree(it.asFile) }) {
+    from(zipTree(tasks.remapJar.archiveFile)) {
         exclude("fabric.mod.json")
     }
-    // 2) Re-add the single filtered fabric.mod.json from resources
     from(layout.buildDirectory.dir("resources/main")) {
         include("fabric.mod.json")
-        into("")
     }
-    // 3) Add a tiny stamp so SHA always changes
-    from(stampFileProvider) {
+    from(stampFile) {
         into("META-INF")
         rename { "build.stamp" }
     }
 
-    destinationDirectory.set(layout.buildDirectory.dir("libs"))
-    archiveBaseName.set(project.base.archivesName.get())
-    archiveVersion.set(project.version.toString())
-    archiveClassifier.set("stamped")
+    destinationDirectory = layout.buildDirectory.dir("libs")
+    archiveBaseName = base.archivesName.get()
+    archiveVersion = version.toString()
+    archiveClassifier = "modrinth"
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }
 
-/* ---------------------------
-   Modrinth configuration
-   --------------------------- */
 modrinth {
-    token = System.getenv("MODRINTH_TOKEN")                  // set in your shell/CI
-    projectId     = (findProperty("modrinth_project") ?: "gGHT7Irr").toString()
-    versionNumber = project.version.toString()
-    versionName   = "Notch Currency ${project.version}"
-    versionType   = (findProperty("modrinth_release_type") ?: "release").toString()
-    uploadFile    = tasks.named("stampRemappedJar").flatMap { it.archiveFile }
-    gameVersions  = [project.property("minecraft_version").toString()]
-    loaders       = ["fabric"]
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = findProperty("modrinth_project") ?: "gGHT7Irr"
+    versionNumber = version.toString()
+    versionName = "Notch Currency ${version}"
+    versionType = findProperty("modrinth_release_type") ?: "release"
+    uploadFile = tasks.named("stampedJar").flatMap { it.archiveFile }
+    gameVersions = [property("minecraft_version").toString()]
+    loaders = ["fabric"]
 
-    // optional, if you keep per-version notes:
-    def cl = file("changelogs/${project.version}.md")
-    changelog = cl.exists() ? cl.text : "See commits."
+    def changelogFile = file("changelogs/${version}.md")
+    changelog = changelogFile.exists() ? changelogFile.text : "See commits for changes."
 
     dependencies {
         required.project "fabric-api"
     }
 }
 
-tasks.named("modrinth").configure {
-    dependsOn("stampRemappedJar")
+tasks.modrinth {
+    dependsOn("stampedJar")
 }

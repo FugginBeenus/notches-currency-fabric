@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PEP",
+    "PGP"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "item": "notchcurrency:merchant_license",
+    "count": 1
+  }
+}

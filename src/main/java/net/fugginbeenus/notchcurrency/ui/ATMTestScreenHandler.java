@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.ui;
 
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
+import net.fugginbeenus.notchcurrency.core.CoinEconomy;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
@@ -14,6 +15,8 @@ import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public class ATMTestScreenHandler extends ScreenHandler {
 
@@ -25,11 +28,11 @@ public class ATMTestScreenHandler extends ScreenHandler {
 
     // Pixel nudges to line up with your painted frames (adjust these!)
     public static int BANK_NUDGE_X = 38; // +right / -left
-    public static int BANK_NUDGE_Y = 1; // +down  / -up
+    public static int BANK_NUDGE_Y = 1;  // +down  / -up
 
     // ===== Player inv / hotbar (leave these unless your texture differs) =====
     private static final int PLAYER_X = 8;
-    private static final int PLAYER_Y = 84;
+    private static final int PLAYER_Y = 113;
     private static final int HOTBAR_Y = PLAYER_Y + 58;
 
     private final PlayerInventory playerInv;
@@ -128,10 +131,45 @@ public class ATMTestScreenHandler extends ScreenHandler {
         }
     }
 
+    /**
+     * Deposit X coins into the player's balance via CoinEconomy,
+     * then refresh the synced balance property.
+     */
     private void depositAmount(ServerPlayerEntity sp, int amount) {
-        int newBal = BalanceStore.add(sp, amount);
+        if (amount <= 0) return;
+        CoinEconomy.depositToBalance(sp, amount);
+        int newBal = BalanceStore.get(sp);
         setSyncedBalance(newBal);
         NotchPackets.sendBalance(sp, newBal);
+    }
+
+    /**
+     * Called from the ATM client screen when the player presses the Withdraw button.
+     * The client should send the desired amount (parsed from the text field) here.
+     *
+     * This method safely no-ops on the client; the actual logic only runs server-side.
+     */
+    public void withdraw(int amount) {
+        if (amount <= 0) {
+            return;
+        }
+
+        if (!playerInv.player.getWorld().isClient && playerInv.player instanceof ServerPlayerEntity sp) {
+            long withdrawn = CoinEconomy.withdrawFromBalanceToInventory(sp, amount);
+
+            if (withdrawn <= 0) {
+                // optional feedback if they don't have enough balance
+                sp.sendMessage(
+                        Text.literal("You don't have enough balance to withdraw that many Notch Coins.")
+                                .formatted(Formatting.RED),
+                        false
+                );
+            }
+
+            int newBal = BalanceStore.get(sp);
+            setSyncedBalance(newBal);
+            NotchPackets.sendBalance(sp, newBal);
+        }
     }
 
     private class CurrencySlot extends Slot {

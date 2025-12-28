@@ -1,17 +1,19 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.Heightmap;
 
-// add these:
-import net.fugginbeenus.notchcurrency.crate.BalloonEntity;
+import java.util.List;
 
 public final class DailyCrateManager {
-    private static long lastDay = -1;
+    private static long lastSpawnWeek = -1;
 
     private DailyCrateManager() {}
 
@@ -26,13 +28,17 @@ public final class DailyCrateManager {
     public static int MIN_Y = 110;
     public static int MAX_Y = 150;
 
-    private static int BALLOONS_PER_DAY = 3;
+    private static int BALLOONS_PER_WAVE = 3;
     public static boolean ANNOUNCE = true;
 
+    // Spawn window (morning of first day of week)
     private static final long WINDOW_START = 1000;
     private static final long WINDOW_END   = 2000;
 
-    public static void setPerDay(int n) { BALLOONS_PER_DAY = Math.max(0, n); }
+    // Minecraft week = 7 days
+    private static final long TICKS_PER_WEEK = 24000L * 7L;
+
+    public static void setPerDay(int n) { BALLOONS_PER_WAVE = Math.max(0, n); }
 
     private static void tick(MinecraftServer server) {
         ServerWorld world = server.getOverworld();
@@ -40,16 +46,57 @@ public final class DailyCrateManager {
 
         BalloonConfigState cfg = BalloonConfigState.get(world);
 
-        long day  = world.getTimeOfDay() / 24000L;
-        long time = world.getTimeOfDay() % 24000L;
+        long totalTime = world.getTime(); // Total world time (doesn't reset)
+        long week = totalTime / TICKS_PER_WEEK;
+        long timeInWeek = totalTime % TICKS_PER_WEEK;
 
-        if (day != lastDay && time >= WINDOW_START && time <= WINDOW_END) {
-            lastDay = day;
+        // Spawn at the start of each week (during the morning window of day 1)
+        if (week != lastSpawnWeek && timeInWeek >= WINDOW_START && timeInWeek <= WINDOW_END) {
+            lastSpawnWeek = week;
+
+            // Clear existing balloons first to prevent stacking
+            int cleared = clearExistingBalloons(world, cfg);
+            if (cleared > 0) {
+                System.out.println("[NotchCurrency] Cleared " + cleared + " old balloons before spawning new wave");
+            }
+
             spawnBalloons(world, cfg);
+
             if (cfg.announce) {
-                server.getPlayerManager().broadcast(Text.literal("🎈 Balloon crates have appeared in the Market District!"), false);
+                server.getPlayerManager().broadcast(
+                        Text.literal("🎈 A new wave of balloon crates has appeared!"), false);
             }
         }
+    }
+
+    /**
+     * Remove all existing balloon entities in the spawn area (and beyond)
+     * Returns count of removed balloons
+     */
+    private static int clearExistingBalloons(ServerWorld world, BalloonConfigState cfg) {
+        int cleared = 0;
+
+        // Create a large search box around the spawn area
+        // Search wider than spawn area in case balloons drifted
+        int searchRadius = cfg.radius + 100;
+        Box searchBox = new Box(
+                cfg.center.getX() - searchRadius, 0, cfg.center.getZ() - searchRadius,
+                cfg.center.getX() + searchRadius, 320, cfg.center.getZ() + searchRadius
+        );
+
+        // Find and remove all balloon entities
+        List<BalloonEntity> balloons = world.getEntitiesByType(
+                TypeFilter.instanceOf(BalloonEntity.class),
+                searchBox,
+                entity -> true
+        );
+
+        for (BalloonEntity balloon : balloons) {
+            balloon.discard();
+            cleared++;
+        }
+
+        return cleared;
     }
 
     // apply config from file
@@ -72,11 +119,13 @@ public final class DailyCrateManager {
         b.radius  = RADIUS;
         b.minY    = MIN_Y;
         b.maxY    = MAX_Y;
-        b.perDay  = BALLOONS_PER_DAY;
+        b.perDay  = BALLOONS_PER_WAVE;
         b.announce = ANNOUNCE;
     }
 
     private static void spawnBalloons(ServerWorld world, BalloonConfigState cfg) {
+        System.out.println("[NotchCurrency] Spawning " + cfg.perDay + " balloons for week " + lastSpawnWeek);
+
         for (int i = 0; i < cfg.perDay; i++) {
             int dx = world.random.nextInt(cfg.radius * 2) - cfg.radius;
             int dz = world.random.nextInt(cfg.radius * 2) - cfg.radius;
@@ -106,14 +155,27 @@ public final class DailyCrateManager {
         cfg.maxY = Math.max(cfg.minY + 5, Math.max(min, max));
         cfg.markDirty();
     }
-    public static void setCount(ServerWorld world, int perDay) {
+    public static void setCount(ServerWorld world, int perWave) {
         var cfg = BalloonConfigState.get(world);
-        cfg.perDay = Math.max(0, perDay);
+        cfg.perDay = Math.max(0, perWave);
         cfg.markDirty();
     }
     public static void setAnnouncements(ServerWorld world, boolean enabled) {
         var cfg = BalloonConfigState.get(world);
         cfg.announce = enabled;
         cfg.markDirty();
+    }
+
+    /**
+     * Force spawn a new wave of balloons (for admin use)
+     * Clears existing balloons first
+     */
+    public static void forceSpawn(ServerWorld world) {
+        BalloonConfigState cfg = BalloonConfigState.get(world);
+        int cleared = clearExistingBalloons(world, cfg);
+        if (cleared > 0) {
+            System.out.println("[NotchCurrency] Force spawn: cleared " + cleared + " old balloons");
+        }
+        spawnBalloons(world, cfg);
     }
 }

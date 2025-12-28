@@ -1,12 +1,12 @@
 {
-	"format_version": "1.21.6",
-	"credit": "Made with Blockbench",
-	"texture_size": [32, 32],
-	"textures": {
-      "0": "notchcurrency:block/currency_block",
-      "1": "notchcurrency:block/currency_block_effect",
-      "particle": "notchcurrency:block/currency_block"
-	},
+  "format_version": "1.21.6",
+  "credit": "Made with Blockbench",
+  "texture_size": [32, 32],
+  "textures": {
+    "0": "notchcurrency:block/currency_block",
+    "1": "notchcurrency:block/currency_block_effect",
+    "particle": "notchcurrency:block/currency_block_effect"
+  },
 	"elements": [
 		{
 			"from": [12, 0, 0],
@@ -165,8 +165,8 @@
 			}
 		},
 		{
-			"from": [13, 12, 1],
-			"to": [15, 14, 15],
+			"from": [13.001, 12.001, 1.001],
+			"to": [14.999, 13.999, 14.999],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 8]},
 			"faces": {
 				"north": {"uv": [1.75, 7, 2, 7.25], "texture": "#0"},
@@ -178,8 +178,8 @@
 			}
 		},
 		{
-			"from": [1, 12, 1],
-			"to": [3, 14, 15],
+			"from": [1.001, 12.001, 1.001],
+			"to": [2.999, 13.999, 14.999],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 8]},
 			"faces": {
 				"north": {"uv": [2, 7, 1.75, 7.25], "texture": "#0"},
@@ -191,8 +191,8 @@
 			}
 		},
 		{
-			"from": [1, 12, 13],
-			"to": [15, 14, 15],
+			"from": [1.001, 12.001, 13.001],
+			"to": [14.999, 13.999, 14.999],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 8]},
 			"faces": {
 				"north": {"uv": [6.375, 0.875, 8.125, 1.125], "texture": "#0"},
@@ -204,8 +204,8 @@
 			}
 		},
 		{
-			"from": [1, 12, 1],
-			"to": [15, 14, 3],
+			"from": [1.001, 12.001, 1.001],
+			"to": [14.999, 13.999, 2.999],
 			"rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 8]},
 			"faces": {
 				"north": {"uv": [10.125, 0.875, 8.375, 1.125], "texture": "#0"},

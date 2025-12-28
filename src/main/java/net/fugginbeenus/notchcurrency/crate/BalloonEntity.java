@@ -1,13 +1,10 @@
-
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootTable;
 import net.minecraft.loot.context.LootContextParameterSet;
@@ -23,22 +20,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.item.Items;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 
 import java.util.List;
 
@@ -51,9 +33,10 @@ public class BalloonEntity extends Entity {
     private static final double BOB_AMPLITUDE = 0.30;
     private static final double BOB_PERIOD_TICKS = 14.0; // bigger = slower
     private static final double DRIFT_SPEED = 0.004;
-    private static final int DESPAWN_TICKS = 20 * 60 * 5; // 5 minutes
+    private static final long DESPAWN_TICKS = 20L * 60L * 5L; // 5 minutes
 
-    private int ageTicks = 0;
+    private int animTicks = 0;  // For bobbing animation only
+    private long spawnWorldTime = -1;  // World time when spawned (persists through chunk unloads)
 
     public BalloonEntity(EntityType<? extends BalloonEntity> type, World world) {
         super(type, world);
@@ -69,8 +52,19 @@ public class BalloonEntity extends Entity {
 
     // NBT
     @Override protected void initDataTracker() {}
-    @Override protected void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) { this.ageTicks = nbt.getInt("AgeTicks"); }
-    @Override protected void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) { nbt.putInt("AgeTicks", this.ageTicks); }
+
+    @Override
+    protected void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
+        // If SpawnWorldTime is missing (old balloon), it will be 0, and we'll re-init in tick()
+        this.spawnWorldTime = nbt.contains("SpawnWorldTime") ? nbt.getLong("SpawnWorldTime") : -1;
+        this.animTicks = nbt.getInt("AnimTicks");
+    }
+
+    @Override
+    protected void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
+        nbt.putLong("SpawnWorldTime", this.spawnWorldTime);
+        nbt.putInt("AnimTicks", this.animTicks);
+    }
 
     // Targetable
     @Override public boolean isAttackable() { return true; }
@@ -84,16 +78,35 @@ public class BalloonEntity extends Entity {
         super.tick();
         if (this.getWorld().isClient) return;
 
-        ageTicks++;
-        if (ageTicks > DESPAWN_TICKS) { discard(); return; }
+        // Initialize spawn time on first tick
+        if (spawnWorldTime < 0) {
+            spawnWorldTime = getWorld().getTime();
+        }
+
+        // Check despawn based on world time (works even if chunk was unloaded)
+        long currentWorldTime = getWorld().getTime();
+        long age = currentWorldTime - spawnWorldTime;
+
+        // Debug logging every 30 seconds (600 ticks)
+        if (animTicks % 600 == 0) {
+            System.out.println("[Balloon] ID=" + getId() + " age=" + age + "/" + DESPAWN_TICKS + " ticks (" + (age/20) + "/" + (DESPAWN_TICKS/20) + " seconds)");
+        }
+
+        if (age > DESPAWN_TICKS) {
+            System.out.println("[Balloon] ID=" + getId() + " despawning after " + (age/20) + " seconds");
+            discard();
+            return;
+        }
+
+        animTicks++;
 
         // Bob + gentle drift (deterministic per id)
-        double bob = Math.sin(ageTicks / BOB_PERIOD_TICKS) * (BOB_AMPLITUDE / BOB_PERIOD_TICKS);
+        double bob = Math.sin(animTicks / BOB_PERIOD_TICKS) * (BOB_AMPLITUDE / BOB_PERIOD_TICKS);
         double dx = ((getId() & 1) == 0 ? DRIFT_SPEED : -DRIFT_SPEED);
         double dz = ((getId() % 3) == 0 ? -DRIFT_SPEED : DRIFT_SPEED);
         setPosition(getX() + dx, getY() + bob, getZ() + dz);
 
-        if (ageTicks % 10 == 0) {
+        if (animTicks % 10 == 0) {
             ((ServerWorld) getWorld()).spawnParticles(
                     ParticleTypes.HAPPY_VILLAGER,
                     getX(), getY() + 0.4, getZ(), 1, 0.1, 0.1, 0.1, 0.0
@@ -116,6 +129,7 @@ public class BalloonEntity extends Entity {
         popAndRainLoot();
         return true;
     }
+
     private void popAndRainLoot() {
         ServerWorld sw = (ServerWorld) getWorld();
 
@@ -131,7 +145,7 @@ public class BalloonEntity extends Entity {
             sw.spawnParticles(ParticleTypes.POOF, getX(), getY(), getZ(), 1, ax, ay, az, 0.02);
         }
 
-        // Barrel “shatter” visual (block break event)
+        // Barrel "shatter" visual (block break event)
         sw.syncWorldEvent(2001, getBlockPos(), Block.getRawIdFromState(Blocks.BARREL.getDefaultState()));
         sw.playSound(null, getBlockPos(), SoundEvents.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 0.8f, 1.1f);
 
@@ -149,14 +163,14 @@ public class BalloonEntity extends Entity {
             loot.add(new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN, 5));
         }
 
-        // 3) “Loot rain” – spawn items with downward + slight outward velocity
+        // 3) "Loot rain" – spawn items with downward + slight outward velocity
         final double cx = getX();
         final double cy = getY();
         final double cz = getZ();
 
         for (ItemStack s : loot) {
             if (s.isEmpty()) continue;
-            var item = new net.minecraft.entity.ItemEntity(sw, cx, cy, cz, s.copy());
+            var item = new ItemEntity(sw, cx, cy, cz, s.copy());
 
             double vx = (sw.random.nextDouble() - 0.5) * 0.2; // small horizontal spread
             double vy = -0.25 - sw.random.nextDouble() * 0.15; // falling down
@@ -170,7 +184,6 @@ public class BalloonEntity extends Entity {
         // 4) Remove the balloon entity
         discard();
     }
-
 
     @Override
     public Packet<ClientPlayPacketListener> createSpawnPacket() {

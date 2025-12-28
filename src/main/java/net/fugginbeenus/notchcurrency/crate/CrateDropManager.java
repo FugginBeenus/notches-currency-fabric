@@ -27,6 +27,11 @@ public final class CrateDropManager {
         INIT = true;
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            // Early exit if nothing is tracked
+            if (TRACKED.isEmpty()) {
+                return;
+            }
+
             for (ServerWorld world : server.getWorlds()) {
                 // Copy keys to avoid CME
                 List<UUID> ids = new ArrayList<>(TRACKED.keySet());

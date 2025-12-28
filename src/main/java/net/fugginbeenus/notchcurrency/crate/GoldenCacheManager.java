@@ -1,8 +1,7 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BarrelBlockEntity;
+import net.fugginbeenus.notchcurrency.registry.ModBlocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -13,10 +12,11 @@ import net.minecraft.world.Heightmap;
 import java.util.Random;
 
 public final class GoldenCacheManager {
-    /** Datapack loot table: data/notchcurrency/loot_tables/golden_cache.json */
+
+    /** Loot table used by the golden cache (e.g. data/notchcurrency/loot_tables/golden_cache.json). */
     public static final Identifier LOOT = new Identifier("notchcurrency", "golden_cache");
 
-    public static boolean ANNOUNCE = true;         // <-- keep only this one
+    public static boolean ANNOUNCE = true;
     private static final int NATURAL_COOLDOWN_TICKS = 20 * 60 * 60 * 4; // 4h
     private static int cooldown = 0;
     private static final Random RNG = new Random();
@@ -33,9 +33,12 @@ public final class GoldenCacheManager {
     }
 
     private static void tick(MinecraftServer server) {
-        if (cooldown > 0) { cooldown--; return; }
+        if (cooldown > 0) {
+            cooldown--;
+            return;
+        }
 
-        // Natural spawns disabled for now (enable when ready)
+        // Natural spawns are disabled for now.
         /*
         ServerWorld world = server.getOverworld();
         if (world == null || world.getPlayers().isEmpty()) return;
@@ -45,7 +48,9 @@ public final class GoldenCacheManager {
         if (placed != null) {
             cooldown = NATURAL_COOLDOWN_TICKS;
             if (ANNOUNCE) {
-                server.getPlayerManager().broadcast(Text.literal("✨ A Golden Cache has spawned somewhere nearby…"), false);
+                server.getPlayerManager().broadcast(
+                        Text.literal("✨ A Golden Cache has spawned somewhere nearby…"), false
+                );
             }
         }
         */
@@ -64,7 +69,7 @@ public final class GoldenCacheManager {
         int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
         BlockPos pos = new BlockPos(x, y, z);
 
-        return placeBarrelWithLoot(world, pos) ? pos : null;
+        return placeCacheBlock(world, pos) ? pos : null;
     }
 
     public static void applyConfig(net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
@@ -79,25 +84,32 @@ public final class GoldenCacheManager {
 
     public static void exportConfig(net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
         var c = cfg.cache;
-        c.announce = ANNOUNCE;
-        c.cooldownMinutes = GLOBAL_COOLDOWN_MIN;
-        c.currencyStacksMin = CURRENCY_STACKS_MIN;
-        c.currencyStacksMax = CURRENCY_STACKS_MAX;
+        c.announce            = ANNOUNCE;
+        c.cooldownMinutes     = GLOBAL_COOLDOWN_MIN;
+        c.currencyStacksMin   = CURRENCY_STACKS_MIN;
+        c.currencyStacksMax   = CURRENCY_STACKS_MAX;
         c.currencyPerStackMin = CURRENCY_PER_STACK_MIN;
         c.currencyPerStackMax = CURRENCY_PER_STACK_MAX;
     }
 
-    /** Admin/testing: force a cache exactly at the given position (snapped to top ground). */
+    /** Admin/testing: force a cache exactly at the given position (snapped to safe top ground). */
     public static BlockPos spawnAt(ServerWorld world, int x, int y, int z) {
-        int safeY = Math.max(y, world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z));
+        int safeY = Math.max(
+                y,
+                world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z)
+        );
         BlockPos pos = new BlockPos(x, safeY, z);
-        return placeBarrelWithLoot(world, pos) ? pos : null;
+        return placeCacheBlock(world, pos) ? pos : null;
     }
 
-    /** Places a barrel at pos and arms it with our loot table. */
-    private static boolean placeBarrelWithLoot(ServerWorld world, BlockPos pos) {
-        // Find a clear spot (air or replaceable). Nudge up to 4 blocks if needed.
+    /**
+     * Places the GOLDEN_CACHE block at/above the given position.
+     * GoldenCacheBlock handles loot on break.
+     */
+    private static boolean placeCacheBlock(ServerWorld world, BlockPos pos) {
         BlockPos place = pos;
+
+        // Try to find a clear space (air or non-solid) up to 4 blocks upward
         for (int i = 0; i < 4; i++) {
             var stateAt = world.getBlockState(place);
             boolean clear = stateAt.isAir() || stateAt.getCollisionShape(world, place).isEmpty();
@@ -105,20 +117,10 @@ public final class GoldenCacheManager {
             place = place.up();
         }
 
-        if (!world.setBlockState(place, Blocks.BARREL.getDefaultState())) return false;
-
-        var be = world.getBlockEntity(place);
-        if (be instanceof BarrelBlockEntity barrel) {
-            barrel.setCustomName(Text.literal("Golden Cache"));
-            // Loot table does the currency stacks + premium items logic
-            barrel.setLootTable(LOOT, world.random.nextLong());
-            barrel.markDirty();
-            return true;
-        }
-
-        world.setBlockState(place, Blocks.AIR.getDefaultState());
-        return false;
+        return world.setBlockState(place, ModBlocks.GOLDEN_CACHE.getDefaultState());
     }
 
-    public static void setAnnouncements(boolean enabled) { ANNOUNCE = enabled; }
+    public static void setAnnouncements(boolean enabled) {
+        ANNOUNCE = enabled;
+    }
 }

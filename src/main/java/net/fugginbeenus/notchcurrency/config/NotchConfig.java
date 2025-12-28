@@ -31,4 +31,12 @@ public final class NotchConfig {
         public int currencyPerStackMin = 100;
         public int currencyPerStackMax = 250;
     }
+
+    // Auction / economy tuning
+
+    /** Flat fee (in coins) to create a listing. 0 = free. */
+    public int auctionListingFeeFlat = 0;
+
+    /** Percent tax (0–100) taken from the seller’s payout on successful sales. */
+    public int auctionSaleTaxPercent = 0;
 }

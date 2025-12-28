@@ -29,15 +29,15 @@ public final class BossCurrencyInject {
         LootTableEvents.MODIFY.register((resourceManager, lootManager, id, table, source) -> {
             if (BOSS_TABLES.contains(id)) {
                 LootPool.Builder pool = LootPool.builder()
-                        .conditionally(RandomChanceLootCondition.builder(0.25f)) // 25%
+                        .conditionally(RandomChanceLootCondition.builder(0.05f)) // 5%
                         .with(ItemEntry.builder(ModItems.NOTCH_COIN))
-                        .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(3.0f, 7.0f)));
+                        .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 3.0f)));
                 table.pool(pool);
             } else if (MINI_TABLES.contains(id)) {
                 LootPool.Builder pool = LootPool.builder()
-                        .conditionally(RandomChanceLootCondition.builder(0.12f)) // 12%
+                        .conditionally(RandomChanceLootCondition.builder(0.03f)) // 3%
                         .with(ItemEntry.builder(ModItems.NOTCH_COIN))
-                        .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 3.0f)));
+                        .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 2.0f)));
                 table.pool(pool);
             }
         });

@@ -1,6 +1,25 @@
 {
   "block.notchcurrency.atm": "ATM",
+  "block.notchcurrency.golden_cache": "Golden Cache",
   "screen.notchcurrency.atm": "ATM",
   "item.notchcurrency.notch_coin": "Notch Coin",
-  "item.notchcurrency.atm": "ATM"
+  "item.notchcurrency.atm": "ATM",
+  "item.notchcurrency.merchant_license": "Merchant License",
+  "item.notchcurrency.shopkeeper_spawn_egg": "Shopkeeper Spawn Egg",
+  "item.notchcurrency.balloon": "Balloon",
+  "item.notchcurrency.golden_cache": "Golden Cache",
+
+  "itemGroup.notchcurrency.notch_currency_tab": "Notch Currency",
+
+  "screen.notchcurrency.shopkeeper_settings": "Shopkeeper Settings",
+  "screen.notchcurrency.shopkeeper_settings.tab.look": "Look",
+  "screen.notchcurrency.shopkeeper_settings.tab.name": "Name",
+  "screen.notchcurrency.shopkeeper_settings.tab.dialog": "Dialog",
+  "screen.notchcurrency.shopkeeper_settings.skin": "Skin (Player Name):",
+  "screen.notchcurrency.shopkeeper_settings.apply_skin": "Apply Skin",
+  "screen.notchcurrency.shopkeeper_settings.display_name": "Display Name:",
+  "screen.notchcurrency.shopkeeper_settings.greeting": "Greeting Message:",
+  "screen.notchcurrency.shopkeeper_settings.greeting_hint": "What the NPC says when customers interact",
+  "screen.notchcurrency.shopkeeper_settings.manage_shop": "Manage Shop",
+  "screen.notchcurrency.shopkeeper_settings.done": "Done"
 }
