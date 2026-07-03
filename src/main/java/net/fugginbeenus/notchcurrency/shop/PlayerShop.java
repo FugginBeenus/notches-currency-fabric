@@ -32,9 +32,12 @@ public class PlayerShop {
     private long createdAt;             // Timestamp
     private boolean isOpen;             // Whether shop accepts purchases
 
-    // Pending earnings for offline collection
-    private final List<PendingSale> pendingSales;
-    // Pending barter items for offline collection
+    // Rent state: a rent-paused shop is still "open" but won't sell until rent is paid.
+    private boolean rentPaused = false;
+    private int unpaidRentCycles = 0;
+
+    // Pending barter items for offline collection.
+    // Coin earnings are tracked solely by pendingBalance (single source of truth).
     private final List<ItemStack> pendingBarterItems;
 
     public PlayerShop(UUID ownerId, String ownerName, String shopName) {
@@ -45,7 +48,6 @@ public class PlayerShop {
         this.linkedNpcId = null;
         this.shopkeeperDialog = "";
         this.listings = new ArrayList<>();
-        this.pendingSales = new ArrayList<>();
         this.pendingBarterItems = new ArrayList<>();
         this.totalRevenue = 0;
         this.pendingBalance = 0;
@@ -61,7 +63,6 @@ public class PlayerShop {
         this.shopName = "Shop";
         this.linkedNpcId = null;
         this.listings = new ArrayList<>();
-        this.pendingSales = new ArrayList<>();
         this.pendingBarterItems = new ArrayList<>();
         this.totalRevenue = 0;
         this.pendingBalance = 0;
@@ -121,6 +122,20 @@ public class PlayerShop {
         pendingBalance += amount;
     }
 
+    /** Deduct up to {@code amount} from the pending balance; returns what was actually taken. */
+    public long payFromPending(long amount) {
+        long take = Math.min(Math.max(0L, amount), pendingBalance);
+        pendingBalance -= take;
+        return take;
+    }
+
+    // --- Rent ---
+
+    public boolean isRentPaused() { return rentPaused; }
+    public void setRentPaused(boolean paused) { this.rentPaused = paused; }
+    public int getUnpaidRentCycles() { return unpaidRentCycles; }
+    public void setUnpaidRentCycles(int n) { this.unpaidRentCycles = Math.max(0, n); }
+
     public int getTotalTransactions() {
         return totalTransactions;
     }
@@ -131,14 +146,6 @@ public class PlayerShop {
 
     public boolean isOpen() {
         return isOpen;
-    }
-
-    public List<PendingSale> getPendingSales() {
-        return Collections.unmodifiableList(pendingSales);
-    }
-
-    public boolean hasPendingSales() {
-        return !pendingSales.isEmpty();
     }
 
     // --- Setters ---
@@ -214,10 +221,6 @@ public class PlayerShop {
         this.totalTransactions++;
     }
 
-    public void addPendingSale(String buyerName, ItemStack itemSold, int quantity, int coinsEarned) {
-        pendingSales.add(new PendingSale(buyerName, itemSold, quantity, coinsEarned, System.currentTimeMillis()));
-    }
-
     public void addPendingBarterItem(ItemStack item) {
         if (!item.isEmpty()) {
             pendingBarterItems.add(item.copy());
@@ -230,17 +233,13 @@ public class PlayerShop {
         return items;
     }
 
-    public boolean hasPendingBarterItems() {
-        return !pendingBarterItems.isEmpty();
+    /** How many barter stacks are waiting to be collected (non-destructive, for GUI display). */
+    public int getPendingBarterCount() {
+        return pendingBarterItems.size();
     }
 
-    public int collectPendingEarnings() {
-        int total = 0;
-        for (PendingSale sale : pendingSales) {
-            total += sale.coinsEarned();
-        }
-        pendingSales.clear();
-        return total;
+    public boolean hasPendingBarterItems() {
+        return !pendingBarterItems.isEmpty();
     }
 
     // --- NBT Serialization ---
@@ -267,12 +266,6 @@ public class PlayerShop {
         }
         nbt.put("Listings", listingsNbt);
 
-        NbtList pendingNbt = new NbtList();
-        for (PendingSale sale : pendingSales) {
-            pendingNbt.add(sale.toNbt());
-        }
-        nbt.put("PendingSales", pendingNbt);
-
         // Save pending barter items
         NbtList barterNbt = new NbtList();
         for (ItemStack item : pendingBarterItems) {
@@ -285,6 +278,8 @@ public class PlayerShop {
         nbt.putInt("TotalTransactions", totalTransactions);
         nbt.putLong("CreatedAt", createdAt);
         nbt.putBoolean("IsOpen", isOpen);
+        nbt.putBoolean("RentPaused", rentPaused);
+        nbt.putInt("UnpaidRentCycles", unpaidRentCycles);
 
         return nbt;
     }
@@ -312,13 +307,6 @@ public class PlayerShop {
             }
         }
 
-        if (nbt.contains("PendingSales", NbtElement.LIST_TYPE)) {
-            NbtList pendingNbt = nbt.getList("PendingSales", NbtElement.COMPOUND_TYPE);
-            for (int i = 0; i < pendingNbt.size(); i++) {
-                shop.pendingSales.add(PendingSale.fromNbt(pendingNbt.getCompound(i)));
-            }
-        }
-
         // Load pending barter items
         if (nbt.contains("PendingBarterItems", NbtElement.LIST_TYPE)) {
             NbtList barterNbt = nbt.getList("PendingBarterItems", NbtElement.COMPOUND_TYPE);
@@ -335,32 +323,9 @@ public class PlayerShop {
         shop.totalTransactions = nbt.getInt("TotalTransactions");
         shop.createdAt = nbt.getLong("CreatedAt");
         shop.isOpen = nbt.getBoolean("IsOpen");
+        shop.rentPaused = nbt.getBoolean("RentPaused");
+        shop.unpaidRentCycles = nbt.getInt("UnpaidRentCycles");
 
         return shop;
-    }
-
-    // --- Pending Sale Record ---
-
-    public record PendingSale(String buyerName, ItemStack itemSold, int quantity, int coinsEarned, long timestamp) {
-
-        public NbtCompound toNbt() {
-            NbtCompound nbt = new NbtCompound();
-            nbt.putString("Buyer", buyerName);
-            nbt.put("Item", itemSold.writeNbt(new NbtCompound()));
-            nbt.putInt("Quantity", quantity);
-            nbt.putInt("Coins", coinsEarned);
-            nbt.putLong("Time", timestamp);
-            return nbt;
-        }
-
-        public static PendingSale fromNbt(NbtCompound nbt) {
-            return new PendingSale(
-                    nbt.getString("Buyer"),
-                    ItemStack.fromNbt(nbt.getCompound("Item")),
-                    nbt.getInt("Quantity"),
-                    nbt.getInt("Coins"),
-                    nbt.getLong("Time")
-            );
-        }
     }
 }

@@ -1,8 +1,25 @@
+# Build output
 .gradle/
 build/
 out/
-git add -A
+bin/
 
+# Run directories (worlds, logs, generated configs)
+run/
+runs/
 
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
 
+# OS
+.DS_Store
+**/.DS_Store
 
+# Local libs (drop-in jars are runtime-only and not committed)
+libs/*.jar
+
+# Borrowed mod API jars for soft-dep compilation (not ours to redistribute)
+api-libs/

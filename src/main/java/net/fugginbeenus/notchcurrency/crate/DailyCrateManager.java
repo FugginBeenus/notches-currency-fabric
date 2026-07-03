@@ -9,10 +9,13 @@ import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.Heightmap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public final class DailyCrateManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
     private static long lastSpawnWeek = -1;
 
     private DailyCrateManager() {}
@@ -57,7 +60,7 @@ public final class DailyCrateManager {
             // Clear existing balloons first to prevent stacking
             int cleared = clearExistingBalloons(world, cfg);
             if (cleared > 0) {
-                System.out.println("[NotchCurrency] Cleared " + cleared + " old balloons before spawning new wave");
+                LOGGER.info("Cleared {} old balloons before spawning new wave", cleared);
             }
 
             spawnBalloons(world, cfg);
@@ -124,7 +127,7 @@ public final class DailyCrateManager {
     }
 
     private static void spawnBalloons(ServerWorld world, BalloonConfigState cfg) {
-        System.out.println("[NotchCurrency] Spawning " + cfg.perDay + " balloons for week " + lastSpawnWeek);
+        LOGGER.info("Spawning {} balloons for week {}", cfg.perDay, lastSpawnWeek);
 
         for (int i = 0; i < cfg.perDay; i++) {
             int dx = world.random.nextInt(cfg.radius * 2) - cfg.radius;
@@ -174,7 +177,7 @@ public final class DailyCrateManager {
         BalloonConfigState cfg = BalloonConfigState.get(world);
         int cleared = clearExistingBalloons(world, cfg);
         if (cleared > 0) {
-            System.out.println("[NotchCurrency] Force spawn: cleared " + cleared + " old balloons");
+            LOGGER.info("Force spawn: cleared {} old balloons", cleared);
         }
         spawnBalloons(world, cfg);
     }

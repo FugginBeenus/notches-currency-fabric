@@ -2,7 +2,9 @@ package net.fugginbeenus.notchcurrency.ui;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+import net.fugginbeenus.notchcurrency.client.NotchHud;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -11,21 +13,17 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
 
-    private static final Identifier ATM_BG =
-            new Identifier(NotchCurrency.MOD_ID, "textures/gui/atm.png");
-
     // === BALANCE PILL (top dark bar with coin + balance text) ===
 
     // Outer pill frame
-    private static final int PILL_X = 36;
-    private static final int PILL_Y = 52;
-    private static final int PILL_W = 104;
+    private static final int PILL_W = 74;
     private static final int PILL_H = 16;
+    private static final int PILL_X = (176 - PILL_W) / 2; // centered on the 176-wide panel
+    private static final int PILL_Y = 52;
 
     // Coin icon inside the pill
     private static final int PILL_ICON_W = 10;
@@ -83,9 +81,9 @@ public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
         // ---- Withdraw amount text field (sits on the black bar) ----
         withdrawField = new TextFieldWidget(
                 this.textRenderer,
-                x + WITHDRAW_FIELD_X,
-                y + WITHDRAW_FIELD_Y,
-                WITHDRAW_FIELD_W,
+                x + WITHDRAW_FIELD_X + 4,   // nudge text right off the rounded edge
+                y + WITHDRAW_FIELD_Y + 4,   // nudge text down to vertical center
+                WITHDRAW_FIELD_W - 7,
                 WITHDRAW_FIELD_H,
                 Text.literal("Withdraw")
         );
@@ -126,54 +124,59 @@ public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
         final int x = (this.width - this.backgroundWidth) / 2;
         final int y = (this.height - this.backgroundHeight) / 2;
 
-        // Draw GUI panel
-        ctx.drawTexture(ATM_BG, x, y, 0, 0, this.backgroundWidth, this.backgroundHeight);
+        // Window panel — code-drawn from the Notch theme (no texture).
+        NotchWidgets.panel(ctx, x, y, this.backgroundWidth, this.backgroundHeight);
+        ctx.drawText(this.textRenderer, Text.literal("ATM"), x + 8, y + 6, NotchTheme.TEXT_DARK, false);
 
-        // ----- Balance text inside the pill -----
-        final String bal = String.valueOf(this.handler.getSyncedBalance());
-        final int textH = this.textRenderer.fontHeight;
-        final int textW = this.textRenderer.getWidth(bal);
-
-        final int minLeft = x + PILL_ICON_X + PILL_ICON_W + TEXT_LEFT_PADDING + TEXT_X_OFFSET;
-        final int maxRight = x + PILL_X + PILL_W - RIGHT_MARGIN;
-
-        int drawX = minLeft;
-        if (drawX + textW > maxRight) {
-            drawX = Math.max(minLeft, maxRight - textW);
+        // Deposit slots (5 across). Item positions mirror the handler; insets sit 1px out.
+        for (int i = 0; i < 5; i++) {
+            NotchWidgets.slot(ctx, x + 45 + i * 18, y + 17);
         }
 
-        final int drawY = y + PILL_Y + (PILL_H - textH) / 2 + TEXT_Y_OFFSET;
-        ctx.drawText(this.textRenderer, bal, drawX, drawY, 0xFFFFFF, true);
+        // Balance pill (coin glyph + balance).
+        NotchWidgets.pill(ctx, x + PILL_X, y + PILL_Y, PILL_W, PILL_H);
+        String label = " " + NotchHud.getBalance();
+        int tw = this.textRenderer.getWidth(label);
+        int tx = x + PILL_X + (PILL_W - tw) / 2;
+        int ty = y + PILL_Y + (PILL_H - this.textRenderer.fontHeight) / 2 + 1;
+        ctx.drawText(this.textRenderer, label, tx, ty, NotchTheme.TEXT_GOLD, true);
 
-        // ----- Debug outline for withdraw button hitbox -----
-        if (DEBUG_WITHDRAW_BUTTON_BOUNDS) {
-            int bx1 = x + WITHDRAW_BUTTON_X;
-            int by1 = y + WITHDRAW_BUTTON_Y;
-            int bx2 = bx1 + WITHDRAW_BUTTON_W;
-            int by2 = by1 + WITHDRAW_BUTTON_H;
+        // Withdraw amount box — the text field renders its text on top.
+        NotchWidgets.inset(ctx, x + WITHDRAW_FIELD_X, y + WITHDRAW_FIELD_Y,
+                WITHDRAW_FIELD_W, WITHDRAW_FIELD_H, NotchTheme.DEEP);
 
-            int color = 0x80FF0000; // semi-transparent red
+        // Withdraw button (green) with a down-arrow.
+        int bx = x + WITHDRAW_BUTTON_X, by = y + WITHDRAW_BUTTON_Y;
+        boolean hov = mouseX >= bx && mouseX < bx + WITHDRAW_BUTTON_W
+                && mouseY >= by && mouseY < by + WITHDRAW_BUTTON_H;
+        greenButton(ctx, bx, by, WITHDRAW_BUTTON_W, WITHDRAW_BUTTON_H, hov);
 
-            ctx.fill(bx1, by1, bx2, by1 + 1, color);       // top
-            ctx.fill(bx1, by2 - 1, bx2, by2, color);       // bottom
-            ctx.fill(bx1, by1, bx1 + 1, by2, color);       // left
-            ctx.fill(bx2 - 1, by1, bx2, by2, color);       // right
+        // Player inventory + hotbar.
+        final int invX = x + 8;
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                NotchWidgets.slot(ctx, invX + col * 18 - 1, y + 113 + row * 18 - 1);
+            }
         }
-
-        // ----- Debug outline for withdraw field hitbox -----
-        if (DEBUG_WITHDRAW_FIELD_BOUNDS) {
-            int fx1 = x + WITHDRAW_FIELD_X;
-            int fy1 = y + WITHDRAW_FIELD_Y;
-            int fx2 = fx1 + WITHDRAW_FIELD_W;
-            int fy2 = fy1 + WITHDRAW_FIELD_H;
-
-            int color = 0x8000FF00; // semi-transparent green
-
-            ctx.fill(fx1, fy1, fx2, fy1 + 1, color);       // top
-            ctx.fill(fx1, fy2 - 1, fx2, fy2, color);       // bottom
-            ctx.fill(fx1, fy1, fx1 + 1, fy2, color);       // left
-            ctx.fill(fx2 - 1, fy1, fx2, fy2, color);       // right
+        for (int col = 0; col < 9; col++) {
+            NotchWidgets.slot(ctx, invX + col * 18 - 1, y + 171 - 1);
         }
+    }
+
+    private void greenButton(DrawContext ctx, int bx, int by, int w, int h, boolean hovered) {
+        int face = hovered ? 0xFF6FB85A : NotchTheme.ACCENT_GREEN;
+        ctx.fill(bx, by, bx + w, by + h, NotchTheme.OUTLINE);
+        ctx.fill(bx + 1, by + 1, bx + w - 1, by + h - 1, face);
+        ctx.fill(bx + 1, by + 1, bx + w - 1, by + 2, 0xFF8FD07A);     // light top
+        ctx.fill(bx + 1, by + 1, bx + 2, by + h - 1, 0xFF8FD07A);     // light left
+        ctx.fill(bx + 1, by + h - 2, bx + w - 1, by + h - 1, 0xFF3C6E2F); // dark bottom
+        ctx.fill(bx + w - 2, by + 1, bx + w - 1, by + h - 1, 0xFF3C6E2F); // dark right
+        // downward arrow (withdraw = coins come to you)
+        int cx = bx + w / 2, cy = by + h / 2 - 2;
+        ctx.fill(cx - 3, cy, cx + 4, cy + 1, NotchTheme.TEXT_LIGHT);
+        ctx.fill(cx - 2, cy + 1, cx + 3, cy + 2, NotchTheme.TEXT_LIGHT);
+        ctx.fill(cx - 1, cy + 2, cx + 2, cy + 3, NotchTheme.TEXT_LIGHT);
+        ctx.fill(cx, cy + 3, cx + 1, cy + 4, NotchTheme.TEXT_LIGHT);
     }
 
     @Override

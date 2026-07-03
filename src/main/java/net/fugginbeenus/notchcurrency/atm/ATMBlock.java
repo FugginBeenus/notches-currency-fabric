@@ -73,7 +73,7 @@ public class ATMBlock extends HorizontalFacingBlock {
 
         // Server: sync balance to HUD immediately
         if (player instanceof ServerPlayerEntity spe) {
-            int bal = net.fugginbeenus.notchcurrency.core.BalanceStore.get(spe);
+            long bal = net.fugginbeenus.notchcurrency.core.BalanceStore.get(spe);
             net.fugginbeenus.notchcurrency.net.NotchPackets.sendBalance(spe, bal);
         }
 

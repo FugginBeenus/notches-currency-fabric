@@ -1,0 +1,779 @@
+package net.fugginbeenus.notchcurrency.client;
+
+import net.fabricmc.loader.api.FabricLoader;
+import net.fugginbeenus.notchcurrency.client.npc.NpcAppearances;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
+import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
+import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.registry.Registries;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
+
+import java.util.UUID;
+
+/**
+ * Owner-only Notch NPC editor. The Appearance tab shows a live preview of the actual NPC (so edits are
+ * reflected instantly) with a model selector (Humanoid default; APP.ly if installed), skin controls
+ * per model (humanoid preset cycling + slim; APP.ly themed variants), and a size control. Code-drawn
+ * with {@link NotchWidgets}; edits go to the server, which re-validates ownership.
+ */
+public class NotchNpcEditorScreen extends Screen {
+
+    private static final int W = 300, H = 230;
+    private static final NpcRole[] SELECTABLE = {
+            NpcRole.NONE, NpcRole.GREETER, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
+            NpcRole.MAILBOX, NpcRole.RAFFLE, NpcRole.BOUNTY, NpcRole.DEALER, NpcRole.ENCHANTER,
+            NpcRole.COSMETICS
+    };
+
+    private final UUID npcId;
+    private final String ownerName;
+    private final boolean canEdit;
+    private final boolean applyInstalled = FabricLoader.getInstance().isModLoaded("apply");
+
+    private NpcRole currentRole;
+    private String currentName;
+    private String currentModel, currentSkinType, currentSkinValue;
+    private boolean currentSlim;
+    private float currentScale;
+    private NotchNpcEntity.Behavior currentBehavior;
+    private int currentRadius;
+    private int dialogueNodes;
+    private int statsBits; // toggle bitmask, see NotchPackets.NPC_SET_STATS
+    private int maxHealth, speedPct, regen; // slider attributes for the stats screen
+    private String followName; // blank = follow the owner
+    private int movesBits; // 1=avoid monsters 2=watch players
+    private int dialogueMode; // 0=window 1=chat
+    private int waypointCount;
+    private int patrolSpeedIdx; // 0 stroll / 1 walk / 2 jog
+    private int poseId; // 0 stand / 1 sit / 2 sneak / 3 sleep
+    private int tab = 0; // 0 Look, 1 Behavior, 2 Role, 3 Talk, 4 Manage
+
+    private int px, py;
+    private TextFieldWidget nameField;
+    private TextFieldWidget playerField;
+    private TextFieldWidget urlField;
+    private TextFieldWidget followField;
+    private NotchNpcEntity preview;
+
+    public NotchNpcEditorScreen(net.fugginbeenus.notchcurrency.client.npc.NpcEditorState state) {
+        super(Text.literal("NPC Editor"));
+        this.npcId = state.npcId();
+        this.currentRole = roleFromOrdinal(state.roleOrdinal());
+        this.currentName = state.name() == null ? "" : state.name();
+        this.ownerName = state.ownerName() == null ? "" : state.ownerName();
+        this.canEdit = state.canEdit();
+        this.currentModel = (state.model() == null || state.model().isEmpty())
+                ? NotchNpcEntity.MODEL_HUMANOID : state.model();
+        this.currentSkinType = (state.skinType() == null || state.skinType().isEmpty())
+                ? NotchNpcEntity.SKIN_PRESET : state.skinType();
+        this.currentSkinValue = state.skinValue() == null ? "" : state.skinValue();
+        this.currentSlim = state.slim();
+        this.currentScale = state.scale() <= 0 ? 1.0f : state.scale();
+        NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
+        this.currentBehavior = (state.behaviorOrdinal() >= 0 && state.behaviorOrdinal() < modes.length)
+                ? modes[state.behaviorOrdinal()] : NotchNpcEntity.Behavior.STATIONARY;
+        this.currentRadius = state.wanderRadius() <= 0 ? 8 : state.wanderRadius();
+        this.dialogueNodes = state.dialogueNodes();
+        this.statsBits = state.statsBits();
+        this.maxHealth = state.maxHealth() <= 0 ? 20 : state.maxHealth();
+        this.speedPct = state.speedPct() <= 0 ? 30 : state.speedPct();
+        this.regen = state.regen();
+        this.followName = state.followName() == null ? "" : state.followName();
+        this.movesBits = state.movesBits();
+        this.dialogueMode = state.dialogueMode();
+        this.waypointCount = state.waypointCount();
+        this.patrolSpeedIdx = state.patrolSpeedIdx();
+        this.poseId = state.poseId();
+    }
+
+    private static NpcRole roleFromOrdinal(int ord) {
+        NpcRole[] all = NpcRole.values();
+        return (ord >= 0 && ord < all.length) ? all[ord] : NpcRole.NONE;
+    }
+
+    @Override
+    protected void init() {
+        px = (this.width - W) / 2;
+        py = (this.height - H) / 2;
+        nameField = new TextFieldWidget(this.textRenderer, px + 152, py + 49, 136, 9, Text.literal("Name"));
+        nameField.setMaxLength(48);
+        nameField.setDrawsBackground(false);
+        nameField.setText(currentName);
+        addDrawableChild(nameField);
+
+        playerField = new TextFieldWidget(this.textRenderer, px + 152, py + 141, 134, 9, Text.literal("Player"));
+        playerField.setMaxLength(16);
+        playerField.setDrawsBackground(false);
+        playerField.setPlaceholder(Text.literal("player name").formatted(Formatting.DARK_GRAY));
+        if (NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) playerField.setText(currentSkinValue);
+        addDrawableChild(playerField);
+
+        urlField = new TextFieldWidget(this.textRenderer, px + 152, py + 159, 134, 9, Text.literal("URL"));
+        urlField.setMaxLength(256);
+        urlField.setDrawsBackground(false);
+        urlField.setPlaceholder(Text.literal("skin URL").formatted(Formatting.DARK_GRAY));
+        if (NotchNpcEntity.SKIN_URL.equals(currentSkinType)) urlField.setText(currentSkinValue);
+        addDrawableChild(urlField);
+
+        followField = new TextFieldWidget(this.textRenderer, px + BEH_X + 52, py + 143, 104, 9, Text.literal("Follow"));
+        followField.setMaxLength(16);
+        followField.setDrawsBackground(false);
+        followField.setPlaceholder(Text.literal("owner").formatted(Formatting.DARK_GRAY));
+        followField.setText(followName);
+        addDrawableChild(followField);
+
+        updateWidgetVisibility();
+    }
+
+    private void updateWidgetVisibility() {
+        nameField.visible = (tab == 0);
+        nameField.setFocusUnlocked(tab == 0);
+        boolean hum = (tab == 0 && isHumanoid());
+        playerField.visible = hum;
+        urlField.visible = hum;
+        followField.visible = (tab == 1 && currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER);
+    }
+
+    @Override
+    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        this.renderBackground(ctx);
+        NotchWidgets.panel(ctx, px, py, W, H);
+        NotchWidgets.title(ctx, this.textRenderer, "NPC Editor", px + W / 2, py + 8);
+        drawTabs(ctx, mouseX, mouseY);
+        switch (tab) {
+            case 0 -> drawAppearance(ctx, mouseX, mouseY);
+            case 1 -> drawBehavior(ctx, mouseX, mouseY);
+            case 2 -> drawRole(ctx, mouseX, mouseY);
+            case 3 -> drawTalk(ctx, mouseX, mouseY);
+            case 4 -> drawPose(ctx, mouseX, mouseY);
+            case 5 -> drawManage(ctx, mouseX, mouseY);
+        }
+        super.render(ctx, mouseX, mouseY, delta);
+    }
+
+    // ---- tabs ----
+
+    private static final int TAB_Y = 22, TAB_H = 16, TAB_W = 44;
+    private int tabX(int i) { return px + 9 + i * 47; }
+
+    private void drawTabs(DrawContext ctx, int mx, int my) {
+        String[] names = {"Look", "Moves", "Role", "Talk", "Pose", "Manage"};
+        for (int i = 0; i < 6; i++) {
+            int tx = tabX(i);
+            boolean hover = over(mx, my, tx, py + TAB_Y, TAB_W, TAB_H);
+            if (i == tab) NotchWidgets.primaryButton(ctx, this.textRenderer, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
+            else NotchWidgets.neutralButton(ctx, this.textRenderer, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
+        }
+        NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
+    }
+
+    // ---- appearance tab ----
+
+    private static final int PREV_X = 8, PREV_Y = 46, PREV_W = 100, PREV_H = 176;
+    private static final int RX = 116;
+    private boolean isApplyModel() { return NotchNpcEntity.MODEL_APPLY.equals(currentModel); }
+
+    private void drawAppearance(DrawContext ctx, int mx, int my) {
+        // Live preview of the actual NPC.
+        NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
+        NotchNpcEntity npc = findPreview();
+        if (npc != null) {
+            float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw;
+            boolean wasInvisible = npc.isInvisible();
+            npc.setYaw(180);
+            npc.bodyYaw = 180;
+            npc.setInvisible(false); // always show the NPC in its own editor preview
+            float lookX = (px + PREV_X + PREV_W / 2f) - mx;
+            float lookY = (py + PREV_Y + 40f) - my;
+            InventoryScreen.drawEntity(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 18, previewSize(),
+                    lookX, lookY, npc);
+            npc.setYaw(oldYaw);
+            npc.bodyYaw = oldBody;
+            npc.setInvisible(wasInvisible);
+        } else {
+            NotchWidgets.centerText(ctx, this.textRenderer, "Preview", px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H / 2, NotchTheme.TEXT_MUTED, false);
+        }
+
+        // Name
+        ctx.drawText(this.textRenderer, "Name:", px + RX, py + 50, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + 150, py + 46, 140, 14, NotchTheme.DEEP);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 64, 140, 14, "Save Name",
+                over(mx, my, px + 150, py + 64, 140, 14));
+
+        // Model: current name + Change button (opens the vanilla/modded model picker)
+        ctx.drawText(this.textRenderer, "Model:", px + RX, py + 86, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, trim(modelDisplayName(currentModel), 15), px + 150, py + 86, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 224, py + 82, 66, 14, "Change...", over(mx, my, px + 224, py + 82, 66, 14));
+
+        // Skin controls per model
+        if (isApplyModel()) {
+            var variants = NpcAppearances.all();
+            for (int i = 0; i < variants.size(); i++) {
+                var v = variants.get(i);
+                int vx = varX(i), vy = varY(i);
+                boolean hover = over(mx, my, vx, vy, VAR_W, VAR_H);
+                if (v.id().equals(currentSkinValue)) NotchWidgets.primaryButton(ctx, this.textRenderer, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
+                else NotchWidgets.neutralButton(ctx, this.textRenderer, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
+            }
+        } else if (isHumanoid()) {
+            boolean preset = NotchNpcEntity.SKIN_PRESET.equals(currentSkinType);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 104, 20, 16, "<", over(mx, my, px + 118, py + 104, 20, 16));
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 268, py + 104, 20, 16, ">", over(mx, my, px + 268, py + 104, 20, 16));
+            NotchWidgets.centerText(ctx, this.textRenderer, "Preset " + presetIndex(), px + 203, py + 108,
+                    preset ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 122, 174, 14,
+                    currentSlim ? "Arms: Slim" : "Arms: Wide", over(mx, my, px + 118, py + 122, 174, 14));
+            // Player-name skin (checkbox enables)
+            drawCheck(ctx, px + 118, py + 139, NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType));
+            NotchWidgets.inset(ctx, px + 150, py + 138, 138, 13, NotchTheme.DEEP);
+            // Custom URL skin (checkbox enables)
+            drawCheck(ctx, px + 118, py + 157, NotchNpcEntity.SKIN_URL.equals(currentSkinType));
+            NotchWidgets.inset(ctx, px + 150, py + 156, 138, 13, NotchTheme.DEEP);
+        } else {
+            NotchWidgets.centerText(ctx, this.textRenderer, "This mob uses its own look.", px + 203, py + 116, NotchTheme.TEXT_MUTED, false);
+        }
+
+        // Size
+        ctx.drawText(this.textRenderer, "Size:", px + RX, py + 200, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 150, py + 196, 20, 16, "-", over(mx, my, px + 150, py + 196, 20, 16));
+        NotchWidgets.centerText(ctx, this.textRenderer, String.format("%.1fx", currentScale), px + 190, py + 200, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 214, py + 196, 20, 16, "+", over(mx, my, px + 214, py + 196, 20, 16));
+    }
+
+    private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
+
+    /** Fit the preview to the current model's size so big disguises don't overflow the panel. */
+    private int previewSize() {
+        float dim = 2.0f;
+        if (currentModel != null && currentModel.startsWith("entity:")) {
+            EntityType<?> t = Registries.ENTITY_TYPE.get(new Identifier(currentModel.substring("entity:".length())));
+            if (t != null) dim = Math.max(t.getDimensions().width, t.getDimensions().height);
+        }
+        return (int) Math.max(8, Math.min(55, 62f / Math.max(0.5f, dim)));
+    }
+
+    private static String modelDisplayName(String model) {
+        if (NotchNpcEntity.MODEL_HUMANOID.equals(model)) return "Humanoid";
+        if (NotchNpcEntity.MODEL_APPLY.equals(model)) return "APP.ly";
+        if (model != null && model.startsWith("entity:")) {
+            EntityType<?> t = Registries.ENTITY_TYPE.get(new Identifier(model.substring("entity:".length())));
+            return t != null ? t.getName().getString() : model.substring("entity:".length());
+        }
+        return model == null ? "Humanoid" : model;
+    }
+
+    private String trim(String s, int max) {
+        return s.length() <= max ? s : s.substring(0, max - 1) + "..";
+    }
+
+    private static final int VAR_W = 84, VAR_H = 16;
+    private int varX(int i) { return (i % 2 == 0) ? px + 118 : px + 206; }
+    private int varY(int i) { return py + 106 + (i / 2) * 18; }
+
+    private int presetIndex() {
+        try { return Math.max(1, Math.min(NpcSkinsPresetCount(), Integer.parseInt(currentSkinValue))); }
+        catch (NumberFormatException e) { return 1; }
+    }
+    private int NpcSkinsPresetCount() { return 12; }
+
+    // ---- behavior tab ----
+
+    private static final int BEH_X = 50, BEH_W = 200, BEH_H = 15;
+    private int behY(int i) { return py + 48 + i * 17; }
+
+    private boolean usesRadius() {
+        return currentBehavior == NotchNpcEntity.Behavior.WANDER || currentBehavior == NotchNpcEntity.Behavior.GUARD;
+    }
+
+    private void drawBehavior(DrawContext ctx, int mx, int my) {
+        String[] labels = {"Stationary", "Wander around home", "Follow owner", "Patrol waypoints", "Guard this area"};
+        NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
+        for (int i = 0; i < modes.length; i++) {
+            boolean hover = over(mx, my, px + BEH_X, behY(i), BEH_W, BEH_H);
+            if (modes[i] == currentBehavior) {
+                NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
+            }
+        }
+
+        int cy = py + 140;
+        if (usesRadius()) {
+            ctx.drawText(this.textRenderer, "Radius:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 50, cy, 20, 16, "-",
+                    over(mx, my, px + BEH_X + 50, cy, 20, 16));
+            NotchWidgets.centerText(ctx, this.textRenderer, currentRadius + " blocks", px + BEH_X + 105, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 140, cy, 20, 16, "+",
+                    over(mx, my, px + BEH_X + 140, cy, 20, 16));
+        } else if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER) {
+            ctx.drawText(this.textRenderer, "Follow:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + BEH_X + 48, cy, 112, 14, NotchTheme.DEEP);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 166, cy, 34, 14, "Set",
+                    over(mx, my, px + BEH_X + 166, cy, 34, 14));
+        } else if (currentBehavior == NotchNpcEntity.Behavior.PATROL) {
+            ctx.drawText(this.textRenderer, "Points: " + waypointCount, px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 56, cy, 84, 16, "Route tool",
+                    over(mx, my, px + BEH_X + 56, cy, 84, 16));
+            NotchWidgets.dangerButton(ctx, this.textRenderer, px + BEH_X + 146, cy, 54, 16, "Clear",
+                    over(mx, my, px + BEH_X + 146, cy, 54, 16));
+
+            int cy2 = cy + 18;
+            String[] speeds = {"Stroll", "Walk", "Jog"};
+            ctx.drawText(this.textRenderer, "Speed:", px + BEH_X, cy2 + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 56, cy2, 84, 16,
+                    speeds[Math.max(0, Math.min(2, patrolSpeedIdx))],
+                    over(mx, my, px + BEH_X + 56, cy2, 84, 16));
+            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 146, cy2, 54, 16, "Done",
+                    over(mx, my, px + BEH_X + 146, cy2, 54, 16));
+        }
+
+        // Extras that ride along with any behavior.
+        boolean avoid = (movesBits & 1) != 0, watch = (movesBits & 2) != 0;
+        boolean hoverAvoid = over(mx, my, px + BEH_X, py + 178, 98, 15);
+        boolean hoverWatch = over(mx, my, px + BEH_X + 102, py + 178, 98, 15);
+        if (avoid) NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X, py + 178, 98, 15, "Avoid monsters", hoverAvoid);
+        else NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X, py + 178, 98, 15, "Avoid monsters", hoverAvoid);
+        if (watch) NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 102, py + 178, 98, 15, "Watch players", hoverWatch);
+        else NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 102, py + 178, 98, 15, "Watch players", hoverWatch);
+
+        String hint = switch (currentBehavior) {
+            case STATIONARY -> "Stays exactly where you placed it.";
+            case WANDER -> "Roams near its home (set where placed).";
+            case FOLLOW_OWNER -> "Follows its owner, or the player named above.";
+            case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
+            case GUARD -> "Attacks hostile mobs near its post (ignores creepers).";
+        };
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 200, NotchTheme.TEXT_MUTED, false);
+    }
+
+    private boolean clickBehavior(int mx, int my) {
+        NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
+        for (int i = 0; i < modes.length; i++) {
+            if (over(mx, my, px + BEH_X, behY(i), BEH_W, BEH_H)) {
+                currentBehavior = modes[i];
+                sendBehavior();
+                updateWidgetVisibility(); // the follow field only shows in FOLLOW mode
+                return true;
+            }
+        }
+        if (over(mx, my, px + BEH_X, py + 178, 98, 15)) {
+            movesBits ^= 1;
+            sendBehavior();
+            return true;
+        }
+        if (over(mx, my, px + BEH_X + 102, py + 178, 98, 15)) {
+            movesBits ^= 2;
+            sendBehavior();
+            return true;
+        }
+        int cy = py + 140;
+        if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER
+                && over(mx, my, px + BEH_X + 166, cy, 34, 14)) {
+            sendBehavior(); // picks up the field text
+            return true;
+        }
+        if (usesRadius()) {
+            if (over(mx, my, px + BEH_X + 50, cy, 20, 16)) {
+                currentRadius = Math.max(4, currentRadius - 4);
+                sendBehavior();
+                return true;
+            }
+            if (over(mx, my, px + BEH_X + 140, cy, 20, 16)) {
+                currentRadius = Math.min(64, currentRadius + 4);
+                sendBehavior();
+                return true;
+            }
+        } else if (currentBehavior == NotchNpcEntity.Behavior.PATROL) {
+            if (over(mx, my, px + BEH_X + 56, cy, 84, 16)) {
+                NotchPacketsClient.sendNpcPatrol(npcId, 0, 0); // hands over the bound route tool
+                this.close(); // straight to walking the route
+                return true;
+            }
+            if (over(mx, my, px + BEH_X + 146, cy, 54, 16)) {
+                waypointCount = 0;
+                NotchPacketsClient.sendNpcPatrol(npcId, 1, 0);
+                return true;
+            }
+            int cy2 = cy + 18;
+            if (over(mx, my, px + BEH_X + 56, cy2, 84, 16)) {
+                patrolSpeedIdx = (patrolSpeedIdx + 1) % 3;
+                NotchPacketsClient.sendNpcPatrol(npcId, 3, patrolSpeedIdx);
+                return true;
+            }
+            if (over(mx, my, px + BEH_X + 146, cy2, 54, 16)) {
+                NotchPacketsClient.sendNpcPatrol(npcId, 2, 0); // finalize: take the route tool back
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void sendBehavior() {
+        if (followField != null) followName = followField.getText().trim();
+        NotchPacketsClient.sendNpcSetBehavior(npcId, currentBehavior.ordinal(), currentRadius, followName, movesBits);
+    }
+
+    // ---- role tab ----
+
+    private static final int ROLE_W = 98, ROLE_H = 16;
+    private int roleX(int i) { return (i % 2 == 0) ? px + 40 : px + 164; }
+    private int roleY(int i) { return py + 52 + (i / 2) * 18; }
+
+    private void drawRole(DrawContext ctx, int mx, int my) {
+        for (int i = 0; i < SELECTABLE.length; i++) {
+            int rx = roleX(i), ry = roleY(i);
+            boolean hover = over(mx, my, rx, ry, ROLE_W, ROLE_H);
+            String label = roleLabel(SELECTABLE[i]);
+            if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
+            else NotchWidgets.neutralButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
+        }
+    }
+
+    // ---- talk (dialogue) tab ----
+
+    private void drawTalk(DrawContext ctx, int mx, int my) {
+        if (dialogueNodes <= 0) {
+            NotchWidgets.centerText(ctx, this.textRenderer, "This NPC has nothing to say yet —",
+                    px + W / 2, py + 60, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.centerText(ctx, this.textRenderer, "talking to it goes straight to its role.",
+                    px + W / 2, py + 72, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 96, 200, 20, "Set Up Dialogue",
+                    over(mx, my, px + 50, py + 96, 200, 20));
+            NotchWidgets.centerText(ctx, this.textRenderer, "Opens the Dialogue Studio with a",
+                    px + W / 2, py + 124, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.textRenderer, "ready-made greeting you can edit.",
+                    px + W / 2, py + 134, NotchTheme.TEXT_MUTED, false);
+        } else {
+            NotchWidgets.centerText(ctx, this.textRenderer,
+                    "Dialogue: " + dialogueNodes + " page" + (dialogueNodes == 1 ? "" : "s"),
+                    px + W / 2, py + 54, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 68, 200, 20, "Edit Dialogue",
+                    over(mx, my, px + 50, py + 68, 200, 20));
+
+            // Style: full conversation window, or a quick chat line + straight to the role.
+            NotchWidgets.divider(ctx, px + 8, py + 96, W - 16);
+            ctx.drawText(this.textRenderer, "Style:", px + 50, py + 106, NotchTheme.TEXT_DARK, false);
+            boolean winHover = over(mx, my, px + 90, py + 102, 76, 14);
+            boolean chatHover = over(mx, my, px + 170, py + 102, 76, 14);
+            if (dialogueMode == 0) {
+                NotchWidgets.primaryButton(ctx, this.textRenderer, px + 90, py + 102, 76, 14, "Window", winHover);
+                NotchWidgets.neutralButton(ctx, this.textRenderer, px + 170, py + 102, 76, 14, "Chat", chatHover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.textRenderer, px + 90, py + 102, 76, 14, "Window", winHover);
+                NotchWidgets.primaryButton(ctx, this.textRenderer, px + 170, py + 102, 76, 14, "Chat", chatHover);
+            }
+            String styleHint = dialogueMode == 0
+                    ? "Window: opens the conversation screen."
+                    : "Chat: says a quick line, then opens its role.";
+            NotchWidgets.centerText(ctx, this.textRenderer, styleHint, px + W / 2, py + 122, NotchTheme.TEXT_MUTED, false);
+
+            NotchWidgets.divider(ctx, px + 8, py + 138, W - 16);
+            NotchWidgets.dangerButton(ctx, this.textRenderer, px + 80, py + 148, 140, 14, "Remove Dialogue",
+                    over(mx, my, px + 80, py + 148, 140, 14));
+        }
+    }
+
+    private boolean clickTalk(int mx, int my) {
+        if (dialogueNodes <= 0) {
+            if (over(mx, my, px + 50, py + 96, 200, 20)) {
+                NotchPacketsClient.sendNpcStudioOpen(npcId);
+                return true;
+            }
+        } else {
+            if (over(mx, my, px + 50, py + 68, 200, 20)) {
+                NotchPacketsClient.sendNpcStudioOpen(npcId);
+                return true;
+            }
+            if (over(mx, my, px + 90, py + 102, 76, 14)) {
+                dialogueMode = 0;
+                NotchPacketsClient.sendNpcDialogueMode(npcId, 0);
+                return true;
+            }
+            if (over(mx, my, px + 170, py + 102, 76, 14)) {
+                dialogueMode = 1;
+                NotchPacketsClient.sendNpcDialogueMode(npcId, 1);
+                return true;
+            }
+            if (over(mx, my, px + 80, py + 148, 140, 14)) {
+                NotchPacketsClient.sendNpcDialogueClear(npcId);
+                dialogueNodes = 0;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ---- pose tab ----
+
+    private static final String[] POSE_NAMES = {"Standing", "Sitting", "Sneaking", "Sleeping", "Chilling", "Prone", "Waving", "Custom"};
+
+    private int poseX(int i) { return (i % 2 == 0) ? px + 30 : px + 155; }
+    private int poseY(int i) { return py + 50 + (i / 2) * 19; }
+
+    private void drawPose(DrawContext ctx, int mx, int my) {
+        for (int i = 0; i < POSE_NAMES.length; i++) {
+            boolean hover = over(mx, my, poseX(i), poseY(i), 115, 16);
+            if (i == poseId) {
+                NotchWidgets.primaryButton(ctx, this.textRenderer, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.textRenderer, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
+            }
+        }
+        String hint = switch (poseId) {
+            case 1 -> "Sits on the ground, hands resting forward.";
+            case 2 -> "The classic sneak stance.";
+            case 3 -> "Lies flat on its back.";
+            case 4 -> "Leans back, feet up. Living the dream.";
+            case 5 -> "Face-down flop (the swim pose).";
+            case 6 -> "Greets everyone with a raised arm.";
+            case 7 -> "Your hand-built pose from the editor.";
+            default -> "Standing normally. Poses hold while it works.";
+        };
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 132, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 148, 200, 18, "Open Pose Editor",
+                over(mx, my, px + 50, py + 148, 200, 18));
+        NotchWidgets.centerText(ctx, this.textRenderer, "Bend each body part with sliders, live.",
+                px + W / 2, py + 172, NotchTheme.TEXT_MUTED, false);
+    }
+
+    private boolean clickPose(int mx, int my) {
+        for (int i = 0; i < POSE_NAMES.length; i++) {
+            if (over(mx, my, poseX(i), poseY(i), 115, 16)) {
+                poseId = i;
+                NotchPacketsClient.sendNpcSetPose(npcId, poseId);
+                return true;
+            }
+        }
+        if (over(mx, my, px + 50, py + 148, 200, 18)) {
+            poseId = 7; // custom — the editor's edits show immediately
+            NotchPacketsClient.sendNpcSetPose(npcId, poseId);
+            MinecraftClient.getInstance().setScreen(new PoseEditorScreen(npcId));
+            return true;
+        }
+        return false;
+    }
+
+    // ---- manage tab ----
+
+    private void drawManage(DrawContext ctx, int mx, int my) {
+        NotchWidgets.centerText(ctx, this.textRenderer, "Owner: " + (ownerName.isEmpty() ? "server" : ownerName),
+                px + W / 2, py + 50, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 64, 160, 16, "Pick Up", over(mx, my, px + 70, py + 64, 160, 16));
+        NotchWidgets.centerText(ctx, this.textRenderer, "Returns the NPC as an item to place elsewhere.",
+                px + W / 2, py + 84, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 70, py + 96, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 96, 160, 16));
+
+        NotchWidgets.divider(ctx, px + 8, py + 120, W - 16);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 126, 160, 16, "Edit Stats & Abilities",
+                over(mx, my, px + 70, py + 126, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 146, 160, 16, "Open Equipment",
+                over(mx, my, px + 70, py + 146, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 166, 160, 16, "Presets",
+                over(mx, my, px + 70, py + 166, 160, 16));
+        NotchWidgets.centerText(ctx, this.textRenderer, "Presets save this whole setup for reuse in any world.",
+                px + W / 2, py + 186, NotchTheme.TEXT_MUTED, false);
+    }
+
+    // ---- input ----
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            int mx = (int) mouseX, my = (int) mouseY;
+            for (int i = 0; i < 6; i++) {
+                if (over(mx, my, tabX(i), py + TAB_Y, TAB_W, TAB_H)) { tab = i; updateWidgetVisibility(); return true; }
+            }
+            if (tab == 0 && clickAppearance(mx, my)) return true;
+            if (tab == 1 && clickBehavior(mx, my)) return true;
+            if (tab == 2) {
+                for (int i = 0; i < SELECTABLE.length; i++) {
+                    if (over(mx, my, roleX(i), roleY(i), ROLE_W, ROLE_H)) {
+                        currentRole = SELECTABLE[i];
+                        NotchPacketsClient.sendNpcSetRole(npcId, currentRole.ordinal());
+                        return true;
+                    }
+                }
+            }
+            if (tab == 3 && clickTalk(mx, my)) return true;
+            if (tab == 4 && clickPose(mx, my)) return true;
+            if (tab == 5) {
+                if (over(mx, my, px + 70, py + 64, 160, 16)) { NotchPacketsClient.sendNpcPickup(npcId); this.close(); return true; }
+                if (over(mx, my, px + 70, py + 96, 160, 16)) { NotchPacketsClient.sendNpcDelete(npcId); this.close(); return true; }
+                if (over(mx, my, px + 70, py + 126, 160, 16)) {
+                    MinecraftClient.getInstance().setScreen(
+                            new NpcStatsScreen(npcId, statsBits, maxHealth, speedPct, regen));
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 146, 160, 16)) {
+                    NotchPacketsClient.sendNpcOpenEquip(npcId);
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 166, 160, 16)) {
+                    // Server replies with the preset list, which opens the preset screen.
+                    NotchPacketsClient.sendNpcPreset(npcId,
+                            net.fugginbeenus.notchcurrency.npc.NpcPresetManager.ACTION_OPEN, "");
+                    return true;
+                }
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean clickAppearance(int mx, int my) {
+        if (over(mx, my, px + 150, py + 64, 140, 14)) {
+            currentName = nameField.getText();
+            NotchPacketsClient.sendNpcSetName(npcId, currentName);
+            return true;
+        }
+        // Model: open the picker
+        if (over(mx, my, px + 224, py + 82, 66, 14)) {
+            MinecraftClient.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
+            return true;
+        }
+        // Skins per model
+        if (isApplyModel()) {
+            var variants = NpcAppearances.all();
+            for (int i = 0; i < variants.size(); i++) {
+                if (over(mx, my, varX(i), varY(i), VAR_W, VAR_H)) {
+                    currentSkinValue = variants.get(i).id();
+                    sendAppearance();
+                    return true;
+                }
+            }
+        } else if (isHumanoid()) {
+            if (over(mx, my, px + 118, py + 104, 20, 16)) { cyclePreset(-1); return true; }
+            if (over(mx, my, px + 268, py + 104, 20, 16)) { cyclePreset(1); return true; }
+            if (over(mx, my, px + 118, py + 122, 174, 14)) { currentSlim = !currentSlim; sendAppearance(); return true; }
+            if (over(mx, my, px + 118, py + 139, 12, 12)) { togglePlayerSkin(); return true; }
+            if (over(mx, my, px + 118, py + 157, 12, 12)) { toggleUrlSkin(); return true; }
+        }
+        // Size
+        if (over(mx, my, px + 150, py + 196, 20, 16)) { currentScale = Math.max(0.5f, round1(currentScale - 0.1f)); sendAppearance(); return true; }
+        if (over(mx, my, px + 214, py + 196, 20, 16)) { currentScale = Math.min(2.0f, round1(currentScale + 0.1f)); sendAppearance(); return true; }
+        return false;
+    }
+
+    /** Called by the model picker when a model is chosen. */
+    public void applyModel(String model) {
+        currentModel = model;
+        if (NotchNpcEntity.MODEL_APPLY.equals(model)) {
+            currentSkinType = NotchNpcEntity.SKIN_VARIANT;
+            if (currentSkinValue == null || currentSkinValue.isEmpty() || currentSkinValue.matches("\\d+")) currentSkinValue = "default";
+        } else if (NotchNpcEntity.MODEL_HUMANOID.equals(model)) {
+            currentSkinType = NotchNpcEntity.SKIN_PRESET;
+            if (currentSkinValue == null || !currentSkinValue.matches("\\d+")) currentSkinValue = "1";
+        } else {
+            // Entity disguise — the mob provides its own appearance.
+            currentSkinType = "entity";
+            currentSkinValue = "";
+        }
+        sendAppearance();
+    }
+
+    private void cyclePreset(int dir) {
+        currentSkinType = NotchNpcEntity.SKIN_PRESET;
+        int n = presetIndex() + dir;
+        if (n < 1) n = 12;
+        if (n > 12) n = 1;
+        currentSkinValue = Integer.toString(n);
+        sendAppearance();
+    }
+
+    private void togglePlayerSkin() {
+        if (NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
+            currentSkinType = NotchNpcEntity.SKIN_PRESET;
+            currentSkinValue = "1";
+        } else {
+            currentSkinType = NotchNpcEntity.SKIN_PLAYER;
+            currentSkinValue = playerField.getText().trim();
+        }
+        sendAppearance();
+    }
+
+    private void toggleUrlSkin() {
+        if (NotchNpcEntity.SKIN_URL.equals(currentSkinType)) {
+            currentSkinType = NotchNpcEntity.SKIN_PRESET;
+            currentSkinValue = "1";
+        } else {
+            currentSkinType = NotchNpcEntity.SKIN_URL;
+            currentSkinValue = urlField.getText().trim();
+        }
+        sendAppearance();
+    }
+
+    private void drawCheck(DrawContext ctx, int x, int y, boolean checked) {
+        NotchWidgets.inset(ctx, x, y, 12, 12, checked ? NotchTheme.ACCENT_GREEN : NotchTheme.DEEP);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Enter re-applies the focused skin field (when its checkbox is on).
+        if (keyCode == 257 || keyCode == 335) {
+            if (playerField != null && playerField.isFocused() && NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
+                currentSkinValue = playerField.getText().trim();
+                sendAppearance();
+                return true;
+            }
+            if (urlField != null && urlField.isFocused() && NotchNpcEntity.SKIN_URL.equals(currentSkinType)) {
+                currentSkinValue = urlField.getText().trim();
+                sendAppearance();
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private static float round1(float v) { return Math.round(v * 10f) / 10f; }
+
+    private void sendAppearance() {
+        NotchPacketsClient.sendNpcSetAppearance(npcId, currentModel, currentSkinType, currentSkinValue, currentSlim, currentScale);
+    }
+
+    private NotchNpcEntity findPreview() {
+        MinecraftClient c = MinecraftClient.getInstance();
+        if (c.world == null) return null;
+        if (preview != null && !preview.isRemoved()) return preview;
+        for (Entity e : c.world.getEntities()) {
+            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) { preview = n; return n; }
+        }
+        return null;
+    }
+
+    private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
+        return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
+    }
+
+    private static String roleLabel(NpcRole role) {
+        return switch (role) {
+            case NONE -> "None";
+            case GREETER -> "Greeter";
+            case SHOP -> "Shop";
+            case ENCHANTER -> "Enchanter";
+            case ADMIN_SHOP -> "Admin Shop";
+            case BANKER -> "Banker";
+            case AUCTIONEER -> "Auctioneer";
+            case MAILBOX -> "Mailbox";
+            case RAFFLE -> "Raffle";
+            case BOUNTY -> "Bounty";
+            case DEALER -> "Dealer";
+            case COSMETICS -> "Cosmetics";
+            case CUSTOM -> "Custom (API)";
+        };
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
+    }
+}

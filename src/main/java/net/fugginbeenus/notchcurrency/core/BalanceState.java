@@ -13,38 +13,60 @@ import java.util.UUID;
 /**
  * World-saved storage for player balances.
  * File name: leveldata/data/notchcurrency_balances.dat
+ *
+ * Balances are stored as {@code long} so a server economy can grow past the
+ * ~2.1 billion limit of {@code int} without silently overflowing.
  */
 public class BalanceState extends PersistentState {
 
     private static final String KEY_ROOT = "balances";
 
     // UUID -> balance
-    private final Map<UUID, Integer> balances = new HashMap<>();
+    private final Map<UUID, Long> balances = new HashMap<>();
 
     public BalanceState() {}
 
     /* ---------- API ---------- */
 
-    public int get(UUID id) {
-        return balances.getOrDefault(id, 0);
+    public long get(UUID id) {
+        return balances.getOrDefault(id, 0L);
     }
 
-    public int set(UUID id, int value) {
-        int v = Math.max(0, value);
+    public long set(UUID id, long value) {
+        long v = Math.max(0L, value);
         balances.put(id, v);
         this.markDirty();
         return v;
     }
 
-    public int add(UUID id, int delta) {
-        int next = Math.max(0, get(id) + delta);
+    public long add(UUID id, long delta) {
+        long next = Math.max(0L, get(id) + delta);
         balances.put(id, next);
         this.markDirty();
         return next;
     }
 
-    public int subtract(UUID id, int delta) {
-        return add(id, -Math.max(0, delta));
+    public long subtract(UUID id, long delta) {
+        return add(id, -Math.max(0L, delta));
+    }
+
+    /** Immutable snapshot of every known balance (for /baltop and /eco stats). */
+    public java.util.Map<UUID, Long> snapshot() {
+        return java.util.Map.copyOf(balances);
+    }
+
+    /** Sum of all balances = total money supply in circulation. */
+    public long totalSupply() {
+        long sum = 0L;
+        for (long v : balances.values()) sum += v;
+        return sum;
+    }
+
+    /** Number of accounts with a non-zero balance. */
+    public int accountCount() {
+        int n = 0;
+        for (long v : balances.values()) if (v > 0) n++;
+        return n;
     }
 
     /* ---------- Persistence ---------- */
@@ -52,8 +74,8 @@ public class BalanceState extends PersistentState {
     @Override
     public NbtCompound writeNbt(NbtCompound nbt) {
         NbtCompound map = new NbtCompound();
-        for (Map.Entry<UUID, Integer> e : balances.entrySet()) {
-            map.putInt(e.getKey().toString(), e.getValue());
+        for (Map.Entry<UUID, Long> e : balances.entrySet()) {
+            map.putLong(e.getKey().toString(), e.getValue());
         }
         nbt.put(KEY_ROOT, map);
         return nbt;
@@ -66,7 +88,8 @@ public class BalanceState extends PersistentState {
             for (String key : map.getKeys()) {
                 try {
                     UUID id = UUID.fromString(key);
-                    state.balances.put(id, map.getInt(key));
+                    // getLong tolerates older int-typed entries, so this still reads legacy data.
+                    state.balances.put(id, map.getLong(key));
                 } catch (IllegalArgumentException ignored) {
                     // skip malformed keys
                 }

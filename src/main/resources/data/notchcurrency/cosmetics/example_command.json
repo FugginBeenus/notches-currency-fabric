@@ -1,0 +1,7 @@
+{
+  "name": "Example Unlock (edit me)",
+  "icon": "minecraft:nether_star",
+  "price": 1000,
+  "one_time": true,
+  "reward": { "type": "command", "command": "say %player% unlocked a cosmetic (replace this command)" }
+}

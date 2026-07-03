@@ -26,7 +26,8 @@ public final class CoinEconomy {
     public static void depositToBalance(ServerPlayerEntity player, int amount) {
         if (player == null || amount <= 0) return;
 
-        CurrencyApi.deposit(player, amount);
+        CurrencyApi.deposit(player, amount,
+                net.fugginbeenus.notchcurrency.economy.TransactionReason.ATM_DEPOSIT, "ATM deposit");
         LOGGER.info("[CoinEconomy] depositToBalance {} -> {}",
                 player.getName().getString(), amount);
     }
@@ -91,12 +92,15 @@ public final class CoinEconomy {
                 amount
         );
 
-        // Try to insert into inventory, drop remainder
-        if (!player.getInventory().insertStack(coins)) {
-            // Inventory full, drop remaining coins at player's feet
-            if (!coins.isEmpty()) {
-                player.dropItem(coins, false);
-            }
+        // Insert what fits, then ALWAYS drop the remainder. (insertStack returns true when
+        // it places *some* — so a partial fit used to silently discard the overflow.)
+        player.getInventory().insertStack(coins);
+        while (!coins.isEmpty()) {
+            int n = Math.min(coins.getCount(), coins.getMaxCount());
+            net.minecraft.item.ItemStack drop = coins.copy();
+            drop.setCount(n);
+            player.dropItem(drop, false);
+            coins.decrement(n);
         }
 
         if (!silent) {

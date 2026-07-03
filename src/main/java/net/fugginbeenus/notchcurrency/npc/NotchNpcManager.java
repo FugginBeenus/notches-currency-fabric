@@ -1,0 +1,417 @@
+package net.fugginbeenus.notchcurrency.npc;
+
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
+import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
+import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+import net.fugginbeenus.notchcurrency.net.NotchPackets;
+import net.fugginbeenus.notchcurrency.registry.ModItems;
+import net.fugginbeenus.notchcurrency.shop.PlayerShop;
+import net.fugginbeenus.notchcurrency.shop.PlayerShopManager;
+import net.fugginbeenus.notchcurrency.shop.ShopState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+
+import java.util.UUID;
+
+/**
+ * Server-side operations for the Notch NPC: opening the owner editor, dispatching the NPC's role on
+ * interact, and the edit actions (set role/name, pick up, delete). All mutating actions are gated on
+ * {@link NotchNpcEntity#canEdit} (owner or op).
+ */
+public final class NotchNpcManager {
+
+    /** Item NBT tag holding a packed NPC config (owner/role/name). */
+    public static final String ITEM_TAG = "NotchNpc";
+
+    private NotchNpcManager() {}
+
+    // ---- interaction ----
+
+    /** Interacting with the NPC (non-editing) runs its role. */
+    public static void dispatchRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
+    }
+
+    /** Open the editor for an owner/op (sends the current state to the client). */
+    public static void openEditor(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!npc.canEdit(sp)) {
+            sp.sendMessage(Text.literal("Only the owner can edit this NPC.").formatted(Formatting.RED), false);
+            return;
+        }
+        String name = (npc.hasCustomName() && npc.getCustomName() != null) ? npc.getCustomName().getString() : "";
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npc.getUuid());
+        buf.writeVarInt(npc.getRole().ordinal());
+        buf.writeString(name);
+        buf.writeString(npc.getOwnerName());
+        buf.writeBoolean(true);
+        buf.writeString(npc.getModelId());
+        buf.writeString(npc.getSkinType());
+        buf.writeString(npc.getSkinValue());
+        buf.writeBoolean(npc.isSlim());
+        buf.writeFloat(npc.getScale());
+        buf.writeVarInt(npc.getBehavior().ordinal());
+        buf.writeVarInt(npc.getWanderRadius());
+        buf.writeVarInt(npc.getDialogue().size());
+        buf.writeVarInt(statsBits(npc));
+        buf.writeVarInt(npc.getDialogueMode().ordinal());
+        buf.writeVarInt(npc.getWaypoints().size());
+        buf.writeVarInt(patrolSpeedIndex(npc));
+        buf.writeVarInt(npc.getNpcPose());
+        buf.writeVarInt((int) Math.round(npc.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH)));
+        buf.writeVarInt((int) Math.round(npc.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
+        buf.writeVarInt(npc.getRegen());
+        buf.writeString(npc.getFollowPlayerName());
+        buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0));
+        ServerPlayNetworking.send(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
+    }
+
+    public static void setDialogueMode(ServerPlayerEntity sp, NotchNpcEntity npc, int modeOrdinal) {
+        if (!guard(sp, npc)) return;
+        NotchNpcEntity.DialogueMode[] modes = NotchNpcEntity.DialogueMode.values();
+        npc.setDialogueMode((modeOrdinal >= 0 && modeOrdinal < modes.length)
+                ? modes[modeOrdinal] : NotchNpcEntity.DialogueMode.WINDOW);
+    }
+
+    /** Pack the stat toggles into a bitmask (1=protected 2=silent 4=glowing 8=nameplate 16=no gravity
+     *  32=opens doors 64=leashable 128=invisible; bits 8-9 = visibility rule 0/1/2 always/day/night). */
+    public static int statsBits(NotchNpcEntity npc) {
+        int bits = 0;
+        if (npc.isProtectedNpc()) bits |= 1;
+        if (npc.isSilent()) bits |= 2;
+        if (npc.isGlowing()) bits |= 4;
+        if (npc.isCustomNameVisible()) bits |= 8;
+        if (npc.hasNoGravity()) bits |= 16;
+        if (npc.opensDoors()) bits |= 32;
+        if (npc.isLeashable()) bits |= 64;
+        if (npc.isManualInvisible()) bits |= 128;
+        bits |= (npc.getVisibility() & 3) << 8;
+        return bits;
+    }
+
+    public static void setStats(ServerPlayerEntity sp, NotchNpcEntity npc, int bits) {
+        if (!guard(sp, npc)) return;
+        npc.setProtectedNpc((bits & 1) != 0);
+        npc.setSilent((bits & 2) != 0);
+        npc.setGlowing((bits & 4) != 0);
+        npc.setCustomNameVisible((bits & 8) != 0);
+        npc.setNoGravity((bits & 16) != 0);
+        npc.setOpensDoors((bits & 32) != 0);
+        npc.setLeashable((bits & 64) != 0);
+        npc.setManualInvisible((bits & 128) != 0);
+        npc.setVisibility((bits >> 8) & 3);
+        // Apply the effective invisibility now rather than waiting for the next tick window.
+        npc.setInvisible(npc.isManualInvisible() || npc.isRuleHidden());
+    }
+
+    /** Slider attributes from the stats screen: max health, walk speed, regen. */
+    public static void setAttrs(ServerPlayerEntity sp, NotchNpcEntity npc, int maxHealth, int speedPct, int regen) {
+        if (!guard(sp, npc)) return;
+        npc.setBaseStats(maxHealth, speedPct);
+        npc.setRegen(regen);
+    }
+
+    // ---- equipment ----
+
+    /** Open the NPC equipment screen (armor + hands backed live by the entity). */
+    public static void openEquipScreen(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        sp.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
+                (syncId, inv, p) -> new NpcEquipScreenHandler(syncId, inv, new NpcEquipmentInventory(npc), npc),
+                Text.literal("NPC Equipment")));
+    }
+
+    public static void setAppearance(ServerPlayerEntity sp, NotchNpcEntity npc,
+                                     String model, String skinType, String skinValue, boolean slim, float scale) {
+        if (!guard(sp, npc)) return;
+        npc.setAppearance(model, skinType, skinValue, slim, scale);
+    }
+
+    public static void setPose(ServerPlayerEntity sp, NotchNpcEntity npc, int pose) {
+        if (!guard(sp, npc)) return;
+        npc.setNpcPose(pose);
+    }
+
+    /** Pose-editor slider edit: set one part's rotation (or reset all with part = -1) and make sure
+     *  the custom pose is what's showing. */
+    public static void setPosePart(ServerPlayerEntity sp, NotchNpcEntity npc, int part, int x, int y, int z) {
+        if (!guard(sp, npc)) return;
+        npc.setCustomPosePart(part, x, y, z);
+        if (npc.getNpcPose() != NotchNpcEntity.POSE_CUSTOM) {
+            npc.setNpcPose(NotchNpcEntity.POSE_CUSTOM);
+        }
+    }
+
+    public static void setBehavior(ServerPlayerEntity sp, NotchNpcEntity npc, int modeOrdinal, int radius,
+                                   String followName, int movesBits) {
+        if (!guard(sp, npc)) return;
+        NotchNpcEntity.Behavior[] all = NotchNpcEntity.Behavior.values();
+        NotchNpcEntity.Behavior mode = (modeOrdinal >= 0 && modeOrdinal < all.length)
+                ? all[modeOrdinal] : NotchNpcEntity.Behavior.STATIONARY;
+        npc.setWanderRadius(radius);
+        npc.setFollowPlayerName(followName);
+        npc.setAvoidMonsters((movesBits & 1) != 0);
+        npc.setWatchPlayers((movesBits & 2) != 0);
+        npc.setBehavior(mode);
+        String desc = switch (mode) {
+            case STATIONARY -> "Stationary";
+            case WANDER -> "Wander (radius " + npc.getWanderRadius() + ")";
+            case FOLLOW_OWNER -> npc.getFollowPlayerName().isEmpty()
+                    ? "Follow owner" : "Follow " + npc.getFollowPlayerName();
+            case PATROL -> "Patrol (" + npc.getWaypoints().size() + " waypoint"
+                    + (npc.getWaypoints().size() == 1 ? "" : "s") + ")";
+            case GUARD -> "Guard (radius " + npc.getWanderRadius() + ")";
+        };
+        sp.sendMessage(Text.literal("Behavior set: " + desc + ".").formatted(Formatting.GREEN), false);
+
+        // Follow with an unresolvable target does nothing — say why. (Common in dev, where each
+        // launch gets a fresh random username/UUID.)
+        if (mode == NotchNpcEntity.Behavior.FOLLOW_OWNER && npc.resolveFollowTarget() == null) {
+            String who = npc.getFollowPlayerName().isEmpty()
+                    ? "its owner (" + (npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName()) + ")"
+                    : npc.getFollowPlayerName();
+            sp.sendMessage(Text.literal("Note: " + who + " isn't online, so it has no one to follow.")
+                    .formatted(Formatting.YELLOW), false);
+        }
+        if (mode == NotchNpcEntity.Behavior.PATROL && npc.getWaypoints().isEmpty()) {
+            sp.sendMessage(Text.literal("Add waypoints (stand somewhere and click 'Add waypoint here') so it has a route.")
+                    .formatted(Formatting.YELLOW), false);
+        }
+    }
+
+    /** Patrol speed presets (index shared with the editor's Speed cycle). */
+    public static final float[] PATROL_SPEEDS = {0.6f, 0.9f, 1.2f};
+    public static final String[] PATROL_SPEED_NAMES = {"Stroll", "Walk", "Jog"};
+
+    public static int patrolSpeedIndex(NotchNpcEntity npc) {
+        int best = 0;
+        for (int i = 1; i < PATROL_SPEEDS.length; i++) {
+            if (Math.abs(npc.getPatrolSpeed() - PATROL_SPEEDS[i]) < Math.abs(npc.getPatrolSpeed() - PATROL_SPEEDS[best])) {
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    /** Patrol edits: 0 = hand out a bound route tool, 1 = clear the route,
+     *  2 = finalize (take the route tools back), 3 = set speed ({@code value} = preset index). */
+    public static void patrolAction(ServerPlayerEntity sp, NotchNpcEntity npc, int action, int value) {
+        if (!guard(sp, npc)) return;
+        switch (action) {
+            case 0 -> {
+                ItemStack tool = new ItemStack(ModItems.ROUTE_PLANNER);
+                String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
+                        ? npc.getCustomName().getString() : "NPC";
+                tool.getOrCreateNbt().putUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUuid());
+                tool.getOrCreateNbt().putString(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY, npcName);
+                if (!sp.getInventory().insertStack(tool)) {
+                    sp.dropItem(tool, false);
+                }
+                sp.sendMessage(Text.literal("Route tool added — walk the route and right-click the ground to drop waypoints.")
+                        .formatted(Formatting.GREEN), false);
+            }
+            case 1 -> {
+                npc.clearWaypoints();
+                sp.sendMessage(Text.literal("Waypoints cleared.").formatted(Formatting.GREEN), false);
+            }
+            case 2 -> {
+                // Finalize: pull this NPC's route tools back out of the player's inventory.
+                int removed = 0;
+                for (int i = 0; i < sp.getInventory().size(); i++) {
+                    ItemStack st = sp.getInventory().getStack(i);
+                    if (st.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem
+                            && st.getNbt() != null
+                            && st.getNbt().containsUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY)
+                            && npc.getUuid().equals(st.getNbt().getUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY))) {
+                        sp.getInventory().setStack(i, ItemStack.EMPTY);
+                        removed++;
+                    }
+                }
+                sp.sendMessage(Text.literal("Route finalized (" + npc.getWaypoints().size() + " waypoints)."
+                        + (removed > 0 ? " Route tool removed." : "")).formatted(Formatting.GREEN), false);
+            }
+            case 3 -> {
+                int idx = Math.max(0, Math.min(PATROL_SPEEDS.length - 1, value));
+                npc.setPatrolSpeed(PATROL_SPEEDS[idx]);
+                sp.sendMessage(Text.literal("Patrol speed: " + PATROL_SPEED_NAMES[idx] + ".").formatted(Formatting.GREEN), false);
+            }
+            default -> { }
+        }
+    }
+
+    /** Route-tool click: add a waypoint at the clicked spot. */
+    public static void addWaypointAt(ServerPlayerEntity sp, NotchNpcEntity npc, net.minecraft.util.math.BlockPos pos) {
+        if (!guard(sp, npc)) return;
+        if (npc.addWaypoint(pos)) {
+            sp.sendMessage(Text.literal("Waypoint " + npc.getWaypoints().size() + " added at "
+                    + pos.toShortString() + ".").formatted(Formatting.GREEN), false);
+        } else {
+            sp.sendMessage(Text.literal("Route is full (16 waypoints).").formatted(Formatting.RED), false);
+        }
+    }
+
+    /** Route-tool sneak-click: undo the last waypoint. */
+    public static void removeLastWaypoint(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        if (npc.removeLastWaypoint()) {
+            sp.sendMessage(Text.literal("Removed last waypoint (" + npc.getWaypoints().size() + " left).")
+                    .formatted(Formatting.YELLOW), false);
+        } else {
+            sp.sendMessage(Text.literal("The route is already empty.").formatted(Formatting.YELLOW), false);
+        }
+    }
+
+    // ---- dialogue setup ----
+
+    /** Build the friendly starter conversation used to seed new dialogues. */
+    private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree buildStarterTree(NotchNpcEntity npc) {
+        var tree = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
+
+        var about = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueNode("about");
+        about.setText("I'm %npc%. I work here! Come see me any time.");
+        about.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Back", "start"));
+        about.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Goodbye", ""));
+
+        var start = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueNode("start");
+        start.setText("Hello, %player%! What can I do for you?");
+        start.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Who are you?", "about"));
+        if (npc.getRole() != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
+                && npc.getRole() != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER) {
+            var business = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Let's do business", "");
+            business.withAction(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction(
+                    net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_ROLE, "", 0));
+            start.withChoice(business);
+        }
+        start.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Goodbye", ""));
+
+        tree.put(start);
+        tree.put(about);
+        tree.setStartId("start");
+        return tree;
+    }
+
+    /** Fill the NPC with the starter conversation the owner can build on. */
+    public static void createDialogueTemplate(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        npc.setDialogue(buildStarterTree(npc));
+        sp.sendMessage(Text.literal("Starter dialogue created — talk to the NPC to try it.").formatted(Formatting.GREEN), false);
+    }
+
+    public static void clearDialogue(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        npc.getDialogue().clear();
+        sp.sendMessage(Text.literal("Dialogue cleared.").formatted(Formatting.GREEN), false);
+    }
+
+    /** Send the full dialogue tree to the owner's client for editing in the studio. An NPC with no
+     *  dialogue gets the starter template pre-loaded (nothing is saved until the studio saves). */
+    public static void openStudio(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        var tree = npc.getDialogue().isEmpty() ? buildStarterTree(npc) : npc.getDialogue();
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npc.getUuid());
+        buf.writeNbt(tree.toNbt());
+        ServerPlayNetworking.send(sp, NotchPackets.NPC_STUDIO_DATA, buf);
+    }
+
+    /** Replace the NPC's dialogue with a studio-edited tree (owner/op re-validated). */
+    public static void saveDialogue(ServerPlayerEntity sp, NotchNpcEntity npc,
+                                    net.minecraft.nbt.NbtCompound treeNbt) {
+        if (!guard(sp, npc)) return;
+        if (treeNbt == null) return;
+        var tree = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(treeNbt);
+        if (tree.size() > 64) {
+            sp.sendMessage(Text.literal("That dialogue is too large (max 64 pages).").formatted(Formatting.RED), false);
+            return;
+        }
+        npc.setDialogue(tree);
+        sp.sendMessage(Text.literal("Dialogue saved (" + tree.size() + " page" + (tree.size() == 1 ? "" : "s") + ").")
+                .formatted(Formatting.GREEN), false);
+    }
+
+    // ---- edit actions (all owner/op-gated) ----
+
+    public static void setRole(ServerPlayerEntity sp, NotchNpcEntity npc, NpcRole role) {
+        if (!guard(sp, npc)) return;
+        NpcRole previous = npc.getRole();
+        npc.setRole(role);
+        if (role == NpcRole.SHOP) {
+            ensureShopForNpc(sp.getServerWorld(), npc, sp);
+        } else if (previous == NpcRole.SHOP) {
+            // Leaving the SHOP role: close & return the linked shop so nothing is orphaned.
+            removeLinkedShop(sp, npc.getUuid());
+        }
+        sp.sendMessage(Text.literal("Role set to " + role.name() + ".").formatted(Formatting.GREEN), false);
+    }
+
+    public static void setName(ServerPlayerEntity sp, NotchNpcEntity npc, String name) {
+        if (!guard(sp, npc)) return;
+        String trimmed = name == null ? "" : name.trim();
+        if (trimmed.isEmpty()) {
+            npc.setCustomName(null);
+            npc.setCustomNameVisible(false);
+        } else {
+            npc.setCustomName(Text.literal(trimmed));
+            npc.setCustomNameVisible(true);
+        }
+        sp.sendMessage(Text.literal("NPC name updated.").formatted(Formatting.GREEN), false);
+    }
+
+    /** Pack the NPC back into an item (config preserved) and hand it to the player. */
+    public static void pickUp(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        // Return & close any linked shop so it isn't orphaned when the entity is removed.
+        removeLinkedShop(sp, npc.getUuid());
+
+        ItemStack stack = new ItemStack(ModItems.NOTCH_NPC_ITEM);
+        stack.getOrCreateNbt().put(ITEM_TAG, npc.writeToItem());
+        npc.discard();
+        if (!sp.getInventory().insertStack(stack)) {
+            sp.dropItem(stack, false);
+        }
+        sp.sendMessage(Text.literal("Picked up the NPC — place the item to set it down again.").formatted(Formatting.GREEN), false);
+    }
+
+    public static void delete(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        removeLinkedShop(sp, npc.getUuid());
+        npc.discard();
+        sp.sendMessage(Text.literal("NPC deleted.").formatted(Formatting.GREEN), false);
+    }
+
+    // ---- shop linkage (SHOP role) ----
+
+    /** Ensure a {@link PlayerShop} exists and is linked to this NPC's UUID (creates one if missing). */
+    public static void ensureShopForNpc(ServerWorld world, NotchNpcEntity npc, ServerPlayerEntity fallbackOwner) {
+        ShopState state = ShopState.get(world);
+        if (state.getShopByNpc(npc.getUuid()) != null) return;
+        UUID ownerId = npc.getOwner() != null ? npc.getOwner() : fallbackOwner.getUuid();
+        String ownerName = npc.getOwnerName().isEmpty() ? fallbackOwner.getName().getString() : npc.getOwnerName();
+        PlayerShop shop = new PlayerShop(ownerId, ownerName, ownerName + "'s Shop");
+        shop.setLinkedNpcId(npc.getUuid());
+        state.addShop(shop);
+        state.markDirtyAndSave();
+    }
+
+    static void removeLinkedShop(ServerPlayerEntity sp, UUID npcUuid) {
+        ShopState state = ShopState.get(sp.getServerWorld());
+        PlayerShop shop = state.getShopByNpc(npcUuid);
+        if (shop == null) return;
+        PlayerShopManager.returnAllShopContents(sp.getServer(), shop, sp);
+        state.removeShop(shop.getShopId());
+        state.markDirtyAndSave();
+    }
+
+    static boolean guard(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (npc.canEdit(sp)) return true;
+        sp.sendMessage(Text.literal("Only the owner can edit this NPC.").formatted(Formatting.RED), false);
+        return false;
+    }
+}

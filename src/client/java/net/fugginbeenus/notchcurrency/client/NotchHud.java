@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
  */
 public final class NotchHud implements HudRenderCallback {
 
-    private static int BALANCE = 0;
+    private static long BALANCE = 0;
 
     // Nudges
     private static final int X_NUDGE = 0;     // +right / -left
@@ -32,8 +32,13 @@ public final class NotchHud implements HudRenderCallback {
     private static final Identifier COIN_HUD_TEX =
             new Identifier(NotchCurrency.MOD_ID, "textures/item/coin.png");
 
-    public static void setBalance(int value) {
+    public static void setBalance(long value) {
         BALANCE = value;
+    }
+
+    /** Latest balance the client has been told about; also used by the ATM screen. */
+    public static long getBalance() {
+        return BALANCE;
     }
 
     @Override
@@ -99,13 +104,10 @@ public final class NotchHud implements HudRenderCallback {
             return true;
         }
 
-        // Riding a mount with a lot of HP (horse hearts row)
-        if (player.hasVehicle() && player.getVehicle() instanceof LivingEntity mount) {
-            float hp = mount.getMaxHealth();
-            // Each row is 20 HP (10 hearts); hide if > 1 row
-            if (hp > 20.0f) {
-                return true;
-            }
+        // Hide when riding ANY vehicle (horses, boats, minecarts, modded aircraft, etc.)
+        // This prevents overlap with mount health bars, vehicle fuel/speed bars, etc.
+        if (player.hasVehicle()) {
+            return true;
         }
 
         return false;

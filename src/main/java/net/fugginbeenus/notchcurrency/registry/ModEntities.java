@@ -3,7 +3,7 @@ package net.fugginbeenus.notchcurrency.registry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.crate.BalloonEntity;
-import net.fugginbeenus.notchcurrency.entity.ShopkeeperEntity;
+import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.EntityType;
@@ -13,7 +13,7 @@ import net.minecraft.util.Identifier;
 
 public final class ModEntities {
     public static EntityType<BalloonEntity> BALLOON;
-    public static EntityType<ShopkeeperEntity> SHOPKEEPER;
+    public static EntityType<NotchNpcEntity> NOTCH_NPC;
 
     public static void register() {
         BALLOON = Registry.register(
@@ -27,11 +27,11 @@ public final class ModEntities {
                         .build()
         );
 
-        SHOPKEEPER = Registry.register(
+        NOTCH_NPC = Registry.register(
                 Registries.ENTITY_TYPE,
-                new Identifier(NotchCurrency.MOD_ID, "shopkeeper"),
-                FabricEntityTypeBuilder.<ShopkeeperEntity>create(SpawnGroup.MISC, ShopkeeperEntity::new)
-                        .dimensions(EntityDimensions.fixed(0.6f, 1.8f)) // Player-sized
+                new Identifier(NotchCurrency.MOD_ID, "notch_npc"),
+                FabricEntityTypeBuilder.<NotchNpcEntity>create(SpawnGroup.MISC, NotchNpcEntity::new)
+                        .dimensions(EntityDimensions.fixed(0.6f, 1.95f)) // player-ish, humanoid geo
                         .trackRangeBlocks(64)
                         .trackedUpdateRate(3)
                         .build()

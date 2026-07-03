@@ -1,0 +1,5 @@
+{
+  "comment": "PLACEHOLDER — reuses the merchant license texture until real NPC item art.",
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "notchcurrency:item/merchant_license" }
+}

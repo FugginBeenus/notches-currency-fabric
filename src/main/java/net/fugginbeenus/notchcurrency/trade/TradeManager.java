@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
+import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
@@ -191,8 +192,8 @@ public final class TradeManager {
             if (!(aReady && bReady)) return;
             if (aHandler == null || bHandler == null) return;
 
-            int aBal = BalanceStore.get(a);
-            int bBal = BalanceStore.get(b);
+            long aBal = BalanceStore.get(a);
+            long bBal = BalanceStore.get(b);
             if (aMoney > aBal || bMoney > bBal) {
                 cancel("Insufficient funds");
                 return;
@@ -205,10 +206,10 @@ public final class TradeManager {
             for (ItemStack s : bItems) if (!s.isEmpty()) a.getInventory().offerOrDrop(s.copy());
 
             // Money transfers
-            BalanceStore.subtract(a, aMoney);
-            BalanceStore.add(b, aMoney);
-            BalanceStore.subtract(b, bMoney);
-            BalanceStore.add(a, bMoney);
+            BalanceStore.subtract(a, aMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
+            BalanceStore.add(b, aMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());
+            BalanceStore.subtract(b, bMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());
+            BalanceStore.add(a, bMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
 
             // Push fresh balances to HUD immediately
             NotchPackets.sendBalance(a, BalanceStore.get(a));

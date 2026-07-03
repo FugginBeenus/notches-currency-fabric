@@ -3,6 +3,8 @@ package net.fugginbeenus.notchcurrency.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -11,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class NotchConfigIO {
+    private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance()
             .getConfigDir().resolve("notchcurrency.json");
@@ -38,7 +41,7 @@ public final class NotchConfigIO {
                 return cfg;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to load config; using defaults", e);
             NotchConfig fallback = new NotchConfig();
             CURRENT = fallback;
             return fallback;
@@ -53,7 +56,7 @@ public final class NotchConfigIO {
             }
             CURRENT = cfg;
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to save config", e);
         }
     }
 }

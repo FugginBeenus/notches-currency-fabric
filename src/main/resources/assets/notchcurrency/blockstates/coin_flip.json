@@ -1,0 +1,9 @@
+{
+  "comment": "PLACEHOLDER — all states share one model until real art. flipping/face drive future animation.",
+  "variants": {
+    "face=heads,flipping=false": { "model": "notchcurrency:block/coin_flip" },
+    "face=heads,flipping=true":  { "model": "notchcurrency:block/coin_flip" },
+    "face=tails,flipping=false": { "model": "notchcurrency:block/coin_flip" },
+    "face=tails,flipping=true":  { "model": "notchcurrency:block/coin_flip" }
+  }
+}

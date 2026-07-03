@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "notchcurrency:block/ledger_board" }
+  }
+}

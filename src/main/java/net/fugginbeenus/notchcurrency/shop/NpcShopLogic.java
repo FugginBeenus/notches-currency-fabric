@@ -87,38 +87,25 @@ public final class NpcShopLogic {
             return;
         }
 
+        // Listings sync live through the handler's data-carrier slots; the buf only carries identity.
         player.openHandledScreen(new ExtendedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal(shop.getShopName() + " - " + shop.getOwnerName());
+                return Text.literal(shop.getShopName());
             }
 
             @Nullable
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
-                return new PlayerShopScreenHandler(syncId, playerInventory,
-                        PlayerShopScreenHandler.Mode.BROWSE, shopId, shop);
+                return new ShopBrowseScreenHandler(syncId, playerInventory, shopId,
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop);
             }
 
             @Override
             public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeEnumConstant(PlayerShopScreenHandler.Mode.BROWSE);
                 buf.writeUuid(shopId);
                 buf.writeString(shop.getShopName());
-                // Write listings
-                List<ShopListing> listings = shop.getListings();
-                buf.writeVarInt(listings.size());
-                for (ShopListing listing : listings) {
-                    buf.writeUuid(listing.getId());
-                    buf.writeItemStack(listing.getItemForSale());
-                    buf.writeVarInt(listing.getStockQuantity());
-                    buf.writeVarInt(listing.getCoinPrice());
-                    buf.writeBoolean(listing.acceptsBarter());
-                    if (listing.acceptsBarter()) {
-                        buf.writeItemStack(listing.getItemPrice());
-                        buf.writeVarInt(listing.getItemPriceCount());
-                    }
-                }
+                buf.writeString(shop.getShopkeeperDialog());
             }
         });
     }
@@ -140,6 +127,7 @@ public final class NpcShopLogic {
             return;
         }
 
+        // Listings/earnings sync live through the handler; the buf only carries identity.
         owner.openHandledScreen(new ExtendedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
@@ -149,31 +137,15 @@ public final class NpcShopLogic {
             @Nullable
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
-                return new PlayerShopScreenHandler(syncId, playerInventory,
-                        PlayerShopScreenHandler.Mode.MANAGE, shopId, shop);
+                return new ShopManageScreenHandler(syncId, playerInventory, shopId,
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop);
             }
 
             @Override
             public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeEnumConstant(PlayerShopScreenHandler.Mode.MANAGE);
                 buf.writeUuid(shopId);
                 buf.writeString(shop.getShopName());
-                // Write listings
-                List<ShopListing> listings = shop.getListings();
-                buf.writeVarInt(listings.size());
-                for (ShopListing listing : listings) {
-                    buf.writeUuid(listing.getId());
-                    buf.writeItemStack(listing.getItemForSale());
-                    buf.writeVarInt(listing.getStockQuantity());
-                    buf.writeVarInt(listing.getCoinPrice());
-                    buf.writeBoolean(listing.acceptsBarter());
-                    if (listing.acceptsBarter()) {
-                        buf.writeItemStack(listing.getItemPrice());
-                        buf.writeVarInt(listing.getItemPriceCount());
-                    }
-                }
-                // Write shop balance for manage mode
-                buf.writeLong(shop.getPendingBalance());
+                buf.writeString(shop.getShopkeeperDialog());
             }
         });
     }

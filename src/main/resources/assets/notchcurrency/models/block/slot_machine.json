@@ -1,0 +1,5 @@
+{
+  "comment": "PLACEHOLDER — reuses currency_block texture until real art.",
+  "parent": "minecraft:block/cube_all",
+  "textures": { "all": "notchcurrency:block/currency_block" }
+}

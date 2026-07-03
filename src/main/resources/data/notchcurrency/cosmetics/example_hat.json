@@ -1,0 +1,7 @@
+{
+  "name": "Party Hat",
+  "icon": "minecraft:leather_helmet",
+  "price": 250,
+  "one_time": true,
+  "reward": { "type": "item", "item": "minecraft:leather_helmet", "count": 1 }
+}

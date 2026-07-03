@@ -1,12 +1,19 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
@@ -21,8 +28,6 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.client.gui.screen.ChatScreen;
 
 
 public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler> {
@@ -60,12 +65,13 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     // Pagination bar + arrows
     private static final int PREV_X = 9;     // left arrow
     private static final int PREV_Y = 102;
-    private static final int PREV_W = 35;
+    private static final int PREV_W = 41;
     private static final int PREV_H = 17;
 
-    private static final int NEXT_X = 98;    // right arrow
+    // prev | page-box | next are all PREV_W wide and share edges as one bar
+    private static final int NEXT_X = PREV_X + PREV_W * 2; // 91
     private static final int NEXT_Y = 102;
-    private static final int NEXT_W = 35;
+    private static final int NEXT_W = 41;
     private static final int NEXT_H = 17;
 
     // Star (filters)
@@ -79,6 +85,18 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     private static final int CLOCK_Y = 102;
     private static final int CLOCK_W = 16;
     private static final int CLOCK_H = 17;
+
+    // New top-bar buttons: same 16×17 footprint as reload/help, evenly spaced (18px pitch)
+    // so list / raffle / reload / help read as one consistent row of icon buttons.
+    private static final int LIST_X = 99;    // list-an-item (+) button
+    private static final int LIST_Y = 7;
+    private static final int LIST_W = 16;
+    private static final int LIST_H = 17;
+
+    private static final int RAFFLE_X = 117; // raffle (ticket) button
+    private static final int RAFFLE_Y = 7;
+    private static final int RAFFLE_W = 16;
+    private static final int RAFFLE_H = 17;
 
     // Page text ("1/8") inside the black bar - centered in the bar
     // Black box is at x44-x97, y103-y117 in texture
@@ -160,14 +178,20 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     private ButtonWidget sortTypeButton;
     private ButtonWidget helpButton;
     private ButtonWidget reloadButton;
+    private ButtonWidget listItemButton;
+    private ButtonWidget raffleButton;
 
     // popup state (overlay only)
     private boolean showUserPopup = false;
 
-    // --- tooltip coin placement ---
-    private boolean priceTooltipActive = false;
-    private int priceTooltipCoinX = 0;
-    private int priceTooltipCoinY = 0;
+    // bid prompt overlay (opened by clicking a timed auction; hides the raw listing id)
+    private static final int BID_X = 19, BID_Y = 62, BID_W = 140, BID_H = 86;
+    private boolean showBidPopup = false;
+    private UUID bidListingId = null;
+    private String bidItemName = "";
+    private long bidStartPrice = 0L;
+    private long bidHighest = 0L;
+    private String bidInput = "";
 
     public AuctionHouseScreen(AuctionHouseScreenHandler handler,
                               PlayerInventory inv,
@@ -278,12 +302,212 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 .build();
         sortTypeButton.setAlpha(0.0f);
         addDrawableChild(sortTypeButton);
+
+        // List-an-item: open the listing screen (server replaces this screen with it).
+        listItemButton = ButtonWidget.builder(Text.empty(), b -> {
+                    if (this.client != null && this.client.interactionManager != null) {
+                        this.client.interactionManager.clickButton(this.handler.syncId, 6); // list item
+                    }
+                })
+                .dimensions(this.x + LIST_X, this.y + LIST_Y, LIST_W, LIST_H)
+                .tooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                        Text.literal("List an item for auction")))
+                .build();
+        listItemButton.setAlpha(0.0f);
+        addDrawableChild(listItemButton);
+
+        // Raffle: the server opens the raffle screen, which replaces this one.
+        raffleButton = ButtonWidget.builder(Text.empty(), b -> {
+                    if (this.client != null && this.client.interactionManager != null) {
+                        this.client.interactionManager.clickButton(this.handler.syncId, 5); // raffle
+                    }
+                })
+                .dimensions(this.x + RAFFLE_X, this.y + RAFFLE_Y, RAFFLE_W, RAFFLE_H)
+                .tooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                        Text.literal("Open the raffle")))
+                .build();
+        raffleButton.setAlpha(0.0f);
+        addDrawableChild(raffleButton);
     }
 
     @Override
     protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        ctx.drawTexture(TEX, this.x, this.y, 0, 0, this.backgroundWidth, this.backgroundHeight);
+        final int x = this.x, y = this.y;
+
+        // Window (measured 178x210 from the original texture).
+        NotchWidgets.panel(ctx, x, y, 178, 210);
+
+        // "MY LISTINGS" green bar.
+        greenBar(ctx, x + MY_X, y + MY_Y, MY_W, MY_H,
+                over(mouseX, mouseY, x + MY_X, y + MY_Y, MY_W, MY_H));
+
+        // List-item (+) and Raffle (ticket) buttons in the free top-bar space.
+        iconButton(ctx, x + LIST_X, y + LIST_Y, LIST_W, LIST_H,
+                over(mouseX, mouseY, x + LIST_X, y + LIST_Y, LIST_W, LIST_H), ICON_PLUS);
+        iconButton(ctx, x + RAFFLE_X, y + RAFFLE_Y, RAFFLE_W, RAFFLE_H,
+                over(mouseX, mouseY, x + RAFFLE_X, y + RAFFLE_Y, RAFFLE_W, RAFFLE_H), ICON_TICKET);
+
+        // Reload + Help (code-drawn).
+        iconButton(ctx, x + RELOAD_X, y + RELOAD_Y, RELOAD_W, RELOAD_H,
+                over(mouseX, mouseY, x + RELOAD_X, y + RELOAD_Y, RELOAD_W, RELOAD_H), ICON_RELOAD);
+        helpButton(ctx, x + HELP_X, y + HELP_Y, HELP_W, HELP_H,
+                over(mouseX, mouseY, x + HELP_X, y + HELP_Y, HELP_W, HELP_H));
+
+        // Listing grid (9 x 4).
+        for (int row = 0; row < AuctionHouseScreenHandler.LISTING_ROWS; row++) {
+            for (int col = 0; col < AuctionHouseScreenHandler.LISTING_COLUMNS; col++) {
+                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 28 + row * 18 - 1);
+            }
+        }
+
+        // Toolbar: prev / next arrows, page box, star (filter), clock (sort).
+        wideArrow(ctx, x + PREV_X, y + PREV_Y, PREV_W, PREV_H,
+                over(mouseX, mouseY, x + PREV_X, y + PREV_Y, PREV_W, PREV_H), true);
+        wideArrow(ctx, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H,
+                over(mouseX, mouseY, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H), false);
+        // Flat dark page box — same width/height as the arrows, between them.
+        ctx.fill(x + PREV_X + PREV_W, y + PREV_Y, x + NEXT_X, y + PREV_Y + PREV_H, NotchTheme.DEEP);
+        iconButton(ctx, x + STAR_X, y + STAR_Y, STAR_W, STAR_H,
+                over(mouseX, mouseY, x + STAR_X, y + STAR_Y, STAR_W, STAR_H), ICON_STAR);
+        iconButton(ctx, x + CLOCK_X, y + CLOCK_Y, CLOCK_W, CLOCK_H,
+                over(mouseX, mouseY, x + CLOCK_X, y + CLOCK_Y, CLOCK_W, CLOCK_H), ICON_CLOCK);
+
+        // Player inventory + hotbar.
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 127 + row * 18 - 1);
+            }
+        }
+        for (int col = 0; col < 9; col++) {
+            NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 185 - 1);
+        }
     }
+
+    private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
+        return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
+    }
+
+    /** Which popup listing slot (0..POPUP_SIZE-1) is under the cursor, or -1. */
+    private int hoveredPopupSlot(double mouseX, double mouseY) {
+        int slotsX = this.x + POPUP_LOCAL_X + POPUP_SLOT_LOCAL_X;
+        int slotsY = this.y + POPUP_LOCAL_Y + POPUP_SLOT_LOCAL_Y;
+        for (int row = 0; row < AuctionHouseScreenHandler.POPUP_ROWS; row++) {
+            for (int col = 0; col < AuctionHouseScreenHandler.POPUP_COLUMNS; col++) {
+                int sx = slotsX + col * POPUP_SLOT_SPACING;
+                int sy = slotsY + row * POPUP_SLOT_SPACING;
+                if (mouseX >= sx && mouseX < sx + POPUP_SLOT_SIZE
+                        && mouseY >= sy && mouseY < sy + POPUP_SLOT_SIZE) {
+                    return row * AuctionHouseScreenHandler.POPUP_COLUMNS + col;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private void greenBar(DrawContext ctx, int bx, int by, int w, int h, boolean hov) {
+        NotchWidgets.colorButton(ctx, bx, by, w, h, NotchTheme.ACCENT_GREEN, 0xFF8FD07A, 0xFF3C6E2F, hov);
+        String s = "MY LISTINGS";
+        // white text + black drop-shadow for readability
+        ctx.drawText(this.textRenderer, s, bx + (w - this.textRenderer.getWidth(s)) / 2,
+                by + (h - 8) / 2, 0xFFFFFFFF, true);
+    }
+
+    private void helpButton(DrawContext ctx, int bx, int by, int w, int h, boolean hov) {
+        NotchWidgets.button(ctx, bx, by, w, h, hov, false);
+        String s = "?";
+        ctx.drawText(this.textRenderer, s, bx + (w - this.textRenderer.getWidth(s)) / 2,
+                by + (h - 8) / 2, NotchTheme.TEXT_DARK, false);
+    }
+
+    private void wideArrow(DrawContext ctx, int bx, int by, int w, int h, boolean hov, boolean left) {
+        // Round only the outer corners so prev | page-box | next read as one bar.
+        NotchWidgets.buttonSel(ctx, bx, by, w, h, hov, left, !left, left, !left);
+        int cx = bx + w / 2, cy = by + h / 2;
+        for (int i = 0; i <= 4; i++) {
+            int half = 4 - i;
+            if (left) ctx.fill(cx + 2 - i, cy - half, cx + 3 - i, cy + half + 1, NotchTheme.TEXT_DARK);
+            else      ctx.fill(cx - 2 + i, cy - half, cx - 1 + i, cy + half + 1, NotchTheme.TEXT_DARK);
+        }
+    }
+
+    private void redX(DrawContext ctx, int bx, int by, int w, int h) {
+        ctx.fill(bx, by, bx + w, by + h, NotchTheme.OUTLINE);
+        ctx.fill(bx + 1, by + 1, bx + w - 1, by + h - 1, 0xFFB23030);
+        ctx.fill(bx + 1, by + 1, bx + w - 1, by + 2, 0xFFD86060);
+        ctx.fill(bx + 1, by + 1, bx + 2, by + h - 1, 0xFFD86060);
+        ctx.fill(bx + 1, by + h - 2, bx + w - 1, by + h - 1, 0xFF7A1818);
+        ctx.fill(bx + w - 2, by + 1, bx + w - 1, by + h - 1, 0xFF7A1818);
+        int cx = bx + w / 2, cy = by + h / 2;
+        for (int i = -2; i <= 2; i++) {
+            ctx.fill(cx + i, cy + i, cx + i + 1, cy + i + 1, NotchTheme.TEXT_LIGHT);
+            ctx.fill(cx + i, cy - i, cx + i + 1, cy - i + 1, NotchTheme.TEXT_LIGHT);
+        }
+    }
+
+    private void iconButton(DrawContext ctx, int bx, int by, int w, int h, boolean hov, String[] icon) {
+        NotchWidgets.button(ctx, bx, by, w, h, hov, false);
+        drawIcon(ctx, bx, by, w, h, icon, NotchTheme.TEXT_DARK);
+    }
+
+    /** Centers a 1-bit-per-char glyph bitmap (rows of '#') inside the button. */
+    private void drawIcon(DrawContext ctx, int bx, int by, int bw, int bh, String[] rows, int color) {
+        int iw = rows[0].length(), ih = rows.length;
+        int ox = bx + (bw - iw) / 2;
+        int oy = by + (bh - ih) / 2;
+        for (int r = 0; r < ih; r++) {
+            String row = rows[r];
+            for (int c = 0; c < iw; c++) {
+                if (row.charAt(c) == '#') {
+                    ctx.fill(ox + c, oy + r, ox + c + 1, oy + r + 1, color);
+                }
+            }
+        }
+    }
+
+    private static final String[] ICON_STAR = {
+            "....#....",
+            "...###...",
+            "#########",
+            ".#######.",
+            "..#####..",
+            ".##.#.##.",
+            ".#.....#.",
+    };
+    private static final String[] ICON_CLOCK = {
+            "..#####..",
+            ".#.....#.",
+            "#...#...#",
+            "#...#...#",
+            "#...####.",
+            "#.......#",
+            ".#.....#.",
+            "..#####..",
+    };
+    private static final String[] ICON_RELOAD = {
+            "...###.#.",
+            "..#...###",
+            ".#.....#.",
+            "#........",
+            "#........",
+            ".#.....#.",
+            "..#####..",
+    };
+    private static final String[] ICON_PLUS = {
+            "...#...",
+            "...#...",
+            "...#...",
+            "#######",
+            "...#...",
+            "...#...",
+            "...#...",
+    };
+    private static final String[] ICON_TICKET = {
+            "#########",
+            "#.......#",
+            "#.#####.#",
+            "#.......#",
+            "#########",
+    };
 
     @Override
     protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
@@ -306,6 +530,11 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                                  Text title,
                                  String[] options,
                                  String activeLabel) {
+        // Push Z-level to render above inventory items
+        var matrices = ctx.getMatrices();
+        matrices.push();
+        matrices.translate(0.0F, 0.0F, 400.0F);
+
         int maxWidth = this.textRenderer.getWidth(title);
 
         for (String opt : options) {
@@ -353,14 +582,15 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             );
             textY += lineHeight;
         }
+
+        matrices.pop();
     }
 
     @Override
     protected void drawMouseoverTooltip(DrawContext ctx, int mouseX, int mouseY) {
-        priceTooltipActive = false;
-
-        // Block tooltips under the popup
+        // Popup: show a cancel hint over the player's own listings; block other tooltips beneath.
         if (showUserPopup) {
+            if (hoveredPopupSlot(mouseX, mouseY) >= 0) return; // tooltip drawn in render(), above the popup
             int px = this.x + POPUP_LOCAL_X;
             int py = this.y + POPUP_LOCAL_Y;
             if (mouseX >= px && mouseX < px + POPUP_W &&
@@ -492,102 +722,147 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     }
                 }
 
-                List<Text> lines = new ArrayList<>();
-
-                // Line 1: rarity colored name
-                Text nameLine = stack.getName().copy().formatted(rarityColor);
-                lines.add(nameLine);
-
-                // Price line: for auctions, show current bid or start; for buy-now, fixed price
+                // Price to display: for auctions, show current bid or start; for buy-now, fixed price
                 long displayPrice = (timedAuction && highestBid > 0L) ? highestBid : startPrice;
 
-                MutableText priceLine = Text.empty()
-                        .append(Text.literal("Price: ").formatted(Formatting.GOLD))
-                        .append(Text.literal(String.valueOf(displayPrice)).formatted(Formatting.YELLOW));
-                lines.add(priceLine);
+                List<Text> lines = new ArrayList<>();
 
-                // For timed auction, also show highest bid explicitly if any
-                if (timedAuction && highestBid > 0L) {
-                    MutableText bidLine = Text.empty()
-                            .append(Text.literal("Highest bid: ").formatted(Formatting.AQUA))
-                            .append(Text.literal(String.valueOf(highestBid)).formatted(Formatting.AQUA));
-                    if (highestBidder != null && !highestBidder.isEmpty()) {
-                        bidLine.append(Text.literal(" by " + highestBidder).formatted(Formatting.GRAY));
+                // Check if shift is held for detailed item view
+                boolean shiftHeld = Screen.hasShiftDown();
+
+                if (shiftHeld) {
+                    // === SHIFT HELD: Show item details with compact auction banner ===
+
+                    // Compact auction banner at top
+                    MutableText bannerLine = Text.literal("⚡ ").formatted(Formatting.YELLOW)
+                            .append(Text.literal(String.valueOf(displayPrice) + " ").formatted(Formatting.GOLD))
+                            .append(Text.literal("\uE000"))
+                            .append(Text.literal(" from ").formatted(Formatting.GRAY))
+                            .append(Text.literal(seller).formatted(Formatting.WHITE))
+                            .append(Text.literal(" - ").formatted(Formatting.GRAY));
+
+                    if (timedAuction) {
+                        bannerLine.append(Text.literal("Bid").formatted(Formatting.YELLOW));
+                    } else {
+                        bannerLine.append(Text.literal("Buy").formatted(Formatting.GREEN));
                     }
-                    lines.add(bidLine);
-                }
+                    lines.add(bannerLine);
 
-                // Seller
-                lines.add(
-                        Text.literal("Seller: " + seller)
-                                .formatted(Formatting.GRAY)
-                );
+                    // Separator
+                    lines.add(Text.literal("─────────────").formatted(Formatting.DARK_GRAY));
 
-                // Rarity
-                lines.add(
-                        Text.literal("Rarity: " + rarityName).formatted(rarityColor)
-                );
+                    // Get vanilla item tooltip lines
+                    // Create a clean copy WITHOUT auction NBT so AuctionTooltips callback won't modify it
+                    ItemStack cleanStack = stack.copy();
+                    NbtCompound cleanTag = cleanStack.getNbt();
+                    if (cleanTag != null) {
+                        // Remove ALL auction-specific tags
+                        cleanTag.remove("nc_price");
+                        cleanTag.remove("nc_seller");
+                        cleanTag.remove("nc_created");
+                        cleanTag.remove("nc_expires");
+                        cleanTag.remove("nc_highest_bid");
+                        cleanTag.remove("nc_highest_bidder");
+                        cleanTag.remove("nc_listing_id");
 
-                // Status + time for timed auctions
-                if (timedAuction && statusLine != null) {
-                    lines.add(statusLine);
-                    if (timeLine != null) {
-                        lines.add(timeLine);
+                        // Also remove the display lore that was added server-side
+                        if (cleanTag.contains("display", 10)) {
+                            NbtCompound display = cleanTag.getCompound("display");
+                            display.remove("Lore");
+                            if (display.isEmpty()) {
+                                cleanTag.remove("display");
+                            }
+                        }
+
+                        // If tag is now empty, remove it entirely
+                        if (cleanTag.isEmpty()) {
+                            cleanStack.setNbt(null);
+                        }
                     }
-                }
 
-                // Hints
-                if (timedAuction) {
-                    lines.add(
-                            Text.literal("Left-click: open bid in chat")
-                                    .formatted(Formatting.YELLOW)
+                    List<Text> vanillaLines = cleanStack.getTooltip(
+                            this.client != null ? this.client.player : null,
+                            this.client != null && this.client.options.advancedItemTooltips
+                                    ? TooltipContext.Default.ADVANCED
+                                    : TooltipContext.Default.BASIC
                     );
-                    lines.add(
-                            Text.literal("Or use /ah bid <id> <amount>")
-                                    .formatted(Formatting.DARK_GRAY)
-                    );
+
+                    // Add vanilla lines (includes item name, enchantments, etc.)
+                    for (Text line : vanillaLines) {
+                        lines.add(line);
+                    }
+
+                    // Hint to release shift
+                    lines.add(Text.literal(""));
+                    lines.add(Text.literal("[Release Shift] Auction info").formatted(Formatting.DARK_GRAY));
+
                 } else {
+                    // === DEFAULT: Show compact auction tooltip ===
+
+                    // Line 1: rarity colored name
+                    Text nameLine = stack.getName().copy().formatted(rarityColor);
+                    lines.add(nameLine);
+
+                    // Price line
+                    MutableText priceLine = Text.empty()
+                            .append(Text.literal("Price: ").formatted(Formatting.GOLD))
+                            .append(Text.literal(String.valueOf(displayPrice) + " ").formatted(Formatting.YELLOW))
+                            .append(Text.literal("\uE000"));
+                    lines.add(priceLine);
+
+                    // For timed auction, also show highest bid explicitly if any
+                    if (timedAuction && highestBid > 0L) {
+                        MutableText bidLine = Text.empty()
+                                .append(Text.literal("Highest bid: ").formatted(Formatting.AQUA))
+                                .append(Text.literal(String.valueOf(highestBid)).formatted(Formatting.AQUA));
+                        if (highestBidder != null && !highestBidder.isEmpty()) {
+                            bidLine.append(Text.literal(" by " + highestBidder).formatted(Formatting.GRAY));
+                        }
+                        lines.add(bidLine);
+                    }
+
+                    // Seller
                     lines.add(
-                            Text.literal("Click to buy")
-                                    .formatted(Formatting.YELLOW)
+                            Text.literal("Seller: " + seller)
+                                    .formatted(Formatting.GRAY)
                     );
+
+                    // Rarity
+                    lines.add(
+                            Text.literal("Rarity: " + rarityName).formatted(rarityColor)
+                    );
+
+                    // Status + time for timed auctions
+                    if (timedAuction && statusLine != null) {
+                        lines.add(statusLine);
+                        if (timeLine != null) {
+                            lines.add(timeLine);
+                        }
+                    }
+
+                    // Hints
+                    if (timedAuction) {
+                        lines.add(
+                                Text.literal("Left-click: open bid in chat")
+                                        .formatted(Formatting.YELLOW)
+                        );
+                        lines.add(
+                                Text.literal("Or use /ah bid <id> <amount>")
+                                        .formatted(Formatting.DARK_GRAY)
+                        );
+                    } else {
+                        lines.add(
+                                Text.literal("Click to buy")
+                                        .formatted(Formatting.YELLOW)
+                        );
+                    }
+
+                    // Hint to hold shift for item details
+                    lines.add(Text.literal("[Shift] Item details").formatted(Formatting.DARK_GRAY));
                 }
 
                 // Draw tooltip
                 ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
-
-                // --- Compute actual tooltip box to align coin properly ---
-                int maxWidth = 0;
-                for (Text line : lines) {
-                    int w = this.textRenderer.getWidth(line);
-                    if (w > maxWidth) {
-                        maxWidth = w;
-                    }
-                }
-
-                int lineHeight = this.textRenderer.fontHeight + 2;
-                int boxWidth = maxWidth + 8;
-                int boxHeight = lines.size() * lineHeight + 8;
-
-                int tooltipX = mouseX + 12;
-                int tooltipY = mouseY - 12;
-
-                if (tooltipX + boxWidth > this.width) {
-                    tooltipX = this.width - boxWidth - 4;
-                }
-                if (tooltipY + boxHeight > this.height) {
-                    tooltipY = this.height - boxHeight - 4;
-                }
-
-                int textLeft = tooltipX + 4;
-                int priceLineIndex = 1; // price line is second line
-                int priceLineY = tooltipY + 4 + lineHeight * priceLineIndex;
-
-                int priceWidth = this.textRenderer.getWidth(priceLine);
-
-                priceTooltipCoinX = textLeft + priceWidth - 5;
-                priceTooltipCoinY = priceLineY - 7;
-                priceTooltipActive = true;
 
                 return;
             }
@@ -605,22 +880,13 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
 
-        if (priceTooltipActive) {
-            var matrices = ctx.getMatrices();
-            matrices.push();
-            matrices.translate(0.0F, 0.0F, 400.0F);
-
-            float scale = 0.55F;
-            matrices.translate(priceTooltipCoinX + 8, priceTooltipCoinY + 8, 0.0F);
-            matrices.scale(scale, scale, 1.0F);
-
-            ctx.drawItem(new ItemStack(ModItems.NOTCH_COIN), -8, -8);
-
-            matrices.pop();
-        }
-
         if (showUserPopup) {
             drawUserPopup(ctx);
+            drawPopupCancelTooltip(ctx, mouseX, mouseY);
+        }
+
+        if (showBidPopup) {
+            drawBidPopup(ctx, mouseX, mouseY);
         }
 
         if (DEBUG_MAIN) {
@@ -641,6 +907,113 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
     }
 
+    /** Bid prompt drawn above everything (Z 500); manual text input keeps the listing id hidden. */
+    private void drawBidPopup(DrawContext ctx, int mouseX, int mouseY) {
+        var matrices = ctx.getMatrices();
+        matrices.push();
+        matrices.translate(0.0F, 0.0F, 500.0F);
+
+        ctx.fill(0, 0, this.width, this.height, 0x88000000);
+
+        int px = this.x + BID_X, py = this.y + BID_Y;
+        NotchWidgets.panel(ctx, px, py, BID_W, BID_H);
+
+        NotchWidgets.title(ctx, this.textRenderer, "Place a Bid", px + BID_W / 2, py + 6);
+        NotchWidgets.centerText(ctx, this.textRenderer, bidItemName, px + BID_W / 2, py + 18, NotchTheme.TEXT_LIGHT, true);
+
+        long cur = bidHighest > 0 ? bidHighest : bidStartPrice;
+        long min = cur + 1;
+        ctx.drawText(this.textRenderer, (bidHighest > 0 ? "Current bid: " : "Start price: ") + cur,
+                px + 10, py + 32, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, "Min next bid: " + min, px + 10, py + 42, NotchTheme.TEXT_DARK, false);
+
+        // Input box + manual text/cursor.
+        NotchWidgets.inset(ctx, px + 10, py + 52, BID_W - 20, 14, NotchTheme.DEEP);
+        boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
+        if (bidInput.isEmpty()) {
+            ctx.drawText(this.textRenderer, Text.literal("amount").formatted(Formatting.DARK_GRAY),
+                    px + 14, py + 55, 0xFF555555, false);
+            if (blink) ctx.drawText(this.textRenderer, "_", px + 14, py + 55, 0xFFFFFFFF, false);
+        } else {
+            ctx.drawText(this.textRenderer, bidInput + (blink ? "_" : ""), px + 14, py + 55, 0xFFFFFFFF, false);
+        }
+
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 68, 58, 14, "Bid",
+                over(mouseX, mouseY, px + 10, py + 68, 58, 14));
+        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 72, py + 68, 58, 14, "Cancel",
+                over(mouseX, mouseY, px + 72, py + 68, 58, 14));
+
+        matrices.pop();
+    }
+
+    private void submitBid() {
+        long amount;
+        try {
+            amount = Long.parseLong(bidInput.trim());
+        } catch (NumberFormatException e) {
+            amount = 0L;
+        }
+        long min = (bidHighest > 0 ? bidHighest : bidStartPrice) + 1;
+        if (amount < min) {
+            if (this.client != null && this.client.player != null) {
+                this.client.player.sendMessage(Text.literal("Bid must be at least " + min + ".").formatted(Formatting.RED), false);
+            }
+            return;
+        }
+        if (bidListingId != null) {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeUuid(bidListingId);
+            buf.writeVarLong(amount);
+            ClientPlayNetworking.send(NotchPackets.BID_REQUEST, buf);
+        }
+        showBidPopup = false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (showBidPopup) {
+            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) { showBidPopup = false; return true; }
+            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) { submitBid(); return true; }
+            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+                if (!bidInput.isEmpty()) bidInput = bidInput.substring(0, bidInput.length() - 1);
+                return true;
+            }
+            return true; // consume all keys while bidding
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        if (showBidPopup) {
+            if (Character.isDigit(chr) && bidInput.length() < 12) bidInput += chr;
+            return true;
+        }
+        return super.charTyped(chr, modifiers);
+    }
+
+    /** Cancel hint for a hovered popup listing, drawn above the popup (Z 600). */
+    private void drawPopupCancelTooltip(DrawContext ctx, int mouseX, int mouseY) {
+        int slot = hoveredPopupSlot(mouseX, mouseY);
+        if (slot < 0) return;
+        ItemStack stack = handler.getUserPopupInventory().getStack(slot);
+        if (stack.isEmpty()) return;
+
+        List<Text> lines = new ArrayList<>();
+        lines.add(stack.getName().copy().formatted(Formatting.WHITE));
+        NbtCompound tag = stack.getNbt();
+        if (tag != null && tag.contains("nc_price", NbtElement.LONG_TYPE)) {
+            lines.add(Text.literal("Price: " + tag.getLong("nc_price") + " coins").formatted(Formatting.GOLD));
+        }
+        lines.add(Text.literal("Click to cancel & reclaim").formatted(Formatting.RED));
+
+        var matrices = ctx.getMatrices();
+        matrices.push();
+        matrices.translate(0.0F, 0.0F, 600.0F);
+        ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+        matrices.pop();
+    }
+
     private void drawUserPopup(DrawContext ctx) {
         var matrices = ctx.getMatrices();
         matrices.push();
@@ -654,7 +1027,9 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
         int px = this.x + POPUP_LOCAL_X;
         int py = this.y + POPUP_LOCAL_Y;
-        ctx.drawTexture(USER_POPUP_TEX, px, py, 0, 0, POPUP_W, POPUP_H);
+
+        // Popup window (code-drawn; original was 107x70).
+        NotchWidgets.panel(ctx, px, py, 107, 70);
 
         if (this.client != null && this.client.player != null) {
             String name = this.client.player.getName().getString();
@@ -663,10 +1038,13 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     name,
                     px + POPUP_NAME_X,
                     py + POPUP_NAME_Y,
-                    0x404040,
+                    NotchTheme.TEXT_DARK,
                     false
             );
         }
+
+        // Red close button.
+        redX(ctx, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H);
 
         SimpleInventory inv = handler.getUserPopupInventory();
         int index = 0;
@@ -674,6 +1052,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             for (int col = 0; col < AuctionHouseScreenHandler.POPUP_COLUMNS; col++) {
                 int sx = px + POPUP_SLOT_LOCAL_X + col * POPUP_SLOT_SPACING;
                 int sy = py + POPUP_SLOT_LOCAL_Y + row * POPUP_SLOT_SPACING;
+
+                NotchWidgets.slot(ctx, sx, sy);
 
                 ItemStack stack = inv.getStack(index++);
                 if (!stack.isEmpty()) {
@@ -701,6 +1081,14 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Bid prompt swallows all clicks while open.
+        if (showBidPopup) {
+            int px = this.x + BID_X, py = this.y + BID_Y;
+            if (over((int) mouseX, (int) mouseY, px + 10, py + 68, 58, 14)) { submitBid(); return true; }
+            if (over((int) mouseX, (int) mouseY, px + 72, py + 68, 58, 14)) { showBidPopup = false; return true; }
+            return true;
+        }
+
         // Popup handling (unchanged)
         if (showUserPopup) {
             int px = this.x + POPUP_LOCAL_X;
@@ -714,6 +1102,19 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
             if (mouseX >= cx1 && mouseX < cx2 && mouseY >= cy1 && mouseY < cy2) {
                 showUserPopup = false;
+                return true;
+            }
+
+            // Click one of your own listings to cancel it (item is returned to you).
+            int slot = hoveredPopupSlot(mouseX, mouseY);
+            if (slot >= 0) {
+                ItemStack stack = handler.getUserPopupInventory().getStack(slot);
+                NbtCompound tag = stack.getNbt();
+                if (!stack.isEmpty() && tag != null && tag.containsUuid("nc_listing_id")) {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeUuid(tag.getUuid("nc_listing_id"));
+                    ClientPlayNetworking.send(NotchPackets.AUCTION_CANCEL, buf);
+                }
                 return true;
             }
 
@@ -777,12 +1178,15 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
                     long expires = tag.getLong("nc_expires");
 
-                    // Timed auction only (expires > 0): open /ah bid in chat
+                    // Timed auction (expires > 0): open the in-GUI bid prompt (no id in chat).
                     if (expires > 0L) {
-                        UUID id = tag.getUuid("nc_listing_id");
-                        String cmd = "/ah bid " + id.toString() + " ";
-
-                        this.client.setScreen(new ChatScreen(cmd));
+                        bidListingId = tag.getUuid("nc_listing_id");
+                        bidItemName = stack.getName().getString();
+                        bidStartPrice = tag.getLong("nc_price");
+                        bidHighest = tag.contains("nc_highest_bid", NbtElement.LONG_TYPE)
+                                ? tag.getLong("nc_highest_bid") : 0L;
+                        bidInput = "";
+                        showBidPopup = true;
                         return true;
                     }
                 }

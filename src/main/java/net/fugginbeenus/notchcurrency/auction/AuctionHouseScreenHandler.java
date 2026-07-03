@@ -518,6 +518,8 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             case 2 -> cycleFilter();
             case 3 -> cycleSortMode();
             case 4 -> reload();
+            case 5 -> net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.openScreen((ServerPlayerEntity) player);
+            case 6 -> AuctionListingScreenHandler.open((ServerPlayerEntity) player);
             default -> {
                 return false;
             }

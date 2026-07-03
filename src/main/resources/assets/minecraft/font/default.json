@@ -1,0 +1,13 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "notchcurrency:item/coin.png",
+      "ascent": 8,
+      "height": 10,
+      "chars": [
+        "\uE000"
+      ]
+    }
+  ]
+}

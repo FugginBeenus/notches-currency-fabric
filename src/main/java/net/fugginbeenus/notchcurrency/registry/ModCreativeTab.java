@@ -34,10 +34,17 @@ public class ModCreativeTab {
                 // Blocks
                 entries.add(ModBlocks.ATM_ITEM);
                 entries.add(ModBlocks.GOLDEN_CACHE_ITEM);
+                entries.add(ModBlocks.LEDGER_BOARD_ITEM);
+                entries.add(ModBlocks.BOUNTY_BOARD_ITEM);
+                entries.add(ModBlocks.crateItem("common_crate"));
+                entries.add(ModBlocks.crateItem("rare_crate"));
+                entries.add(ModBlocks.crateItem("epic_crate"));
+                entries.add(ModItems.CRATE_KEY);
+                entries.add(ModBlocks.SLOT_MACHINE_ITEM);
+                entries.add(ModBlocks.COIN_FLIP_ITEM);
 
                 // Shop items
-                entries.add(ModItems.SHOPKEEPER_SPAWN_EGG);
-                entries.add(ModItems.MERCHANT_LICENSE);
+                entries.add(ModItems.NOTCH_NPC_ITEM);
 
                 // Misc
                 entries.add(ModItems.BALLOON);
@@ -63,12 +70,10 @@ public class ModCreativeTab {
 
         // Add spawn egg to Spawn Eggs tab
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> {
-            entries.add(ModItems.SHOPKEEPER_SPAWN_EGG);
         });
 
         // Add Merchant License and Balloon to Tools tab
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> {
-            entries.add(ModItems.MERCHANT_LICENSE);
             entries.add(ModItems.BALLOON);
         });
     }

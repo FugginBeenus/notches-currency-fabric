@@ -10,8 +10,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -36,7 +34,6 @@ public class ATMTestScreenHandler extends ScreenHandler {
     private static final int HOTBAR_Y = PLAYER_Y + 58;
 
     private final PlayerInventory playerInv;
-    private final PropertyDelegate props = new ArrayPropertyDelegate(1);
 
     private final Inventory bankInv = new SimpleInventory(5) {
         @Override
@@ -51,12 +48,6 @@ public class ATMTestScreenHandler extends ScreenHandler {
     public ATMTestScreenHandler(int syncId, PlayerInventory playerInv) {
         super(ModScreenHandlers.ATM, syncId);
         this.playerInv = playerInv;
-
-        this.addProperties(props);
-
-        if (!playerInv.player.getWorld().isClient && playerInv.player instanceof ServerPlayerEntity sp) {
-            props.set(0, BalanceStore.get(sp));
-        }
 
         // ----- Top 5 slots (with nudges) -----
         final int rowY = BANK_BASE_Y + BANK_NUDGE_Y;
@@ -78,16 +69,6 @@ public class ATMTestScreenHandler extends ScreenHandler {
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(playerInv, col, PLAYER_X + col * 18, HOTBAR_Y));
         }
-    }
-
-    public void setSyncedBalance(int value) {
-        if (!playerInv.player.getWorld().isClient) {
-            props.set(0, value);
-        }
-    }
-
-    public int getSyncedBalance() {
-        return props.get(0);
     }
 
     @Override
@@ -132,15 +113,13 @@ public class ATMTestScreenHandler extends ScreenHandler {
     }
 
     /**
-     * Deposit X coins into the player's balance via CoinEconomy,
-     * then refresh the synced balance property.
+     * Deposit X coins into the player's balance via CoinEconomy, then push the new
+     * balance to the client (the HUD/ATM screen read it from there).
      */
     private void depositAmount(ServerPlayerEntity sp, int amount) {
         if (amount <= 0) return;
         CoinEconomy.depositToBalance(sp, amount);
-        int newBal = BalanceStore.get(sp);
-        setSyncedBalance(newBal);
-        NotchPackets.sendBalance(sp, newBal);
+        NotchPackets.sendBalance(sp, BalanceStore.get(sp));
     }
 
     /**
@@ -166,9 +145,7 @@ public class ATMTestScreenHandler extends ScreenHandler {
                 );
             }
 
-            int newBal = BalanceStore.get(sp);
-            setSyncedBalance(newBal);
-            NotchPackets.sendBalance(sp, newBal);
+            NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         }
     }
 

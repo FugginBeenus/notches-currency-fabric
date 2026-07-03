@@ -79,26 +79,11 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Return any stocked items to the owner
-        for (ShopListing listing : shop.getListings()) {
-            if (listing.getStockQuantity() > 0) {
-                ItemStack toReturn = listing.createSaleStack(listing.getStockQuantity());
-                giveItemsToPlayer(player, toReturn);
-            }
-        }
-
-        // Collect any pending earnings
-        int pending = shop.collectPendingEarnings();
-        if (pending > 0) {
-            CurrencyApi.deposit(player, pending);
-            player.sendMessage(Text.literal("Collected ")
-                    .append(NotchCurrency.coins(pending))
-                    .append(" in pending sales!")
-                    .formatted(Formatting.GREEN), false);
-        }
+        // Return all stock, pending coins, and barter items via the single canonical path
+        returnAllShopContents(player.getServer(), shop, player);
 
         state.deleteShop(shopId, player.getUuid());
-        player.sendMessage(Text.literal("Shop deleted. All stock has been returned to you.")
+        player.sendMessage(Text.literal("Shop deleted. Everything has been returned to you.")
                 .formatted(Formatting.YELLOW), false);
 
         return true;
@@ -287,230 +272,6 @@ public final class PlayerShopManager {
     // --- Purchasing ---
 
     /**
-     * Attempt to purchase from a shop using coins.
-     * Uses atomic operations to prevent race conditions and duping.
-     */
-    public static synchronized PurchaseResult purchaseWithCoins(ServerPlayerEntity buyer, UUID shopId, UUID listingId, int quantity) {
-        MinecraftServer server = buyer.getServer();
-        ShopState state = ShopState.get(server);
-        PlayerShop shop = state.getShop(shopId);
-
-        if (shop == null) {
-            return PurchaseResult.SHOP_NOT_FOUND;
-        }
-
-        if (!shop.isOpen()) {
-            return PurchaseResult.SHOP_CLOSED;
-        }
-
-        // Can't buy from your own shop
-        if (shop.getOwnerId().equals(buyer.getUuid())) {
-            return PurchaseResult.OWN_SHOP;
-        }
-
-        ShopListing listing = shop.getListing(listingId);
-        if (listing == null) {
-            return PurchaseResult.LISTING_NOT_FOUND;
-        }
-
-        if (!listing.acceptsCoins()) {
-            return PurchaseResult.COINS_NOT_ACCEPTED;
-        }
-
-        if (quantity <= 0 || quantity > 64) { // Add max quantity limit
-            return PurchaseResult.INVALID_QUANTITY;
-        }
-
-        // Use atomic tryRemoveStock to prevent race conditions
-        // This checks AND removes in one synchronized operation
-        if (!listing.tryRemoveStock(quantity)) {
-            return PurchaseResult.INSUFFICIENT_STOCK;
-        }
-
-        // Stock is now reserved - continue with purchase
-        int totalCost = listing.getCoinPrice() * quantity;
-        int buyerBalance = CurrencyApi.getBalance(buyer);
-
-        if (buyerBalance < totalCost) {
-            // Refund the stock since we can't complete the purchase
-            listing.addStock(quantity);
-            return PurchaseResult.INSUFFICIENT_FUNDS;
-        }
-
-        // Execute the purchase - stock already removed above
-        // 1. Charge buyer
-        if (!CurrencyApi.tryWithdraw(buyer, totalCost)) {
-            // Failed to charge - refund stock
-            listing.addStock(quantity);
-            return PurchaseResult.INSUFFICIENT_FUNDS;
-        }
-
-        // 2. Stock already removed above via tryRemoveStock
-
-        // 3. Give items to buyer
-        ItemStack purchased = listing.createSaleStack(quantity);
-        giveItemsToPlayer(buyer, purchased);
-
-        // 4. Pay the seller (minus tax)
-        int tax = (int) Math.floor(totalCost * SALES_TAX_PERCENT / 100.0);
-        int sellerEarnings = totalCost - tax;
-
-        ServerPlayerEntity seller = server.getPlayerManager().getPlayer(shop.getOwnerId());
-        if (seller != null) {
-            // Seller is online - pay directly
-            CurrencyApi.deposit(seller, sellerEarnings);
-            seller.sendMessage(Text.literal("")
-                    .append(Text.literal(buyer.getName().getString()).formatted(Formatting.AQUA))
-                    .append(Text.literal(" bought ").formatted(Formatting.GREEN))
-                    .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
-                    .append(purchased.getName())
-                    .append(Text.literal(" from your shop for ").formatted(Formatting.GREEN))
-                    .append(NotchCurrency.coins(totalCost)), false);
-        } else {
-            // Seller is offline - queue earnings and deposit to their balance
-            shop.addPendingSale(buyer.getName().getString(), listing.getItemForSale(), quantity, sellerEarnings);
-            CurrencyApi.deposit(server, shop.getOwnerId(), sellerEarnings);
-        }
-
-        // 5. Update statistics
-        listing.recordSale(quantity, totalCost);
-        shop.recordSale(sellerEarnings);
-        state.markDirtyAndSave();
-
-        // 6. Feedback to buyer - coin/purchase sound
-        buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
-        buyer.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.5F, 1.0F);
-        buyer.sendMessage(Text.literal("Purchased ")
-                .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
-                .append(purchased.getName())
-                .append(Text.literal(" for ").formatted(Formatting.GREEN))
-                .append(NotchCurrency.coins(totalCost)), false);
-
-        LOGGER.info("{} purchased {}x {} from {}'s shop for {} coins",
-                buyer.getName().getString(), quantity,
-                purchased.getName().getString(), shop.getOwnerName(), totalCost);
-
-        // 7. Low stock warning to seller
-        int remainingStock = listing.getStockQuantitySafe();
-        if (remainingStock > 0 && remainingStock <= LOW_STOCK_THRESHOLD) {
-            notifyLowStock(server, shop, listing, remainingStock);
-        } else if (remainingStock == 0) {
-            notifyOutOfStock(server, shop, listing);
-        }
-
-        return PurchaseResult.SUCCESS;
-    }
-
-    // Low stock threshold - warn when stock falls to this level or below
-    private static final int LOW_STOCK_THRESHOLD = 5;
-
-    /**
-     * Notify shop owner of low stock.
-     */
-    private static void notifyLowStock(MinecraftServer server, PlayerShop shop, ShopListing listing, int remaining) {
-        ServerPlayerEntity owner = server.getPlayerManager().getPlayer(shop.getOwnerId());
-        if (owner != null) {
-            // Warning sound - note block pling
-            owner.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1.0F, 0.8F);
-            owner.sendMessage(Text.literal("⚠ Low stock warning: ").formatted(Formatting.YELLOW)
-                    .append(listing.getItemForSale().getName())
-                    .append(Text.literal(" only has " + remaining + " left!").formatted(Formatting.YELLOW)), false);
-        }
-    }
-
-    /**
-     * Notify shop owner that an item is out of stock.
-     */
-    private static void notifyOutOfStock(MinecraftServer server, PlayerShop shop, ShopListing listing) {
-        ServerPlayerEntity owner = server.getPlayerManager().getPlayer(shop.getOwnerId());
-        if (owner != null) {
-            // Urgent warning sound - anvil land (thunk)
-            owner.playSound(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.5F, 1.5F);
-            owner.sendMessage(Text.literal("❌ Out of stock: ").formatted(Formatting.RED)
-                    .append(listing.getItemForSale().getName())
-                    .append(Text.literal(" is now sold out!").formatted(Formatting.RED)), false);
-        }
-    }
-
-    /**
-     * Attempt to purchase from a shop using barter (items).
-     */
-    public static PurchaseResult purchaseWithBarter(ServerPlayerEntity buyer, UUID shopId, UUID listingId, int quantity) {
-        MinecraftServer server = buyer.getServer();
-        ShopState state = ShopState.get(server);
-        PlayerShop shop = state.getShop(shopId);
-
-        if (shop == null) return PurchaseResult.SHOP_NOT_FOUND;
-        if (!shop.isOpen()) return PurchaseResult.SHOP_CLOSED;
-        if (shop.getOwnerId().equals(buyer.getUuid())) return PurchaseResult.OWN_SHOP;
-
-        ShopListing listing = shop.getListing(listingId);
-        if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
-        if (!listing.acceptsBarter()) return PurchaseResult.BARTER_NOT_ACCEPTED;
-        if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
-
-        int available = listing.getStockQuantity();
-        if (available < quantity) return PurchaseResult.INSUFFICIENT_STOCK;
-
-        // Check if buyer has the required items
-        ItemStack required = listing.getItemPrice();
-        int requiredTotal = listing.getItemPriceCount() * quantity;
-
-        int buyerHas = countItemsInInventory(buyer, required);
-        if (buyerHas < requiredTotal) {
-            return PurchaseResult.INSUFFICIENT_ITEMS;
-        }
-
-        // Execute the barter
-        // 1. Take items from buyer
-        removeItemsFromInventory(buyer, required, requiredTotal);
-
-        // 2. Reduce stock
-        listing.removeStock(quantity);
-
-        // 3. Give purchased items to buyer
-        ItemStack purchased = listing.createSaleStack(quantity);
-        giveItemsToPlayer(buyer, purchased);
-
-        // 4. Give bartered items to seller
-        ItemStack barterItems = required.copy();
-        barterItems.setCount(requiredTotal);
-
-        ServerPlayerEntity seller = server.getPlayerManager().getPlayer(shop.getOwnerId());
-        if (seller != null) {
-            giveItemsToPlayer(seller, barterItems);
-            seller.sendMessage(Text.literal("")
-                    .append(Text.literal(buyer.getName().getString()).formatted(Formatting.AQUA))
-                    .append(Text.literal(" traded ").formatted(Formatting.GREEN))
-                    .append(Text.literal(requiredTotal + "x ").formatted(Formatting.WHITE))
-                    .append(required.getName())
-                    .append(Text.literal(" for ").formatted(Formatting.GREEN))
-                    .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
-                    .append(purchased.getName()), false);
-        } else {
-            // TODO: [FUTURE] Queue unsold items for offline player collection
-            // For now, items are lost if seller is offline during barter
-            // Could use a mailbox system similar to auction house
-        }
-
-        // 5. Update statistics
-        listing.recordSale(quantity, 0);
-        shop.recordSale(0);
-        state.markDirtyAndSave();
-
-        // 6. Feedback
-        buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
-        buyer.sendMessage(Text.literal("Traded ")
-                .append(Text.literal(requiredTotal + "x ").formatted(Formatting.WHITE))
-                .append(required.getName())
-                .append(Text.literal(" for ").formatted(Formatting.GREEN))
-                .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
-                .append(purchased.getName()), false);
-
-        return PurchaseResult.SUCCESS;
-    }
-
-    /**
      * Unified purchase method - handles BOTH coin AND barter prices (additive).
      * If a listing has both a coin price and a barter item, buyer must pay BOTH.
      */
@@ -520,7 +281,7 @@ public final class PlayerShopManager {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) return PurchaseResult.SHOP_NOT_FOUND;
-        if (!shop.isOpen()) return PurchaseResult.SHOP_CLOSED;
+        if (!shop.isOpen() || shop.isRentPaused()) return PurchaseResult.SHOP_CLOSED;
         if (shop.getOwnerId().equals(buyer.getUuid())) return PurchaseResult.OWN_SHOP;
 
         ShopListing listing = shop.getListing(listingId);
@@ -542,7 +303,7 @@ public final class PlayerShopManager {
 
         if (needsCoins) {
             totalCoinCost = listing.getCoinPrice() * quantity;
-            int buyerBalance = CurrencyApi.getBalance(buyer);
+            long buyerBalance = CurrencyApi.getBalance(buyer);
             if (buyerBalance < totalCoinCost) {
                 return PurchaseResult.INSUFFICIENT_FUNDS;
             }
@@ -564,7 +325,8 @@ public final class PlayerShopManager {
 
         // Stock removed successfully, now take payment
         if (needsCoins) {
-            CurrencyApi.withdraw(buyer, totalCoinCost);
+            CurrencyApi.withdraw(buyer, totalCoinCost,
+                    net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE, "shop purchase");
         }
         if (needsBarter) {
             removeItemsFromInventory(buyer, barterItem, totalBarterCost);
@@ -615,10 +377,9 @@ public final class PlayerShopManager {
             }
 
             seller.sendMessage(message, false);
-        } else if (needsCoins) {
-            shop.addPendingSale(buyer.getName().getString(), listing.getItemForSale(), quantity,
-                    totalCoinCost - (int) Math.floor(totalCoinCost * SALES_TAX_PERCENT / 100.0));
         }
+        // (Offline owners: coins are already held in the shop's pending balance via
+        //  recordSale() above, and are paid out when the owner withdraws or the shop closes.)
 
         // Update statistics
         listing.recordSale(quantity, totalCoinCost);
@@ -695,45 +456,26 @@ public final class PlayerShopManager {
         }
     }
 
-    /**
-     * Collect pending sales earnings for a player.
-     */
-    public static int collectPendingEarnings(ServerPlayerEntity owner, UUID shopId) {
-        ShopState state = ShopState.get(owner.getServerWorld());
-        PlayerShop shop = state.getShop(shopId);
-
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
-            return 0;
-        }
-
-        int collected = shop.collectPendingEarnings();
-        if (collected > 0) {
-            state.markDirtyAndSave();
-            owner.sendMessage(Text.literal("Collected ")
-                    .append(NotchCurrency.coins(collected))
-                    .append(Text.literal(" from pending sales!").formatted(Formatting.GREEN)), false);
-        }
-        return collected;
-    }
 
     /**
-     * Return all shop contents (items and currency) to the owner.
-     * Used when admin deletes a shop or for cleanup.
+     * Return ALL of a shop's contents to its owner: pending coin balance, pending
+     * barter items, and every listing's remaining stock.
+     *
+     * This is the single canonical path used by /shop delete, admin delete, shopkeeper
+     * death, and NPC deletion, so that coins/items can never be lost or duplicated by
+     * different routes handling the pending stores differently.
+     *
+     * Coins are paid to the owner's account by UUID (works while offline); items go to
+     * the owner's inventory only if they are currently online.
      */
-    public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, ServerPlayerEntity owner) {
-        int totalCurrency = 0;
-        List<ItemStack> itemsToReturn = new java.util.ArrayList<>();
+    public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, @Nullable ServerPlayerEntity owner) {
+        // Pending coin balance is the single source of truth for shop earnings.
+        long totalCurrency = shop.withdrawBalance();
 
-        // Collect pending balance
-        totalCurrency += (int) shop.getPendingBalance();
+        // Pending barter items.
+        List<ItemStack> itemsToReturn = new java.util.ArrayList<>(shop.collectPendingBarterItems());
 
-        // Collect pending sale earnings
-        totalCurrency += shop.collectPendingEarnings();
-
-        // Collect pending barter items
-        itemsToReturn.addAll(shop.collectPendingBarterItems());
-
-        // Collect all stock from listings
+        // All remaining listing stock (cleared so it can never be returned twice).
         for (ShopListing listing : shop.getListings()) {
             int stock = listing.getStockQuantitySafe();
             if (stock > 0) {
@@ -746,27 +488,26 @@ public final class PlayerShopManager {
                     itemsToReturn.add(returnStack);
                     stock -= stackSize;
                 }
+                listing.setStock(0);
             }
         }
 
-        // Give currency to owner's balance
+        // Pay coins to the owner's account (by UUID so it works while offline).
         if (totalCurrency > 0) {
-            net.fugginbeenus.notchcurrency.api.CurrencyApi.deposit(server, shop.getOwnerId(), totalCurrency);
+            CurrencyApi.deposit(server, shop.getOwnerId(), totalCurrency,
+                    net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_PAYOUT, "shop closed/returned");
         }
 
-        // Give items to owner if online, otherwise they're lost (could queue for later)
+        // Hand items to the owner if they're online.
         if (owner != null) {
             for (ItemStack item : itemsToReturn) {
-                if (!item.isEmpty()) {
-                    if (!owner.getInventory().insertStack(item.copy())) {
-                        owner.dropItem(item.copy(), false);
-                    }
-                }
+                giveItemsToPlayer(owner, item);
             }
-
             if (totalCurrency > 0 || !itemsToReturn.isEmpty()) {
-                owner.sendMessage(Text.literal("Your shop was closed. Returned: " + totalCurrency + " coins and " +
-                        itemsToReturn.size() + " item stacks.").formatted(Formatting.YELLOW), false);
+                owner.sendMessage(Text.literal("Returned ")
+                        .append(NotchCurrency.coins(totalCurrency))
+                        .append(Text.literal(" and " + itemsToReturn.size() + " item stack(s) from your shop.")
+                                .formatted(Formatting.YELLOW)), false);
             }
         }
 

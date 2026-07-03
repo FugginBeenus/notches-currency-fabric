@@ -1,0 +1,116 @@
+package net.fugginbeenus.notchcurrency.client.npc;
+
+import net.fabricmc.loader.api.FabricLoader;
+import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Dispatching renderer for the Notch NPC. Three model paths:
+ *  - "humanoid" (default): a vanilla biped with preset/player/URL skins.
+ *  - "apply" (only when the {@code apply} mod is installed): the animated GeckoLib model.
+ *  - "entity:&lt;id&gt;": a disguise — renders as any vanilla/modded living entity via a cached proxy.
+ * Anything that can't render (unknown/non-living type, renderer failure) falls back to the biped.
+ */
+public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
+
+    private final NotchNpcBipedRenderer biped;
+    private final NotchNpcGeoRenderer geo;
+    private final boolean applyLoaded;
+    private final Map<String, Entity> proxies = new HashMap<>();
+
+    public NotchNpcRenderer(EntityRendererFactory.Context ctx) {
+        super(ctx);
+        this.biped = new NotchNpcBipedRenderer(ctx);
+        this.geo = new NotchNpcGeoRenderer(ctx);
+        this.applyLoaded = FabricLoader.getInstance().isModLoaded("apply");
+    }
+
+    @Override
+    public void render(NotchNpcEntity entity, float yaw, float tickDelta, MatrixStack matrices,
+                       VertexConsumerProvider vertexConsumers, int light) {
+        String model = entity.getModelId();
+        if (entity.isInvisible()) {
+            // Invisible (stats toggle or day/night rule): draw nothing, label included. The biped
+            // path would hide the body on its own, but the geo/disguise paths would not.
+            return;
+        }
+        if (applyLoaded && NotchNpcEntity.MODEL_APPLY.equals(model)) {
+            geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+            return;
+        }
+        if (model != null && model.startsWith("entity:")
+                && renderDisguise(entity, model.substring("entity:".length()), yaw, tickDelta, matrices, vertexConsumers, light)) {
+            return;
+        }
+        biped.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+    }
+
+    /** Render the NPC as another entity type. Returns false (→ caller draws the biped) on any failure. */
+    private boolean renderDisguise(NotchNpcEntity npc, String typeId, float yaw, float tickDelta,
+                                   MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+        Entity proxy = getProxy(typeId);
+        if (!(proxy instanceof LivingEntity le)) return false;
+
+        le.setYaw(npc.getYaw());
+        le.setBodyYaw(npc.bodyYaw);
+        le.setHeadYaw(npc.headYaw);
+        le.prevBodyYaw = npc.prevBodyYaw;
+        le.prevHeadYaw = npc.prevHeadYaw;
+        le.setPitch(npc.getPitch());
+        le.age = npc.age;
+
+        float scale = npc.getScale();
+        boolean scaled = scale > 0f && scale != 1.0f;
+        if (scaled) {
+            matrices.push();
+            matrices.scale(scale, scale, scale);
+        }
+        try {
+            @SuppressWarnings("unchecked")
+            EntityRenderer<Entity> r = (EntityRenderer<Entity>) this.dispatcher.getRenderer(le);
+            if (r == null) {
+                if (scaled) matrices.pop();
+                return false;
+            }
+            r.render(le, yaw, tickDelta, matrices, vcp, light);
+        } catch (Exception e) {
+            if (scaled) matrices.pop();
+            return false;
+        }
+        if (scaled) matrices.pop();
+        // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height).
+        if (npc.hasCustomName() && npc.isCustomNameVisible()) {
+            this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light);
+        }
+        return true;
+    }
+
+    private Entity getProxy(String typeId) {
+        if (proxies.containsKey(typeId)) return proxies.get(typeId);
+        Entity proxy = null;
+        try {
+            EntityType<?> type = Registries.ENTITY_TYPE.get(new Identifier(typeId));
+            var world = MinecraftClient.getInstance().world;
+            if (type != null && world != null) proxy = type.create(world);
+        } catch (Exception ignored) {}
+        proxies.put(typeId, proxy); // caches null too, so we don't retry a bad type every frame
+        return proxy;
+    }
+
+    @Override
+    public Identifier getTexture(NotchNpcEntity entity) {
+        return biped.getTexture(entity);
+    }
+}

@@ -21,10 +21,14 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.entity.ItemEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class BalloonEntity extends Entity {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
 
     // Loot table: data/notchcurrency/loot_tables/balloon_crate.json
     public static final Identifier LOOT = new Identifier("notchcurrency", "balloon_crate");
@@ -89,11 +93,12 @@ public class BalloonEntity extends Entity {
 
         // Debug logging every 30 seconds (600 ticks)
         if (animTicks % 600 == 0) {
-            System.out.println("[Balloon] ID=" + getId() + " age=" + age + "/" + DESPAWN_TICKS + " ticks (" + (age/20) + "/" + (DESPAWN_TICKS/20) + " seconds)");
+            LOGGER.debug("[Balloon] ID={} age={}/{} ticks ({}/{} seconds)",
+                    getId(), age, DESPAWN_TICKS, age / 20, DESPAWN_TICKS / 20);
         }
 
         if (age > DESPAWN_TICKS) {
-            System.out.println("[Balloon] ID=" + getId() + " despawning after " + (age/20) + " seconds");
+            LOGGER.debug("[Balloon] ID={} despawning after {} seconds", getId(), age / 20);
             discard();
             return;
         }

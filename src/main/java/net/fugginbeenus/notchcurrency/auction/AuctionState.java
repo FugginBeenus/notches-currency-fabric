@@ -2,11 +2,13 @@ package net.fugginbeenus.notchcurrency.auction;
 
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
@@ -43,7 +45,17 @@ public final class AuctionState extends PersistentState {
     // ----- PersistentState plumbing -----
 
     public static AuctionState get(ServerWorld world) {
-        PersistentStateManager mgr = world.getPersistentStateManager();
+        return get(world.getServer());
+    }
+
+    /**
+     * Auctions are global: always stored in the overworld's persistent state, so a
+     * listing is visible regardless of which dimension the seller or buyer is in.
+     * (Balances and player shops are overworld-only too.)
+     */
+    public static AuctionState get(MinecraftServer server) {
+        ServerWorld overworld = server.getOverworld();
+        PersistentStateManager mgr = overworld.getPersistentStateManager();
         return mgr.getOrCreate(AuctionState::fromNbt, AuctionState::new, "notchcurrency_auctions");
     }
 
@@ -158,6 +170,29 @@ public final class AuctionState extends PersistentState {
     public void addPending(PendingWinnings pw) {
         pendingWinnings.put(pw.listingId, pw);
         markDirty();
+    }
+
+    // ----- Helper to strip auction NBT from items -----
+
+    /**
+     * Removes all auction-related NBT tags from an item so its normal tooltip returns.
+     * Call this before giving purchased/returned items to players.
+     */
+    private static void stripAuctionTags(ItemStack stack) {
+        if (stack.hasNbt()) {
+            NbtCompound tag = stack.getNbt();
+            tag.remove("nc_price");
+            tag.remove("nc_seller");
+            tag.remove("nc_created");
+            tag.remove("nc_expires");
+            tag.remove("nc_highest_bid");
+            tag.remove("nc_highest_bidder");
+            tag.remove("nc_listing_id");
+            // If the tag is now empty, remove it entirely
+            if (tag.isEmpty()) {
+                stack.setNbt(null);
+            }
+        }
     }
 
     // ----- Login reminder helpers -----
@@ -330,16 +365,16 @@ public final class AuctionState extends PersistentState {
             return;
         }
 
-        int bal = BalanceStore.get(buyer);
-        int priceInt = (int) Math.min(Integer.MAX_VALUE, listing.price);
+        long bal = BalanceStore.get(buyer);
+        long price = listing.price;
 
-        if (bal < priceInt) {
+        if (bal < price) {
             buyer.sendMessage(Text.literal("You don't have enough Notch coins."), false);
             return;
         }
 
         // Withdraw from buyer
-        BalanceStore.subtract(buyer, priceInt);
+        BalanceStore.subtract(buyer, price, TransactionReason.AUCTION, "auction buy-now");
         NotchPackets.sendBalance(buyer, BalanceStore.get(buyer));
 
         // Pay seller if online; if offline, store coins in mailbox
@@ -349,13 +384,13 @@ public final class AuctionState extends PersistentState {
         boolean sellerPaidNow = false;
 
         // Apply sale tax on the seller's payout
-        int gross = priceInt;
-        int net = AuctionConfig.applySaleTax(gross);
-        int tax = gross - net;
+        long gross = price;
+        long net = AuctionConfig.applySaleTax(gross);
+        long tax = gross - net;
 
         if (sellerPlayer != null) {
             if (net > 0) {
-                BalanceStore.add(sellerPlayer, net);
+                BalanceStore.add(sellerPlayer, net, TransactionReason.AUCTION, "auction sale payout");
                 NotchPackets.sendBalance(sellerPlayer, BalanceStore.get(sellerPlayer));
             }
 
@@ -388,6 +423,10 @@ public final class AuctionState extends PersistentState {
 
         // Give item; if inventory full, into mailbox
         ItemStack prize = listing.stack.copy();
+
+        // Strip auction NBT tags so the item's normal tooltip returns
+        stripAuctionTags(prize);
+
         ItemStack toGive = prize.copy();
         boolean inserted = buyer.getInventory().insertStack(toGive);
         if (!inserted && !toGive.isEmpty()) {
@@ -439,7 +478,7 @@ public final class AuctionState extends PersistentState {
                 .append(Text.literal(count + "x ").formatted(Formatting.GREEN))
                 .append(itemName)
                 .append(Text.literal(" for ").formatted(Formatting.GREEN))
-                .append(Text.literal(String.valueOf(priceInt) + " ").formatted(Formatting.GREEN))
+                .append(Text.literal(String.valueOf(price) + " ").formatted(Formatting.GREEN))
                 .append(NotchCurrency.coinIcon())
                 .append(Text.literal("!").formatted(Formatting.GREEN));
 
@@ -506,7 +545,7 @@ public final class AuctionState extends PersistentState {
             return;
         }
 
-        int bal = BalanceStore.get(bidder);
+        long bal = BalanceStore.get(bidder);
         if (bal < amount) {
             bidder.sendMessage(
                     Text.literal("Insufficient funds for that bid.")
@@ -516,12 +555,13 @@ public final class AuctionState extends PersistentState {
             return;
         }
 
-        // Refund previous highest bidder (if any)
+        // Refund previous highest bidder (if any). Offline-safe: an offline bidder is still credited
+        // by UUID, otherwise their reserved coins would be destroyed when outbid while away.
         if (listing.highestBidderUuid != null && listing.highestBid > 0) {
             ServerPlayerEntity prevTop = world.getServer().getPlayerManager()
                     .getPlayer(listing.highestBidderUuid);
             if (prevTop != null) {
-                BalanceStore.add(prevTop, (int) Math.min(Integer.MAX_VALUE, listing.highestBid));
+                BalanceStore.add(prevTop, listing.highestBid, TransactionReason.AUCTION_REFUND, "outbid refund");
                 NotchPackets.sendBalance(prevTop, BalanceStore.get(prevTop));
                 prevTop.sendMessage(
                         Text.literal("Your bid was refunded on ")
@@ -530,11 +570,14 @@ public final class AuctionState extends PersistentState {
                         false
                 );
                 prevTop.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
+            } else {
+                BalanceStore.add(world.getServer(), listing.highestBidderUuid, listing.highestBid,
+                        TransactionReason.AUCTION_REFUND, "outbid refund (offline)");
             }
         }
 
         // Reserve bidder's coins
-        BalanceStore.subtract(bidder, (int) Math.min(Integer.MAX_VALUE, amount));
+        BalanceStore.subtract(bidder, amount, TransactionReason.AUCTION_BID, "bid reserve");
         NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
 
         listing.highestBid = amount;
@@ -576,6 +619,36 @@ public final class AuctionState extends PersistentState {
     public void removeListing(UUID id) {
         listings.remove(id);
         markDirty();
+    }
+
+    /**
+     * Refund the reserved coins of a timed auction's highest bidder, if any. Bids escrow the coins
+     * at bid time (see placeBid), so any path that removes a still-live listing with a standing bid
+     * MUST call this or those coins are destroyed. Offline-safe: credits by UUID. Returns the amount
+     * refunded (0 if there was no bid).
+     */
+    public long refundHighestBid(ServerWorld world, AuctionListing listing) {
+        if (listing == null || listing.highestBidderUuid == null || listing.highestBid <= 0) {
+            return 0L;
+        }
+        long amount = listing.highestBid;
+        MinecraftServer server = world.getServer();
+        ServerPlayerEntity bidder = server.getPlayerManager().getPlayer(listing.highestBidderUuid);
+        if (bidder != null) {
+            BalanceStore.add(bidder, amount, TransactionReason.AUCTION_REFUND, "auction cancelled — bid refunded");
+            NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
+            bidder.sendMessage(Text.literal("Your bid was refunded — ")
+                    .append(listing.stack.getName().copy().formatted(Formatting.YELLOW))
+                    .append(Text.literal(" was cancelled by the seller.").formatted(Formatting.YELLOW)), false);
+        } else {
+            BalanceStore.add(server, listing.highestBidderUuid, amount,
+                    TransactionReason.AUCTION_REFUND, "auction cancelled — bid refunded (offline)");
+        }
+        // Clear so no later path double-refunds.
+        listing.highestBid = 0L;
+        listing.highestBidderUuid = null;
+        listing.highestBidderName = null;
+        return amount;
     }
 
     /**
@@ -626,19 +699,20 @@ public final class AuctionState extends PersistentState {
                         .getPlayer(listing.highestBidderUuid);
 
                 long finalPrice = listing.highestBid;
-                int grossInt = (int) Math.min(Integer.MAX_VALUE, finalPrice);
-                int netInt = AuctionConfig.applySaleTax(grossInt);
-                int tax = grossInt - netInt;
+                long gross = finalPrice;
+                long net = AuctionConfig.applySaleTax(gross);
+                long tax = gross - net;
 
                 ItemStack prize = listing.stack.copy();
+                stripAuctionTags(prize);
                 Text itemName = listing.stack.getName().copy().formatted(Formatting.WHITE);
 
                 boolean sellerPaidNow = false;
 
                 // Pay seller if online; otherwise they'll claim coins later
                 if (seller != null) {
-                    if (netInt > 0) {
-                        BalanceStore.add(seller, netInt);
+                    if (net > 0) {
+                        BalanceStore.add(seller, net, TransactionReason.AUCTION, "auction win payout");
                         NotchPackets.sendBalance(seller, BalanceStore.get(seller));
                     }
 
@@ -691,7 +765,7 @@ public final class AuctionState extends PersistentState {
                                         ? listing.highestBidderName
                                         : winner.getName().getString(),
                                 prize,
-                                sellerPaidNow ? 0L : netInt
+                                sellerPaidNow ? 0L : net
                         );
                         addPending(pw);
 
@@ -733,7 +807,7 @@ public final class AuctionState extends PersistentState {
                                     ? listing.highestBidderName
                                     : "Unknown",
                             prize,
-                            sellerPaidNow ? 0L : netInt
+                            sellerPaidNow ? 0L : net
                     );
                     addPending(pw);
                 }
@@ -744,6 +818,7 @@ public final class AuctionState extends PersistentState {
                 // No bids: return item to seller or mailbox, then remove listing.
                 if (seller != null) {
                     ItemStack toReturn = listing.stack.copy();
+                    stripAuctionTags(toReturn);
                     boolean inserted = seller.getInventory().insertStack(toReturn);
                     if (!inserted && !toReturn.isEmpty()) {
                         // Inventory full -> mailbox instead of drop
@@ -798,13 +873,15 @@ public final class AuctionState extends PersistentState {
                     }
                 } else {
                     // Seller offline: put return item into mailbox
+                    ItemStack returnStack = listing.stack.copy();
+                    stripAuctionTags(returnStack);
                     PendingWinnings pw = new PendingWinnings(
                             listing.id,
                             listing.sellerUuid,
                             listing.sellerUuid,
                             listing.sellerName,
                             listing.sellerName,
-                            listing.stack.copy(),
+                            returnStack,
                             0L
                     );
                     addPending(pw);
@@ -839,8 +916,8 @@ public final class AuctionState extends PersistentState {
 
             // Claim coins as seller
             if (pw.sellerUuid.equals(uuid) && pw.finalPrice > 0L) {
-                int amt = (int) Math.min(Integer.MAX_VALUE, pw.finalPrice);
-                BalanceStore.add(player, amt);
+                long amt = pw.finalPrice;
+                BalanceStore.add(player, amt, TransactionReason.AUCTION, "claimed auction winnings");
                 NotchPackets.sendBalance(player, BalanceStore.get(player));
 
                 player.sendMessage(
@@ -859,6 +936,7 @@ public final class AuctionState extends PersistentState {
             // Claim item as winner (or seller in no-bid return)
             if (pw.winnerUuid.equals(uuid) && !pw.stack.isEmpty()) {
                 ItemStack toGive = pw.stack.copy();
+                stripAuctionTags(toGive); // Safety strip in case of old pending data
                 boolean inserted = player.getInventory().insertStack(toGive);
 
                 if (!inserted && !toGive.isEmpty()) {

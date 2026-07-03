@@ -1,0 +1,4 @@
+[
+  { "item": "minecraft:iron_sword", "category": "hunt" },
+  { "item": "minecraft:chest",      "category": "gather" }
+]

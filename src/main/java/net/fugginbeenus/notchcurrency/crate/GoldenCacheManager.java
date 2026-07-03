@@ -17,8 +17,6 @@ public final class GoldenCacheManager {
     public static final Identifier LOOT = new Identifier("notchcurrency", "golden_cache");
 
     public static boolean ANNOUNCE = true;
-    private static final int NATURAL_COOLDOWN_TICKS = 20 * 60 * 60 * 4; // 4h
-    private static int cooldown = 0;
     private static final Random RNG = new Random();
 
     // Config knobs (persisted)
@@ -29,31 +27,9 @@ public final class GoldenCacheManager {
     private GoldenCacheManager() {}
 
     public static void init() {
-        ServerTickEvents.END_SERVER_TICK.register(GoldenCacheManager::tick);
-    }
-
-    private static void tick(MinecraftServer server) {
-        if (cooldown > 0) {
-            cooldown--;
-            return;
-        }
-
-        // Natural spawns are disabled for now.
-        /*
-        ServerWorld world = server.getOverworld();
-        if (world == null || world.getPlayers().isEmpty()) return;
-
-        var p = world.getPlayers().get(RNG.nextInt(world.getPlayers().size()));
-        BlockPos placed = spawnNear(world, p.getBlockPos(), 96);
-        if (placed != null) {
-            cooldown = NATURAL_COOLDOWN_TICKS;
-            if (ANNOUNCE) {
-                server.getPlayerManager().broadcast(
-                        Text.literal("✨ A Golden Cache has spawned somewhere nearby…"), false
-                );
-            }
-        }
-        */
+        // Natural (timed) cache spawns are not enabled yet; caches are placed via the
+        // /cache admin command and spawnNear/spawnAt. Kept as an entry point so a
+        // scheduled-spawn loop can be wired up later without touching the initializer.
     }
 
     /** Admin/testing: force a cache near a point within radius. Returns placed location or null. */

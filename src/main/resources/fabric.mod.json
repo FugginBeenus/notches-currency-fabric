@@ -1,15 +1,32 @@
 {
   "schemaVersion": 1,
   "id": "notchcurrency",
-  "version": "0.1.0",
+  "version": "${version}",
   "name": "Notch Currency",
+  "description": "A server-side economy mod: currency, ATMs, player shops with NPC shopkeepers, an auction house, and player-to-player trading.",
+  "authors": [ "FugginBeenus" ],
+  "contact": {
+    "homepage": "https://modrinth.com/project/notches-currency",
+    "sources": "https://github.com/FugginBeenus/notch-currency-fabric",
+    "issues": "https://github.com/FugginBeenus/notch-currency-fabric/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/notchcurrency/textures/notch_icon.png",
+  "environment": "*",
   "entrypoints": {
     "main":   [ "net.fugginbeenus.notchcurrency.core.NotchCurrency" ],
-    "client": [ "net.fugginbeenus.notchcurrency.client.ClientInit" ]
+    "client": [ "net.fugginbeenus.notchcurrency.client.ClientInit" ],
+    "modmenu": [ "net.fugginbeenus.notchcurrency.config.ui.NotchModMenu" ]
   },
   "depends": {
     "fabricloader": ">=0.16.10",
     "fabric-api": "*",
-    "minecraft": "1.20.1"
+    "minecraft": "~1.20.1",
+    "geckolib": ">=4.4"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*",
+    "waystones": "*"
   }
 }

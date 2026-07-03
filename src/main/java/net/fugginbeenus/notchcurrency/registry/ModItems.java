@@ -1,8 +1,9 @@
 package net.fugginbeenus.notchcurrency.registry;
 
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.fugginbeenus.notchcurrency.shop.MerchantLicenseItem;
-import net.fugginbeenus.notchcurrency.shop.ShopkeeperSpawnItem;
+import net.fugginbeenus.notchcurrency.item.CrateKeyItem;
+import net.fugginbeenus.notchcurrency.item.NotchNpcItem;
+import net.fugginbeenus.notchcurrency.item.RaffleTicketItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -23,18 +24,42 @@ public final class ModItems {
             new Item(new Item.Settings())
     );
 
-    /** Merchant License - use on Shopkeeper NPC to create a shop */
-    public static final Item MERCHANT_LICENSE = Registry.register(
+    /** Raffle Ticket - a physical receipt handed out when a player buys raffle entries. */
+    public static final Item RAFFLE_TICKET = Registry.register(
             Registries.ITEM,
-            NotchCurrency.id("merchant_license"),
-            new MerchantLicenseItem(new Item.Settings())
+            NotchCurrency.id("raffle_ticket"),
+            new RaffleTicketItem(new Item.Settings())
     );
 
-    /** Shopkeeper Spawn Egg - spawns a humanoid Shopkeeper NPC for players */
-    public static final Item SHOPKEEPER_SPAWN_EGG = Registry.register(
+    /** Crate Key - opens crates (coin-bought sink). */
+    public static final Item CRATE_KEY = Registry.register(
             Registries.ITEM,
-            NotchCurrency.id("shopkeeper_spawn_egg"),
-            new ShopkeeperSpawnItem(new Item.Settings())
+            NotchCurrency.id("crate_key"),
+            new CrateKeyItem(new Item.Settings())
+    );
+
+    /**
+     * The "tails" face of the coin, used only to draw the flip-side in the Coin Flip GUI. Not in any
+     * creative tab (purely a GUI sprite). Placeholder texture reuses the coin art until real art.
+     */
+    public static final Item COIN_TAILS = Registry.register(
+            Registries.ITEM,
+            NotchCurrency.id("coin_tails"),
+            new Item(new Item.Settings())
+    );
+
+    /** The single Notch NPC item — places a blank NPC (or a packed one from the editor's Pick up). */
+    public static final Item NOTCH_NPC_ITEM = Registry.register(
+            Registries.ITEM,
+            NotchCurrency.id("notch_npc"),
+            new NotchNpcItem(new Item.Settings())
+    );
+
+    /** Patrol route tool — bound to one NPC by the editor; right-click ground to drop waypoints. */
+    public static final Item ROUTE_PLANNER = Registry.register(
+            Registries.ITEM,
+            NotchCurrency.id("route_planner"),
+            new net.fugginbeenus.notchcurrency.item.RoutePlannerItem(new Item.Settings())
     );
 
     /**

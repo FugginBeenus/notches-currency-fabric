@@ -1,0 +1,11 @@
+{
+  "name": "Common Crate",
+  "keys_required": 1,
+  "loot": [
+    { "type": "item", "item": "minecraft:iron_ingot",        "min": 3, "max": 8,  "weight": 20 },
+    { "type": "item", "item": "minecraft:gold_ingot",        "min": 2, "max": 5,  "weight": 15 },
+    { "type": "coins", "amount": 50, "weight": 15 },
+    { "type": "item", "item": "minecraft:experience_bottle", "min": 4, "max": 12, "weight": 10 },
+    { "type": "item", "item": "minecraft:diamond",           "min": 1, "max": 2,  "weight": 5 }
+  ]
+}

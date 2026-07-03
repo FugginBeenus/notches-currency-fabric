@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.client.AuctionTooltips;
-import net.fugginbeenus.notchcurrency.client.entity.ShopkeeperRenderer;
 import net.fugginbeenus.notchcurrency.auction.UserListingsScreenHandler;
 import net.fugginbeenus.notchcurrency.client.UserListingsScreen;
 import net.fugginbeenus.notchcurrency.crate.BarrelCleanupManager;
@@ -27,9 +26,13 @@ import net.minecraft.util.Formatting;
 public final class ClientInit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        // Rebuild the custom-currency resource pack from the admin's art + config, before resources load.
+        CurrencyPackGenerator.generate();
+
         // Entity renderers
         EntityRendererRegistry.register(ModEntities.BALLOON, BalloonRenderer::new);
-        EntityRendererRegistry.register(ModEntities.SHOPKEEPER, ShopkeeperRenderer::new);
+        EntityRendererRegistry.register(ModEntities.NOTCH_NPC,
+                net.fugginbeenus.notchcurrency.client.npc.NotchNpcRenderer::new);
 
         BarrelCleanupManager.init();
 
@@ -38,15 +41,33 @@ public final class ClientInit implements ClientModInitializer {
         // Screens
         HandledScreens.register(ModScreenHandlers.ATM, ATMScreen::new);
         HandledScreens.register(ModScreenHandlers.TRADE, TradeScreen::new);
-        HandledScreens.register(ModScreenHandlers.PLAYER_SHOP, PlayerShopScreen::new);
+        HandledScreens.register(ModScreenHandlers.RAFFLE, RaffleScreen::new);
+        HandledScreens.register(ModScreenHandlers.RAFFLE_ADMIN, RaffleAdminScreen::new);
+        HandledScreens.register(ModScreenHandlers.AUCTION_LISTING, AuctionListingScreen::new);
+        HandledScreens.register(ModScreenHandlers.BOUNTY_BOARD, BountyBoardScreen::new);
+        HandledScreens.register(ModScreenHandlers.BOUNTY_ADMIN, BountyAdminScreen::new);
+        HandledScreens.register(ModScreenHandlers.LOAN, LoanScreen::new);
+        HandledScreens.register(ModScreenHandlers.SLOT_MACHINE, SlotMachineScreen::new);
+        HandledScreens.register(ModScreenHandlers.ENCHANTER, EnchanterScreen::new);
+        HandledScreens.register(ModScreenHandlers.COSMETIC_SHOP, CosmeticShopScreen::new);
+        HandledScreens.register(ModScreenHandlers.TRADE_OFFER_CREATE, TradeOfferCreateScreen::new);
+        HandledScreens.register(ModScreenHandlers.TRADE_OFFERS, TradeOffersScreen::new);
+        HandledScreens.register(ModScreenHandlers.RECEIPTS, ReceiptsScreen::new);
+        HandledScreens.register(ModScreenHandlers.SHOP_BROWSE, ShopBrowseScreen::new);
+        HandledScreens.register(ModScreenHandlers.SHOP_MANAGE, ShopManageScreen::new);
+        HandledScreens.register(ModScreenHandlers.SHOP_LISTING_EDIT, ShopListingEditScreen::new);
+        HandledScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
+        HandledScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
 
         HudRenderCallback.EVENT.register(new NotchHud());
 
         // Balance sync → HUD
         NotchPacketsClient.registerBalanceReceiver(NotchHud::setBalance);
 
-        // Shopkeeper settings screen receiver
-        NotchPacketsClient.registerShopkeeperSettingsReceiver();
+        NotchPacketsClient.registerNpcEditorReceiver();
+        NotchPacketsClient.registerNpcDialogueReceiver();
+        NotchPacketsClient.registerNpcStudioReceiver();
+        NotchPacketsClient.registerNpcPresetReceiver();
 
         // Trade cancel / complete messages
         ClientPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_CANCEL, (client, h, buf, response) -> {
@@ -72,6 +93,7 @@ public final class ClientInit implements ClientModInitializer {
         // On world join (SP/MP), request our balance
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             NotchPacketsClient.requestBalance();
+            CurrencyPackGenerator.remindIfDisabled(client);
         });
 
         // Screen handlers
