@@ -3,7 +3,7 @@
   "id": "notchcurrency",
   "version": "${version}",
   "name": "Notch Currency",
-  "description": "A server-side economy mod: currency, ATMs, player shops with NPC shopkeepers, an auction house, and player-to-player trading.",
+  "description": "A server-side economy mod: currency, banking, player shops, an auction house, a deep customizable NPC system, and a full suite of economy roles, sinks, and faucets.",
   "authors": [ "FugginBeenus" ],
   "contact": {
     "homepage": "https://modrinth.com/project/notches-currency",
