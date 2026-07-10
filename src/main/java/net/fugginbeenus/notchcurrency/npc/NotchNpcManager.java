@@ -60,11 +60,14 @@ public final class NotchNpcManager {
         buf.writeVarInt(npc.getBehavior().ordinal());
         buf.writeVarInt(npc.getWanderRadius());
         buf.writeVarInt(npc.getDialogue().size());
+        buf.writeBoolean(npc.getDialogue().isFlat()); // flat = Quick Lines; branching = Studio only
         buf.writeVarInt(statsBits(npc));
         buf.writeVarInt(npc.getDialogueMode().ordinal());
         buf.writeVarInt(npc.getWaypoints().size());
         buf.writeVarInt(patrolSpeedIndex(npc));
+        buf.writeVarInt(patrolWaitIndex(npc));
         buf.writeVarInt(npc.getNpcPose());
+        buf.writeVarInt(npc.getPoseAnim());
         buf.writeVarInt((int) Math.round(npc.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH)));
         buf.writeVarInt((int) Math.round(npc.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
         buf.writeVarInt(npc.getRegen());
@@ -92,7 +95,10 @@ public final class NotchNpcManager {
         if (npc.opensDoors()) bits |= 32;
         if (npc.isLeashable()) bits |= 64;
         if (npc.isManualInvisible()) bits |= 128;
-        bits |= (npc.getVisibility() & 3) << 8;
+        bits |= (npc.getVisibility() & 3) << 8; // bits 8-9 reserved for the visibility rule
+        if (npc.isNpcPushable()) bits |= 1024;
+        if (npc.isHostileToPlayers()) bits |= 2048;
+        if (npc.fightsBack()) bits |= 4096;
         return bits;
     }
 
@@ -107,6 +113,9 @@ public final class NotchNpcManager {
         npc.setLeashable((bits & 64) != 0);
         npc.setManualInvisible((bits & 128) != 0);
         npc.setVisibility((bits >> 8) & 3);
+        npc.setNpcPushable((bits & 1024) != 0);
+        npc.setHostileToPlayers((bits & 2048) != 0);
+        npc.setFightsBack((bits & 4096) != 0);
         // Apply the effective invisibility now rather than waiting for the next tick window.
         npc.setInvisible(npc.isManualInvisible() || npc.isRuleHidden());
     }
@@ -147,6 +156,31 @@ public final class NotchNpcManager {
         if (npc.getNpcPose() != NotchNpcEntity.POSE_CUSTOM) {
             npc.setNpcPose(NotchNpcEntity.POSE_CUSTOM);
         }
+    }
+
+    /** Set the idle animation layered on the pose (statue/breathe/sway/lively). */
+    public static void setPoseAnim(ServerPlayerEntity sp, NotchNpcEntity npc, int anim) {
+        if (!guard(sp, npc)) return;
+        npc.setPoseAnim(anim);
+    }
+
+    /** Move (delta, clamped) and/or rotate (absolute yaw) the whole NPC — the move screen's live
+     *  control. The home leash follows so movement behaviors don't drag it back. */
+    public static void transform(ServerPlayerEntity sp, NotchNpcEntity npc, double dx, double dy, double dz,
+                                 float yawDeg, boolean applyYaw) {
+        if (!guard(sp, npc)) return;
+        dx = net.minecraft.util.math.MathHelper.clamp(dx, -16.0, 16.0);
+        dy = net.minecraft.util.math.MathHelper.clamp(dy, -16.0, 16.0);
+        dz = net.minecraft.util.math.MathHelper.clamp(dz, -16.0, 16.0);
+        double x = npc.getX() + dx;
+        double y = Math.max(npc.getWorld().getBottomY(), npc.getY() + dy);
+        double z = npc.getZ() + dz;
+        float yaw = applyYaw ? net.minecraft.util.math.MathHelper.wrapDegrees(yawDeg) : npc.getYaw();
+        npc.refreshPositionAndAngles(x, y, z, yaw, npc.getPitch());
+        npc.setHeadYaw(yaw);
+        npc.bodyYaw = yaw;
+        npc.getNavigation().stop();
+        npc.setHome(npc.getBlockPos());
     }
 
     public static void setBehavior(ServerPlayerEntity sp, NotchNpcEntity npc, int modeOrdinal, int radius,
@@ -200,8 +234,23 @@ public final class NotchNpcManager {
         return best;
     }
 
+    /** Waypoint dwell-time presets in ticks (index shared with the editor's Wait cycle). */
+    public static final int[] PATROL_WAITS = {0, 40, 100, 200, 400};
+    public static final String[] PATROL_WAIT_NAMES = {"None", "2s", "5s", "10s", "20s"};
+
+    public static int patrolWaitIndex(NotchNpcEntity npc) {
+        int best = 0;
+        for (int i = 1; i < PATROL_WAITS.length; i++) {
+            if (Math.abs(npc.getPatrolWaitTicks() - PATROL_WAITS[i]) < Math.abs(npc.getPatrolWaitTicks() - PATROL_WAITS[best])) {
+                best = i;
+            }
+        }
+        return best;
+    }
+
     /** Patrol edits: 0 = hand out a bound route tool, 1 = clear the route,
-     *  2 = finalize (take the route tools back), 3 = set speed ({@code value} = preset index). */
+     *  2 = finalize (take the route tools back), 3 = set speed ({@code value} = preset index),
+     *  4 = set waypoint dwell time ({@code value} = preset index). */
     public static void patrolAction(ServerPlayerEntity sp, NotchNpcEntity npc, int action, int value) {
         if (!guard(sp, npc)) return;
         switch (action) {
@@ -221,39 +270,30 @@ public final class NotchNpcManager {
                 npc.clearWaypoints();
                 sp.sendMessage(Text.literal("Waypoints cleared.").formatted(Formatting.GREEN), false);
             }
-            case 2 -> {
-                // Finalize: pull this NPC's route tools back out of the player's inventory.
-                int removed = 0;
-                for (int i = 0; i < sp.getInventory().size(); i++) {
-                    ItemStack st = sp.getInventory().getStack(i);
-                    if (st.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem
-                            && st.getNbt() != null
-                            && st.getNbt().containsUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY)
-                            && npc.getUuid().equals(st.getNbt().getUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY))) {
-                        sp.getInventory().setStack(i, ItemStack.EMPTY);
-                        removed++;
-                    }
-                }
-                sp.sendMessage(Text.literal("Route finalized (" + npc.getWaypoints().size() + " waypoints)."
-                        + (removed > 0 ? " Route tool removed." : "")).formatted(Formatting.GREEN), false);
-            }
+            case 2 -> confirmRoute(sp, npc);
             case 3 -> {
                 int idx = Math.max(0, Math.min(PATROL_SPEEDS.length - 1, value));
                 npc.setPatrolSpeed(PATROL_SPEEDS[idx]);
                 sp.sendMessage(Text.literal("Patrol speed: " + PATROL_SPEED_NAMES[idx] + ".").formatted(Formatting.GREEN), false);
             }
+            case 4 -> {
+                int idx = Math.max(0, Math.min(PATROL_WAITS.length - 1, value));
+                npc.setPatrolWaitTicks(PATROL_WAITS[idx]);
+                sp.sendMessage(Text.literal("Waypoint wait: " + PATROL_WAIT_NAMES[idx] + ".").formatted(Formatting.GREEN), false);
+            }
             default -> { }
         }
     }
 
-    /** Route-tool click: add a waypoint at the clicked spot. */
+    /** Route-tool click: add a waypoint at the clicked spot. Actionbar feedback (the HUD overlay
+     *  shows the running count) so the chat doesn't fill up while walking a long route. */
     public static void addWaypointAt(ServerPlayerEntity sp, NotchNpcEntity npc, net.minecraft.util.math.BlockPos pos) {
         if (!guard(sp, npc)) return;
         if (npc.addWaypoint(pos)) {
-            sp.sendMessage(Text.literal("Waypoint " + npc.getWaypoints().size() + " added at "
-                    + pos.toShortString() + ".").formatted(Formatting.GREEN), false);
+            sp.sendMessage(Text.literal("Waypoint " + npc.getWaypoints().size() + " added.")
+                    .formatted(Formatting.GREEN), true);
         } else {
-            sp.sendMessage(Text.literal("Route is full (16 waypoints).").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("Route is full (16 waypoints).").formatted(Formatting.RED), true);
         }
     }
 
@@ -262,10 +302,36 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         if (npc.removeLastWaypoint()) {
             sp.sendMessage(Text.literal("Removed last waypoint (" + npc.getWaypoints().size() + " left).")
-                    .formatted(Formatting.YELLOW), false);
+                    .formatted(Formatting.YELLOW), true);
         } else {
-            sp.sendMessage(Text.literal("The route is already empty.").formatted(Formatting.YELLOW), false);
+            sp.sendMessage(Text.literal("The route is already empty.").formatted(Formatting.YELLOW), true);
         }
+    }
+
+    /** Confirm the route: the tool disappears, and the NPC starts walking it. Needs 2+ waypoints
+     *  (with fewer, the tool stays so the player can keep planning). */
+    public static void confirmRoute(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        if (npc.getWaypoints().size() < 2) {
+            sp.sendMessage(Text.literal("Add at least 2 waypoints first (right-click the ground).")
+                    .formatted(Formatting.YELLOW), false);
+            return;
+        }
+        int removed = 0;
+        for (int i = 0; i < sp.getInventory().size(); i++) {
+            ItemStack st = sp.getInventory().getStack(i);
+            if (st.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem
+                    && st.getNbt() != null
+                    && st.getNbt().containsUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY)
+                    && npc.getUuid().equals(st.getNbt().getUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY))) {
+                sp.getInventory().setStack(i, ItemStack.EMPTY);
+                removed++;
+            }
+        }
+        npc.setBehavior(NotchNpcEntity.Behavior.PATROL);
+        sp.sendMessage(Text.literal("Route confirmed — " + npc.getWaypoints().size()
+                + " waypoints, patrol started." + (removed > 0 ? " The route tool vanished." : ""))
+                .formatted(Formatting.GREEN), false);
     }
 
     // ---- dialogue setup ----
@@ -321,7 +387,8 @@ public final class NotchNpcManager {
         ServerPlayNetworking.send(sp, NotchPackets.NPC_STUDIO_DATA, buf);
     }
 
-    /** Replace the NPC's dialogue with a studio-edited tree (owner/op re-validated). */
+    /** Replace the NPC's dialogue with a studio-edited tree (owner/op re-validated). The client
+     *  can't be trusted with sizes: clamp text to 500 chars, choices to 6 per page, drop blank ids. */
     public static void saveDialogue(ServerPlayerEntity sp, NotchNpcEntity npc,
                                     net.minecraft.nbt.NbtCompound treeNbt) {
         if (!guard(sp, npc)) return;
@@ -331,8 +398,19 @@ public final class NotchNpcManager {
             sp.sendMessage(Text.literal("That dialogue is too large (max 64 pages).").formatted(Formatting.RED), false);
             return;
         }
-        npc.setDialogue(tree);
-        sp.sendMessage(Text.literal("Dialogue saved (" + tree.size() + " page" + (tree.size() == 1 ? "" : "s") + ").")
+        var clean = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
+        for (var node : tree.nodes().values()) {
+            if (node.id().isBlank()) continue;
+            if (node.text().length() > 500) node.setText(node.text().substring(0, 500));
+            while (node.choices().size() > 6) node.choices().remove(node.choices().size() - 1);
+            clean.put(node);
+        }
+        clean.setStartId(tree.startId());
+        if (clean.get(clean.startId()) == null && clean.size() > 0) {
+            clean.setStartId(clean.nodes().keySet().iterator().next()); // start page was dropped
+        }
+        npc.setDialogue(clean);
+        sp.sendMessage(Text.literal("Dialogue saved (" + clean.size() + " page" + (clean.size() == 1 ? "" : "s") + ").")
                 .formatted(Formatting.GREEN), false);
     }
 

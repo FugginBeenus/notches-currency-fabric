@@ -38,17 +38,19 @@ import java.util.Map;
 public class EnchanterScreenHandler extends ScreenHandler {
 
     public static final int INPUT_X = 12, INPUT_Y = 22;
-    public static final int INV_X = 8, INV_Y = 140, HOTBAR_Y = 198;
+    public static final int INV_X = 47, INV_Y = 156, HOTBAR_Y = 214;
 
     // Property indices.
-    public static final int P_REPAIR_COST = 0, P_MULTIPLIER = 1, P_EXTRACT_COST = 2, P_TREASURE = 3;
+    public static final int P_REPAIR_COST = 0, P_MULTIPLIER = 1, P_EXTRACT_COST = 2, P_TREASURE = 3,
+            P_UNCRAFT_COST = 4, P_COST_COMMON = 5, P_COST_UNCOMMON = 6, P_COST_RARE = 7,
+            P_COST_VERY_RARE = 8, P_TREASURE_MULT = 9, P_EXTRACT_VALUE_PCT = 10;
 
     // Packet action ids.
-    public static final int ACTION_REPAIR = 0, ACTION_UPGRADE = 1, ACTION_EXTRACT = 2;
+    public static final int ACTION_REPAIR = 0, ACTION_UPGRADE = 1, ACTION_EXTRACT = 2, ACTION_UNCRAFT = 3;
 
     private final SimpleInventory input = new SimpleInventory(1);
     private final PlayerInventory playerInv;
-    private final PropertyDelegate props = new ArrayPropertyDelegate(4);
+    private final PropertyDelegate props = new ArrayPropertyDelegate(11);
 
     public EnchanterScreenHandler(int syncId, PlayerInventory inv) {
         super(ModScreenHandlers.ENCHANTER, syncId);
@@ -57,6 +59,13 @@ public class EnchanterScreenHandler extends ScreenHandler {
         props.set(P_MULTIPLIER, EnchanterManager.costMultiplierPercent);
         props.set(P_EXTRACT_COST, EnchanterManager.extractCost);
         props.set(P_TREASURE, EnchanterManager.allowTreasure ? 1 : 0);
+        props.set(P_UNCRAFT_COST, EnchanterManager.uncraftCost);
+        props.set(P_COST_COMMON, EnchanterManager.costCommon);
+        props.set(P_COST_UNCOMMON, EnchanterManager.costUncommon);
+        props.set(P_COST_RARE, EnchanterManager.costRare);
+        props.set(P_COST_VERY_RARE, EnchanterManager.costVeryRare);
+        props.set(P_TREASURE_MULT, EnchanterManager.treasureMultiplierPercent);
+        props.set(P_EXTRACT_VALUE_PCT, EnchanterManager.extractValuePercent);
 
         addSlot(new Slot(input, 0, INPUT_X, INPUT_Y));
 
@@ -85,6 +94,14 @@ public class EnchanterScreenHandler extends ScreenHandler {
     public int multiplierProp() { return props.get(P_MULTIPLIER); }
     public int extractCostProp() { return props.get(P_EXTRACT_COST); }
     public boolean treasureAllowedProp() { return props.get(P_TREASURE) != 0; }
+    public int uncraftCostProp() { return props.get(P_UNCRAFT_COST); }
+
+    /** The synced price knobs, so the client's card prices always match the server's config. */
+    public EnchanterManager.Pricing pricing() {
+        return new EnchanterManager.Pricing(props.get(P_COST_COMMON), props.get(P_COST_UNCOMMON),
+                props.get(P_COST_RARE), props.get(P_COST_VERY_RARE), props.get(P_TREASURE_MULT),
+                props.get(P_MULTIPLIER), props.get(P_EXTRACT_COST), props.get(P_EXTRACT_VALUE_PCT));
+    }
 
     @Override
     public void sendContentUpdates() {
@@ -106,7 +123,29 @@ public class EnchanterScreenHandler extends ScreenHandler {
             case ACTION_REPAIR -> repair(sp, stack);
             case ACTION_UPGRADE -> upgrade(sp, stack, enchId);
             case ACTION_EXTRACT -> extract(sp, stack, enchId);
+            case ACTION_UNCRAFT -> uncraft(sp, stack);
         }
+    }
+
+    /** Break the item back into its crafting ingredients for a fee (one craft's worth per click). */
+    private void uncraft(ServerPlayerEntity sp, ItemStack stack) {
+        EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.getWorld());
+        if (plan == null) {
+            String why = stack.isDamaged() ? "Repair it first — worn gear can't be salvaged for full parts."
+                    : "That item has no crafting recipe to reverse.";
+            sp.sendMessage(Text.literal(why).formatted(Formatting.YELLOW), false);
+            return;
+        }
+        long cost = EnchanterManager.uncraftCost;
+        if (!charge(sp, cost, "enchanter uncraft")) return;
+        stack.decrement(plan.consumed());
+        input.markDirty();
+        for (ItemStack ret : plan.returns()) {
+            sp.getInventory().offerOrDrop(ret.copy());
+        }
+        sendContentUpdates();
+        sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.7f, 0.8f);
+        sp.sendMessage(Text.literal("Uncrafted into its parts for " + cost + " coins.").formatted(Formatting.GREEN), false);
     }
 
     private void repair(ServerPlayerEntity sp, ItemStack stack) {
@@ -140,7 +179,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
             sp.sendMessage(Text.literal("That enchantment can't go on this item.").formatted(Formatting.RED), false);
             return;
         }
-        long cost = EnchanterManager.upgradeCost(ench, level, EnchanterManager.costMultiplierPercent);
+        long cost = EnchanterManager.upgradeCost(ench, level, EnchanterManager.pricing());
         if (!charge(sp, cost, "enchanter upgrade")) return;
         Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
         map.put(ench, level);
@@ -162,7 +201,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
             sp.sendMessage(Text.literal("That enchantment isn't on this item.").formatted(Formatting.RED), false);
             return;
         }
-        long cost = EnchanterManager.extractCost;
+        long cost = EnchanterManager.extractPrice(ench, level, EnchanterManager.pricing());
         if (!charge(sp, cost, "enchanter extract")) return;
         map.remove(ench);
         EnchantmentHelper.set(map, stack);

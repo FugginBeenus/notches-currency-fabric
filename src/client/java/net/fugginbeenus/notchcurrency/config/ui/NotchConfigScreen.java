@@ -50,6 +50,7 @@ public final class NotchConfigScreen {
                     net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.applyConfig(cfg);
                     net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
                     net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
+                    net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
                     // Rebuild the custom-currency pack so a name change takes effect on the next start.
                     net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
                 });
@@ -304,6 +305,53 @@ public final class NotchConfigScreen {
                 .setTooltip(Text.literal("The cosmetics shop NPC. Offers are datapack-driven — see"),
                         Text.literal("data/notchcurrency/cosmetics/*.json. Buying is a coin SINK."))
                 .setSaveConsumer(v -> cfg.cosmetic.enabled = v).build());
+
+        // ===== Villager Trades =====
+        ConfigCategory villager = builder.getOrCreateCategory(Text.literal("Villager Trades"));
+        villager.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.villagerTrades.enabled)
+                .setDefaultValue(true)
+                .setTooltip(Text.literal("When villagers roll new trades, some may be priced in coins instead of"),
+                        Text.literal("emeralds — a rare find that makes currency spendable at villagers (a SINK)."))
+                .setSaveConsumer(v -> cfg.villagerTrades.enabled = v).build());
+        villager.addEntry(eb.startIntSlider(Text.literal("Conversion chance"), cfg.villagerTrades.chancePercent, 0, 100)
+                .setDefaultValue(10)
+                .setTextGetter(v -> Text.literal(v + "%"))
+                .setTooltip(Text.literal("Chance per new emerald trade. High-value trades (8+ emeralds) get double."))
+                .setSaveConsumer(v -> cfg.villagerTrades.chancePercent = v).build());
+        villager.addEntry(eb.startIntField(Text.literal("Coins per emerald"), cfg.villagerTrades.coinsPerEmerald)
+                .setDefaultValue(3).setMin(1)
+                .setTooltip(Text.literal("Coin price for each emerald of the original trade."),
+                        Text.literal("Trades too pricey to fit the two buy slots stay emerald-priced."))
+                .setSaveConsumer(v -> cfg.villagerTrades.coinsPerEmerald = v).build());
+
+        // ===== HUD =====
+        ConfigCategory hud = builder.getOrCreateCategory(Text.literal("HUD"));
+        hud.addEntry(eb.startSelector(Text.literal("Bounty tracker position"),
+                        new String[]{"TOP_LEFT", "TOP_CENTER", "TOP_RIGHT",
+                                "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"},
+                        cfg.hud.bountyTrackerCorner)
+                .setDefaultValue("TOP_RIGHT")
+                .setTooltip(Text.literal("Screen anchor for the bounty tracker pills."),
+                        Text.literal("Client-side: on a server each player sets their own."))
+                .setSaveConsumer(v -> cfg.hud.bountyTrackerCorner = v).build());
+        hud.addEntry(eb.startIntField(Text.literal("Bounty tracker X offset"), cfg.hud.bountyTrackerX)
+                .setDefaultValue(6)
+                .setTooltip(Text.literal("Pixels inward from the anchor (left/right nudge on CENTER)."))
+                .setSaveConsumer(v -> cfg.hud.bountyTrackerX = v).build());
+        hud.addEntry(eb.startIntField(Text.literal("Bounty tracker Y offset"), cfg.hud.bountyTrackerY)
+                .setDefaultValue(6)
+                .setTooltip(Text.literal("Pixels inward from the top or bottom edge."))
+                .setSaveConsumer(v -> cfg.hud.bountyTrackerY = v).build());
+        hud.addEntry(eb.startIntSlider(Text.literal("Bounty tracker scale"), cfg.hud.bountyTrackerScale, 50, 200)
+                .setDefaultValue(100)
+                .setTextGetter(v -> Text.literal(v + "%"))
+                .setTooltip(Text.literal("Shrink or grow the whole tracker."))
+                .setSaveConsumer(v -> cfg.hud.bountyTrackerScale = v).build());
+        hud.addEntry(eb.startIntSlider(Text.literal("Bounty tracker opacity"), cfg.hud.bountyTrackerOpacity, 0, 100)
+                .setDefaultValue(85)
+                .setTextGetter(v -> Text.literal(v + "%"))
+                .setTooltip(Text.literal("Background darkness of the pills."))
+                .setSaveConsumer(v -> cfg.hud.bountyTrackerOpacity = v).build());
 
         // ===== Waystone Fee =====
         ConfigCategory waystone = builder.getOrCreateCategory(Text.literal("Waystone Fee"));

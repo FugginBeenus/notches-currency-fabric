@@ -87,13 +87,23 @@ public class TradeOffersScreenHandler extends ScreenHandler {
     }
 
     private static ItemStack display(TradeOffer offer, boolean mine) {
-        ItemStack carrier = offer.offered().copy();
-        if (carrier.isEmpty()) return ItemStack.EMPTY;
+        ItemStack carrier = offer.firstOffered().copy();
+        if (carrier.isEmpty()) carrier = new ItemStack(net.minecraft.item.Items.PAPER); // coins-only offer
         NbtCompound t = carrier.getOrCreateNbt();
         t.putUuid("nc_oid", offer.id());
         t.putLong("nc_price", offer.priceCoins());
-        t.putString("nc_reqname", offer.requestsItem() ? offer.requestedItem().getName().getString() : "");
-        t.putInt("nc_reqcount", offer.requestsItem() ? offer.requestedItem().getCount() : 0);
+        t.putLong("nc_gcoins", offer.offeredCoins());
+        // Every stack on both sides, so the row can draw the whole exchange like trade ingredients.
+        net.minecraft.nbt.NbtList gives = new net.minecraft.nbt.NbtList();
+        for (ItemStack st : offer.offeredItems()) {
+            gives.add(st.writeNbt(new NbtCompound()));
+        }
+        t.put("nc_gives", gives);
+        net.minecraft.nbt.NbtList wants = new net.minecraft.nbt.NbtList();
+        for (ItemStack st : offer.requestedItems()) {
+            wants.add(st.writeNbt(new NbtCompound()));
+        }
+        t.put("nc_wants", wants);
         t.putString("nc_from", offer.creatorName());
         t.putString("nc_target", offer.isOpen() ? "" : offer.targetName());
         t.putBoolean("nc_mine", mine);

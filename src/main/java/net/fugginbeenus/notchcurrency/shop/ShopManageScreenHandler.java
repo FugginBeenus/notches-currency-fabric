@@ -42,6 +42,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
     private final UUID shopId;
     private final String shopName;
     private final String greeting;
+    @Nullable private final UUID npcId; // linked NPC, for the client-side preview
     @Nullable private final PlayerShop shop; // server side only
     private final SimpleInventory rowInv = new SimpleInventory(ROWS);
     private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
@@ -55,16 +56,18 @@ public class ShopManageScreenHandler extends ScreenHandler {
 
     /** Client constructor: the opening buf carries the shop identity. */
     public ShopManageScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
-        this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256), null);
+        this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256),
+                ShopBrowseScreenHandler.readNpcId(buf), null);
     }
 
     /** Server constructor. */
     public ShopManageScreenHandler(int syncId, PlayerInventory inv, UUID shopId, String shopName,
-                                   String greeting, @Nullable PlayerShop shop) {
+                                   String greeting, @Nullable UUID npcId, @Nullable PlayerShop shop) {
         super(ModScreenHandlers.SHOP_MANAGE, syncId);
         this.shopId = shopId;
         this.shopName = shopName;
         this.greeting = greeting;
+        this.npcId = npcId;
         this.shop = shop;
         this.addProperties(props);
         for (int i = 0; i < ROWS; i++) {
@@ -76,6 +79,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
     public UUID shopId() { return shopId; }
     public String shopName() { return shopName; }
     public String greeting() { return greeting; }
+    @Nullable public UUID npcId() { return npcId; }
     public ItemStack rowStack(int i) { return rowInv.getStack(i); }
     public int prop(int i) { return props.get(i); }
 

@@ -17,12 +17,15 @@ import java.util.UUID;
  */
 public class NpcStatsScreen extends Screen {
 
-    private static final int W = 300, H = 224;
+    private static final int W = 300, H = 266;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
     private static final String[] TOGGLE_NAMES = {
             "Protected", "Silent", "Glowing", "Nameplate",
-            "No gravity", "Opens doors", "Leashable", "Invisible"};
+            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable",
+            "Hostile: players", "Fights back"};
+    // Explicit bit per toggle (bits 8-9 are reserved for the visibility rule, so Pushable jumps to 1024).
+    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024, 2048, 4096};
 
     private final UUID npcId;
     private int statsBits;
@@ -68,19 +71,19 @@ public class NpcStatsScreen extends Screen {
         NotchWidgets.divider(ctx, px + 8, py + 96, W - 16);
 
         for (int i = 0; i < TOGGLE_NAMES.length; i++) {
-            boolean on = (statsBits & (1 << i)) != 0;
+            boolean on = (statsBits & TOGGLE_BITS[i]) != 0;
             boolean hover = over(mouseX, mouseY, toggleX(i), toggleY(i), 132, 15);
             if (on) NotchWidgets.primaryButton(ctx, this.textRenderer, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
             else NotchWidgets.neutralButton(ctx, this.textRenderer, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
         }
 
         // Day/night rule: while off-schedule the NPC is invisible and won't respond to clicks.
-        ctx.drawText(this.textRenderer, "Appears", px + 14, py + 184, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + SLIDER_X, py + 181, SLIDER_W, 15,
-                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 181, SLIDER_W, 15));
+        ctx.drawText(this.textRenderer, "Appears", px + 14, py + 226, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + SLIDER_X, py + 223, SLIDER_W, 15,
+                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 223, SLIDER_W, 15));
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 202, 160, 16, "Done",
-                over(mouseX, mouseY, px + 70, py + 202, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 244, 160, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 70, py + 244, 160, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -117,19 +120,22 @@ public class NpcStatsScreen extends Screen {
             }
             for (int i = 0; i < TOGGLE_NAMES.length; i++) {
                 if (over(mx, my, toggleX(i), toggleY(i), 132, 15)) {
-                    statsBits ^= (1 << i);
+                    NotchWidgets.tick();
+                    statsBits ^= TOGGLE_BITS[i];
                     NotchPacketsClient.sendNpcSetStats(npcId, statsBits);
                     return true;
                 }
             }
-            if (over(mx, my, px + SLIDER_X, py + 181, SLIDER_W, 15)) {
+            if (over(mx, my, px + SLIDER_X, py + 223, SLIDER_W, 15)) {
+                NotchWidgets.tick();
                 int vis = (visibility() + 1) % 3;
                 statsBits = (statsBits & ~(3 << 8)) | (vis << 8);
                 NotchPacketsClient.sendNpcSetStats(npcId, statsBits);
                 return true;
             }
-            if (over(mx, my, px + 70, py + 202, 160, 16)) {
-                this.close();
+            if (over(mx, my, px + 70, py + 244, 160, 16)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // return to the NPC editor
                 return true;
             }
         }

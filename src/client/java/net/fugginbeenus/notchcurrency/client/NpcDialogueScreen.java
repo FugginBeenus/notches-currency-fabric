@@ -29,18 +29,18 @@ public class NpcDialogueScreen extends Screen {
     private static final int TEXT_X = 90, TEXT_Y = 30, TEXT_W = 180;
     private static final int CHOICE_H = 16;
 
-    private final UUID npcId;
-    private final String npcName;
-    private final String nodeId;
+    protected final UUID npcId;
+    protected final String npcName;
+    protected final String nodeId;
     private final String text;
-    private final int[] indices;
-    private final String[] labels;
-    private final boolean[] enabled;
+    protected final int[] indices;
+    protected final String[] labels;
+    protected final boolean[] enabled;
 
     private int px, py;
     private List<OrderedText> wrapped;
     private NotchNpcEntity portrait;
-    private boolean chose = false;
+    protected boolean chose = false;
 
     public NpcDialogueScreen(UUID npcId, String npcName, String nodeId, String text,
                              int[] indices, String[] labels, boolean[] enabled) {
@@ -70,6 +70,10 @@ public class NpcDialogueScreen extends Screen {
         this.renderBackground(ctx);
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, npcName, px + W / 2, py + 8);
+        if (!bannerText().isEmpty()) {
+            NotchWidgets.centerText(ctx, this.textRenderer, bannerText(), px + W / 2, py + 18,
+                    NotchTheme.TEXT_MUTED, false);
+        }
 
         // Portrait of the actual NPC (looks toward the cursor, like the editor preview).
         NotchWidgets.inset(ctx, px + PORTRAIT_X, py + PORTRAIT_Y, PORTRAIT_W, PORTRAIT_H, NotchTheme.DEEP);
@@ -114,13 +118,25 @@ public class NpcDialogueScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < labels.length; i++) {
                 if (enabled[i] && over(mx, my, px + TEXT_X, choiceY(i), TEXT_W, CHOICE_H)) {
-                    chose = true; // one click per page; the server sends the next page or closes
-                    NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, indices[i]);
+                    NotchWidgets.tick();
+                    onChoice(i);
                     return true;
                 }
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** A choice was clicked ({@code i} = index into the visible arrays). The live screen asks the
+     *  server; the preview subclass navigates its local tree instead. */
+    protected void onChoice(int i) {
+        chose = true; // one click per page; the server sends the next page or closes
+        NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, indices[i]);
+    }
+
+    /** Optional muted line under the title (the preview marks itself with it). */
+    protected String bannerText() {
+        return "";
     }
 
     private NotchNpcEntity findNpc() {

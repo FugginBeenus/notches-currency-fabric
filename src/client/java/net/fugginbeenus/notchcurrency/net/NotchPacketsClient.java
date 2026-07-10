@@ -49,11 +49,14 @@ public final class NotchPacketsClient {
             int behaviorOrdinal = buf.readVarInt();
             int wanderRadius = buf.readVarInt();
             int dialogueNodes = buf.readVarInt();
+            boolean dialogueFlat = buf.readBoolean();
             int statsBits = buf.readVarInt();
             int dialogueMode = buf.readVarInt();
             int waypoints = buf.readVarInt();
             int patrolSpeedIdx = buf.readVarInt();
+            int patrolWaitIdx = buf.readVarInt();
             int poseId = buf.readVarInt();
+            int poseAnim = buf.readVarInt();
             int maxHealth = buf.readVarInt();
             int speedPct = buf.readVarInt();
             int regen = buf.readVarInt();
@@ -61,8 +64,9 @@ public final class NotchPacketsClient {
             int movesBits = buf.readVarInt();
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim, scale,
-                    behaviorOrdinal, wanderRadius, dialogueNodes, statsBits, dialogueMode, waypoints,
-                    patrolSpeedIdx, poseId, maxHealth, speedPct, regen, followName, movesBits);
+                    behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
+                    waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
+                    regen, followName, movesBits);
             client.execute(() -> MinecraftClient.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });
@@ -74,6 +78,20 @@ public final class NotchPacketsClient {
         buf.writeVarInt(action);
         buf.writeVarInt(value);
         ClientPlayNetworking.send(NotchPackets.NPC_PATROL, buf);
+    }
+
+    /** Ask the server to reopen the NPC editor — used by sub-screens' Back buttons. */
+    public static void sendNpcEditorReopen(UUID npcId) {
+        sendNpcEditorReopen(npcId, 0);
+    }
+
+    /** Reopen the NPC editor landing on {@code returnTab} — sub-screens pass their home tab so
+     *  "Back" returns you where you came from. */
+    public static void sendNpcEditorReopen(UUID npcId, int returnTab) {
+        net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen.reopenAtTab = returnTab;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        ClientPlayNetworking.send(NotchPackets.NPC_EDITOR_REOPEN, buf);
     }
 
     public static void sendNpcSetPose(UUID npcId, int pose) {
@@ -91,6 +109,26 @@ public final class NotchPacketsClient {
         buf.writeVarInt(degY);
         buf.writeVarInt(degZ);
         ClientPlayNetworking.send(NotchPackets.NPC_POSE_PART, buf);
+    }
+
+    /** Set the idle animation layered on the pose (statue/breathe/sway/lively). */
+    public static void sendNpcSetAnim(UUID npcId, int anim) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeVarInt(anim);
+        ClientPlayNetworking.send(NotchPackets.NPC_SET_ANIM, buf);
+    }
+
+    /** Move (delta blocks) and/or rotate (absolute yaw, when applyYaw) the whole NPC. */
+    public static void sendNpcTransform(UUID npcId, double dx, double dy, double dz, float yawDeg, boolean applyYaw) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeDouble(dx);
+        buf.writeDouble(dy);
+        buf.writeDouble(dz);
+        buf.writeFloat(yawDeg);
+        buf.writeBoolean(applyYaw);
+        ClientPlayNetworking.send(NotchPackets.NPC_TRANSFORM, buf);
     }
 
     public static void sendNpcDialogueMode(UUID npcId, int modeOrdinal) {
@@ -147,9 +185,10 @@ public final class NotchPacketsClient {
         ClientPlayNetworking.send(NotchPackets.SHOP_WITHDRAW, buf);
     }
 
-    public static void sendTradeOfferCreate(long price, String target) {
+    public static void sendTradeOfferCreate(long price, long giveCoins, String target) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarLong(price);
+        buf.writeVarLong(giveCoins);
         buf.writeString(target);
         ClientPlayNetworking.send(NotchPackets.TRADE_OFFER_CREATE, buf);
     }
@@ -262,14 +301,51 @@ public final class NotchPacketsClient {
         ClientPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_STUDIO_DATA, (client, handler, buf, rs) -> {
             UUID npcId = buf.readUuid();
             net.minecraft.nbt.NbtCompound tree = buf.readNbt();
-            client.execute(() -> MinecraftClient.getInstance().setScreen(
-                    new net.fugginbeenus.notchcurrency.client.DialogueStudioScreen(npcId,
-                            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(
-                                    tree == null ? new net.minecraft.nbt.NbtCompound() : tree))));
+            client.execute(() -> {
+                var parsed = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(
+                        tree == null ? new net.minecraft.nbt.NbtCompound() : tree);
+                if (nextStudioOpensQuickLines) {
+                    nextStudioOpensQuickLines = false;
+                    MinecraftClient.getInstance().setScreen(
+                            new net.fugginbeenus.notchcurrency.client.QuickLinesScreen(npcId, parsed));
+                } else {
+                    MinecraftClient.getInstance().setScreen(
+                            new net.fugginbeenus.notchcurrency.client.DialogueStudioScreen(npcId, parsed));
+                }
+            });
         });
     }
 
+    /** The taken-bounty list for the on-screen tracker HUD. */
+    public static void registerBountyTrackerReceiver() {
+        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.BOUNTY_TRACKER, (client, handler, buf, rs) -> {
+            int count = buf.readVarInt();
+            var list = new java.util.ArrayList<net.fugginbeenus.notchcurrency.client.BountyTrackerHud.Entry>();
+            for (int i = 0; i < count; i++) {
+                String desc = buf.readString();
+                boolean kill = buf.readBoolean();
+                String target = buf.readString();
+                int prog = buf.readVarInt();
+                int req = buf.readVarInt();
+                long expiry = buf.readLong();
+                String rarity = buf.readString();
+                list.add(new net.fugginbeenus.notchcurrency.client.BountyTrackerHud.Entry(
+                        desc, kill, target, prog, req, expiry, rarity));
+            }
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.BountyTrackerHud.setEntries(list));
+        });
+    }
+
+    /** When set, the next NPC_STUDIO_DATA reply opens Quick Lines instead of the full studio. */
+    private static boolean nextStudioOpensQuickLines = false;
+
     public static void sendNpcStudioOpen(UUID npcId) {
+        sendNpcStudioOpen(npcId, false);
+    }
+
+    /** {@code quickLines} routes the server's tree reply into the Quick Lines editor. */
+    public static void sendNpcStudioOpen(UUID npcId, boolean quickLines) {
+        nextStudioOpensQuickLines = quickLines;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         ClientPlayNetworking.send(NotchPackets.NPC_STUDIO_OPEN, buf);

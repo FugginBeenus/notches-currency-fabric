@@ -18,6 +18,7 @@ public class NpcPatrolGoal extends Goal {
     private final NotchNpcEntity npc;
     private int index;
     private int repathCountdown;
+    private int waitCountdown; // linger at a reached waypoint before moving on
 
     public NpcPatrolGoal(NotchNpcEntity npc) {
         this.npc = npc;
@@ -49,6 +50,7 @@ public class NpcPatrolGoal extends Goal {
         }
         this.index = nearest;
         this.repathCountdown = 0;
+        this.waitCountdown = 0;
     }
 
     @Override
@@ -57,11 +59,23 @@ public class NpcPatrolGoal extends Goal {
         if (route.isEmpty()) return;
         if (index >= route.size()) index = 0;
 
+        // Lingering at a waypoint: stand still until the dwell timer runs out.
+        if (waitCountdown > 0) {
+            waitCountdown--;
+            return;
+        }
+
         BlockPos target = route.get(index);
         if (target.getSquaredDistance(npc.getPos()) <= ARRIVE_DIST_SQ) {
             index = (index + 1) % route.size();
             target = route.get(index);
             repathCountdown = 0;
+            // Dwell time is read live so the editor's setting applies mid-patrol.
+            if (npc.getPatrolWaitTicks() > 0) {
+                waitCountdown = this.getTickCount(npc.getPatrolWaitTicks());
+                npc.getNavigation().stop();
+                return;
+            }
         }
         if (--repathCountdown <= 0) {
             repathCountdown = this.getTickCount(20);

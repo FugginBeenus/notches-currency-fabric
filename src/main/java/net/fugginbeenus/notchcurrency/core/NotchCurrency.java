@@ -63,7 +63,10 @@ public class NotchCurrency implements ModInitializer {
         HoverEvent.ItemStackContent content =
                 new HoverEvent.ItemStackContent(new ItemStack(ModItems.NOTCH_COIN));
 
+        // Force white so the coin glyph renders at full brightness (untinted) no matter what colour
+        // the surrounding price text is drawn in — otherwise dark price text darkens the coin.
         return t.styled(style -> style
+                .withColor(net.minecraft.text.TextColor.fromRgb(0xFFFFFF))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, content)));
     }
 
@@ -123,6 +126,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
 
         // Waystone fee — soft integration; only hook the event when the Waystones mod is present.
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
@@ -188,6 +192,9 @@ public class NotchCurrency implements ModInitializer {
 
             // Hand over any items owed from trade offers resolved while they were offline.
             net.fugginbeenus.notchcurrency.trade.TradeOfferManager.deliverMail(sp);
+
+            // Seed the on-screen bounty tracker with their taken bounties.
+            net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
         });
 
         // HUD balance sync on respawn

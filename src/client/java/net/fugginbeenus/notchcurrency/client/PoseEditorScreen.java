@@ -110,7 +110,7 @@ public class PoseEditorScreen extends Screen {
 
         NotchWidgets.centerText(ctx, this.textRenderer, "Changes apply to the NPC instantly.",
                 px + RX + (W - RX) / 2 - 4, py + 187, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + RX, py + 198, 208, 16, "Done",
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + RX, py + 198, 208, 16, "Back to Editor",
                 over(mouseX, mouseY, px + RX, py + 198, 208, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -125,6 +125,7 @@ public class PoseEditorScreen extends Screen {
             int px = px(), py = py();
             for (int i = 0; i < PART_NAMES.length; i++) {
                 if (over(mx, my, partX(i), partY(i), PART_W, PART_H)) {
+                    if (selectedPart != i) NotchWidgets.tick();
                     selectedPart = i;
                     return true;
                 }
@@ -138,17 +139,20 @@ public class PoseEditorScreen extends Screen {
                 }
             }
             if (over(mx, my, px + RX, py + 166, 100, 15)) {
+                NotchWidgets.click();
                 setPartAngles(0, 0, 0);
                 sendPart();
                 return true;
             }
             if (over(mx, my, px + RX + 108, py + 166, 100, 15)) {
+                NotchWidgets.click();
                 for (int i = 0; i < 18; i++) angles[i] = 0;
                 NotchPacketsClient.sendNpcPosePart(npcId, -1, 0, 0, 0);
                 return true;
             }
             if (over(mx, my, px + RX, py + 198, 208, 16)) {
-                this.close();
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 4); // return to the NPC editor
                 return true;
             }
         }

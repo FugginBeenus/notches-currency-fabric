@@ -15,6 +15,44 @@ public final class NotchConfig {
     public Currency currency = new Currency();
     public Waystone waystone = new Waystone();
     public Cosmetic cosmetic = new Cosmetic();
+    public Hud hud = new Hud();
+    public VillagerTrades villagerTrades = new VillagerTrades();
+
+    /**
+     * Villager currency integration: when a villager rolls new trades, each emerald-priced trade
+     * has a chance to be re-priced in coins instead (a rare, lootable-style find and a coin SINK).
+     * High-value trades (8+ emeralds) get double the chance.
+     */
+    public static final class VillagerTrades {
+        /** Master toggle for coin-priced villager trades. */
+        public boolean enabled = true;
+
+        /** Per-trade conversion chance in percent (doubled for 8+ emerald trades). */
+        public int chancePercent = 10;
+
+        /** Coin price per emerald of the original trade. */
+        public int coinsPerEmerald = 3;
+    }
+
+    /**
+     * On-screen HUD positioning. The HUD renders client-side from the LOCAL copy of this file, so
+     * on a server every player can position it for their own modded HUD layout, while the server
+     * owner's copy sets the default for singleplayer/hosted setups.
+     */
+    public static final class Hud {
+        /** Bounty tracker anchor: TOP/BOTTOM x LEFT/CENTER/RIGHT (e.g. TOP_RIGHT, BOTTOM_CENTER). */
+        public String bountyTrackerCorner = "TOP_RIGHT";
+
+        /** Pixel offsets from that anchor. */
+        public int bountyTrackerX = 6;
+        public int bountyTrackerY = 6;
+
+        /** Whole-tracker scale in percent (50–200). */
+        public int bountyTrackerScale = 100;
+
+        /** Pill background opacity in percent (0–100). */
+        public int bountyTrackerOpacity = 85;
+    }
 
     /**
      * Cosmetics shop: sell cosmetics from any mod for coins (a SINK). Offers are datapack-driven
@@ -69,11 +107,27 @@ public final class NotchConfig {
         /** Scales all enchantment purchase prices (percent; 200 = double price). */
         public int costMultiplierPercent = 100;
 
-        /** Coins to extract one enchantment onto a book. */
+        /** Per-level coin cost of an enchantment, by rarity. */
+        public int costCommon = 15;
+        public int costUncommon = 25;
+        public int costRare = 45;
+        public int costVeryRare = 80;
+
+        /** Extra price multiplier for treasure enchants like Mending (percent; 200 = double). */
+        public int treasureMultiplierPercent = 200;
+
+        /** Flat fee to extract an enchantment onto a book (the value share below is added on top). */
         public int extractCost = 25;
+
+        /** Extraction also charges this % of the enchant's own purchase price, so pulling a
+         *  high-value enchant can't undercut its worth (anti book-farming). 0 = flat fee only. */
+        public int extractValuePercent = 100;
 
         /** Whether treasure enchantments (Mending etc.) can be bought — at double price. */
         public boolean allowTreasure = true;
+
+        /** Coins to uncraft an undamaged item back into its crafting ingredients. */
+        public int uncraftCost = 30;
     }
 
     /**

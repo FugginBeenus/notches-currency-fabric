@@ -105,9 +105,9 @@ public class LoanScreen extends HandledScreen<LoanScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, this.x + BORROW_X, this.y + BTN_Y, BTN_W, BTN_H)) { send(0, amount()); return true; }
-            if (over(mx, my, this.x + REPAY_X, this.y + BTN_Y, BTN_W, BTN_H)) { send(1, amount()); return true; }
-            if (over(mx, my, this.x + ALL_X, this.y + ALL_Y, ALL_W, ALL_H)) { send(1, 0); return true; }
+            if (over(mx, my, this.x + BORROW_X, this.y + BTN_Y, BTN_W, BTN_H)) { NotchWidgets.click(); send(0, amount()); return true; }
+            if (over(mx, my, this.x + REPAY_X, this.y + BTN_Y, BTN_W, BTN_H)) { NotchWidgets.click(); send(1, amount()); return true; }
+            if (over(mx, my, this.x + ALL_X, this.y + ALL_Y, ALL_W, ALL_H)) { NotchWidgets.click(); send(1, 0); return true; }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -125,5 +125,12 @@ public class LoanScreen extends HandledScreen<LoanScreenHandler> {
         buf.writeVarInt(action);
         buf.writeVarLong(amount);
         ClientPlayNetworking.send(NotchPackets.LOAN_ACTION, buf);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, amountField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

@@ -138,6 +138,7 @@ public final class BountyManager {
         player.sendMessage(Text.literal("Took bounty: ").formatted(Formatting.GREEN)
                 .append(Text.literal(offer.describe()).formatted(offer.getRarity().color()))
                 .append(Text.literal(" — finish within " + mins + "m.").formatted(Formatting.GREEN)), false);
+        syncTracker(player);
     }
 
     // ---- kill tracking (only toward taken bounties) ----
@@ -155,6 +156,7 @@ public final class BountyManager {
 
             int next = tb.addProgress(1);
             state.markDirty();
+            syncTracker(player);
             if (next >= b.getRequired()) {
                 player.sendMessage(Text.literal("✔ Bounty complete: ").formatted(Formatting.GREEN)
                         .append(Text.literal(b.describe()).formatted(b.getRarity().color()))
@@ -193,6 +195,7 @@ public final class BountyManager {
                     .append(totalCoins > 0 ? Text.literal(" (+").formatted(Formatting.GREEN)
                             .append(NotchCurrency.coins(totalCoins)).append(Text.literal(")").formatted(Formatting.GREEN))
                             : Text.empty()), false);
+            syncTracker(player);
         } else {
             player.sendMessage(Text.literal("Nothing ready to collect.").formatted(Formatting.GRAY), false);
         }
@@ -226,6 +229,37 @@ public final class BountyManager {
         player.sendMessage(Text.literal("Delivered " + b.getRequired() + " ").formatted(Formatting.GREEN)
                 .append(b.targetName().copy().formatted(Formatting.WHITE))
                 .append(Text.literal(" — reward: " + b.rewardSummary() + "!").formatted(Formatting.GREEN)), false);
+        syncTracker(player);
+    }
+
+    /** Sync the player's taken bounties to their on-screen tracker HUD. Call after anything that
+     *  changes the taken list or its progress (take, kill progress, claim, turn-in, join). */
+    public static void syncTracker(ServerPlayerEntity player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+        BountyState state = BountyState.get(server);
+        long now = worldTime(server);
+
+        var taken = state.getTakenAll(player.getUuid());
+        var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+        int count = 0;
+        for (TakenBounty tb : taken) {
+            if (!tb.isExpired(now)) count++;
+        }
+        buf.writeVarInt(count);
+        for (TakenBounty tb : taken) {
+            if (tb.isExpired(now)) continue;
+            Bounty b = tb.bounty();
+            buf.writeString(b.describe());
+            buf.writeBoolean(b.getType() == BountyType.KILL);
+            buf.writeString(b.getType() == BountyType.FETCH ? b.getTarget().toString() : "");
+            buf.writeVarInt(tb.progress());
+            buf.writeVarInt(b.getRequired());
+            buf.writeLong(tb.expiresGameTime());
+            buf.writeString(b.getRarity().name());
+        }
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+                net.fugginbeenus.notchcurrency.net.NotchPackets.BOUNTY_TRACKER, buf);
     }
 
     private static void giveReward(ServerPlayerEntity player, Bounty b) {

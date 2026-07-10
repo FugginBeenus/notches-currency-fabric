@@ -11,6 +11,7 @@ import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.RotationAxis;
 
 /**
  * Vanilla-biped renderer for the default "humanoid" Notch NPC model. Built on the real
@@ -42,6 +43,19 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
         this.model.sneaking = entity.isInSneakingPose();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+    }
+
+    @Override
+    protected void setupTransforms(NotchNpcEntity entity, MatrixStack matrices, float animationProgress,
+                                   float bodyYaw, float tickDelta) {
+        if (entity.getNpcPose() == NotchNpcEntity.POSE_PRONE) {
+            // Replicate vanilla's swimming/crawling transform (face-down, flat on the ground).
+            matrices.multiply(RotationAxis.NEGATIVE_Y.rotationDegrees(bodyYaw));
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90.0f));
+            matrices.translate(0.0f, -1.0f, 0.3f); // vanilla swim offset — sits the crawl on the ground
+            return;
+        }
+        super.setupTransforms(entity, matrices, animationProgress, bodyYaw, tickDelta);
     }
 
     @Override

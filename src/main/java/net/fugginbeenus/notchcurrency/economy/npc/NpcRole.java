@@ -8,13 +8,14 @@ package net.fugginbeenus.notchcurrency.economy.npc;
  * {@code ADMIN_SHOP} additionally references a specific admin shop (the assignment's shopId).
  */
 public enum NpcRole {
-    /** No economy function yet — a freshly configured NPC (or a pure greeter until dialogue lands). */
+    /** No economy function — interaction plays the NPC's dialogue (if any), nothing after. */
     NONE,
     /** A player-owned shop NPC (links a {@code PlayerShop} keyed by the NPC's UUID). */
     SHOP,
-    /** Greets/talks only (branching dialogue arrives in a later phase). */
+    /** Talks only: plays its dialogue (window or a random chat line) and never opens a screen.
+     *  With no dialogue configured it falls back to a stock "Hello there!". */
     GREETER,
-    /** Enchant/repair/uncraft service NPC (placeholder for a future feature). */
+    /** Opens the Enchanter: buy enchant levels, repair, extract to book, uncraft. */
     ENCHANTER,
     /** Opens an admin server-shop (needs a shopId on the assignment). */
     ADMIN_SHOP,

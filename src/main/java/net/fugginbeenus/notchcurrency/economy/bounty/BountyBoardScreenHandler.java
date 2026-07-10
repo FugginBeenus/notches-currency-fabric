@@ -116,6 +116,11 @@ public class BountyBoardScreenHandler extends ScreenHandler {
         t.putUuid("bid", b.getId());
         t.putString("desc", b.describe());
         t.putString("rew", b.rewardSummary());
+        t.putLong("rewc", b.getRewardCoins());
+        if (!b.getRewardItem().isEmpty()) {
+            // The reward stack itself, so the row can draw its icon with the count.
+            t.put("rews", b.getRewardItem().writeNbt(new NbtCompound()));
+        }
         t.putString("rar", b.getRarity().name());
         t.putString("typ", b.getType().name());
         t.putInt("prog", progress);

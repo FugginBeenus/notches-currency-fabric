@@ -39,6 +39,26 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Ownership-gated editing, a "pick up" that repacks the config into the item, and saveable presets
 - A public API (`NotchNpcApi`) for other mods to spawn NPCs and register custom roles
 
+#### Dialogue
+Two ways to give an NPC a voice (editor → Talk tab):
+- **Quick Lines** — type up to 8 lines; the NPC says one at random in chat each time it's talked to.
+  Perfect for greeters and flavor shopkeepers.
+- **Dialogue Studio** — full branching conversations: pages, choice buttons, per-choice actions
+  (open its shop/screen, pay/charge coins, give items, run commands) and requirements (has coins,
+  has item, is owner, is op — locked choices grey out or hide). Preview plays the conversation
+  client-side without saving; nothing runs for real until you talk to the NPC.
+
+**Text placeholders** (work in dialogue pages, choice labels, and quick lines):
+| Placeholder | Becomes |
+|---|---|
+| `%player%` | the name of whoever is talking to the NPC |
+| `%npc%` | the NPC's name |
+| `%balance%` | the player's coin balance |
+| `&` color codes | standard Minecraft colors, e.g. `&6gold`, `&lbold` |
+
+Styles: **Window** opens the conversation screen; **Chat** prints one random page to chat and then
+opens the NPC's job (shop, bank, …). Quick Lines auto-selects Chat.
+
 ### Economy Roles
 Assign any NPC a role: Shop, Banker, Auctioneer, Mailbox, Raffle, Bounty, Dealer (casino),
 Enchanter, or Cosmetics — plus admin server-shops.
@@ -47,6 +67,8 @@ Enchanter, or Cosmetics — plus admin server-shops.
 - Enchanter (repair / buy enchants / extract to book), raffle, gambling (slots + coin flip),
   crates & keys, bounty board, loans, and a cosmetics shop
 - Sinks: wealth tax, shop rent, auction fees, and an optional Waystone teleport fee
+- Villager currency trades: when villagers roll new trades, some have a rare chance to be priced
+  in coins instead of emeralds (chance and exchange rate configurable)
 - A custom-currency maker that generates a resource pack from your coin texture + name
 
 ### Admin & Config

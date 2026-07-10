@@ -19,17 +19,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Backing handler for the listing editor. The two item slots hold SAMPLES — the sale item and the
- * barter item are copied into the listing on save and always handed back on close; nothing is ever
- * consumed or created by the slots, so there is no dupe or loss path. Stock moves only through the
- * explicit deposit/return actions, straight between the player inventory and the listing. Every
- * action applies immediately server-side (SHOP_EDIT_ACTION) — no save-on-close.
+ * Backing handler for the listing editor. The SALE and BARTER slots hold SAMPLES — copied into the
+ * listing on save and always handed back on close; nothing is consumed or created by them, so there
+ * is no dupe or loss path. The STOCK bin is a real intake slot: matching stacks dropped in are
+ * pulled into the listing's stock count each tick (and cleared); anything that doesn't match just
+ * sits there and returns on close. Every action applies immediately server-side (SHOP_EDIT_ACTION).
  */
 public class ShopListingEditScreenHandler extends ScreenHandler {
 
-    public static final int SALE_X = 12, SALE_Y = 22;
-    public static final int BARTER_X = 12, BARTER_Y = 70;
-    public static final int INV_X = 8, INV_Y = 140, HOTBAR_Y = 198;
+    public static final int SALE_X = 12, SALE_Y = 24;
+    public static final int BARTER_X = 12, BARTER_Y = 72;
+    public static final int STOCK_X = 12, STOCK_Y = 110;
+    public static final int INV_X = 24, INV_Y = 158, HOTBAR_Y = 216;
+
+    // Sample/intake slot indices.
+    public static final int SLOT_SALE = 0, SLOT_BARTER = 1, SLOT_STOCK = 2, SLOT_COUNT = 3;
 
     public static final int P_STOCK = 0, P_PRICE = 1, P_HAS_LISTING = 2;
     private static final int PROP_COUNT = 3;
@@ -39,7 +43,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             ACTION_DELETE = 3, ACTION_BACK = 4, ACTION_CLEAR_BARTER = 5;
 
     private final PlayerInventory playerInv;
-    private final SimpleInventory samples = new SimpleInventory(2);
+    private final SimpleInventory samples = new SimpleInventory(SLOT_COUNT);
     private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
 
     // Initial display seed (from the opening buf on the client).
@@ -70,8 +74,9 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         props.set(P_PRICE, price);
         props.set(P_STOCK, stock);
 
-        addSlot(new Slot(samples, 0, SALE_X, SALE_Y));
-        addSlot(new Slot(samples, 1, BARTER_X, BARTER_Y));
+        addSlot(new Slot(samples, SLOT_SALE, SALE_X, SALE_Y));
+        addSlot(new Slot(samples, SLOT_BARTER, BARTER_X, BARTER_Y));
+        addSlot(new Slot(samples, SLOT_STOCK, STOCK_X, STOCK_Y));
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInv, col + row * 9 + 9, INV_X + col * 18, INV_Y + row * 18));
@@ -122,8 +127,9 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     public int priceProp() { return props.get(P_PRICE); }
     public String currentSaleDesc() { return currentSaleDesc; }
     public String currentBarterDesc() { return currentBarterDesc; }
-    public ItemStack saleSample() { return samples.getStack(0); }
-    public ItemStack barterSample() { return samples.getStack(1); }
+    public ItemStack saleSample() { return samples.getStack(SLOT_SALE); }
+    public ItemStack barterSample() { return samples.getStack(SLOT_BARTER); }
+    public ItemStack stockSample() { return samples.getStack(SLOT_STOCK); }
 
     @Nullable
     private ShopListing listing() {
@@ -190,7 +196,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             listingId = created.getId();
             props.set(P_HAS_LISTING, 1);
             state.markDirtyAndSave();
-            sp.sendMessage(Text.literal("Listing created — now deposit some stock.").formatted(Formatting.GREEN), false);
+            sp.sendMessage(Text.literal("Listing created — drop stock into the bin.").formatted(Formatting.GREEN), false);
             return;
         }
 
@@ -266,6 +272,17 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     @Override
     public void sendContentUpdates() {
         ShopListing l = listing();
+        // Pull any matching stack sitting in the stock bin into the listing's stock, then clear it.
+        if (l != null && playerInv.player instanceof ServerPlayerEntity sp && !sp.getWorld().isClient) {
+            ItemStack intake = samples.getStack(SLOT_STOCK);
+            if (!intake.isEmpty() && ItemStack.canCombine(intake, l.getItemForSale())) {
+                int moved = intake.getCount();
+                l.addStock(moved);
+                samples.setStack(SLOT_STOCK, ItemStack.EMPTY);
+                ShopState.get(sp.getServerWorld()).markDirtyAndSave();
+                sp.sendMessage(Text.literal("Added " + moved + " to stock.").formatted(Formatting.GREEN), true);
+            }
+        }
         if (l != null) {
             props.set(P_STOCK, l.getStockQuantitySafe());
         }
@@ -293,10 +310,12 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         if (slot != null && slot.hasStack()) {
             ItemStack stack = slot.getStack();
             result = stack.copy();
-            if (index <= 1) {
-                if (!this.insertItem(stack, 2, this.slots.size(), true)) return ItemStack.EMPTY;
+            if (index < SLOT_COUNT) {
+                // A sample/intake slot → back to the player inventory.
+                if (!this.insertItem(stack, SLOT_COUNT, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                if (!this.insertItem(stack, 0, 2, false)) return ItemStack.EMPTY;
+                // Player inventory → the stock bin (shift-click deposits stock).
+                if (!this.insertItem(stack, SLOT_STOCK, SLOT_STOCK + 1, false)) return ItemStack.EMPTY;
             }
             if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
             else slot.markDirty();

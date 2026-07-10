@@ -17,6 +17,8 @@ import net.minecraft.util.Identifier;
 public class DialogueCondition {
 
     public enum Type {
+        /** No requirement — always passes. An editor placeholder; stripped on save. */
+        NONE,
         /** Player balance ≥ {@code amount}. */
         HAS_COINS,
         /** Player carries ≥ {@code amount} of item {@code value} (an item id). */
@@ -49,6 +51,7 @@ public class DialogueCondition {
 
     public boolean test(ServerPlayerEntity sp, NotchNpcEntity npc) {
         return switch (type) {
+            case NONE -> true;
             case HAS_COINS -> CurrencyApi.getBalance(sp) >= amount;
             case HAS_ITEM -> countItem(sp) >= amount;
             case IS_OWNER -> npc.isOwnedBy(sp);

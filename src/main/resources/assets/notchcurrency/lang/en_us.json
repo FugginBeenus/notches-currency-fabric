@@ -19,5 +19,7 @@
   "item.notchcurrency.raffle_ticket": "Raffle Ticket",
   "item.notchcurrency.balloon": "Balloon",
   "item.notchcurrency.golden_cache": "Golden Cache",
-  "itemGroup.notchcurrency.notch_currency_tab": "Notch Currency"
+  "itemGroup.notchcurrency.notch_currency_tab": "Notch Currency",
+  "key.notchcurrency.bounty_tracker": "Toggle Bounty Tracker",
+  "key.categories.notchcurrency": "Notch Currency"
 }

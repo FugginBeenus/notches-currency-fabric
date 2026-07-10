@@ -47,6 +47,8 @@ public final class NotchPackets {
     // ---- Notch NPC editor ----
     // Server -> client: open the NPC editor (npc uuid, roleOrdinal, name, ownerName, canEdit)
     public static final Identifier NPC_EDITOR_OPEN = new Identifier(NotchCurrency.MOD_ID, "npc_editor_open");
+    // Client -> server: reopen the NPC editor (npc uuid) — used by sub-screens' Back buttons
+    public static final Identifier NPC_EDITOR_REOPEN = new Identifier(NotchCurrency.MOD_ID, "npc_editor_reopen");
     // Client -> server: set the NPC's role (npc uuid, roleOrdinal)
     public static final Identifier NPC_SET_ROLE = new Identifier(NotchCurrency.MOD_ID, "npc_set_role");
     // Client -> server: set the NPC's display name (npc uuid, name)
@@ -93,6 +95,13 @@ public final class NotchPackets {
     public static final Identifier NPC_SET_POSE = new Identifier(NotchCurrency.MOD_ID, "npc_set_pose");
     // Client -> server: set one custom-pose part (npc uuid, part [-1=reset all], degX, degY, degZ)
     public static final Identifier NPC_POSE_PART = new Identifier(NotchCurrency.MOD_ID, "npc_pose_part");
+    // Client -> server: move/rotate the whole NPC (npc uuid, dx, dy, dz, yawDeg, applyYaw)
+    public static final Identifier NPC_TRANSFORM = new Identifier(NotchCurrency.MOD_ID, "npc_transform");
+    // Client -> server: set the idle animation layered on the pose (npc uuid, anim id)
+    public static final Identifier NPC_SET_ANIM = new Identifier(NotchCurrency.MOD_ID, "npc_set_anim");
+    // Server -> client: the player's taken bounties, for the on-screen tracker HUD
+    // (count, then per bounty: desc, isKill, targetItemId, prog, req, expiry, rarity)
+    public static final Identifier BOUNTY_TRACKER = new Identifier(NotchCurrency.MOD_ID, "bounty_tracker");
 
     // ---- NPC dialogue ----
     // Server -> client: show a dialogue node (uuid, npcName, nodeId ["" = close], text, choices[idx,label,enabled])

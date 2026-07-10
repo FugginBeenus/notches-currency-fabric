@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.trade;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -179,5 +180,12 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
         @Override public void onPress() { onClick.run(); }
         @Override protected void renderButton(DrawContext ctx, int mouseX, int mouseY, float delta) { /* invisible */ }
         @Override protected void appendClickableNarrations(NarrationMessageBuilder builder) { /* no narration */ }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, selfMoneyField, otherMoneyField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

@@ -42,6 +42,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     private int px, py, gridX, gridY;
     private TextFieldWidget search;
     private int scrollRow = 0;
+    private boolean draggingScroll = false;
 
     public NotchNpcModelPickerScreen(NotchNpcEditorScreen editor) {
         super(Text.literal("Choose Model"));
@@ -142,9 +143,13 @@ public class NotchNpcModelPickerScreen extends Screen {
         }
         ctx.disableScissor();
 
+        // Scrollbar on the right of the grid.
         if (maxScroll > 0) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "scroll — " + (scrollRow + 1) + "/" + (maxScroll + 1),
-                    px + W / 2, py + GRID_TOP + gridH + 3, NotchTheme.TEXT_MUTED, false);
+            int sbX = gridX + COLS * TILE_W + 1, sbW = 6;
+            NotchWidgets.inset(ctx, sbX, gridY, sbW, gridH, NotchTheme.DEEP);
+            int thumbH = Math.max(14, gridH * VISIBLE_ROWS / totalRows);
+            int thumbY = gridY + (gridH - thumbH) * scrollRow / maxScroll;
+            NotchWidgets.button(ctx, sbX, thumbY, sbW, thumbH, over(mouseX, mouseY, sbX, gridY, sbW, gridH), false);
         }
 
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + W / 2 - 40, py + H - 22, 80, 16, "Back",
@@ -157,10 +162,12 @@ public class NotchNpcModelPickerScreen extends Screen {
         NotchWidgets.inset(ctx, tx + 2, ty + 2, TILE_W - 4, TILE_H - 4, hover ? NotchTheme.SLOT_FILL : NotchTheme.DEEP);
         int cx = tx + TILE_W / 2;
         try {
-            // Scale each preview to its bounding box so big mobs don't overflow their tile.
-            float dim = Math.max(0.5f, Math.max(e.preview().getHeight(), e.preview().getWidth()));
-            int size = (int) Math.max(4, Math.min(30, 26f / dim));
-            InventoryScreen.drawEntity(ctx, cx, ty + TILE_H - 15, size, 0f, 0f, e.preview());
+            // Fit each preview inside its tile using BOTH dimensions (so wide/tall mobs don't bleed
+            // into neighbouring tiles), leaving room for the label under it.
+            float h = Math.max(0.5f, e.preview().getHeight());
+            float w = Math.max(0.5f, e.preview().getWidth());
+            int size = (int) Math.max(3, Math.min((TILE_H - 20) / h, (TILE_W - 10) / w));
+            InventoryScreen.drawEntity(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, e.preview());
         } catch (Exception ignored) {
             NotchWidgets.centerText(ctx, this.textRenderer, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);
         }
@@ -176,7 +183,15 @@ public class NotchNpcModelPickerScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, px + W / 2 - 40, py + H - 22, 80, 16)) {
+                NotchWidgets.click();
                 MinecraftClient.getInstance().setScreen(editor);
+                return true;
+            }
+            // Scrollbar drag.
+            int gridH = VISIBLE_ROWS * TILE_H, sbX = gridX + COLS * TILE_W + 1;
+            if (mx >= sbX && mx < sbX + 6 && my >= gridY && my < gridY + gridH) {
+                draggingScroll = true;
+                scrollbarTo(my, gridH);
                 return true;
             }
             if (mx >= gridX && mx < gridX + COLS * TILE_W && my >= gridY && my < gridY + VISIBLE_ROWS * TILE_H) {
@@ -184,6 +199,7 @@ public class NotchNpcModelPickerScreen extends Screen {
                 int row = (my - gridY) / TILE_H + scrollRow;
                 int idx = row * COLS + col;
                 if (idx >= 0 && idx < filtered.size()) {
+                    NotchWidgets.click();
                     editor.applyModel(filtered.get(idx).id());
                     MinecraftClient.getInstance().setScreen(editor);
                     return true;
@@ -199,6 +215,30 @@ public class NotchNpcModelPickerScreen extends Screen {
         int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
         scrollRow = Math.max(0, Math.min(maxScroll, scrollRow - (int) Math.signum(amount)));
         return true;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (draggingScroll) {
+            scrollbarTo(mouseY, VISIBLE_ROWS * TILE_H);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        draggingScroll = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    /** Map a mouse-Y over the scrollbar track to a scroll row. */
+    private void scrollbarTo(double my, int gridH) {
+        int totalRows = (filtered.size() + COLS - 1) / COLS;
+        int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
+        if (maxScroll == 0) { scrollRow = 0; return; }
+        float t = (float) ((my - gridY) / gridH);
+        scrollRow = Math.max(0, Math.min(maxScroll, Math.round(t * maxScroll)));
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

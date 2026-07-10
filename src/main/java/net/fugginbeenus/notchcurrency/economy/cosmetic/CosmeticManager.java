@@ -30,7 +30,7 @@ public final class CosmeticManager {
         return enabled;
     }
 
-    public static void openScreen(ServerPlayerEntity sp) {
+    public static void openScreen(ServerPlayerEntity sp, java.util.UUID npcId) {
         if (!enabled) {
             sp.sendMessage(Text.literal("The cosmetics shop is closed right now.").formatted(Formatting.YELLOW), false);
             return;
@@ -39,7 +39,7 @@ public final class CosmeticManager {
             sp.sendMessage(Text.literal("No cosmetics are on offer yet.").formatted(Formatting.GRAY), false);
             return;
         }
-        CosmeticShopScreenHandler.open(sp);
+        CosmeticShopScreenHandler.open(sp, npcId);
     }
 
     /** Attempt to buy the offer with the given id for the player. */

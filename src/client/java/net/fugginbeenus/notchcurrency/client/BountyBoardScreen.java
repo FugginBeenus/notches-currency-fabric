@@ -28,11 +28,11 @@ import java.util.UUID;
  */
 public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
 
-    private static final int W = 240, H = 226;
-    private static final int ROW_H = 16;
+    private static final int W = 240, H = 290;
+    private static final int ROW_H = 22;   // row pitch; the row body is ROW_H - 2
     private static final int OFFERS_Y = 36;
-    private static final int TAKEN_Y = 138;
-    private static final int BTN_W = 50, BTN_H = 13;
+    private static final int TAKEN_Y = 164;
+    private static final int BTN_W = 50, BTN_H = 14;
 
     public BountyBoardScreen(BountyBoardScreenHandler handler, PlayerInventory inv, Text title) {
         super(handler, inv, title);
@@ -86,6 +86,9 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         return n;
     }
 
+    private static final ItemStack COIN =
+            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+
     /** Draw one bounty row; returns nothing but the click handler mirrors the layout. */
     private void drawRow(DrawContext ctx, int x, int y, ItemStack stack, int mouseX, int mouseY) {
         NbtCompound t = stack.getNbt();
@@ -95,28 +98,56 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         boolean mine = t.getBoolean("mine");
         boolean kill = "KILL".equals(t.getString("typ"));
         int prog = t.getInt("prog"), req = t.getInt("req");
+        int btnX = x + W - 8 - BTN_W;
 
-        // rarity accent bar + reward icon
-        ctx.fill(x + 6, y + 1, x + 8, y + ROW_H - 1, rarity.accentArgb());
-        ctx.drawItem(stack, x + 10, y);
+        // Raised row with hover feedback + a rarity accent bar down the left edge.
+        boolean rowHover = over(mouseX, mouseY, x + 6, y, W - 12, ROW_H - 2);
+        NotchWidgets.button(ctx, x + 6, y, W - 12, ROW_H - 2, rowHover, false);
+        ctx.fill(x + 8, y + 2, x + 10, y + ROW_H - 4, rarity.accentArgb());
 
-        // task text
+        // Reward icons, right-aligned before the button: coins first, then the reward item.
+        long rewCoins = t.getLong("rewc");
+        ItemStack rewItem = t.contains("rews") ? ItemStack.fromNbt(t.getCompound("rews")) : ItemStack.EMPTY;
+        int rewX = btnX - 6;
+        if (!rewItem.isEmpty()) {
+            rewX -= 20;
+            ctx.drawItem(rewItem, rewX, y + 2);
+            ctx.drawItemInSlot(this.textRenderer, rewItem, rewX, y + 2);
+        }
+        if (rewCoins > 0) {
+            rewX -= 22;
+            ctx.drawItem(COIN, rewX, y + 2);
+            ctx.drawItemInSlot(this.textRenderer, COIN, rewX, y + 2, NotchWidgets.compactCount(rewCoins));
+        }
+
+        // Task text (with a live progress bar on kill bounties you've taken).
         String task = t.getString("desc");
         if (mine && kill) task += "  " + prog + "/" + req;
-        int textX = x + 30;
-        int btnX = x + W - 8 - BTN_W;
-        String trimmed = this.textRenderer.trimToWidth(task, btnX - textX - 6);
-        ctx.drawText(this.textRenderer, trimmed, textX, y + 4, NotchTheme.TEXT_DARK, false);
+        int textX = x + 14;
+        String trimmed = this.textRenderer.trimToWidth(task, rewX - textX - 6);
+        ctx.drawText(this.textRenderer, trimmed, textX, y + 6, NotchTheme.TEXT_DARK, false);
+        if (mine && kill) {
+            int barW = Math.min(90, rewX - textX - 8);
+            int fill = req <= 0 ? barW : (int) (barW * Math.min(1f, prog / (float) req));
+            ctx.fill(textX, y + 16, textX + barW, y + 18, 0xFF3A3A3A);
+            ctx.fill(textX, y + 16, textX + fill, y + 18, rarity.accentArgb());
+        }
 
-        // action button
-        boolean hov = over(mouseX, mouseY, btnX, y + 1, BTN_W, BTN_H);
+        // Action button (or the time left while a kill bounty is in progress).
+        boolean hov = over(mouseX, mouseY, btnX, y + 3, BTN_W, BTN_H);
         if (!mine) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, btnX, y + 1, BTN_W, BTN_H, "Take", hov);
-        } else if (kill) {
-            if (prog >= req) NotchWidgets.primaryButton(ctx, this.textRenderer, btnX, y + 1, BTN_W, BTN_H, "Collect", hov);
-            else ctx.drawText(this.textRenderer, "…", btnX + BTN_W - 8, y + 4, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, btnX, y + 3, BTN_W, BTN_H, "Take", hov);
+        } else if (kill && prog < req) {
+            long exp = t.getLong("exp");
+            String left = "…";
+            if (exp > 0 && this.client != null && this.client.world != null) {
+                left = Math.max(0, (exp - this.client.world.getTime()) / 20L / 60L) + "m";
+            }
+            int lw = this.textRenderer.getWidth(left);
+            ctx.drawText(this.textRenderer, left, btnX + BTN_W - lw - 2, y + 6, NotchTheme.TEXT_MUTED, false);
         } else {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, btnX, y + 1, BTN_W, BTN_H, "Turn in", hov);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, btnX, y + 3, BTN_W, BTN_H,
+                    kill ? "Collect" : "Turn in", hov);
         }
     }
 
@@ -181,10 +212,12 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
             // Page nav.
             if (handler.prop(BountyBoardScreenHandler.P_TOTAL_PAGES) > 1 && this.client != null && this.client.interactionManager != null) {
                 if (over(mx, my, this.x + W - 74, this.y + 22, 13, 12)) {
+                    NotchWidgets.tick();
                     this.client.interactionManager.clickButton(this.handler.syncId, 0);
                     return true;
                 }
                 if (over(mx, my, this.x + W - 23, this.y + 22, 13, 12)) {
+                    NotchWidgets.tick();
                     this.client.interactionManager.clickButton(this.handler.syncId, 1);
                     return true;
                 }
@@ -194,7 +227,7 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
             for (int i = 0; i < BountyBoardScreenHandler.OFFER_SLOTS; i++) {
                 int ry = this.y + OFFERS_Y + i * ROW_H;
                 ItemStack s = handler.offerStack(i);
-                if (!s.isEmpty() && over(mx, my, btnX, ry + 1, BTN_W, BTN_H)) {
+                if (!s.isEmpty() && over(mx, my, btnX, ry + 3, BTN_W, BTN_H)) {
                     action(s, 0);
                     return true;
                 }
@@ -203,7 +236,7 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
             for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
                 int ry = this.y + TAKEN_Y + 8 + i * ROW_H;
                 ItemStack s = handler.takenStack(i);
-                if (s.isEmpty() || !over(mx, my, btnX, ry + 1, BTN_W, BTN_H)) continue;
+                if (s.isEmpty() || !over(mx, my, btnX, ry + 3, BTN_W, BTN_H)) continue;
                 NbtCompound t = s.getNbt();
                 if (t == null) continue;
                 boolean kill = "KILL".equals(t.getString("typ"));
@@ -218,6 +251,7 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
     private void action(ItemStack stack, int action) {
         NbtCompound t = stack.getNbt();
         if (t == null || !t.containsUuid("bid")) return;
+        NotchWidgets.click();
         UUID id = t.getUuid("bid");
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(id);

@@ -54,6 +54,39 @@ public class DialogueTree {
         startId = "";
     }
 
+    /** True when no node has any choices — a flat set of standalone lines (the Quick Lines shape). */
+    public boolean isFlat() {
+        for (DialogueNode n : nodes.values()) {
+            if (!n.choices().isEmpty()) return false;
+        }
+        return true;
+    }
+
+    /** Rename a page, preserving page order and fixing up the start id and every choice that led to
+     *  it. Returns false when the old id doesn't exist or the new id is blank/taken. */
+    public boolean renameNode(String oldId, String newId) {
+        if (newId == null || newId.isEmpty() || nodes.containsKey(newId)) return false;
+        DialogueNode node = nodes.get(oldId);
+        if (node == null) return false;
+
+        node.setId(newId);
+        // Rebuild the map in iteration order so the page keeps its spot in the list.
+        Map<String, DialogueNode> rebuilt = new LinkedHashMap<>();
+        for (Map.Entry<String, DialogueNode> e : nodes.entrySet()) {
+            rebuilt.put(e.getKey().equals(oldId) ? newId : e.getKey(), e.getValue());
+        }
+        nodes.clear();
+        nodes.putAll(rebuilt);
+
+        if (startId.equals(oldId)) startId = newId;
+        for (DialogueNode n : nodes.values()) {
+            for (DialogueChoice c : n.choices()) {
+                if (c.next().equals(oldId)) c.setNext(newId);
+            }
+        }
+        return true;
+    }
+
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.putString("Start", startId);

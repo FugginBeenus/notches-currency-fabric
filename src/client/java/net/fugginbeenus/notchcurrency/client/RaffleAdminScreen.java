@@ -169,11 +169,11 @@ public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && this.client != null && this.client.interactionManager != null) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, this.x + CLR_X, this.y + CLR_Y, CLR_W, CLR_H)) { click(0); return true; }
-            if (over(mx, my, this.x + DR_X, this.y + DR_Y, DR_W, DR_H)) { click(1); return true; }
-            if (over(mx, my, this.x + RS_X, this.y + RS_Y, RS_W, RS_H)) { click(2); return true; }
-            if (over(mx, my, this.x + TG_X, this.y + TG_Y, TG_W, TG_H)) { enabledToggle = !enabledToggle; return true; }
-            if (over(mx, my, this.x + SV_X, this.y + SV_Y, SV_W, SV_H)) { save(); return true; }
+            if (over(mx, my, this.x + CLR_X, this.y + CLR_Y, CLR_W, CLR_H)) { NotchWidgets.click(); click(0); return true; }
+            if (over(mx, my, this.x + DR_X, this.y + DR_Y, DR_W, DR_H)) { NotchWidgets.click(); click(1); return true; }
+            if (over(mx, my, this.x + RS_X, this.y + RS_Y, RS_W, RS_H)) { NotchWidgets.click(); click(2); return true; }
+            if (over(mx, my, this.x + TG_X, this.y + TG_Y, TG_W, TG_H)) { NotchWidgets.tick(); enabledToggle = !enabledToggle; return true; }
+            if (over(mx, my, this.x + SV_X, this.y + SV_Y, SV_W, SV_H)) { NotchWidgets.click(); save(); return true; }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -198,5 +198,11 @@ public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
         } catch (NumberFormatException e) {
             return fallback;
         }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, coinsField, priceField, cutField, daysField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

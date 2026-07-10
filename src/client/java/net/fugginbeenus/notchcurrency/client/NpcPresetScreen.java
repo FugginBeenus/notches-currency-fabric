@@ -102,7 +102,7 @@ public class NpcPresetScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 218, py + 170, 66, 14, "Save",
                 over(mouseX, mouseY, px + 218, py + 170, 66, 14));
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 196, 160, 16, "Done",
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 196, 160, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 70, py + 196, 160, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -117,16 +117,19 @@ public class NpcPresetScreen extends Screen {
                 int i = scroll + v;
                 if (i >= presets.size()) break;
                 if (over(mx, my, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1)) {
+                    NotchWidgets.tick();
                     selected = (selected == i) ? -1 : i;
                     return true;
                 }
             }
             if (over(mx, my, px + 16, py + 146, 170, 15) && selected >= 0) {
+                NotchWidgets.click();
                 NotchPacketsClient.sendNpcPreset(npcId, NpcPresetManager.ACTION_LOAD, presets.get(selected));
-                this.close(); // straight back to the world to see the NPC change
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // back to the editor, preview updated
                 return true;
             }
             if (over(mx, my, px + 192, py + 146, 92, 15) && selected >= 0) {
+                NotchWidgets.click();
                 NotchPacketsClient.sendNpcPreset(npcId, NpcPresetManager.ACTION_DELETE, presets.get(selected));
                 selected = -1;
                 return true;
@@ -134,12 +137,14 @@ public class NpcPresetScreen extends Screen {
             if (over(mx, my, px + 218, py + 170, 66, 14)) {
                 String name = nameField.getText().trim();
                 if (!name.isEmpty()) {
+                    NotchWidgets.click();
                     NotchPacketsClient.sendNpcPreset(npcId, NpcPresetManager.ACTION_SAVE, name);
                 }
                 return true;
             }
             if (over(mx, my, px + 70, py + 196, 160, 16)) {
-                this.close();
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // return to the NPC editor
                 return true;
             }
         }
@@ -151,6 +156,13 @@ public class NpcPresetScreen extends Screen {
         int maxScroll = Math.max(0, presets.size() - VISIBLE_ROWS);
         scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(amount)));
         return true;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Plain characters insert via charTyped only (guards against the select-all wipe).
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

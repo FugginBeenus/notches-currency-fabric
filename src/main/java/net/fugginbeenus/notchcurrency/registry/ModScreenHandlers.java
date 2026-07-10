@@ -164,10 +164,11 @@ public final class ModScreenHandlers {
                 net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler::new
         );
 
-        // Cosmetics shop
-        COSMETIC_SHOP = ScreenHandlerRegistry.registerSimple(
+        // Cosmetics shop (extended: linked NPC uuid in the opening buf for the preview)
+        COSMETIC_SHOP = Registry.register(
+                Registries.SCREEN_HANDLER,
                 NotchCurrency.id("cosmetic_shop"),
-                net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new
+                new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new)
         );
 
         // Offline trade offers

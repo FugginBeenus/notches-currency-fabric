@@ -173,9 +173,10 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, this.x + HEADS_X, this.y + SIDE_Y, SIDE_W, SIDE_H)) { selectedHeads = true; return true; }
-            if (over(mx, my, this.x + TAILS_X, this.y + SIDE_Y, SIDE_W, SIDE_H)) { selectedHeads = false; return true; }
+            if (over(mx, my, this.x + HEADS_X, this.y + SIDE_Y, SIDE_W, SIDE_H)) { NotchWidgets.tick(); selectedHeads = true; return true; }
+            if (over(mx, my, this.x + TAILS_X, this.y + SIDE_Y, SIDE_W, SIDE_H)) { NotchWidgets.tick(); selectedHeads = false; return true; }
             if (over(mx, my, this.x + FLIP_X, this.y + FLIP_Y, FLIP_W, FLIP_H)) {
+                NotchWidgets.click();
                 if (handler.prop(CoinFlipScreenHandler.P_ENABLED) == 0) { setError("Gambling is disabled."); playErr(); return true; }
                 long bet = betValue();
                 long bal = handler.prop(CoinFlipScreenHandler.P_BAL) & 0xFFFFFFFFL;
@@ -199,5 +200,12 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
         } catch (NumberFormatException e) {
             return 0L;
         }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, betField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

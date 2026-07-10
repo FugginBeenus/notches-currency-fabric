@@ -202,6 +202,7 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
         if (button == 0 && this.client != null && this.client.interactionManager != null) {
             int id = buttonAt(mouseX, mouseY);
             if (id >= 0) {
+                NotchWidgets.click();
                 this.client.interactionManager.clickButton(this.handler.syncId, id);
                 return true;
             }

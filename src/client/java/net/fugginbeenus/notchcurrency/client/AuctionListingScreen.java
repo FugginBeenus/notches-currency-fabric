@@ -138,11 +138,13 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
         if (button == 0) {
             for (int i = 0; i < DURATIONS.length; i++) {
                 if (over((int) mouseX, (int) mouseY, this.x + SEG_X[i], this.y + SEG_Y, SEG_W[i], SEG_H)) {
+                    if (durationIndex != i) NotchWidgets.tick();
                     durationIndex = i;
                     return true;
                 }
             }
             if (over((int) mouseX, (int) mouseY, this.x + LIST_X, this.y + LIST_Y, LIST_W, LIST_H)) {
+                NotchWidgets.click();
                 submit();
                 return true;
             }
@@ -168,5 +170,12 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
         buf.writeVarInt(currentDays());
         ClientPlayNetworking.send(NotchPackets.AUCTION_LIST, buf);
         priceField.setText("");
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, priceField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

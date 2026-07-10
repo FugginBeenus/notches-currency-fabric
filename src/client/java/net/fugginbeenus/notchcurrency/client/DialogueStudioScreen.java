@@ -26,11 +26,11 @@ import java.util.UUID;
  */
 public class DialogueStudioScreen extends Screen {
 
-    private static final int W = 380, H = 226;
+    private static final int W = 400, H = 260;
     // Left pane: page list.
-    private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 9;
+    private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
     // Right pane.
-    private static final int ED_X = 116, ED_W = 256;
+    private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
 
     private final UUID npcId;
@@ -38,10 +38,15 @@ public class DialogueStudioScreen extends Screen {
 
     private int px, py;
     private String selectedId = "";
-    private int choiceIdx = -1; // -1 = editing the page; >=0 = editing that choice
+    private int choiceIdx = -1;  // -1 = editing the page; >=0 = editing that choice
+    private int actionIdx = 0;   // which of the choice's two action slots is being edited
+    private int condIdx = 0;     // which of the two condition slots
     private int listScroll = 0;
+    private String statusMsg = "";
+    private long statusUntil = 0;
 
-    private TextFieldWidget nodeTextField;
+    private net.minecraft.client.gui.widget.EditBoxWidget nodeTextBox; // multiline "Says" editor
+    private TextFieldWidget renameField;
     private TextFieldWidget choiceLabelField;
     private TextFieldWidget actionValueField, actionAmountField;
     private TextFieldWidget condValueField, condAmountField;
@@ -63,11 +68,19 @@ public class DialogueStudioScreen extends Screen {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
 
-        nodeTextField = field(px + ED_X + 38, py + 56, ED_W - 40, 300);
-        nodeTextField.setChangedListener(s -> {
+        // Multiline "Says" editor: type freely, it wraps and scrolls (finally).
+        nodeTextBox = new net.minecraft.client.gui.widget.EditBoxWidget(this.textRenderer,
+                px + ED_X, py + 54, ED_W - 4, 56,
+                Text.literal("What the NPC says...").formatted(Formatting.DARK_GRAY), Text.empty());
+        nodeTextBox.setMaxLength(500);
+        nodeTextBox.setChangeListener(s -> {
             DialogueNode n = node();
             if (n != null && choiceIdx < 0) n.setText(s);
         });
+        addDrawableChild(nodeTextBox);
+
+        renameField = field(px + ED_X + 30, py + 26, 88, 24);
+        renameField.setTextPredicate(s -> s.chars().allMatch(ch -> ch == '_' || Character.isLetterOrDigit(ch)));
 
         choiceLabelField = field(px + ED_X + 38, py + 56, ED_W - 40, 48);
         choiceLabelField.setChangedListener(s -> {
@@ -77,31 +90,37 @@ public class DialogueStudioScreen extends Screen {
 
         actionValueField = field(px + ED_X + 60, py + 108, ED_W - 62, 200);
         actionValueField.setChangedListener(s -> {
-            DialogueAction a = action(false);
+            DialogueAction a = action(actionIdx, false);
             if (a != null) a.setValue(s);
         });
 
         actionAmountField = field(px + ED_X + 60, py + 126, 96, 9);
         actionAmountField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         actionAmountField.setChangedListener(s -> {
-            DialogueAction a = action(false);
+            DialogueAction a = action(actionIdx, false);
             if (a != null) a.setAmount(parse(s));
         });
 
         condValueField = field(px + ED_X + 60, py + 162, ED_W - 62, 200);
         condValueField.setChangedListener(s -> {
-            DialogueCondition c = condition(false);
+            DialogueCondition c = condition(condIdx, false);
             if (c != null) c.setValue(s);
         });
 
         condAmountField = field(px + ED_X + 60, py + 180, 96, 9);
         condAmountField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         condAmountField.setChangedListener(s -> {
-            DialogueCondition c = condition(false);
+            DialogueCondition c = condition(condIdx, false);
             if (c != null) c.setAmount(parse(s));
         });
 
         refreshFields();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (nodeTextBox != null) nodeTextBox.tick(); // cursor blink
     }
 
     private TextFieldWidget field(int x, int y, int w, int maxLen) {
@@ -132,26 +151,39 @@ public class DialogueStudioScreen extends Screen {
         return n.choices().get(choiceIdx);
     }
 
-    /** The choice's first action ({@code create} = add one if missing). */
-    private DialogueAction action(boolean create) {
+    /** The choice's action in slot {@code idx} ({@code create} = grow the list to reach it). */
+    private DialogueAction action(int idx, boolean create) {
         DialogueChoice c = choice();
         if (c == null) return null;
-        if (c.actions().isEmpty()) {
+        if (c.actions().size() <= idx) {
             if (!create) return null;
-            c.actions().add(new DialogueAction());
+            while (c.actions().size() <= idx) c.actions().add(new DialogueAction());
         }
-        return c.actions().get(0);
+        return c.actions().get(idx);
     }
 
-    /** The choice's first condition ({@code create} = add one if missing). */
-    private DialogueCondition condition(boolean create) {
+    /** The choice's condition in slot {@code idx} ({@code create} = grow the list to reach it). */
+    private DialogueCondition condition(int idx, boolean create) {
         DialogueChoice c = choice();
         if (c == null) return null;
-        if (c.conditions().isEmpty()) {
+        if (c.conditions().size() <= idx) {
             if (!create) return null;
-            c.conditions().add(new DialogueCondition());
+            while (c.conditions().size() <= idx) {
+                c.conditions().add(new DialogueCondition(DialogueCondition.Type.NONE, "", 0));
+            }
         }
-        return c.conditions().get(0);
+        return c.conditions().get(idx);
+    }
+
+    /** Whether an action/condition slot has something real in it (drives the tab's • marker). */
+    private boolean actionSlotUsed(int idx) {
+        DialogueAction a = action(idx, false);
+        return a != null && a.type() != DialogueAction.Type.NONE;
+    }
+
+    private boolean condSlotUsed(int idx) {
+        DialogueCondition c = condition(idx, false);
+        return c != null && c.type() != DialogueCondition.Type.NONE;
     }
 
     /** Re-fill widgets from the model (call after changing selection/mode). Order matters: set the
@@ -161,13 +193,16 @@ public class DialogueStudioScreen extends Screen {
         DialogueChoice c = choice();
         boolean nodeMode = (choiceIdx < 0);
 
-        nodeTextField.setVisible(nodeMode && n != null);
-        if (nodeMode && n != null) nodeTextField.setText(n.text());
+        nodeTextBox.visible = nodeMode && n != null;
+        if (nodeMode && n != null && !nodeTextBox.getText().equals(n.text())) nodeTextBox.setText(n.text());
+
+        renameField.setVisible(nodeMode && n != null);
+        if (nodeMode && n != null) renameField.setText(n.id());
 
         choiceLabelField.setVisible(!nodeMode && c != null);
         if (!nodeMode && c != null) choiceLabelField.setText(c.label());
 
-        DialogueAction a = action(false);
+        DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
         boolean valVisible = !nodeMode && c != null
                 && (at == DialogueAction.Type.GIVE_ITEM || at == DialogueAction.Type.RUN_COMMAND
@@ -180,9 +215,10 @@ public class DialogueStudioScreen extends Screen {
         actionAmountField.setVisible(amtVisible);
         if (amtVisible) actionAmountField.setText(a.amount() > 0 ? Long.toString(a.amount()) : "");
 
-        DialogueCondition cd = condition(false);
-        boolean cvVisible = !nodeMode && c != null && cd != null && cd.type() == DialogueCondition.Type.HAS_ITEM;
-        boolean caVisible = !nodeMode && c != null && cd != null
+        DialogueCondition cd = condition(condIdx, false);
+        boolean condReal = cd != null && cd.type() != DialogueCondition.Type.NONE;
+        boolean cvVisible = !nodeMode && c != null && condReal && cd.type() == DialogueCondition.Type.HAS_ITEM;
+        boolean caVisible = !nodeMode && c != null && condReal
                 && (cd.type() == DialogueCondition.Type.HAS_COINS || cd.type() == DialogueCondition.Type.HAS_ITEM);
         condValueField.setVisible(cvVisible);
         if (cvVisible) condValueField.setText(cd.value());
@@ -208,10 +244,12 @@ public class DialogueStudioScreen extends Screen {
         }
 
         // Bottom bar.
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + ED_X, py + H - 24, 130, 16, "Save & Close",
-                over(mouseX, mouseY, px + ED_X, py + H - 24, 130, 16));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 138, py + H - 24, 90, 16, "Discard",
-                over(mouseX, mouseY, px + ED_X + 138, py + H - 24, 90, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + ED_X, py + H - 24, 104, 16, "Save & Back",
+                over(mouseX, mouseY, px + ED_X, py + H - 24, 104, 16));
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 108, py + H - 24, 78, 16, "Preview",
+                !tree.isEmpty() && over(mouseX, mouseY, px + ED_X + 108, py + H - 24, 78, 16));
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 190, py + H - 24, 70, 16, "Discard",
+                over(mouseX, mouseY, px + ED_X + 190, py + H - 24, 70, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -255,41 +293,49 @@ public class DialogueStudioScreen extends Screen {
             return;
         }
         boolean isStart = n.id().equals(tree.startId());
-        ctx.drawText(this.textRenderer, "Page: " + n.id(), px + ED_X, py + 30,
-                isStart ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_DARK, isStart);
+
+        // Header row: editable page id + rename, start marker, delete.
+        ctx.drawText(this.textRenderer, "Id:", px + ED_X, py + 30,
+                isStart ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + ED_X + 26, py + 26, 94, 13, NotchTheme.DEEP);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 124, py + 26, 50, 13, "Rename",
+                over(mx, my, px + ED_X + 124, py + 26, 50, 13));
         if (!isStart) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 126, py + 26, 64, 13, "Set Start",
-                    over(mx, my, px + ED_X + 126, py + 26, 64, 13));
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 178, py + 26, 52, 13, "Start",
+                    over(mx, my, px + ED_X + 178, py + 26, 52, 13));
+        } else {
+            NotchWidgets.centerText(ctx, this.textRenderer, "[start]", px + ED_X + 204, py + 29,
+                    NotchTheme.TEXT_GOLD, false);
         }
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 196, py + 26, 60, 13, "Delete",
-                over(mx, my, px + ED_X + 196, py + 26, 60, 13));
+        NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 234, py + 26, 40, 13, "Del",
+                over(mx, my, px + ED_X + 234, py + 26, 40, 13));
 
-        ctx.drawText(this.textRenderer, "Says:", px + ED_X, py + 58, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + ED_X + 36, py + 54, ED_W - 36, 14, NotchTheme.DEEP);
-        ctx.drawText(this.textRenderer, "%player% / %npc% / %balance% fill in automatically",
-                px + ED_X + 36, py + 70, NotchTheme.TEXT_MUTED, false);
-
-        ctx.drawText(this.textRenderer, "Choices:", px + ED_X, py + 80, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, "(click one to edit it)", px + ED_X + 50, py + 80, NotchTheme.TEXT_MUTED, false);
+        // Says (the EditBoxWidget draws itself at py+54, h=56) + status/hint line.
+        ctx.drawText(this.textRenderer, "Says:", px + ED_X, py + 44, NotchTheme.TEXT_DARK, false);
+        if (!statusMsg.isEmpty() && System.currentTimeMillis() < statusUntil) {
+            ctx.drawText(this.textRenderer, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
+        }
+        ctx.drawText(this.textRenderer, "Choices:", px + ED_X, py + 118, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, "(click one to edit it)", px + ED_X + 50, py + 118, NotchTheme.TEXT_MUTED, false);
         List<DialogueChoice> choices = n.choices();
         for (int i = 0; i < choices.size(); i++) {
-            int ry = py + 90 + i * 17;
+            int ry = py + 129 + i * 17;
             DialogueChoice c = choices.get(i);
             String label = c.label().isEmpty() ? "(unnamed)" : c.label();
             String target = c.next().isEmpty() ? "end" : c.next();
             String row = label + "  ->  " + target;
-            if (this.textRenderer.getWidth(row) > 200) {
-                row = this.textRenderer.trimToWidth(row, 194) + "..";
+            if (this.textRenderer.getWidth(row) > 220) {
+                row = this.textRenderer.trimToWidth(row, 214) + "..";
             }
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 220, 15, row,
-                    over(mx, my, px + ED_X, ry, 220, 15));
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 226, ry, 16, 15, "x",
-                    over(mx, my, px + ED_X + 226, ry, 16, 15));
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 240, 15, row,
+                    over(mx, my, px + ED_X, ry, 240, 15));
+            NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 246, ry, 16, 15, "x",
+                    over(mx, my, px + ED_X + 246, ry, 16, 15));
         }
         if (choices.size() < MAX_CHOICES) {
-            int ry = py + 90 + choices.size() * 17;
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 242, 15, "+ Add Choice",
-                    over(mx, my, px + ED_X, ry, 242, 15));
+            int ry = py + 129 + choices.size() * 17;
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 262, 15, "+ Add Choice",
+                    over(mx, my, px + ED_X, ry, 262, 15));
         }
     }
 
@@ -311,11 +357,12 @@ public class DialogueStudioScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 72, 160, 14, target,
                 over(mx, my, px + ED_X + 58, py + 72, 160, 14));
 
-        DialogueAction a = action(false);
+        DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
         ctx.drawText(this.textRenderer, "Action:", px + ED_X, py + 94, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 90, 160, 14, actionName(at),
-                over(mx, my, px + ED_X + 58, py + 90, 160, 14));
+        drawSlotTabs(ctx, px + ED_X + 40, py + 90, actionIdx, actionSlotUsed(0), actionSlotUsed(1), mx, my);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 80, py + 90, 138, 14, actionName(at),
+                over(mx, my, px + ED_X + 80, py + 90, 138, 14));
         if (at == DialogueAction.Type.OPEN_SCREEN && a != null) {
             ctx.drawText(this.textRenderer, "Screen:", px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
             NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 108, 160, 14,
@@ -331,11 +378,12 @@ public class DialogueStudioScreen extends Screen {
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 124, 100, 14, NotchTheme.DEEP);
         }
 
-        DialogueCondition cd = condition(false);
-        String condName = cd == null ? "None" : conditionName(cd.type());
+        DialogueCondition cd = condition(condIdx, false);
+        String condName = (cd == null || cd.type() == DialogueCondition.Type.NONE) ? "None" : conditionName(cd.type());
         ctx.drawText(this.textRenderer, "Requires:", px + ED_X, py + 148, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 144, 160, 14, condName,
-                over(mx, my, px + ED_X + 58, py + 144, 160, 14));
+        drawSlotTabs(ctx, px + ED_X + 52, py + 144, condIdx, condSlotUsed(0), condSlotUsed(1), mx, my);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 92, py + 144, 126, 14, condName,
+                over(mx, my, px + ED_X + 92, py + 144, 126, 14));
         if (condValueField.isVisible()) {
             ctx.drawText(this.textRenderer, "Item id:", px + ED_X, py + 166, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 160, ED_W - 60, 14, NotchTheme.DEEP);
@@ -344,7 +392,7 @@ public class DialogueStudioScreen extends Screen {
             ctx.drawText(this.textRenderer, "At least:", px + ED_X, py + 184, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 178, 100, 14, NotchTheme.DEEP);
         }
-        if (cd != null) {
+        if (condSlotUsed(0) || condSlotUsed(1)) {
             String lockLabel = c.hideWhenLocked() ? "Locked: hidden" : "Locked: greyed";
             NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 166, py + 178, 90, 14, lockLabel,
                     over(mx, my, px + ED_X + 166, py + 178, 90, 14));
@@ -384,11 +432,27 @@ public class DialogueStudioScreen extends Screen {
 
     private static String conditionName(DialogueCondition.Type t) {
         return switch (t) {
+            case NONE -> "None";
             case HAS_COINS -> "Has coins";
             case HAS_ITEM -> "Has item";
             case IS_OWNER -> "Is owner";
             case IS_OP -> "Is op";
         };
+    }
+
+    /** The two [1][2] slot tabs for actions/requirements; a • marks a configured slot. */
+    private void drawSlotTabs(DrawContext ctx, int x, int y, int selected, boolean used0, boolean used1,
+                              int mx, int my) {
+        for (int i = 0; i < 2; i++) {
+            boolean used = i == 0 ? used0 : used1;
+            String label = (i + 1) + (used ? "•" : "");
+            boolean hover = over(mx, my, x + i * 19, y, 17, 14);
+            if (i == selected) {
+                NotchWidgets.primaryButton(ctx, this.textRenderer, x + i * 19, y, 17, 14, label, hover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.textRenderer, x + i * 19, y, 17, 14, label, hover);
+            }
+        }
     }
 
     // ---- input ----
@@ -399,13 +463,23 @@ public class DialogueStudioScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
 
             // Bottom bar.
-            if (over(mx, my, px + ED_X, py + H - 24, 130, 16)) {
+            if (over(mx, my, px + ED_X, py + H - 24, 104, 16)) {
+                NotchWidgets.click();
+                normalize();
                 NotchPacketsClient.sendNpcStudioSave(npcId, tree.toNbt());
-                this.close();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 3); // return to the NPC editor
                 return true;
             }
-            if (over(mx, my, px + ED_X + 138, py + H - 24, 90, 16)) {
-                this.close();
+            if (!tree.isEmpty() && over(mx, my, px + ED_X + 108, py + H - 24, 78, 16)) {
+                NotchWidgets.click();
+                // Play the local (possibly unsaved) tree from its start page; ESC returns here.
+                net.minecraft.client.MinecraftClient.getInstance().setScreen(
+                        new PreviewDialogueScreen(this, npcId, npcDisplayName(), tree, tree.startId()));
+                return true;
+            }
+            if (over(mx, my, px + ED_X + 190, py + H - 24, 70, 16)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 3); // discard + return to the NPC editor
                 return true;
             }
 
@@ -415,6 +489,7 @@ public class DialogueStudioScreen extends Screen {
                 int idx = listScroll + i;
                 if (idx >= ids.size()) break;
                 if (over(mx, my, px + LIST_X, py + LIST_Y + i * ROW_H, LIST_W, ROW_H - 1)) {
+                    NotchWidgets.tick();
                     selectedId = ids.get(idx);
                     choiceIdx = -1;
                     refreshFields();
@@ -422,11 +497,15 @@ public class DialogueStudioScreen extends Screen {
                 }
             }
             if (tree.size() < MAX_NODES && over(mx, my, px + LIST_X, py + H - 42, LIST_W, 14)) {
+                NotchWidgets.tick();
                 addPage();
                 return true;
             }
 
-            if (choiceIdx < 0 ? clickNodeEditor(mx, my) : clickChoiceEditor(mx, my)) return true;
+            if (choiceIdx < 0 ? clickNodeEditor(mx, my) : clickChoiceEditor(mx, my)) {
+                NotchWidgets.tick();
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -435,36 +514,54 @@ public class DialogueStudioScreen extends Screen {
         DialogueNode n = node();
         if (n == null) return false;
         boolean isStart = n.id().equals(tree.startId());
-        if (!isStart && over(mx, my, px + ED_X + 126, py + 26, 64, 13)) {
+        if (over(mx, my, px + ED_X + 124, py + 26, 50, 13)) { // Rename
+            renamePage(n.id(), renameField.getText().trim());
+            return true;
+        }
+        if (!isStart && over(mx, my, px + ED_X + 178, py + 26, 52, 13)) { // Start
             tree.setStartId(n.id());
             return true;
         }
-        if (over(mx, my, px + ED_X + 196, py + 26, 60, 13)) {
+        if (over(mx, my, px + ED_X + 234, py + 26, 40, 13)) { // Del
             deletePage(n.id());
             return true;
         }
         List<DialogueChoice> choices = n.choices();
         for (int i = 0; i < choices.size(); i++) {
-            int ry = py + 90 + i * 17;
-            if (over(mx, my, px + ED_X + 226, ry, 16, 15)) {
+            int ry = py + 129 + i * 17;
+            if (over(mx, my, px + ED_X + 246, ry, 16, 15)) {
                 choices.remove(i);
                 refreshFields();
                 return true;
             }
-            if (over(mx, my, px + ED_X, ry, 220, 15)) {
+            if (over(mx, my, px + ED_X, ry, 240, 15)) {
                 choiceIdx = i;
+                actionIdx = 0;
+                condIdx = 0;
                 refreshFields();
                 return true;
             }
         }
         if (choices.size() < MAX_CHOICES) {
-            int ry = py + 90 + choices.size() * 17;
-            if (over(mx, my, px + ED_X, ry, 242, 15)) {
+            int ry = py + 129 + choices.size() * 17;
+            if (over(mx, my, px + ED_X, ry, 262, 15)) {
                 choices.add(new DialogueChoice("New choice", ""));
                 return true;
             }
         }
         return false;
+    }
+
+    private void renamePage(String oldId, String newId) {
+        if (newId.equals(oldId)) return;
+        if (tree.renameNode(oldId, newId)) {
+            selectedId = newId;
+            statusMsg = "";
+            refreshFields();
+        } else {
+            statusMsg = newId.isEmpty() ? "Id can't be empty." : "That id is taken.";
+            statusUntil = System.currentTimeMillis() + 2500;
+        }
     }
 
     private boolean clickChoiceEditor(int mx, int my) {
@@ -479,30 +576,73 @@ public class DialogueStudioScreen extends Screen {
             cycleNext(c);
             return true;
         }
-        if (over(mx, my, px + ED_X + 58, py + 90, 160, 14)) { // Action (cycle)
-            cycleAction(c);
+        // Action slot tabs [1][2].
+        for (int i = 0; i < 2; i++) {
+            if (over(mx, my, px + ED_X + 40 + i * 19, py + 90, 17, 14)) {
+                actionIdx = i;
+                refreshFields();
+                return true;
+            }
+        }
+        if (over(mx, my, px + ED_X + 80, py + 90, 138, 14)) { // Action (cycle)
+            cycleAction();
             refreshFields();
             return true;
         }
-        DialogueAction a = action(false);
+        DialogueAction a = action(actionIdx, false);
         if (a != null && a.type() == DialogueAction.Type.OPEN_SCREEN
                 && over(mx, my, px + ED_X + 58, py + 108, 160, 14)) { // Screen (cycle)
             a.setValue(nextScreen(a.value()));
             return true;
         }
-        if (over(mx, my, px + ED_X + 58, py + 144, 160, 14)) { // Requires (cycle)
-            cycleCondition(c);
+        // Condition slot tabs [1][2].
+        for (int i = 0; i < 2; i++) {
+            if (over(mx, my, px + ED_X + 52 + i * 19, py + 144, 17, 14)) {
+                condIdx = i;
+                refreshFields();
+                return true;
+            }
+        }
+        if (over(mx, my, px + ED_X + 92, py + 144, 126, 14)) { // Requires (cycle)
+            cycleCondition();
             refreshFields();
             return true;
         }
-        if (condition(false) != null && over(mx, my, px + ED_X + 166, py + 178, 90, 14)) {
-            c.setHideWhenLocked(!c.hideWhenLocked());
-            return true;
+        if (condSlotUsed(0) || condSlotUsed(1)) {
+            if (over(mx, my, px + ED_X + 166, py + 178, 90, 14)) {
+                c.setHideWhenLocked(!c.hideWhenLocked());
+                return true;
+            }
         }
         return false;
     }
 
     // ---- edit operations ----
+
+    /** The NPC's display name for the preview window (found in the client world by uuid). */
+    private String npcDisplayName() {
+        var c = net.minecraft.client.MinecraftClient.getInstance();
+        if (c.world != null) {
+            for (var e : c.world.getEntities()) {
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n
+                        && n.getUuid().equals(npcId)) {
+                    return n.hasCustomName() && n.getCustomName() != null
+                            ? n.getCustomName().getString() : "NPC";
+                }
+            }
+        }
+        return "NPC";
+    }
+
+    /** Strip empty (NONE) action/condition editor slots so the saved tree stays clean. */
+    private void normalize() {
+        for (DialogueNode n : tree.nodes().values()) {
+            for (DialogueChoice c : n.choices()) {
+                c.actions().removeIf(a -> a.type() == DialogueAction.Type.NONE);
+                c.conditions().removeIf(cd -> cd.type() == DialogueCondition.Type.NONE);
+            }
+        }
+    }
 
     private void addPage() {
         int n = 1;
@@ -538,20 +678,16 @@ public class DialogueStudioScreen extends Screen {
         c.setNext(options.get((idx + 1) % options.size()));
     }
 
-    private void cycleAction(DialogueChoice c) {
+    private void cycleAction() {
         DialogueAction.Type[] types = DialogueAction.Type.values();
-        DialogueAction a = action(false);
+        DialogueAction a = action(actionIdx, false);
         DialogueAction.Type current = a == null ? DialogueAction.Type.NONE : a.type();
         DialogueAction.Type next = types[(current.ordinal() + 1) % types.length];
-        if (next == DialogueAction.Type.NONE) {
-            c.actions().clear();
-        } else {
-            DialogueAction updated = action(true);
-            updated.setType(next);
-            // Entering OPEN_SCREEN: seed a valid screen id so the cycle starts somewhere real.
-            if (next == DialogueAction.Type.OPEN_SCREEN && !isKnownScreen(updated.value())) {
-                updated.setValue(SCREEN_IDS[0]);
-            }
+        DialogueAction updated = action(actionIdx, true);
+        updated.setType(next); // NONE = an empty slot; stripped when saving
+        // Entering OPEN_SCREEN: seed a valid screen id so the cycle starts somewhere real.
+        if (next == DialogueAction.Type.OPEN_SCREEN && !isKnownScreen(updated.value())) {
+            updated.setValue(SCREEN_IDS[0]);
         }
     }
 
@@ -562,19 +698,10 @@ public class DialogueStudioScreen extends Screen {
         return false;
     }
 
-    private void cycleCondition(DialogueChoice c) {
-        DialogueCondition cd = condition(false);
-        if (cd == null) {
-            condition(true).setType(DialogueCondition.Type.HAS_COINS);
-            return;
-        }
+    private void cycleCondition() {
+        DialogueCondition cd = condition(condIdx, true);
         DialogueCondition.Type[] types = DialogueCondition.Type.values();
-        int next = cd.type().ordinal() + 1;
-        if (next >= types.length) {
-            c.conditions().clear(); // wraps back to "None"
-        } else {
-            cd.setType(types[next]);
-        }
+        cd.setType(types[(cd.type().ordinal() + 1) % types.length]); // NONE = empty slot, stripped on save
     }
 
     @Override
@@ -589,6 +716,16 @@ public class DialogueStudioScreen extends Screen {
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Plain characters insert via charTyped only — forwarding them trips select-all (the
+        // "typing 'a' wipes the line" bug). Edit/nav keys are forwarded by the guards.
+        if (NotchWidgets.typingInEditBox(keyCode, scanCode, modifiers, nodeTextBox)) return true;
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, renameField, choiceLabelField,
+                actionValueField, actionAmountField, condValueField, condAmountField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

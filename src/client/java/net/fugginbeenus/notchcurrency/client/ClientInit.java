@@ -60,6 +60,20 @@ public final class ClientInit implements ClientModInitializer {
         HandledScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
 
         HudRenderCallback.EVENT.register(new NotchHud());
+        HudRenderCallback.EVENT.register(new RouteHud());
+        HudRenderCallback.EVENT.register(new BountyTrackerHud());
+        NotchPacketsClient.registerBountyTrackerReceiver();
+
+        // Toggle the bounty tracker HUD (default B).
+        var trackerKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
+                new net.minecraft.client.option.KeyBinding("key.notchcurrency.bounty_tracker",
+                        net.minecraft.client.util.InputUtil.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
+                        "key.categories.notchcurrency"));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (trackerKey.wasPressed()) {
+                BountyTrackerHud.toggle();
+            }
+        });
 
         // Balance sync → HUD
         NotchPacketsClient.registerBalanceReceiver(NotchHud::setBalance);

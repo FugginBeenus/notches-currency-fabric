@@ -10,18 +10,26 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
- * The trade-offers board: offers you can accept up top (paginated), your own open offers below with
- * a cancel button. Code-drawn; refreshes live. Accept/cancel go by offer id through TRADE_OFFER_ACTION.
+ * The trade-offers board, in the live-trade screen's language: each offer reads as a give → get
+ * exchange — the offered item, an arrow, then the coins and/or item wanted in return — with the
+ * from/to detail in the hover tooltip. Offers you can accept up top (paginated), your own open
+ * offers below with a cancel button. Accept/cancel go by offer id through TRADE_OFFER_ACTION.
  */
 public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
 
     private static final int W = 248, H = 236;
     private static final int ROW_X = 8, ROW_W = 232, ROW_H = 20;
     private static final int IN_Y = 34, MINE_Y = 152, ROW_STEP = 21;
+
+    private static final ItemStack COIN =
+            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
     // Action ids (mirror the packet).
     private static final int ACTION_ACCEPT = 0, ACTION_CANCEL = 1;
@@ -37,38 +45,79 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
     private int inY(int i) { return this.y + IN_Y + i * ROW_STEP; }
     private int mineY(int i) { return this.y + MINE_Y + i * ROW_STEP; }
 
-    private record Row(ItemStack icon, UUID id, long price, String reqName, int reqCount, String from, String target) {}
+    private record Row(ItemStack icon, UUID id, java.util.List<ItemStack> gives, long giveCoins,
+                       long price, java.util.List<ItemStack> wants, String from, String target) {}
+
+    private static java.util.List<ItemStack> readStacks(NbtCompound t, String key) {
+        java.util.List<ItemStack> out = new ArrayList<>();
+        net.minecraft.nbt.NbtList list = t.getList(key, net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < list.size(); i++) {
+            ItemStack st = ItemStack.fromNbt(list.getCompound(i));
+            if (!st.isEmpty()) out.add(st);
+        }
+        return out;
+    }
 
     private Row row(ItemStack stack) {
         if (stack.isEmpty()) return null;
         NbtCompound t = stack.getNbt();
         if (t == null || !t.containsUuid("nc_oid")) return null;
-        return new Row(stack, t.getUuid("nc_oid"), t.getLong("nc_price"), t.getString("nc_reqname"),
-                t.getInt("nc_reqcount"), t.getString("nc_from"), t.getString("nc_target"));
+        return new Row(stack, t.getUuid("nc_oid"), readStacks(t, "nc_gives"), t.getLong("nc_gcoins"),
+                t.getLong("nc_price"), readStacks(t, "nc_wants"),
+                t.getString("nc_from"), t.getString("nc_target"));
     }
 
-    private static String priceLine(Row r) {
-        StringBuilder sb = new StringBuilder();
-        if (r.price() > 0) sb.append(r.price()).append("c");
-        if (r.reqCount() > 0 && !r.reqName().isEmpty()) {
-            if (sb.length() > 0) sb.append(" + ");
-            sb.append(r.reqCount()).append("×").append(r.reqName());
-        }
-        return sb.length() > 0 ? sb.toString() : "free";
-    }
-
+    /** Give → get, drawn like the live-trade screen: icons with counts, not text. */
     private void drawRow(DrawContext ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
         int x = this.x;
-        NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
-        ctx.drawItem(r.icon(), x + ROW_X + 2, ry + 2);
-        String give = r.icon().getName().getString();
-        if (give.length() > 16) give = give.substring(0, 15) + "…";
-        ctx.drawText(this.textRenderer, give + " x" + r.icon().getCount(), x + ROW_X + 22, ry + 2, NotchTheme.TEXT_LIGHT, false);
-        String sub = "for " + priceLine(r) + (mine
-                ? (r.target().isEmpty() ? " · open" : " · to " + r.target())
-                : " · from " + r.from());
-        if (sub.length() > 34) sub = sub.substring(0, 33) + "…";
-        ctx.drawText(this.textRenderer, sub, x + ROW_X + 22, ry + 11, NotchTheme.TEXT_MUTED, false);
+        boolean hover = over(mouseX, mouseY, x + ROW_X, ry, ROW_W, ROW_H);
+        NotchWidgets.button(ctx, x + ROW_X, ry, ROW_W, ROW_H, hover, false);
+
+        // The give side: attached coins, then up to two item stacks, then a "+N" for the rest.
+        int gx = x + ROW_X + 4;
+        if (r.giveCoins() > 0) {
+            ctx.drawItem(COIN, gx, ry + 2);
+            ctx.drawItemInSlot(this.textRenderer, COIN, gx, ry + 2, NotchWidgets.compactCount(r.giveCoins()));
+            gx += 22;
+        }
+        int shown = 0;
+        for (ItemStack st : r.gives()) {
+            if (shown >= 2 || gx > x + ROW_X + 48) break;
+            ctx.drawItem(st, gx, ry + 2);
+            ctx.drawItemInSlot(this.textRenderer, st, gx, ry + 2);
+            gx += 22;
+            shown++;
+        }
+        int extra = r.gives().size() - shown;
+        if (extra > 0) {
+            ctx.drawText(this.textRenderer, "+" + extra, gx, ry + 6, NotchTheme.TEXT_MUTED, false);
+        }
+
+        NotchWidgets.arrowRight(ctx, x + ROW_X + 86, ry + 6, NotchTheme.TEXT_MUTED);
+
+        // What they want back: coins, then up to two item stacks, then a "+N" for the rest.
+        int ix = x + ROW_X + 106;
+        if (r.price() > 0) {
+            ctx.drawItem(COIN, ix, ry + 2);
+            ctx.drawItemInSlot(this.textRenderer, COIN, ix, ry + 2, NotchWidgets.compactCount(r.price()));
+            ix += 22;
+        }
+        int wantsShown = 0;
+        for (ItemStack st : r.wants()) {
+            if (wantsShown >= 2 || ix > x + ROW_X + 150) break;
+            ctx.drawItem(st, ix, ry + 2);
+            ctx.drawItemInSlot(this.textRenderer, st, ix, ry + 2);
+            ix += 22;
+            wantsShown++;
+        }
+        int wantsExtra = r.wants().size() - wantsShown;
+        if (wantsExtra > 0) {
+            ctx.drawText(this.textRenderer, "+" + wantsExtra, ix, ry + 6, NotchTheme.TEXT_MUTED, false);
+        }
+        if (r.price() <= 0 && r.wants().isEmpty()) {
+            ctx.drawText(this.textRenderer, "free", ix, ry + 6, NotchTheme.TEXT_MUTED, false);
+        }
+
         int bx = x + ROW_X + ROW_W - 54;
         if (mine) {
             NotchWidgets.dangerButton(ctx, this.textRenderer, bx, ry + 2, 50, 16, "Cancel",
@@ -129,6 +178,40 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
         this.renderBackground(ctx);
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+        // Row tooltip: the full exchange, spelled out.
+        for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {
+            if (tooltipFor(ctx, row(handler.incomingStack(i)), inY(i), false, mouseX, mouseY)) return;
+        }
+        for (int i = 0; i < TradeOffersScreenHandler.OUTGOING; i++) {
+            if (tooltipFor(ctx, row(handler.outgoingStack(i)), mineY(i), true, mouseX, mouseY)) return;
+        }
+    }
+
+    private boolean tooltipFor(DrawContext ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
+        // Only over the row body — the Accept/Cancel button explains itself.
+        if (r == null || !over(mouseX, mouseY, x + ROW_X, ry, ROW_W - 58, ROW_H)) return false;
+        List<Text> lines = new ArrayList<>();
+        lines.add(Text.literal(mine ? "They receive:" : "You receive:").formatted(Formatting.GRAY));
+        for (ItemStack st : r.gives()) {
+            lines.add(Text.literal("  " + st.getCount() + "× ").append(st.getName()));
+        }
+        if (r.giveCoins() > 0) {
+            lines.add(Text.literal("  ").append(NotchWidgets.priceText(r.giveCoins(), "", 0)));
+        }
+        lines.add(Text.literal("For:").formatted(Formatting.GRAY));
+        if (r.price() > 0) {
+            lines.add(Text.literal("  ").append(NotchWidgets.priceText(r.price(), "", 0)));
+        }
+        for (ItemStack st : r.wants()) {
+            lines.add(Text.literal("  " + st.getCount() + "× ").append(st.getName()));
+        }
+        if (r.price() <= 0 && r.wants().isEmpty()) {
+            lines.add(Text.literal("  nothing — it's free").formatted(Formatting.GRAY));
+        }
+        lines.add(Text.literal(mine ? (r.target().isEmpty() ? "Open — anyone can accept" : "Reserved for " + r.target())
+                : "From " + r.from()).formatted(Formatting.DARK_GRAY));
+        ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+        return true;
     }
 
     @Override
@@ -137,13 +220,14 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
             int mx = (int) mouseX, my = (int) mouseY;
             int pageCount = handler.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
             if (pageCount > 1) {
-                if (over(mx, my, x + 190, y + 22, 13, 11)) { clickButton(0); return true; }
-                if (over(mx, my, x + 227, y + 22, 13, 11)) { clickButton(1); return true; }
+                if (over(mx, my, x + 190, y + 22, 13, 11)) { NotchWidgets.tick(); clickButton(0); return true; }
+                if (over(mx, my, x + 227, y + 22, 13, 11)) { NotchWidgets.tick(); clickButton(1); return true; }
             }
             int bxIn = x + ROW_X + ROW_W - 54;
             for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {
                 Row r = row(handler.incomingStack(i));
                 if (r != null && over(mx, my, bxIn, inY(i) + 2, 50, 16)) {
+                    NotchWidgets.click();
                     NotchPacketsClient.sendTradeOfferAction(r.id(), ACTION_ACCEPT);
                     return true;
                 }
@@ -151,6 +235,7 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
             for (int i = 0; i < TradeOffersScreenHandler.OUTGOING; i++) {
                 Row r = row(handler.outgoingStack(i));
                 if (r != null && over(mx, my, bxIn, mineY(i) + 2, 50, 16)) {
+                    NotchWidgets.click();
                     NotchPacketsClient.sendTradeOfferAction(r.id(), ACTION_CANCEL);
                     return true;
                 }

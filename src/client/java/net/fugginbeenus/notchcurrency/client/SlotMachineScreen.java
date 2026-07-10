@@ -286,6 +286,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && !spinning
                 && over((int) mouseX, (int) mouseY, this.x + SPIN_X, this.y + SPIN_Y, SPIN_W, SPIN_H)) {
+            NotchWidgets.click();
             if (handler.prop(SlotMachineScreenHandler.P_ENABLED) == 0) {
                 setError("Gambling is disabled.");
                 playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
@@ -329,5 +330,12 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         } catch (NumberFormatException e) {
             return 0L;
         }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, betField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

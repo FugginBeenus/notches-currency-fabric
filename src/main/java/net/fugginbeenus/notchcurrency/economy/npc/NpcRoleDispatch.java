@@ -58,7 +58,8 @@ public final class NpcRoleDispatch {
             case SHOP -> openPlayerShop(sp, npc);
             case GREETER -> greet(sp, npc);
             case ENCHANTER -> net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.openScreen(sp);
-            case COSMETICS -> net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.openScreen(sp);
+            case COSMETICS -> net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.openScreen(sp,
+                    npc != null ? npc.getUuid() : null);
             case CUSTOM -> customInteract(sp, npc);
             case NONE -> sp.sendMessage(Text.literal("This NPC hasn't been given a job yet.").formatted(Formatting.GRAY), false);
         }

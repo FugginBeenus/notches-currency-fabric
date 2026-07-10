@@ -393,6 +393,42 @@ public final class ServerPacketHandlers {
             });
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_ANIM, (server, player, handler, buf, rs) -> {
+            UUID id = buf.readUuid();
+            int anim = buf.readVarInt();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setPoseAnim(player, npc, anim);
+                }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_TRANSFORM, (server, player, handler, buf, rs) -> {
+            UUID id = buf.readUuid();
+            double dx = buf.readDouble();
+            double dy = buf.readDouble();
+            double dz = buf.readDouble();
+            float yaw = buf.readFloat();
+            boolean applyYaw = buf.readBoolean();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.transform(player, npc, dx, dy, dz, yaw, applyYaw);
+                }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_EDITOR_REOPEN, (server, player, handler, buf, rs) -> {
+            UUID id = buf.readUuid();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openEditor(player, npc);
+                }
+            });
+        });
+
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_POSE, (server, player, handler, buf, rs) -> {
             UUID id = buf.readUuid();
             int pose = buf.readVarInt();
@@ -473,10 +509,11 @@ public final class ServerPacketHandlers {
 
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_OFFER_CREATE, (server, player, handler, buf, rs) -> {
             long price = buf.readVarLong();
+            long giveCoins = buf.readVarLong();
             String target = buf.readString(16);
             server.execute(() -> {
                 if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler h) {
-                    h.submit(player, price, target);
+                    h.submit(player, price, giveCoins, target);
                 }
             });
         });

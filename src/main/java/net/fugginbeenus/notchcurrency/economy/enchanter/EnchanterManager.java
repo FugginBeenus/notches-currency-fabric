@@ -30,6 +30,10 @@ public final class EnchanterManager {
     public static int costMultiplierPercent = 100;
     public static int extractCost = 25;
     public static boolean allowTreasure = true;
+    public static int uncraftCost = 30;
+    public static int costCommon = 15, costUncommon = 25, costRare = 45, costVeryRare = 80;
+    public static int treasureMultiplierPercent = 200;
+    public static int extractValuePercent = 100;
 
     public static void applyConfig(NotchConfig cfg) {
         enabled = cfg.enchanter.enabled;
@@ -37,6 +41,29 @@ public final class EnchanterManager {
         costMultiplierPercent = Math.max(1, cfg.enchanter.costMultiplierPercent);
         extractCost = Math.max(0, cfg.enchanter.extractCost);
         allowTreasure = cfg.enchanter.allowTreasure;
+        uncraftCost = Math.max(0, cfg.enchanter.uncraftCost);
+        costCommon = Math.max(1, cfg.enchanter.costCommon);
+        costUncommon = Math.max(1, cfg.enchanter.costUncommon);
+        costRare = Math.max(1, cfg.enchanter.costRare);
+        costVeryRare = Math.max(1, cfg.enchanter.costVeryRare);
+        treasureMultiplierPercent = Math.max(100, cfg.enchanter.treasureMultiplierPercent);
+        extractValuePercent = Math.max(0, cfg.enchanter.extractValuePercent);
+    }
+
+    /** The price knobs bundled up, so the client screen prices with the SERVER's synced values. */
+    public record Pricing(int common, int uncommon, int rare, int veryRare, int treasurePct, int globalPct,
+                          int extractBase, int extractValuePct) {}
+
+    /** The server's live pricing (from config). The handler syncs it to clients as properties. */
+    public static Pricing pricing() {
+        return new Pricing(costCommon, costUncommon, costRare, costVeryRare,
+                treasureMultiplierPercent, costMultiplierPercent, extractCost, extractValuePercent);
+    }
+
+    /** Coins to pull an enchant onto a book: a flat handling fee plus a share of the enchant's own
+     *  purchase price — so extraction can never undercut what the enchant is worth (no book farms). */
+    public static long extractPrice(Enchantment ench, int level, Pricing p) {
+        return Math.max(1, p.extractBase() + upgradeCost(ench, level, p) * p.extractValuePct() / 100);
     }
 
     public static void openScreen(ServerPlayerEntity sp) {
@@ -55,20 +82,62 @@ public final class EnchanterManager {
     }
 
     /** Coins for buying {@code level} of an enchant (one level step). Rarer + higher = pricier. */
-    public static long upgradeCost(Enchantment ench, int level, int multiplierPercent) {
+    public static long upgradeCost(Enchantment ench, int level, Pricing p) {
         int base = switch (ench.getRarity()) {
-            case COMMON -> 15;
-            case UNCOMMON -> 25;
-            case RARE -> 45;
-            case VERY_RARE -> 80;
+            case COMMON -> p.common();
+            case UNCOMMON -> p.uncommon();
+            case RARE -> p.rare();
+            case VERY_RARE -> p.veryRare();
         };
         long cost = (long) base * level;
-        if (ench.isTreasure()) cost *= 2; // mending & friends carry a premium
-        return Math.max(1, cost * multiplierPercent / 100);
+        if (ench.isTreasure()) cost = cost * p.treasurePct() / 100; // mending & friends carry a premium
+        return Math.max(1, cost * p.globalPct() / 100);
     }
 
     /** One purchasable upgrade: the enchantment and the level being bought. */
     public record Offer(Enchantment enchantment, int level) {}
+
+    /** An uncraft quote: how many of the item one craft consumes, and what comes back. */
+    public record UncraftPlan(int consumed, List<ItemStack> returns) {}
+
+    /**
+     * Work out what the item breaks back into: the first crafting recipe whose output is this item.
+     * Same code runs client-side (preview) and server-side (validation), so the display matches the
+     * result. Null when there's no recipe, the stack is too small for one craft, or the item is
+     * damaged (no salvaging worn-out gear for full materials).
+     */
+    @org.jetbrains.annotations.Nullable
+    public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.World world) {
+        if (stack.isEmpty() || stack.isDamaged()) return null;
+        for (net.minecraft.recipe.CraftingRecipe recipe
+                : world.getRecipeManager().listAllOfType(net.minecraft.recipe.RecipeType.CRAFTING)) {
+            ItemStack out = recipe.getOutput(world.getRegistryManager());
+            if (out.isEmpty() || !out.isOf(stack.getItem())) continue;
+            if (stack.getCount() < out.getCount()) continue;
+            List<ItemStack> returns = new ArrayList<>();
+            for (net.minecraft.recipe.Ingredient ing : recipe.getIngredients()) {
+                if (ing.isEmpty()) continue;
+                ItemStack[] options = ing.getMatchingStacks();
+                if (options.length == 0 || options[0].isEmpty()) continue;
+                boolean merged = false;
+                for (ItemStack have : returns) {
+                    if (ItemStack.canCombine(have, options[0])) {
+                        have.increment(1);
+                        merged = true;
+                        break;
+                    }
+                }
+                if (!merged) {
+                    ItemStack one = options[0].copy();
+                    one.setCount(1);
+                    returns.add(one);
+                }
+            }
+            if (returns.isEmpty()) continue; // special recipes (fireworks etc.) expose no ingredients
+            return new UncraftPlan(out.getCount(), returns);
+        }
+        return null;
+    }
 
     /**
      * Every next-level the stack can take: its existing enchants below max level, plus compatible

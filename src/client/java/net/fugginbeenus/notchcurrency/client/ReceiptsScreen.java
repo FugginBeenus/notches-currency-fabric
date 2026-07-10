@@ -106,8 +106,8 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && totalPages() > 1) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, x + 190, y + 16, 13, 12)) { page = Math.max(0, page - 1); return true; }
-            if (over(mx, my, x + 227, y + 16, 13, 12)) { page = Math.min(totalPages() - 1, page + 1); return true; }
+            if (over(mx, my, x + 190, y + 16, 13, 12)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
+            if (over(mx, my, x + 227, y + 16, 13, 12)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }

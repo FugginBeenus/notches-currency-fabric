@@ -98,7 +98,7 @@ public final class NpcShopLogic {
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
                 return new ShopBrowseScreenHandler(syncId, playerInventory, shopId,
-                        shop.getShopName(), shop.getShopkeeperDialog(), shop);
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop);
             }
 
             @Override
@@ -106,8 +106,15 @@ public final class NpcShopLogic {
                 buf.writeUuid(shopId);
                 buf.writeString(shop.getShopName());
                 buf.writeString(shop.getShopkeeperDialog());
+                writeNpcId(buf, shop.getLinkedNpcId());
             }
         });
+    }
+
+    /** Append the linked NPC uuid (for the shop screen's live preview), or a "no npc" marker. */
+    private static void writeNpcId(PacketByteBuf buf, @Nullable UUID npcId) {
+        buf.writeBoolean(npcId != null);
+        if (npcId != null) buf.writeUuid(npcId);
     }
 
     /**
@@ -138,7 +145,7 @@ public final class NpcShopLogic {
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
                 return new ShopManageScreenHandler(syncId, playerInventory, shopId,
-                        shop.getShopName(), shop.getShopkeeperDialog(), shop);
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop);
             }
 
             @Override
@@ -146,6 +153,7 @@ public final class NpcShopLogic {
                 buf.writeUuid(shopId);
                 buf.writeString(shop.getShopName());
                 buf.writeString(shop.getShopkeeperDialog());
+                writeNpcId(buf, shop.getLinkedNpcId());
             }
         });
     }

@@ -1,8 +1,12 @@
 package net.fugginbeenus.notchcurrency.client.ui;
 
+import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Code-drawn GUI primitives in the Notch Currency style, built from {@link NotchTheme}.
@@ -130,6 +134,52 @@ public final class NotchWidgets {
         ctx.fill(x, y + 1, x + w, y + 2, NotchTheme.HIGHLIGHT);
     }
 
+    /** Compact number for stack-count overlays: 999, 1k, 9.9k, 120k, 1.2m — keeps big coin prices
+     *  from spilling across the icon. Show the exact value in the tooltip. */
+    public static String compactCount(long n) {
+        if (n < 1_000) return Long.toString(n);
+        if (n < 1_000_000) return compact(n, 1_000, "k");
+        if (n < 1_000_000_000) return compact(n, 1_000_000, "m");
+        return compact(n, 1_000_000_000, "b");
+    }
+
+    private static String compact(long n, long unit, String suffix) {
+        long whole = n / unit;
+        long tenth = (n % unit) * 10 / unit;
+        return (whole < 10 && tenth > 0) ? whole + "." + tenth + suffix : whole + suffix;
+    }
+
+    /** The vanilla button click, for code-drawn buttons (primary actions: Buy, Take, Save…). */
+    public static void click() {
+        net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(
+                net.minecraft.client.sound.PositionedSoundInstance.master(
+                        net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), 1.0f));
+    }
+
+    /** A lighter, higher tick for small controls (tabs, pagers, steppers, nudges). */
+    public static void tick() {
+        net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(
+                net.minecraft.client.sound.PositionedSoundInstance.master(
+                        net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), 1.35f, 0.5f));
+    }
+
+    /** A small right-pointing arrow (13×8), like the vanilla trade arrow. */
+    public static void arrowRight(DrawContext ctx, int x, int y, int color) {
+        ctx.fill(x, y + 3, x + 10, y + 5, color);
+        for (int i = 0; i < 4; i++) {
+            ctx.fill(x + 10 + i, y + i, x + 11 + i, y + 8 - i, color);
+        }
+    }
+
+    /** A crisp 7×4 solid triangle centred at (cx, cy), pointing up or down. Renders reliably where a
+     *  ▲/▼ glyph might fall back to a missing box. Used for scrollbar-style paging arrows. */
+    public static void triangle(DrawContext ctx, int cx, int cy, boolean up, int color) {
+        for (int r = 0; r < 4; r++) {
+            int half = up ? r : (3 - r);
+            ctx.fill(cx - half, cy + r, cx + half + 1, cy + r + 1, color);
+        }
+    }
+
     /** A horizontal slider: inset track + draggable handle. {@code t} is 0..1; the screen owns the
      *  drag math (map mouse x across [x+2, x+w-8]). A center tick marks the midpoint. */
     public static void slider(DrawContext ctx, int x, int y, int w, int h, float t, boolean hovered) {
@@ -184,5 +234,72 @@ public final class NotchWidgets {
         int g = Math.min(255, ((argb >> 8) & 0xFF) + 16);
         int b = Math.min(255, (argb & 0xFF) + 16);
         return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    /**
+     * A price as display text using the reskinnable coin glyph for the coin part, e.g.
+     * "50 ⛁ + 2×Diamond", or "free" when nothing is required. Shared by the shop + cosmetics screens.
+     */
+    public static Text priceText(long coinPrice, String barterName, int barterCount) {
+        MutableText t = Text.empty();
+        boolean any = false;
+        if (coinPrice > 0) {
+            t.append(NotchCurrency.coins(coinPrice));
+            any = true;
+        }
+        if (barterCount > 0 && barterName != null && !barterName.isEmpty()) {
+            if (any) t.append(Text.literal(" + "));
+            t.append(Text.literal(barterCount + "×" + barterName));
+            any = true;
+        }
+        return any ? t : Text.literal("free");
+    }
+
+    /**
+     * Guard against the vanilla HandledScreen text-field bug: when a field is focused, a plain
+     * letter/number key isn't "handled" by TextFieldWidget.keyPressed, so HandledScreen falls through
+     * and closes the screen (inventory key) or swaps the hotbar (number keys). This mirrors vanilla
+     * AnvilScreen: while a field is focused, feed the key to it and SWALLOW everything except ESC, so
+     * the screen never closes or hotbar-swaps mid-typing. Call from a screen's keyPressed:
+     * {@code if (NotchWidgets.typingInField(k, s, m, fieldA, fieldB)) return true;}
+     */
+    public static boolean typingInField(int keyCode, int scanCode, int modifiers, TextFieldWidget... fields) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false; // let the screen close on ESC
+        for (TextFieldWidget f : fields) {
+            if (f != null && f.isFocused() && f.isVisible()) {
+                // Forward only navigation/editing keys (and real Ctrl/Cmd combos) to the field.
+                // Plain letters/numbers are inserted via charTyped, so we must NOT forward them here:
+                // forwarding a bare 'a' trips the field's select-all and the next char wipes the line.
+                boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
+                boolean editKey = combo
+                        || keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE
+                        || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
+                        || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
+                        || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+                if (editKey) f.keyPressed(keyCode, scanCode, modifiers);
+                return true; // swallow everything else so HandledScreen doesn't close/hotbar-swap
+            }
+        }
+        return false;
+    }
+
+    /** The multiline-editor version of {@link #typingInField}: while the box is focused, forward
+     *  only navigation/editing keys (plain letters insert via charTyped — forwarding a bare 'a'
+     *  trips select-all and the next char wipes the text). UP/DOWN/PGUP/PGDN included for line nav;
+     *  ENTER included so newlines still work. */
+    public static boolean typingInEditBox(int keyCode, int scanCode, int modifiers,
+                                          net.minecraft.client.gui.widget.EditBoxWidget box) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false; // let the screen close on ESC
+        if (box == null || !box.isFocused() || !box.visible) return false;
+        boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
+        boolean editKey = combo
+                || keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE
+                || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
+                || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN
+                || keyCode == GLFW.GLFW_KEY_PAGE_UP || keyCode == GLFW.GLFW_KEY_PAGE_DOWN
+                || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
+                || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+        if (editKey) box.keyPressed(keyCode, scanCode, modifiers);
+        return true; // swallow plain characters — charTyped inserts them
     }
 }
