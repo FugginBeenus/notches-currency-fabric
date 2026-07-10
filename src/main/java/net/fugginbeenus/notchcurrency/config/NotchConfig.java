@@ -18,6 +18,9 @@ public final class NotchConfig {
     public Hud hud = new Hud();
     public VillagerTrades villagerTrades = new VillagerTrades();
 
+    // NOTE: currency.itemName + config/notchcurrency/currency/*.png are also read SERVER-side and
+    // pushed to every joining player (CurrencyServerSync), so admins customize the coin once.
+
     /**
      * Villager currency integration: when a villager rolls new trades, each emerald-priced trade
      * has a chance to be re-priced in coins instead (a rare, lootable-style find and a coin SINK).

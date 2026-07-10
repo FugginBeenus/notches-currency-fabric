@@ -30,6 +30,10 @@ public final class CurrencyPackGenerator {
     /** How the pack shows up in ResourcePackManager's enabled-names list. */
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
 
+    /** The pack a server's pushed coin skin lands in (kept apart from the player's own art). */
+    public static final String SERVER_PACK_DIR_NAME = "NotchCurrencyServer";
+    public static final String SERVER_PACK_PROFILE_NAME = "file/" + SERVER_PACK_DIR_NAME;
+
     private static boolean remindedThisSession = false;
 
     private CurrencyPackGenerator() {}
@@ -119,6 +123,94 @@ public final class CurrencyPackGenerator {
         }
     }
 
+    /**
+     * Applies a server-pushed coin skin (CURRENCY_SYNC): writes it into the separate
+     * NotchCurrencyServer pack, auto-enables it and hot-reloads resources. An all-empty payload
+     * clears the pack (the server stopped customizing, or a previous server's skin lingers).
+     * Runs on the client thread.
+     */
+    public static void applyServerData(MinecraftClient client, String itemName, byte[] coin, byte[] tails) {
+        try {
+            Path pack = FabricLoader.getInstance().getGameDir().resolve("resourcepacks")
+                    .resolve(SERVER_PACK_DIR_NAME);
+            itemName = itemName == null ? "" : itemName.trim();
+            boolean empty = itemName.isEmpty() && coin == null && tails == null;
+
+            // Fingerprint the payload so identical re-joins don't rewrite + reload every time.
+            String stamp = itemName + "|" + (coin == null ? -1 : java.util.Arrays.hashCode(coin))
+                    + "|" + (tails == null ? -1 : java.util.Arrays.hashCode(tails));
+            Path stampFile = pack.resolve("sync_stamp.txt");
+            if (!empty && Files.isRegularFile(stampFile) && stamp.equals(Files.readString(stampFile))) {
+                enableServerPack(client, false);
+                return;
+            }
+
+            deleteRecursively(pack);
+            if (empty) {
+                boolean wasEnabled = client.getResourcePackManager().getEnabledNames()
+                        .contains(SERVER_PACK_PROFILE_NAME);
+                if (wasEnabled) {
+                    client.getResourcePackManager().scanPacks();
+                    client.getResourcePackManager().disable(SERVER_PACK_PROFILE_NAME);
+                    client.options.refreshResourcePacks(client.getResourcePackManager());
+                }
+                return;
+            }
+
+            Path assets = pack.resolve("assets").resolve("notchcurrency");
+            Files.createDirectories(assets.resolve("textures").resolve("item"));
+            Files.writeString(pack.resolve("pack.mcmeta"), """
+                    {
+                      "pack": {
+                        "pack_format": 15,
+                        "description": "This server's coin skin (synced by Notch Currency)"
+                      }
+                    }
+                    """);
+            if (coin != null) {
+                Files.write(assets.resolve("textures").resolve("item").resolve("coin.png"), coin);
+            }
+            if (tails != null) {
+                Files.write(assets.resolve("textures").resolve("item").resolve("coin_tails.png"), tails);
+            }
+            if (!itemName.isEmpty()) {
+                Files.createDirectories(assets.resolve("lang"));
+                String json = "{\n  \"item.notchcurrency.notch_coin\": " + quote(itemName)
+                        + ",\n  \"item.notchcurrency.coin_tails\": " + quote(itemName + " (Tails)") + "\n}\n";
+                Files.writeString(assets.resolve("lang").resolve("en_us.json"), json);
+            }
+            Files.writeString(stampFile, stamp);
+
+            LOGGER.info("Received the server's coin skin (art: {}, tails: {}, name: '{}')",
+                    coin != null, tails != null, itemName);
+            enableServerPack(client, true);
+        } catch (IOException e) {
+            LOGGER.error("Couldn't apply the server's coin skin", e);
+        }
+    }
+
+    /** Best-effort enable + reload; falls back to a chat hint if the pack can't be auto-enabled. */
+    private static void enableServerPack(MinecraftClient client, boolean contentChanged) {
+        try {
+            var mgr = client.getResourcePackManager();
+            mgr.scanPacks();
+            if (!mgr.getEnabledNames().contains(SERVER_PACK_PROFILE_NAME)) {
+                if (mgr.enable(SERVER_PACK_PROFILE_NAME)) {
+                    client.options.refreshResourcePacks(mgr);
+                    client.reloadResources();
+                } else if (client.player != null) {
+                    client.player.sendMessage(Text.literal(
+                            "[Notch Currency] This server has custom coin art — enable \"NotchCurrencyServer\" in Options → Resource Packs.")
+                            .formatted(Formatting.GOLD), false);
+                }
+            } else if (contentChanged) {
+                client.reloadResources();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Couldn't auto-enable the server coin pack", e);
+        }
+    }
+
     private static void writeReadme(Path src) throws IOException {
         Path readme = src.resolve("README.txt");
         if (Files.exists(readme)) return;
@@ -132,6 +224,10 @@ public final class CurrencyPackGenerator {
                 On the next game start a resource pack called "NotchCurrencyCustom" is generated in the
                 resourcepacks folder. Enable it once in Options -> Resource Packs and your art shows on
                 the coin item, the balance HUD and the coin symbol in chat, everywhere at once.
+
+                On a dedicated server, put the same files in the SERVER's config/notchcurrency/currency
+                folder (and set the name in the server's config file). The skin is pushed to every player
+                automatically when they join - nothing to distribute.
                 """);
     }
 

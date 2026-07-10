@@ -316,6 +316,17 @@ public final class NotchPacketsClient {
         });
     }
 
+    /** The server's custom coin skin, pushed on join — written into a local auto-enabled pack. */
+    public static void registerCurrencySyncReceiver() {
+        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.CURRENCY_SYNC, (client, handler, buf, rs) -> {
+            String itemName = buf.readString(64);
+            byte[] coin = buf.readBoolean() ? buf.readByteArray() : null;
+            byte[] tails = buf.readBoolean() ? buf.readByteArray() : null;
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator
+                    .applyServerData(client, itemName, coin, tails));
+        });
+    }
+
     /** The taken-bounty list for the on-screen tracker HUD. */
     public static void registerBountyTrackerReceiver() {
         ClientPlayNetworking.registerGlobalReceiver(NotchPackets.BOUNTY_TRACKER, (client, handler, buf, rs) -> {

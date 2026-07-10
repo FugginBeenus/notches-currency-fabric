@@ -193,6 +193,9 @@ public class NotchCurrency implements ModInitializer {
             // Hand over any items owed from trade offers resolved while they were offline.
             net.fugginbeenus.notchcurrency.trade.TradeOfferManager.deliverMail(sp);
 
+            // Push the server's custom coin skin (art + name) so every player sees it.
+            net.fugginbeenus.notchcurrency.currency.CurrencyServerSync.send(sp);
+
             // Seed the on-screen bounty tracker with their taken bounties.
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
         });

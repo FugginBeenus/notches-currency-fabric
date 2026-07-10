@@ -63,6 +63,7 @@ public final class ClientInit implements ClientModInitializer {
         HudRenderCallback.EVENT.register(new RouteHud());
         HudRenderCallback.EVENT.register(new BountyTrackerHud());
         NotchPacketsClient.registerBountyTrackerReceiver();
+        NotchPacketsClient.registerCurrencySyncReceiver();
 
         // Toggle the bounty tracker HUD (default B).
         var trackerKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(

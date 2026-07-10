@@ -102,6 +102,9 @@ public final class NotchPackets {
     // Server -> client: the player's taken bounties, for the on-screen tracker HUD
     // (count, then per bounty: desc, isKill, targetItemId, prog, req, expiry, rarity)
     public static final Identifier BOUNTY_TRACKER = new Identifier(NotchCurrency.MOD_ID, "bounty_tracker");
+    // Server -> client: the server's custom-currency skin, pushed on join so every player sees the
+    // admin's coin (itemName, hasCoin?, coinPngBytes, hasTails?, tailsPngBytes; all-empty = clear)
+    public static final Identifier CURRENCY_SYNC = new Identifier(NotchCurrency.MOD_ID, "currency_sync");
 
     // ---- NPC dialogue ----
     // Server -> client: show a dialogue node (uuid, npcName, nodeId ["" = close], text, choices[idx,label,enabled])
