@@ -4,7 +4,6 @@ import net.fugginbeenus.notchcurrency.block.LedgerBoardBlock;
 import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -14,19 +13,27 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.RotationAxis;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Draws the live leaderboard for the Ledger Board. Rendered as a camera-facing billboard hovering
- * over the tablet — a robust transform that can't get the facing wrong (unlike a face-flat draw),
- * so the standings are readable from any angle. HOVER_Y/SCALE tune the placement.
+ * Draws the live leaderboard flat on the Ledger Board's tablet, Create-display-board style:
+ * face-locked (not billboard), full-bright, no shadow, left-aligned rows printed on the surface.
+ * Uses the vanilla wall-sign transform (rotate by the opposite facing, step out to the front plane).
+ * The five tunables up top set the plate placement — nudge if it sits off the tablet.
  */
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
-    private static final float HOVER_Y = 1.2f;   // height above the lower-block origin (blocks) — over the tablet
-    private static final float SCALE = 0.016f;   // billboard text scale
-    private static final int LINE_H = 10;        // line spacing (text px)
+    // --- tunables ---
+    private static final float DEPTH = -0.129f; // toward the tablet front plane (model tablet min z = 6/16)
+    private static final float PLATE_Y = 0.46f; // raise the origin to the plaque centre (blocks)
+    private static final float SCALE = 0.0083f; // text scale (small — the tablet is narrow)
+    private static final int LEFT_X = -44;      // left margin in text px (row start)
+    private static final int TOP = -34;         // header baseline (text px; negative = up)
+    private static final int LINE_H = 10;       // line spacing (text px)
 
     private final TextRenderer text;
 
@@ -42,10 +49,10 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
                 || state.get(LedgerBoardBlock.HALF) != DoubleBlockHalf.LOWER) {
             return;
         }
+        Direction facing = state.get(LedgerBoardBlock.FACING);
 
-        // Build the lines.
-        List<Text> lines = new java.util.ArrayList<>();
-        lines.add(Text.literal("TOP BALANCES").formatted(Formatting.GOLD, Formatting.BOLD));
+        List<Text> lines = new ArrayList<>();
+        lines.add(Text.literal("TOP BALANCES").formatted(Formatting.GOLD));
         List<EconomyLeaderboard.Entry> rows = be.rows();
         if (rows.isEmpty()) {
             lines.add(Text.literal("No balances yet").formatted(Formatting.GRAY));
@@ -54,35 +61,30 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
             EconomyLeaderboard.Entry e = rows.get(i);
             Formatting rank = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.YELLOW : Formatting.GRAY;
             MutableText line = Text.literal((i + 1) + " ").formatted(rank)
-                    .append(Text.literal(trim(e.name())).formatted(Formatting.WHITE))
-                    .append(Text.literal("  " + compact(e.balance())).formatted(Formatting.YELLOW));
+                    .append(Text.literal(trim(e.name())).formatted(Formatting.AQUA))
+                    .append(Text.literal(" " + compact(e.balance())).formatted(Formatting.YELLOW));
             lines.add(line);
         }
 
         matrices.push();
-        matrices.translate(0.5, HOVER_Y, 0.5);
-        // Face the camera (nameplate-style billboard).
-        matrices.multiply(MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation());
-        matrices.scale(-SCALE, -SCALE, SCALE);
+        matrices.translate(0.5, 0.5, 0.5);
+        // Vanilla wall-sign orientation: face the FACING direction, flat on the front.
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-facing.getOpposite().asRotation()));
+        matrices.translate(0.0, PLATE_Y, DEPTH);
+        matrices.scale(SCALE, -SCALE, SCALE);
 
         int lightBright = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-        int top = -(lines.size() * LINE_H) / 2;
-        int bg = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.4f) * 255f) << 24;
         for (int i = 0; i < lines.size(); i++) {
-            Text t = lines.get(i);
-            float x = -text.getWidth(t) / 2f;
-            float y = top + i * LINE_H;
-            // Shadowed text with a faint background plate for readability.
-            text.draw(t, x, y, 0xFFFFFFFF, false, matrices.peek().getPositionMatrix(), vertexConsumers,
-                    TextRenderer.TextLayerType.SEE_THROUGH, bg, lightBright);
-            text.draw(t, x, y, 0xFFFFFFFF, false, matrices.peek().getPositionMatrix(), vertexConsumers,
+            // Full-bright, no shadow — the Create display-board look.
+            text.draw(lines.get(i), LEFT_X, TOP + i * LINE_H, 0xFFFFFFFF, false,
+                    matrices.peek().getPositionMatrix(), vertexConsumers,
                     TextRenderer.TextLayerType.NORMAL, 0, lightBright);
         }
         matrices.pop();
     }
 
     private static String trim(String name) {
-        return name.length() > 9 ? name.substring(0, 8) + "…" : name;
+        return name.length() > 8 ? name.substring(0, 7) + "…" : name;
     }
 
     private static String compact(long n) {
@@ -99,6 +101,6 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
 
     @Override
     public boolean rendersOutsideBoundingBox(LedgerBoardBlockEntity be) {
-        return true;
+        return true; // text spans up into the upper half
     }
 }
