@@ -539,6 +539,9 @@ public class DialogueStudioScreen extends Screen {
                 actionIdx = 0;
                 condIdx = 0;
                 refreshFields();
+                // Hand focus straight to the label so it's immediately editable.
+                this.setFocused(choiceLabelField);
+                choiceLabelField.setCursorToEnd();
                 return true;
             }
         }
@@ -570,6 +573,13 @@ public class DialogueStudioScreen extends Screen {
         if (over(mx, my, px + ED_X + 192, py + 26, 64, 13)) { // Done
             choiceIdx = -1;
             refreshFields();
+            return true;
+        }
+        // Clicking anywhere in the label box focuses the field (its own strip is thinner than
+        // the drawn inset, which made label editing feel broken).
+        if (over(mx, my, px + ED_X + 36, py + 54, ED_W - 36, 14)) {
+            this.setFocused(choiceLabelField);
+            choiceLabelField.setCursorToEnd();
             return true;
         }
         if (over(mx, my, px + ED_X + 58, py + 72, 160, 14)) { // Leads to (cycle)

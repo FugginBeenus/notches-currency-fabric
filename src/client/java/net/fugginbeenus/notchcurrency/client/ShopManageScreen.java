@@ -45,12 +45,46 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
     private int rowY(int i) { return this.y + ROWS_Y + i * ROW_STEP; }
 
+    /** Preset title colors the swatch cycles through (0 = default white, then &-code chars). */
+    private static final char[] TITLE_COLORS =
+            {0, '6', 'e', 'a', '2', 'b', '3', '9', 'd', '5', 'c', '4', '7'};
+
+    /** The first &-color code in the name, or 0 when uncolored. */
+    private char firstColorCode() {
+        String s = nameField == null ? "" : nameField.getText();
+        for (int i = 0; i + 1 < s.length(); i++) {
+            if (s.charAt(i) == '&' && Formatting.byCode(s.charAt(i + 1)) != null
+                    && Formatting.byCode(s.charAt(i + 1)).isColor()) {
+                return Character.toLowerCase(s.charAt(i + 1));
+            }
+        }
+        return 0;
+    }
+
+    private int swatchArgb() {
+        Formatting f = firstColorCode() == 0 ? null : Formatting.byCode(firstColorCode());
+        return f == null || f.getColorValue() == null ? 0xFFFFFFFF : 0xFF000000 | f.getColorValue();
+    }
+
+    /** Swatch click: swap the leading &-color code for the next preset (mid-name codes untouched). */
+    private void cycleTitleColor() {
+        char cur = firstColorCode();
+        int idx = 0;
+        for (int i = 0; i < TITLE_COLORS.length; i++) {
+            if (TITLE_COLORS[i] == cur) { idx = i; break; }
+        }
+        char next = TITLE_COLORS[(idx + 1) % TITLE_COLORS.length];
+        String bare = nameField.getText().replaceFirst("^(?:&[0-9a-fk-orA-FK-OR])+", "");
+        nameField.setText(next == 0 ? bare : "&" + next + bare);
+    }
+
     @Override
     protected void init() {
         super.init();
         String oldName = nameField == null ? handler.shopName() : nameField.getText();
         nameField = new TextFieldWidget(this.textRenderer, this.x + 45, this.y + 61, 160, 10, Text.literal("Name"));
         nameField.setMaxLength(48); // room for &-color codes in the title ("&6Golden Goods")
+        nameField.setWidth(144);    // leaves room for the title-color swatch
         nameField.setDrawsBackground(false);
         nameField.setText(oldName);
         addDrawableChild(nameField);
@@ -120,7 +154,10 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
         // Name + greeting rows (fields draw on top of the insets).
         ctx.drawText(this.textRenderer, "Name", x + 10, y + 62, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + 42, y + 59, 166, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, x + 42, y + 59, 150, 14, NotchTheme.DEEP);
+        // Title color swatch: cycles preset colors; shows the current &-code's color either way.
+        NotchWidgets.slot(ctx, x + 195, y + 59, 14, 14);
+        ctx.fill(x + 197, y + 61, x + 207, y + 71, swatchArgb());
         NotchWidgets.neutralButton(ctx, this.textRenderer, x + 212, y + 59, 36, 14, "Set",
                 over(mouseX, mouseY, x + 212, y + 59, 36, 14));
         ctx.drawText(this.textRenderer, "Greet", x + 10, y + 80, NotchTheme.TEXT_DARK, false);
@@ -185,6 +222,12 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         this.renderBackground(ctx);
         super.render(ctx, mouseX, mouseY, delta);
+        if (over(mouseX, mouseY, x + 195, y + 59, 14, 14)) {
+            ctx.drawTooltip(this.textRenderer, List.of(
+                    Text.literal("Title color — click to cycle"),
+                    Text.literal("Typed &-codes show here too (\"&6Golden Goods\")").formatted(Formatting.GRAY),
+                    Text.literal("Press Set to apply").formatted(Formatting.GRAY)), mouseX, mouseY);
+        }
         // Full price/stock tooltip when hovering a listing (left of the Edit button).
         for (int i = 0; i < ShopManageScreenHandler.ROWS; i++) {
             Row row = row(i);
@@ -215,6 +258,11 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
             if (over(mx, my, x + 8, y + 20, 60, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_TOGGLE_OPEN, "", null);
+                return true;
+            }
+            if (over(mx, my, x + 195, y + 59, 14, 14)) {
+                NotchWidgets.tick();
+                cycleTitleColor();
                 return true;
             }
             if (over(mx, my, x + 212, y + 59, 36, 14)) {
