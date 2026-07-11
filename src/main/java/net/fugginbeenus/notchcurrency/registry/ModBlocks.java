@@ -80,13 +80,15 @@ public final class ModBlocks {
             new BlockItem(BOUNTY_BOARD, new Item.Settings())
     );
 
-    // Slot Machine — right-click to play the slots. Placeholder model/texture for now.
+    // Slot Machine — right-click to play the slots. Non-full model, so nonOpaque keeps
+    // neighbouring blocks from culling their touching faces (the see-through-world bug).
     public static final Block SLOT_MACHINE = Registry.register(
             Registries.BLOCK,
             NotchCurrency.id("slot_machine"),
             new SlotMachineBlock(AbstractBlock.Settings.create()
                     .strength(2.0f)
-                    .requiresTool())
+                    .requiresTool()
+                    .nonOpaque())
     );
 
     public static final Item SLOT_MACHINE_ITEM = Registry.register(

@@ -26,6 +26,19 @@ public class SlotMachineBlock extends Block {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
 
+    /** Fits the model: pedestal + cabinet + marquee (same shape regardless of facing). */
+    private static final net.minecraft.util.shape.VoxelShape SHAPE = net.minecraft.util.shape.VoxelShapes.union(
+            Block.createCuboidShape(1, 0, 1, 15, 3, 15),
+            Block.createCuboidShape(2, 3, 2, 14, 13, 14),
+            Block.createCuboidShape(3, 13, 3, 13, 15.5, 13));
+
+    @Override
+    public net.minecraft.util.shape.VoxelShape getOutlineShape(BlockState state,
+            net.minecraft.world.BlockView world, BlockPos pos,
+            net.minecraft.block.ShapeContext context) {
+        return SHAPE;
+    }
+
     public SlotMachineBlock(Settings settings) {
         super(settings);
         setDefaultState(getStateManager().getDefaultState().with(FACING, net.minecraft.util.math.Direction.NORTH));
