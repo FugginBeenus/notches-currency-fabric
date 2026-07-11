@@ -174,6 +174,12 @@ public final class NotchWidgets {
                         net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), 1.35f, 0.5f));
     }
 
+    /** Classic '&' color/format codes rendered as § formatting ("&6Golden &lShop"). Same codes the
+     *  dialogue system supports, so owners learn them once. */
+    public static String colorize(String s) {
+        return s == null ? "" : s.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
+    }
+
     /** A small right-pointing arrow (13×8), like the vanilla trade arrow. */
     public static void arrowRight(DrawContext ctx, int x, int y, int color) {
         ctx.fill(x, y + 3, x + 10, y + 5, color);

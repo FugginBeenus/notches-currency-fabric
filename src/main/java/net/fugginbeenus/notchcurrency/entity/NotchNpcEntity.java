@@ -131,6 +131,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree dialogue =
             new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
     private DialogueMode dialogueMode = DialogueMode.WINDOW;
+    private String farewellText = "";
 
     // Stats: protection toggle (silent/glowing/gravity/nameplate ride on vanilla entity flags).
     private boolean protectedNpc = true;
@@ -358,6 +359,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public DialogueMode getDialogueMode() { return dialogueMode; }
     public void setDialogueMode(DialogueMode mode) { this.dialogueMode = mode == null ? DialogueMode.WINDOW : mode; }
+
+    /** Optional goodbye line said in chat when a screen this NPC opened is closed ("" = none). */
+    public String getFarewellText() { return farewellText; }
+    public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
 
     // ---- stats ----
 
@@ -781,6 +786,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.put("Waypoints", wps);
         nbt.put("Dialogue", dialogue.toNbt());
         nbt.putString("DialogueMode", dialogueMode.name());
+        nbt.putString("Farewell", farewellText);
         // Stats — the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
@@ -860,6 +866,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("Dialogue")) {
             dialogue = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(nbt.getCompound("Dialogue"));
         }
+        if (nbt.contains("Farewell")) farewellText = nbt.getString("Farewell");
         if (nbt.contains("DialogueMode")) {
             try {
                 dialogueMode = DialogueMode.valueOf(nbt.getString("DialogueMode"));

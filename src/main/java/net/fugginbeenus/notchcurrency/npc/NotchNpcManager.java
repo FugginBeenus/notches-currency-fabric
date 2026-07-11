@@ -73,6 +73,7 @@ public final class NotchNpcManager {
         buf.writeVarInt(npc.getRegen());
         buf.writeString(npc.getFollowPlayerName());
         buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0));
+        buf.writeString(npc.getFarewellText());
         ServerPlayNetworking.send(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
@@ -399,11 +400,24 @@ public final class NotchNpcManager {
             return;
         }
         var clean = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
+        boolean allowCommands = sp.hasPermissionLevel(2);
+        boolean strippedCommands = false;
         for (var node : tree.nodes().values()) {
             if (node.id().isBlank()) continue;
             if (node.text().length() > 500) node.setText(node.text().substring(0, 500));
             while (node.choices().size() > 6) node.choices().remove(node.choices().size() - 1);
+            if (!allowCommands) {
+                for (var choice : node.choices()) {
+                    strippedCommands |= choice.actions().removeIf(a ->
+                            a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND
+                            || a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
+                }
+            }
             clean.put(node);
+        }
+        if (strippedCommands) {
+            sp.sendMessage(Text.literal("Command actions were removed — those are admin-only.")
+                    .formatted(Formatting.YELLOW), false);
         }
         clean.setStartId(tree.startId());
         if (clean.get(clean.startId()) == null && clean.size() > 0) {
@@ -427,6 +441,15 @@ public final class NotchNpcManager {
             removeLinkedShop(sp, npc.getUuid());
         }
         sp.sendMessage(Text.literal("Role set to " + role.name() + ".").formatted(Formatting.GREEN), false);
+    }
+
+    public static void setFarewell(ServerPlayerEntity sp, NotchNpcEntity npc, String text) {
+        if (!guard(sp, npc)) return;
+        String trimmed = text == null ? "" : text.trim();
+        if (trimmed.length() > 150) trimmed = trimmed.substring(0, 150);
+        npc.setFarewellText(trimmed);
+        sp.sendMessage(Text.literal(trimmed.isEmpty() ? "Goodbye line cleared." : "Goodbye line saved.")
+                .formatted(Formatting.GREEN), false);
     }
 
     public static void setName(ServerPlayerEntity sp, NotchNpcEntity npc, String name) {

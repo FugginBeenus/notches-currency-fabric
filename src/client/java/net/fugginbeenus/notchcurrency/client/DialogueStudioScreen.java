@@ -678,11 +678,21 @@ public class DialogueStudioScreen extends Screen {
         c.setNext(options.get((idx + 1) % options.size()));
     }
 
+    /** Command actions are admin-only: hidden from the cycle for non-ops (server strips them too). */
+    private static boolean commandsAllowed() {
+        var p = net.minecraft.client.MinecraftClient.getInstance().player;
+        return p != null && p.hasPermissionLevel(2);
+    }
+
     private void cycleAction() {
         DialogueAction.Type[] types = DialogueAction.Type.values();
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type current = a == null ? DialogueAction.Type.NONE : a.type();
         DialogueAction.Type next = types[(current.ordinal() + 1) % types.length];
+        while (!commandsAllowed() && (next == DialogueAction.Type.RUN_COMMAND
+                || next == DialogueAction.Type.RUN_COMMAND_AS_PLAYER)) {
+            next = types[(next.ordinal() + 1) % types.length];
+        }
         DialogueAction updated = action(actionIdx, true);
         updated.setType(next); // NONE = an empty slot; stripped when saving
         // Entering OPEN_SCREEN: seed a valid screen id so the cycle starts somewhere real.

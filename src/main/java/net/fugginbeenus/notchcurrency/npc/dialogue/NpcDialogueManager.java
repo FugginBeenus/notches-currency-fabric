@@ -47,10 +47,9 @@ public final class NpcDialogueManager {
                     ? npc.getCustomName().getString() : "NPC";
             sp.sendMessage(Text.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
                     .formatted(Formatting.WHITE), false);
-            var role = npc.getRole();
-            if (role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
-                    && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER) {
-                NpcRoleDispatch.open(sp, role, npc.getRoleTarget(), npc);
+            if (hasRoleScreen(npc)) {
+                // Give the greeting a beat to be read before the GUI covers it.
+                pendingOpens.add(new PendingOpen(sp.getUuid(), npc.getUuid(), GREETING_DELAY_TICKS));
             }
             return true;
         }
@@ -66,7 +65,13 @@ public final class NpcDialogueManager {
         if (!(sp.getServerWorld().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
         if (sp.squaredDistanceTo(npc) > MAX_TALK_DIST_SQ) return;
         DialogueNode node = npc.getDialogue().get(nodeId);
-        if (node == null || choiceIndex < 0 || choiceIndex >= node.choices().size()) return;
+        if (node == null || choiceIndex < 0) return;
+        // The synthetic role-entry choice sits one past the authored ones (see sendNode).
+        if (choiceIndex == node.choices().size() && hasRoleScreen(npc)) {
+            openRole(sp, npc);
+            return;
+        }
+        if (choiceIndex >= node.choices().size()) return;
         DialogueChoice choice = node.choices().get(choiceIndex);
         if (!choice.isAvailable(sp, npc)) return; // locked/hidden — client shouldn't send, but re-check
 
@@ -75,13 +80,14 @@ public final class NpcDialogueManager {
             switch (a.type()) {
                 case NONE -> { }
                 case OPEN_ROLE -> {
-                    NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
+                    openRole(sp, npc);
                     openedRole = true;
                 }
                 case OPEN_SCREEN -> {
                     try {
                         var role = net.fugginbeenus.notchcurrency.economy.npc.NpcRole.valueOf(a.value());
                         NpcRoleDispatch.open(sp, role, null, npc);
+                        watchForFarewell(sp, npc);
                         openedRole = true;
                     } catch (IllegalArgumentException ignored) {
                         // Unknown screen id — skip.
@@ -132,18 +138,106 @@ public final class NpcDialogueManager {
             visible.add(new int[]{i, ok ? 1 : 0});
         }
 
+        // Role NPCs always get a way INTO their screen: a synthetic entry choice appended after the
+        // authored ones (index = choices.size(), recognized in choose()). Keeps window dialogue from
+        // dead-ending in front of a shop.
+        boolean roleEntry = hasRoleScreen(npc);
+
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npc.getUuid());
         buf.writeString(npcName);
         buf.writeString(node.id());
         buf.writeString(substitute(node.text(), sp, npcName));
-        buf.writeVarInt(visible.size());
+        buf.writeVarInt(visible.size() + (roleEntry ? 1 : 0));
         for (int[] v : visible) {
             buf.writeVarInt(v[0]);
             buf.writeString(substitute(node.choices().get(v[0]).label(), sp, npcName));
             buf.writeBoolean(v[1] == 1);
         }
+        if (roleEntry) {
+            buf.writeVarInt(node.choices().size());
+            buf.writeString(NpcRoleDispatch.entryLabel(npc.getRole()));
+            buf.writeBoolean(true);
+        }
         ServerPlayNetworking.send(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
+    }
+
+    // ---- role hand-off: delayed opens (chat greetings) + farewell lines on screen close ----
+
+    private static final int GREETING_DELAY_TICKS = 25;   // ~1.25s to read the greeting
+    private static final int FAREWELL_TTL_TICKS = 20 * 60 * 5; // give up after 5 minutes
+
+    private static final class PendingOpen {
+        final UUID player, npc;
+        int ticks;
+        PendingOpen(UUID player, UUID npc, int ticks) { this.player = player; this.npc = npc; this.ticks = ticks; }
+    }
+
+    private static final class FarewellWatch {
+        final String npcName, farewell;
+        boolean sawScreen;
+        int ttl = FAREWELL_TTL_TICKS;
+        FarewellWatch(String npcName, String farewell) { this.npcName = npcName; this.farewell = farewell; }
+    }
+
+    private static final List<PendingOpen> pendingOpens = new ArrayList<>();
+    private static final java.util.Map<UUID, FarewellWatch> farewells = new java.util.HashMap<>();
+
+    /** True when interacting should be able to reach a screen/feature beyond the dialogue. */
+    private static boolean hasRoleScreen(NotchNpcEntity npc) {
+        var role = npc.getRole();
+        return role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
+                && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER;
+    }
+
+    /** Open the NPC's role feature and, if it has a goodbye line, watch for the screen closing. */
+    private static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
+        watchForFarewell(sp, npc);
+    }
+
+    private static void watchForFarewell(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        String farewell = npc.getFarewellText();
+        if (farewell == null || farewell.isBlank()) return;
+        String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
+                ? npc.getCustomName().getString() : "NPC";
+        farewells.put(sp.getUuid(), new FarewellWatch(npcName, farewell));
+    }
+
+    /** Server tick: fire delayed role opens, and say goodbyes when the opened screen closes. */
+    public static void tick(net.minecraft.server.MinecraftServer server) {
+        if (!pendingOpens.isEmpty()) {
+            var it = pendingOpens.iterator();
+            while (it.hasNext()) {
+                PendingOpen p = it.next();
+                if (--p.ticks > 0) continue;
+                it.remove();
+                ServerPlayerEntity sp = server.getPlayerManager().getPlayer(p.player);
+                if (sp != null && sp.getServerWorld().getEntity(p.npc) instanceof NotchNpcEntity npc) {
+                    openRole(sp, npc);
+                }
+            }
+        }
+        if (!farewells.isEmpty()) {
+            var it = farewells.entrySet().iterator();
+            while (it.hasNext()) {
+                var entry = it.next();
+                ServerPlayerEntity sp = server.getPlayerManager().getPlayer(entry.getKey());
+                FarewellWatch w = entry.getValue();
+                if (sp == null || --w.ttl <= 0) {
+                    it.remove();
+                    continue;
+                }
+                boolean inScreen = sp.currentScreenHandler != sp.playerScreenHandler;
+                if (inScreen) {
+                    w.sawScreen = true;
+                } else if (w.sawScreen) {
+                    sp.sendMessage(Text.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
+                            .formatted(Formatting.WHITE), false);
+                    it.remove();
+                }
+            }
+        }
     }
 
     private static void sendClose(ServerPlayerEntity sp) {
@@ -180,8 +274,22 @@ public final class NpcDialogueManager {
         }
     }
 
+    /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs) — a stored
+     *  command must never outlive its author's authority. */
+    private static boolean ownerMayRunCommands(NotchNpcEntity npc, net.minecraft.server.MinecraftServer server) {
+        if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;
+        UUID owner = npc.getOwner();
+        if (owner == null) return false;
+        ServerPlayerEntity online = server.getPlayerManager().getPlayer(owner);
+        if (online != null) return online.hasPermissionLevel(2);
+        var profile = server.getUserCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
+                : server.getUserCache().getByUuid(owner);
+        return profile.isPresent() && server.getPlayerManager().isOperator(profile.get());
+    }
+
     private static void runCommand(ServerPlayerEntity sp, NotchNpcEntity npc, String command, boolean asPlayer) {
         if (command == null || command.isBlank() || sp.getServer() == null) return;
+        if (!ownerMayRunCommands(npc, sp.getServer())) return;
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
         String cmd = substitute(command, sp, npcName);

@@ -156,6 +156,9 @@ public class NotchCurrency implements ModInitializer {
 
             // Recover admin-shop dynamic prices toward baseline.
             AdminShopState.get(server).tickDecay();
+
+            // NPC dialogue hand-offs: delayed greeting→GUI opens + goodbye lines on screen close.
+            net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.tick(server);
         });
 
         // NOTE: Orphan cleanup is NOT run automatically on startup because entities

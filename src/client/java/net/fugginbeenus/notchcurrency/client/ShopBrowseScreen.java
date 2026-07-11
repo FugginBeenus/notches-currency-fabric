@@ -67,7 +67,8 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
         final int x = this.x, y = this.y;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, handler.shopName(), x + W / 2, y + 7);
+        // Owners can color the title with &-codes in the shop name ("&6Golden Goods").
+        NotchWidgets.title(ctx, this.textRenderer, NotchWidgets.colorize(handler.shopName()), x + W / 2, y + 7);
 
         boolean canBuy = open();
 

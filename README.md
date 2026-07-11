@@ -23,7 +23,9 @@ and a wide range of money sinks and faucets designed to keep a server's economy 
 - Code-drawn browse, manage, and listing-editor screens, fully paginated (up to 27 listings)
 - Flexible pricing: sell for coins, for a bartered item, or both at once
 - Live earnings collection, name/greeting/open controls, and optional shop rent as a sink
-- Each shop is run by an NPC with the Shop role
+- Color the shop title with `&`-codes in the name (`&6Golden Goods`) — same codes as dialogue
+- Each shop is run by an NPC with the Shop role; add dialogue and shoppers get the conversation
+  first with a "Browse the shop" option, plus an optional goodbye line when they close the screen
 
 ### Auction House
 - Buy-now and timed auctions with bidding, offline-safe outbid refunds, and a winnings mailbox

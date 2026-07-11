@@ -285,6 +285,17 @@ public final class ServerPacketHandlers {
             });
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_FAREWELL, (server, player, handler, buf, rs) -> {
+            UUID id = buf.readUuid();
+            String text = buf.readString(160);
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFarewell(player, npc, text);
+                }
+            });
+        });
+
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_PICKUP, (server, player, handler, buf, rs) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {

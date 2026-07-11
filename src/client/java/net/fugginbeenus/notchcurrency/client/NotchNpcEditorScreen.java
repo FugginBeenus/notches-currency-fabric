@@ -30,8 +30,9 @@ import java.util.UUID;
 public class NotchNpcEditorScreen extends Screen {
 
     private static final int W = 300, H = 230;
+    // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
     private static final NpcRole[] SELECTABLE = {
-            NpcRole.NONE, NpcRole.GREETER, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
+            NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
             NpcRole.MAILBOX, NpcRole.RAFFLE, NpcRole.BOUNTY, NpcRole.DEALER, NpcRole.ENCHANTER,
             NpcRole.COSMETICS
     };
@@ -68,6 +69,8 @@ public class NotchNpcEditorScreen extends Screen {
     private TextFieldWidget playerField;
     private TextFieldWidget urlField;
     private TextFieldWidget followField;
+    private TextFieldWidget farewellField;
+    private String currentFarewell;
     private NotchNpcEntity preview;
 
     /** Which tab the NEXT editor open should land on. Sub-screens (pose editor, studio, stats…) set
@@ -82,6 +85,7 @@ public class NotchNpcEditorScreen extends Screen {
         this.npcId = state.npcId();
         this.currentRole = roleFromOrdinal(state.roleOrdinal());
         this.currentName = state.name() == null ? "" : state.name();
+        this.currentFarewell = state.farewell() == null ? "" : state.farewell();
         this.ownerName = state.ownerName() == null ? "" : state.ownerName();
         this.canEdit = state.canEdit();
         this.currentModel = (state.model() == null || state.model().isEmpty())
@@ -126,6 +130,13 @@ public class NotchNpcEditorScreen extends Screen {
         nameField.setText(currentName);
         addDrawableChild(nameField);
 
+        farewellField = new TextFieldWidget(this.textRenderer, px + 78, py + 175, 158, 9, Text.literal("Goodbye"));
+        farewellField.setMaxLength(150);
+        farewellField.setDrawsBackground(false);
+        farewellField.setPlaceholder(Text.literal("(optional)").formatted(Formatting.DARK_GRAY));
+        farewellField.setText(currentFarewell);
+        addDrawableChild(farewellField);
+
         playerField = new TextFieldWidget(this.textRenderer, px + 152, py + 141, 134, 9, Text.literal("Player"));
         playerField.setMaxLength(16);
         playerField.setDrawsBackground(false);
@@ -152,6 +163,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     private void updateWidgetVisibility() {
         nameField.visible = (tab == 0);
+        farewellField.visible = (tab == 3);
         nameField.setFocusUnlocked(tab == 0);
         boolean hum = (tab == 0 && isHumanoid());
         playerField.visible = hum;
@@ -536,10 +548,16 @@ public class NotchNpcEditorScreen extends Screen {
                 : "Chat: one random line, then opens its job.";
         NotchWidgets.centerText(ctx, this.textRenderer, styleHint, px + W / 2, py + 160, NotchTheme.TEXT_MUTED, false);
 
+        // Optional goodbye line, said in chat when a screen this NPC opened closes.
+        ctx.drawText(this.textRenderer, "Goodbye:", px + 22, py + 175, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + 75, py + 171, 164, 13, NotchTheme.PANEL_MID);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 244, py + 171, 34, 13, "Set",
+                over(mx, my, px + 244, py + 171, 34, 13));
+
         if (dialogueNodes > 0) {
-            NotchWidgets.divider(ctx, px + 8, py + 172, W - 16);
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + 80, py + 180, 140, 14, "Remove Dialogue",
-                    over(mx, my, px + 80, py + 180, 140, 14));
+            NotchWidgets.divider(ctx, px + 8, py + 190, W - 16);
+            NotchWidgets.dangerButton(ctx, this.textRenderer, px + 80, py + 196, 140, 14, "Remove Dialogue",
+                    over(mx, my, px + 80, py + 196, 140, 14));
         }
     }
 
@@ -563,7 +581,12 @@ public class NotchNpcEditorScreen extends Screen {
             NotchPacketsClient.sendNpcDialogueMode(npcId, 1);
             return true;
         }
-        if (dialogueNodes > 0 && over(mx, my, px + 80, py + 180, 140, 14)) {
+        if (over(mx, my, px + 244, py + 171, 34, 13)) {
+            currentFarewell = farewellField.getText().trim();
+            NotchPacketsClient.sendNpcSetFarewell(npcId, currentFarewell);
+            return true;
+        }
+        if (dialogueNodes > 0 && over(mx, my, px + 80, py + 196, 140, 14)) {
             NotchPacketsClient.sendNpcDialogueClear(npcId);
             dialogueNodes = 0;
             dialogueFlat = true;
@@ -826,7 +849,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
         // Plain characters insert via charTyped only (guards against the select-all wipe).
-        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField)) {
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField, farewellField)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

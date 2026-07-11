@@ -53,6 +53,8 @@ public final class NotchPackets {
     public static final Identifier NPC_SET_ROLE = new Identifier(NotchCurrency.MOD_ID, "npc_set_role");
     // Client -> server: set the NPC's display name (npc uuid, name)
     public static final Identifier NPC_SET_NAME = new Identifier(NotchCurrency.MOD_ID, "npc_set_name");
+    // Client -> server: set the NPC's goodbye line (uuid, text; "" clears)
+    public static final Identifier NPC_SET_FAREWELL = new Identifier(NotchCurrency.MOD_ID, "npc_set_farewell");
     // Client -> server: pick the NPC up into an item (npc uuid)
     public static final Identifier NPC_PICKUP = new Identifier(NotchCurrency.MOD_ID, "npc_pickup");
     // Client -> server: delete the NPC (npc uuid)

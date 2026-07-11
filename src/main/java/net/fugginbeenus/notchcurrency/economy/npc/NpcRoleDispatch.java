@@ -65,6 +65,23 @@ public final class NpcRoleDispatch {
         }
     }
 
+    /** The label for the synthetic "enter my shop" choice appended to a role NPC's dialogue window. */
+    public static String entryLabel(NpcRole role) {
+        return switch (role) {
+            case SHOP, ADMIN_SHOP -> "Browse the shop";
+            case BANKER -> "Open the bank";
+            case AUCTIONEER -> "Auction house";
+            case MAILBOX -> "Collect my mail";
+            case RAFFLE -> "Try the raffle";
+            case BOUNTY -> "See the bounties";
+            case DEALER -> "Play the slots";
+            case ENCHANTER -> "Enchanting services";
+            case COSMETICS -> "Browse cosmetics";
+            case CUSTOM -> "Let's get to it";
+            default -> "Continue";
+        };
+    }
+
     /** CUSTOM role: hand the interaction to the handler another mod registered via the API. */
     private static void customInteract(ServerPlayerEntity sp, @Nullable Entity npc) {
         if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n) {

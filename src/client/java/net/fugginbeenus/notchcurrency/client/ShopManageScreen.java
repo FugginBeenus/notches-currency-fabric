@@ -27,7 +27,10 @@ import java.util.UUID;
 public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
     private static final int W = 256, H = 244;
-    private static final int ROW_X = 8, ROW_W = 240, ROW_H = 17, ROW_STEP = 18, ROWS_Y = 112;
+    private static final int ROW_X = 8, ROW_W = 240, ROW_H = 18, ROW_STEP = 19, ROWS_Y = 110;
+
+    private static final ItemStack COIN =
+            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
     private TextFieldWidget nameField;
     private TextFieldWidget greetField;
@@ -47,7 +50,7 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
         super.init();
         String oldName = nameField == null ? handler.shopName() : nameField.getText();
         nameField = new TextFieldWidget(this.textRenderer, this.x + 45, this.y + 61, 160, 10, Text.literal("Name"));
-        nameField.setMaxLength(32);
+        nameField.setMaxLength(48); // room for &-color codes in the title ("&6Golden Goods")
         nameField.setDrawsBackground(false);
         nameField.setText(oldName);
         addDrawableChild(nameField);
@@ -61,29 +64,17 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
         addDrawableChild(greetField);
     }
 
-    private record Row(ItemStack icon, UUID listingId, int price, String barterName, int barterCount, int stock) {}
+    private record Row(ItemStack icon, UUID listingId, int price, String barterName, int barterCount,
+                       ItemStack barterStack, int stock) {}
 
     private Row row(int i) {
         ItemStack stack = handler.rowStack(i);
         if (stack.isEmpty()) return null;
         NbtCompound t = stack.getNbt();
         if (t == null || !t.containsUuid("nc_lid")) return null;
+        ItemStack barter = t.contains("nc_bstack") ? ItemStack.fromNbt(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
         return new Row(stack, t.getUuid("nc_lid"), t.getInt("nc_price"),
-                t.getString("nc_bname"), t.getInt("nc_bcount"), t.getInt("nc_stock"));
-    }
-
-    /** Compact per-row price: coin glyph + shortened barter, so it fits the row. */
-    private static Text rowPrice(Row r) {
-        MutableText p = Text.empty();
-        boolean any = false;
-        if (r.price() > 0) { p.append(NotchCurrency.coins(r.price())); any = true; }
-        if (r.barterCount() > 0 && !r.barterName().isEmpty()) {
-            String bn = r.barterName();
-            if (bn.length() > 8) bn = bn.substring(0, 7) + "…";
-            p.append(Text.literal((any ? " +" : "") + r.barterCount() + "×" + bn));
-            any = true;
-        }
-        return any ? p : Text.literal("free");
+                t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }
 
     @Override
@@ -160,12 +151,21 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
             if (row == null) continue;
             any = true;
             int ry = rowY(i);
+            // Vanilla-trade card, same as the browse screen: price icons -> arrow -> item.
             NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
-            ctx.drawItem(row.icon(), x + ROW_X + 2, ry + 1);
-            String name = row.icon().getName().getString();
-            if (name.length() > 14) name = name.substring(0, 13) + "…";
-            ctx.drawText(this.textRenderer, name, x + ROW_X + 20, ry + 5, NotchTheme.TEXT_LIGHT, false);
-            ctx.drawText(this.textRenderer, rowPrice(row), x + ROW_X + 108, ry + 5, NotchTheme.TEXT_MUTED, false);
+            if (row.price() > 0) {
+                ctx.drawItem(COIN, x + ROW_X + 3, ry + 1);
+                ctx.drawItemInSlot(this.textRenderer, COIN, x + ROW_X + 3, ry + 1,
+                        NotchWidgets.compactCount(row.price()));
+            }
+            if (!row.barterStack().isEmpty()) {
+                ctx.drawItemInSlot(this.textRenderer, row.barterStack(), x + ROW_X + 23, ry + 1);
+            }
+            if (row.price() <= 0 && row.barterStack().isEmpty()) {
+                ctx.drawText(this.textRenderer, "free", x + ROW_X + 6, ry + 5, NotchTheme.TEXT_MUTED, false);
+            }
+            NotchWidgets.arrowRight(ctx, x + ROW_X + 45, ry + 5, NotchTheme.TEXT_MUTED);
+            ctx.drawItemInSlot(this.textRenderer, row.icon(), x + ROW_X + 64, ry + 1);
             String s = "x" + row.stock();
             ctx.drawText(this.textRenderer, s, x + ROW_X + 200 - this.textRenderer.getWidth(s), ry + 5,
                     row.stock() > 0 ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_RED, false);

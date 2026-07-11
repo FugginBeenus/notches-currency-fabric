@@ -12,8 +12,8 @@ public enum NpcRole {
     NONE,
     /** A player-owned shop NPC (links a {@code PlayerShop} keyed by the NPC's UUID). */
     SHOP,
-    /** Talks only: plays its dialogue (window or a random chat line) and never opens a screen.
-     *  With no dialogue configured it falls back to a stock "Hello there!". */
+    /** Legacy — hidden from the editor's role picker. NONE + dialogue covers this now (any NPC can
+     *  talk); existing Greeters keep working: dialogue plays, no screen ever opens. */
     GREETER,
     /** Opens the Enchanter: buy enchant levels, repair, extract to book, uncraft. */
     ENCHANTER,
