@@ -351,10 +351,7 @@ public final class NotchNpcManager {
         start.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Who are you?", "about"));
         if (npc.getRole() != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
                 && npc.getRole() != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER) {
-            var business = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Let's do business", "");
-            business.withAction(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction(
-                    net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_ROLE, "", 0));
-            start.withChoice(business);
+            start.withChoice(roleEntryChoice(npc));
         }
         start.withChoice(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice("Goodbye", ""));
 
@@ -440,7 +437,45 @@ public final class NotchNpcManager {
             // Leaving the SHOP role: close & return the linked shop so nothing is orphaned.
             removeLinkedShop(sp, npc.getUuid());
         }
+        seedRoleEntryChoice(sp, npc);
         sp.sendMessage(Text.literal("Role set to " + role.name() + ".").formatted(Formatting.GREEN), false);
+    }
+
+    /** The default "Browse the shop"-style choice: a NORMAL choice with an OPEN_ROLE action, so
+     *  the author can rename or delete it in the Studio (it is never forced back). */
+    private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice roleEntryChoice(NotchNpcEntity npc) {
+        var entry = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice(
+                net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch.entryLabel(npc.getRole()), "");
+        entry.withAction(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction(
+                net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_ROLE, "", 0));
+        return entry;
+    }
+
+    /** When an NPC with branching dialogue gains a screen role and no choice reaches it yet, add
+     *  the default entry choice to the start page (once — removing it in the Studio sticks). */
+    private static void seedRoleEntryChoice(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        var role = npc.getRole();
+        if (role == NpcRole.NONE || role == NpcRole.GREETER) return;
+        var tree = npc.getDialogue();
+        if (tree.isEmpty() || tree.isFlat()) return; // flat = Quick Lines; CHAT opens the role itself
+        var start = tree.start();
+        if (start == null || start.choices().size() >= 6) return;
+        for (var node : tree.nodes().values()) {
+            for (var choice : node.choices()) {
+                for (var action : choice.actions()) {
+                    var t = action.type();
+                    if (t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_ROLE
+                            || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_SCREEN) {
+                        return; // the author already wired a path in
+                    }
+                }
+            }
+        }
+        start.withChoice(roleEntryChoice(npc));
+        sp.sendMessage(Text.literal("Added a \""
+                + net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch.entryLabel(npc.getRole())
+                + "\" choice to its dialogue — edit or remove it in the Studio.")
+                .formatted(Formatting.YELLOW), false);
     }
 
     public static void setFarewell(ServerPlayerEntity sp, NotchNpcEntity npc, String text) {

@@ -65,13 +65,7 @@ public final class NpcDialogueManager {
         if (!(sp.getServerWorld().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
         if (sp.squaredDistanceTo(npc) > MAX_TALK_DIST_SQ) return;
         DialogueNode node = npc.getDialogue().get(nodeId);
-        if (node == null || choiceIndex < 0) return;
-        // The synthetic role-entry choice sits one past the authored ones (see sendNode).
-        if (choiceIndex == node.choices().size() && hasRoleScreen(npc)) {
-            openRole(sp, npc);
-            return;
-        }
-        if (choiceIndex >= node.choices().size()) return;
+        if (node == null || choiceIndex < 0 || choiceIndex >= node.choices().size()) return;
         DialogueChoice choice = node.choices().get(choiceIndex);
         if (!choice.isAvailable(sp, npc)) return; // locked/hidden — client shouldn't send, but re-check
 
@@ -138,26 +132,18 @@ public final class NpcDialogueManager {
             visible.add(new int[]{i, ok ? 1 : 0});
         }
 
-        // Role NPCs always get a way INTO their screen: a synthetic entry choice appended after the
-        // authored ones (index = choices.size(), recognized in choose()). Keeps window dialogue from
-        // dead-ending in front of a shop.
-        boolean roleEntry = hasRoleScreen(npc);
-
+        // Reaching the role screen is a REAL choice with an OPEN_ROLE action (seeded by default for
+        // role NPCs, but the author can edit or remove it) — not a synthetic appended here.
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npc.getUuid());
         buf.writeString(npcName);
         buf.writeString(node.id());
         buf.writeString(substitute(node.text(), sp, npcName));
-        buf.writeVarInt(visible.size() + (roleEntry ? 1 : 0));
+        buf.writeVarInt(visible.size());
         for (int[] v : visible) {
             buf.writeVarInt(v[0]);
             buf.writeString(substitute(node.choices().get(v[0]).label(), sp, npcName));
             buf.writeBoolean(v[1] == 1);
-        }
-        if (roleEntry) {
-            buf.writeVarInt(node.choices().size());
-            buf.writeString(NpcRoleDispatch.entryLabel(npc.getRole()));
-            buf.writeBoolean(true);
         }
         ServerPlayNetworking.send(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
     }
