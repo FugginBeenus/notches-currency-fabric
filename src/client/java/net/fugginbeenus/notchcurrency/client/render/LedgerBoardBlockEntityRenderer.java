@@ -24,8 +24,8 @@ import java.util.List;
  */
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
-    private static final float HOVER_Y = 1.55f;  // height above the block origin (blocks)
-    private static final float SCALE = 0.02f;    // billboard text scale
+    private static final float HOVER_Y = 1.2f;   // height above the lower-block origin (blocks) — over the tablet
+    private static final float SCALE = 0.016f;   // billboard text scale
     private static final int LINE_H = 10;        // line spacing (text px)
 
     private final TextRenderer text;
