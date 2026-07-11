@@ -64,6 +64,12 @@ public final class CrateManager {
             player.sendMessage(Text.literal("This crate is empty.").formatted(Formatting.GRAY), false);
             return;
         }
+        // Guard BEFORE keys are consumed: a bad datapack entry must never pay out "Air".
+        if (loot.isItem() && !Registries.ITEM.containsId(loot.itemId())) {
+            player.sendMessage(Text.literal("This crate is misconfigured (unknown item "
+                    + loot.itemId() + ") — check the server log.").formatted(Formatting.RED), false);
+            return;
+        }
         consumeKeys(player, def.keysRequired());
 
         Text rewardText;

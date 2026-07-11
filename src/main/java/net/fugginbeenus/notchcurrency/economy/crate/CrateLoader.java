@@ -63,8 +63,13 @@ public class CrateLoader implements SimpleSynchronousResourceReloadListener {
             } else {
                 int min = l.get("min").getAsInt();
                 int max = l.has("max") ? l.get("max").getAsInt() : min;
-                loot.add(new CrateDef.LootEntry(true, new Identifier(l.get("item").getAsString()),
-                        min, Math.max(min, max), 0, weight));
+                Identifier itemId = new Identifier(l.get("item").getAsString());
+                if (!net.minecraft.registry.Registries.ITEM.containsId(itemId)) {
+                    // A misconfigured entry would silently pay out "Air" — name the culprit instead.
+                    LOGGER.warn("Crate '{}': unknown item '{}' — loot entry skipped", id, itemId);
+                    continue;
+                }
+                loot.add(new CrateDef.LootEntry(true, itemId, min, Math.max(min, max), 0, weight));
             }
         }
         return new CrateDef(id, name, keys, loot);
