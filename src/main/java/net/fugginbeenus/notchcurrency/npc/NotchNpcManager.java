@@ -141,6 +141,15 @@ public final class NotchNpcManager {
     public static void setAppearance(ServerPlayerEntity sp, NotchNpcEntity npc,
                                      String model, String skinType, String skinValue, boolean slim, float scale) {
         if (!guard(sp, npc)) return;
+        // URL skins are fetched by every client that sees the NPC — only allow real web URLs.
+        if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
+            String lower = skinValue.trim().toLowerCase();
+            if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+                sp.sendMessage(Text.literal("Skin URLs must start with http:// or https://.")
+                        .formatted(Formatting.RED), false);
+                return;
+            }
+        }
         npc.setAppearance(model, skinType, skinValue, slim, scale);
     }
 
@@ -400,7 +409,7 @@ public final class NotchNpcManager {
         boolean allowCommands = sp.hasPermissionLevel(2);
         boolean strippedCommands = false;
         for (var node : tree.nodes().values()) {
-            if (node.id().isBlank()) continue;
+            if (node.id().isBlank() || node.id().length() > 32) continue; // ids are <=24 in the studio
             if (node.text().length() > 500) node.setText(node.text().substring(0, 500));
             while (node.choices().size() > 6) node.choices().remove(node.choices().size() - 1);
             if (!allowCommands) {
@@ -490,6 +499,7 @@ public final class NotchNpcManager {
     public static void setName(ServerPlayerEntity sp, NotchNpcEntity npc, String name) {
         if (!guard(sp, npc)) return;
         String trimmed = name == null ? "" : name.trim();
+        if (trimmed.length() > 48) trimmed = trimmed.substring(0, 48); // matches the editor field cap
         if (trimmed.isEmpty()) {
             npc.setCustomName(null);
             npc.setCustomNameVisible(false);

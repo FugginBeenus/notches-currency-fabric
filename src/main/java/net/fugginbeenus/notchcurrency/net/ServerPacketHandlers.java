@@ -276,7 +276,7 @@ public final class ServerPacketHandlers {
 
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_NAME, (server, player, handler, buf, rs) -> {
             UUID id = buf.readUuid();
-            String name = buf.readString();
+            String name = buf.readString(64); // editor field caps at 48; wire cap is belt-and-suspenders
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
@@ -318,7 +318,7 @@ public final class ServerPacketHandlers {
 
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, handler, buf, rs) -> {
             UUID id = buf.readUuid();
-            String nodeId = buf.readString();
+            String nodeId = buf.readString(64); // page ids are <=24 chars of [a-z0-9_]
             int choice = buf.readVarInt();
             server.execute(() ->
                     net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.choose(player, id, nodeId, choice));
@@ -571,9 +571,9 @@ public final class ServerPacketHandlers {
 
         ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_APPEARANCE, (server, player, handler, buf, rs) -> {
             UUID id = buf.readUuid();
-            String model = buf.readString();
-            String skinType = buf.readString();
-            String skinValue = buf.readString();
+            String model = buf.readString(64);
+            String skinType = buf.readString(16);
+            String skinValue = buf.readString(256); // player name or skin URL (client field caps at 256)
             boolean slim = buf.readBoolean();
             float scale = buf.readFloat();
             server.execute(() -> {

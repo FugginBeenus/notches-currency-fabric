@@ -76,7 +76,7 @@ Enchanter, or Cosmetics — plus admin server-shops.
 ### Admin & Config
 - `/eco give|take|set|stats`, a `/baltop` leaderboard, and a physical Ledger Board block
 - Optional Discord webhook for admin-relevant transactions
-- A full ModMenu + Cloth Config GUI — nearly everything is configurable
+- A full in-game settings screen (ModMenu) with live search — nearly everything is configurable
 
 ## Commands (quick reference)
 - `/pay <player> <amount>` — send coins
@@ -89,7 +89,7 @@ Enchanter, or Cosmetics — plus admin server-shops.
 ## Dependencies
 - Fabric API (required)
 - GeckoLib (required — the NPC system is built on it)
-- ModMenu + Cloth Config (optional — the config GUI)
+- ModMenu (optional — opens the config screen)
 - Waystones (optional — enables the teleport fee)
 
 ## Development Setup

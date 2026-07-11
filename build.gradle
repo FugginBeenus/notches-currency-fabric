@@ -23,7 +23,6 @@ repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://maven.terraformersmc.com/releases/" } // ModMenu
-    maven { url = "https://maven.shedaniel.me/" }                // Cloth Config
     maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" } // GeckoLib
 }
 
@@ -41,11 +40,8 @@ dependencies {
         runtimeOnly files(file)
     }
 
-    // Config GUI: ModMenu + Cloth Config
+    // Config GUI entrypoint: ModMenu (the settings screen itself is code-drawn, no Cloth Config)
     modImplementation("com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${property('cloth_config_version')}") {
-        exclude group: "net.fabricmc.fabric-api"
-    }
 
     // GeckoLib — animation/model framework for the Notch NPC entity (hard dependency)
     modImplementation "software.bernie.geckolib:geckolib-fabric-${property('minecraft_version')}:${property('geckolib_version')}"
