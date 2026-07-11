@@ -337,8 +337,8 @@ public final class ShopCommands {
                                                     p.sendMessage(Text.literal("Status: " + (shop.isOpen() ? "§aOPEN" : "§cCLOSED")), false);
                                                     p.sendMessage(Text.literal("NPC: " + (shop.getLinkedNpcId() != null ? shop.getLinkedNpcId().toString() : "None")), false);
                                                     p.sendMessage(Text.literal("Listings: " + shop.getListings().size()), false);
-                                                    p.sendMessage(Text.literal("Pending Balance: " + shop.getPendingBalance() + " coins"), false);
-                                                    p.sendMessage(Text.literal("Total Revenue: " + shop.getTotalRevenue() + " coins"), false);
+                                                    p.sendMessage(Text.literal("Pending Balance: " + shop.getPendingBalance() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()), false);
+                                                    p.sendMessage(Text.literal("Total Revenue: " + shop.getTotalRevenue() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()), false);
                                                     p.sendMessage(Text.literal("Total Transactions: " + shop.getTotalTransactions()), false);
                                                     return 1;
                                                 })

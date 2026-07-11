@@ -55,7 +55,7 @@ public final class TradeOfferManager {
         }
         if (offeredCoins > 0) {
             if (BalanceStore.get(creator) < offeredCoins) {
-                creator.sendMessage(Text.literal("You don't have " + offeredCoins + " coins to attach.").formatted(Formatting.RED), false);
+                creator.sendMessage(Text.literal("You don't have " + offeredCoins + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to attach.").formatted(Formatting.RED), false);
                 return false;
             }
             BalanceStore.subtract(creator, offeredCoins, TransactionReason.TRADE, "trade offer escrow");
@@ -88,7 +88,7 @@ public final class TradeOfferManager {
         }
         // Verify the accepter can pay (coins + every requested stack, totals merged by item type).
         if (offer.priceCoins() > 0 && BalanceStore.get(accepter) < offer.priceCoins()) {
-            accepter.sendMessage(Text.literal("You need " + offer.priceCoins() + " coins for this trade.").formatted(Formatting.RED), false);
+            accepter.sendMessage(Text.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").formatted(Formatting.RED), false);
             return false;
         }
         List<ItemStack> wants = aggregate(offer.requestedItems());

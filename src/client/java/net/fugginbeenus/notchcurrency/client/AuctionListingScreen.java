@@ -71,7 +71,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
         NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INPUT_X - 1, y + AuctionListingScreenHandler.INPUT_Y - 1);
 
         // Price box (TextFieldWidget renders its text on top).
-        ctx.drawText(this.textRenderer, "Price (coins):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, "Price (" + NotchWidgets.coinName() + "):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + PRICE_X, y + PRICE_Y, PRICE_W, PRICE_H, NotchTheme.DEEP);
 
         // Auction-duration segmented selector (selected = green, others = grey).
@@ -97,7 +97,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
         }
         long fee = handler.feeFor(typedPrice);
         if (fee > 0 || handler.feePercent() > 0 || handler.feeFlat() > 0) {
-            String note = "Fee: " + fee + " coins"
+            String note = "Fee: " + fee + " " + NotchWidgets.coinName()
                     + (handler.feePercent() > 0 ? " (" + handler.feePercent() + "% + " + handler.feeFlat() + ")" : "");
             ctx.drawText(this.textRenderer, note, x + LIST_X + 4, y + LIST_Y - 10, NotchTheme.TEXT_MUTED, false);
         }

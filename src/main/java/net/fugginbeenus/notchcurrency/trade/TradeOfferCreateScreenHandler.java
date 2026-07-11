@@ -72,12 +72,12 @@ public class TradeOfferCreateScreenHandler extends ScreenHandler {
             if (!samples.getStack(GIVE_COUNT + i).isEmpty()) wanted.add(samples.getStack(GIVE_COUNT + i));
         }
         if (given.isEmpty() && giveCoins <= 0) {
-            sp.sendMessage(Text.literal("Put the items (and/or coins) you're offering on the GIVE side.")
+            sp.sendMessage(Text.literal("Put the items (and/or " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ") you're offering on the GIVE side.")
                     .formatted(Formatting.RED), false);
             return;
         }
         if (price <= 0 && wanted.isEmpty()) {
-            sp.sendMessage(Text.literal("Ask for coins and/or items in return.").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("Ask for " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " and/or items in return.").formatted(Formatting.RED), false);
             return;
         }
         boolean created = TradeOfferManager.createOffer(sp, given, giveCoins, price, wanted, targetName);

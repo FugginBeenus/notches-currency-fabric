@@ -199,7 +199,7 @@ public final class AdminShopCommands {
             String msg = switch (r) {
                 case NOT_BUYABLE -> "This item isn't for sale here.";
                 case NOT_SELLABLE -> "This shop doesn't buy that item.";
-                case INSUFFICIENT_FUNDS -> "You don't have enough coins!";
+                case INSUFFICIENT_FUNDS -> "You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!";
                 case INSUFFICIENT_ITEMS -> "You don't have enough of that item!";
                 case INVALID_QUANTITY -> "Invalid quantity.";
                 default -> "Trade failed.";

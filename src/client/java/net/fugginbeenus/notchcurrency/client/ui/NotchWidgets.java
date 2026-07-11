@@ -149,6 +149,17 @@ public final class NotchWidgets {
         return (whole < 10 && tenth > 0) ? whole + "." + tenth + suffix : whole + suffix;
     }
 
+    /**
+     * The currency's display word for GUI text ("Bet must be 10-1000 ___"). Resolves the coin
+     * item's translated name, so a rename from the currency maker (or any resource pack) carries
+     * into every screen automatically; the stock "Notch Coin" reads as plain "coins" in amounts.
+     */
+    public static String coinName() {
+        String resolved = net.minecraft.text.Text.translatable("item.notchcurrency.notch_coin").getString();
+        return resolved.equals("Notch Coin") || resolved.equals("item.notchcurrency.notch_coin")
+                ? "coins" : resolved;
+    }
+
     /** The vanilla button click, for code-drawn buttons (primary actions: Buy, Take, Save…). */
     public static void click() {
         net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(

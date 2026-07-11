@@ -65,8 +65,8 @@ public class LoanScreen extends HandledScreen<LoanScreenHandler> {
         int term = handler.prop(LoanScreenHandler.P_TERM);
         int daysLeft = handler.prop(LoanScreenHandler.P_DAYS_LEFT);
 
-        ctx.drawText(this.textRenderer, "You owe: " + debt + " coins", x + 12, y + 26, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, "Borrowing limit: " + max + " coins", x + 12, y + 38, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, "You owe: " + debt + " " + NotchWidgets.coinName(), x + 12, y + 26, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, "Borrowing limit: " + max + " " + NotchWidgets.coinName(), x + 12, y + 38, NotchTheme.TEXT_DARK, false);
         ctx.drawText(this.textRenderer, "Interest: " + interest + "% per cycle", x + 12, y + 50, NotchTheme.TEXT_DARK, false);
         ctx.drawText(this.textRenderer, "Term: " + term + " days", x + 12, y + 62, NotchTheme.TEXT_DARK, false);
 

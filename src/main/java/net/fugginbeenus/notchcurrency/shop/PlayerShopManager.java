@@ -116,7 +116,7 @@ public final class PlayerShopManager {
         }
 
         if (coinPrice < MIN_PRICE || coinPrice > MAX_PRICE) {
-            owner.sendMessage(Text.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " coins.")
+            owner.sendMessage(Text.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                     .formatted(Formatting.RED), false);
             return false;
         }

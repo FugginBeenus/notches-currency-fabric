@@ -77,7 +77,7 @@ public class Bounty {
     /** Short reward summary for the board, e.g. "50 coins" / "1 Diamond" / "50 coins + 1 Diamond". */
     public String rewardSummary() {
         StringBuilder sb = new StringBuilder();
-        if (rewardCoins > 0) sb.append(rewardCoins).append(" coins");
+        if (rewardCoins > 0) sb.append(rewardCoins).append(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word());
         if (!rewardItem.isEmpty()) {
             if (sb.length() > 0) sb.append(" + ");
             sb.append(rewardItem.getCount()).append(" ").append(rewardItem.getName().getString());

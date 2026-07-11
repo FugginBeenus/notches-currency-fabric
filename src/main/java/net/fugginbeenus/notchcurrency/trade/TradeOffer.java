@@ -67,7 +67,7 @@ public class TradeOffer {
         }
         if (offeredCoins > 0) {
             if (sb.length() > 0) sb.append(" + ");
-            sb.append(offeredCoins).append(" coins");
+            sb.append(offeredCoins).append(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word());
         }
         return sb.length() > 0 ? sb.toString() : "nothing";
     }

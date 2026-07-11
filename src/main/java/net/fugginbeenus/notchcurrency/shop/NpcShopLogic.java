@@ -68,7 +68,7 @@ public final class NpcShopLogic {
         buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         buyer.sendMessage(
                 Text.literal("§aYou bought §e" + quantity + "x §f" + item.getName().getString()
-                        + " §afor §e" + totalCost + "§a coins."),
+                        + " §afor §e" + totalCost + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
                 true
         );
 

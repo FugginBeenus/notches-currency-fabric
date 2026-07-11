@@ -114,7 +114,7 @@ public final class LoanManager {
         long want = amount <= 0 ? debt : amount;
         long pay = Math.min(Math.min(want, debt), CurrencyApi.getBalance(player));
         if (pay <= 0) {
-            player.sendMessage(Text.literal("You don't have coins to repay with.").formatted(Formatting.RED), false);
+            player.sendMessage(Text.literal("You don't have " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to repay with.").formatted(Formatting.RED), false);
             return;
         }
         CurrencyApi.withdraw(player, pay, TransactionReason.SINK, "loan repay");

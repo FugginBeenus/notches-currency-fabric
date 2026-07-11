@@ -94,7 +94,7 @@ public final class NpcDialogueManager {
                 }
                 case CHARGE_COINS -> {
                     if (a.amount() > 0 && !CurrencyApi.withdraw(sp, a.amount(), TransactionReason.SINK, "NPC dialogue fee")) {
-                        sp.sendMessage(Text.literal("You can't afford that (" + a.amount() + " coins).")
+                        sp.sendMessage(Text.literal("You can't afford that (" + a.amount() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ").")
                                 .formatted(Formatting.RED), false);
                         sendNode(sp, npc, node); // stay on this page
                         return;

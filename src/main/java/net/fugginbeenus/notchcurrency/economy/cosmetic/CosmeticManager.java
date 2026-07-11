@@ -56,7 +56,7 @@ public final class CosmeticManager {
             return;
         }
         if (BalanceStore.get(sp) < offer.price()) {
-            sp.sendMessage(Text.literal("You need " + offer.price() + " coins for that.").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("You need " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").formatted(Formatting.RED), false);
             return;
         }
 
@@ -82,6 +82,6 @@ public final class CosmeticManager {
                 SoundCategory.PLAYERS, 0.6f, 1.4f);
         sp.sendMessage(Text.literal("Purchased ").formatted(Formatting.GREEN)
                 .append(Text.literal(offer.name()).formatted(Formatting.LIGHT_PURPLE))
-                .append(Text.literal(" for " + offer.price() + " coins.").formatted(Formatting.GREEN)), false);
+                .append(Text.literal(" for " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
     }
 }

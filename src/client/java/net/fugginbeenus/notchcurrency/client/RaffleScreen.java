@@ -88,7 +88,7 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
             // Total coin prize = ticket pot + the admin's guaranteed coins pool.
             long pot = handler.prop(RaffleScreenHandler.P_POT) & 0xFFFFFFFFL;
             long guaranteed = handler.prop(RaffleScreenHandler.P_COINS_POOL) & 0xFFFFFFFFL;
-            NotchWidgets.centerText(ctx, this.textRenderer, "Prize: " + (pot + guaranteed) + " coins", x + W / 2, y + 92, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.centerText(ctx, this.textRenderer, "Prize: " + (pot + guaranteed) + " " + NotchWidgets.coinName(), x + W / 2, y + 92, NotchTheme.TEXT_DARK, false);
 
             NotchWidgets.divider(ctx, x + 12, y + 104, W - 24);
 
@@ -97,7 +97,7 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
             int total = handler.prop(RaffleScreenHandler.P_TOTAL);
             String odds = (total > 0 && yours > 0) ? String.format("%.1f%%", 100.0 * yours / total) : "0%";
 
-            ctx.drawText(this.textRenderer, "Ticket price: " + price + " coins", x + 14, y + 112, NotchTheme.TEXT_DARK, false);
+            ctx.drawText(this.textRenderer, "Ticket price: " + price + " " + NotchWidgets.coinName(), x + 14, y + 112, NotchTheme.TEXT_DARK, false);
             ctx.drawText(this.textRenderer, "Your entries: " + yours + "  (" + odds + " to win)", x + 14, y + 124, NotchTheme.TEXT_DARK, false);
             ctx.drawText(this.textRenderer, "Total entries: " + total, x + 14, y + 136, NotchTheme.TEXT_DARK, false);
 

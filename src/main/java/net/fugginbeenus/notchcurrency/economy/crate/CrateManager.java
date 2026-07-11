@@ -97,7 +97,7 @@ public final class CrateManager {
                 String range = e.min() == e.max() ? String.valueOf(e.min()) : e.min() + "-" + e.max();
                 name = Text.literal(range + "x ").append(new ItemStack(Registries.ITEM.get(e.itemId())).getName().copy().formatted(Formatting.WHITE));
             } else {
-                name = Text.literal(e.coins() + " coins").formatted(Formatting.YELLOW);
+                name = Text.literal(e.coins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW);
             }
             player.sendMessage(Text.literal(" • ").formatted(Formatting.DARK_GRAY)
                     .append(name)

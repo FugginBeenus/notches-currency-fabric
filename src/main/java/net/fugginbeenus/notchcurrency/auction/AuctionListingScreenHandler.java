@@ -90,7 +90,7 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         long fee = AuctionConfig.listingFee(price);
         if (fee > 0) {
             if (BalanceStore.get(sp) < fee) {
-                sp.sendMessage(Text.literal("You need " + fee + " coins for the listing fee.").formatted(Formatting.RED), false);
+                sp.sendMessage(Text.literal("You need " + fee + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for the listing fee.").formatted(Formatting.RED), false);
                 return false;
             }
             BalanceStore.subtract(sp, fee, TransactionReason.SINK, "auction listing fee");
@@ -112,7 +112,7 @@ public class AuctionListingScreenHandler extends ScreenHandler {
 
         sp.sendMessage(Text.literal("Listed ").formatted(Formatting.GREEN)
                 .append(listed.getName().copy().formatted(Formatting.YELLOW))
-                .append(Text.literal(" for " + price + " coins"
+                .append(Text.literal(" for " + price + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()
                         + (clampedDays > 0 ? " (" + clampedDays + "-day auction)." : " (buy now).")).formatted(Formatting.GREEN)), false);
         sendContentUpdates();
         return true;

@@ -103,7 +103,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
             NotchWidgets.centerText(ctx, this.textRenderer, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, false);
         } else if (!spinning && hasShown) {
             if (shownWin > 0) {
-                String msg = jackpotShown ? "JACKPOT!  +" + shownWin + " coins" : "You won " + shownWin + " coins!";
+                String msg = jackpotShown ? "JACKPOT!  +" + shownWin + " " + NotchWidgets.coinName() : "You won " + shownWin + " " + NotchWidgets.coinName() + "!";
                 NotchWidgets.centerText(ctx, this.textRenderer, msg, x + W / 2, y + STATUS_Y,
                         jackpotShown ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_GREEN, true);
             } else {
@@ -113,7 +113,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         }
 
         long bal = spinning ? frozenBalance : (handler.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL);
-        NotchWidgets.centerText(ctx, this.textRenderer, bal + " coins", x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
+        NotchWidgets.centerText(ctx, this.textRenderer, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
 
         NotchWidgets.divider(ctx, x + 8, y + 102, W - 16);
 
@@ -297,12 +297,12 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
             int min = handler.prop(SlotMachineScreenHandler.P_MIN);
             int max = handler.prop(SlotMachineScreenHandler.P_MAX);
             if (bet < min || bet > max) {
-                setError("Bet must be " + min + "-" + max + " coins.");
+                setError("Bet must be " + min + "-" + max + " " + NotchWidgets.coinName() + ".");
                 playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
             if (bet > bal) {
-                setError("Not enough coins for that bet.");
+                setError("Not enough " + NotchWidgets.coinName() + " for that bet.");
                 playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }

@@ -145,7 +145,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
         sendContentUpdates();
         sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.7f, 0.8f);
-        sp.sendMessage(Text.literal("Uncrafted into its parts for " + cost + " coins.").formatted(Formatting.GREEN), false);
+        sp.sendMessage(Text.literal("Uncrafted into its parts for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN), false);
     }
 
     private void repair(ServerPlayerEntity sp, ItemStack stack) {
@@ -161,7 +161,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
         sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_ANVIL_USE, SoundCategory.BLOCKS, 0.6f, 1.2f);
         sp.sendMessage(Text.literal("Repaired ").formatted(Formatting.GREEN)
                 .append(stack.getName().copy().formatted(Formatting.YELLOW))
-                .append(Text.literal(" for " + cost + " coins.").formatted(Formatting.GREEN)), false);
+                .append(Text.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
     }
 
     private void upgrade(ServerPlayerEntity sp, ItemStack stack, String enchId) {
@@ -189,7 +189,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
         sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.8f, 1.0f);
         sp.sendMessage(Text.literal("Applied ").formatted(Formatting.GREEN)
                 .append(ench.getName(level).copy().formatted(Formatting.LIGHT_PURPLE))
-                .append(Text.literal(" for " + cost + " coins.").formatted(Formatting.GREEN)), false);
+                .append(Text.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
     }
 
     private void extract(ServerPlayerEntity sp, ItemStack stack, String enchId) {
@@ -225,7 +225,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
     private boolean charge(ServerPlayerEntity sp, long cost, String detail) {
         if (cost <= 0) return true;
         if (BalanceStore.get(sp) < cost) {
-            sp.sendMessage(Text.literal("You need " + cost + " coins for that.").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").formatted(Formatting.RED), false);
             return false;
         }
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, detail);

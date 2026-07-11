@@ -68,7 +68,7 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
         NotchWidgets.title(ctx, this.textRenderer, "Coin Flip", x + W / 2, y + 8);
 
         long bal = handler.prop(CoinFlipScreenHandler.P_BAL) & 0xFFFFFFFFL;
-        NotchWidgets.centerText(ctx, this.textRenderer, bal + " coins", x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
+        NotchWidgets.centerText(ctx, this.textRenderer, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
 
         // The coin: soft glow + sparkles behind the scaled Notch Coin.
         int ccx = x + W / 2, ccy = y + COIN_CY;
@@ -99,9 +99,9 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
             NotchWidgets.centerText(ctx, this.textRenderer, errorMsg, x + W / 2, y + 116, NotchTheme.TEXT_RED, false);
         } else if (bet > 0) {
             long net = Math.round(bet * (payout / 100.0)) - bet;
-            NotchWidgets.centerText(ctx, this.textRenderer, "Call it right: +" + net + " coins",
+            NotchWidgets.centerText(ctx, this.textRenderer, "Call it right: +" + net + " " + NotchWidgets.coinName(),
                     x + W / 2, y + 114, NotchTheme.TEXT_GREEN, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "Call it wrong: -" + bet + " coins",
+            NotchWidgets.centerText(ctx, this.textRenderer, "Call it wrong: -" + bet + " " + NotchWidgets.coinName(),
                     x + W / 2, y + 124, NotchTheme.TEXT_RED, false);
         } else {
             NotchWidgets.centerText(ctx, this.textRenderer, "Enter a bet below.",
@@ -182,8 +182,8 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
                 long bal = handler.prop(CoinFlipScreenHandler.P_BAL) & 0xFFFFFFFFL;
                 int min = handler.prop(CoinFlipScreenHandler.P_MIN);
                 int max = handler.prop(CoinFlipScreenHandler.P_MAX);
-                if (bet < min || bet > max) { setError("Bet must be " + min + "-" + max + " coins."); playErr(); return true; }
-                if (bet > bal) { setError("Not enough coins for that bet."); playErr(); return true; }
+                if (bet < min || bet > max) { setError("Bet must be " + min + "-" + max + " " + NotchWidgets.coinName() + "."); playErr(); return true; }
+                if (bet > bal) { setError("Not enough " + NotchWidgets.coinName() + " for that bet."); playErr(); return true; }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBoolean(selectedHeads);
                 buf.writeVarLong(bet);

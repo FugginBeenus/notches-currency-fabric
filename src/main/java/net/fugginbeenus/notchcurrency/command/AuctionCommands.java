@@ -392,7 +392,7 @@ public final class AuctionCommands {
                                             state.removeListing(id);
                                             if (refunded > 0) {
                                                 p.sendMessage(Text.literal("The high bidder was refunded "
-                                                        + refunded + " coins.").formatted(Formatting.GRAY), false);
+                                                        + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GRAY), false);
                                             }
 
                                             ItemStack toReturn = l.stack.copy();

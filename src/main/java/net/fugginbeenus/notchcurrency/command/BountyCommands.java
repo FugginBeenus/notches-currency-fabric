@@ -161,7 +161,7 @@ public final class BountyCommands {
         BountyState.get(src.getServer()).addOffer(b);
         src.sendFeedback(() -> Text.literal("Posted bounty: ").formatted(Formatting.GREEN)
                 .append(Text.literal(b.describe()).formatted(Formatting.WHITE))
-                .append(Text.literal(" (" + reward + " coins" + (repeatable ? ", repeatable" : "") + ").").formatted(Formatting.GRAY)), true);
+                .append(Text.literal(" (" + reward + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + (repeatable ? ", repeatable" : "") + ").").formatted(Formatting.GRAY)), true);
         return 1;
     }
 

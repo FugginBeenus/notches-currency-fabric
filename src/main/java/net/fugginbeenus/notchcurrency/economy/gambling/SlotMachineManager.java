@@ -90,11 +90,11 @@ public final class SlotMachineManager {
         }
         if (!GamblingManager.betInRange(bet)) {
             sp.sendMessage(Text.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " coins.").formatted(Formatting.RED), false);
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.RED), false);
             return SpinResult.fail();
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Slots bet")) {
-            sp.sendMessage(Text.literal("You don't have " + bet + " coins to bet.").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").formatted(Formatting.RED), false);
             return SpinResult.fail();
         }
 

@@ -47,7 +47,7 @@ public final class WaystoneFeeHandler {
 
         if (BalanceStore.get(sp) < cost) {
             event.setCanceled(true);
-            sp.sendMessage(Text.literal("You need " + cost + " coins to use this waystone.")
+            sp.sendMessage(Text.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to use this waystone.")
                     .formatted(Formatting.RED), false);
             return;
         }
@@ -55,7 +55,7 @@ public final class WaystoneFeeHandler {
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, "waystone fee");
         NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         if (announce) {
-            sp.sendMessage(Text.literal("Paid " + cost + " coins in waystone fees.")
+            sp.sendMessage(Text.literal("Paid " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in waystone fees.")
                     .formatted(Formatting.GRAY), false);
         }
     }

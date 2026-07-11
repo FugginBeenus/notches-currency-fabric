@@ -54,7 +54,7 @@ public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreen
 
     private TextFieldWidget numberField(TextFieldWidget old, int fx, int fy, int fw) {
         String kept = old == null ? "" : old.getText();
-        TextFieldWidget field = new TextFieldWidget(this.textRenderer, fx, fy, fw, 10, Text.literal("coins"));
+        TextFieldWidget field = new TextFieldWidget(this.textRenderer, fx, fy, fw, 10, Text.literal(NotchWidgets.coinName()));
         field.setMaxLength(9);
         field.setDrawsBackground(false);
         field.setPlaceholder(Text.literal("0").formatted(Formatting.DARK_GRAY));
@@ -87,7 +87,7 @@ public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreen
         }
         NotchWidgets.pill(ctx, x + 14, y + 92, 82, 15);
         ctx.drawItem(COIN, x + 78, y + 91);
-        NotchWidgets.centerText(ctx, this.textRenderer, "coins attached", x + 55, y + 111, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, NotchWidgets.coinName() + " attached", x + 55, y + 111, NotchTheme.TEXT_MUTED, false);
 
         // The exchange arrow.
         NotchWidgets.arrowRight(ctx, x + 105, y + 68, NotchTheme.TEXT_MUTED);
@@ -101,7 +101,7 @@ public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreen
         }
         NotchWidgets.pill(ctx, x + 130, y + 92, 82, 15);
         ctx.drawItem(COIN, x + 194, y + 91);
-        NotchWidgets.centerText(ctx, this.textRenderer, "coins wanted", x + 171, y + 111, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, NotchWidgets.coinName() + " wanted", x + 171, y + 111, NotchTheme.TEXT_MUTED, false);
 
         // Who can accept + create.
         ctx.drawText(this.textRenderer, "To", x + 10, y + 136, NotchTheme.TEXT_DARK, false);

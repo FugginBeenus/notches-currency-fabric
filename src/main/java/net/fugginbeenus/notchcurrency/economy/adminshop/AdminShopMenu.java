@@ -34,13 +34,13 @@ public final class AdminShopMenu {
             if (e.isBuyable()) {
                 line.append(button("Buy " + e.currentBuyPrice(), Formatting.GREEN,
                         "/adminshop buy " + shop.getId() + " " + e.getId() + " 1",
-                        "Buy " + unit + "x for " + e.currentBuyPrice() + " coins"));
+                        "Buy " + unit + "x for " + e.currentBuyPrice() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));
                 line.append(Text.literal(" "));
             }
             if (e.isSellable()) {
                 line.append(button("Sell " + e.currentSellPrice(), Formatting.YELLOW,
                         "/adminshop sell " + shop.getId() + " " + e.getId() + " 1",
-                        "Sell " + unit + "x for " + e.currentSellPrice() + " coins"));
+                        "Sell " + unit + "x for " + e.currentSellPrice() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));
             }
             if (e.isDynamic()) {
                 line.append(Text.literal(" ~").formatted(Formatting.AQUA)

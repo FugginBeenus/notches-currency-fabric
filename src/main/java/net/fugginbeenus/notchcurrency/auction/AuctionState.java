@@ -247,7 +247,7 @@ public final class AuctionState extends PersistentState {
                                 ))
                                 .withHoverEvent(new HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
-                                        Text.literal("Click to claim all pending auction coins & items")
+                                        Text.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items")
                                 )));
 
                 p.sendMessage(
@@ -369,7 +369,7 @@ public final class AuctionState extends PersistentState {
         long price = listing.price;
 
         if (bal < price) {
-            buyer.sendMessage(Text.literal("You don't have enough Notch coins."), false);
+            buyer.sendMessage(Text.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), false);
             return;
         }
 
@@ -968,7 +968,7 @@ public final class AuctionState extends PersistentState {
 
         if (!claimedSomething) {
             player.sendMessage(
-                    Text.literal("You have no claimable coins or items right now.")
+                    Text.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
                             .formatted(Formatting.GRAY),
                     false
             );

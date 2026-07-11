@@ -79,7 +79,7 @@ public final class ServerPacketHandlers {
                         long refunded = state.refundHighestBid(world, l);
                         state.removeListing(listingId);
                         if (refunded > 0) {
-                            sp.sendMessage(Text.literal("The high bidder was refunded " + refunded + " coins.")
+                            sp.sendMessage(Text.literal("The high bidder was refunded " + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                                     .formatted(Formatting.GRAY), false);
                         }
 
@@ -589,7 +589,7 @@ public final class ServerPacketHandlers {
                         int toWithdraw = (int) Math.min(currentBal, requested);
                         if (toWithdraw <= 0) {
                             sp.sendMessage(
-                                    Text.literal("You don't have that many Notch coins in your account.")
+                                    Text.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
                                             .formatted(Formatting.RED),
                                     false
                             );
@@ -639,7 +639,7 @@ public final class ServerPacketHandlers {
                                 case BARTER_NOT_ACCEPTED -> "This item doesn't accept barter.";
                                 case INVALID_QUANTITY -> "Invalid quantity.";
                                 case INSUFFICIENT_STOCK -> "Not enough stock available.";
-                                case INSUFFICIENT_FUNDS -> "You don't have enough coins!";
+                                case INSUFFICIENT_FUNDS -> "You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!";
                                 case INSUFFICIENT_ITEMS -> "You don't have the required items!";
                                 default -> "Purchase failed.";
                             };

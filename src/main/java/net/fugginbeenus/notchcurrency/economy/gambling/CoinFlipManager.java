@@ -101,7 +101,7 @@ public final class CoinFlipManager {
         }
         if (!GamblingManager.betInRange(bet)) {
             sp.sendMessage(Text.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " coins.").formatted(Formatting.RED), false);
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.RED), false);
             return;
         }
         ServerWorld world = sp.getServerWorld();
@@ -115,7 +115,7 @@ public final class CoinFlipManager {
             }
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Coin flip bet")) {
-            sp.sendMessage(Text.literal("You don't have " + bet + " coins to bet.").formatted(Formatting.RED), false);
+            sp.sendMessage(Text.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").formatted(Formatting.RED), false);
             return;
         }
 
@@ -178,10 +178,10 @@ public final class CoinFlipManager {
         if (sp != null) {
             String side = landedHeads ? "HEADS" : "TAILS";
             if (won) {
-                sp.sendMessage(Text.literal("The coin landed " + side + " — you won " + payout + " coins!")
+                sp.sendMessage(Text.literal("The coin landed " + side + " — you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
                         .formatted(Formatting.GREEN), false);
             } else {
-                sp.sendMessage(Text.literal("The coin landed " + side + " — you lost " + bet + " coins.")
+                sp.sendMessage(Text.literal("The coin landed " + side + " — you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                         .formatted(Formatting.RED), false);
             }
         }

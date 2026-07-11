@@ -119,7 +119,7 @@ public class RaffleTicketItem extends Item {
             case STATUS_WINNER -> {
                 tooltip.add(Text.empty());
                 tooltip.add(Text.literal("★ WINNING TICKET ★").formatted(Formatting.GOLD, Formatting.BOLD));
-                tooltip.add(Text.literal("Prize: " + nbt.getLong(K_PRIZE) + " coins").formatted(Formatting.YELLOW));
+                tooltip.add(Text.literal("Prize: " + nbt.getLong(K_PRIZE) + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW));
                 tooltip.add(Text.literal("Claim at the raffle, or /raffle claim.").formatted(Formatting.GRAY));
             }
             case STATUS_LOSER -> {

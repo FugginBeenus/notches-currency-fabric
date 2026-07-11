@@ -1003,7 +1003,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         lines.add(stack.getName().copy().formatted(Formatting.WHITE));
         NbtCompound tag = stack.getNbt();
         if (tag != null && tag.contains("nc_price", NbtElement.LONG_TYPE)) {
-            lines.add(Text.literal("Price: " + tag.getLong("nc_price") + " coins").formatted(Formatting.GOLD));
+            lines.add(Text.literal("Price: " + tag.getLong("nc_price") + " " + NotchWidgets.coinName()).formatted(Formatting.GOLD));
         }
         lines.add(Text.literal("Click to cancel & reclaim").formatted(Formatting.RED));
 
