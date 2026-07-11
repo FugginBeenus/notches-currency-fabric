@@ -48,10 +48,11 @@ public class LedgerBoardBlock extends Block implements BlockEntityProvider {
 
     private static final int TOP_LIMIT = 10;
 
-    private static final VoxelShape LOWER_NS = Block.createCuboidShape(0.5, 0, 5, 15.5, 16, 11);
-    private static final VoxelShape LOWER_EW = Block.createCuboidShape(5, 0, 0.5, 11, 16, 15.5);
-    private static final VoxelShape UPPER_NS = Block.createCuboidShape(0.5, 0, 5, 15.5, 15, 11);
-    private static final VoxelShape UPPER_EW = Block.createCuboidShape(5, 0, 0.5, 11, 15, 15.5);
+    // Wide display panel; spills sideways, so the shapes are wide too (per facing axis).
+    private static final VoxelShape LOWER_NS = Block.createCuboidShape(-8, 0, 4, 24, 16, 9);
+    private static final VoxelShape LOWER_EW = Block.createCuboidShape(4, 0, -8, 9, 16, 24);
+    private static final VoxelShape UPPER_NS = Block.createCuboidShape(-8, 0, 4, 24, 16, 9);
+    private static final VoxelShape UPPER_EW = Block.createCuboidShape(4, 0, -8, 9, 16, 24);
 
     public LedgerBoardBlock(Settings settings) {
         super(settings);

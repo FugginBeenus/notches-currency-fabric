@@ -28,10 +28,10 @@ import java.util.List;
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
     // --- tunables (block units unless noted) ---
-    private static final float PLATE_TOP = 1.36f; // top of the plaque (y), rows descend from here
-    private static final float FRONT_Z = 0.62f;   // tablet front plane in the oriented frame (1 = block front)
+    private static final float PLATE_TOP = 1.55f; // top of the screen (y), rows descend from here
+    private static final float FRONT_Z = 0.71f;   // screen front plane in the oriented frame (1 = block front)
     private static final float SCALE = 0.017f;    // text scale
-    private static final int LINE_H = 10;         // line spacing (text px)
+    private static final int LINE_H = 11;         // line spacing (text px)
 
     private final TextRenderer text;
 
