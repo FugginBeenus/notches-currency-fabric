@@ -2,7 +2,8 @@
   "credit": "Notch Currency \u2014 wide leaderboard display board (spills ~1.75 wide, 2 tall).",
   "textures": {
     "particle": "notchcurrency:block/ledger_board",
-    "0": "notchcurrency:block/ledger_board"
+    "0": "notchcurrency:block/ledger_board",
+    "coin": "notchcurrency:item/coin"
   },
   "elements": [
     {
@@ -480,70 +481,70 @@
     {
       "name": "coin crest",
       "from": [
-        6,
-        28,
-        4.2
+        5.5,
+        27,
+        4.3
       ],
       "to": [
-        10,
+        10.5,
         32,
-        5.2
+        5.3
       ],
       "faces": {
         "north": {
           "uv": [
-            14.5,
-            0.0,
-            16.0,
-            1.5
+            0,
+            0,
+            16,
+            16
           ],
-          "texture": "#0"
+          "texture": "#coin"
+        },
+        "south": {
+          "uv": [
+            16,
+            0,
+            0,
+            16
+          ],
+          "texture": "#coin"
         },
         "east": {
           "uv": [
-            14.5,
-            1.5,
-            16.0,
-            2.0
+            13.0,
+            14.0,
+            15.0,
+            16.0
           ],
           "texture": "#0"
         },
         "west": {
           "uv": [
-            14.5,
-            1.5,
-            16.0,
-            2.0
+            13.0,
+            14.0,
+            15.0,
+            16.0
           ],
           "texture": "#0"
         },
         "up": {
           "uv": [
-            14.5,
-            1.5,
-            16.0,
-            2.0
+            13.0,
+            14.0,
+            15.0,
+            16.0
           ],
           "texture": "#0"
         },
         "down": {
           "uv": [
-            14.5,
-            1.5,
-            16.0,
-            2.0
+            13.0,
+            14.0,
+            15.0,
+            16.0
           ],
           "texture": "#0"
         }
-      },
-      "rotation": {
-        "origin": [
-          8,
-          30,
-          4.7
-        ],
-        "axis": "z",
-        "angle": 45
       }
     }
   ],
