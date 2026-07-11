@@ -19,6 +19,20 @@ public final class EconomyLeaderboard {
 
     private EconomyLeaderboard() {}
 
+    /** One ranked row: resolved name + balance. For the in-world Ledger Board renderer. */
+    public record Entry(String name, long balance) {}
+
+    /** The top {@code limit} balances as compact name/balance rows (no header). Empty if none. */
+    public static List<Entry> topEntries(MinecraftServer server, int limit) {
+        List<Entry> out = new ArrayList<>();
+        BalanceState.get(server).snapshot().entrySet().stream()
+                .filter(e -> e.getValue() > 0)
+                .sorted(Map.Entry.<UUID, Long>comparingByValue().reversed())
+                .limit(limit)
+                .forEach(e -> out.add(new Entry(nameOf(server, e.getKey()), e.getValue())));
+        return out;
+    }
+
     /** The header + ranked lines for the top {@code limit} balances. Empty list if none. */
     public static List<Text> topLines(MinecraftServer server, int limit) {
         List<Map.Entry<UUID, Long>> top = BalanceState.get(server).snapshot()

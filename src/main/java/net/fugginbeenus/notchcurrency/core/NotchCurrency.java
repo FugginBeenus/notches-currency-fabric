@@ -82,6 +82,7 @@ public class NotchCurrency implements ModInitializer {
 
         // Registries
         ModBlocks.register();
+        net.fugginbeenus.notchcurrency.registry.ModBlockEntities.register();
         ModItems.register();
         ModScreenHandlers.register();
         ModCreativeTab.register();

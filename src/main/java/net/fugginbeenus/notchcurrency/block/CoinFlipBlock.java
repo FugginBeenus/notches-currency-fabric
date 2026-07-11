@@ -42,12 +42,15 @@ public class CoinFlipBlock extends Block {
         builder.add(FLIPPING, FACE);
     }
 
-    /** Fits the model (foot + column + tabletop + standing coin) so the shape hugs the podium. */
+    /** Fits the oversized furniture-scale table (legs + apron + overhanging top + standing coin);
+     *  the shape spills the block like the model. */
     private static final VoxelShape SHAPE = VoxelShapes.union(
-            Block.createCuboidShape(3, 0, 3, 13, 2, 13),
-            Block.createCuboidShape(5, 2, 5, 11, 7, 11),
-            Block.createCuboidShape(1, 7, 1, 15, 9, 15),
-            Block.createCuboidShape(5.5, 9, 6.5, 10.5, 14, 9.5));
+            Block.createCuboidShape(-3, 0, -3, 2, 12, 2),
+            Block.createCuboidShape(14, 0, -3, 19, 12, 2),
+            Block.createCuboidShape(-3, 0, 14, 2, 12, 19),
+            Block.createCuboidShape(14, 0, 14, 19, 12, 19),
+            Block.createCuboidShape(-2, 9, -2, 18, 15, 18),
+            Block.createCuboidShape(3, 15, 3, 13, 24, 13));
 
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {

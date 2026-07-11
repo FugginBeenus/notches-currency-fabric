@@ -34,6 +34,11 @@ public final class ClientInit implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.NOTCH_NPC,
                 net.fugginbeenus.notchcurrency.client.npc.NotchNpcRenderer::new);
 
+        // Ledger Board draws the live leaderboard onto its face.
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.LEDGER_BOARD,
+                net.fugginbeenus.notchcurrency.client.render.LedgerBoardBlockEntityRenderer::new);
+
         BarrelCleanupManager.init();
 
         AuctionTooltips.init();

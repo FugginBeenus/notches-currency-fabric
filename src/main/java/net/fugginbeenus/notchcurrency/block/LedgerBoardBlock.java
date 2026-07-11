@@ -1,11 +1,18 @@
 package net.fugginbeenus.notchcurrency.block;
 
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
+import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
+import net.fugginbeenus.notchcurrency.registry.ModBlockEntities;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.DoubleBlockHalf;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -34,7 +41,7 @@ import net.minecraft.world.WorldAccess;
  * the whole visual (spans up past y=16); the upper is an invisible occupancy block. Faces the placer;
  * breaking either half removes both and only the lower drops.
  */
-public class LedgerBoardBlock extends Block {
+public class LedgerBoardBlock extends Block implements BlockEntityProvider {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = Properties.DOUBLE_BLOCK_HALF;
@@ -123,6 +130,23 @@ public class LedgerBoardBlock extends Block {
     @Override
     public BlockState mirror(BlockState state, BlockMirror mirror) {
         return state.rotate(mirror.getRotation(state.get(FACING)));
+    }
+
+    /** Only the lower half owns the entity that fetches + shows the live leaderboard. */
+    @Nullable
+    @Override
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return state.get(HALF) == DoubleBlockHalf.LOWER ? new LedgerBoardBlockEntity(pos, state) : null;
+    }
+
+    @Nullable
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+        if (world.isClient || state.get(HALF) != DoubleBlockHalf.LOWER || type != ModBlockEntities.LEDGER_BOARD) {
+            return null;
+        }
+        return (BlockEntityTicker<T>) (BlockEntityTicker<LedgerBoardBlockEntity>) LedgerBoardBlockEntity::serverTick;
     }
 
     @Override
