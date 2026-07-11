@@ -1,434 +1,475 @@
 package net.fugginbeenus.notchcurrency.config.ui;
 
-import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import me.shedaniel.clothconfig2.api.ConfigCategory;
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.fugginbeenus.notchcurrency.auction.AuctionConfig;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
+import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.BoolEntry;
+import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.NumberEntry;
+import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.SelectEntry;
+import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.SliderEntry;
+import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.StringEntry;
 import net.fugginbeenus.notchcurrency.crate.DailyCrateManager;
 import net.fugginbeenus.notchcurrency.crate.GoldenCacheManager;
 import net.fugginbeenus.notchcurrency.economy.ShopRent;
 import net.fugginbeenus.notchcurrency.economy.WealthTax;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
-import net.fugginbeenus.notchcurrency.economy.crate.CrateManager;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
-/**
- * Builds the Cloth Config settings screen for Notch Currency, opened from ModMenu.
- *
- * Edits the live {@link NotchConfig} instance and persists it on save. Economy knobs
- * (auction fees) re-apply immediately; world-bound knobs (balloon/cache) re-apply to the
- * static managers and fully take effect on the next world load.
- *
- * Note: on a multiplayer client this edits the *client's* local config file, which has no
- * effect on a remote server — server admins edit the server's config or use commands.
- */
-public final class NotchConfigScreen {
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-    private NotchConfigScreen() {}
+/**
+ * The settings screen (ModMenu → Notch Currency), rebuilt Jade-style in the mod's own code-drawn
+ * theme: a live search bar over ONE scrolling list of every setting, grouped under collapsible
+ * section headers — no more category tabs hiding behind scroll arrows. Rows edit in place
+ * (toggle pills, drag sliders, cycle buttons, click-to-edit numbers/text), show their tooltip +
+ * default on hover, and get a reset arrow when off-default. Edits stay local until Save & Apply
+ * persists the file and re-applies every manager; Esc/Cancel discards.
+ */
+public final class NotchConfigScreen extends Screen {
+
+    private static final int ROW_H = 17, HEADER_H = 18;
+    /** Sections stay folded/unfolded across reopens within a session. */
+    private static final Set<String> COLLAPSED = new HashSet<>();
+
+    private final Screen parent;
+    private final NotchConfig cfg;
+    private final List<ConfigEntry> entries;
+
+    private int px, py, pw, ph;        // panel rect
+    private int listTop, listBottom;   // viewport
+    private double scroll;
+    private boolean draggingBar;
+    private SliderEntry draggingSlider;
+
+    private TextFieldWidget search;
+    private TextFieldWidget editField;
+    private ConfigEntry editing;
+    private int editingY;
+
+    /** One laid-out line: a section header (entry == null) or a setting row. */
+    private record Row(String header, ConfigEntry entry, int y) {}
+    private final List<Row> rows = new ArrayList<>();
+    private int contentH;
 
     public static Screen create(Screen parent) {
-        NotchConfig cfg = NotchConfigIO.get();
+        return new NotchConfigScreen(parent);
+    }
 
-        ConfigBuilder builder = ConfigBuilder.create()
-                .setParentScreen(parent)
-                .setTitle(Text.literal("Notch Currency"))
-                .setSavingRunnable(() -> {
-                    NotchConfigIO.save(cfg);
-                    AuctionConfig.apply(cfg);
-                    DailyCrateManager.applyConfig(cfg);
-                    GoldenCacheManager.applyConfig(cfg);
-                    WealthTax.applyConfig(cfg);
-                    ShopRent.applyConfig(cfg);
-                    RaffleManager.applyConfig(cfg);
-                    BountyManager.applyConfig(cfg);
-                    CrateManager.applyConfig(cfg);
-                    net.fugginbeenus.notchcurrency.economy.loan.LoanManager.applyConfig(cfg);
-                    net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.applyConfig(cfg);
-                    net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
-                    net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
-                    net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
-                    // Rebuild the custom-currency pack so a name change takes effect on the next start.
-                    net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
-                });
+    private NotchConfigScreen(Screen parent) {
+        super(Text.literal("Notch Currency"));
+        this.parent = parent;
+        this.cfg = NotchConfigIO.get();
+        this.entries = ConfigEntries.build(cfg);
+    }
 
-        ConfigEntryBuilder eb = builder.entryBuilder();
+    @Override
+    protected void init() {
+        pw = Math.min(400, this.width - 8);
+        ph = this.height - 16;
+        px = (this.width - pw) / 2;
+        py = 8;
+        listTop = py + 42;
+        listBottom = py + ph - 28;
 
-        // ===== Economy =====
-        ConfigCategory economy = builder.getOrCreateCategory(Text.literal("Economy"));
-        economy.addEntry(eb.startIntField(Text.literal("Auction listing fee — flat (coins)"), cfg.auctionListingFeeFlat)
-                .setDefaultValue(0).setMin(0)
-                .setTooltip(Text.literal("Flat coin fee to create an auction listing, on top of the percent fee."),
-                        Text.literal("A money SINK. 0 = no flat fee."))
-                .setSaveConsumer(v -> cfg.auctionListingFeeFlat = v).build());
-        economy.addEntry(eb.startIntField(Text.literal("Auction listing fee — percent of price"), cfg.auctionListingFeePercent)
-                .setDefaultValue(0).setMin(0)
-                .setTooltip(Text.literal("Listing fee as a percent of the asking price — scales with the listing."),
-                        Text.literal("A money SINK. 0 = no percent fee."))
-                .setSaveConsumer(v -> cfg.auctionListingFeePercent = v).build());
-        economy.addEntry(eb.startIntField(Text.literal("Auction listing fee — max (coins)"), cfg.auctionListingFeeMax)
-                .setDefaultValue(0).setMin(0)
-                .setTooltip(Text.literal("Cap on the total listing fee. 0 = uncapped."))
-                .setSaveConsumer(v -> cfg.auctionListingFeeMax = v).build());
-        economy.addEntry(eb.startIntField(Text.literal("Auction sale tax (%)"), cfg.auctionSaleTaxPercent)
-                .setDefaultValue(0).setMin(0).setMax(100)
-                .setTooltip(Text.literal("Percent taken from the seller's payout on a sale."),
-                        Text.literal("A money SINK. 0 = no tax."))
-                .setSaveConsumer(v -> cfg.auctionSaleTaxPercent = v).build());
-        economy.addEntry(eb.startIntField(Text.literal("Auction sale tax — max (coins)"), cfg.auctionSaleTaxMax)
-                .setDefaultValue(0).setMin(0)
-                .setTooltip(Text.literal("Cap on the sale tax per sale. 0 = uncapped."))
-                .setSaveConsumer(v -> cfg.auctionSaleTaxMax = v).build());
+        String keep = search == null ? "" : search.getText();
+        search = new TextFieldWidget(this.textRenderer, px + 13, py + 21, pw - 26, 14, Text.literal("search"));
+        search.setMaxLength(64);
+        search.setText(keep);
+        search.setChangedListener(s -> scroll = 0);
+        addSelectableChild(search);
+        closeEdit(false);
+    }
 
-        // ===== Currency (the maker — kept as the 2nd tab so it's easy to find) =====
-        ConfigCategory currency = builder.getOrCreateCategory(Text.literal("Currency"));
-        currency.addEntry(eb.startStrField(Text.literal("Coin name"), cfg.currency.itemName)
-                .setDefaultValue("")
-                .setTooltip(Text.literal("Rename the coin everywhere — the item AND messages/GUIs (\"You won 50 Rupees\")."),
-                        Text.literal("Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\"."),
-                        Text.literal("Drop coin.png in config/notchcurrency/currency/ to reskin the art."),
-                        Text.literal("A resource pack is generated on save; enable it in Options → Resource Packs."))
-                .setSaveConsumer(v -> cfg.currency.itemName = v).build());
+    /* -------------------------------- layout -------------------------------- */
 
-        // ===== Wealth Tax =====
-        ConfigCategory tax = builder.getOrCreateCategory(Text.literal("Wealth Tax"));
-        tax.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.wealthTax.enabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("A periodic SINK that taxes only the wealthy."),
-                        Text.literal("Off by default — it's an aggressive lever."))
-                .setSaveConsumer(v -> cfg.wealthTax.enabled = v).build());
-        tax.addEntry(eb.startLongField(Text.literal("Threshold"), cfg.wealthTax.threshold)
-                .setDefaultValue(100_000L).setMin(0L)
-                .setTooltip(Text.literal("Only the balance ABOVE this is taxed."),
-                        Text.literal("Players below it pay nothing."))
-                .setSaveConsumer(v -> cfg.wealthTax.threshold = v).build());
-        tax.addEntry(eb.startIntField(Text.literal("Rate (% of excess)"), cfg.wealthTax.ratePercent)
-                .setDefaultValue(1).setMin(0).setMax(100)
-                .setTooltip(Text.literal("Percent of the above-threshold amount removed each cycle."))
-                .setSaveConsumer(v -> cfg.wealthTax.ratePercent = v).build());
-        tax.addEntry(eb.startIntField(Text.literal("Interval (minutes)"), cfg.wealthTax.intervalMinutes)
-                .setDefaultValue(1440).setMin(1)
-                .setTooltip(Text.literal("How often the tax runs. 1440 = once a day."))
-                .setSaveConsumer(v -> cfg.wealthTax.intervalMinutes = v).build());
-        tax.addEntry(eb.startBooleanToggle(Text.literal("Announce to taxed players"), cfg.wealthTax.announce)
-                .setDefaultValue(true)
-                .setSaveConsumer(v -> cfg.wealthTax.announce = v).build());
+    private void buildRows() {
+        rows.clear();
+        String query = search.getText().trim().toLowerCase();
+        boolean searching = !query.isEmpty();
+        int y = 0;
+        String open = null;
+        for (ConfigEntry e : entries) {
+            if (searching && !e.matches(query)) continue;
+            if (!e.category.equals(open)) {
+                open = e.category;
+                rows.add(new Row(open, null, y));
+                y += HEADER_H;
+            }
+            if (!searching && COLLAPSED.contains(e.category)) continue;
+            rows.add(new Row(null, e, y));
+            y += ROW_H;
+        }
+        contentH = y;
+    }
 
-        // ===== Shop Rent =====
-        ConfigCategory rent = builder.getOrCreateCategory(Text.literal("Shop Rent"));
-        rent.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.shopRent.enabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("Charge open player-shops rent each cycle (a SINK)."),
-                        Text.literal("Paid from shop earnings first, then the owner's balance."))
-                .setSaveConsumer(v -> cfg.shopRent.enabled = v).build());
-        rent.addEntry(eb.startLongField(Text.literal("Base rent per shop"), cfg.shopRent.baseRent)
-                .setDefaultValue(100L).setMin(0L)
-                .setSaveConsumer(v -> cfg.shopRent.baseRent = v).build());
-        rent.addEntry(eb.startLongField(Text.literal("Rent per listing"), cfg.shopRent.perListing)
-                .setDefaultValue(0L).setMin(0L)
-                .setTooltip(Text.literal("Extra rent per active listing, scaling with shop size."))
-                .setSaveConsumer(v -> cfg.shopRent.perListing = v).build());
-        rent.addEntry(eb.startIntField(Text.literal("Interval (minutes)"), cfg.shopRent.intervalMinutes)
-                .setDefaultValue(1440).setMin(1)
-                .setTooltip(Text.literal("How often rent is charged. 1440 = once a day."))
-                .setSaveConsumer(v -> cfg.shopRent.intervalMinutes = v).build());
-        rent.addEntry(eb.startIntField(Text.literal("Grace cycles before close"), cfg.shopRent.graceCycles)
-                .setDefaultValue(3).setMin(0)
-                .setTooltip(Text.literal("Cycles a frozen shop survives before auto-closing."))
-                .setSaveConsumer(v -> cfg.shopRent.graceCycles = v).build());
-        rent.addEntry(eb.startBooleanToggle(Text.literal("Announce to owners"), cfg.shopRent.announce)
-                .setDefaultValue(true)
-                .setSaveConsumer(v -> cfg.shopRent.announce = v).build());
+    private double maxScroll() {
+        return Math.max(0, contentH - (listBottom - listTop));
+    }
 
-        // ===== Raffle =====
-        ConfigCategory raffle = builder.getOrCreateCategory(Text.literal("Raffle"));
-        raffle.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.raffle.enabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("Players buy tickets into a shared pot; one weighted winner takes it all."),
-                        Text.literal("The house cut on each ticket is a SINK; the pot is redistributed."))
-                .setSaveConsumer(v -> cfg.raffle.enabled = v).build());
-        raffle.addEntry(eb.startLongField(Text.literal("Ticket price"), cfg.raffle.ticketPrice)
-                .setDefaultValue(100L).setMin(1L)
-                .setSaveConsumer(v -> cfg.raffle.ticketPrice = v).build());
-        raffle.addEntry(eb.startIntField(Text.literal("House cut (%)"), cfg.raffle.houseCutPercent)
-                .setDefaultValue(20).setMin(0).setMax(100)
-                .setTooltip(Text.literal("Percent of each ticket destroyed as the house cut (a SINK)."),
-                        Text.literal("The rest funds the prize pot."))
-                .setSaveConsumer(v -> cfg.raffle.houseCutPercent = v).build());
-        raffle.addEntry(eb.startIntField(Text.literal("Max tickets per player"), cfg.raffle.maxTicketsPerPlayer)
-                .setDefaultValue(0).setMin(0)
-                .setTooltip(Text.literal("Cap per player per round. 0 = unlimited."))
-                .setSaveConsumer(v -> cfg.raffle.maxTicketsPerPlayer = v).build());
-        raffle.addEntry(eb.startIntField(Text.literal("Auto-draw interval (minutes)"), cfg.raffle.drawIntervalMinutes)
-                .setDefaultValue(1440).setMin(0)
-                .setTooltip(Text.literal("How often a winner is drawn automatically. 1440 = once a day."),
-                        Text.literal("0 = manual only (/raffle draw)."))
-                .setSaveConsumer(v -> cfg.raffle.drawIntervalMinutes = v).build());
-        raffle.addEntry(eb.startBooleanToggle(Text.literal("Announce entries & winner"), cfg.raffle.announce)
-                .setDefaultValue(true)
-                .setSaveConsumer(v -> cfg.raffle.announce = v).build());
-        raffle.addEntry(eb.startBooleanToggle(Text.literal("Allow ticket redemption"), cfg.raffle.redeemEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Let players turn in an old losing ticket for a few free entries."),
-                        Text.literal("<5 entries → 1, <10 → 5, else 10; once per player per round."))
-                .setSaveConsumer(v -> cfg.raffle.redeemEnabled = v).build());
+    /* -------------------------------- render -------------------------------- */
 
-        // ===== Bounty Board =====
-        ConfigCategory bounty = builder.getOrCreateCategory(Text.literal("Bounty Board"));
-        bounty.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.bounty.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Auto-generate rotating kill/deliver bounties from datapack pools."),
-                        Text.literal("A coin/item FAUCET. Rewards are created money."))
-                .setSaveConsumer(v -> cfg.bounty.enabled = v).build());
-        bounty.addEntry(eb.startIntField(Text.literal("Live bounties on the board"), cfg.bounty.activeCount)
-                .setDefaultValue(5).setMin(0).setMax(20)
-                .setTooltip(Text.literal("How many generated bounties are available at once."))
-                .setSaveConsumer(v -> cfg.bounty.activeCount = v).build());
-        bounty.addEntry(eb.startIntField(Text.literal("Bounties a player can take at once"), cfg.bounty.takeLimit)
-                .setDefaultValue(3).setMin(1).setMax(5)
-                .setTooltip(Text.literal("How many bounties a player may have in progress at a time."))
-                .setSaveConsumer(v -> cfg.bounty.takeLimit = v).build());
-        bounty.addEntry(eb.startIntField(Text.literal("Bounty duration (minutes)"), cfg.bounty.durationMinutes)
-                .setDefaultValue(30).setMin(1)
-                .setTooltip(Text.literal("How long each bounty lasts before it rotates out."))
-                .setSaveConsumer(v -> cfg.bounty.durationMinutes = v).build());
-        bounty.addEntry(eb.startIntField(Text.literal("Coin reward scale (%)"), cfg.bounty.rewardMultiplierPercent)
-                .setDefaultValue(100).setMin(0).setMax(1000)
-                .setTooltip(Text.literal("Scales every coin reward. 100 = unchanged, 50 = half, 0 = no coins."))
-                .setSaveConsumer(v -> cfg.bounty.rewardMultiplierPercent = v).build());
-        bounty.addEntry(eb.startLongField(Text.literal("Max coin reward (0 = no cap)"), cfg.bounty.maxCoinReward)
-                .setDefaultValue(250L).setMin(0L)
-                .setTooltip(Text.literal("Hard cap on the coins one bounty can pay (after scaling)."))
-                .setSaveConsumer(v -> cfg.bounty.maxCoinReward = v).build());
+    @Override
+    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        renderBackground(ctx);
+        buildRows();
+        scroll = Math.max(0, Math.min(scroll, maxScroll()));
 
-        // ===== Crates =====
-        ConfigCategory crate = builder.getOrCreateCategory(Text.literal("Crates"));
-        crate.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.crate.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Crate blocks opened with coin-bought keys."),
-                        Text.literal("Buying keys is a SINK; loot is defined per-crate in datapacks."))
-                .setSaveConsumer(v -> cfg.crate.enabled = v).build());
-        crate.addEntry(eb.startLongField(Text.literal("Crate key price (coins)"), cfg.crate.keyPrice)
-                .setDefaultValue(500L).setMin(0L)
-                .setTooltip(Text.literal("Coin cost of one Crate Key. Higher-tier crates need more keys."))
-                .setSaveConsumer(v -> cfg.crate.keyPrice = v).build());
+        NotchWidgets.panel(ctx, px, py, pw, ph);
+        NotchWidgets.title(ctx, this.textRenderer, "Notch Currency", px + pw / 2, py + 7);
+        NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.PANEL_MID);
 
-        // ===== Loans =====
-        ConfigCategory loan = builder.getOrCreateCategory(Text.literal("Loans"));
-        loan.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.loan.enabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("Players borrow coins (created) up to a cap and repay with interest."),
-                        Text.literal("Interest is a SINK. Off by default — it creates money."))
-                .setSaveConsumer(v -> cfg.loan.enabled = v).build());
-        loan.addEntry(eb.startLongField(Text.literal("Borrowing limit (max debt)"), cfg.loan.maxDebt)
-                .setDefaultValue(10_000L).setMin(0L)
-                .setSaveConsumer(v -> cfg.loan.maxDebt = v).build());
-        loan.addEntry(eb.startIntField(Text.literal("Interest per cycle (%)"), cfg.loan.interestPercentPerCycle)
-                .setDefaultValue(5).setMin(0).setMax(100)
-                .setSaveConsumer(v -> cfg.loan.interestPercentPerCycle = v).build());
-        loan.addEntry(eb.startIntField(Text.literal("Interest interval (minutes)"), cfg.loan.intervalMinutes)
-                .setDefaultValue(1440).setMin(1)
-                .setTooltip(Text.literal("How often interest is applied. 1440 = once a day."))
-                .setSaveConsumer(v -> cfg.loan.intervalMinutes = v).build());
-        loan.addEntry(eb.startBooleanToggle(Text.literal("Auto-collect from balance"), cfg.loan.autoCollect)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Each cycle, pull any spare balance toward the debt before charging interest."))
-                .setSaveConsumer(v -> cfg.loan.autoCollect = v).build());
-        loan.addEntry(eb.startIntField(Text.literal("Loan term (days)"), cfg.loan.termDays)
-                .setDefaultValue(7).setMin(1)
-                .setTooltip(Text.literal("How long a borrower has to repay before the loan goes overdue."))
-                .setSaveConsumer(v -> cfg.loan.termDays = v).build());
-        loan.addEntry(eb.startIntField(Text.literal("Late fee (%)"), cfg.loan.lateFeePercent)
-                .setDefaultValue(10).setMin(0).setMax(100)
-                .setTooltip(Text.literal("One-time penalty added to the debt the first cycle it is overdue."))
-                .setSaveConsumer(v -> cfg.loan.lateFeePercent = v).build());
-        loan.addEntry(eb.startIntField(Text.literal("Overdue interest (%)"), cfg.loan.overdueInterestPercent)
-                .setDefaultValue(20).setMin(0).setMax(100)
-                .setTooltip(Text.literal("Interest rate charged each cycle while a loan is past due (replaces the normal rate)."))
-                .setSaveConsumer(v -> cfg.loan.overdueInterestPercent = v).build());
+        ConfigEntry hoveredEntry = null;
+        boolean hoveredReset = false;
 
-        // ===== Gambling =====
-        ConfigCategory gambling = builder.getOrCreateCategory(Text.literal("Gambling"));
-        gambling.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.gambling.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Slots + coin flip. Bets are a SINK, winnings a FAUCET; the house edge nets a sink."))
-                .setSaveConsumer(v -> cfg.gambling.enabled = v).build());
-        gambling.addEntry(eb.startLongField(Text.literal("Minimum bet"), cfg.gambling.minBet)
-                .setDefaultValue(10L).setMin(1L)
-                .setSaveConsumer(v -> cfg.gambling.minBet = v).build());
-        gambling.addEntry(eb.startLongField(Text.literal("Maximum bet"), cfg.gambling.maxBet)
-                .setDefaultValue(1_000L).setMin(1L)
-                .setSaveConsumer(v -> cfg.gambling.maxBet = v).build());
-        gambling.addEntry(eb.startIntField(Text.literal("Slots house edge (%)"), cfg.gambling.slotsHouseEdgePercent)
-                .setDefaultValue(22).setMin(0).setMax(90)
-                .setTooltip(Text.literal("The cut the house keeps. 22 = players get ~78% back over time."),
-                        Text.literal("Payouts auto-scale to hit this edge no matter the reel odds."))
-                .setSaveConsumer(v -> cfg.gambling.slotsHouseEdgePercent = v).build());
-        gambling.addEntry(eb.startIntField(Text.literal("Coin flip payout (%)"), cfg.gambling.coinFlipPayoutPercent)
-                .setDefaultValue(195).setMin(100).setMax(300)
-                .setTooltip(Text.literal("Percent of the bet returned on a win. 200 = fair double; below 200 is the house edge."))
-                .setSaveConsumer(v -> cfg.gambling.coinFlipPayoutPercent = v).build());
-        gambling.addEntry(eb.startIntField(Text.literal("Coin flip reveal (ticks)"), cfg.gambling.coinFlipRevealTicks)
-                .setDefaultValue(30).setMin(0).setMax(200)
-                .setTooltip(Text.literal("How long the coin-flip block spins before the result shows. 20 ticks = 1 second."))
-                .setSaveConsumer(v -> cfg.gambling.coinFlipRevealTicks = v).build());
+        // Scrolling list, scissored to the viewport.
+        ctx.enableScissor(px + 1, listTop, px + pw - 1, listBottom);
+        for (Row row : rows) {
+            int ry = listTop + row.y() - (int) scroll;
+            if (ry + HEADER_H < listTop || ry > listBottom) continue;
 
-        // ===== Enchanter =====
-        ConfigCategory enchanter = builder.getOrCreateCategory(Text.literal("Enchanter"));
-        enchanter.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.enchanter.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("The enchant/repair/extract service NPC. Every payment is a SINK."))
-                .setSaveConsumer(v -> cfg.enchanter.enabled = v).build());
-        enchanter.addEntry(eb.startIntField(Text.literal("Full repair cost"), cfg.enchanter.repairFullCost)
-                .setDefaultValue(60).setMin(0)
-                .setTooltip(Text.literal("Coins to fully repair a 100%-damaged item; scales down with less damage."))
-                .setSaveConsumer(v -> cfg.enchanter.repairFullCost = v).build());
-        enchanter.addEntry(eb.startIntField(Text.literal("Enchant price multiplier (%)"), cfg.enchanter.costMultiplierPercent)
-                .setDefaultValue(100).setMin(1).setMax(1000)
-                .setTooltip(Text.literal("Scales all enchantment purchase prices. 200 = double."))
-                .setSaveConsumer(v -> cfg.enchanter.costMultiplierPercent = v).build());
-        enchanter.addEntry(eb.startIntField(Text.literal("Extract cost"), cfg.enchanter.extractCost)
-                .setDefaultValue(25).setMin(0)
-                .setTooltip(Text.literal("Coins to pull one enchantment off an item onto a book."))
-                .setSaveConsumer(v -> cfg.enchanter.extractCost = v).build());
-        enchanter.addEntry(eb.startBooleanToggle(Text.literal("Sell treasure enchants"), cfg.enchanter.allowTreasure)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Whether Mending and other treasure enchantments can be bought (at double price)."))
-                .setSaveConsumer(v -> cfg.enchanter.allowTreasure = v).build());
+            if (row.header() != null) {
+                boolean folded = COLLAPSED.contains(row.header());
+                NotchWidgets.triangle(ctx, px + 19, ry + 7, folded, NotchTheme.TEXT_MUTED);
+                ctx.drawText(this.textRenderer, row.header(), px + 28, ry + 5, NotchTheme.TEXT_DARK, false);
+                int tw = this.textRenderer.getWidth(row.header());
+                NotchWidgets.divider(ctx, px + 34 + tw, ry + 8, pw - 56 - tw);
+            } else {
+                ConfigEntry e = row.entry();
+                boolean rowHover = mouseY >= ry && mouseY < ry + ROW_H
+                        && mouseX >= px + 8 && mouseX < px + pw - 18
+                        && mouseY >= listTop && mouseY < listBottom;
+                if (rowHover) {
+                    ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x18000000);
+                    hoveredEntry = e;
+                }
+                ctx.drawText(this.textRenderer,
+                        this.textRenderer.trimToWidth(e.label, labelW()), px + 16, ry + 4,
+                        NotchTheme.TEXT_DARK, false);
+                if (!e.isDefault()) {
+                    boolean rh = rowHover && mouseX >= resetX() && mouseX < resetX() + 13;
+                    NotchWidgets.neutralButton(ctx, this.textRenderer, resetX(), ry + 2, 13, 13, "", rh);
+                    leftTriangle(ctx, resetX() + 6, ry + 8, rh ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED);
+                    if (rh) hoveredReset = true;
+                }
+                drawControl(ctx, e, ry, mouseX, mouseY, rowHover);
+            }
+        }
+        ctx.disableScissor();
 
-        // ===== Cosmetics =====
-        ConfigCategory cosmetic = builder.getOrCreateCategory(Text.literal("Cosmetics"));
-        cosmetic.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.cosmetic.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("The cosmetics shop NPC. Offers are datapack-driven — see"),
-                        Text.literal("data/notchcurrency/cosmetics/*.json. Buying is a coin SINK."))
-                .setSaveConsumer(v -> cfg.cosmetic.enabled = v).build());
+        // Scrollbar.
+        if (maxScroll() > 0) {
+            int trackX = px + pw - 14, trackW = 6;
+            int trackH = listBottom - listTop;
+            NotchWidgets.inset(ctx, trackX, listTop, trackW, trackH, NotchTheme.PANEL_MID);
+            int thumbH = Math.max(16, (int) ((long) trackH * trackH / contentH));
+            int thumbY = listTop + (int) ((trackH - thumbH) * (scroll / maxScroll()));
+            ctx.fill(trackX + 1, thumbY, trackX + trackW - 1, thumbY + thumbH, NotchTheme.EDGE);
+        }
 
-        // ===== Villager Trades =====
-        ConfigCategory villager = builder.getOrCreateCategory(Text.literal("Villager Trades"));
-        villager.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.villagerTrades.enabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("When villagers roll new trades, some may be priced in coins instead of"),
-                        Text.literal("emeralds — a rare find that makes currency spendable at villagers (a SINK)."))
-                .setSaveConsumer(v -> cfg.villagerTrades.enabled = v).build());
-        villager.addEntry(eb.startIntSlider(Text.literal("Conversion chance"), cfg.villagerTrades.chancePercent, 0, 100)
-                .setDefaultValue(10)
-                .setTextGetter(v -> Text.literal(v + "%"))
-                .setTooltip(Text.literal("Chance per new emerald trade. High-value trades (8+ emeralds) get double."))
-                .setSaveConsumer(v -> cfg.villagerTrades.chancePercent = v).build());
-        villager.addEntry(eb.startIntField(Text.literal("Coins per emerald"), cfg.villagerTrades.coinsPerEmerald)
-                .setDefaultValue(3).setMin(1)
-                .setTooltip(Text.literal("Coin price for each emerald of the original trade."),
-                        Text.literal("Trades too pricey to fit the two buy slots stay emerald-priced."))
-                .setSaveConsumer(v -> cfg.villagerTrades.coinsPerEmerald = v).build());
+        // Footer.
+        NotchWidgets.divider(ctx, px + 10, listBottom + 3, pw - 20);
+        ctx.drawText(this.textRenderer, "config/notchcurrency.json", px + 12, py + ph - 18, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, cancelX(), footerY(), 64, 16, "Cancel",
+                hit(mouseX, mouseY, cancelX(), footerY(), 64, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, saveX(), footerY(), 104, 16, "Save & Apply",
+                hit(mouseX, mouseY, saveX(), footerY(), 104, 16));
 
-        // ===== HUD =====
-        ConfigCategory hud = builder.getOrCreateCategory(Text.literal("HUD"));
-        hud.addEntry(eb.startSelector(Text.literal("Bounty tracker position"),
-                        new String[]{"TOP_LEFT", "TOP_CENTER", "TOP_RIGHT",
-                                "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"},
-                        cfg.hud.bountyTrackerCorner)
-                .setDefaultValue("TOP_RIGHT")
-                .setTooltip(Text.literal("Screen anchor for the bounty tracker pills."),
-                        Text.literal("Client-side: on a server each player sets their own."))
-                .setSaveConsumer(v -> cfg.hud.bountyTrackerCorner = v).build());
-        hud.addEntry(eb.startIntField(Text.literal("Bounty tracker X offset"), cfg.hud.bountyTrackerX)
-                .setDefaultValue(6)
-                .setTooltip(Text.literal("Pixels inward from the anchor (left/right nudge on CENTER)."))
-                .setSaveConsumer(v -> cfg.hud.bountyTrackerX = v).build());
-        hud.addEntry(eb.startIntField(Text.literal("Bounty tracker Y offset"), cfg.hud.bountyTrackerY)
-                .setDefaultValue(6)
-                .setTooltip(Text.literal("Pixels inward from the top or bottom edge."))
-                .setSaveConsumer(v -> cfg.hud.bountyTrackerY = v).build());
-        hud.addEntry(eb.startIntSlider(Text.literal("Bounty tracker scale"), cfg.hud.bountyTrackerScale, 50, 200)
-                .setDefaultValue(100)
-                .setTextGetter(v -> Text.literal(v + "%"))
-                .setTooltip(Text.literal("Shrink or grow the whole tracker."))
-                .setSaveConsumer(v -> cfg.hud.bountyTrackerScale = v).build());
-        hud.addEntry(eb.startIntSlider(Text.literal("Bounty tracker opacity"), cfg.hud.bountyTrackerOpacity, 0, 100)
-                .setDefaultValue(85)
-                .setTextGetter(v -> Text.literal(v + "%"))
-                .setTooltip(Text.literal("Background darkness of the pills."))
-                .setSaveConsumer(v -> cfg.hud.bountyTrackerOpacity = v).build());
+        super.render(ctx, mouseX, mouseY, delta);
+        if (search.getText().isEmpty() && !search.isFocused()) {
+            ctx.drawText(this.textRenderer, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
+        }
+        if (editField != null) editField.render(ctx, mouseX, mouseY, delta);
 
-        // ===== Waystone Fee =====
-        ConfigCategory waystone = builder.getOrCreateCategory(Text.literal("Waystone Fee"));
-        waystone.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.waystone.enabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("Charge a coin SINK to teleport via a Waystone. Needs the Waystones mod installed."))
-                .setSaveConsumer(v -> cfg.waystone.enabled = v).build());
-        waystone.addEntry(eb.startIntField(Text.literal("Teleport fee"), cfg.waystone.fee)
-                .setDefaultValue(50).setMin(0)
-                .setTooltip(Text.literal("Coins for a normal same-dimension waystone teleport."))
-                .setSaveConsumer(v -> cfg.waystone.fee = v).build());
-        waystone.addEntry(eb.startIntField(Text.literal("Dimensional fee"), cfg.waystone.dimensionalFee)
-                .setDefaultValue(200).setMin(0)
-                .setTooltip(Text.literal("Coins for a teleport that crosses dimensions."))
-                .setSaveConsumer(v -> cfg.waystone.dimensionalFee = v).build());
-        waystone.addEntry(eb.startBooleanToggle(Text.literal("Announce fee"), cfg.waystone.announce)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Tell the player how much they paid after each teleport."))
-                .setSaveConsumer(v -> cfg.waystone.announce = v).build());
+        // Tooltip last, above everything.
+        if (hoveredEntry != null && editing == null) {
+            if (hoveredReset) {
+                ctx.drawTooltip(this.textRenderer, Text.literal("Reset to default"), mouseX, mouseY);
+            } else if (hoveredEntry.tooltip.length > 0 || hoveredEntry instanceof NumberEntry) {
+                List<Text> lines = new ArrayList<>();
+                for (String s : hoveredEntry.tooltip) lines.add(Text.literal(s));
+                if (hoveredEntry instanceof NumberEntry n) {
+                    lines.add(Text.literal("Range: " + n.min + " – " + n.max)
+                            .styled(st -> st.withColor(0xFF808080)));
+                }
+                ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+            }
+        }
+    }
 
-        // ===== Audit Log =====
-        ConfigCategory ledger = builder.getOrCreateCategory(Text.literal("Audit Log"));
-        ledger.addEntry(eb.startBooleanToggle(Text.literal("Write audit file"), cfg.ledger.fileLogEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Log every transaction to <world>/notchcurrency/ledger/."))
-                .setSaveConsumer(v -> cfg.ledger.fileLogEnabled = v).build());
-        ledger.addEntry(eb.startBooleanToggle(Text.literal("Enable Discord webhook"), cfg.ledger.webhookEnabled)
-                .setDefaultValue(false)
-                .setTooltip(Text.literal("Mirror admin-relevant events to a Discord webhook."))
-                .setSaveConsumer(v -> cfg.ledger.webhookEnabled = v).build());
-        ledger.addEntry(eb.startStrField(Text.literal("Discord webhook URL"), cfg.ledger.webhookUrl)
-                .setDefaultValue("")
-                .setTooltip(Text.literal("Paste a Discord channel webhook URL. Leave blank to disable."))
-                .setSaveConsumer(v -> cfg.ledger.webhookUrl = v).build());
-        ledger.addEntry(eb.startLongField(Text.literal("Webhook large-txn threshold"), cfg.ledger.webhookLargeTxnThreshold)
-                .setDefaultValue(10_000L).setMin(0L)
-                .setTooltip(Text.literal("Transactions at or above this amount also post to the webhook."),
-                        Text.literal("0 = never post by size (admin actions still post)."))
-                .setSaveConsumer(v -> cfg.ledger.webhookLargeTxnThreshold = v).build());
+    private void drawControl(DrawContext ctx, ConfigEntry e, int ry, int mouseX, int mouseY, boolean rowHover) {
+        int right = px + pw - 20;
+        if (e == editing) return; // the edit field renders on top instead
 
-        // ===== Balloon Crates =====
-        ConfigCategory balloon = builder.getOrCreateCategory(Text.literal("Balloon Crates"));
-        balloon.addEntry(eb.startBooleanToggle(Text.literal("Announce spawns"), cfg.balloon.announce)
-                .setDefaultValue(true).setSaveConsumer(v -> cfg.balloon.announce = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Spawn count per wave"), cfg.balloon.perDay)
-                .setDefaultValue(3).setMin(0)
-                .setTooltip(Text.literal("How many balloon crates spawn each wave."))
-                .setSaveConsumer(v -> cfg.balloon.perDay = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Center X"), cfg.balloon.centerX)
-                .setDefaultValue(0).setSaveConsumer(v -> cfg.balloon.centerX = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Center Y"), cfg.balloon.centerY)
-                .setDefaultValue(80).setSaveConsumer(v -> cfg.balloon.centerY = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Center Z"), cfg.balloon.centerZ)
-                .setDefaultValue(0).setSaveConsumer(v -> cfg.balloon.centerZ = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Spawn radius"), cfg.balloon.radius)
-                .setDefaultValue(25).setMin(1).setSaveConsumer(v -> cfg.balloon.radius = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Min Y"), cfg.balloon.minY)
-                .setDefaultValue(110).setSaveConsumer(v -> cfg.balloon.minY = v).build());
-        balloon.addEntry(eb.startIntField(Text.literal("Max Y"), cfg.balloon.maxY)
-                .setDefaultValue(150).setSaveConsumer(v -> cfg.balloon.maxY = v).build());
+        if (e instanceof BoolEntry b) {
+            int bx = right - 40;
+            boolean hov = rowHover && mouseX >= bx;
+            if (b.value) {
+                ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF6FB25D : NotchTheme.ACCENT_GREEN);
+                ctx.drawText(this.textRenderer, "ON", bx + 12, ry + 5, NotchTheme.TEXT_LIGHT, true);
+            } else {
+                ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF8A8A8A : NotchTheme.PANEL_MID);
+                ctx.drawText(this.textRenderer, "OFF", bx + 10, ry + 5, NotchTheme.TEXT_DARK, false);
+            }
+        } else if (e instanceof SliderEntry s) {
+            String val = s.value + s.suffix;
+            ctx.drawText(this.textRenderer, val, right - this.textRenderer.getWidth(val), ry + 5,
+                    NotchTheme.TEXT_DARK, false);
+            int tx = sliderX(), tw = sliderW();
+            NotchWidgets.inset(ctx, tx, ry + 6, tw, 6, NotchTheme.PANEL_MID);
+            int thumb = tx + 1 + (int) ((tw - 8) * s.fraction());
+            ctx.fill(thumb, ry + 4, thumb + 6, ry + 14,
+                    draggingSlider == s ? NotchTheme.ACCENT_GREEN : NotchTheme.EDGE);
+        } else if (e instanceof SelectEntry sel) {
+            int bx = right - 110;
+            NotchWidgets.neutralButton(ctx, this.textRenderer, bx, ry + 2, 110, 14, sel.value(),
+                    rowHover && mouseX >= bx);
+        } else {
+            String val = e instanceof NumberEntry n ? Long.toString(n.value)
+                    : ((StringEntry) e).value.isEmpty() ? "(blank)" : ((StringEntry) e).value;
+            val = this.textRenderer.trimToWidth(val, 110);
+            int vw = this.textRenderer.getWidth(val);
+            boolean hov = rowHover && mouseX >= right - 116;
+            ctx.drawText(this.textRenderer, val, right - vw, ry + 4,
+                    e instanceof StringEntry && ((StringEntry) e).value.isEmpty()
+                            ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK, false);
+            if (hov) ctx.fill(right - vw, ry + 13, right, ry + 14, NotchTheme.TEXT_MUTED);
+        }
+    }
 
-        // ===== Golden Cache =====
-        ConfigCategory cache = builder.getOrCreateCategory(Text.literal("Golden Cache"));
-        cache.addEntry(eb.startBooleanToggle(Text.literal("Announce spawns"), cfg.cache.announce)
-                .setDefaultValue(true).setSaveConsumer(v -> cfg.cache.announce = v).build());
-        cache.addEntry(eb.startIntField(Text.literal("Cooldown (minutes)"), cfg.cache.cooldownMinutes)
-                .setDefaultValue(60).setMin(0).setSaveConsumer(v -> cfg.cache.cooldownMinutes = v).build());
-        cache.addEntry(eb.startIntField(Text.literal("Currency stacks (min)"), cfg.cache.currencyStacksMin)
-                .setDefaultValue(1).setMin(0).setSaveConsumer(v -> cfg.cache.currencyStacksMin = v).build());
-        cache.addEntry(eb.startIntField(Text.literal("Currency stacks (max)"), cfg.cache.currencyStacksMax)
-                .setDefaultValue(3).setMin(0).setSaveConsumer(v -> cfg.cache.currencyStacksMax = v).build());
-        cache.addEntry(eb.startIntField(Text.literal("Coins per stack (min)"), cfg.cache.currencyPerStackMin)
-                .setDefaultValue(100).setMin(1).setSaveConsumer(v -> cfg.cache.currencyPerStackMin = v).build());
-        cache.addEntry(eb.startIntField(Text.literal("Coins per stack (max)"), cfg.cache.currencyPerStackMax)
-                .setDefaultValue(250).setMin(1).setSaveConsumer(v -> cfg.cache.currencyPerStackMax = v).build());
+    /** A small left-pointing triangle (the per-row "revert" glyph — drawn, not a font char). */
+    private static void leftTriangle(DrawContext ctx, int cx, int cy, int color) {
+        for (int c = 0; c < 4; c++) {
+            int half = 3 - c;
+            ctx.fill(cx - 3 + c, cy - half, cx - 2 + c, cy + half + 1, color);
+        }
+    }
 
-        return builder.build();
+    private int labelW() { return pw - 200; }
+    private int resetX() { return px + pw - 160; }
+    private int sliderX() { return px + pw - 142; }
+    private int sliderW() { return 88; }
+    private int footerY() { return py + ph - 22; }
+    private int saveX() { return px + pw - 114; }
+    private int cancelX() { return px + pw - 184; }
+
+    private static boolean hit(int mx, int my, int x, int y, int w, int h) {
+        return mx >= x && mx < x + w && my >= y && my < y + h;
+    }
+
+    /* -------------------------------- input -------------------------------- */
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (editField != null && editField.mouseClicked(mouseX, mouseY, button)) return true;
+        if (editing != null) closeEdit(true);
+
+        if (hit((int) mouseX, (int) mouseY, saveX(), footerY(), 104, 16)) {
+            NotchWidgets.click();
+            saveAndApply();
+            return true;
+        }
+        if (hit((int) mouseX, (int) mouseY, cancelX(), footerY(), 64, 16)) {
+            NotchWidgets.click();
+            this.close();
+            return true;
+        }
+
+        // Scrollbar jump/drag.
+        if (maxScroll() > 0 && mouseX >= px + pw - 16 && mouseX <= px + pw - 6
+                && mouseY >= listTop && mouseY <= listBottom) {
+            draggingBar = true;
+            scrollBarTo(mouseY);
+            return true;
+        }
+
+        if (mouseY >= listTop && mouseY < listBottom) {
+            for (Row row : rows) {
+                int ry = listTop + row.y() - (int) scroll;
+                if (row.header() != null) {
+                    if (mouseY >= ry && mouseY < ry + HEADER_H && mouseX >= px + 8 && mouseX < px + pw - 18
+                            && search.getText().trim().isEmpty()) {
+                        if (!COLLAPSED.remove(row.header())) COLLAPSED.add(row.header());
+                        NotchWidgets.tick();
+                        return true;
+                    }
+                    continue;
+                }
+                if (mouseY < ry || mouseY >= ry + ROW_H) continue;
+                if (clickRow(row.entry(), ry, mouseX, mouseY, button)) return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean clickRow(ConfigEntry e, int ry, double mouseX, double mouseY, int button) {
+        int right = px + pw - 20;
+        if (!e.isDefault() && hit((int) mouseX, (int) mouseY, resetX(), ry + 2, 13, 13)) {
+            e.reset();
+            NotchWidgets.tick();
+            return true;
+        }
+        if (e instanceof BoolEntry b && mouseX >= right - 40 && mouseX < right) {
+            b.value = !b.value;
+            NotchWidgets.tick();
+            return true;
+        }
+        if (e instanceof SliderEntry s && mouseX >= sliderX() - 2 && mouseX < sliderX() + sliderW() + 2) {
+            draggingSlider = s;
+            s.setFromFraction((mouseX - sliderX()) / (double) (sliderW() - 6));
+            return true;
+        }
+        if (e instanceof SelectEntry sel && mouseX >= right - 110 && mouseX < right) {
+            sel.cycle(button == 1 || hasShiftDown() ? -1 : 1);
+            NotchWidgets.tick();
+            return true;
+        }
+        if ((e instanceof NumberEntry || e instanceof StringEntry) && mouseX >= right - 116 && mouseX < right) {
+            openEdit(e, ry);
+            return true;
+        }
+        return false;
+    }
+
+    private void openEdit(ConfigEntry e, int ry) {
+        editing = e;
+        editingY = ry;
+        int w = 116;
+        editField = new TextFieldWidget(this.textRenderer, px + pw - 20 - w, ry + 2, w, 13, Text.literal("value"));
+        if (e instanceof NumberEntry n) {
+            editField.setMaxLength(14);
+            editField.setTextPredicate(s -> s.matches("-?[0-9]*"));
+            editField.setText(Long.toString(n.value));
+        } else {
+            editField.setMaxLength(((StringEntry) e).maxLength);
+            editField.setText(((StringEntry) e).value);
+        }
+        editField.setFocused(true);
+        setFocused(editField);
+        NotchWidgets.tick();
+    }
+
+    private void closeEdit(boolean commit) {
+        if (editing == null) return;
+        if (commit) {
+            if (editing instanceof NumberEntry n) {
+                try {
+                    n.set(Long.parseLong(editField.getText().trim()));
+                } catch (NumberFormatException ignored) { /* keep the old value */ }
+            } else if (editing instanceof StringEntry s) {
+                s.value = editField.getText().trim();
+            }
+        }
+        editing = null;
+        editField = null;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (draggingBar) {
+            scrollBarTo(mouseY);
+            return true;
+        }
+        if (draggingSlider != null) {
+            draggingSlider.setFromFraction((mouseX - sliderX()) / (double) (sliderW() - 6));
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (draggingSlider != null) {
+            draggingSlider = null;
+            NotchWidgets.tick();
+        }
+        draggingBar = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (editing != null) closeEdit(true);
+        scroll = Math.max(0, Math.min(scroll - amount * 22, maxScroll()));
+        return true;
+    }
+
+    private void scrollBarTo(double mouseY) {
+        double f = (mouseY - listTop - 8) / (double) (listBottom - listTop - 16);
+        scroll = Math.max(0, Math.min(f, 1)) * maxScroll();
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (editing != null) {
+            if (keyCode == 257 || keyCode == 335) { // enter
+                closeEdit(true);
+                NotchWidgets.tick();
+                return true;
+            }
+            if (keyCode == 256) { // esc cancels just the edit
+                closeEdit(false);
+                return true;
+            }
+            if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, editField)) return true;
+        }
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, search)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        if (editField != null && editField.charTyped(chr, modifiers)) return true;
+        return super.charTyped(chr, modifiers);
+    }
+
+    @Override
+    public void tick() {
+        search.tick();
+        if (editField != null) editField.tick();
+    }
+
+    /* -------------------------------- saving -------------------------------- */
+
+    private void saveAndApply() {
+        closeEdit(true);
+        for (ConfigEntry e : entries) e.commit();
+        // Keep min/max pairs ordered so a typo can't invert a range.
+        if (cfg.gambling.maxBet < cfg.gambling.minBet) cfg.gambling.maxBet = cfg.gambling.minBet;
+        if (cfg.cache.currencyStacksMax < cfg.cache.currencyStacksMin) cfg.cache.currencyStacksMax = cfg.cache.currencyStacksMin;
+        if (cfg.cache.currencyPerStackMax < cfg.cache.currencyPerStackMin) cfg.cache.currencyPerStackMax = cfg.cache.currencyPerStackMin;
+        if (cfg.balloon.maxY < cfg.balloon.minY) cfg.balloon.maxY = cfg.balloon.minY;
+
+        NotchConfigIO.save(cfg);
+        AuctionConfig.apply(cfg);
+        DailyCrateManager.applyConfig(cfg);
+        GoldenCacheManager.applyConfig(cfg);
+        WealthTax.applyConfig(cfg);
+        ShopRent.applyConfig(cfg);
+        RaffleManager.applyConfig(cfg);
+        BountyManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.crate.CrateManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.loan.LoanManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.gambling.GamblingManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
+        // Rebuild the custom-currency pack so a name change takes effect right away.
+        net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
+        this.close();
+    }
+
+    @Override
+    public void close() {
+        if (this.client != null) this.client.setScreen(parent);
     }
 }
