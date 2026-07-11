@@ -1,6 +1,5 @@
 {
-  "credit": "Notch Currency — code-drawn crate (open). Lid hinged +45° at the back edge (vanilla model rotations cap at 45°).",
-  "texture_size": [64, 64],
+  "credit": "Notch Currency — code-drawn crate (open). Lid hinged +45° at the back edge (vanilla model rotations cap at 45°). UVs 0-16 over a 64px texture.",
   "textures": {
     "particle": "#crate"
   },
@@ -10,12 +9,12 @@
       "from": [1, 0, 1],
       "to": [15, 10, 15],
       "faces": {
-        "north": {"uv": [0, 0, 14, 10], "texture": "#crate"},
-        "south": {"uv": [16, 0, 30, 10], "texture": "#crate"},
-        "east":  {"uv": [16, 0, 30, 10], "texture": "#crate"},
-        "west":  {"uv": [16, 0, 30, 10], "texture": "#crate"},
-        "up":    {"uv": [0, 32, 14, 46], "texture": "#crate"},
-        "down":  {"uv": [32, 0, 46, 14], "texture": "#crate", "cullface": "down"}
+        "north": {"uv": [0, 0, 3.5, 2.5], "texture": "#crate"},
+        "south": {"uv": [4, 0, 7.5, 2.5], "texture": "#crate"},
+        "east":  {"uv": [4, 0, 7.5, 2.5], "texture": "#crate"},
+        "west":  {"uv": [4, 0, 7.5, 2.5], "texture": "#crate"},
+        "up":    {"uv": [0, 8, 3.5, 11.5], "texture": "#crate"},
+        "down":  {"uv": [8, 0, 11.5, 3.5], "texture": "#crate", "cullface": "down"}
       }
     },
     {
@@ -24,12 +23,12 @@
       "to": [15, 15, 15],
       "rotation": {"origin": [8, 10, 15], "axis": "x", "angle": 45},
       "faces": {
-        "north": {"uv": [0, 16, 14, 21], "texture": "#crate"},
-        "south": {"uv": [32, 16, 46, 21], "texture": "#crate"},
-        "east":  {"uv": [32, 16, 46, 21], "texture": "#crate"},
-        "west":  {"uv": [32, 16, 46, 21], "texture": "#crate"},
-        "up":    {"uv": [16, 16, 30, 30], "texture": "#crate"},
-        "down":  {"uv": [16, 16, 30, 30], "texture": "#crate"}
+        "north": {"uv": [0, 4, 3.5, 5.25], "texture": "#crate"},
+        "south": {"uv": [8, 4, 11.5, 5.25], "texture": "#crate"},
+        "east":  {"uv": [8, 4, 11.5, 5.25], "texture": "#crate"},
+        "west":  {"uv": [8, 4, 11.5, 5.25], "texture": "#crate"},
+        "up":    {"uv": [4, 4, 7.5, 7.5], "texture": "#crate"},
+        "down":  {"uv": [4, 4, 7.5, 7.5], "texture": "#crate"}
       }
     }
   ],
