@@ -1,6 +1,4 @@
 {
   "parent": "notchcurrency:block/template_coin_flip",
-  "textures": {
-    "coin": "notchcurrency:block/coin_flip_tails"
-  }
+  "textures": { "coin": "notchcurrency:item/coin" }
 }

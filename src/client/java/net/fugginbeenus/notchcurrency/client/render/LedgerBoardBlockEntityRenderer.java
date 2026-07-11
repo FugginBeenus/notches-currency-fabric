@@ -4,13 +4,13 @@ import net.fugginbeenus.notchcurrency.block.LedgerBoardBlock;
 import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Direction;
@@ -19,19 +19,19 @@ import net.minecraft.util.math.RotationAxis;
 import java.util.List;
 
 /**
- * Draws the live leaderboard onto the Ledger Board's tablet face. Server-synced rows (see the block
- * entity) are rendered as ranked name/balance lines. The transform constants up top are deliberately
- * easy to nudge — the exact plate placement wants an in-game eyeball.
+ * Draws the live leaderboard onto the Ledger Board's tablet face. The transform anchors the origin
+ * at the CENTRE of the tablet's front plaque; rows are drawn in text-pixel space around it. The six
+ * constants below are the only things to nudge if the plate placement needs an in-game tweak.
  */
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
-    // Tunables (block units, 1.0 = a full block). Front face of the tablet, plaque area.
-    private static final float FACE_Z = 0.372f;   // tablet front plane (model tablet min z = 6/16)
-    private static final float TOP_Y = 1.34f;     // first row baseline height (spans into upper block)
-    private static final float ROW_H = 0.155f;    // vertical gap between rows
-    private static final float SCALE = 0.0125f;   // text scale
-    private static final float MARGIN = 0.14f;    // left inset from the tablet edge
-    private static final float WIDTH = 0.72f;      // usable plate width (balance right-aligns to this)
+    // --- tunables ---
+    private static final float FACE_Z = 0.372f; // world z of the tablet front (model tablet min z = 6/16)
+    private static final float PLATE_Y = 0.46f; // how far above block-centre the plaque centre sits (blocks)
+    private static final float SCALE = 0.009f;  // text scale (smaller = more fits on the narrow tablet)
+    private static final int HEADER_Y = -34;    // header baseline (text px; negative = up)
+    private static final int ROW0 = -22;        // first rank baseline (text px)
+    private static final int ROW_STEP = 9;      // gap between ranks (text px)
 
     private final TextRenderer text;
 
@@ -42,13 +42,11 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     @Override
     public void render(LedgerBoardBlockEntity be, float tickDelta, MatrixStack matrices,
                        VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        if (be.getWorld() == null) return;
         var state = be.getCachedState();
-        if (!(state.getBlock() instanceof LedgerBoardBlock) || state.get(LedgerBoardBlock.HALF) != DoubleBlockHalf.LOWER) {
+        if (!(state.getBlock() instanceof LedgerBoardBlock)
+                || state.get(LedgerBoardBlock.HALF) != DoubleBlockHalf.LOWER) {
             return;
         }
-        List<EconomyLeaderboard.Entry> rows = be.rows();
-
         Direction facing = state.get(LedgerBoardBlock.FACING);
         int deg = switch (facing) {
             case EAST -> 90;
@@ -58,54 +56,37 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         };
 
         matrices.push();
-        matrices.translate(0.5, 0.0, 0.5);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180 - deg));
-        matrices.translate(0.0, 0.0, -(0.5f - (1f - FACE_Z)) - 0.5f + FACE_Z + 0.001f);
-        // Flip so text is upright and faces outward; scale to block space.
-        matrices.scale(-SCALE, -SCALE, SCALE);
+        matrices.translate(0.5, 0.5, 0.5);                                   // block centre
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180 - deg)); // orient to the front
+        matrices.translate(0.0, PLATE_Y, 0.5 - FACE_Z + 0.002);              // up to the plaque, out to its face
+        matrices.scale(-SCALE, -SCALE, SCALE);                               // upright + un-mirrored
 
-        // Header.
-        int fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-        drawCentered(Text.literal("TOP BALANCES").formatted(Formatting.GOLD), matrices, vertexConsumers, fullLight,
-                px(TOP_Y + ROW_H));
+        int lightBright = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+        drawCentered(Text.literal("TOP BALANCES").formatted(Formatting.GOLD), matrices, vertexConsumers, lightBright, HEADER_Y);
 
+        List<EconomyLeaderboard.Entry> rows = be.rows();
         if (rows.isEmpty()) {
-            drawCentered(Text.literal("No balances yet").formatted(Formatting.GRAY), matrices, vertexConsumers,
-                    fullLight, px(TOP_Y - ROW_H));
+            drawCentered(Text.literal("No balances yet").formatted(Formatting.GRAY), matrices, vertexConsumers, lightBright, ROW0 + ROW_STEP);
         }
         for (int i = 0; i < rows.size(); i++) {
             EconomyLeaderboard.Entry e = rows.get(i);
-            float y = px(TOP_Y - i * ROW_H);
-            Formatting rankColor = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.GOLD : Formatting.GRAY;
-            Text left = Text.literal((i + 1) + " ").formatted(rankColor)
-                    .copy().append(Text.literal(trim(e.name())).formatted(Formatting.WHITE));
-            String bal = compact(e.balance());
-            drawLeft(left, matrices, vertexConsumers, fullLight, px(MARGIN), y);
-            drawRight(Text.literal(bal).formatted(Formatting.YELLOW), matrices, vertexConsumers, fullLight,
-                    px(MARGIN + WIDTH), y);
+            Formatting rank = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.YELLOW : Formatting.GRAY;
+            MutableText line = Text.literal((i + 1) + " ").formatted(rank)
+                    .append(Text.literal(trim(e.name())).formatted(Formatting.WHITE))
+                    .append(Text.literal("  " + compact(e.balance())).formatted(Formatting.YELLOW));
+            drawCentered(line, matrices, vertexConsumers, lightBright, ROW0 + i * ROW_STEP);
         }
         matrices.pop();
     }
 
-    private float px(float blocks) {
-        return blocks / SCALE; // convert a block offset into pre-scale text pixels
-    }
-
-    private void drawLeft(Text t, MatrixStack m, VertexConsumerProvider vc, int light, float x, float y) {
-        text.draw(t, x, y, 0xFFFFFF, false, m.peek().getPositionMatrix(), vc,
+    private void drawCentered(Text t, MatrixStack m, VertexConsumerProvider vc, int light, int y) {
+        float x = -text.getWidth(t) / 2f;
+        text.draw(t, x, (float) y, 0xFFFFFF, false, m.peek().getPositionMatrix(), vc,
                 TextRenderer.TextLayerType.NORMAL, 0, light);
     }
 
-    private void drawRight(Text t, MatrixStack m, VertexConsumerProvider vc, int light, float rightX, float y) {
-        drawLeft(t, m, vc, light, rightX - text.getWidth(t), y);
-    }
-
-    private void drawCentered(Text t, MatrixStack m, VertexConsumerProvider vc, int light, float y) {
-        drawLeft(t, m, vc, light, px(MARGIN + WIDTH / 2f) - text.getWidth(t) / 2f, y);
-    }
-
     private static String trim(String name) {
-        return name.length() > 10 ? name.substring(0, 9) + "…" : name;
+        return name.length() > 7 ? name.substring(0, 6) + "…" : name;
     }
 
     private static String compact(long n) {
