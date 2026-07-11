@@ -77,6 +77,7 @@ public final class CrateManager {
             rewardText = NotchCurrency.coins(loot.coins());
         }
 
+        net.fugginbeenus.notchcurrency.block.CrateBlock.animateOpen(world, pos); // pop the lid
         effects(world, pos);
         player.sendMessage(Text.literal("🎁 You opened the " + def.name() + " and won ").formatted(Formatting.GOLD)
                 .append(rewardText)

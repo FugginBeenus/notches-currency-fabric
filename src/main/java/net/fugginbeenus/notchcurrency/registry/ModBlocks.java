@@ -120,7 +120,7 @@ public final class ModBlocks {
 
     private static Block registerCrate(String blockId, String crateType) {
         Block block = Registry.register(Registries.BLOCK, NotchCurrency.id(blockId),
-                new CrateBlock(AbstractBlock.Settings.create().strength(2.0f).requiresTool(), crateType));
+                new CrateBlock(AbstractBlock.Settings.create().strength(2.0f).requiresTool().nonOpaque(), crateType));
         Registry.register(Registries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, new Item.Settings()));
         return block;
     }

@@ -1,5 +1,5 @@
 {
-  "parent": "notchcurrency:block/template_crate",
+  "parent": "notchcurrency:block/template_crate_open",
   "textures": {
     "crate": "notchcurrency:block/epic_crate"
   }
