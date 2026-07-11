@@ -28,10 +28,9 @@ import java.util.List;
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
     // --- tunables ---
-    private static final float DEPTH = -0.129f; // toward the tablet front plane (model tablet min z = 6/16)
+    private static final float DEPTH = 0.129f;  // OUT to the tablet front plane (model tablet min z = 6/16)
     private static final float PLATE_Y = 0.46f; // raise the origin to the plaque centre (blocks)
     private static final float SCALE = 0.0083f; // text scale (small — the tablet is narrow)
-    private static final int LEFT_X = -44;      // left margin in text px (row start)
     private static final int TOP = -34;         // header baseline (text px; negative = up)
     private static final int LINE_H = 10;       // line spacing (text px)
 
@@ -68,15 +67,16 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
 
         matrices.push();
         matrices.translate(0.5, 0.5, 0.5);
-        // Vanilla wall-sign orientation: face the FACING direction, flat on the front.
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-facing.getOpposite().asRotation()));
+        // Face the FACING direction, flat on the front plane; -X,-Y scale keeps it upright + unmirrored.
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-facing.asRotation()));
         matrices.translate(0.0, PLATE_Y, DEPTH);
-        matrices.scale(SCALE, -SCALE, SCALE);
+        matrices.scale(-SCALE, -SCALE, SCALE);
 
         int lightBright = LightmapTextureManager.MAX_LIGHT_COORDINATE;
         for (int i = 0; i < lines.size(); i++) {
-            // Full-bright, no shadow — the Create display-board look.
-            text.draw(lines.get(i), LEFT_X, TOP + i * LINE_H, 0xFFFFFFFF, false,
+            Text line = lines.get(i);
+            // Full-bright, no shadow — the Create display-board look. Centred on the plate.
+            text.draw(line, -text.getWidth(line) / 2f, TOP + i * LINE_H, 0xFFFFFFFF, false,
                     matrices.peek().getPositionMatrix(), vertexConsumers,
                     TextRenderer.TextLayerType.NORMAL, 0, lightBright);
         }
