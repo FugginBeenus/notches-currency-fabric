@@ -1,5 +1,12 @@
 {
   "variants": {
-    "": { "model": "notchcurrency:block/ledger_board" }
+    "facing=north,half=lower": { "model": "notchcurrency:block/ledger_board" },
+    "facing=east,half=lower":  { "model": "notchcurrency:block/ledger_board", "y": 90 },
+    "facing=south,half=lower": { "model": "notchcurrency:block/ledger_board", "y": 180 },
+    "facing=west,half=lower":  { "model": "notchcurrency:block/ledger_board", "y": 270 },
+    "facing=north,half=upper": { "model": "notchcurrency:block/ledger_board_upper" },
+    "facing=east,half=upper":  { "model": "notchcurrency:block/ledger_board_upper", "y": 90 },
+    "facing=south,half=upper": { "model": "notchcurrency:block/ledger_board_upper", "y": 180 },
+    "facing=west,half=upper":  { "model": "notchcurrency:block/ledger_board_upper", "y": 270 }
   }
 }

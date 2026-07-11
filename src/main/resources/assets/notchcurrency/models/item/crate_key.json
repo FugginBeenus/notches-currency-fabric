@@ -1,4 +1,4 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": { "layer0": "notchcurrency:item/coin" }
+  "textures": { "layer0": "notchcurrency:item/crate_key" }
 }

@@ -76,8 +76,9 @@ public final class CrateManager {
         if (loot.isItem()) {
             int n = randRange(loot.min(), loot.max());
             ItemStack reward = new ItemStack(Registries.ITEM.get(loot.itemId()), n);
-            player.getInventory().offerOrDrop(reward);
+            // Name BEFORE insertion — offerOrDrop empties the stack, and an empty stack names "Air".
             rewardText = Text.literal(n + "x ").append(reward.getName().copy().formatted(Formatting.WHITE));
+            player.getInventory().offerOrDrop(reward);
         } else {
             CurrencyApi.deposit(player, loot.coins(), TransactionReason.FAUCET, "crate: " + def.name());
             rewardText = NotchCurrency.coins(loot.coins());

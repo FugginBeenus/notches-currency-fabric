@@ -56,7 +56,8 @@ public final class ModBlocks {
             NotchCurrency.id("ledger_board"),
             new LedgerBoardBlock(AbstractBlock.Settings.create()
                     .strength(2.0f)
-                    .requiresTool())
+                    .requiresTool()
+                    .nonOpaque())
     );
 
     public static final Item LEDGER_BOARD_ITEM = Registry.register(
@@ -104,7 +105,8 @@ public final class ModBlocks {
             NotchCurrency.id("coin_flip"),
             new CoinFlipBlock(AbstractBlock.Settings.create()
                     .strength(2.0f)
-                    .requiresTool())
+                    .requiresTool()
+                    .nonOpaque())
     );
 
     public static final Item COIN_FLIP_ITEM = Registry.register(

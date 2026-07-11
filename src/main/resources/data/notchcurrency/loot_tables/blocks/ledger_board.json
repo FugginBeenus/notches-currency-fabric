@@ -1,13 +1,11 @@
 {
   "type": "minecraft:block",
   "pools": [
-    {
-      "rolls": 1,
-      "entries": [
-        { "type": "minecraft:item", "name": "notchcurrency:ledger_board" }
-      ],
+    { "rolls": 1,
+      "entries": [ { "type": "minecraft:item", "name": "notchcurrency:ledger_board" } ],
       "conditions": [
-        { "condition": "minecraft:survives_explosion" }
+        { "condition": "minecraft:survives_explosion" },
+        { "condition": "minecraft:block_state_property", "block": "notchcurrency:ledger_board", "properties": { "half": "lower" } }
       ]
     }
   ]
