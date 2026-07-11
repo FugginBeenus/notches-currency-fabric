@@ -38,8 +38,10 @@ public class CrateBlock extends Block {
     /** How long the lid stays up after opening (ticks). */
     private static final int OPEN_TICKS = 30;
 
-    /** The crate body; the lid can swing above y=16 when open so the shape stays at the base box. */
-    private static final VoxelShape SHAPE = Block.createCuboidShape(1, 0, 1, 15, 15, 15);
+    /** The oversized chest spills its block (~24 wide, 20 tall, 18 deep); the shape follows the
+     *  model so selection/collision feel right. Wider than deep, so it swaps with facing. */
+    private static final VoxelShape SHAPE_NS = Block.createCuboidShape(-4, 0, -1, 20, 20, 17);
+    private static final VoxelShape SHAPE_EW = Block.createCuboidShape(-1, 0, -4, 17, 20, 20);
 
     private final String crateType;
 
@@ -57,7 +59,7 @@ public class CrateBlock extends Block {
 
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return SHAPE;
+        return state.get(FACING).getAxis() == Direction.Axis.Z ? SHAPE_NS : SHAPE_EW;
     }
 
     @Override
