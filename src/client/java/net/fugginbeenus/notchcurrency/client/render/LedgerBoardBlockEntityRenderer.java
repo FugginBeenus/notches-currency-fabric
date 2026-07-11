@@ -10,7 +10,6 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Direction;
@@ -28,10 +27,12 @@ import java.util.List;
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
     // --- tunables (block units unless noted) ---
-    private static final float PLATE_TOP = 1.55f; // top of the screen (y), rows descend from here
+    private static final float PLATE_TOP = 1.5f;  // top of the screen (y), rows descend from here
     private static final float FRONT_Z = 0.71f;   // screen front plane in the oriented frame (1 = block front)
-    private static final float SCALE = 0.017f;    // text scale
-    private static final int LINE_H = 11;         // line spacing (text px)
+    private static final float SCALE = 0.0125f;   // text scale (smaller so full names fit)
+    private static final int LINE_H = 13;         // line spacing (text px)
+    private static final int LEFT_X = -62;        // left margin — rank + name start here (text px)
+    private static final int RIGHT_X = 62;        // right margin — balance right-aligns here (text px)
 
     private final TextRenderer text;
 
@@ -55,43 +56,45 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         }
         Direction facing = state.get(LedgerBoardBlock.FACING);
 
-        List<Text> lines = new ArrayList<>();
-        lines.add(Text.literal("TOP BALANCES").formatted(Formatting.GOLD));
         List<EconomyLeaderboard.Entry> rows = be.rows();
-        if (rows.isEmpty()) {
-            lines.add(Text.literal("No balances yet").formatted(Formatting.GRAY));
-        }
-        for (int i = 0; i < rows.size(); i++) {
-            EconomyLeaderboard.Entry e = rows.get(i);
-            Formatting rank = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.YELLOW : Formatting.GRAY;
-            MutableText line = Text.literal((i + 1) + " ").formatted(rank)
-                    .append(Text.literal(trim(e.name())).formatted(Formatting.AQUA))
-                    .append(Text.literal(" " + compact(e.balance())).formatted(Formatting.YELLOW));
-            lines.add(line);
-        }
 
         matrices.push();
         // centre → rotateY(facing) → unCentre  (Create's FlapDisplayRenderer frame)
         matrices.translate(0.5, 0.5, 0.5);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(horizontalAngle(facing)));
         matrices.translate(-0.5, -0.5, -0.5);
-        // step to the plaque top-centre, on the tablet front plane
+        // step to the screen top-centre, on the front plane
         matrices.translate(0.5, PLATE_TOP, FRONT_Z);
         matrices.scale(SCALE, -SCALE, SCALE);
         matrices.translate(0.0, 0.0, 0.5); // a texel off the surface, avoids z-fighting
 
-        int lightBright = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-        for (int i = 0; i < lines.size(); i++) {
-            Text line = lines.get(i);
-            float x = -text.getWidth(line) / 2f;
-            text.draw(line, x, i * LINE_H, 0xFFFFFFFF, false, matrices.peek().getPositionMatrix(),
-                    vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, lightBright);
+        int lb = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+        var matrix = matrices.peek().getPositionMatrix();
+
+        // Header, centred.
+        Text header = Text.literal("TOP BALANCES").formatted(Formatting.GOLD);
+        text.draw(header, -text.getWidth(header) / 2f, 0, 0xFFFFFFFF, false, matrix, vertexConsumers,
+                TextRenderer.TextLayerType.NORMAL, 0, lb);
+
+        if (rows.isEmpty()) {
+            Text none = Text.literal("No balances yet").formatted(Formatting.GRAY);
+            text.draw(none, -text.getWidth(none) / 2f, LINE_H, 0xFFFFFFFF, false, matrix, vertexConsumers,
+                    TextRenderer.TextLayerType.NORMAL, 0, lb);
+        }
+        // Rows: rank + name left-aligned, balance right-aligned (Create-style columns).
+        for (int i = 0; i < rows.size(); i++) {
+            EconomyLeaderboard.Entry e = rows.get(i);
+            int y = (i + 1) * LINE_H;
+            Formatting rank = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.YELLOW : Formatting.GRAY;
+            Text name = Text.literal((i + 1) + " ").formatted(rank)
+                    .copy().append(Text.literal(e.name()).formatted(Formatting.AQUA));
+            Text bal = Text.literal(compact(e.balance())).formatted(Formatting.YELLOW);
+            text.draw(name, LEFT_X, y, 0xFFFFFFFF, false, matrix, vertexConsumers,
+                    TextRenderer.TextLayerType.NORMAL, 0, lb);
+            text.draw(bal, RIGHT_X - text.getWidth(bal), y, 0xFFFFFFFF, false, matrix, vertexConsumers,
+                    TextRenderer.TextLayerType.NORMAL, 0, lb);
         }
         matrices.pop();
-    }
-
-    private static String trim(String name) {
-        return name.length() > 8 ? name.substring(0, 7) + "…" : name;
     }
 
     private static String compact(long n) {
