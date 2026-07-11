@@ -3,33 +3,136 @@ package net.fugginbeenus.notchcurrency.block;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ShapeContext;
+import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 
 /**
- * "Bounty Board" — a placeable block that shows the auto-generated bounties on use (the same
- * board reachable from a BOUNTY-role NPC). Placeholder model/texture for now.
+ * "Bounty Board" — a two-block-tall notice board (door-style upper/lower halves) that opens the
+ * bounty screen on use, from either half. Faces the placer; the visual model lives entirely on
+ * the LOWER half (it spans up to y=32), the upper half is an invisible occupancy block so nothing
+ * can be placed inside the board. Breaking either half removes both; only the lower half drops.
  */
 public class BountyBoardBlock extends Block {
 
+    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final EnumProperty<DoubleBlockHalf> HALF = Properties.DOUBLE_BLOCK_HALF;
+
+    private static final VoxelShape LOWER_NS = VoxelShapes.union(
+            Block.createCuboidShape(2, 0, 6.5, 4, 16, 9.5),
+            Block.createCuboidShape(12, 0, 6.5, 14, 16, 9.5),
+            Block.createCuboidShape(1, 6, 6.75, 15, 16, 9.25));
+    private static final VoxelShape LOWER_EW = VoxelShapes.union(
+            Block.createCuboidShape(6.5, 0, 2, 9.5, 16, 4),
+            Block.createCuboidShape(6.5, 0, 12, 9.5, 16, 14),
+            Block.createCuboidShape(6.75, 6, 1, 9.25, 16, 15));
+    private static final VoxelShape UPPER_NS = Block.createCuboidShape(0.5, 0, 6.25, 15.5, 16, 9.75);
+    private static final VoxelShape UPPER_EW = Block.createCuboidShape(6.25, 0, 0.5, 9.75, 16, 15.5);
+
     public BountyBoardBlock(Settings settings) {
         super(settings);
+        setDefaultState(getStateManager().getDefaultState()
+                .with(FACING, Direction.NORTH).with(HALF, DoubleBlockHalf.LOWER));
+    }
+
+    @Override
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        builder.add(FACING, HALF);
+    }
+
+    @Override
+    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+        boolean ns = state.get(FACING).getAxis() == Direction.Axis.Z;
+        return state.get(HALF) == DoubleBlockHalf.LOWER ? (ns ? LOWER_NS : LOWER_EW)
+                : (ns ? UPPER_NS : UPPER_EW);
+    }
+
+    @Override
+    public BlockState getPlacementState(ItemPlacementContext ctx) {
+        BlockPos pos = ctx.getBlockPos();
+        World world = ctx.getWorld();
+        if (pos.getY() < world.getTopY() - 1 && world.getBlockState(pos.up()).canReplace(ctx)) {
+            return getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        }
+        return null; // no room for the upper half
     }
 
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        world.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL);
         super.onPlaced(world, pos, state, placer, itemStack);
         if (!world.isClient && world instanceof ServerWorld sw) {
             BountyManager.ensurePopulated(sw.getServer()); // start generating right away
         }
+    }
+
+    /** Door-style: if the other half stops matching, this half becomes air (keeps the pair in sync). */
+    @Override
+    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState,
+                                                WorldAccess world, BlockPos pos, BlockPos neighborPos) {
+        DoubleBlockHalf half = state.get(HALF);
+        if (direction.getAxis() == Direction.Axis.Y
+                && (half == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
+            return neighborState.isOf(this) && neighborState.get(HALF) != half
+                    ? state : Blocks.AIR.getDefaultState();
+        }
+        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
+    }
+
+    @Override
+    public boolean canPlaceAt(BlockState state, net.minecraft.world.WorldView world, BlockPos pos) {
+        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
+            BlockState below = world.getBlockState(pos.down());
+            return below.isOf(this) && below.get(HALF) == DoubleBlockHalf.LOWER;
+        }
+        return super.canPlaceAt(state, world, pos);
+    }
+
+    /** Creative players breaking the upper half: remove the lower without dropping a second board. */
+    @Override
+    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+        if (!world.isClient && player.isCreative() && state.get(HALF) == DoubleBlockHalf.UPPER) {
+            BlockPos below = pos.down();
+            BlockState belowState = world.getBlockState(below);
+            if (belowState.isOf(this) && belowState.get(HALF) == DoubleBlockHalf.LOWER) {
+                world.setBlockState(below, Blocks.AIR.getDefaultState(),
+                        Block.NOTIFY_ALL | Block.SKIP_DROPS);
+                world.syncWorldEvent(player, 2001, below, Block.getRawIdFromState(belowState));
+            }
+        }
+        super.onBreak(world, pos, state, player);
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, BlockRotation rotation) {
+        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, BlockMirror mirror) {
+        return state.rotate(mirror.getRotation(state.get(FACING)));
     }
 
     @Override

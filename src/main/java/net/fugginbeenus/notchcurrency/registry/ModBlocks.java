@@ -71,7 +71,8 @@ public final class ModBlocks {
             NotchCurrency.id("bounty_board"),
             new BountyBoardBlock(AbstractBlock.Settings.create()
                     .strength(2.0f)
-                    .requiresTool())
+                    .requiresTool()
+                    .nonOpaque())
     );
 
     public static final Item BOUNTY_BOARD_ITEM = Registry.register(

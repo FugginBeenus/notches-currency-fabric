@@ -7,7 +7,12 @@
         { "type": "minecraft:item", "name": "notchcurrency:bounty_board" }
       ],
       "conditions": [
-        { "condition": "minecraft:survives_explosion" }
+        { "condition": "minecraft:survives_explosion" },
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "notchcurrency:bounty_board",
+          "properties": { "half": "lower" }
+        }
       ]
     }
   ]
