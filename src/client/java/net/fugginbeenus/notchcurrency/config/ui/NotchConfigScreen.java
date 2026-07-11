@@ -83,6 +83,16 @@ public final class NotchConfigScreen {
                 .setTooltip(Text.literal("Cap on the sale tax per sale. 0 = uncapped."))
                 .setSaveConsumer(v -> cfg.auctionSaleTaxMax = v).build());
 
+        // ===== Currency (the maker — kept as the 2nd tab so it's easy to find) =====
+        ConfigCategory currency = builder.getOrCreateCategory(Text.literal("Currency"));
+        currency.addEntry(eb.startStrField(Text.literal("Coin name"), cfg.currency.itemName)
+                .setDefaultValue("")
+                .setTooltip(Text.literal("Rename the coin everywhere — the item AND messages/GUIs (\"You won 50 Rupees\")."),
+                        Text.literal("Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\"."),
+                        Text.literal("Drop coin.png in config/notchcurrency/currency/ to reskin the art."),
+                        Text.literal("A resource pack is generated on save; enable it in Options → Resource Packs."))
+                .setSaveConsumer(v -> cfg.currency.itemName = v).build());
+
         // ===== Wealth Tax =====
         ConfigCategory tax = builder.getOrCreateCategory(Text.literal("Wealth Tax"));
         tax.addEntry(eb.startBooleanToggle(Text.literal("Enabled"), cfg.wealthTax.enabled)
@@ -288,16 +298,6 @@ public final class NotchConfigScreen {
                 .setDefaultValue(true)
                 .setTooltip(Text.literal("Whether Mending and other treasure enchantments can be bought (at double price)."))
                 .setSaveConsumer(v -> cfg.enchanter.allowTreasure = v).build());
-
-        // ===== Currency =====
-        ConfigCategory currency = builder.getOrCreateCategory(Text.literal("Currency"));
-        currency.addEntry(eb.startStrField(Text.literal("Coin name"), cfg.currency.itemName)
-                .setDefaultValue("")
-                .setTooltip(Text.literal("Rename the coin everywhere — the item AND messages/GUIs (\"You won 50 Rupees\")."),
-                        Text.literal("Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\"."),
-                        Text.literal("Drop coin.png in config/notchcurrency/currency/ to reskin the art."),
-                        Text.literal("A resource pack is generated on save; enable it in Options → Resource Packs."))
-                .setSaveConsumer(v -> cfg.currency.itemName = v).build());
 
         // ===== Cosmetics =====
         ConfigCategory cosmetic = builder.getOrCreateCategory(Text.literal("Cosmetics"));
