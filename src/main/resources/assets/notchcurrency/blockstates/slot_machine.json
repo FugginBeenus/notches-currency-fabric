@@ -1,3 +1,8 @@
 {
-  "variants": { "": { "model": "notchcurrency:block/slot_machine" } }
+  "variants": {
+    "facing=north": { "model": "notchcurrency:block/slot_machine" },
+    "facing=east":  { "model": "notchcurrency:block/slot_machine", "y": 90 },
+    "facing=south": { "model": "notchcurrency:block/slot_machine", "y": 180 },
+    "facing=west":  { "model": "notchcurrency:block/slot_machine", "y": 270 }
+  }
 }

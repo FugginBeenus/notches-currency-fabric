@@ -1,5 +1,106 @@
 {
-  "comment": "PLACEHOLDER — reuses currency_block texture until real art.",
-  "parent": "minecraft:block/cube_all",
-  "textures": { "all": "notchcurrency:block/currency_block" }
+  "credit": "Notch Currency — code-drawn slot machine (open me in Blockbench!)",
+  "texture_size": [128, 128],
+  "textures": {
+    "0": "notchcurrency:block/slot_machine",
+    "lights": "notchcurrency:block/slot_machine_lights",
+    "particle": "notchcurrency:block/slot_machine"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [1, 0, 1],
+      "to": [15, 3, 15],
+      "faces": {
+        "north": {"uv": [0, 11, 7, 12.5], "texture": "#0"},
+        "south": {"uv": [0, 11, 7, 12.5], "texture": "#0"},
+        "east":  {"uv": [0, 11, 7, 12.5], "texture": "#0"},
+        "west":  {"uv": [0, 11, 7, 12.5], "texture": "#0"},
+        "up":    {"uv": [6, 5, 13, 12], "texture": "#0"},
+        "down":  {"uv": [6, 5, 13, 12], "texture": "#0", "cullface": "down"}
+      }
+    },
+    {
+      "name": "body",
+      "from": [2, 3, 2],
+      "to": [14, 13, 14],
+      "faces": {
+        "north": {"uv": [0, 0, 6, 5], "texture": "#0"},
+        "south": {"uv": [6, 0, 12, 5], "texture": "#0"},
+        "east":  {"uv": [6, 0, 12, 5], "texture": "#0"},
+        "west":  {"uv": [6, 0, 12, 5], "texture": "#0"},
+        "up":    {"uv": [0, 5, 6, 11], "texture": "#0"}
+      }
+    },
+    {
+      "name": "marquee sign",
+      "from": [3, 13, 3],
+      "to": [13, 15.5, 8.5],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 4], "texture": "#lights"},
+        "south": {"uv": [0, 12.5, 5, 13.75], "texture": "#0"},
+        "east":  {"uv": [12, 5, 14.75, 6.25], "texture": "#0"},
+        "west":  {"uv": [12, 5, 14.75, 6.25], "texture": "#0"},
+        "up":    {"uv": [7, 12, 12, 14.75], "texture": "#0"}
+      }
+    },
+    {
+      "name": "reel window",
+      "from": [3.5, 8, 1.4],
+      "to": [12.5, 12.5, 2],
+      "faces": {
+        "north": {"uv": [5, 13.75, 9.5, 16], "texture": "#0"},
+        "east":  {"uv": [15, 4, 16, 5], "texture": "#0"},
+        "west":  {"uv": [15, 4, 16, 5], "texture": "#0"},
+        "up":    {"uv": [15, 4, 16, 5], "texture": "#0"},
+        "down":  {"uv": [15, 4, 16, 5], "texture": "#0"}
+      }
+    },
+    {
+      "name": "payout tray",
+      "from": [5, 3, 0.8],
+      "to": [11, 5, 2],
+      "faces": {
+        "north": {"uv": [12, 7.5, 15, 8.5], "texture": "#0"},
+        "east":  {"uv": [15, 4, 16, 5], "texture": "#0"},
+        "west":  {"uv": [15, 4, 16, 5], "texture": "#0"},
+        "up":    {"uv": [12, 8.5, 15, 9.5], "texture": "#0"},
+        "down":  {"uv": [15, 4, 16, 5], "texture": "#0"}
+      }
+    },
+    {
+      "name": "lever arm",
+      "from": [14.1, 7, 7.5],
+      "to": [15.1, 12.5, 8.5],
+      "faces": {
+        "north": {"uv": [15, 0, 15.5, 2.75], "texture": "#0"},
+        "south": {"uv": [15, 0, 15.5, 2.75], "texture": "#0"},
+        "east":  {"uv": [15, 0, 15.5, 2.75], "texture": "#0"},
+        "west":  {"uv": [15, 0, 15.5, 2.75], "texture": "#0"},
+        "up":    {"uv": [15, 5, 16, 6], "texture": "#0"},
+        "down":  {"uv": [15, 5, 16, 6], "texture": "#0"}
+      }
+    },
+    {
+      "name": "lever knob",
+      "from": [13.6, 12.2, 7],
+      "to": [15.6, 14.2, 9],
+      "faces": {
+        "north": {"uv": [15, 6, 16, 7], "texture": "#0"},
+        "south": {"uv": [15, 6, 16, 7], "texture": "#0"},
+        "east":  {"uv": [15, 6, 16, 7], "texture": "#0"},
+        "west":  {"uv": [15, 6, 16, 7], "texture": "#0"},
+        "up":    {"uv": [15, 6, 16, 7], "texture": "#0"},
+        "down":  {"uv": [15, 6, 16, 7], "texture": "#0"}
+      }
+    }
+  ],
+  "display": {
+    "gui":                   {"rotation": [30, 225, 0], "translation": [0, 0, 0],   "scale": [0.625, 0.625, 0.625]},
+    "ground":                {"rotation": [0, 0, 0],    "translation": [0, 3, 0],   "scale": [0.25, 0.25, 0.25]},
+    "fixed":                 {"rotation": [0, 0, 0],    "translation": [0, 0, 0],   "scale": [0.5, 0.5, 0.5]},
+    "thirdperson_righthand": {"rotation": [75, 45, 0],  "translation": [0, 2.5, 0], "scale": [0.375, 0.375, 0.375]},
+    "firstperson_righthand": {"rotation": [0, 45, 0],   "translation": [0, 0, 0],   "scale": [0.4, 0.4, 0.4]},
+    "firstperson_lefthand":  {"rotation": [0, 225, 0],  "translation": [0, 0, 0],   "scale": [0.4, 0.4, 0.4]}
+  }
 }
