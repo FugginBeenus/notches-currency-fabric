@@ -39,6 +39,12 @@ public final class ClientInit implements ClientModInitializer {
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.LEDGER_BOARD,
                 net.fugginbeenus.notchcurrency.client.render.LedgerBoardBlockEntityRenderer::new);
 
+        // Cutout layer so the coin crest / standing coin's transparent corners aren't black.
+        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlocks(
+                net.minecraft.client.render.RenderLayer.getCutout(),
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
+
         BarrelCleanupManager.init();
 
         AuctionTooltips.init();
