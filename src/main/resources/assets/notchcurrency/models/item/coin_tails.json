@@ -1,5 +1,4 @@
 {
-  "comment": "PLACEHOLDER — reuses the coin texture until real tails-side art.",
   "parent": "minecraft:item/generated",
   "textures": { "layer0": "notchcurrency:item/coin_tails" }
 }

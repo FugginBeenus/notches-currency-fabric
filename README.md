@@ -1,7 +1,7 @@
 # Notch Currency Mod
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-green.svg)](https://www.minecraft.net/)
-[![Fabric](https://img.shields.io/badge/Fabric-0.92.6-blue.svg)](https://fabricmc.net/)
+[![Fabric API](https://img.shields.io/badge/Fabric_API-0.92.2-blue.svg)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/FugginBeenus/notches-currency-fabric)](https://github.com/FugginBeenus/notches-currency-fabric/releases)
 
@@ -71,7 +71,23 @@ Enchanter, or Cosmetics — plus admin server-shops.
 - Sinks: wealth tax, shop rent, auction fees, and an optional Waystone teleport fee
 - Villager currency trades: when villagers roll new trades, some have a rare chance to be priced
   in coins instead of emeralds (chance and exchange rate configurable)
-- A custom-currency maker that generates a resource pack from your coin texture + name
+- A custom-currency maker: rename the coin and drop in your own art, and it flows everywhere — the
+  item, HUD, chat glyph, and every message/GUI. On a server the admin's coin is pushed to every
+  player automatically (no hand-distributed resource pack)
+
+### Blocks
+Every feature has a physical, hand-modeled block or table to build a casino/marketplace around:
+- **ATM** — deposit coins / withdraw balance
+- **Ledger Board** — a wide monument that renders the live balance leaderboard right on its face,
+  Create-display-board style (updates in real time; no GUI needed)
+- **Bounty Board** — a two-tall notice board that opens the rotating bounty list
+- **Slot Machine** — animated marquee lights; bet and spin the reels
+- **Coin Flip table** — a 3D coin sits on the felt, then pops up, tumbles, and lands on the result
+- **Crates** (Common / Rare / Epic) — arched treasure chests whose lids swing open on a win
+- Plus the Golden Cache and balloon crates that spawn around the world
+
+On-screen, taken bounties show in a positional **Bounty Tracker HUD** (toggle with **B**), freely
+placeable via ModMenu so it dodges other mods' overlays.
 
 ### Admin & Config
 - `/eco give|take|set|stats`, a `/baltop` leaderboard, and a physical Ledger Board block

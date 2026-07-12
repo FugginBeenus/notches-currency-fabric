@@ -1,597 +1,133 @@
 {
-  "credit": "Notch Currency \u2014 coin flip gambling table (furniture-scale, spills the block).",
-  "textures": {
-    "particle": "notchcurrency:block/coin_flip",
-    "0": "notchcurrency:block/coin_flip"
-  },
-  "elements": [
-    {
-      "name": "apron",
-      "from": [
-        -2,
-        9,
-        -2
-      ],
-      "to": [
-        18,
-        12,
-        18
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            7.0,
-            7.0,
-            9.0,
-            9.0
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "leg",
-      "from": [
-        -3,
-        0,
-        -3
-      ],
-      "to": [
-        2,
-        12,
-        2
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            11.0,
-            0.0,
-            12.5,
-            1.5
-          ],
-          "texture": "#0",
-          "cullface": "down"
-        }
-      }
-    },
-    {
-      "name": "leg",
-      "from": [
-        14,
-        0,
-        -3
-      ],
-      "to": [
-        19,
-        12,
-        2
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            11.0,
-            0.0,
-            12.5,
-            1.5
-          ],
-          "texture": "#0",
-          "cullface": "down"
-        }
-      }
-    },
-    {
-      "name": "leg",
-      "from": [
-        -3,
-        0,
-        14
-      ],
-      "to": [
-        2,
-        12,
-        19
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            11.0,
-            0.0,
-            12.5,
-            1.5
-          ],
-          "texture": "#0",
-          "cullface": "down"
-        }
-      }
-    },
-    {
-      "name": "leg",
-      "from": [
-        14,
-        0,
-        14
-      ],
-      "to": [
-        19,
-        12,
-        19
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            0.0,
-            9.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            9.0,
-            0.0,
-            11.0,
-            6.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            11.0,
-            0.0,
-            12.5,
-            1.5
-          ],
-          "texture": "#0",
-          "cullface": "down"
-        }
-      }
-    },
-    {
-      "name": "top",
-      "from": [
-        -5,
-        12.5,
-        -5
-      ],
-      "to": [
-        21,
-        15,
-        21
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0.0,
-            7.0,
-            7.0,
-            8.25
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            0.0,
-            0.0,
-            7.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            7.0,
-            7.0,
-            9.0,
-            9.0
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "lip",
-      "from": [
-        -4,
-        11.5,
-        -4
-      ],
-      "to": [
-        20,
-        12.5,
-        20
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            7.0,
-            7.0,
-            9.0,
-            9.0
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "rail",
-      "from": [
-        -2.3,
-        10.5,
-        -2.3
-      ],
-      "to": [
-        18.3,
-        12,
-        -1.7
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            7.0,
-            6.0,
-            12.0,
-            7.0
-          ],
-          "texture": "#0"
-        }
-      }
-    }
-  ],
-  "display": {
-    "gui": {
-      "rotation": [
-        30,
-        225,
-        0
-      ],
-      "translation": [
-        0,
-        -1.5,
-        0
-      ],
-      "scale": [
-        0.4,
-        0.4,
-        0.4
-      ]
-    },
-    "ground": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "translation": [
-        0,
-        3,
-        0
-      ],
-      "scale": [
-        0.2,
-        0.2,
-        0.2
-      ]
-    },
-    "fixed": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.4,
-        0.4,
-        0.4
-      ]
-    },
-    "thirdperson_righthand": {
-      "rotation": [
-        75,
-        45,
-        0
-      ],
-      "translation": [
-        0,
-        2.5,
-        0
-      ],
-      "scale": [
-        0.3,
-        0.3,
-        0.3
-      ]
-    },
-    "firstperson_righthand": {
-      "rotation": [
-        0,
-        45,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.32,
-        0.32,
-        0.32
-      ]
-    },
-    "firstperson_lefthand": {
-      "rotation": [
-        0,
-        225,
-        0
-      ],
-      "translation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        0.32,
-        0.32,
-        0.32
-      ]
-    }
-  }
+	"format_version": "1.21.11",
+	"credit": "Notch Currency — coin flip gambling table (furniture-scale, spills the block).",
+	"textures": {
+		"0": "notchcurrency:block/coin_flip",
+		"particle": "notchcurrency:block/coin_flip"
+	},
+	"elements": [
+		{
+			"name": "apron",
+			"from": [-2, 9, -2],
+			"to": [18, 12, 18],
+			"faces": {
+				"north": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"east": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"south": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"west": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"down": {"uv": [7, 7, 9, 9], "texture": "#0"}
+			}
+		},
+		{
+			"name": "leg",
+			"from": [-3, 0, -3],
+			"to": [2, 12, 2],
+			"faces": {
+				"north": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"east": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"south": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"west": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"down": {"uv": [11, 0, 12.5, 1.5], "texture": "#0", "cullface": "down"}
+			}
+		},
+		{
+			"name": "leg",
+			"from": [14, 0, -3],
+			"to": [19, 12, 2],
+			"faces": {
+				"north": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"east": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"south": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"west": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"down": {"uv": [11, 0, 12.5, 1.5], "texture": "#0", "cullface": "down"}
+			}
+		},
+		{
+			"name": "leg",
+			"from": [-3, 0, 14],
+			"to": [2, 12, 19],
+			"faces": {
+				"north": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"east": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"south": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"west": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"down": {"uv": [11, 0, 12.5, 1.5], "texture": "#0", "cullface": "down"}
+			}
+		},
+		{
+			"name": "leg",
+			"from": [14, 0, 14],
+			"to": [19, 12, 19],
+			"faces": {
+				"north": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"east": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"south": {"uv": [7, 0, 9, 6], "texture": "#0"},
+				"west": {"uv": [9, 0, 11, 6], "texture": "#0"},
+				"down": {"uv": [11, 0, 12.5, 1.5], "texture": "#0", "cullface": "down"}
+			}
+		},
+		{
+			"name": "top",
+			"from": [-5, 12.5, -5],
+			"to": [21, 15, 21],
+			"faces": {
+				"north": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"east": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"south": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"west": {"uv": [0, 7, 7, 8.25], "texture": "#0"},
+				"up": {"uv": [0, 0, 7, 7], "texture": "#0"},
+				"down": {"uv": [7, 7, 9, 9], "texture": "#0"}
+			}
+		},
+		{
+			"name": "lip",
+			"from": [-4, 11.5, -4],
+			"to": [20, 12.5, 20],
+			"faces": {
+				"north": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"east": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"south": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"west": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"down": {"uv": [7, 7, 9, 9], "texture": "#0"}
+			}
+		},
+		{
+			"name": "rail",
+			"from": [-2.3, 10.5, -2.3],
+			"to": [18.3, 12, -1.7],
+			"faces": {
+				"north": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"south": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"up": {"uv": [7, 6, 12, 7], "texture": "#0"},
+				"down": {"uv": [7, 6, 12, 7], "texture": "#0"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [75, 45, 0],
+			"translation": [0, 2.5, 0],
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 45, 0],
+			"scale": [0.32, 0.32, 0.32]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, -135, 0],
+			"scale": [0.32, 0.32, 0.32]
+		},
+		"ground": {
+			"translation": [0, 3, 0],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"gui": {
+			"rotation": [30, -135, 0],
+			"translation": [0, -1.5, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"fixed": {
+			"scale": [0.4, 0.4, 0.4]
+		}
+	}
 }
