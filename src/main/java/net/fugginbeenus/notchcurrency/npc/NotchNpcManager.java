@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.npc;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -268,8 +269,8 @@ public final class NotchNpcManager {
                 ItemStack tool = new ItemStack(ModItems.ROUTE_PLANNER);
                 String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                         ? npc.getCustomName().getString() : "NPC";
-                tool.getOrCreateNbt().putUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUuid());
-                tool.getOrCreateNbt().putString(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY, npcName);
+                StackData.putUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUuid());
+                StackData.putString(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY, npcName);
                 if (!sp.getInventory().insertStack(tool)) {
                     sp.dropItem(tool, false);
                 }
@@ -331,9 +332,7 @@ public final class NotchNpcManager {
         for (int i = 0; i < sp.getInventory().size(); i++) {
             ItemStack st = sp.getInventory().getStack(i);
             if (st.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem
-                    && st.getNbt() != null
-                    && st.getNbt().containsUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY)
-                    && npc.getUuid().equals(st.getNbt().getUuid(net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY))) {
+                    && npc.getUuid().equals(StackData.getUuid(st, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY))) {
                 sp.getInventory().setStack(i, ItemStack.EMPTY);
                 removed++;
             }
@@ -517,7 +516,7 @@ public final class NotchNpcManager {
         removeLinkedShop(sp, npc.getUuid());
 
         ItemStack stack = new ItemStack(ModItems.NOTCH_NPC_ITEM);
-        stack.getOrCreateNbt().put(ITEM_TAG, npc.writeToItem());
+        StackData.putCompound(stack, ITEM_TAG, npc.writeToItem());
         npc.discard();
         if (!sp.getInventory().insertStack(stack)) {
             sp.dropItem(stack, false);

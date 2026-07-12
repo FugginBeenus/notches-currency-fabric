@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -117,7 +118,7 @@ public class TradeOfferState extends PersistentState {
             List<ItemStack> items = new ArrayList<>();
             NbtList stacks = entry.getList("Items", NbtElement.COMPOUND_TYPE);
             for (int j = 0; j < stacks.size(); j++) {
-                items.add(ItemStack.fromNbt(stacks.getCompound(j)));
+                items.add(StackData.readStack(stacks.getCompound(j)));
             }
             state.mailbox.put(id, items);
         }

@@ -9,6 +9,7 @@ import net.fugginbeenus.notchcurrency.auction.AuctionConfig;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.AuctionListing;
 import net.fugginbeenus.notchcurrency.auction.AuctionState;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -209,8 +210,8 @@ public final class AuctionCommands {
                                             if (p.getUuid().equals(pw.winnerUuid) && !pw.stack.isEmpty()) {
                                                 ItemStack toGive = pw.stack.copy();
                                                 // Strip auction NBT tags so the item's normal tooltip returns
-                                                if (toGive.hasNbt()) {
-                                                    NbtCompound tag = toGive.getNbt();
+                                                if (StackData.hasData(toGive)) {
+                                                    NbtCompound tag = StackData.editData(toGive);
                                                     tag.remove("nc_price");
                                                     tag.remove("nc_seller");
                                                     tag.remove("nc_created");
@@ -219,7 +220,9 @@ public final class AuctionCommands {
                                                     tag.remove("nc_highest_bidder");
                                                     tag.remove("nc_listing_id");
                                                     if (tag.isEmpty()) {
-                                                        toGive.setNbt(null);
+                                                        StackData.clearData(toGive);
+                                                    } else {
+                                                        StackData.commitData(toGive, tag);
                                                     }
                                                 }
                                                 boolean inserted = p.getInventory().insertStack(toGive);
@@ -397,8 +400,8 @@ public final class AuctionCommands {
 
                                             ItemStack toReturn = l.stack.copy();
                                             // Strip auction NBT tags so the item's normal tooltip returns
-                                            if (toReturn.hasNbt()) {
-                                                NbtCompound tag = toReturn.getNbt();
+                                            if (StackData.hasData(toReturn)) {
+                                                NbtCompound tag = StackData.editData(toReturn);
                                                 tag.remove("nc_price");
                                                 tag.remove("nc_seller");
                                                 tag.remove("nc_created");
@@ -407,7 +410,9 @@ public final class AuctionCommands {
                                                 tag.remove("nc_highest_bidder");
                                                 tag.remove("nc_listing_id");
                                                 if (tag.isEmpty()) {
-                                                    toReturn.setNbt(null);
+                                                    StackData.clearData(toReturn);
+                                                } else {
+                                                    StackData.commitData(toReturn, tag);
                                                 }
                                             }
                                             boolean inserted = p.getInventory().insertStack(toReturn);

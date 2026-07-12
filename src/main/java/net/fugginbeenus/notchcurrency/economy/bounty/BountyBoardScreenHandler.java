@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
@@ -112,14 +113,14 @@ public class BountyBoardScreenHandler extends ScreenHandler {
 
     private static ItemStack display(Bounty b, boolean mine, int progress, long expiry) {
         ItemStack carrier = !b.getRewardItem().isEmpty() ? b.getRewardItem().copy() : new ItemStack(ModItems.NOTCH_COIN);
-        NbtCompound t = carrier.getOrCreateNbt();
+        NbtCompound t = StackData.editData(carrier);
         t.putUuid("bid", b.getId());
         t.putString("desc", b.describe());
         t.putString("rew", b.rewardSummary());
         t.putLong("rewc", b.getRewardCoins());
         if (!b.getRewardItem().isEmpty()) {
             // The reward stack itself, so the row can draw its icon with the count.
-            t.put("rews", b.getRewardItem().writeNbt(new NbtCompound()));
+            t.put("rews", StackData.writeStack(b.getRewardItem()));
         }
         t.putString("rar", b.getRarity().name());
         t.putString("typ", b.getType().name());
@@ -127,6 +128,7 @@ public class BountyBoardScreenHandler extends ScreenHandler {
         t.putInt("req", b.getRequired());
         t.putLong("exp", expiry);
         t.putBoolean("mine", mine);
+        StackData.commitData(carrier, t);
         return carrier;
     }
 

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -311,7 +312,7 @@ public class PlayerShop {
         if (nbt.contains("PendingBarterItems", NbtElement.LIST_TYPE)) {
             NbtList barterNbt = nbt.getList("PendingBarterItems", NbtElement.COMPOUND_TYPE);
             for (int i = 0; i < barterNbt.size(); i++) {
-                ItemStack item = ItemStack.fromNbt(barterNbt.getCompound(i));
+                ItemStack item = StackData.readStack(barterNbt.getCompound(i));
                 if (!item.isEmpty()) {
                     shop.pendingBarterItems.add(item);
                 }

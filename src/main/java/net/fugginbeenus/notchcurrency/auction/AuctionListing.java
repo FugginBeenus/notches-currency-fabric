@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -80,7 +81,7 @@ public final class AuctionListing {
         long created = tag.getLong("Created");
         long expires = tag.getLong("Expires");
         String category = tag.getString("Category");
-        ItemStack stack = ItemStack.fromNbt(tag.getCompound("Stack"));
+        ItemStack stack = StackData.readStack(tag.getCompound("Stack"));
 
         AuctionListing listing = new AuctionListing(
                 id, seller, sellerName, stack, price, created, expires, category

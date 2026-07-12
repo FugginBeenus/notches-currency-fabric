@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -197,14 +198,14 @@ public class ShopListing {
         ShopListing listing = new ShopListing(id);
 
         if (nbt.contains("Item", NbtElement.COMPOUND_TYPE)) {
-            listing.itemForSale = ItemStack.fromNbt(nbt.getCompound("Item"));
+            listing.itemForSale = StackData.readStack(nbt.getCompound("Item"));
         }
 
         listing.stockQuantity = nbt.getInt("Stock");
         listing.coinPrice = nbt.getInt("CoinPrice");
 
         if (nbt.contains("ItemPrice", NbtElement.COMPOUND_TYPE)) {
-            listing.itemPrice = ItemStack.fromNbt(nbt.getCompound("ItemPrice"));
+            listing.itemPrice = StackData.readStack(nbt.getCompound("ItemPrice"));
             listing.itemPriceCount = nbt.getInt("ItemPriceCount");
         }
 

@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.item;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
@@ -44,49 +44,43 @@ public class RaffleTicketItem extends Item {
 
     public static ItemStack create(long round, int entries, UUID owner, String ownerName) {
         ItemStack stack = new ItemStack(ModItems.RAFFLE_TICKET);
-        NbtCompound nbt = stack.getOrCreateNbt();
-        nbt.putLong(K_ROUND, round);
-        nbt.putInt(K_ENTRIES, entries);
-        nbt.putUuid(K_OWNER, owner);
-        nbt.putString(K_OWNER_NAME, ownerName);
-        nbt.putString(K_STATUS, STATUS_ACTIVE);
+        StackData.putLong(stack, K_ROUND, round);
+        StackData.putInt(stack, K_ENTRIES, entries);
+        StackData.putUuid(stack, K_OWNER, owner);
+        StackData.putString(stack, K_OWNER_NAME, ownerName);
+        StackData.putString(stack, K_STATUS, STATUS_ACTIVE);
         return stack;
     }
 
     public static boolean isTicket(ItemStack stack) {
-        return stack.isOf(ModItems.RAFFLE_TICKET) && stack.hasNbt();
+        return stack.isOf(ModItems.RAFFLE_TICKET) && StackData.hasData(stack);
     }
 
     public static long round(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        return nbt == null ? 0L : nbt.getLong(K_ROUND);
+        return StackData.getLong(stack, K_ROUND);
     }
 
     public static int entries(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        return nbt == null ? 0 : nbt.getInt(K_ENTRIES);
+        return StackData.getInt(stack, K_ENTRIES);
     }
 
     /** Update the entry count on an existing ticket (used when a player buys more entries). */
     public static void setEntries(ItemStack stack, int entries) {
-        stack.getOrCreateNbt().putInt(K_ENTRIES, entries);
+        StackData.putInt(stack, K_ENTRIES, entries);
     }
 
     @Nullable
     public static UUID owner(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        return nbt != null && nbt.containsUuid(K_OWNER) ? nbt.getUuid(K_OWNER) : null;
+        return StackData.getUuid(stack, K_OWNER);
     }
 
     public static String status(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        return nbt == null ? STATUS_ACTIVE : nbt.getString(K_STATUS);
+        return StackData.hasData(stack) ? StackData.getString(stack, K_STATUS) : STATUS_ACTIVE;
     }
 
     public static void setStatus(ItemStack stack, String status, long prize) {
-        NbtCompound nbt = stack.getOrCreateNbt();
-        nbt.putString(K_STATUS, status);
-        if (STATUS_WINNER.equals(status)) nbt.putLong(K_PRIZE, prize);
+        StackData.putString(stack, K_STATUS, status);
+        if (STATUS_WINNER.equals(status)) StackData.putLong(stack, K_PRIZE, prize);
     }
 
     // ---- display ----
@@ -102,15 +96,14 @@ public class RaffleTicketItem extends Item {
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null) {
+        if (!StackData.hasData(stack)) {
             super.appendTooltip(stack, world, tooltip, context);
             return;
         }
 
-        long r = nbt.getLong(K_ROUND);
-        int e = nbt.getInt(K_ENTRIES);
-        String s = nbt.getString(K_STATUS);
+        long r = StackData.getLong(stack, K_ROUND);
+        int e = StackData.getInt(stack, K_ENTRIES);
+        String s = StackData.getString(stack, K_STATUS);
 
         tooltip.add(Text.literal("Raffle #" + r).formatted(Formatting.AQUA));
         tooltip.add(Text.literal(e + (e == 1 ? " entry" : " entries")).formatted(Formatting.WHITE));
@@ -119,7 +112,7 @@ public class RaffleTicketItem extends Item {
             case STATUS_WINNER -> {
                 tooltip.add(Text.empty());
                 tooltip.add(Text.literal("★ WINNING TICKET ★").formatted(Formatting.GOLD, Formatting.BOLD));
-                tooltip.add(Text.literal("Prize: " + nbt.getLong(K_PRIZE) + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW));
+                tooltip.add(Text.literal("Prize: " + StackData.getLong(stack, K_PRIZE) + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW));
                 tooltip.add(Text.literal("Claim at the raffle, or /raffle claim.").formatted(Formatting.GRAY));
             }
             case STATUS_LOSER -> {
@@ -130,8 +123,8 @@ public class RaffleTicketItem extends Item {
             default -> tooltip.add(Text.literal("Active — winner not yet drawn.").formatted(Formatting.DARK_GREEN));
         }
 
-        if (nbt.contains(K_OWNER_NAME)) {
-            tooltip.add(Text.literal("Holder: " + nbt.getString(K_OWNER_NAME)).formatted(Formatting.DARK_GRAY));
+        if (StackData.has(stack, K_OWNER_NAME)) {
+            tooltip.add(Text.literal("Holder: " + StackData.getString(stack, K_OWNER_NAME)).formatted(Formatting.DARK_GRAY));
         }
         super.appendTooltip(stack, world, tooltip, context);
     }

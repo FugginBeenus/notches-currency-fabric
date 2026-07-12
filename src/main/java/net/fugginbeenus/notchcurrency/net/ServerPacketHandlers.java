@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.net;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -84,8 +85,8 @@ public final class ServerPacketHandlers {
                         }
 
                         ItemStack toReturn = l.stack.copy();
-                        if (toReturn.hasNbt()) {
-                            net.minecraft.nbt.NbtCompound tag = toReturn.getNbt();
+                        if (StackData.hasData(toReturn)) {
+                            net.minecraft.nbt.NbtCompound tag = StackData.editData(toReturn);
                             tag.remove("nc_price");
                             tag.remove("nc_seller");
                             tag.remove("nc_created");
@@ -93,7 +94,8 @@ public final class ServerPacketHandlers {
                             tag.remove("nc_highest_bid");
                             tag.remove("nc_highest_bidder");
                             tag.remove("nc_listing_id");
-                            if (tag.isEmpty()) toReturn.setNbt(null);
+                            if (tag.isEmpty()) StackData.clearData(toReturn);
+                            else StackData.commitData(toReturn, tag);
                         }
                         if (!sp.getInventory().insertStack(toReturn) && !toReturn.isEmpty()) {
                             sp.dropItem(toReturn, false);

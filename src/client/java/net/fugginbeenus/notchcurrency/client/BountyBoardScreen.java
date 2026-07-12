@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyBoardScreenHandler;
@@ -91,8 +92,8 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
 
     /** Draw one bounty row; returns nothing but the click handler mirrors the layout. */
     private void drawRow(DrawContext ctx, int x, int y, ItemStack stack, int mouseX, int mouseY) {
-        NbtCompound t = stack.getNbt();
-        if (stack.isEmpty() || t == null) return;
+        if (stack.isEmpty() || !StackData.hasData(stack)) return;
+        NbtCompound t = StackData.getData(stack);
 
         BountyRarity rarity = BountyRarity.fromString(t.getString("rar"));
         boolean mine = t.getBoolean("mine");
@@ -107,7 +108,7 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
 
         // Reward icons, right-aligned before the button: coins first, then the reward item.
         long rewCoins = t.getLong("rewc");
-        ItemStack rewItem = t.contains("rews") ? ItemStack.fromNbt(t.getCompound("rews")) : ItemStack.EMPTY;
+        ItemStack rewItem = t.contains("rews") ? StackData.readStack(t.getCompound("rews")) : ItemStack.EMPTY;
         int rewX = btnX - 6;
         if (!rewItem.isEmpty()) {
             rewX -= 20;
@@ -172,8 +173,8 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         int[] hit = rowAt(mouseX, mouseY);
         if (hit == null) return;
         ItemStack stack = hit[0] == 0 ? handler.offerStack(hit[1]) : handler.takenStack(hit[1]);
-        NbtCompound t = stack.getNbt();
-        if (stack.isEmpty() || t == null) return;
+        if (stack.isEmpty() || !StackData.hasData(stack)) return;
+        NbtCompound t = StackData.getData(stack);
 
         BountyRarity rarity = BountyRarity.fromString(t.getString("rar"));
         List<Text> lines = new ArrayList<>();
@@ -237,8 +238,8 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
                 int ry = this.y + TAKEN_Y + 8 + i * ROW_H;
                 ItemStack s = handler.takenStack(i);
                 if (s.isEmpty() || !over(mx, my, btnX, ry + 3, BTN_W, BTN_H)) continue;
-                NbtCompound t = s.getNbt();
-                if (t == null) continue;
+                if (!StackData.hasData(s)) continue;
+                NbtCompound t = StackData.getData(s);
                 boolean kill = "KILL".equals(t.getString("typ"));
                 if (kill && t.getInt("prog") < t.getInt("req")) return true; // not ready
                 action(s, kill ? 1 : 2);
@@ -249,8 +250,8 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
     }
 
     private void action(ItemStack stack, int action) {
-        NbtCompound t = stack.getNbt();
-        if (t == null || !t.containsUuid("bid")) return;
+        NbtCompound t = StackData.getData(stack);
+        if (!t.containsUuid("bid")) return;
         NotchWidgets.click();
         UUID id = t.getUuid("bid");
         PacketByteBuf buf = PacketByteBufs.create();

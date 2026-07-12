@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.client.ui.NpcPreviewWidget;
@@ -48,8 +49,8 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     private Cell cell(int i) {
         ItemStack s = handler.rowStack(i);
         if (s.isEmpty()) return null;
-        NbtCompound t = s.getNbt();
-        if (t == null || !t.contains("nc_cid")) return null;
+        NbtCompound t = StackData.getData(s);
+        if (!t.contains("nc_cid")) return null;
         return new Cell(s, t.getString("nc_cid"), t.getString("nc_name"),
                 t.getLong("nc_price"), t.getBoolean("nc_owned"));
     }

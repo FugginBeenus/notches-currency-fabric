@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.cosmetic;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -124,11 +125,12 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
         ItemStack carrier = offer.icon().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
         carrier.setCount(1);
-        NbtCompound t = carrier.getOrCreateNbt();
+        NbtCompound t = StackData.editData(carrier);
         t.putString("nc_cid", offer.id());
         t.putString("nc_name", offer.name());
         t.putLong("nc_price", offer.price());
         t.putBoolean("nc_owned", owned);
+        StackData.commitData(carrier, t);
         return carrier;
     }
 

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -455,7 +456,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         base.setCount(listing.stack.getCount());
 
         // Core NBT used by the client-side tooltip
-        NbtCompound tag = base.getOrCreateNbt();
+        NbtCompound tag = StackData.editData(base);
         tag.putLong("nc_price", listing.price);
         tag.putString("nc_seller", listing.sellerName);
         tag.putLong("nc_created", listing.createdGameTime);
@@ -472,7 +473,9 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             tag.remove("nc_highest_bidder");
         }
 
-        // Lore for vanilla hover
+        StackData.commitData(base, tag);
+
+        // Lore for vanilla hover (a vanilla component seam, kept as raw NBT for now)
         NbtCompound display = base.getOrCreateSubNbt("display");
         NbtList lore = new NbtList();
 

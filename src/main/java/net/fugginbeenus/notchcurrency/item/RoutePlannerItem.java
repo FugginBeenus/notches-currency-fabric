@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.item;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
 import net.minecraft.client.item.TooltipContext;
@@ -8,7 +9,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -86,13 +86,13 @@ public class RoutePlannerItem extends Item {
         boolean held = selected || sp.getOffHandStack() == stack;
         if (!held || world.getTime() % 10 != 0) return;
 
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null || !nbt.containsUuid(NPC_KEY)) return;
-        if (!(((ServerWorld) world).getEntity(nbt.getUuid(NPC_KEY)) instanceof NotchNpcEntity npc)) return;
+        UUID npcId = StackData.getUuid(stack, NPC_KEY);
+        if (npcId == null) return;
+        if (!(((ServerWorld) world).getEntity(npcId) instanceof NotchNpcEntity npc)) return;
 
         List<BlockPos> route = npc.getWaypoints();
-        if (nbt.getInt(COUNT_KEY) != route.size()) {
-            nbt.putInt(COUNT_KEY, route.size());
+        if (StackData.getInt(stack, COUNT_KEY) != route.size()) {
+            StackData.putInt(stack, COUNT_KEY, route.size());
         }
         ServerWorld sw = (ServerWorld) world;
         for (BlockPos wp : route) {
@@ -105,13 +105,12 @@ public class RoutePlannerItem extends Item {
 
     @Nullable
     private static NotchNpcEntity boundNpc(ItemStack stack, ServerWorld world, ServerPlayerEntity sp) {
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null || !nbt.containsUuid(NPC_KEY)) {
+        UUID npcId = StackData.getUuid(stack, NPC_KEY);
+        if (npcId == null) {
             sp.sendMessage(Text.literal("This route tool isn't bound to an NPC — get one from the NPC editor.")
                     .formatted(Formatting.RED), false);
             return null;
         }
-        UUID npcId = nbt.getUuid(NPC_KEY);
         if (world.getEntity(npcId) instanceof NotchNpcEntity npc) {
             return npc;
         }
@@ -121,8 +120,7 @@ public class RoutePlannerItem extends Item {
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        NbtCompound nbt = stack.getNbt();
-        String bound = (nbt != null && nbt.contains(NPC_NAME_KEY)) ? nbt.getString(NPC_NAME_KEY) : null;
+        String bound = StackData.has(stack, NPC_NAME_KEY) ? StackData.getString(stack, NPC_NAME_KEY) : null;
         tooltip.add(Text.literal(bound == null ? "Not bound to an NPC." : "Route for: " + bound)
                 .formatted(Formatting.AQUA));
         tooltip.add(Text.literal("Right-click ground: add waypoint").formatted(Formatting.GRAY));

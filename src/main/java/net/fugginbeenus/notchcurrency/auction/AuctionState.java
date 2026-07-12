@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -127,7 +128,7 @@ public final class AuctionState extends PersistentState {
             String sellerName = tag.getString("SellerName");
             String winnerName = tag.getString("WinnerName");
             long price = tag.getLong("FinalPrice");
-            ItemStack stack = ItemStack.fromNbt(tag.getCompound("Stack"));
+            ItemStack stack = StackData.readStack(tag.getCompound("Stack"));
             return new PendingWinnings(id, seller, winner, sellerName, winnerName, stack, price);
         }
 
@@ -179,8 +180,8 @@ public final class AuctionState extends PersistentState {
      * Call this before giving purchased/returned items to players.
      */
     private static void stripAuctionTags(ItemStack stack) {
-        if (stack.hasNbt()) {
-            NbtCompound tag = stack.getNbt();
+        if (StackData.hasData(stack)) {
+            NbtCompound tag = StackData.editData(stack);
             tag.remove("nc_price");
             tag.remove("nc_seller");
             tag.remove("nc_created");
@@ -190,7 +191,9 @@ public final class AuctionState extends PersistentState {
             tag.remove("nc_listing_id");
             // If the tag is now empty, remove it entirely
             if (tag.isEmpty()) {
-                stack.setNbt(null);
+                StackData.clearData(stack);
+            } else {
+                StackData.commitData(stack, tag);
             }
         }
     }
@@ -301,12 +304,13 @@ public final class AuctionState extends PersistentState {
 
         // Tag the stack so client tooltip can read everything
         ItemStack listingStack = stack.copy();
-        NbtCompound tag = listingStack.getOrCreateNbt();
+        NbtCompound tag = StackData.editData(listingStack);
         tag.putLong("nc_price", price);
         tag.putString("nc_seller", seller.getName().getString());
         tag.putUuid("nc_listing_id", id);
         tag.putLong("nc_created", now);
         tag.putLong("nc_expires", expires);
+        StackData.commitData(listingStack, tag);
 
         AuctionListing listing = new AuctionListing(
                 id,
@@ -585,9 +589,10 @@ public final class AuctionState extends PersistentState {
         listing.highestBidderName = bidder.getName().getString();
 
         // Sync bid info into the listing's stack NBT for client tooltip
-        NbtCompound tag = listing.stack.getOrCreateNbt();
+        NbtCompound tag = StackData.editData(listing.stack);
         tag.putLong("nc_highest_bid", listing.highestBid);
         tag.putString("nc_highest_bidder", listing.highestBidderName);
+        StackData.commitData(listing.stack, tag);
 
         bidder.sendMessage(
                 Text.literal("You bid " + amount + " ")

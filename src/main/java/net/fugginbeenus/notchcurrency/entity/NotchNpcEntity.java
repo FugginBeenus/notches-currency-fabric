@@ -812,7 +812,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         NbtCompound equip = new NbtCompound();
         for (net.minecraft.entity.EquipmentSlot slot : net.minecraft.entity.EquipmentSlot.values()) {
             net.minecraft.item.ItemStack st = this.getEquippedStack(slot);
-            if (!st.isEmpty()) equip.put(slot.getName(), st.writeNbt(new NbtCompound()));
+            if (!st.isEmpty()) equip.put(slot.getName(), net.fugginbeenus.notchcurrency.compat.StackData.writeStack(st));
         }
         nbt.put("Equip", equip);
     }
@@ -908,7 +908,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             NbtCompound equip = nbt.getCompound("Equip");
             for (net.minecraft.entity.EquipmentSlot slot : net.minecraft.entity.EquipmentSlot.values()) {
                 if (equip.contains(slot.getName())) {
-                    this.equipStack(slot, net.minecraft.item.ItemStack.fromNbt(equip.getCompound(slot.getName())));
+                    this.equipStack(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slot.getName())));
                     this.setEquipmentDropChance(slot, 1.0f); // owner's items always drop if it dies
                 }
             }

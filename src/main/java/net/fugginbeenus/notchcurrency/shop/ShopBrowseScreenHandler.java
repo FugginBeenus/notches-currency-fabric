@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -117,7 +118,7 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
     static ItemStack displayStack(ShopListing listing) {
         ItemStack carrier = listing.getItemForSale().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
-        NbtCompound t = carrier.getOrCreateNbt();
+        NbtCompound t = StackData.editData(carrier);
         t.putUuid("nc_lid", listing.getId());
         t.putInt("nc_price", listing.getCoinPrice());
         t.putString("nc_bname", listing.acceptsBarter() ? listing.getItemPrice().getName().getString() : "");
@@ -126,10 +127,9 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
         if (listing.acceptsBarter()) {
             ItemStack bs = listing.getItemPrice().copy();
             bs.setCount(Math.max(1, Math.min(64, listing.getItemPriceCount())));
-            NbtCompound b = new NbtCompound();
-            bs.writeNbt(b);
-            t.put("nc_bstack", b);
+            t.put("nc_bstack", StackData.writeStack(bs));
         }
+        StackData.commitData(carrier, t);
         return carrier;
     }
 

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -52,7 +53,7 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
         java.util.List<ItemStack> out = new ArrayList<>();
         net.minecraft.nbt.NbtList list = t.getList(key, net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < list.size(); i++) {
-            ItemStack st = ItemStack.fromNbt(list.getCompound(i));
+            ItemStack st = StackData.readStack(list.getCompound(i));
             if (!st.isEmpty()) out.add(st);
         }
         return out;
@@ -60,8 +61,8 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
 
     private Row row(ItemStack stack) {
         if (stack.isEmpty()) return null;
-        NbtCompound t = stack.getNbt();
-        if (t == null || !t.containsUuid("nc_oid")) return null;
+        NbtCompound t = StackData.getData(stack);
+        if (!t.containsUuid("nc_oid")) return null;
         return new Row(stack, t.getUuid("nc_oid"), readStacks(t, "nc_gives"), t.getLong("nc_gcoins"),
                 t.getLong("nc_price"), readStacks(t, "nc_wants"),
                 t.getString("nc_from"), t.getString("nc_target"));

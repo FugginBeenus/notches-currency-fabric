@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.item;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
@@ -50,10 +51,9 @@ public class NotchNpcItem extends Item {
         npc.setBodyYaw(yaw);
 
         ItemStack stack = context.getStack();
-        NbtCompound root = stack.getNbt();
-        if (root != null && root.contains(NotchNpcManager.ITEM_TAG)) {
+        if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
             // Restore a packed NPC (from "Pick up").
-            npc.readFromItem(root.getCompound(NotchNpcManager.ITEM_TAG));
+            npc.readFromItem(StackData.getCompound(stack, NotchNpcManager.ITEM_TAG));
         } else if (player != null) {
             // Fresh blank NPC — the placer owns it.
             npc.setOwner(player.getUuid(), player.getName().getString());
@@ -84,9 +84,8 @@ public class NotchNpcItem extends Item {
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        NbtCompound root = stack.getNbt();
-        if (root != null && root.contains(NotchNpcManager.ITEM_TAG)) {
-            NbtCompound tag = root.getCompound(NotchNpcManager.ITEM_TAG);
+        if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
+            NbtCompound tag = StackData.getCompound(stack, NotchNpcManager.ITEM_TAG);
             String name = tag.contains("Name") ? tag.getString("Name") : "NPC";
             String role = tag.contains("Role") ? tag.getString("Role") : "NONE";
             tooltip.add(Text.literal("Packed NPC: " + name).formatted(Formatting.AQUA));

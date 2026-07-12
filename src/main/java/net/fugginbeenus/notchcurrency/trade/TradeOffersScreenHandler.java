@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -89,24 +90,25 @@ public class TradeOffersScreenHandler extends ScreenHandler {
     private static ItemStack display(TradeOffer offer, boolean mine) {
         ItemStack carrier = offer.firstOffered().copy();
         if (carrier.isEmpty()) carrier = new ItemStack(net.minecraft.item.Items.PAPER); // coins-only offer
-        NbtCompound t = carrier.getOrCreateNbt();
+        NbtCompound t = StackData.editData(carrier);
         t.putUuid("nc_oid", offer.id());
         t.putLong("nc_price", offer.priceCoins());
         t.putLong("nc_gcoins", offer.offeredCoins());
         // Every stack on both sides, so the row can draw the whole exchange like trade ingredients.
         net.minecraft.nbt.NbtList gives = new net.minecraft.nbt.NbtList();
         for (ItemStack st : offer.offeredItems()) {
-            gives.add(st.writeNbt(new NbtCompound()));
+            gives.add(StackData.writeStack(st));
         }
         t.put("nc_gives", gives);
         net.minecraft.nbt.NbtList wants = new net.minecraft.nbt.NbtList();
         for (ItemStack st : offer.requestedItems()) {
-            wants.add(st.writeNbt(new NbtCompound()));
+            wants.add(StackData.writeStack(st));
         }
         t.put("nc_wants", wants);
         t.putString("nc_from", offer.creatorName());
         t.putString("nc_target", offer.isOpen() ? "" : offer.targetName());
         t.putBoolean("nc_mine", mine);
+        StackData.commitData(carrier, t);
         return carrier;
     }
 

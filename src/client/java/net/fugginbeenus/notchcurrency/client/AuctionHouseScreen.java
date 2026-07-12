@@ -3,6 +3,7 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -637,10 +638,9 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 && this.focusedSlot.getIndex() < AuctionHouseScreenHandler.LISTING_SIZE) {
 
             ItemStack stack = this.focusedSlot.getStack();
-            NbtCompound tag = stack.getNbt();
+            NbtCompound tag = StackData.getData(stack);
 
-            if (tag != null
-                    && tag.contains("nc_price", NbtElement.LONG_TYPE)
+            if (tag.contains("nc_price", NbtElement.LONG_TYPE)
                     && tag.contains("nc_seller", NbtElement.STRING_TYPE)) {
 
                 long startPrice = tag.getLong("nc_price");
@@ -1001,8 +1001,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
         List<Text> lines = new ArrayList<>();
         lines.add(stack.getName().copy().formatted(Formatting.WHITE));
-        NbtCompound tag = stack.getNbt();
-        if (tag != null && tag.contains("nc_price", NbtElement.LONG_TYPE)) {
+        NbtCompound tag = StackData.getData(stack);
+        if (tag.contains("nc_price", NbtElement.LONG_TYPE)) {
             lines.add(Text.literal("Price: " + tag.getLong("nc_price") + " " + NotchWidgets.coinName()).formatted(Formatting.GOLD));
         }
         lines.add(Text.literal("Click to cancel & reclaim").formatted(Formatting.RED));
@@ -1109,8 +1109,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             int slot = hoveredPopupSlot(mouseX, mouseY);
             if (slot >= 0) {
                 ItemStack stack = handler.getUserPopupInventory().getStack(slot);
-                NbtCompound tag = stack.getNbt();
-                if (!stack.isEmpty() && tag != null && tag.containsUuid("nc_listing_id")) {
+                NbtCompound tag = StackData.getData(stack);
+                if (!stack.isEmpty() && tag.containsUuid("nc_listing_id")) {
                     PacketByteBuf buf = PacketByteBufs.create();
                     buf.writeUuid(tag.getUuid("nc_listing_id"));
                     ClientPlayNetworking.send(NotchPackets.AUCTION_CANCEL, buf);
@@ -1134,10 +1134,9 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     && this.isPointWithinBounds(clickedSlot.x, clickedSlot.y, 16, 16, mouseX, mouseY)) {
 
                 ItemStack stack = clickedSlot.getStack();
-                NbtCompound tag = stack.getNbt();
+                NbtCompound tag = StackData.getData(stack);
 
-                if (tag != null
-                        && tag.contains("nc_seller", NbtElement.STRING_TYPE)
+                if (tag.contains("nc_seller", NbtElement.STRING_TYPE)
                         && tag.contains("nc_expires", NbtElement.LONG_TYPE)) {
 
                     long expires = tag.getLong("nc_expires");
@@ -1171,9 +1170,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     && this.isPointWithinBounds(clicked.x, clicked.y, 16, 16, mouseX, mouseY)) {
 
                 ItemStack stack = clicked.getStack();
-                NbtCompound tag = stack.getNbt();
-                if (tag != null
-                        && tag.contains("nc_expires", NbtElement.LONG_TYPE)
+                NbtCompound tag = StackData.getData(stack);
+                if (tag.contains("nc_expires", NbtElement.LONG_TYPE)
                         && tag.containsUuid("nc_listing_id")) {
 
                     long expires = tag.getLong("nc_expires");

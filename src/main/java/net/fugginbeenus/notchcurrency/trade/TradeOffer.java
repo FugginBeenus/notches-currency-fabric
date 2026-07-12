@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -94,7 +95,7 @@ public class TradeOffer {
     private static NbtList writeStacks(List<ItemStack> stacks) {
         NbtList list = new NbtList();
         for (ItemStack st : stacks) {
-            if (!st.isEmpty()) list.add(st.writeNbt(new NbtCompound()));
+            if (!st.isEmpty()) list.add(StackData.writeStack(st));
         }
         return list;
     }
@@ -103,7 +104,7 @@ public class TradeOffer {
         List<ItemStack> out = new ArrayList<>();
         NbtList list = t.getList(key, NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < list.size(); i++) {
-            ItemStack st = ItemStack.fromNbt(list.getCompound(i));
+            ItemStack st = StackData.readStack(list.getCompound(i));
             if (!st.isEmpty()) out.add(st);
         }
         return out;
@@ -113,12 +114,12 @@ public class TradeOffer {
         List<ItemStack> items = readStacks(t, "OfferedList");
         if (items.isEmpty() && t.contains("Offered")) {
             // Pre-grid offers stored a single stack.
-            ItemStack st = ItemStack.fromNbt(t.getCompound("Offered"));
+            ItemStack st = StackData.readStack(t.getCompound("Offered"));
             if (!st.isEmpty()) items.add(st);
         }
         List<ItemStack> wants = readStacks(t, "RequestedList");
         if (wants.isEmpty() && t.contains("Requested")) {
-            ItemStack st = ItemStack.fromNbt(t.getCompound("Requested"));
+            ItemStack st = StackData.readStack(t.getCompound("Requested"));
             if (!st.isEmpty()) wants.add(st);
         }
         return new TradeOffer(

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.raffle;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -259,7 +260,7 @@ public class RaffleState extends PersistentState {
         state.pot = nbt.getLong("Pot");
         state.coinsPool = nbt.getLong("CoinsPool");
         if (nbt.contains("PrizeItem", NbtElement.COMPOUND_TYPE)) {
-            state.prizeItem = ItemStack.fromNbt(nbt.getCompound("PrizeItem"));
+            state.prizeItem = StackData.readStack(nbt.getCompound("PrizeItem"));
         }
 
         NbtList ticketList = nbt.getList("Tickets", NbtElement.COMPOUND_TYPE);
@@ -280,7 +281,7 @@ public class RaffleState extends PersistentState {
             try {
                 long round = o.getLong("Round");
                 ItemStack prize = o.contains("PrizeItem", NbtElement.COMPOUND_TYPE)
-                        ? ItemStack.fromNbt(o.getCompound("PrizeItem")) : ItemStack.EMPTY;
+                        ? StackData.readStack(o.getCompound("PrizeItem")) : ItemStack.EMPTY;
                 state.unclaimed.put(round, new Result(round, o.getUuid("Winner"),
                         o.getString("Name"), o.getLong("Prize"), prize));
             } catch (IllegalArgumentException ignored) {

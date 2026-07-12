@@ -1,11 +1,11 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.item.RoutePlannerItem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 
 /**
  * Transparent route-planning overlay: while the player holds a bound route tool, a translucent
@@ -27,10 +27,9 @@ public final class RouteHud implements HudRenderCallback {
             if (!(held.getItem() instanceof RoutePlannerItem)) return;
         }
 
-        NbtCompound nbt = held.getNbt();
-        String npcName = (nbt != null && nbt.contains(RoutePlannerItem.NPC_NAME_KEY))
-                ? nbt.getString(RoutePlannerItem.NPC_NAME_KEY) : "NPC";
-        int count = nbt != null ? nbt.getInt(RoutePlannerItem.COUNT_KEY) : 0;
+        String npcName = StackData.has(held, RoutePlannerItem.NPC_NAME_KEY)
+                ? StackData.getString(held, RoutePlannerItem.NPC_NAME_KEY) : "NPC";
+        int count = StackData.getInt(held, RoutePlannerItem.COUNT_KEY);
 
         String title = "Patrol route — " + npcName;
         String countLine = "Waypoints: " + count + "/16" + (count < 2 ? "  (need 2+)" : "");

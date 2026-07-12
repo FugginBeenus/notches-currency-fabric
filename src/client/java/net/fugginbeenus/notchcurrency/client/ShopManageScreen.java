@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -104,9 +105,9 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
     private Row row(int i) {
         ItemStack stack = handler.rowStack(i);
         if (stack.isEmpty()) return null;
-        NbtCompound t = stack.getNbt();
-        if (t == null || !t.containsUuid("nc_lid")) return null;
-        ItemStack barter = t.contains("nc_bstack") ? ItemStack.fromNbt(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
+        NbtCompound t = StackData.getData(stack);
+        if (!t.containsUuid("nc_lid")) return null;
+        ItemStack barter = t.contains("nc_bstack") ? StackData.readStack(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
         return new Row(stack, t.getUuid("nc_lid"), t.getInt("nc_price"),
                 t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }

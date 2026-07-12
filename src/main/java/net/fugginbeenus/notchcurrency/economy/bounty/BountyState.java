@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -234,7 +235,7 @@ public class BountyState extends PersistentState {
 
         NbtList decreeList = nbt.getList("Decrees", NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < decreeList.size(); i++) {
-            ItemStack s = ItemStack.fromNbt(decreeList.getCompound(i));
+            ItemStack s = StackData.readStack(decreeList.getCompound(i));
             if (!s.isEmpty()) state.decrees.add(s);
         }
         return state;

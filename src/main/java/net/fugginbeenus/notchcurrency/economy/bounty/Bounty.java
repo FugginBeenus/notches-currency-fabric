@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -95,7 +96,7 @@ public class Bounty {
         o.putString("Target", target.toString());
         o.putInt("Required", required);
         o.putLong("RewardCoins", rewardCoins);
-        if (!rewardItem.isEmpty()) o.put("RewardItem", rewardItem.writeNbt(new NbtCompound()));
+        if (!rewardItem.isEmpty()) o.put("RewardItem", StackData.writeStack(rewardItem));
         o.putString("Rarity", rarity.name());
         o.putBoolean("Repeatable", repeatable);
         o.putLong("Expires", expiresGameTime);
@@ -104,7 +105,7 @@ public class Bounty {
     }
 
     public static Bounty fromNbt(NbtCompound o) {
-        ItemStack reward = o.contains("RewardItem") ? ItemStack.fromNbt(o.getCompound("RewardItem")) : ItemStack.EMPTY;
+        ItemStack reward = o.contains("RewardItem") ? StackData.readStack(o.getCompound("RewardItem")) : ItemStack.EMPTY;
         return new Bounty(
                 o.getUuid("Id"),
                 BountyType.valueOf(o.getString("Type")),
