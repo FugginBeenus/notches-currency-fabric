@@ -18,7 +18,7 @@ public final class ModEntities {
     public static void register() {
         BALLOON = Registry.register(
                 Registries.ENTITY_TYPE,
-                new Identifier(NotchCurrency.MOD_ID, "balloon"),
+                NotchCurrency.id("balloon"),
                 FabricEntityTypeBuilder.<BalloonEntity>create(SpawnGroup.MISC,
                                 (type, world) -> new BalloonEntity(type, world))
                         .dimensions(EntityDimensions.fixed(0.9f, 1.4f)) // solid hitbox
@@ -29,7 +29,7 @@ public final class ModEntities {
 
         NOTCH_NPC = Registry.register(
                 Registries.ENTITY_TYPE,
-                new Identifier(NotchCurrency.MOD_ID, "notch_npc"),
+                NotchCurrency.id("notch_npc"),
                 FabricEntityTypeBuilder.<NotchNpcEntity>create(SpawnGroup.MISC, NotchNpcEntity::new)
                         .dimensions(EntityDimensions.fixed(0.6f, 1.95f)) // player-ish, humanoid geo
                         .trackRangeBlocks(64)

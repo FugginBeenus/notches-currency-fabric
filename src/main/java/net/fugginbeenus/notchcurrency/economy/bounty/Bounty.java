@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
@@ -109,7 +110,7 @@ public class Bounty {
         return new Bounty(
                 o.getUuid("Id"),
                 BountyType.valueOf(o.getString("Type")),
-                new Identifier(o.getString("Target")),
+                Reg.parse(o.getString("Target")),
                 o.getInt("Required"),
                 o.getLong("RewardCoins"),
                 reward,

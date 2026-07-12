@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.PlayerSkinTexture;
@@ -24,7 +25,7 @@ public final class NpcSkins {
     private static final Identifier[] PRESETS = new Identifier[PRESET_COUNT];
     static {
         for (int i = 0; i < PRESET_COUNT; i++) {
-            PRESETS[i] = new Identifier("notchcurrency", "textures/skins/preset_" + (i + 1) + ".png");
+            PRESETS[i] = NotchCurrency.id("textures/skins/preset_" + (i + 1) + ".png");
         }
     }
     private static final Identifier DEFAULT = DefaultSkinHelper.getTexture();
@@ -58,7 +59,7 @@ public final class NpcSkins {
         loading.put("url:" + url, true);
         MinecraftClient.getInstance().execute(() -> {
             try {
-                Identifier id = new Identifier("notchcurrency", "skins/url/" + Integer.toHexString(url.hashCode()));
+                Identifier id = NotchCurrency.id("skins/url/" + Integer.toHexString(url.hashCode()));
                 MinecraftClient.getInstance().getTextureManager().registerTexture(id,
                         new PlayerSkinTexture(null, url, DEFAULT, true, () -> {
                             cache.put("url:" + url, id);

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.crate;
 
+import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
@@ -31,7 +32,7 @@ public class BalloonEntity extends Entity {
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
 
     // Loot table: data/notchcurrency/loot_tables/balloon_crate.json
-    public static final Identifier LOOT = new Identifier("notchcurrency", "balloon_crate");
+    public static final Identifier LOOT = NotchCurrency.id("balloon_crate");
 
     // ---- Motion tuning ----
     private static final double BOB_AMPLITUDE = 0.30;

@@ -11,8 +11,8 @@ import software.bernie.geckolib.model.GeoModel;
  */
 public class NotchNpcGeoModel extends GeoModel<NotchNpcEntity> {
 
-    private static final Identifier MODEL = new Identifier(NotchCurrency.MOD_ID, "geo/notch_npc.geo.json");
-    private static final Identifier ANIMATION = new Identifier(NotchCurrency.MOD_ID, "animations/notch_npc.animation.json");
+    private static final Identifier MODEL = NotchCurrency.id("geo/notch_npc.geo.json");
+    private static final Identifier ANIMATION = NotchCurrency.id("animations/notch_npc.animation.json");
 
     @Override
     public Identifier getModelResource(NotchNpcEntity animatable) {

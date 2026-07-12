@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.trade;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.minecraft.client.gui.DrawContext;
@@ -14,7 +15,7 @@ import net.minecraft.util.Identifier;
 
 public class TradeScreen extends HandledScreen<TradeScreenHandler> {
 
-    private static final Identifier TEX = new Identifier("notchcurrency", "textures/gui/trade.png");
+    private static final Identifier TEX = NotchCurrency.id("textures/gui/trade.png");
 
     // === Panel (your texture) ===
     private static final int TEX_U = 2, TEX_V = 2;

@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.client.npc.NpcAppearances;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -286,7 +287,7 @@ public class NotchNpcEditorScreen extends Screen {
         // clips, and leave a margin (esp. at the top for the nameplate).
         float h = 1.9f, w = 0.6f; // humanoid default
         if (currentModel != null && currentModel.startsWith("entity:")) {
-            EntityType<?> t = Registries.ENTITY_TYPE.get(new Identifier(currentModel.substring("entity:".length())));
+            EntityType<?> t = Registries.ENTITY_TYPE.get(Reg.parse(currentModel.substring("entity:".length())));
             if (t != null) {
                 h = Math.max(0.5f, t.getDimensions().height);
                 w = Math.max(0.5f, t.getDimensions().width);
@@ -302,7 +303,7 @@ public class NotchNpcEditorScreen extends Screen {
         if (NotchNpcEntity.MODEL_HUMANOID.equals(model)) return "Humanoid";
         if (NotchNpcEntity.MODEL_APPLY.equals(model)) return "APP.ly";
         if (model != null && model.startsWith("entity:")) {
-            EntityType<?> t = Registries.ENTITY_TYPE.get(new Identifier(model.substring("entity:".length())));
+            EntityType<?> t = Registries.ENTITY_TYPE.get(Reg.parse(model.substring("entity:".length())));
             return t != null ? t.getName().getString() : model.substring("entity:".length());
         }
         return model == null ? "Humanoid" : model;

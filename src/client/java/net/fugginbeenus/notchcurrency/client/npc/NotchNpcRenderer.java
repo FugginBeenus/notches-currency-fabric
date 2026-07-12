@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -101,7 +102,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         if (proxies.containsKey(typeId)) return proxies.get(typeId);
         Entity proxy = null;
         try {
-            EntityType<?> type = Registries.ENTITY_TYPE.get(new Identifier(typeId));
+            EntityType<?> type = Registries.ENTITY_TYPE.get(Reg.parse(typeId));
             var world = MinecraftClient.getInstance().world;
             if (type != null && world != null) proxy = type.create(world);
         } catch (Exception ignored) {}

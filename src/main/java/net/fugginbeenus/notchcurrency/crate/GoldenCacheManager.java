@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.registry.ModBlocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -14,7 +15,7 @@ import java.util.Random;
 public final class GoldenCacheManager {
 
     /** Loot table used by the golden cache (e.g. data/notchcurrency/loot_tables/golden_cache.json). */
-    public static final Identifier LOOT = new Identifier("notchcurrency", "golden_cache");
+    public static final Identifier LOOT = NotchCurrency.id("golden_cache");
 
     public static boolean ANNOUNCE = true;
     private static final Random RNG = new Random();

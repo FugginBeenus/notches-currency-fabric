@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.loot;
 
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.condition.RandomChanceLootCondition;
@@ -13,13 +14,13 @@ import java.util.Set;
 
 public final class BossCurrencyInject {
     private static final Set<Identifier> BOSS_TABLES = Set.of(
-            new Identifier("minecraft", "entities/wither"),
-            new Identifier("minecraft", "entities/warden"),
-            new Identifier("minecraft", "entities/elder_guardian")
+            Reg.id("minecraft","entities/wither"),
+            Reg.id("minecraft","entities/warden"),
+            Reg.id("minecraft","entities/elder_guardian")
     );
     private static final Set<Identifier> MINI_TABLES = Set.of(
-            new Identifier("minecraft", "entities/evoker"),
-            new Identifier("minecraft", "entities/piglin_brute")
+            Reg.id("minecraft","entities/evoker"),
+            Reg.id("minecraft","entities/piglin_brute")
     );
 
     private BossCurrencyInject() {}

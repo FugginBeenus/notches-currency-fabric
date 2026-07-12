@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
@@ -51,7 +52,7 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
                 int max = o.has("max") ? o.get("max").getAsInt() : min;
                 BountyPools.addObjective(new BountyPools.ObjectiveEntry(
                         type,
-                        new Identifier(o.get("target").getAsString()),
+                        Reg.parse(o.get("target").getAsString()),
                         min, Math.max(min, max),
                         rarityOf(o), weightOf(o),
                         o.has("category") ? o.get("category").getAsString() : "general"));
@@ -63,7 +64,7 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
         for (Map.Entry<Identifier, Resource> e : manager
                 .findResources("notch_bounties/decrees", id -> id.getPath().endsWith(".json")).entrySet()) {
             forEachEntry(e, o -> BountyPools.addDecree(
-                    new Identifier(o.get("item").getAsString()), o.get("category").getAsString()));
+                    Reg.parse(o.get("item").getAsString()), o.get("category").getAsString()));
         }
     }
 
@@ -76,7 +77,7 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
                 int max = o.has("max") ? o.get("max").getAsInt() : min;
                 BountyPools.addReward(new BountyPools.RewardEntry(
                         item,
-                        item ? new Identifier(o.get("item").getAsString()) : null,
+                        item ? Reg.parse(o.get("item").getAsString()) : null,
                         min, Math.max(min, max),
                         rarityOf(o), weightOf(o)));
             });

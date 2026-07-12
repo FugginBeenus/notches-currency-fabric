@@ -30,7 +30,7 @@ public final class NotchHud implements HudRenderCallback {
 
     // Only used if USE_ITEM_ICON == false
     private static final Identifier COIN_HUD_TEX =
-            new Identifier(NotchCurrency.MOD_ID, "textures/item/coin.png");
+            NotchCurrency.id("textures/item/coin.png");
 
     public static void setBalance(long value) {
         BALANCE = value;

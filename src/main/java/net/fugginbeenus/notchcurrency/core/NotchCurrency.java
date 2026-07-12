@@ -54,7 +54,7 @@ public class NotchCurrency implements ModInitializer {
     public static final String MOD_ID = "notchcurrency";
 
     public static Identifier id(String path) {
-        return new Identifier(MOD_ID, path);
+        return net.fugginbeenus.notchcurrency.compat.Reg.id(path);
     }
 
     /** Gold coin glyph with a hover that shows the Notch Coin item. */

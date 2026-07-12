@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -61,7 +62,7 @@ public class DialogueCondition {
 
     private long countItem(ServerPlayerEntity sp) {
         Item item = Registries.ITEM.get(Identifier.tryParse(value) == null
-                ? new Identifier("minecraft", "air") : Identifier.tryParse(value));
+                ? Reg.id("minecraft", "air") : Identifier.tryParse(value));
         if (item == net.minecraft.item.Items.AIR) return 0;
         long count = 0;
         for (int i = 0; i < sp.getInventory().size(); i++) {

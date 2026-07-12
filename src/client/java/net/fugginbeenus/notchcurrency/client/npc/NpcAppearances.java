@@ -20,7 +20,7 @@ public final class NpcAppearances {
     private static final Map<String, Variant> BY_ID = new LinkedHashMap<>();
 
     private static void add(String id, String name, String texturePath) {
-        BY_ID.put(id, new Variant(id, name, new Identifier(NotchCurrency.MOD_ID, "textures/entity/" + texturePath)));
+        BY_ID.put(id, new Variant(id, name, NotchCurrency.id("textures/entity/" + texturePath)));
     }
 
     static {
