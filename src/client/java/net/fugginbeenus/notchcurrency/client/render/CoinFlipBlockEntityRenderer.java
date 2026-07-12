@@ -3,13 +3,13 @@ package net.fugginbeenus.notchcurrency.client.render;
 import net.fugginbeenus.notchcurrency.block.CoinFace;
 import net.fugginbeenus.notchcurrency.block.CoinFlipBlock;
 import net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity;
+import net.fugginbeenus.notchcurrency.compat.Render;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
@@ -62,7 +62,7 @@ public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlip
         matrices.scale(SIZE, SIZE, SIZE);
 
         // Full-bright: the coin floats above the block, so the block's baked light renders it black.
-        itemRenderer.renderItem(coin, ModelTransformationMode.FIXED,
+        Render.renderFixedItem(itemRenderer, coin,
                 LightmapTextureManager.MAX_LIGHT_COORDINATE, overlay,
                 matrices, vertexConsumers, world, 0);
         matrices.pop();

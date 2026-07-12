@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.client.render;
 
 import net.fugginbeenus.notchcurrency.block.LedgerBoardBlock;
+import net.fugginbeenus.notchcurrency.compat.Render;
 import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.minecraft.block.enums.DoubleBlockHalf;
@@ -73,13 +74,11 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
 
         // Header, centred.
         Text header = Text.literal("TOP BALANCES").formatted(Formatting.GOLD);
-        text.draw(header, -text.getWidth(header) / 2f, 0, 0xFFFFFFFF, false, matrix, vertexConsumers,
-                TextRenderer.TextLayerType.NORMAL, 0, lb);
+        Render.drawText(text, header, -text.getWidth(header) / 2f, 0, 0xFFFFFFFF, matrix, vertexConsumers, lb);
 
         if (rows.isEmpty()) {
             Text none = Text.literal("No balances yet").formatted(Formatting.GRAY);
-            text.draw(none, -text.getWidth(none) / 2f, LINE_H, 0xFFFFFFFF, false, matrix, vertexConsumers,
-                    TextRenderer.TextLayerType.NORMAL, 0, lb);
+            Render.drawText(text, none, -text.getWidth(none) / 2f, LINE_H, 0xFFFFFFFF, matrix, vertexConsumers, lb);
         }
         // Rows: rank + name left-aligned, balance right-aligned (Create-style columns).
         for (int i = 0; i < rows.size(); i++) {
@@ -89,10 +88,8 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
             Text name = Text.literal((i + 1) + " ").formatted(rank)
                     .copy().append(Text.literal(e.name()).formatted(Formatting.AQUA));
             Text bal = Text.literal(compact(e.balance())).formatted(Formatting.YELLOW);
-            text.draw(name, LEFT_X, y, 0xFFFFFFFF, false, matrix, vertexConsumers,
-                    TextRenderer.TextLayerType.NORMAL, 0, lb);
-            text.draw(bal, RIGHT_X - text.getWidth(bal), y, 0xFFFFFFFF, false, matrix, vertexConsumers,
-                    TextRenderer.TextLayerType.NORMAL, 0, lb);
+            Render.drawText(text, name, LEFT_X, y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            Render.drawText(text, bal, RIGHT_X - text.getWidth(bal), y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
         }
         matrices.pop();
     }
