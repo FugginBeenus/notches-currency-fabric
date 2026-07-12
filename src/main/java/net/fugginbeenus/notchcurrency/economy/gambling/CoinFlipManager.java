@@ -126,6 +126,9 @@ public final class CoinFlipManager {
             // Start the spin, close the screen so the player watches the block, reveal on delay.
             BlockState st = world.getBlockState(pos);
             world.setBlockState(pos, st.with(CoinFlipBlock.FLIPPING, true), Block.NOTIFY_LISTENERS);
+            if (world.getBlockEntity(pos) instanceof net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity be) {
+                be.startFlip(world.getTime(), revealTicks); // drives the pop + spin animation
+            }
             world.playSound(null, pos, SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.BLOCKS, 0.8f, 1.4f);
             sp.closeHandledScreen();
             queue.add(new Pending(world, pos.toImmutable(), sp.getUuid(), bet, won, landedHeads,

@@ -1,8 +1,11 @@
 package net.fugginbeenus.notchcurrency.block;
 
+import net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipManager;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -25,7 +28,7 @@ import net.minecraft.world.World;
  * {@link #FACE}. Those two blockstates are the animation hook — a future model/animated texture can
  * read them without a block entity. While flipping, the block is "busy" and rejects new bets.
  */
-public class CoinFlipBlock extends Block {
+public class CoinFlipBlock extends Block implements BlockEntityProvider {
 
     public static final BooleanProperty FLIPPING = BooleanProperty.of("flipping");
     public static final EnumProperty<CoinFace> FACE = EnumProperty.of("face", CoinFace.class);
@@ -35,6 +38,11 @@ public class CoinFlipBlock extends Block {
         setDefaultState(getStateManager().getDefaultState()
                 .with(FLIPPING, false)
                 .with(FACE, CoinFace.HEADS));
+    }
+
+    @Override
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return new CoinFlipBlockEntity(pos, state);
     }
 
     @Override

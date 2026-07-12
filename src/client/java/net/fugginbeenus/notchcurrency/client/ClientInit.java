@@ -38,6 +38,10 @@ public final class ClientInit implements ClientModInitializer {
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.LEDGER_BOARD,
                 net.fugginbeenus.notchcurrency.client.render.LedgerBoardBlockEntityRenderer::new);
+        // Coin Flip table renders an animated notch coin (arc + spin on flip).
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.COIN_FLIP,
+                net.fugginbeenus.notchcurrency.client.render.CoinFlipBlockEntityRenderer::new);
 
         // Cutout layer so the coin crest / standing coin's transparent corners aren't black.
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlocks(
