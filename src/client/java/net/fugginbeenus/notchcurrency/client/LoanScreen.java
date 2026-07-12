@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -124,7 +124,7 @@ public class LoanScreen extends HandledScreen<LoanScreenHandler> {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarInt(action);
         buf.writeVarLong(amount);
-        ClientPlayNetworking.send(NotchPackets.LOAN_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.LOAN_ACTION, buf);
     }
 
     @Override

@@ -258,7 +258,7 @@ public final class BountyManager {
             buf.writeLong(tb.expiresGameTime());
             buf.writeString(b.getRarity().name());
         }
-        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+        net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player,
                 net.fugginbeenus.notchcurrency.net.NotchPackets.BOUNTY_TRACKER, buf);
     }
 

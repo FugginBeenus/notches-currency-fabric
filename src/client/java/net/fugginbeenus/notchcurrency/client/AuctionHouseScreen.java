@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -964,7 +964,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeUuid(bidListingId);
             buf.writeVarLong(amount);
-            ClientPlayNetworking.send(NotchPackets.BID_REQUEST, buf);
+            NetClient.sendToServer(NotchPackets.BID_REQUEST, buf);
         }
         showBidPopup = false;
     }
@@ -1113,7 +1113,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 if (!stack.isEmpty() && tag.containsUuid("nc_listing_id")) {
                     PacketByteBuf buf = PacketByteBufs.create();
                     buf.writeUuid(tag.getUuid("nc_listing_id"));
-                    ClientPlayNetworking.send(NotchPackets.AUCTION_CANCEL, buf);
+                    NetClient.sendToServer(NotchPackets.AUCTION_CANCEL, buf);
                 }
                 return true;
             }

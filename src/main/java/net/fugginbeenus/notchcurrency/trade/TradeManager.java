@@ -2,7 +2,7 @@ package net.fugginbeenus.notchcurrency.trade;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
@@ -33,7 +33,7 @@ public final class TradeManager {
         ServerTickEvents.START_SERVER_TICK.register(s -> tickSessions());
 
         // Client -> server: money + ready toggle
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_UPDATE, (srv, player, handler, buf, response) -> {
+        Net.registerServerReceiver(NotchPackets.TRADE_UPDATE, (srv, player, buf) -> {
             int money = buf.readVarInt();
             boolean ready = buf.readBoolean();
             srv.execute(() -> {
@@ -48,7 +48,7 @@ public final class TradeManager {
         });
 
         // Client -> server: cancel (ESC/close)
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_CANCEL, (srv, player, handler, buf, response) -> {
+        Net.registerServerReceiver(NotchPackets.TRADE_CANCEL, (srv, player, buf) -> {
             String reason = buf.readString(64);
             srv.execute(() -> {
                 TradeSession sess = get(player.getUuid());
@@ -228,11 +228,11 @@ public final class TradeManager {
         private void sendCancel(ServerPlayerEntity p, String reason) {
             var buf = PacketByteBufs.create();
             buf.writeString(reason);
-            ServerPlayNetworking.send(p, NotchPackets.TRADE_CANCEL, buf);
+            Net.sendToClient(p, NotchPackets.TRADE_CANCEL, buf);
         }
 
         private void sendDone(ServerPlayerEntity p) {
-            ServerPlayNetworking.send(p, NotchPackets.TRADE_COMPLETE, PacketByteBufs.empty());
+            Net.sendToClient(p, NotchPackets.TRADE_COMPLETE, PacketByteBufs.empty());
         }
     }
 }

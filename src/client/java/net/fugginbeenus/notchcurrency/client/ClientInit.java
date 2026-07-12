@@ -2,7 +2,7 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -100,7 +100,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerNpcPresetReceiver();
 
         // Trade cancel / complete messages
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_CANCEL, (client, h, buf, response) -> {
+        NetClient.registerClientReceiver(NotchPackets.TRADE_CANCEL, (client, buf) -> {
             String reason = buf.readString(64);
             client.execute(() -> {
                 if (client.player != null) {
@@ -110,7 +110,7 @@ public final class ClientInit implements ClientModInitializer {
                 if (client.currentScreen instanceof TradeScreen) client.setScreen(null);
             });
         });
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_COMPLETE, (client, h, buf, response) -> {
+        NetClient.registerClientReceiver(NotchPackets.TRADE_COMPLETE, (client, buf) -> {
             client.execute(() -> {
                 if (client.player != null) {
                     client.player.sendMessage(

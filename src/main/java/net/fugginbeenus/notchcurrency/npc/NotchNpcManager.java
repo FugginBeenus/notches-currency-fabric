@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
@@ -75,7 +75,7 @@ public final class NotchNpcManager {
         buf.writeString(npc.getFollowPlayerName());
         buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0));
         buf.writeString(npc.getFarewellText());
-        ServerPlayNetworking.send(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
+        Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
     public static void setDialogueMode(ServerPlayerEntity sp, NotchNpcEntity npc, int modeOrdinal) {
@@ -390,7 +390,7 @@ public final class NotchNpcManager {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npc.getUuid());
         buf.writeNbt(tree.toNbt());
-        ServerPlayNetworking.send(sp, NotchPackets.NPC_STUDIO_DATA, buf);
+        Net.sendToClient(sp, NotchPackets.NPC_STUDIO_DATA, buf);
     }
 
     /** Replace the NPC's dialogue with a studio-edited tree (owner/op re-validated). The client

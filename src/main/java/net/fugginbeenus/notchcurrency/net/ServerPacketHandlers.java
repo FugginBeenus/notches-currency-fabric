@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.net;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
@@ -32,17 +32,17 @@ public final class ServerPacketHandlers {
     /** Call once from NotchCurrency.onInitialize(). */
     public static void register() {
         // Server handles client's explicit balance request
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.BALANCE_REQUEST,
-                (server, player, handler, buf, response) ->
+                (server, player, buf) ->
                         server.execute(() ->
                                 NotchPackets.sendBalance(player, BalanceStore.get(player)))
         );
 
         // Server handles client's bid request (from right-click GUI)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.BID_REQUEST,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     UUID listingId = buf.readUuid();
                     long bidAmount = buf.readVarLong();
 
@@ -57,9 +57,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles cancel-listing requests from the AH "My Listings" popup
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.AUCTION_CANCEL,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     UUID listingId = buf.readUuid();
 
                     server.execute(() -> {
@@ -115,9 +115,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles create-listing from the "List an Item" screen
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.AUCTION_LIST,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     long price = buf.readVarLong();
                     int days = buf.readVarInt();
                     server.execute(() -> {
@@ -130,9 +130,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles raffle admin GUI "Save & Apply" (op-only)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.RAFFLE_ADMIN_SAVE,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     long price = buf.readVarLong();
                     int cut = buf.readVarInt();
                     int intervalDays = buf.readVarInt();
@@ -180,9 +180,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles bounty board actions (take / claim / turn in) from the GUI
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ACTION,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     UUID bountyId = buf.readUuid();
                     int action = buf.readVarInt();
                     server.execute(() -> {
@@ -197,9 +197,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles bounty admin GUI "Save & Apply" (op-only)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ADMIN_SAVE,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     boolean enabled = buf.readBoolean();
                     int activeCount = buf.readVarInt();
                     int takeLimit = buf.readVarInt();
@@ -224,9 +224,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles loan GUI borrow/repay
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.LOAN_ACTION,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     int action = buf.readVarInt();
                     long amount = buf.readVarLong();
                     server.execute(() -> {
@@ -237,9 +237,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles slot-machine spins (bet typed in the GUI)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.SLOTS_SPIN,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     long bet = buf.readVarLong();
                     server.execute(() -> {
                         if (player.currentScreenHandler
@@ -251,9 +251,9 @@ public final class ServerPacketHandlers {
         );
 
         // Server handles coin-flip bets (side + bet from the GUI; block does the reveal)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.COINFLIP_FLIP,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     boolean guessHeads = buf.readBoolean();
                     long bet = buf.readVarLong();
                     server.execute(() ->
@@ -262,7 +262,7 @@ public final class ServerPacketHandlers {
         );
 
         // ---- Notch NPC editor (owner/op re-checked inside NotchNpcManager) ----
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_ROLE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_ROLE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int ord = buf.readVarInt();
             server.execute(() -> {
@@ -276,7 +276,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_NAME, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_NAME, (server, player, buf) -> {
             UUID id = buf.readUuid();
             String name = buf.readString(64); // editor field caps at 48; wire cap is belt-and-suspenders
             server.execute(() -> {
@@ -287,7 +287,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_FAREWELL, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_FAREWELL, (server, player, buf) -> {
             UUID id = buf.readUuid();
             String text = buf.readString(160);
             server.execute(() -> {
@@ -298,7 +298,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_PICKUP, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_PICKUP, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -308,7 +308,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DELETE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_DELETE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -318,7 +318,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             String nodeId = buf.readString(64); // page ids are <=24 chars of [a-z0-9_]
             int choice = buf.readVarInt();
@@ -326,7 +326,7 @@ public final class ServerPacketHandlers {
                     net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.choose(player, id, nodeId, choice));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_TEMPLATE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_TEMPLATE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -336,7 +336,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_CLEAR, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CLEAR, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -346,7 +346,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_MODE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_MODE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int mode = buf.readVarInt();
             server.execute(() -> {
@@ -357,7 +357,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_STUDIO_OPEN, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_STUDIO_OPEN, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -367,7 +367,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_STUDIO_SAVE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_STUDIO_SAVE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             net.minecraft.nbt.NbtCompound tree = buf.readNbt();
             server.execute(() -> {
@@ -378,7 +378,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_BEHAVIOR, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_BEHAVIOR, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int mode = buf.readVarInt();
             int radius = buf.readVarInt();
@@ -392,7 +392,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_POSE_PART, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_POSE_PART, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int part = buf.readVarInt();
             int x = buf.readVarInt();
@@ -406,7 +406,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_ANIM, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_ANIM, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int anim = buf.readVarInt();
             server.execute(() -> {
@@ -417,7 +417,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_TRANSFORM, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_TRANSFORM, (server, player, buf) -> {
             UUID id = buf.readUuid();
             double dx = buf.readDouble();
             double dy = buf.readDouble();
@@ -432,7 +432,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_EDITOR_REOPEN, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_EDITOR_REOPEN, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -442,7 +442,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_POSE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_POSE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int pose = buf.readVarInt();
             server.execute(() -> {
@@ -453,7 +453,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_PATROL, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_PATROL, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int action = buf.readVarInt();
             int value = buf.readVarInt();
@@ -465,7 +465,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_EQUIP, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_EQUIP, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
@@ -475,7 +475,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_STATS, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_STATS, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int bits = buf.readVarInt();
             server.execute(() -> {
@@ -486,7 +486,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_ATTRS, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_ATTRS, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int maxHealth = buf.readVarInt();
             int speedPct = buf.readVarInt();
@@ -499,7 +499,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.SHOP_MANAGE_ACTION, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.SHOP_MANAGE_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
             String text = buf.readString(160);
             UUID listingId = buf.readBoolean() ? buf.readUuid() : null;
@@ -510,7 +510,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.SHOP_EDIT_ACTION, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.SHOP_EDIT_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
             int price = buf.readVarInt();
             server.execute(() -> {
@@ -520,7 +520,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_OFFER_CREATE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.TRADE_OFFER_CREATE, (server, player, buf) -> {
             long price = buf.readVarLong();
             long giveCoins = buf.readVarLong();
             String target = buf.readString(16);
@@ -531,7 +531,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.TRADE_OFFER_ACTION, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.TRADE_OFFER_ACTION, (server, player, buf) -> {
             java.util.UUID offerId = buf.readUuid();
             int action = buf.readVarInt();
             server.execute(() -> {
@@ -540,7 +540,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.COSMETIC_BUY, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.COSMETIC_BUY, (server, player, buf) -> {
             String offerId = buf.readString(128);
             server.execute(() -> {
                 if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler) {
@@ -549,7 +549,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.ENCHANTER_ACTION, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.ENCHANTER_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
             String enchId = buf.readString(128);
             server.execute(() -> {
@@ -559,7 +559,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_PRESET, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_PRESET, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int action = buf.readVarInt();
             String name = buf.readString(64);
@@ -571,7 +571,7 @@ public final class ServerPacketHandlers {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_SET_APPEARANCE, (server, player, handler, buf, rs) -> {
+        Net.registerServerReceiver(NotchPackets.NPC_SET_APPEARANCE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             String model = buf.readString(64);
             String skinType = buf.readString(16);
@@ -587,9 +587,9 @@ public final class ServerPacketHandlers {
         });
 
         // Server handles ATM withdraw requests (client -> server)
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.ATM_WITHDRAW,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     int requested = buf.readVarInt();
 
                     server.execute(() -> {
@@ -627,9 +627,9 @@ public final class ServerPacketHandlers {
                 }
         );
         // Handle shop purchase requests
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.SHOP_PURCHASE,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     UUID shopId = buf.readUuid();
                     UUID listingId = buf.readUuid();
                     int quantity = buf.readVarInt();
@@ -663,9 +663,9 @@ public final class ServerPacketHandlers {
         );
 
         // Handle shop balance withdrawal
-        ServerPlayNetworking.registerGlobalReceiver(
+        Net.registerServerReceiver(
                 NotchPackets.SHOP_WITHDRAW,
-                (server, player, handler, buf, response) -> {
+                (server, player, buf) -> {
                     UUID shopId = buf.readUuid();
 
                     server.execute(() -> {

@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -257,6 +257,6 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(id);
         buf.writeVarInt(action);
-        ClientPlayNetworking.send(NotchPackets.BOUNTY_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.BOUNTY_ACTION, buf);
     }
 }

@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -147,7 +147,7 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
         buf.writeVarInt((int) parse(activeField.getText(), 5));
         buf.writeVarInt((int) parse(limitField.getText(), 3));
         buf.writeVarInt((int) parse(durField.getText(), 30));
-        ClientPlayNetworking.send(NotchPackets.BOUNTY_ADMIN_SAVE, buf);
+        NetClient.sendToServer(NotchPackets.BOUNTY_ADMIN_SAVE, buf);
     }
 
     private long parse(String s, long fallback) {

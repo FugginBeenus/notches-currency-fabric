@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -187,7 +187,7 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBoolean(selectedHeads);
                 buf.writeVarLong(bet);
-                ClientPlayNetworking.send(NotchPackets.COINFLIP_FLIP, buf);
+                NetClient.sendToServer(NotchPackets.COINFLIP_FLIP, buf);
                 return true;
             }
         }

@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
@@ -145,7 +145,7 @@ public final class NpcDialogueManager {
             buf.writeString(substitute(node.choices().get(v[0]).label(), sp, npcName));
             buf.writeBoolean(v[1] == 1);
         }
-        ServerPlayNetworking.send(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
+        Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
     }
 
     // ---- role hand-off: delayed opens (chat greetings) + farewell lines on screen close ----
@@ -233,7 +233,7 @@ public final class NpcDialogueManager {
         buf.writeString(""); // empty node id = close
         buf.writeString("");
         buf.writeVarInt(0);
-        ServerPlayNetworking.send(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
+        Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
     }
 
     private static String substitute(String text, ServerPlayerEntity sp, String npcName) {

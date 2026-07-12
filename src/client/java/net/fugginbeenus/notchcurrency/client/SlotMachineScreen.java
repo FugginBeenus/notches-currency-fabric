@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -318,7 +318,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
             playSnd(SoundEvents.BLOCK_LEVER_CLICK, 0.8f);
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeVarLong(bet);
-            ClientPlayNetworking.send(NotchPackets.SLOTS_SPIN, buf);
+            NetClient.sendToServer(NotchPackets.SLOTS_SPIN, buf);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);

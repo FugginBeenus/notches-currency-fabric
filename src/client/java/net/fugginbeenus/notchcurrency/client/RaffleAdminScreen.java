@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -189,7 +189,7 @@ public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
         buf.writeVarInt((int) parse(daysField.getText(), 0));
         buf.writeBoolean(enabledToggle);
         buf.writeVarLong(parse(coinsField.getText(), 0));
-        ClientPlayNetworking.send(NotchPackets.RAFFLE_ADMIN_SAVE, buf);
+        NetClient.sendToServer(NotchPackets.RAFFLE_ADMIN_SAVE, buf);
     }
 
     private long parse(String s, long fallback) {

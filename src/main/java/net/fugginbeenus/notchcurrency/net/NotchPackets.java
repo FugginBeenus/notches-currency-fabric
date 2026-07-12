@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.net;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -139,6 +139,6 @@ public final class NotchPackets {
     public static void sendBalance(ServerPlayerEntity sp, long value) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarLong(value);
-        ServerPlayNetworking.send(sp, BALANCE_SYNC, buf);
+        Net.sendToClient(sp, BALANCE_SYNC, buf);
     }
 }

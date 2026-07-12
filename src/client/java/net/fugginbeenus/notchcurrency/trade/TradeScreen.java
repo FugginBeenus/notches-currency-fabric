@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -133,7 +133,7 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
         var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
         buf.writeVarInt(Math.max(0, money));
         buf.writeBoolean(ready);
-        ClientPlayNetworking.send(NotchPackets.TRADE_UPDATE, buf);
+        NetClient.sendToServer(NotchPackets.TRADE_UPDATE, buf);
     }
 
     @Override

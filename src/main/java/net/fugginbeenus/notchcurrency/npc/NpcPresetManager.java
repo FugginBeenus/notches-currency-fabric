@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -151,7 +151,7 @@ public final class NpcPresetManager {
         for (String n : names) {
             buf.writeString(n);
         }
-        ServerPlayNetworking.send(sp, NotchPackets.NPC_PRESET_LIST, buf);
+        Net.sendToClient(sp, NotchPackets.NPC_PRESET_LIST, buf);
     }
 
     public static List<String> list() {

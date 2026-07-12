@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -168,7 +168,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarLong(price);
         buf.writeVarInt(currentDays());
-        ClientPlayNetworking.send(NotchPackets.AUCTION_LIST, buf);
+        NetClient.sendToServer(NotchPackets.AUCTION_LIST, buf);
         priceField.setText("");
     }
 

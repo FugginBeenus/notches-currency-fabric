@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.net;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.PacketByteBuf;
@@ -23,11 +23,11 @@ public final class NotchPacketsClient {
     private NotchPacketsClient() {}
 
     public static void requestBalance() {
-        ClientPlayNetworking.send(BALANCE_REQUEST, PacketByteBufs.empty());
+        NetClient.sendToServer(BALANCE_REQUEST, PacketByteBufs.empty());
     }
 
     public static void registerBalanceReceiver(LongConsumer onBalance) {
-        ClientPlayNetworking.registerGlobalReceiver(BALANCE_SYNC, (client, handler, buf, responseSender) -> {
+        NetClient.registerClientReceiver(BALANCE_SYNC, (client, buf) -> {
             long bal = buf.readVarLong();
             client.execute(() -> onBalance.accept(bal));
         });
@@ -35,7 +35,7 @@ public final class NotchPacketsClient {
 
     // ---- Notch NPC editor ----
     public static void registerNpcEditorReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_EDITOR_OPEN, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.NPC_EDITOR_OPEN, (client, buf) -> {
             UUID npcId = buf.readUuid();
             int roleOrdinal = buf.readVarInt();
             String name = buf.readString();
@@ -78,7 +78,7 @@ public final class NotchPacketsClient {
         buf.writeUuid(npcId);
         buf.writeVarInt(action);
         buf.writeVarInt(value);
-        ClientPlayNetworking.send(NotchPackets.NPC_PATROL, buf);
+        NetClient.sendToServer(NotchPackets.NPC_PATROL, buf);
     }
 
     /** Ask the server to reopen the NPC editor — used by sub-screens' Back buttons. */
@@ -92,14 +92,14 @@ public final class NotchPacketsClient {
         net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen.reopenAtTab = returnTab;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_EDITOR_REOPEN, buf);
+        NetClient.sendToServer(NotchPackets.NPC_EDITOR_REOPEN, buf);
     }
 
     public static void sendNpcSetPose(UUID npcId, int pose) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(pose);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_POSE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_POSE, buf);
     }
 
     public static void sendNpcPosePart(UUID npcId, int part, int degX, int degY, int degZ) {
@@ -109,7 +109,7 @@ public final class NotchPacketsClient {
         buf.writeVarInt(degX);
         buf.writeVarInt(degY);
         buf.writeVarInt(degZ);
-        ClientPlayNetworking.send(NotchPackets.NPC_POSE_PART, buf);
+        NetClient.sendToServer(NotchPackets.NPC_POSE_PART, buf);
     }
 
     /** Set the idle animation layered on the pose (statue/breathe/sway/lively). */
@@ -117,7 +117,7 @@ public final class NotchPacketsClient {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(anim);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_ANIM, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_ANIM, buf);
     }
 
     /** Move (delta blocks) and/or rotate (absolute yaw, when applyYaw) the whole NPC. */
@@ -129,21 +129,21 @@ public final class NotchPacketsClient {
         buf.writeDouble(dz);
         buf.writeFloat(yawDeg);
         buf.writeBoolean(applyYaw);
-        ClientPlayNetworking.send(NotchPackets.NPC_TRANSFORM, buf);
+        NetClient.sendToServer(NotchPackets.NPC_TRANSFORM, buf);
     }
 
     public static void sendNpcDialogueMode(UUID npcId, int modeOrdinal) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(modeOrdinal);
-        ClientPlayNetworking.send(NotchPackets.NPC_DIALOGUE_MODE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_DIALOGUE_MODE, buf);
     }
 
     public static void sendNpcSetStats(UUID npcId, int bits) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(bits);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_STATS, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_STATS, buf);
     }
 
     public static void sendNpcSetAttrs(UUID npcId, int maxHealth, int speedPct, int regen) {
@@ -152,7 +152,7 @@ public final class NotchPacketsClient {
         buf.writeVarInt(maxHealth);
         buf.writeVarInt(speedPct);
         buf.writeVarInt(regen);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_ATTRS, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_ATTRS, buf);
     }
 
     public static void sendShopPurchase(UUID shopId, UUID listingId, int quantity) {
@@ -161,7 +161,7 @@ public final class NotchPacketsClient {
         buf.writeUuid(listingId);
         buf.writeVarInt(quantity);
         buf.writeBoolean(false); // legacy useCoins flag: read and ignored by the server
-        ClientPlayNetworking.send(NotchPackets.SHOP_PURCHASE, buf);
+        NetClient.sendToServer(NotchPackets.SHOP_PURCHASE, buf);
     }
 
     public static void sendShopManageAction(int action, String text, @Nullable UUID listingId) {
@@ -170,20 +170,20 @@ public final class NotchPacketsClient {
         buf.writeString(text);
         buf.writeBoolean(listingId != null);
         if (listingId != null) buf.writeUuid(listingId);
-        ClientPlayNetworking.send(NotchPackets.SHOP_MANAGE_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.SHOP_MANAGE_ACTION, buf);
     }
 
     public static void sendShopEditAction(int action, int price) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarInt(action);
         buf.writeVarInt(price);
-        ClientPlayNetworking.send(NotchPackets.SHOP_EDIT_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.SHOP_EDIT_ACTION, buf);
     }
 
     public static void sendShopWithdraw(UUID shopId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(shopId);
-        ClientPlayNetworking.send(NotchPackets.SHOP_WITHDRAW, buf);
+        NetClient.sendToServer(NotchPackets.SHOP_WITHDRAW, buf);
     }
 
     public static void sendTradeOfferCreate(long price, long giveCoins, String target) {
@@ -191,27 +191,27 @@ public final class NotchPacketsClient {
         buf.writeVarLong(price);
         buf.writeVarLong(giveCoins);
         buf.writeString(target);
-        ClientPlayNetworking.send(NotchPackets.TRADE_OFFER_CREATE, buf);
+        NetClient.sendToServer(NotchPackets.TRADE_OFFER_CREATE, buf);
     }
 
     public static void sendTradeOfferAction(UUID offerId, int action) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(offerId);
         buf.writeVarInt(action);
-        ClientPlayNetworking.send(NotchPackets.TRADE_OFFER_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.TRADE_OFFER_ACTION, buf);
     }
 
     public static void sendCosmeticBuy(String offerId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(offerId);
-        ClientPlayNetworking.send(NotchPackets.COSMETIC_BUY, buf);
+        NetClient.sendToServer(NotchPackets.COSMETIC_BUY, buf);
     }
 
     public static void sendEnchanterAction(int action, String enchantId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarInt(action);
         buf.writeString(enchantId);
-        ClientPlayNetworking.send(NotchPackets.ENCHANTER_ACTION, buf);
+        NetClient.sendToServer(NotchPackets.ENCHANTER_ACTION, buf);
     }
 
     public static void sendNpcPreset(UUID npcId, int action, String name) {
@@ -219,11 +219,11 @@ public final class NotchPacketsClient {
         buf.writeUuid(npcId);
         buf.writeVarInt(action);
         buf.writeString(name);
-        ClientPlayNetworking.send(NotchPackets.NPC_PRESET, buf);
+        NetClient.sendToServer(NotchPackets.NPC_PRESET, buf);
     }
 
     public static void registerNpcPresetReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_PRESET_LIST, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.NPC_PRESET_LIST, (client, buf) -> {
             UUID npcId = buf.readUuid();
             int count = buf.readVarInt();
             java.util.List<String> names = new java.util.ArrayList<>(count);
@@ -245,11 +245,11 @@ public final class NotchPacketsClient {
     public static void sendNpcOpenEquip(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_EQUIP, buf);
+        NetClient.sendToServer(NotchPackets.NPC_EQUIP, buf);
     }
 
     public static void registerNpcDialogueReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_DIALOGUE_OPEN, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.NPC_DIALOGUE_OPEN, (client, buf) -> {
             UUID npcId = buf.readUuid();
             String npcName = buf.readString();
             String nodeId = buf.readString();
@@ -283,23 +283,23 @@ public final class NotchPacketsClient {
         buf.writeUuid(npcId);
         buf.writeString(nodeId);
         buf.writeVarInt(choiceIndex);
-        ClientPlayNetworking.send(NotchPackets.NPC_DIALOGUE_CHOICE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_DIALOGUE_CHOICE, buf);
     }
 
     public static void sendNpcDialogueTemplate(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_DIALOGUE_TEMPLATE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_DIALOGUE_TEMPLATE, buf);
     }
 
     public static void sendNpcDialogueClear(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_DIALOGUE_CLEAR, buf);
+        NetClient.sendToServer(NotchPackets.NPC_DIALOGUE_CLEAR, buf);
     }
 
     public static void registerNpcStudioReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.NPC_STUDIO_DATA, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.NPC_STUDIO_DATA, (client, buf) -> {
             UUID npcId = buf.readUuid();
             net.minecraft.nbt.NbtCompound tree = buf.readNbt();
             client.execute(() -> {
@@ -319,7 +319,7 @@ public final class NotchPacketsClient {
 
     /** The server's custom coin skin, pushed on join — written into a local auto-enabled pack. */
     public static void registerCurrencySyncReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.CURRENCY_SYNC, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.CURRENCY_SYNC, (client, buf) -> {
             String itemName = buf.readString(64);
             byte[] coin = buf.readBoolean() ? buf.readByteArray() : null;
             byte[] tails = buf.readBoolean() ? buf.readByteArray() : null;
@@ -330,7 +330,7 @@ public final class NotchPacketsClient {
 
     /** The taken-bounty list for the on-screen tracker HUD. */
     public static void registerBountyTrackerReceiver() {
-        ClientPlayNetworking.registerGlobalReceiver(NotchPackets.BOUNTY_TRACKER, (client, handler, buf, rs) -> {
+        NetClient.registerClientReceiver(NotchPackets.BOUNTY_TRACKER, (client, buf) -> {
             int count = buf.readVarInt();
             var list = new java.util.ArrayList<net.fugginbeenus.notchcurrency.client.BountyTrackerHud.Entry>();
             for (int i = 0; i < count; i++) {
@@ -360,14 +360,14 @@ public final class NotchPacketsClient {
         nextStudioOpensQuickLines = quickLines;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_STUDIO_OPEN, buf);
+        NetClient.sendToServer(NotchPackets.NPC_STUDIO_OPEN, buf);
     }
 
     public static void sendNpcStudioSave(UUID npcId, net.minecraft.nbt.NbtCompound treeNbt) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeNbt(treeNbt);
-        ClientPlayNetworking.send(NotchPackets.NPC_STUDIO_SAVE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_STUDIO_SAVE, buf);
     }
 
     public static void sendNpcSetBehavior(UUID npcId, int modeOrdinal, int radius, String followName, int movesBits) {
@@ -377,7 +377,7 @@ public final class NotchPacketsClient {
         buf.writeVarInt(radius);
         buf.writeString(followName);
         buf.writeVarInt(movesBits);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_BEHAVIOR, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_BEHAVIOR, buf);
     }
 
     public static void sendNpcSetAppearance(UUID npcId, String model, String skinType, String skinValue, boolean slim, float scale) {
@@ -388,40 +388,40 @@ public final class NotchPacketsClient {
         buf.writeString(skinValue);
         buf.writeBoolean(slim);
         buf.writeFloat(scale);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_APPEARANCE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_APPEARANCE, buf);
     }
 
     public static void sendNpcSetRole(UUID npcId, int roleOrdinal) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(roleOrdinal);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_ROLE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_ROLE, buf);
     }
 
     public static void sendNpcSetName(UUID npcId, String name) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeString(name);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_NAME, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_NAME, buf);
     }
 
     public static void sendNpcSetFarewell(UUID npcId, String text) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeString(text);
-        ClientPlayNetworking.send(NotchPackets.NPC_SET_FAREWELL, buf);
+        NetClient.sendToServer(NotchPackets.NPC_SET_FAREWELL, buf);
     }
 
     public static void sendNpcPickup(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_PICKUP, buf);
+        NetClient.sendToServer(NotchPackets.NPC_PICKUP, buf);
     }
 
     public static void sendNpcDelete(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
-        ClientPlayNetworking.send(NotchPackets.NPC_DELETE, buf);
+        NetClient.sendToServer(NotchPackets.NPC_DELETE, buf);
     }
 
 }
