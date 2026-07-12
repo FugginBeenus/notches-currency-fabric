@@ -4,6 +4,7 @@ import net.fugginbeenus.notchcurrency.block.CoinFace;
 import net.fugginbeenus.notchcurrency.block.CoinFlipBlock;
 import net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
@@ -44,21 +45,25 @@ public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlip
         boolean tails = state.get(CoinFlipBlock.FACE) == CoinFace.TAILS;
         ItemStack coin = new ItemStack(tails ? ModItems.COIN_TAILS : ModItems.NOTCH_COIN);
 
-        matrices.push();
-        matrices.translate(0.5, TABLE_Y, 0.5);
-
+        float spin = 0f;
+        float arc = 0f;
         if (flipping && be.flipStartTick() >= 0) {
             float elapsed = (world.getTime() - be.flipStartTick()) + tickDelta;
-            float dur = Math.max(1f, be.revealTicks());
-            float t = MathHelper.clamp(elapsed / dur, 0f, 1f);
-            matrices.translate(0.0, 4f * PEAK * t * (1f - t), 0.0);           // parabola arc up + back down
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(elapsed * 52f)); // fast tumble
-        } else {
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f));  // lie flat, face up
+            float t = MathHelper.clamp(elapsed / Math.max(1f, be.revealTicks()), 0f, 1f);
+            arc = 4f * PEAK * t * (1f - t);   // parabola arc up + back down
+            spin = elapsed * 52f;              // fast tumble on top of the flat rest
         }
+
+        matrices.push();
+        matrices.translate(0.5, TABLE_Y + arc, 0.5);
+        // Flat on the felt (90° from the item's upright card) + the flip spin, both around X so it
+        // tumbles toward the front rather than spinning edge-on.
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f + spin));
         matrices.scale(SIZE, SIZE, SIZE);
 
-        itemRenderer.renderItem(coin, ModelTransformationMode.FIXED, light, overlay,
+        // Full-bright: the coin floats above the block, so the block's baked light renders it black.
+        itemRenderer.renderItem(coin, ModelTransformationMode.FIXED,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE, overlay,
                 matrices, vertexConsumers, world, 0);
         matrices.pop();
     }
