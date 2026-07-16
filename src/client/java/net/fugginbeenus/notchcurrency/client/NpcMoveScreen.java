@@ -260,4 +260,12 @@ public class NpcMoveScreen extends Screen {
         // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
     }
     *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
+    }
+    *///?}
 }

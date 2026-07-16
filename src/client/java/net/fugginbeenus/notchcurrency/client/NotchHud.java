@@ -32,6 +32,21 @@ public final class NotchHud implements HudRenderCallback {
     private static final Identifier COIN_HUD_TEX =
             NotchCurrency.id("textures/item/coin.png");
 
+    // On 1.21 HUD callbacks draw AFTER chat, so the balance would sit on top of long chat lines.
+    // When a game message is wide enough to reach under the HUD, hide it for chat's fade-out.
+    private static long chatClashUntil = 0;
+
+    /** Called for every game chat message (from ClientInit); only consulted on 1.21. */
+    public static void noteChatMessage(net.minecraft.text.Text message) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc == null) return;
+        int lineEnd = 4 + mc.textRenderer.getWidth(message);
+        int hotbarLeft = mc.getWindow().getScaledWidth() / 2 - 91;
+        if (lineEnd >= hotbarLeft + 60) {
+            chatClashUntil = System.currentTimeMillis() + 10_000; // vanilla chat fade
+        }
+    }
+
     public static void setBalance(long value) {
         BALANCE = value;
     }
@@ -96,6 +111,10 @@ public final class NotchHud implements HudRenderCallback {
      */
     private static boolean shouldHide(MinecraftClient mc) {
         if (mc.options.hudHidden) return true;
+
+        //? if >=1.21 {
+        /*if (System.currentTimeMillis() < chatClashUntil) return true;
+        *///?}
 
         var player = mc.player;
         if (player == null) return true;

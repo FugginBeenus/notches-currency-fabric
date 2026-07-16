@@ -33,6 +33,11 @@ public final class ClientInit implements ClientModInitializer {
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
                 () -> net.minecraft.client.MinecraftClient.getInstance().isOnThread());
 
+        // The balance HUD ducks out of the way of wide chat lines (only matters on 1.21, where
+        // HUD callbacks draw over chat).
+        net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register(
+                (message, overlay) -> { if (!overlay) NotchHud.noteChatMessage(message); });
+
         // Rebuild the custom-currency resource pack from the admin's art + config, before resources load.
         CurrencyPackGenerator.generate();
 

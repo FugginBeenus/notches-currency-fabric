@@ -174,7 +174,9 @@ public class NotchNpcEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        //? if <1.21 {
+        //? if >=1.21 {
+        /*renderInGameBackground(ctx);
+        *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
@@ -910,6 +912,14 @@ public class NotchNpcEditorScreen extends Screen {
     /*@Override
     protected void applyBlur(float delta) {
         // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }
