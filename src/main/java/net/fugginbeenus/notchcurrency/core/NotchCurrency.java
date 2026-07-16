@@ -77,6 +77,10 @@ public class NotchCurrency implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // Packet channels must be declared before ANYTHING registers a receiver or sends —
+        // TradeManager.init() below registers receivers, so this has to be the first thing that runs.
+        net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
+
         // GeckoLib (animation framework for the Notch NPC entity) — must init before entities.
         // 4.8 (the 1.21 build) initializes itself; the manual call only exists on 4.4.
         //? if <1.21
@@ -211,9 +215,6 @@ public class NotchCurrency implements ModInitializer {
             ServerPlayerEntity sp = newP;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         });
-
-        // Packet channels must be declared before any receiver is registered or anything is sent.
-        net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
 
         // Server-bound packet receivers (balance request, bids, ATM withdraw, shop ops)
         ServerPacketHandlers.register();
