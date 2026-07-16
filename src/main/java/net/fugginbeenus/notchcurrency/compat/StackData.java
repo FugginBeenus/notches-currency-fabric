@@ -46,19 +46,42 @@ public final class StackData {
     /** The stack's custom-data compound for reading, or {@code null} if none is present. */
     @Nullable
     private static NbtCompound read(ItemStack stack) {
+        //? if >=1.21 {
+        /*net.minecraft.component.type.NbtComponent held =
+                stack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+        return held == null ? null : held.copyNbt();
+        *///?} else {
         return stack.getNbt();
+        //?}
     }
 
-    /** The stack's custom-data compound for writing (created if absent). */
-    private static NbtCompound write(ItemStack stack) {
-        return stack.getOrCreateNbt();
+    /**
+     * Read-modify-write the custom data. Every mutating method funnels through here because on 1.21
+     * the component is copy-on-write: mutating a compound you were handed does nothing unless it's
+     * set back. On 1.20.1 the compound is live and the set-back is a no-op.
+     */
+    private static void mutate(ItemStack stack, java.util.function.Consumer<NbtCompound> action) {
+        //? if >=1.21 {
+        /*NbtCompound data = stack.getOrDefault(
+                net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+        action.accept(data);
+        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                net.minecraft.component.type.NbtComponent.of(data));
+        *///?} else {
+        action.accept(stack.getOrCreateNbt());
+        //?}
     }
 
     // ---- presence ----
 
     /** True if the stack carries any custom data at all (was {@code stack.hasNbt()}). */
     public static boolean hasData(ItemStack stack) {
+        //? if >=1.21 {
+        /*return stack.contains(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+        *///?} else {
         return stack.hasNbt();
+        //?}
     }
 
     /** True if the given key is present. */
@@ -75,8 +98,8 @@ public final class StackData {
 
     /** Remove a key if present. */
     public static void remove(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
-        if (nbt != null) nbt.remove(key);
+        if (!hasData(stack)) return;
+        mutate(stack, data -> data.remove(key));
     }
 
     // ---- typed getters (vanilla defaults for a missing key) ----
@@ -126,31 +149,31 @@ public final class StackData {
     // ---- typed setters (full read-modify-write; safe on copy-on-write component storage) ----
 
     public static void putInt(ItemStack stack, String key, int value) {
-        write(stack).putInt(key, value);
+        mutate(stack, data -> data.putInt(key, value));
     }
 
     public static void putLong(ItemStack stack, String key, long value) {
-        write(stack).putLong(key, value);
+        mutate(stack, data -> data.putLong(key, value));
     }
 
     public static void putDouble(ItemStack stack, String key, double value) {
-        write(stack).putDouble(key, value);
+        mutate(stack, data -> data.putDouble(key, value));
     }
 
     public static void putBoolean(ItemStack stack, String key, boolean value) {
-        write(stack).putBoolean(key, value);
+        mutate(stack, data -> data.putBoolean(key, value));
     }
 
     public static void putString(ItemStack stack, String key, String value) {
-        write(stack).putString(key, value);
+        mutate(stack, data -> data.putString(key, value));
     }
 
     public static void putUuid(ItemStack stack, String key, UUID value) {
-        write(stack).putUuid(key, value);
+        mutate(stack, data -> data.putUuid(key, value));
     }
 
     public static void putCompound(ItemStack stack, String key, NbtCompound value) {
-        write(stack).put(key, value);
+        mutate(stack, data -> data.put(key, value));
     }
 
     // ---- bulk read (for carrier stacks whose readers do many typed lookups) ----
@@ -182,17 +205,32 @@ public final class StackData {
      * don't interleave {@link #getInt}-style reads against the same stack before committing.
      */
     public static NbtCompound editData(ItemStack stack) {
+        //? if >=1.21 {
+        /*return stack.getOrDefault(
+                net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+        *///?} else {
         return stack.getOrCreateNbt();
+        //?}
     }
 
     /** Commit a compound obtained from {@link #editData} back onto the stack. */
     public static void commitData(ItemStack stack, NbtCompound data) {
+        //? if >=1.21 {
+        /*stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
+                net.minecraft.component.type.NbtComponent.of(data));
+        *///?} else {
         stack.setNbt(data);
+        //?}
     }
 
     /** Strip all custom data from the stack (was {@code stack.setNbt(null)}). */
     public static void clearData(ItemStack stack) {
+        //? if >=1.21 {
+        /*stack.remove(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+        *///?} else {
         stack.setNbt(null);
+        //?}
     }
 
     // ---- whole-stack persistence (for world-save data classes) ----
@@ -203,7 +241,13 @@ public final class StackData {
      * {@code ItemStack.CODEC} encode against the stashed registry manager.
      */
     public static NbtCompound writeStack(ItemStack stack) {
+        //? if >=1.21 {
+        /*return (NbtCompound) ItemStack.OPTIONAL_CODEC
+                .encodeStart(RegistryAccess.get().getOps(net.minecraft.nbt.NbtOps.INSTANCE), stack)
+                .getOrThrow();
+        *///?} else {
         return stack.writeNbt(new NbtCompound());
+        //?}
     }
 
     /**
@@ -212,6 +256,13 @@ public final class StackData {
      * {@code ItemStack.CODEC} decode against the stashed registry manager.
      */
     public static ItemStack readStack(NbtCompound nbt) {
+        //? if >=1.21 {
+        /*return ItemStack.OPTIONAL_CODEC
+                .parse(RegistryAccess.get().getOps(net.minecraft.nbt.NbtOps.INSTANCE), nbt)
+                .result()
+                .orElse(ItemStack.EMPTY);
+        *///?} else {
         return ItemStack.fromNbt(nbt);
+        //?}
     }
 }
