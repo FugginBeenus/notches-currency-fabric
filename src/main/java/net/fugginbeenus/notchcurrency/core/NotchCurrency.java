@@ -78,6 +78,8 @@ public class NotchCurrency implements ModInitializer {
     @Override
     public void onInitialize() {
         // GeckoLib (animation framework for the Notch NPC entity) — must init before entities.
+        // 4.8 (the 1.21 build) initializes itself; the manual call only exists on 4.4.
+        //? if <1.21
         software.bernie.geckolib.GeckoLib.initialize();
 
         // Registries

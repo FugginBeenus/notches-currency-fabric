@@ -26,8 +26,13 @@ public final class BossCurrencyInject {
     private BossCurrencyInject() {}
 
     public static void init() {
+        //? if >=1.21 {
+        /*LootTableEvents.MODIFY.register((key, table, source, registries) -> {
+            Identifier id = key.getValue();
+        *///?} else {
         // Fabric Loot v2 signature: (resourceManager, lootManager, id, tableBuilder, source)
         LootTableEvents.MODIFY.register((resourceManager, lootManager, id, table, source) -> {
+        //?}
             if (BOSS_TABLES.contains(id)) {
                 LootPool.Builder pool = LootPool.builder()
                         .conditionally(RandomChanceLootCondition.builder(0.05f)) // 5%

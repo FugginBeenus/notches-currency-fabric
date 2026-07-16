@@ -51,6 +51,29 @@ public final class VillagerCoinTrades {
 
             // The price has to fit the two buy slots: one coin stack, or an overflow split into the
             // second slot when it's free. Anything pricier stays an emerald trade.
+            //? if >=1.21 {
+            /*java.util.Optional<net.minecraft.village.TradedItem> second = offer.getSecondBuyItem();
+            java.util.Optional<net.minecraft.village.TradedItem> secondOut;
+            if (cost <= max) {
+                coins.setCount(cost);
+                secondOut = second;
+            } else if (second.isEmpty() && cost <= max * 2) {
+                coins.setCount(max);
+                secondOut = java.util.Optional.of(
+                        new net.minecraft.village.TradedItem(ModItems.NOTCH_COIN, cost - max));
+            } else {
+                continue;
+            }
+
+            int chance = emeralds >= 8 ? Math.min(100, chancePercent * 2) : chancePercent;
+            if (random.nextInt(100) >= chance) continue;
+
+            offers.set(i, new TradeOffer(
+                    new net.minecraft.village.TradedItem(ModItems.NOTCH_COIN, coins.getCount()),
+                    secondOut, offer.getSellItem(),
+                    offer.getUses(), offer.getMaxUses(), offer.getMerchantExperience(),
+                    offer.getPriceMultiplier()));
+            *///?} else {
             ItemStack second = offer.getSecondBuyItem();
             ItemStack secondOut;
             if (cost <= max) {
@@ -69,6 +92,7 @@ public final class VillagerCoinTrades {
             offers.set(i, new TradeOffer(coins, secondOut, offer.getSellItem(),
                     offer.getUses(), offer.getMaxUses(), offer.getMerchantExperience(),
                     offer.getPriceMultiplier()));
+            //?}
         }
     }
 }

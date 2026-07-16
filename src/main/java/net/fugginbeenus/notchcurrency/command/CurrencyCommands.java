@@ -76,8 +76,12 @@ public final class CurrencyCommands {
         );
         dispatcher.register(
                 CommandManager.literal("bal")
-                        .executes(ctx -> ctx.getSource().getServer().getCommandManager()
-                                .executeWithPrefix(ctx.getSource(), "balance"))
+                        .executes(ctx -> {
+                            // Block form: executeWithPrefix stopped returning an int in 1.21.
+                            ctx.getSource().getServer().getCommandManager()
+                                    .executeWithPrefix(ctx.getSource(), "balance");
+                            return 1;
+                        })
         );
 
         // ===== /pay <player> <amount> =====

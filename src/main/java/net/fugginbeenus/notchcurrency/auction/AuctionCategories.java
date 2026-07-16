@@ -54,7 +54,11 @@ public final class AuctionCategories {
                 item instanceof BowItem ||
                 item instanceof CrossbowItem ||
                 item instanceof ShieldItem ||
+                //? if >=1.21 {
+                /*item instanceof AnimalArmorItem) {
+                *///?} else {
                 item instanceof HorseArmorItem) {
+                //?}
             return "gear";
         }
 

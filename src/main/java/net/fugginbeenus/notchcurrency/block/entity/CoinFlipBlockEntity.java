@@ -67,7 +67,12 @@ public class CoinFlipBlockEntity extends BlockEntity {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound toInitialChunkDataNbt(net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+        return createNbt(registries);
+    *///?} else {
     public NbtCompound toInitialChunkDataNbt() {
         return createNbt();
+    //?}
     }
 }

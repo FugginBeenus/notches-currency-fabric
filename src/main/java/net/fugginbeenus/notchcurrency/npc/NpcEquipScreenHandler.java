@@ -28,6 +28,27 @@ public class NpcEquipScreenHandler extends ScreenHandler {
     private final Inventory equip;
     @Nullable private final NotchNpcEntity npc;
 
+    /** Where an item wants to be equipped. 1.21 made the vanilla lookup an instance method, so this
+     *  replicates the old static logic (Equipment interface, shield to offhand, else main hand). */
+    private static EquipmentSlot preferredSlot(ItemStack stack) {
+        //? if >=1.21 {
+        /*net.minecraft.item.Equipment eq = net.minecraft.item.Equipment.fromStack(stack);
+        if (eq != null) return eq.getSlotType();
+        return stack.isOf(net.minecraft.item.Items.SHIELD) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
+        *///?} else {
+        return LivingEntity.getPreferredEquipmentSlot(stack);
+        //?}
+    }
+
+    /** 1.21 split the ARMOR slot type into humanoid and animal armor. */
+    private static boolean isArmor(EquipmentSlot slot) {
+        //? if >=1.21 {
+        /*return slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR;
+        *///?} else {
+        return slot.getType() == EquipmentSlot.Type.ARMOR;
+        //?}
+    }
+
     /** Client constructor. */
     public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv) {
         this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null);
@@ -70,10 +91,10 @@ public class NpcEquipScreenHandler extends ScreenHandler {
             if (!this.insertItem(stack, 6, 42, true)) return ItemStack.EMPTY;
         } else {
             // Player inventory -> the item's preferred slot (armor to its piece, else the hands).
-            EquipmentSlot preferred = LivingEntity.getPreferredEquipmentSlot(stack);
+            EquipmentSlot preferred = preferredSlot(stack);
             int target = indexOf(preferred);
             boolean moved = target >= 0 && this.insertItem(stack, target, target + 1, false);
-            if (!moved && preferred.getType() != EquipmentSlot.Type.ARMOR) {
+            if (!moved && !isArmor(preferred)) {
                 moved = this.insertItem(stack, 4, 6, false); // either hand
             }
             if (!moved) return ItemStack.EMPTY;
@@ -107,13 +128,13 @@ public class NpcEquipScreenHandler extends ScreenHandler {
 
         @Override
         public boolean canInsert(ItemStack stack) {
-            if (type.getType() != EquipmentSlot.Type.ARMOR) return true;
-            return LivingEntity.getPreferredEquipmentSlot(stack) == type;
+            if (!isArmor(type)) return true;
+            return preferredSlot(stack) == type;
         }
 
         @Override
         public int getMaxItemCount() {
-            return type.getType() == EquipmentSlot.Type.ARMOR ? 1 : 64;
+            return isArmor(type) ? 1 : 64;
         }
     }
 }

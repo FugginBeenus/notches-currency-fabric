@@ -156,7 +156,12 @@ public class BalloonEntity extends Entity {
         sw.playSound(null, getBlockPos(), SoundEvents.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 0.8f, 1.1f);
 
         // 2) Roll loot table
+        //? if >=1.21 {
+        /*LootTable table = sw.getServer().getReloadableRegistries().getLootTable(
+                net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.LOOT_TABLE, LOOT));
+        *///?} else {
         LootTable table = sw.getServer().getLootManager().getLootTable(LOOT);
+        //?}
         LootContextParameterSet ctx = new LootContextParameterSet.Builder(sw)
                 .add(LootContextParameters.ORIGIN, this.getPos())
                 .add(LootContextParameters.THIS_ENTITY, this)

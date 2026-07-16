@@ -72,7 +72,12 @@ public class GoldenCacheBlock extends Block {
             }
 
             // --- 3) Loot from loot table (with fallback) ---
+            //? if >=1.21 {
+            /*LootTable table = sw.getServer().getReloadableRegistries().getLootTable(
+                    net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.LOOT_TABLE, GoldenCacheManager.LOOT));
+            *///?} else {
             LootTable table = sw.getServer().getLootManager().getLootTable(GoldenCacheManager.LOOT);
+            //?}
             LootContextParameterSet ctx = new LootContextParameterSet.Builder(sw)
                     .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
                     .add(LootContextParameters.THIS_ENTITY, player)

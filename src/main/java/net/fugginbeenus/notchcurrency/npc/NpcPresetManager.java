@@ -63,7 +63,11 @@ public final class NpcPresetManager {
                         .formatted(Formatting.RED), false);
                 return;
             }
+            //? if >=1.21 {
+            /*NbtIo.writeCompressed(tag, file.toPath());
+            *///?} else {
             NbtIo.writeCompressed(tag, file);
+            //?}
             sp.sendMessage(Text.literal("Preset '" + name + "' saved.").formatted(Formatting.GREEN), false);
         } catch (IOException e) {
             sp.sendMessage(Text.literal("Couldn't save the preset: " + e.getMessage()).formatted(Formatting.RED), false);
@@ -89,7 +93,11 @@ public final class NpcPresetManager {
                 msg(actor, "No preset named '" + name + "'.", Formatting.RED);
                 return false;
             }
+            //? if >=1.21 {
+            /*tag = NbtIo.readCompressed(file.toPath(), net.minecraft.nbt.NbtSizeTracker.ofUnlimitedBytes());
+            *///?} else {
             tag = NbtIo.readCompressed(file);
+            //?}
         } catch (IOException e) {
             msg(actor, "Couldn't read the preset: " + e.getMessage(), Formatting.RED);
             return false;

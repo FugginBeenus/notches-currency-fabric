@@ -475,28 +475,25 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
         StackData.commitData(base, tag);
 
-        // Lore for vanilla hover (a vanilla component seam, kept as raw NBT for now)
+        // Lore for vanilla hover. The lines are the same on both versions; only how they attach
+        // differs — the display NBT tag on 1.20.1, the LORE component on 1.21.
+        java.util.List<Text> loreLines = new java.util.ArrayList<>();
+        loreLines.add(Text.literal("Price: " + listing.price + " ").formatted(Formatting.GOLD));
+        if (listing.highestBid > 0) {
+            loreLines.add(Text.literal("Highest bid: " + listing.highestBid + " ").formatted(Formatting.YELLOW));
+        }
+        loreLines.add(Text.literal("Seller: " + listing.sellerName).formatted(Formatting.GRAY));
+        loreLines.add(Text.literal("Click to buy / bid").formatted(Formatting.YELLOW));
+
+        //? if >=1.21 {
+        /*base.set(net.minecraft.component.DataComponentTypes.LORE,
+                new net.minecraft.component.type.LoreComponent(loreLines));
+        *///?} else {
         NbtCompound display = base.getOrCreateSubNbt("display");
         NbtList lore = new NbtList();
-
-        lore.add(NbtString.of(Text.Serializer.toJson(
-                Text.literal("Price: " + listing.price + " ").formatted(Formatting.GOLD)
-        )));
-
-        if (listing.highestBid > 0) {
-            lore.add(NbtString.of(Text.Serializer.toJson(
-                    Text.literal("Highest bid: " + listing.highestBid + " ").formatted(Formatting.YELLOW)
-            )));
-        }
-
-        lore.add(NbtString.of(Text.Serializer.toJson(
-                Text.literal("Seller: " + listing.sellerName).formatted(Formatting.GRAY)
-        )));
-        lore.add(NbtString.of(Text.Serializer.toJson(
-                Text.literal("Click to buy / bid").formatted(Formatting.YELLOW)
-        )));
-
+        for (Text line : loreLines) lore.add(NbtString.of(Text.Serializer.toJson(line)));
         display.put("Lore", lore);
+        //?}
         return base;
     }
 
