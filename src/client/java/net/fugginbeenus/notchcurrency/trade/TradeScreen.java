@@ -145,7 +145,11 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
             otherMoneyField.setText(want);
         }
 
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
 
         // Draw "CONFIRM"/"READY" label (independent nudge from hitbox)

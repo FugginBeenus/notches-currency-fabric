@@ -63,7 +63,11 @@ public class QuickLinesScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Quick Lines", px + W / 2, py + 8);
         NotchWidgets.centerText(ctx, this.textRenderer,

@@ -66,7 +66,11 @@ public class NpcPresetScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "NPC Presets", px + W / 2, py + 8);
@@ -152,7 +156,11 @@ public class NpcPresetScreen extends Screen {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         int maxScroll = Math.max(0, presets.size() - VISIBLE_ROWS);
         scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(amount)));
         return true;

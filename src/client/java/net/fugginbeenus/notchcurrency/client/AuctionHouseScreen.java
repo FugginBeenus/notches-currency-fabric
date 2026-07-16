@@ -876,7 +876,11 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
 

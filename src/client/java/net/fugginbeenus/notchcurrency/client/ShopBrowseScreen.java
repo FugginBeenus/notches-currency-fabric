@@ -162,7 +162,11 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
         // Trade-row tooltip.
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
@@ -234,13 +238,21 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         if (pages() > 1) {
             if (amount < 0) clickButton(1);
             else if (amount > 0) clickButton(0);
             return true;
         }
+        //? if >=1.21 {
+        /*return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount);
+        *///?} else {
         return super.mouseScrolled(mouseX, mouseY, amount);
+        //?}
     }
 
     private void clickButton(int id) {

@@ -239,7 +239,11 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
         // Card tooltip: full name, description, price.
@@ -336,13 +340,21 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         if (tab != 2) {
             scroll -= (int) Math.signum(amount);
             clampScroll(cards().size());
             return true;
         }
+        //? if >=1.21 {
+        /*return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount);
+        *///?} else {
         return super.mouseScrolled(mouseX, mouseY, amount);
+        //?}
     }
 
     private void clampScroll(int count) {

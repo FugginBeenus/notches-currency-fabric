@@ -174,7 +174,11 @@ public class NotchNpcEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "NPC Editor", px + W / 2, py + 8);
         drawTabs(ctx, mouseX, mouseY);
@@ -223,7 +227,7 @@ public class NotchNpcEditorScreen extends Screen {
             npc.setInvisible(false); // always show the NPC in its own editor preview
             float lookX = (px + PREV_X + PREV_W / 2f) - mx;
             float lookY = (py + PREV_Y + 40f) - my;
-            InventoryScreen.drawEntity(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 18, previewSize(),
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 18, previewSize(),
                     lookX, lookY, npc);
             npc.setYaw(oldYaw);
             npc.bodyYaw = oldBody;

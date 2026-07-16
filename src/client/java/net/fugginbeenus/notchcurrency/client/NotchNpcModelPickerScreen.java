@@ -120,7 +120,11 @@ public class NotchNpcModelPickerScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Choose Model", px + W / 2, py + 8);
 
@@ -167,7 +171,7 @@ public class NotchNpcModelPickerScreen extends Screen {
             float h = Math.max(0.5f, e.preview().getHeight());
             float w = Math.max(0.5f, e.preview().getWidth());
             int size = (int) Math.max(3, Math.min((TILE_H - 20) / h, (TILE_W - 10) / w));
-            InventoryScreen.drawEntity(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, e.preview());
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, e.preview());
         } catch (Exception ignored) {
             NotchWidgets.centerText(ctx, this.textRenderer, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);
         }
@@ -210,7 +214,11 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         int totalRows = (filtered.size() + COLS - 1) / COLS;
         int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
         scrollRow = Math.max(0, Math.min(maxScroll, scrollRow - (int) Math.signum(amount)));

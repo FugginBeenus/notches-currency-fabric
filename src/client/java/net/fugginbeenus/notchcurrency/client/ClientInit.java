@@ -4,7 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
@@ -134,11 +134,11 @@ public final class ClientInit implements ClientModInitializer {
         });
 
         // Screen handlers
-        ScreenRegistry.register(
+        HandledScreens.register(
                 ModScreenHandlers.AUCTION_HOUSE,
                 AuctionHouseScreen::new
         );
-        ScreenRegistry.register(
+        HandledScreens.register(
                 ModScreenHandlers.USER_AUCTIONS,
                 UserListingsScreen::new
         );

@@ -119,7 +119,15 @@ public final class NotchConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
+        //? if >=1.21 {
+        /*renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         renderBackground(ctx);
+        //?}
+        //?}
         buildRows();
         scroll = Math.max(0, Math.min(scroll, maxScroll()));
 
@@ -396,7 +404,11 @@ public final class NotchConfigScreen extends Screen {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         if (editing != null) closeEdit(true);
         scroll = Math.max(0, Math.min(scroll - amount * 22, maxScroll()));
         return true;

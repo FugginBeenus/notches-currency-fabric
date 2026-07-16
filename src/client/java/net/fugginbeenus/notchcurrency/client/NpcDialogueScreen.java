@@ -67,7 +67,11 @@ public class NpcDialogueScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, npcName, px + W / 2, py + 8);
         if (!bannerText().isEmpty()) {
@@ -82,7 +86,7 @@ public class NpcDialogueScreen extends Screen {
             float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw;
             npc.setYaw(180);
             npc.bodyYaw = 180;
-            InventoryScreen.drawEntity(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
                     (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 30f) - mouseY, npc);
             npc.setYaw(oldYaw);
             npc.bodyYaw = oldBody;

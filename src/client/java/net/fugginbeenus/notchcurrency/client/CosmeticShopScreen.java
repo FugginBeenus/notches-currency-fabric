@@ -129,7 +129,11 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
@@ -187,13 +191,21 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         if (pages() > 1) {
             if (amount < 0) clickButton(1);
             else if (amount > 0) clickButton(0);
             return true;
         }
+        //? if >=1.21 {
+        /*return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount);
+        *///?} else {
         return super.mouseScrolled(mouseX, mouseY, amount);
+        //?}
     }
 
     private void clickButton(int id) {

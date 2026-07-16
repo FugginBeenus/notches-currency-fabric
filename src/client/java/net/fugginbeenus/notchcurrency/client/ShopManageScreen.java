@@ -221,7 +221,11 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         super.render(ctx, mouseX, mouseY, delta);
         if (over(mouseX, mouseY, x + 195, y + 59, 14, 14)) {
             ctx.drawTooltip(this.textRenderer, List.of(

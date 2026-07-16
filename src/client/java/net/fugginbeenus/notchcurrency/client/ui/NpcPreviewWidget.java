@@ -67,7 +67,7 @@ public final class NpcPreviewWidget {
         npc.setCustomNameVisible(false);
 
         ctx.enableScissor(x + 1, y + 1, x + w - 1, y + h - 1);
-        InventoryScreen.drawEntity(ctx, cx, feetY, size, 0f, 0f, npc);
+        net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, feetY, size, 0f, 0f, npc);
         ctx.disableScissor();
 
         npc.setYaw(oldYaw);

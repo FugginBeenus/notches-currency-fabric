@@ -61,7 +61,11 @@ public class PoseEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Pose Editor", px + W / 2, py + 8);
@@ -75,7 +79,7 @@ public class PoseEditorScreen extends Screen {
             npc.setYaw(180);
             npc.bodyYaw = 180;
             npc.setInvisible(false); // always show the NPC in its own editor preview
-            InventoryScreen.drawEntity(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 16, 46,
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 16, 46,
                     (px + PREV_X + PREV_W / 2f) - mouseX, (py + PREV_Y + 40f) - mouseY, npc);
             npc.setYaw(oldYaw);
             npc.bodyYaw = oldBody;

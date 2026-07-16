@@ -230,7 +230,11 @@ public class DialogueStudioScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*this.renderBackground(ctx, mouseX, mouseY, delta);
+        *///?} else {
         this.renderBackground(ctx);
+        //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Dialogue Studio", px + W / 2, py + 8);
         NotchWidgets.centerText(ctx, this.textRenderer, "Pages are what the NPC says. Choices are the buttons players click.",
@@ -725,13 +729,21 @@ public class DialogueStudioScreen extends Screen {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
+    *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    //?}
         if (mouseX >= px + LIST_X && mouseX < px + LIST_X + LIST_W) {
             int maxScroll = Math.max(0, tree.size() - LIST_ROWS);
             listScroll = Math.max(0, Math.min(maxScroll, listScroll - (int) Math.signum(amount)));
             return true;
         }
+        //? if >=1.21 {
+        /*return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount);
+        *///?} else {
         return super.mouseScrolled(mouseX, mouseY, amount);
+        //?}
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
