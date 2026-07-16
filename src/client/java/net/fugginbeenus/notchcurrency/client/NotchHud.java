@@ -40,9 +40,14 @@ public final class NotchHud implements HudRenderCallback {
     public static void noteChatMessage(net.minecraft.text.Text message) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null) return;
-        int lineEnd = 4 + mc.textRenderer.getWidth(message);
-        int hotbarLeft = mc.getWindow().getScaledWidth() / 2 - 91;
-        if (lineEnd >= hotbarLeft + 60) {
+        // Where the chat line ends, in screen pixels (chat draws at x=4, scaled by the chat option).
+        double chatScale = mc.options.getChatScale().getValue();
+        int lineEnd = 4 + (int) Math.ceil(mc.textRenderer.getWidth(message) * chatScale);
+        // The HUD's leftmost pixel: the icon, left of the right-aligned balance text.
+        int anchorRight = mc.getWindow().getScaledWidth() / 2 + 91 + X_NUDGE;
+        int balanceW = mc.textRenderer.getWidth(String.valueOf(BALANCE));
+        int hudLeft = anchorRight - balanceW - GAP - (USE_ITEM_ICON ? 16 : ICON_PX);
+        if (lineEnd >= hudLeft) {
             chatClashUntil = System.currentTimeMillis() + 10_000; // vanilla chat fade
         }
     }
