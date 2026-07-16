@@ -26,6 +26,9 @@ import net.minecraft.util.Formatting;
 public final class ClientInit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        // Packet channels must be declared before any receiver is registered or anything is sent.
+        net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
+
         // Rebuild the custom-currency resource pack from the admin's art + config, before resources load.
         CurrencyPackGenerator.generate();
 

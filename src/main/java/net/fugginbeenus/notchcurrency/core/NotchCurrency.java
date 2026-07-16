@@ -210,6 +210,9 @@ public class NotchCurrency implements ModInitializer {
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         });
 
+        // Packet channels must be declared before any receiver is registered or anything is sent.
+        net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
+
         // Server-bound packet receivers (balance request, bids, ATM withdraw, shop ops)
         ServerPacketHandlers.register();
 
