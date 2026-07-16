@@ -165,9 +165,7 @@ public class ShopListingEditScreen extends HandledScreen<ShopListingEditScreenHa
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        //? if >=1.21 {
-        /*this.renderBackground(ctx, mouseX, mouseY, delta);
-        *///?} else {
+        //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         super.render(ctx, mouseX, mouseY, delta);

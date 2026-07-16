@@ -145,9 +145,7 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
             otherMoneyField.setText(want);
         }
 
-        //? if >=1.21 {
-        /*this.renderBackground(ctx, mouseX, mouseY, delta);
-        *///?} else {
+        //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         super.render(ctx, mouseX, mouseY, delta);

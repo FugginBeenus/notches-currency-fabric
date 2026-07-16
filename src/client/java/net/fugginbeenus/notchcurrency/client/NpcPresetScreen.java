@@ -66,9 +66,7 @@ public class NpcPresetScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        //? if >=1.21 {
-        /*this.renderBackground(ctx, mouseX, mouseY, delta);
-        *///?} else {
+        //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         int px = px(), py = py();

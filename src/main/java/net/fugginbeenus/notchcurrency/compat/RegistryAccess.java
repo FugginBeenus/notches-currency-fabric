@@ -21,8 +21,20 @@ public final class RegistryAccess {
 
     private static volatile DynamicRegistryManager serverRegistries;
     private static volatile DynamicRegistryManager clientRegistries;
+    private static volatile java.util.function.BooleanSupplier clientThreadCheck;
 
     private RegistryAccess() {}
+
+    /**
+     * Lets {@link #get()} tell which side is asking. Registry lookups are identity-based, so code on
+     * the render thread must resolve against the client's registries — in singleplayer, an
+     * enchantment read off a synced stack is a client-registry object that the server's registry
+     * simply doesn't contain (extracting an enchant silently no-opped on exactly that). Registered
+     * once from client init; never set on a dedicated server.
+     */
+    public static void setClientThreadCheck(java.util.function.BooleanSupplier check) {
+        clientThreadCheck = check;
+    }
 
     /** Record the server's registry manager (server started / stopped). */
     public static void setServer(@Nullable DynamicRegistryManager manager) {
@@ -35,10 +47,15 @@ public final class RegistryAccess {
     }
 
     /**
-     * The registry manager to resolve against: the server's when one is running (always, on a
-     * dedicated server or singleplayer's integrated server), otherwise the client world's.
+     * The registry manager to resolve against: the client world's on the render thread, otherwise
+     * the server's. Each side must use its own — the two are distinct instances in singleplayer and
+     * identity-based lookups against the wrong one come back empty.
      */
     public static DynamicRegistryManager get() {
+        java.util.function.BooleanSupplier check = clientThreadCheck;
+        if (check != null && check.getAsBoolean() && clientRegistries != null) {
+            return clientRegistries;
+        }
         DynamicRegistryManager manager = serverRegistries;
         if (manager == null) manager = clientRegistries;
         if (manager == null) {

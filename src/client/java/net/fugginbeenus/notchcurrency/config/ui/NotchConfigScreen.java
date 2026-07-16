@@ -122,9 +122,7 @@ public final class NotchConfigScreen extends Screen {
         //? if >=1.21 {
         /*renderBackground(ctx, mouseX, mouseY, delta);
         *///?} else {
-        //? if >=1.21 {
-        /*renderBackground(ctx, mouseX, mouseY, delta);
-        *///?} else {
+        //? if <1.21 {
         renderBackground(ctx);
         //?}
         //?}

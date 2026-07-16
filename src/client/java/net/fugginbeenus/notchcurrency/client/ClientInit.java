@@ -29,6 +29,10 @@ public final class ClientInit implements ClientModInitializer {
         // Packet channels must be declared before any receiver is registered or anything is sent.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
 
+        // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
+        net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
+                () -> net.minecraft.client.MinecraftClient.getInstance().isOnThread());
+
         // Rebuild the custom-currency resource pack from the admin's art + config, before resources load.
         CurrencyPackGenerator.generate();
 
