@@ -5,7 +5,9 @@ import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
+//? if <1.21 {
 import net.minecraft.client.item.TooltipContext;
+//?}
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -83,7 +85,11 @@ public class NotchNpcItem extends Item {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    *///?} else {
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    //?}
         if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
             NbtCompound tag = StackData.getCompound(stack, NotchNpcManager.ITEM_TAG);
             String name = tag.contains("Name") ? tag.getString("Name") : "NPC";
@@ -96,6 +102,10 @@ public class NotchNpcItem extends Item {
             tooltip.add(Text.literal("Sneak + right-click it to configure").formatted(Formatting.YELLOW));
             tooltip.add(Text.literal("appearance, role, name and more.").formatted(Formatting.YELLOW));
         }
+        //? if >=1.21 {
+        /*super.appendTooltip(stack, context, tooltip, type);
+        *///?} else {
         super.appendTooltip(stack, world, tooltip, context);
+        //?}
     }
 }

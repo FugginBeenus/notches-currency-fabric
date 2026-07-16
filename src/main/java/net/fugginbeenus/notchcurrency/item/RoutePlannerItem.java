@@ -3,7 +3,9 @@ package net.fugginbeenus.notchcurrency.item;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
+//? if <1.21 {
 import net.minecraft.client.item.TooltipContext;
+//?}
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -119,13 +121,21 @@ public class RoutePlannerItem extends Item {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    *///?} else {
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    //?}
         String bound = StackData.has(stack, NPC_NAME_KEY) ? StackData.getString(stack, NPC_NAME_KEY) : null;
         tooltip.add(Text.literal(bound == null ? "Not bound to an NPC." : "Route for: " + bound)
                 .formatted(Formatting.AQUA));
         tooltip.add(Text.literal("Right-click ground: add waypoint").formatted(Formatting.GRAY));
         tooltip.add(Text.literal("Sneak + right-click: undo last").formatted(Formatting.GRAY));
         tooltip.add(Text.literal("Right-click the air: confirm route").formatted(Formatting.GRAY));
+        //? if >=1.21 {
+        /*super.appendTooltip(stack, context, tooltip, type);
+        *///?} else {
         super.appendTooltip(stack, world, tooltip, context);
+        //?}
     }
 }

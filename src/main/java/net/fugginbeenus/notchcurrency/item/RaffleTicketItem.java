@@ -2,7 +2,9 @@ package net.fugginbeenus.notchcurrency.item;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
+//? if <1.21 {
 import net.minecraft.client.item.TooltipContext;
+//?}
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -95,9 +97,17 @@ public class RaffleTicketItem extends Item {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    *///?} else {
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    //?}
         if (!StackData.hasData(stack)) {
+            //? if >=1.21 {
+            /*super.appendTooltip(stack, context, tooltip, type);
+            *///?} else {
             super.appendTooltip(stack, world, tooltip, context);
+            //?}
             return;
         }
 
@@ -126,6 +136,10 @@ public class RaffleTicketItem extends Item {
         if (StackData.has(stack, K_OWNER_NAME)) {
             tooltip.add(Text.literal("Holder: " + StackData.getString(stack, K_OWNER_NAME)).formatted(Formatting.DARK_GRAY));
         }
+        //? if >=1.21 {
+        /*super.appendTooltip(stack, context, tooltip, type);
+        *///?} else {
         super.appendTooltip(stack, world, tooltip, context);
+        //?}
     }
 }
