@@ -388,7 +388,11 @@ public final class PlayerShopManager {
         state.markDirtyAndSave();
 
         // Feedback to buyer
+        //? if >=1.21 {
+        /*buyer.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        *///?} else {
         buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        //?}
 
         MutableText buyerMessage = Text.literal("Purchased ")
                 .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))

@@ -63,13 +63,28 @@ public class ATMBlock extends HorizontalFacingBlock {
 
     // --- Interaction / GUI ---
 
+    //? if >=1.21 {
+    /*@Override
+    protected com.mojang.serialization.MapCodec<? extends net.minecraft.block.HorizontalFacingBlock> getCodec() {
+        return createCodec(ATMBlock::new);
+    }
+    *///?}
+
     @Override
+    //? if >=1.21 {
+    /*protected ActionResult onUse(BlockState state,
+                                 World world,
+                                 BlockPos pos,
+                                 PlayerEntity player,
+                                 BlockHitResult hit) {
+    *///?} else {
     public ActionResult onUse(BlockState state,
                               World world,
                               BlockPos pos,
                               PlayerEntity player,
                               Hand hand,
                               BlockHitResult hit) {
+    //?}
 
         // Server: sync balance to HUD immediately
         if (player instanceof ServerPlayerEntity spe) {

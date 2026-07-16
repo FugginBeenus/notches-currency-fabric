@@ -30,7 +30,11 @@ public class GoldenCacheBlock extends Block {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    *///?} else {
     public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    //?}
         if (!world.isClient) {
             ServerWorld sw = (ServerWorld) world;
 
@@ -101,7 +105,11 @@ public class GoldenCacheBlock extends Block {
         }
 
         // Let vanilla handle actually removing the block, etc.
+        //? if >=1.21 {
+        /*return super.onBreak(world, pos, state, player);
+        *///?} else {
         super.onBreak(world, pos, state, player);
+        //?}
     }
 
     /**

@@ -50,7 +50,11 @@ public final class AdminShopManager {
         giveItems(buyer, template, qty * perBundle);
         entry.recordBuy(qty);
 
+        //? if >=1.21 {
+        /*buyer.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        *///?} else {
         buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        //?}
         buyer.sendMessage(Text.literal("Bought ")
                 .append(Text.literal((qty * perBundle) + "x ").formatted(Formatting.WHITE))
                 .append(template.getName())
@@ -83,7 +87,11 @@ public final class AdminShopManager {
         }
         entry.recordSell(qty);
 
+        //? if >=1.21 {
+        /*seller.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1.0F, 1.2F);
+        *///?} else {
         seller.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1.0F, 1.2F);
+        //?}
         seller.sendMessage(Text.literal("Sold ")
                 .append(Text.literal(needed + "x ").formatted(Formatting.WHITE))
                 .append(template.getName())

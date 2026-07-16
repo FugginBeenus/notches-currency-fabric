@@ -110,7 +110,11 @@ public class LedgerBoardBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    *///?} else {
     public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    //?}
         if (!world.isClient && player.isCreative() && state.get(HALF) == DoubleBlockHalf.UPPER) {
             BlockPos below = pos.down();
             BlockState belowState = world.getBlockState(below);
@@ -120,7 +124,11 @@ public class LedgerBoardBlock extends Block implements BlockEntityProvider {
                 world.syncWorldEvent(player, 2001, below, Block.getRawIdFromState(belowState));
             }
         }
+        //? if >=1.21 {
+        /*return super.onBreak(world, pos, state, player);
+        *///?} else {
         super.onBreak(world, pos, state, player);
+        //?}
     }
 
     @Override
@@ -151,8 +159,13 @@ public class LedgerBoardBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
+    //? if >=1.21 {
+    /*protected ActionResult onUse(BlockState state, World world, BlockPos pos,
+                                 PlayerEntity player, BlockHitResult hit) {
+    *///?} else {
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
+    //?}
         if (world.isClient) {
             return ActionResult.SUCCESS;
         }
