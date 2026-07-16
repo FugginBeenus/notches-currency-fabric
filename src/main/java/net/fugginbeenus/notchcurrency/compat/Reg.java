@@ -22,16 +22,28 @@ public final class Reg {
 
     /** A {@code notchcurrency:}-namespaced id. The single construction point for the mod's own ids. */
     public static Identifier id(String path) {
+        //? if >=1.21 {
+        /*return Identifier.of(NotchCurrency.MOD_ID, path);
+        *///?} else {
         return new Identifier(NotchCurrency.MOD_ID, path);
+        //?}
     }
 
     /** An id in an explicit namespace (e.g. {@code minecraft:entities/wither}). */
     public static Identifier id(String namespace, String path) {
+        //? if >=1.21 {
+        /*return Identifier.of(namespace, path);
+        *///?} else {
         return new Identifier(namespace, path);
+        //?}
     }
 
     /** Parse a full {@code "namespace:path"} string (bare paths default to the {@code minecraft} namespace). */
     public static Identifier parse(String full) {
+        //? if >=1.21 {
+        /*return Identifier.of(full);
+        *///?} else {
         return new Identifier(full);
+        //?}
     }
 }
