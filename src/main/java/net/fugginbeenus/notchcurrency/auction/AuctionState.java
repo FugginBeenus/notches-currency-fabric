@@ -119,7 +119,7 @@ public final class AuctionState extends PersistentState {
             tag.putString("SellerName", sellerName);
             tag.putString("WinnerName", winnerName);
             tag.putLong("FinalPrice", finalPrice);
-            tag.put("Stack", stack.writeNbt(new NbtCompound()));
+            tag.put("Stack", StackData.writeStack(stack));
             return tag;
         }
 

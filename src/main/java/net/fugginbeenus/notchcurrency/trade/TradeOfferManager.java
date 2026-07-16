@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
+
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -178,7 +180,7 @@ public final class TradeOfferManager {
             if (st.isEmpty()) continue;
             boolean merged = false;
             for (ItemStack have : totals) {
-                if (ItemStack.canCombine(have, st)) {
+                if (StackData.canCombine(have, st)) {
                     have.setCount(have.getCount() + st.getCount());
                     merged = true;
                     break;
@@ -220,7 +222,7 @@ public final class TradeOfferManager {
         int n = 0;
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack st = player.getInventory().getStack(i);
-            if (!st.isEmpty() && ItemStack.canCombine(st, match)) n += st.getCount();
+            if (!st.isEmpty() && StackData.canCombine(st, match)) n += st.getCount();
         }
         return n;
     }
@@ -229,7 +231,7 @@ public final class TradeOfferManager {
         int remaining = count;
         for (int i = 0; i < player.getInventory().size() && remaining > 0; i++) {
             ItemStack st = player.getInventory().getStack(i);
-            if (!st.isEmpty() && ItemStack.canCombine(st, match)) {
+            if (!st.isEmpty() && StackData.canCombine(st, match)) {
                 int take = Math.min(remaining, st.getCount());
                 st.decrement(take);
                 remaining -= take;

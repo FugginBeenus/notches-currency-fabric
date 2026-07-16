@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.adminshop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
+
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -97,7 +99,7 @@ public final class AdminShopManager {
         var inv = player.getInventory();
         for (int i = 0; i < inv.size(); i++) {
             ItemStack s = inv.getStack(i);
-            if (ItemStack.canCombine(template, s)) count += s.getCount();
+            if (StackData.canCombine(template, s)) count += s.getCount();
         }
         return count;
     }
@@ -107,7 +109,7 @@ public final class AdminShopManager {
         var inv = player.getInventory();
         for (int i = 0; i < inv.size() && remaining > 0; i++) {
             ItemStack s = inv.getStack(i);
-            if (ItemStack.canCombine(template, s)) {
+            if (StackData.canCombine(template, s)) {
                 int take = Math.min(remaining, s.getCount());
                 s.decrement(take);
                 remaining -= take;

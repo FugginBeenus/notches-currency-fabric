@@ -97,7 +97,7 @@ public class AdminShopEntry {
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.putUuid("Id", id);
-        nbt.put("Item", item.writeNbt(new NbtCompound()));
+        nbt.put("Item", StackData.writeStack(item));
         nbt.putLong("Buy", baseBuyPrice);
         nbt.putLong("Sell", baseSellPrice);
         nbt.putBoolean("Dynamic", dynamic);

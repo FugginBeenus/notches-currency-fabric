@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.enchanter;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
+
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -121,7 +123,7 @@ public final class EnchanterManager {
                 if (options.length == 0 || options[0].isEmpty()) continue;
                 boolean merged = false;
                 for (ItemStack have : returns) {
-                    if (ItemStack.canCombine(have, options[0])) {
+                    if (StackData.canCombine(have, options[0])) {
                         have.increment(1);
                         merged = true;
                         break;

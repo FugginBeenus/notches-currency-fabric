@@ -270,7 +270,7 @@ public class PlayerShop {
         // Save pending barter items
         NbtList barterNbt = new NbtList();
         for (ItemStack item : pendingBarterItems) {
-            barterNbt.add(item.writeNbt(new NbtCompound()));
+            barterNbt.add(StackData.writeStack(item));
         }
         nbt.put("PendingBarterItems", barterNbt);
 

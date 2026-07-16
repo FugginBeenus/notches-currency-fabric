@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
+
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.entity.player.PlayerEntity;
@@ -201,7 +203,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         }
 
         // Editing an existing listing.
-        if (!sale.isEmpty() && !ItemStack.canCombine(sale, l.getItemForSale())) {
+        if (!sale.isEmpty() && !StackData.canCombine(sale, l.getItemForSale())) {
             // Swapping the sale item: hand back the old item's stock first so nothing strands.
             int old = l.getStockQuantitySafe();
             if (old > 0) {
@@ -232,7 +234,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         int moved = 0;
         for (int i = 0; i < sp.getInventory().size(); i++) {
             ItemStack st = sp.getInventory().getStack(i);
-            if (!st.isEmpty() && ItemStack.canCombine(st, l.getItemForSale())) {
+            if (!st.isEmpty() && StackData.canCombine(st, l.getItemForSale())) {
                 moved += st.getCount();
                 sp.getInventory().setStack(i, ItemStack.EMPTY);
             }
@@ -275,7 +277,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         // Pull any matching stack sitting in the stock bin into the listing's stock, then clear it.
         if (l != null && playerInv.player instanceof ServerPlayerEntity sp && !sp.getWorld().isClient) {
             ItemStack intake = samples.getStack(SLOT_STOCK);
-            if (!intake.isEmpty() && ItemStack.canCombine(intake, l.getItemForSale())) {
+            if (!intake.isEmpty() && StackData.canCombine(intake, l.getItemForSale())) {
                 int moved = intake.getCount();
                 l.addStock(moved);
                 samples.setStack(SLOT_STOCK, ItemStack.EMPTY);

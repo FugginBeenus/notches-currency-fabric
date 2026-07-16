@@ -176,6 +176,18 @@ public final class StackData {
         mutate(stack, data -> data.put(key, value));
     }
 
+    /**
+     * True if two stacks are the same item with the same attached data — i.e. they could merge.
+     * 1.20.1 calls this {@code ItemStack.canCombine}; 1.21 renamed it (and compares components).
+     */
+    public static boolean canCombine(ItemStack a, ItemStack b) {
+        //? if >=1.21 {
+        /*return ItemStack.areItemsAndComponentsEqual(a, b);
+        *///?} else {
+        return ItemStack.canCombine(a, b);
+        //?}
+    }
+
     // ---- bulk read (for carrier stacks whose readers do many typed lookups) ----
 
     /**

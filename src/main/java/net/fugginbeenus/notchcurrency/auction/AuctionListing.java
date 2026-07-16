@@ -60,7 +60,7 @@ public final class AuctionListing {
         tag.putLong("Created", createdGameTime);
         tag.putLong("Expires", expiresGameTime);
         tag.putString("Category", category);
-        tag.put("Stack", stack.writeNbt(new NbtCompound()));
+        tag.put("Stack", StackData.writeStack(stack));
 
         // bidding fields
         tag.putLong("HighestBid", highestBid);

@@ -178,12 +178,12 @@ public class ShopListing {
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.putUuid("Id", id);
-        nbt.put("Item", itemForSale.writeNbt(new NbtCompound()));
+        nbt.put("Item", StackData.writeStack(itemForSale));
         nbt.putInt("Stock", stockQuantity);
         nbt.putInt("CoinPrice", coinPrice);
 
         if (!itemPrice.isEmpty()) {
-            nbt.put("ItemPrice", itemPrice.writeNbt(new NbtCompound()));
+            nbt.put("ItemPrice", StackData.writeStack(itemPrice));
             nbt.putInt("ItemPriceCount", itemPriceCount);
         }
 

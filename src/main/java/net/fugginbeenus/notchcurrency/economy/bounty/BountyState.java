@@ -191,7 +191,7 @@ public class BountyState extends PersistentState {
         nbt.put("Completed", doneList);
 
         NbtList decreeList = new NbtList();
-        for (ItemStack s : decrees) decreeList.add(s.writeNbt(new NbtCompound()));
+        for (ItemStack s : decrees) decreeList.add(StackData.writeStack(s));
         nbt.put("Decrees", decreeList);
         return nbt;
     }

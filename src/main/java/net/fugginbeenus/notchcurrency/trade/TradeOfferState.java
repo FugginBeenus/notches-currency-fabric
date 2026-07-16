@@ -143,7 +143,7 @@ public class TradeOfferState extends PersistentState {
             NbtCompound entry = new NbtCompound();
             entry.putUuid("Player", e.getKey());
             NbtList stacks = new NbtList();
-            for (ItemStack st : e.getValue()) stacks.add(st.writeNbt(new NbtCompound()));
+            for (ItemStack st : e.getValue()) stacks.add(StackData.writeStack(st));
             entry.put("Items", stacks);
             mail.add(entry);
         }

@@ -226,7 +226,7 @@ public class RaffleState extends PersistentState {
         nbt.putLong("Round", currentRound);
         nbt.putLong("Pot", pot);
         nbt.putLong("CoinsPool", coinsPool);
-        if (!prizeItem.isEmpty()) nbt.put("PrizeItem", prizeItem.writeNbt(new NbtCompound()));
+        if (!prizeItem.isEmpty()) nbt.put("PrizeItem", StackData.writeStack(prizeItem));
 
         NbtList ticketList = new NbtList();
         for (Map.Entry<UUID, Integer> e : tickets.entrySet()) {
@@ -245,7 +245,7 @@ public class RaffleState extends PersistentState {
             o.putUuid("Winner", r.winner);
             o.putString("Name", r.winnerName);
             o.putLong("Prize", r.prize);
-            if (!r.prizeItem.isEmpty()) o.put("PrizeItem", r.prizeItem.writeNbt(new NbtCompound()));
+            if (!r.prizeItem.isEmpty()) o.put("PrizeItem", StackData.writeStack(r.prizeItem));
             winList.add(o);
         }
         nbt.put("Unclaimed", winList);

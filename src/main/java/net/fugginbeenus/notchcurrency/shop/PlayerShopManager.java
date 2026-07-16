@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StackData;
+
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.minecraft.item.ItemStack;
@@ -159,7 +161,7 @@ public final class PlayerShopManager {
         }
 
         // Verify item matches
-        if (!ItemStack.canCombine(listing.getItemForSale(), items)) {
+        if (!StackData.canCombine(listing.getItemForSale(), items)) {
             owner.sendMessage(Text.literal("Item doesn't match the listing!").formatted(Formatting.RED), false);
             return false;
         }
@@ -437,7 +439,7 @@ public final class PlayerShopManager {
         int count = 0;
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack stack = player.getInventory().getStack(i);
-            if (ItemStack.canCombine(template, stack)) {
+            if (StackData.canCombine(template, stack)) {
                 count += stack.getCount();
             }
         }
@@ -448,7 +450,7 @@ public final class PlayerShopManager {
         int remaining = amount;
         for (int i = 0; i < player.getInventory().size() && remaining > 0; i++) {
             ItemStack stack = player.getInventory().getStack(i);
-            if (ItemStack.canCombine(template, stack)) {
+            if (StackData.canCombine(template, stack)) {
                 int take = Math.min(remaining, stack.getCount());
                 stack.decrement(take);
                 remaining -= take;
