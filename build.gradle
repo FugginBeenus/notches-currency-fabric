@@ -52,11 +52,8 @@ dependencies {
 
     // Waystones fee — SOFT integration. Compile against the Waystones + Balm APIs only (Loom remaps
     // these to yarn); they are NOT shipped and NOT required at runtime (gated by isModLoaded).
-    // The vendored jars are 1.20.1 builds, so this only applies on 1.20.1 until 1.21 jars are added.
-    if (property('minecraft_version') == '1.20.1') {
-        modCompileOnly files(rootProject.file('api-libs/waystones-14.1.20+fabric-1.20.1.jar'))
-        modCompileOnly files(rootProject.file('api-libs/balm-fabric-1.20.1-7.3.36.jar'))
-    }
+    // Jars are per-version: drop each Minecraft version's Waystones + Balm into api-libs/<mc>/.
+    modCompileOnly fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar')
 }
 
 // ===== Loom Configuration =====
