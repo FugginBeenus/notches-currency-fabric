@@ -101,27 +101,16 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         int stock = has ? listing.getStockQuantitySafe() : 0;
         UUID id = has ? listing.getId() : null;
 
-        sp.openHandledScreen(new ExtendedScreenHandlerFactory() {
-            @Override
-            public Text getDisplayName() {
-                return Text.literal(has ? "Edit Listing" : "New Listing");
-            }
-
-            @Override
-            public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity p) {
-                return new ShopListingEditScreenHandler(syncId, inv, has, saleDesc, barterDesc,
-                        price, stock, shop, id);
-            }
-
-            @Override
-            public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeBoolean(has);
-                buf.writeString(saleDesc);
-                buf.writeString(barterDesc);
-                buf.writeVarInt(price);
-                buf.writeVarInt(stock);
-            }
-        });
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal(has ? "Edit Listing" : "New Listing"),
+                (syncId, inv, p) -> new ShopListingEditScreenHandler(syncId, inv, has, saleDesc, barterDesc,
+                        price, stock, shop, id),
+                buf -> {
+                    buf.writeBoolean(has);
+                    buf.writeString(saleDesc);
+                    buf.writeString(barterDesc);
+                    buf.writeVarInt(price);
+                    buf.writeVarInt(stock);
+                });
     }
 
     public boolean hasListing() { return props.get(P_HAS_LISTING) != 0; }

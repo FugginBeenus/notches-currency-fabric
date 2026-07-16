@@ -179,7 +179,12 @@ public final class ModScreenHandlers {
         COSMETIC_SHOP = Registry.register(
                 Registries.SCREEN_HANDLER,
                 NotchCurrency.id("cosmetic_shop"),
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new)
+                //?}
         );
 
         // Offline trade offers
@@ -196,28 +201,48 @@ public final class ModScreenHandlers {
         RECEIPTS = Registry.register(
                 Registries.SCREEN_HANDLER,
                 NotchCurrency.id("receipts"),
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler::new)
+                //?}
         );
 
         // Shop browser (buyer side)
         SHOP_BROWSE = Registry.register(
                 Registries.SCREEN_HANDLER,
                 NotchCurrency.id("shop_browse"),
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler::new)
+                //?}
         );
 
         // Shop manage hub (owner side)
         SHOP_MANAGE = Registry.register(
                 Registries.SCREEN_HANDLER,
                 NotchCurrency.id("shop_manage"),
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler::new)
+                //?}
         );
 
         // Shop listing editor (owner side)
         SHOP_LISTING_EDIT = Registry.register(
                 Registries.SCREEN_HANDLER,
                 NotchCurrency.id("shop_listing_edit"),
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler::new)
+                //?}
         );
     }
 }

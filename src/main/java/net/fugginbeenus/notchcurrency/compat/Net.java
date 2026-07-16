@@ -60,6 +60,11 @@ public final class Net {
         return new PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(payload.data()));
     }
 
+    public static final net.minecraft.network.codec.PacketCodec<PacketByteBuf, PacketByteBuf> RAW_BUF_CODEC =
+            net.minecraft.network.codec.PacketCodec.of(
+                    (value, buf) -> buf.writeBytes(value.slice()),
+                    buf -> new PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(toBytes(buf))));
+
     static byte[] toBytes(PacketByteBuf buf) {
         byte[] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);

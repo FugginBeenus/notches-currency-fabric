@@ -1,19 +1,15 @@
 package net.fugginbeenus.notchcurrency.economy.enchanter;
 
+import net.fugginbeenus.notchcurrency.compat.Ench;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
 import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
@@ -181,21 +177,21 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
         long cost = EnchanterManager.upgradeCost(ench, level, EnchanterManager.pricing());
         if (!charge(sp, cost, "enchanter upgrade")) return;
-        Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
+        Map<Enchantment, Integer> map = Ench.get(stack);
         map.put(ench, level);
-        EnchantmentHelper.set(map, stack);
+        Ench.set(map, stack);
         input.markDirty();
         sendContentUpdates();
         sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.8f, 1.0f);
         sp.sendMessage(Text.literal("Applied ").formatted(Formatting.GREEN)
-                .append(ench.getName(level).copy().formatted(Formatting.LIGHT_PURPLE))
+                .append(Ench.name(ench, level).copy().formatted(Formatting.LIGHT_PURPLE))
                 .append(Text.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
     }
 
     private void extract(ServerPlayerEntity sp, ItemStack stack, String enchId) {
         Enchantment ench = enchantFromId(enchId);
         if (ench == null) return;
-        Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
+        Map<Enchantment, Integer> map = Ench.get(stack);
         Integer level = map.get(ench);
         if (level == null) {
             sp.sendMessage(Text.literal("That enchantment isn't on this item.").formatted(Formatting.RED), false);
@@ -204,22 +200,21 @@ public class EnchanterScreenHandler extends ScreenHandler {
         long cost = EnchanterManager.extractPrice(ench, level, EnchanterManager.pricing());
         if (!charge(sp, cost, "enchanter extract")) return;
         map.remove(ench);
-        EnchantmentHelper.set(map, stack);
+        Ench.set(map, stack);
         input.markDirty();
-        ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-        EnchantedBookItem.addEnchantment(book, new EnchantmentLevelEntry(ench, level));
+        ItemStack book = Ench.enchantedBook(ench, level);
         sp.getInventory().offerOrDrop(book);
         sendContentUpdates();
         sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.7f, 1.1f);
         sp.sendMessage(Text.literal("Extracted ").formatted(Formatting.GREEN)
-                .append(ench.getName(level).copy().formatted(Formatting.LIGHT_PURPLE))
+                .append(Ench.name(ench, level).copy().formatted(Formatting.LIGHT_PURPLE))
                 .append(Text.literal(" onto a book.").formatted(Formatting.GREEN)), false);
     }
 
     @org.jetbrains.annotations.Nullable
     private Enchantment enchantFromId(String enchId) {
         Identifier id = Identifier.tryParse(enchId);
-        return id == null ? null : Registries.ENCHANTMENT.get(id);
+        return id == null ? null : Ench.byId(id);
     }
 
     private boolean charge(ServerPlayerEntity sp, long cost, String detail) {

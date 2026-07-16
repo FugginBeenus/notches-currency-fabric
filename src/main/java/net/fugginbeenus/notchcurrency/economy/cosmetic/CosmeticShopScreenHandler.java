@@ -73,23 +73,12 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
 
     /** Open for the player, passing the linked NPC uuid for the preview. */
     public static void open(ServerPlayerEntity sp, @Nullable UUID npcId) {
-        sp.openHandledScreen(new ExtendedScreenHandlerFactory() {
-            @Override
-            public Text getDisplayName() {
-                return Text.literal("Cosmetics");
-            }
-
-            @Override
-            public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity p) {
-                return new CosmeticShopScreenHandler(syncId, inv, npcId);
-            }
-
-            @Override
-            public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeBoolean(npcId != null);
-                if (npcId != null) buf.writeUuid(npcId);
-            }
-        });
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("Cosmetics"),
+                (syncId, inv, p) -> new CosmeticShopScreenHandler(syncId, inv, npcId),
+                buf -> {
+                    buf.writeBoolean(npcId != null);
+                    if (npcId != null) buf.writeUuid(npcId);
+                });
     }
 
     public ItemStack rowStack(int i) { return rowInv.getStack(i); }

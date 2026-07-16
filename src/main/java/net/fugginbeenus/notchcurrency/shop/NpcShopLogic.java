@@ -88,27 +88,15 @@ public final class NpcShopLogic {
         }
 
         // Listings sync live through the handler's data-carrier slots; the buf only carries identity.
-        player.openHandledScreen(new ExtendedScreenHandlerFactory() {
-            @Override
-            public Text getDisplayName() {
-                return Text.literal(shop.getShopName());
-            }
-
-            @Nullable
-            @Override
-            public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
-                return new ShopBrowseScreenHandler(syncId, playerInventory, shopId,
-                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop);
-            }
-
-            @Override
-            public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeUuid(shopId);
-                buf.writeString(shop.getShopName());
-                buf.writeString(shop.getShopkeeperDialog());
-                writeNpcId(buf, shop.getLinkedNpcId());
-            }
-        });
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Text.literal(shop.getShopName()),
+                (syncId, playerInventory, p) -> new ShopBrowseScreenHandler(syncId, playerInventory, shopId,
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
+                buf -> {
+                    buf.writeUuid(shopId);
+                    buf.writeString(shop.getShopName());
+                    buf.writeString(shop.getShopkeeperDialog());
+                    writeNpcId(buf, shop.getLinkedNpcId());
+                });
     }
 
     /** Append the linked NPC uuid (for the shop screen's live preview), or a "no npc" marker. */
@@ -135,27 +123,15 @@ public final class NpcShopLogic {
         }
 
         // Listings/earnings sync live through the handler; the buf only carries identity.
-        owner.openHandledScreen(new ExtendedScreenHandlerFactory() {
-            @Override
-            public Text getDisplayName() {
-                return Text.literal("Manage: " + shop.getShopName());
-            }
-
-            @Nullable
-            @Override
-            public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity p) {
-                return new ShopManageScreenHandler(syncId, playerInventory, shopId,
-                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop);
-            }
-
-            @Override
-            public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeUuid(shopId);
-                buf.writeString(shop.getShopName());
-                buf.writeString(shop.getShopkeeperDialog());
-                writeNpcId(buf, shop.getLinkedNpcId());
-            }
-        });
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Text.literal("Manage: " + shop.getShopName()),
+                (syncId, playerInventory, p) -> new ShopManageScreenHandler(syncId, playerInventory, shopId,
+                        shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
+                buf -> {
+                    buf.writeUuid(shopId);
+                    buf.writeString(shop.getShopName());
+                    buf.writeString(shop.getShopkeeperDialog());
+                    writeNpcId(buf, shop.getLinkedNpcId());
+                });
     }
 
     /**

@@ -44,29 +44,18 @@ public class ReceiptsScreenHandler extends ScreenHandler {
     /** Open the receipts screen for a player, sending their history in the opening buf. */
     public static void open(ServerPlayerEntity sp) {
         List<ReceiptState.Receipt> recent = ReceiptState.get(sp.getServer()).recent(sp.getUuid());
-        sp.openHandledScreen(new ExtendedScreenHandlerFactory() {
-            @Override
-            public Text getDisplayName() {
-                return Text.literal("Receipts");
-            }
-
-            @Override
-            public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity p) {
-                return new ReceiptsScreenHandler(syncId, inv);
-            }
-
-            @Override
-            public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                buf.writeVarInt(recent.size());
-                for (ReceiptState.Receipt r : recent) {
-                    buf.writeLong(r.time());
-                    buf.writeLong(r.delta());
-                    buf.writeLong(r.balanceAfter());
-                    buf.writeString(r.reason());
-                    buf.writeString(r.detail().length() > 96 ? r.detail().substring(0, 96) : r.detail());
-                }
-            }
-        });
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("Receipts"),
+                (syncId, inv, p) -> new ReceiptsScreenHandler(syncId, inv),
+                buf -> {
+                    buf.writeVarInt(recent.size());
+                    for (ReceiptState.Receipt r : recent) {
+                        buf.writeLong(r.time());
+                        buf.writeLong(r.delta());
+                        buf.writeLong(r.balanceAfter());
+                        buf.writeString(r.reason());
+                        buf.writeString(r.detail().length() > 96 ? r.detail().substring(0, 96) : r.detail());
+                    }
+                });
     }
 
     @Override

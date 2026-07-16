@@ -1,12 +1,11 @@
 package net.fugginbeenus.notchcurrency.economy.enchanter;
 
+import net.fugginbeenus.notchcurrency.compat.Ench;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -85,14 +84,14 @@ public final class EnchanterManager {
 
     /** Coins for buying {@code level} of an enchant (one level step). Rarer + higher = pricier. */
     public static long upgradeCost(Enchantment ench, int level, Pricing p) {
-        int base = switch (ench.getRarity()) {
-            case COMMON -> p.common();
-            case UNCOMMON -> p.uncommon();
-            case RARE -> p.rare();
-            case VERY_RARE -> p.veryRare();
+        int base = switch (Ench.rarityTier(ench)) {
+            case Ench.COMMON -> p.common();
+            case Ench.UNCOMMON -> p.uncommon();
+            case Ench.RARE -> p.rare();
+            default -> p.veryRare();
         };
         long cost = (long) base * level;
-        if (ench.isTreasure()) cost = cost * p.treasurePct() / 100; // mending & friends carry a premium
+        if (Ench.isTreasure(ench)) cost = cost * p.treasurePct() / 100; // mending & friends carry a premium
         return Math.max(1, cost * p.globalPct() / 100);
     }
 
@@ -111,9 +110,16 @@ public final class EnchanterManager {
     @org.jetbrains.annotations.Nullable
     public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.World world) {
         if (stack.isEmpty() || stack.isDamaged()) return null;
+        //? if >=1.21 {
+        /*for (net.minecraft.recipe.RecipeEntry<net.minecraft.recipe.CraftingRecipe> recipeEntry
+                : world.getRecipeManager().listAllOfType(net.minecraft.recipe.RecipeType.CRAFTING)) {
+            net.minecraft.recipe.CraftingRecipe recipe = recipeEntry.value();
+            ItemStack out = recipe.getResult(world.getRegistryManager());
+        *///?} else {
         for (net.minecraft.recipe.CraftingRecipe recipe
                 : world.getRecipeManager().listAllOfType(net.minecraft.recipe.RecipeType.CRAFTING)) {
             ItemStack out = recipe.getOutput(world.getRegistryManager());
+        //?}
             if (out.isEmpty() || !out.isOf(stack.getItem())) continue;
             if (stack.getCount() < out.getCount()) continue;
             List<ItemStack> returns = new ArrayList<>();
@@ -149,17 +155,17 @@ public final class EnchanterManager {
     public static List<Offer> upgradeOffers(ItemStack stack, boolean treasureAllowed) {
         List<Offer> offers = new ArrayList<>();
         if (stack.isEmpty()) return offers;
-        Map<Enchantment, Integer> current = EnchantmentHelper.get(stack);
-        for (Enchantment ench : Registries.ENCHANTMENT) {
-            if (ench.isCursed()) continue;
-            if (ench.isTreasure() && !treasureAllowed) continue;
+        Map<Enchantment, Integer> current = Ench.get(stack);
+        for (Enchantment ench : Ench.all()) {
+            if (Ench.isCursed(ench)) continue;
+            if (Ench.isTreasure(ench) && !treasureAllowed) continue;
             int cur = current.getOrDefault(ench, 0);
-            if (cur >= ench.getMaxLevel()) continue;
+            if (cur >= Ench.maxLevel(ench)) continue;
             if (cur == 0) {
-                if (!ench.isAcceptableItem(stack)) continue;
+                if (!Ench.isAcceptableItem(ench, stack)) continue;
                 boolean clash = false;
                 for (Enchantment other : current.keySet()) {
-                    if (other != ench && !ench.canCombine(other)) {
+                    if (other != ench && !Ench.canCombine(ench, other)) {
                         clash = true;
                         break;
                     }
