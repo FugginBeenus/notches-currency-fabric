@@ -13,8 +13,11 @@ base {
 }
 
 // ===== Java Configuration =====
+// Per-version: Minecraft is Java 17 through 1.20.4 and Java 21 from 1.20.5 on.
+def javaVersion = Integer.parseInt(property('java_version').toString())
+
 java {
-    toolchain { languageVersion = JavaLanguageVersion.of(17) }
+    toolchain { languageVersion = JavaLanguageVersion.of(javaVersion) }
     withSourcesJar()
 }
 
@@ -89,7 +92,7 @@ loom {
 // ===== Build Tasks =====
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.release = 17
+    options.release = javaVersion
 }
 
 tasks.processResources {

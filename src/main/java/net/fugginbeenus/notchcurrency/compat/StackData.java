@@ -46,7 +46,6 @@ public final class StackData {
     /** The stack's custom-data compound for reading, or {@code null} if none is present. */
     @Nullable
     private static NbtCompound read(ItemStack stack) {
-        //? on 1.20.1: the whole-stack tag doubles as our custom-data bag.
         return stack.getNbt();
     }
 
