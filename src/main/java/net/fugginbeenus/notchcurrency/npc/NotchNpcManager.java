@@ -134,9 +134,12 @@ public final class NotchNpcManager {
     /** Open the NPC equipment screen (armor + hands backed live by the entity). */
     public static void openEquipScreen(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
-        sp.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("NPC Equipment"),
                 (syncId, inv, p) -> new NpcEquipScreenHandler(syncId, inv, new NpcEquipmentInventory(npc), npc),
-                Text.literal("NPC Equipment")));
+                buf -> {
+                    buf.writeBoolean(true);
+                    buf.writeUuid(npc.getUuid());
+                });
     }
 
     public static void setAppearance(ServerPlayerEntity sp, NotchNpcEntity npc,

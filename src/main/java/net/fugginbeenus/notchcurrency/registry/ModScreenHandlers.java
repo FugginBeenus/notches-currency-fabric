@@ -164,9 +164,16 @@ public final class ModScreenHandlers {
         );
 
         // NPC equipment
-        NPC_EQUIP = simple(
+        // NPC equipment (extended: the NPC uuid rides the opening buf for the live preview)
+        NPC_EQUIP = Registry.register(
+                Registries.SCREEN_HANDLER,
                 NotchCurrency.id("npc_equip"),
-                net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler::new
+                //? if >=1.21 {
+                /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler::new,
+                        net.fugginbeenus.notchcurrency.compat.Net.RAW_BUF_CODEC)
+                *///?} else {
+                new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler::new)
+                //?}
         );
 
         // Enchanter service

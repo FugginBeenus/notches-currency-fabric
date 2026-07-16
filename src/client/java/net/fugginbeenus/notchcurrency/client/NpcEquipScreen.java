@@ -2,19 +2,38 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
+import net.fugginbeenus.notchcurrency.client.ui.NpcPreviewWidget;
 import net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+
+import java.util.List;
 
 /**
- * The NPC equipment screen: drop armor into the typed slots (helmet/chest/legs/boots), anything into
- * the hands, straight from your inventory — chest-style. Changes land on the NPC instantly.
+ * The NPC equipment screen, laid out like the shop screens: the typed gear slots in a recessed
+ * container on the left, a framed live preview of the NPC on the right (gear appears on the model
+ * the moment it lands in a slot), and the player inventory below. Shift-click routes armor to its
+ * piece and everything else to the hands; empty slots explain what they take on hover.
  */
 public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
 
-    private static final int W = 176, H = 166;
+    private static final int W = 248, H = 240;
+    private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
+
+    private static final String[] SLOT_LABELS = {"Helmet", "Chest", "Legs", "Boots", "Hand", "Offhand"};
+    private static final String[] SLOT_HINTS = {
+            "Any head item — armor, skulls, carved pumpkins.",
+            "Any chestplate (or elytra).",
+            "Any leggings.",
+            "Any boots.",
+            "Anything — tools, weapons, or just a prop.",
+            "Anything — shields live here."
+    };
+
+    private final NpcPreviewWidget preview = new NpcPreviewWidget();
 
     public NpcEquipScreen(NpcEquipScreenHandler handler, PlayerInventory inv, Text title) {
         super(handler, inv, title);
@@ -28,25 +47,37 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
     protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
         final int x = this.x, y = this.y;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Equipment", x + W / 2, y + 4);
+        NotchWidgets.title(ctx, this.textRenderer, "Equipment", x + W / 2, y + 7);
 
-        // Armor column + labels.
-        String[] labels = {"Helmet", "Chest", "Legs", "Boots"};
+        // Recessed containers: gear on the left, the live NPC on the right.
+        NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
+        NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
+
+        // Armor column.
+        ctx.drawText(this.textRenderer, "ARMOR", x + NpcEquipScreenHandler.ARMOR_X, y + NpcEquipScreenHandler.ARMOR_Y - 10,
+                NotchTheme.TEXT_MUTED, false);
         for (int i = 0; i < 4; i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.ARMOR_X - 1, y + NpcEquipScreenHandler.ARMOR_Y - 1 + i * 18);
-            ctx.drawText(this.textRenderer, labels[i], x + NpcEquipScreenHandler.ARMOR_X + 20,
-                    y + NpcEquipScreenHandler.ARMOR_Y + 4 + i * 18, NotchTheme.TEXT_MUTED, false);
+            ctx.drawText(this.textRenderer, SLOT_LABELS[i], x + NpcEquipScreenHandler.ARMOR_X + 22,
+                    y + NpcEquipScreenHandler.ARMOR_Y + 4 + i * 18, NotchTheme.TEXT_DARK, false);
         }
 
-        // Hands.
+        // Hands, under a divider.
+        NotchWidgets.divider(ctx, x + 12, y + NpcEquipScreenHandler.MAIN_Y - 8, 140);
+        ctx.drawText(this.textRenderer, "HANDS", x + NpcEquipScreenHandler.HAND_X, y + NpcEquipScreenHandler.MAIN_Y - 10 + 4,
+                NotchTheme.TEXT_MUTED, false);
         NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.HAND_X - 1, y + NpcEquipScreenHandler.MAIN_Y - 1);
-        ctx.drawText(this.textRenderer, "Hand", x + NpcEquipScreenHandler.HAND_X + 20,
-                y + NpcEquipScreenHandler.MAIN_Y + 4, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.HAND_X - 1, y + NpcEquipScreenHandler.OFF_Y - 1);
-        ctx.drawText(this.textRenderer, "Offhand", x + NpcEquipScreenHandler.HAND_X + 20,
-                y + NpcEquipScreenHandler.OFF_Y + 4, NotchTheme.TEXT_MUTED, false);
+        ctx.drawText(this.textRenderer, SLOT_LABELS[4], x + NpcEquipScreenHandler.HAND_X + 22,
+                y + NpcEquipScreenHandler.MAIN_Y + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.OFF_X - 1, y + NpcEquipScreenHandler.OFF_Y - 1);
+        ctx.drawText(this.textRenderer, SLOT_LABELS[5], x + NpcEquipScreenHandler.OFF_X + 22,
+                y + NpcEquipScreenHandler.OFF_Y + 4, NotchTheme.TEXT_DARK, false);
 
-        // Player inventory + hotbar.
+        // Live preview — the real NPC, so gear shows the instant it's equipped.
+        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
+
+        // Divider + player inventory.
+        NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.INV_X - 1 + col * 18,
@@ -66,6 +97,16 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         //?}
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+
+        // Empty gear slots explain what they accept.
+        if (this.focusedSlot != null && !this.focusedSlot.hasStack() && this.focusedSlot.getIndex() < 6
+                && this.focusedSlot.inventory != this.handler.slots.get(6).inventory) {
+            int idx = this.focusedSlot.getIndex();
+            List<Text> lines = List.of(
+                    Text.literal(SLOT_LABELS[idx]).formatted(Formatting.WHITE),
+                    Text.literal(SLOT_HINTS[idx]).formatted(Formatting.GRAY));
+            ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+        }
     }
 
     //? if >=1.21 {

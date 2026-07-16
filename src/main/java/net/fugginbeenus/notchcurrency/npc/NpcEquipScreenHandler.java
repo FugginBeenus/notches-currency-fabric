@@ -20,13 +20,15 @@ import org.jetbrains.annotations.Nullable;
  */
 public class NpcEquipScreenHandler extends ScreenHandler {
 
-    // Slot coordinates (client draws insets at these -1).
-    public static final int ARMOR_X = 26, ARMOR_Y = 16; // 4 slots, 18 apart
-    public static final int HAND_X = 80, MAIN_Y = 34, OFF_Y = 52;
-    public static final int INV_X = 8, INV_Y = 84, HOTBAR_Y = 142;
+    // Slot coordinates (client draws insets at these -1). Gear lives in the left container box;
+    // the right box is the live preview; the player inventory sits below the divider.
+    public static final int ARMOR_X = 14, ARMOR_Y = 28;              // 4 slots, 18 apart
+    public static final int HAND_X = 14, OFF_X = 86, MAIN_Y = 112, OFF_Y = 112; // side by side
+    public static final int INV_X = 43, INV_Y = 158, HOTBAR_Y = 216;
 
     private final Inventory equip;
     @Nullable private final NotchNpcEntity npc;
+    @Nullable private final java.util.UUID npcId;
 
     /** Where an item wants to be equipped. 1.21 made the vanilla lookup an instance method, so this
      *  replicates the old static logic (Equipment interface, shield to offhand, else main hand). */
@@ -49,16 +51,23 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         //?}
     }
 
-    /** Client constructor. */
-    public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv) {
-        this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null);
+    /** Client constructor — the opening buf carries the NPC id so the live preview can find it. */
+    public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, net.minecraft.network.PacketByteBuf buf) {
+        this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null,
+                buf.readBoolean() ? buf.readUuid() : null);
     }
 
     /** Server constructor. */
     public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, Inventory equip, @Nullable NotchNpcEntity npc) {
+        this(syncId, playerInv, equip, npc, npc != null ? npc.getUuid() : null);
+    }
+
+    private NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, Inventory equip,
+                                  @Nullable NotchNpcEntity npc, @Nullable java.util.UUID npcId) {
         super(ModScreenHandlers.NPC_EQUIP, syncId);
         this.equip = equip;
         this.npc = npc;
+        this.npcId = npcId;
 
         // 0-3: armor (helmet, chest, legs, boots).
         for (int i = 0; i < 4; i++) {
@@ -66,7 +75,7 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         }
         // 4: main hand, 5: off hand.
         this.addSlot(new EquipSlot(equip, 4, HAND_X, MAIN_Y, EquipmentSlot.MAINHAND));
-        this.addSlot(new EquipSlot(equip, 5, HAND_X, OFF_Y, EquipmentSlot.OFFHAND));
+        this.addSlot(new EquipSlot(equip, 5, OFF_X, OFF_Y, EquipmentSlot.OFFHAND));
 
         // 6-32: player inventory; 33-41: hotbar.
         for (int row = 0; row < 3; row++) {
@@ -77,6 +86,12 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInv, col, INV_X + col * 18, HOTBAR_Y));
         }
+    }
+
+    /** The NPC this screen is editing (for the client-side live preview). */
+    @Nullable
+    public java.util.UUID npcId() {
+        return npcId;
     }
 
     @Override
