@@ -1,1 +1,1 @@
-{ "pack": { "pack_format": 15, "description": "Notch Currency resources" } }
+{ "pack": { "pack_format": ${pack_format}, "description": "Notch Currency resources" } }

@@ -92,11 +92,25 @@ tasks.withType(JavaCompile).configureEach {
     options.release = javaVersion
 }
 
+def mcVersion = property('minecraft_version').toString()
+def minecraftDep = "~${mcVersion}"
+def packFormat = property('pack_format').toString()
+
 tasks.processResources {
     inputs.property "version", project.version
+    inputs.property "minecraft_dep", minecraftDep
+    inputs.property "pack_format", packFormat
     filesMatching("fabric.mod.json") {
-        expand("version": project.version)
+        expand("version": project.version, "minecraft_dep": minecraftDep)
     }
+    filesMatching("pack.mcmeta") {
+        expand("pack_format": packFormat)
+    }
+}
+
+// Jars are named notchcurrency-<version>+<minecraft>.jar so the per-version builds don't collide.
+tasks.remapJar {
+    archiveVersion = "${project.version}+${mcVersion}"
 }
 
 tasks.jar {

@@ -47,6 +47,14 @@ public final class CurrencyPackGenerator {
      * If the custom pack exists but isn't enabled, nudge the player (once per session) to turn it on.
      * The pack can't be force-enabled from code reliably, so this is a friendly one-line hint.
      */
+    /** Resource-pack format for the running game version (15 on 1.20.1, 34 on 1.21.1). */
+    private static final int PACK_FORMAT =
+            //? if >=1.21 {
+            /*34;
+            *///?} else {
+            15;
+            //?}
+
     /** The enabled pack ids (renamed from getEnabledNames in 1.21). */
     private static java.util.Collection<String> enabledPacks(MinecraftClient client) {
         //? if >=1.21 {
@@ -104,11 +112,11 @@ public final class CurrencyPackGenerator {
             Files.writeString(target().resolve("pack.mcmeta"), """
                     {
                       "pack": {
-                        "pack_format": 15,
+                        "pack_format": %d,
                         "description": "Notch Currency custom coin (generated — edit via config/notchcurrency/currency)"
                       }
                     }
-                    """);
+                    """.formatted(PACK_FORMAT));
 
             if (hasArt) {
                 Files.copy(coin, assets.resolve("textures").resolve("item").resolve("coin.png"),
@@ -170,11 +178,11 @@ public final class CurrencyPackGenerator {
             Files.writeString(pack.resolve("pack.mcmeta"), """
                     {
                       "pack": {
-                        "pack_format": 15,
+                        "pack_format": %d,
                         "description": "This server's coin skin (synced by Notch Currency)"
                       }
                     }
-                    """);
+                    """.formatted(PACK_FORMAT));
             if (coin != null) {
                 Files.write(assets.resolve("textures").resolve("item").resolve("coin.png"), coin);
             }
