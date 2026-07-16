@@ -69,4 +69,11 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

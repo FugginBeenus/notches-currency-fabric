@@ -338,4 +338,11 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, betField)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

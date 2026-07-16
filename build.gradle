@@ -106,6 +106,15 @@ tasks.processResources {
     filesMatching("pack.mcmeta") {
         expand("pack_format": packFormat)
     }
+    // 1.21 renamed the datapack folders to singular; the source tree keeps the 1.20 names.
+    if (packFormat.toInteger() >= 34) {
+        eachFile { f ->
+            f.path = f.path
+                    .replace("data/notchcurrency/loot_tables/", "data/notchcurrency/loot_table/")
+                    .replace("data/notchcurrency/recipes/", "data/notchcurrency/recipe/")
+        }
+        includeEmptyDirs = false
+    }
 }
 
 // Jars are named notchcurrency-<version>+<minecraft>.jar so the per-version builds don't collide.

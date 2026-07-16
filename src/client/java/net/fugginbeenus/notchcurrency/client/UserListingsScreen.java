@@ -151,4 +151,11 @@ public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler>
         ctx.fill(x1, y1, x1 + 1, y2, color);
         ctx.fill(x2 - 1, y1, x2, y2, color);
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

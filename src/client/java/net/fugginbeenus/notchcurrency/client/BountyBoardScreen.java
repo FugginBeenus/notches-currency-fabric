@@ -263,4 +263,11 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         buf.writeVarInt(action);
         NetClient.sendToServer(NotchPackets.BOUNTY_ACTION, buf);
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

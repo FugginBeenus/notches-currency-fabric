@@ -219,9 +219,11 @@ public class NotchCurrency implements ModInitializer {
         // Server-bound packet receivers (balance request, bids, ATM withdraw, shop ops)
         ServerPacketHandlers.register();
 
-        // StackData needs a registry lookup to (de)serialize whole stacks on 1.21+.
+        // StackData/Ench need a registry lookup to (de)serialize on 1.21+.
         ServerLifecycleEvents.SERVER_STARTED.register(
-                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.set(server.getRegistryManager()));
+                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.getRegistryManager()));
+        ServerLifecycleEvents.SERVER_STOPPED.register(
+                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
 
         // Flush & close the economy audit log when the server stops.
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> EconomyLedger.close());

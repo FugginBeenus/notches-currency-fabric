@@ -119,4 +119,11 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

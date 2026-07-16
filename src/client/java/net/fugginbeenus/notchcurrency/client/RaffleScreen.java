@@ -227,4 +227,11 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
                 && over((int) mx, (int) my, this.x + REDEEM_X, this.y + REDEEM_Y, REDEEM_W, REDEEM_H)) return 4;
         return -1;
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

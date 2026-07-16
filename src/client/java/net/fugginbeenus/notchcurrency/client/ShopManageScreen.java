@@ -321,4 +321,11 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, greetField)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
 }

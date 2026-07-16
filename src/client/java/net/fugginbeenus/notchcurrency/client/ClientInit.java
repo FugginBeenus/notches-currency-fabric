@@ -127,7 +127,7 @@ public final class ClientInit implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             // StackData needs a registry lookup to decode carried stacks on 1.21+.
             if (client.world != null) {
-                net.fugginbeenus.notchcurrency.compat.RegistryAccess.set(client.world.getRegistryManager());
+                net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClient(client.world.getRegistryManager());
             }
             NotchPacketsClient.requestBalance();
             CurrencyPackGenerator.remindIfDisabled(client);
