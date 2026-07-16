@@ -1,7 +1,11 @@
 package net.fugginbeenus.notchcurrency.integration;
 
 import net.blay09.mods.balm.api.Balm;
+//? if >=1.21 {
+/*import net.blay09.mods.waystones.api.event.WaystoneTeleportEvent;
+*///?} else {
 import net.blay09.mods.waystones.api.WaystoneTeleportEvent;
+//?}
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;

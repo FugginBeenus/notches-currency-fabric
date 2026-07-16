@@ -56,7 +56,11 @@ public class BalloonEntity extends Entity {
     }
 
     // NBT
+    //? if >=1.21 {
+    /*@Override protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {}
+    *///?} else {
     @Override protected void initDataTracker() {}
+    //?}
 
     @Override
     protected void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
@@ -197,7 +201,13 @@ public class BalloonEntity extends Entity {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public Packet<ClientPlayPacketListener> createSpawnPacket(net.minecraft.server.network.EntityTrackerEntry entry) {
+        return new EntitySpawnS2CPacket(this, entry);
+    }
+    *///?} else {
     public Packet<ClientPlayPacketListener> createSpawnPacket() {
         return new EntitySpawnS2CPacket(this);
     }
+    //?}
 }

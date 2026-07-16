@@ -27,7 +27,7 @@ public final class BossCurrencyInject {
 
     public static void init() {
         //? if >=1.21 {
-        /*LootTableEvents.MODIFY.register((key, table, source, registries) -> {
+        /*LootTableEvents.MODIFY.register((key, table, source) -> {
             Identifier id = key.getValue();
         *///?} else {
         // Fabric Loot v2 signature: (resourceManager, lootManager, id, tableBuilder, source)
