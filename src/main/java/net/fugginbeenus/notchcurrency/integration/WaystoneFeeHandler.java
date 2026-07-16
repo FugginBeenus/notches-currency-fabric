@@ -40,6 +40,19 @@ public final class WaystoneFeeHandler {
     /** Hook the Waystones teleport event. Only call when the Waystones mod is loaded. */
     public static void register() {
         Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, WaystoneFeeHandler::onPre);
+
+        // Fees to each joining client, so the waystone selection menu can price its destinations.
+        // Join-only: fee changes mid-session reach players on their next login.
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register(
+                (handler, sender, server) -> sendFees(handler.getPlayer()));
+    }
+
+    private static void sendFees(ServerPlayerEntity sp) {
+        var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+        buf.writeBoolean(enabled);
+        buf.writeVarInt(fee);
+        buf.writeVarInt(dimensionalFee);
+        net.fugginbeenus.notchcurrency.compat.Net.sendToClient(sp, NotchPackets.WAYSTONE_FEE_SYNC, buf);
     }
 
     private static void onPre(WaystoneTeleportEvent.Pre event) {

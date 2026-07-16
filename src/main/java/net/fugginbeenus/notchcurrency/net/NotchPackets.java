@@ -126,6 +126,10 @@ public final class NotchPackets {
     // Client -> server: set the dialogue style (npc uuid, mode ordinal: 0=window 1=chat)
     public static final Identifier NPC_DIALOGUE_MODE = NotchCurrency.id("npc_dialogue_mode");
 
+    // Server -> client: waystone teleport fees, so the selection menu can price each destination
+    // (enabled, fee, dimensionalFee; sent on join by WaystoneFeeHandler when Waystones is present)
+    public static final Identifier WAYSTONE_FEE_SYNC = NotchCurrency.id("waystone_fee_sync");
+
     // ATM withdraw (client -> server)
     public static final Identifier ATM_WITHDRAW    = NotchCurrency.id("atm_withdraw");
 

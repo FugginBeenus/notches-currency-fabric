@@ -319,6 +319,13 @@ public final class NotchPacketsClient {
 
     /** The server's custom coin skin, pushed on join — written into a local auto-enabled pack. */
     public static void registerCurrencySyncReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.WAYSTONE_FEE_SYNC, (client, buf) -> {
+            boolean enabled = buf.readBoolean();
+            int fee = buf.readVarInt();
+            int dimensionalFee = buf.readVarInt();
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.WaystoneFees.set(enabled, fee, dimensionalFee));
+        });
+
         NetClient.registerClientReceiver(NotchPackets.CURRENCY_SYNC, (client, buf) -> {
             String itemName = buf.readString(64);
             byte[] coin = buf.readBoolean() ? buf.readByteArray() : null;
