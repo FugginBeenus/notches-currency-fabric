@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.registry;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.trade.TradeScreenHandler;
 import net.fugginbeenus.notchcurrency.ui.ATMTestScreenHandler;
@@ -79,87 +78,99 @@ public final class ModScreenHandlers {
     private ModScreenHandlers() {}
 
     /** Call once from NotchCurrency.onInitialize() */
+    /**
+     * Register a plain screen handler. Fabric's ScreenHandlerRegistry.registerSimple was removed, so
+     * this uses the vanilla registry directly — the two-arg ScreenHandlerType constructor and
+     * VANILLA_FEATURES both exist on 1.20.1 and 1.21, so no version gate is needed.
+     */
+    private static <T extends net.minecraft.screen.ScreenHandler> ScreenHandlerType<T> simple(
+            net.minecraft.util.Identifier id, ScreenHandlerType.Factory<T> factory) {
+        return Registry.register(Registries.SCREEN_HANDLER, id,
+                new ScreenHandlerType<>(factory,
+                        net.minecraft.resource.featuretoggle.FeatureFlags.VANILLA_FEATURES));
+    }
+
     public static void register() {
         // ATM
-        ATM = ScreenHandlerRegistry.registerSimple(
+        ATM = simple(
                 NotchCurrency.id("atm"),
                 ATMTestScreenHandler::new
         );
 
         // Player-to-player trade
-        TRADE = ScreenHandlerRegistry.registerSimple(
+        TRADE = simple(
                 NotchCurrency.id("trade"),
                 TradeScreenHandler::new
         );
 
         // Main auction house browser
-        AUCTION_HOUSE = ScreenHandlerRegistry.registerSimple(
+        AUCTION_HOUSE = simple(
                 NotchCurrency.id("auction_house"),
                 AuctionHouseScreenHandler::new
         );
 
         // Popup "My Listings" / user auctions window
-        USER_AUCTIONS = ScreenHandlerRegistry.registerSimple(
+        USER_AUCTIONS = simple(
                 NotchCurrency.id("user_auctions"),
                 UserListingsScreenHandler::new
         );
 
         // Raffle panel
-        RAFFLE = ScreenHandlerRegistry.registerSimple(
+        RAFFLE = simple(
                 NotchCurrency.id("raffle"),
                 RaffleScreenHandler::new
         );
 
         // Raffle admin setup panel
-        RAFFLE_ADMIN = ScreenHandlerRegistry.registerSimple(
+        RAFFLE_ADMIN = simple(
                 NotchCurrency.id("raffle_admin"),
                 RaffleAdminScreenHandler::new
         );
 
         // List-an-item screen
-        AUCTION_LISTING = ScreenHandlerRegistry.registerSimple(
+        AUCTION_LISTING = simple(
                 NotchCurrency.id("auction_listing"),
                 AuctionListingScreenHandler::new
         );
 
         // Bounty board
-        BOUNTY_BOARD = ScreenHandlerRegistry.registerSimple(
+        BOUNTY_BOARD = simple(
                 NotchCurrency.id("bounty_board"),
                 BountyBoardScreenHandler::new
         );
 
         // Bounty admin setup
-        BOUNTY_ADMIN = ScreenHandlerRegistry.registerSimple(
+        BOUNTY_ADMIN = simple(
                 NotchCurrency.id("bounty_admin"),
                 BountyAdminScreenHandler::new
         );
 
         // Loan application
-        LOAN = ScreenHandlerRegistry.registerSimple(
+        LOAN = simple(
                 NotchCurrency.id("loan"),
                 net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler::new
         );
 
         // Slot machine
-        SLOT_MACHINE = ScreenHandlerRegistry.registerSimple(
+        SLOT_MACHINE = simple(
                 NotchCurrency.id("slot_machine"),
                 net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler::new
         );
 
         // Coin flip
-        COIN_FLIP = ScreenHandlerRegistry.registerSimple(
+        COIN_FLIP = simple(
                 NotchCurrency.id("coin_flip"),
                 net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler::new
         );
 
         // NPC equipment
-        NPC_EQUIP = ScreenHandlerRegistry.registerSimple(
+        NPC_EQUIP = simple(
                 NotchCurrency.id("npc_equip"),
                 net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler::new
         );
 
         // Enchanter service
-        ENCHANTER = ScreenHandlerRegistry.registerSimple(
+        ENCHANTER = simple(
                 NotchCurrency.id("enchanter"),
                 net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler::new
         );
@@ -172,11 +183,11 @@ public final class ModScreenHandlers {
         );
 
         // Offline trade offers
-        TRADE_OFFER_CREATE = ScreenHandlerRegistry.registerSimple(
+        TRADE_OFFER_CREATE = simple(
                 NotchCurrency.id("trade_offer_create"),
                 net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler::new
         );
-        TRADE_OFFERS = ScreenHandlerRegistry.registerSimple(
+        TRADE_OFFERS = simple(
                 NotchCurrency.id("trade_offers"),
                 net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler::new
         );
