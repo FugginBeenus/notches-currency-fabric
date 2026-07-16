@@ -114,12 +114,20 @@ public final class NpcSkins {
                 MinecraftClient.getInstance().execute(() -> {
                     try {
                         GameProfile profile = new GameProfile(uuid, username);
+                        //? if >=1.21 {
+                        /*MinecraftClient.getInstance().getSkinProvider().fetchSkinTextures(profile)
+                                .thenAccept(textures -> MinecraftClient.getInstance().execute(() -> {
+                                    cache.put(key, textures.texture());
+                                    loading.put(key, false);
+                                }));
+                        *///?} else {
                         MinecraftClient.getInstance().getSkinProvider().loadSkin(profile, (type, id, tex) -> {
                             if (type == MinecraftProfileTexture.Type.SKIN) {
                                 cache.put(key, id);
                                 loading.put(key, false);
                             }
                         }, true);
+                        //?}
                         CompletableFuture.delayedExecutor(30, java.util.concurrent.TimeUnit.SECONDS).execute(() -> {
                             if (cache.get(key) == null) loading.put(key, false);
                         });

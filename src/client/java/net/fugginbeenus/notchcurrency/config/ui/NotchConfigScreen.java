@@ -445,8 +445,10 @@ public final class NotchConfigScreen extends Screen {
 
     @Override
     public void tick() {
+        //? if <1.21 {
         search.tick();
         if (editField != null) editField.tick();
+        //?}
     }
 
     /* -------------------------------- saving -------------------------------- */

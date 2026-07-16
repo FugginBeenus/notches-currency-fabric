@@ -46,8 +46,13 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     }
 
     @Override
+    //? if >=1.21 {
+    /*protected void setupTransforms(NotchNpcEntity entity, MatrixStack matrices, float animationProgress,
+                                   float bodyYaw, float tickDelta, float scale) {
+    *///?} else {
     protected void setupTransforms(NotchNpcEntity entity, MatrixStack matrices, float animationProgress,
                                    float bodyYaw, float tickDelta) {
+    //?}
         if (entity.getNpcPose() == NotchNpcEntity.POSE_PRONE) {
             // Replicate vanilla's swimming/crawling transform (face-down, flat on the ground).
             matrices.multiply(RotationAxis.NEGATIVE_Y.rotationDegrees(bodyYaw));
@@ -55,7 +60,11 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
             matrices.translate(0.0f, -1.0f, 0.3f); // vanilla swim offset — sits the crawl on the ground
             return;
         }
+        //? if >=1.21 {
+        /*super.setupTransforms(entity, matrices, animationProgress, bodyYaw, tickDelta, scale);
+        *///?} else {
         super.setupTransforms(entity, matrices, animationProgress, bodyYaw, tickDelta);
+        //?}
     }
 
     @Override

@@ -57,10 +57,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
     private record Card(Enchantment ench, int level, long cost, ItemStack book) {}
 
     private static ItemStack bookOf(Enchantment ench, int level) {
-        ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-        net.minecraft.item.EnchantedBookItem.addEnchantment(book,
-                new net.minecraft.enchantment.EnchantmentLevelEntry(ench, level));
-        return book;
+        return net.fugginbeenus.notchcurrency.compat.Ench.enchantedBook(ench, level);
     }
 
     private List<Card> cards() {
@@ -68,7 +65,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
         List<Card> cards = new ArrayList<>();
         if (stack.isEmpty()) return cards;
         if (tab == 1) {
-            for (Map.Entry<Enchantment, Integer> e : EnchantmentHelper.get(stack).entrySet()) {
+            for (Map.Entry<Enchantment, Integer> e : net.fugginbeenus.notchcurrency.compat.Ench.get(stack).entrySet()) {
                 cards.add(new Card(e.getKey(), e.getValue(),
                         EnchanterManager.extractPrice(e.getKey(), e.getValue(), handler.pricing()),
                         bookOf(e.getKey(), e.getValue())));
@@ -174,10 +171,10 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
             NotchWidgets.button(ctx, x + LIST_X, cy, CARD_W, CARD_H, hover, false);
             ctx.drawItem(c.book(), x + LIST_X + 4, cy + 5);
 
-            String name = c.ench().getName(c.level()).getString();
+            String name = net.fugginbeenus.notchcurrency.compat.Ench.name(c.ench(), c.level()).getString();
             while (name.length() > 3 && this.textRenderer.getWidth(name) > CARD_W - 52) name = name.substring(0, name.length() - 2) + "…";
             ctx.drawText(this.textRenderer, name, x + LIST_X + 24, cy + 9,
-                    c.ench().isTreasure() ? 0xFF9A5CC6 : NotchTheme.TEXT_DARK, false);
+                    net.fugginbeenus.notchcurrency.compat.Ench.isTreasure(c.ench()) ? 0xFF9A5CC6 : NotchTheme.TEXT_DARK, false);
 
             ctx.drawItem(COIN, x + LIST_X + CARD_W - 22, cy + 5);
             ctx.drawItemInSlot(this.textRenderer, COIN, x + LIST_X + CARD_W - 22, cy + 5,
@@ -297,7 +294,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
                     int i = scroll + v;
                     if (i >= cards.size()) break;
                     if (over(mx, my, x + LIST_X, cardY(v), CARD_W, CARD_H)) {
-                        String id = String.valueOf(Registries.ENCHANTMENT.getId(cards.get(i).ench()));
+                        String id = String.valueOf(net.fugginbeenus.notchcurrency.compat.Ench.idOf(cards.get(i).ench()));
                         NotchWidgets.click();
                         NotchPacketsClient.sendEnchanterAction(tab == 1
                                 ? EnchanterScreenHandler.ACTION_EXTRACT

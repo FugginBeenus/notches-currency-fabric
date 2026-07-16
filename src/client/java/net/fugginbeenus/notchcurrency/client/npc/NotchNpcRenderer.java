@@ -93,7 +93,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         if (scaled) matrices.pop();
         // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height).
         if (npc.hasCustomName() && npc.isCustomNameVisible()) {
+            //? if >=1.21 {
+            /*this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light, tickDelta);
+            *///?} else {
             this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light);
+            //?}
         }
         return true;
     }

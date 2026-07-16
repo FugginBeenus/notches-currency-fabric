@@ -120,7 +120,9 @@ public class DialogueStudioScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        //? if <1.21 {
         if (nodeTextBox != null) nodeTextBox.tick(); // cursor blink
+        //?}
     }
 
     private TextFieldWidget field(int x, int y, int w, int maxLen) {
@@ -545,7 +547,11 @@ public class DialogueStudioScreen extends Screen {
                 refreshFields();
                 // Hand focus straight to the label so it's immediately editable.
                 this.setFocused(choiceLabelField);
-                choiceLabelField.setCursorToEnd();
+                //? if >=1.21 {
+            /*choiceLabelField.setCursorToEnd(false);
+            *///?} else {
+            choiceLabelField.setCursorToEnd();
+            //?}
                 return true;
             }
         }
@@ -583,7 +589,11 @@ public class DialogueStudioScreen extends Screen {
         // the drawn inset, which made label editing feel broken).
         if (over(mx, my, px + ED_X + 36, py + 54, ED_W - 36, 14)) {
             this.setFocused(choiceLabelField);
+            //? if >=1.21 {
+            /*choiceLabelField.setCursorToEnd(false);
+            *///?} else {
             choiceLabelField.setCursorToEnd();
+            //?}
             return true;
         }
         if (over(mx, my, px + ED_X + 58, py + 72, 160, 14)) { // Leads to (cycle)

@@ -48,7 +48,11 @@ public final class BountyTrackerHud implements HudRenderCallback {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void onHudRender(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter) {
+    *///?} else {
     public void onHudRender(DrawContext ctx, float tickDelta) {
+    //?}
         MinecraftClient client = MinecraftClient.getInstance();
         if (!visible || client.player == null || client.world == null || client.options.hudHidden) return;
 

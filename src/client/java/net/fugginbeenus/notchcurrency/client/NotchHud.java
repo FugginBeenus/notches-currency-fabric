@@ -42,7 +42,11 @@ public final class NotchHud implements HudRenderCallback {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void onHudRender(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter) {
+    *///?} else {
     public void onHudRender(DrawContext ctx, float tickDelta) {
+    //?}
         final MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null || mc.player == null) return;
         if (shouldHide(mc)) return;

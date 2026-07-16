@@ -14,7 +14,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+//? if <1.21 {
 import net.minecraft.client.item.TooltipContext;
+//?}
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
@@ -754,8 +756,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     // Get vanilla item tooltip lines
                     // Create a clean copy WITHOUT auction NBT so AuctionTooltips callback won't modify it
                     ItemStack cleanStack = stack.copy();
-                    NbtCompound cleanTag = cleanStack.getNbt();
-                    if (cleanTag != null) {
+                    if (StackData.hasData(cleanStack)) {
+                        NbtCompound cleanTag = StackData.editData(cleanStack);
                         // Remove ALL auction-specific tags
                         cleanTag.remove("nc_price");
                         cleanTag.remove("nc_seller");
@@ -765,6 +767,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                         cleanTag.remove("nc_highest_bidder");
                         cleanTag.remove("nc_listing_id");
 
+                        //? if <1.21 {
                         // Also remove the display lore that was added server-side
                         if (cleanTag.contains("display", 10)) {
                             NbtCompound display = cleanTag.getCompound("display");
@@ -773,19 +776,36 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                                 cleanTag.remove("display");
                             }
                         }
+                        //?}
 
                         // If tag is now empty, remove it entirely
                         if (cleanTag.isEmpty()) {
-                            cleanStack.setNbt(null);
+                            StackData.clearData(cleanStack);
+                        } else {
+                            StackData.commitData(cleanStack, cleanTag);
                         }
                     }
+                    //? if >=1.21 {
+                    /*// The server-side lore rides the LORE component on 1.21.
+                    cleanStack.remove(net.minecraft.component.DataComponentTypes.LORE);
+                    *///?}
 
+                    //? if >=1.21 {
+                    /*List<Text> vanillaLines = cleanStack.getTooltip(
+                            net.minecraft.item.Item.TooltipContext.DEFAULT,
+                            this.client != null ? this.client.player : null,
+                            this.client != null && this.client.options.advancedItemTooltips
+                                    ? net.minecraft.item.tooltip.TooltipType.ADVANCED
+                                    : net.minecraft.item.tooltip.TooltipType.BASIC
+                    );
+                    *///?} else {
                     List<Text> vanillaLines = cleanStack.getTooltip(
                             this.client != null ? this.client.player : null,
                             this.client != null && this.client.options.advancedItemTooltips
                                     ? TooltipContext.Default.ADVANCED
                                     : TooltipContext.Default.BASIC
                     );
+                    //?}
 
                     // Add vanilla lines (includes item name, enchantments, etc.)
                     for (Text line : vanillaLines) {

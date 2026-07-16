@@ -293,8 +293,13 @@ public class NotchNpcEditorScreen extends Screen {
         if (currentModel != null && currentModel.startsWith("entity:")) {
             EntityType<?> t = Registries.ENTITY_TYPE.get(Reg.parse(currentModel.substring("entity:".length())));
             if (t != null) {
+                //? if >=1.21 {
+                /*h = Math.max(0.5f, t.getDimensions().height());
+                w = Math.max(0.5f, t.getDimensions().width());
+                *///?} else {
                 h = Math.max(0.5f, t.getDimensions().height);
                 w = Math.max(0.5f, t.getDimensions().width);
+                //?}
             }
         }
         float fitH = (PREV_H - 34) / h;

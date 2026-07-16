@@ -3,7 +3,9 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+//? if <1.21 {
 import net.minecraft.client.item.TooltipContext;
+//?}
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
@@ -20,9 +22,16 @@ public final class AuctionTooltips {
         ItemTooltipCallback.EVENT.register(AuctionTooltips::onTooltip);
     }
 
+    //? if >=1.21 {
+    /*private static void onTooltip(ItemStack stack,
+                                  net.minecraft.item.Item.TooltipContext context,
+                                  net.minecraft.item.tooltip.TooltipType type,
+                                  List<Text> lines) {
+    *///?} else {
     private static void onTooltip(ItemStack stack,
                                   TooltipContext context,
                                   List<Text> lines) {
+    //?}
 
         NbtCompound tag = StackData.getData(stack);
         if (!tag.contains("nc_price")) {

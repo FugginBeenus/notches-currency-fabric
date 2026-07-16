@@ -183,7 +183,11 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
             this.onClick = onClick;
         }
         @Override public void onPress() { onClick.run(); }
+        //? if >=1.21 {
+        /*@Override protected void renderWidget(DrawContext ctx, int mouseX, int mouseY, float delta) { }
+        *///?} else {
         @Override protected void renderButton(DrawContext ctx, int mouseX, int mouseY, float delta) { /* invisible */ }
+        //?}
         @Override protected void appendClickableNarrations(NarrationMessageBuilder builder) { /* no narration */ }
     }
 

@@ -17,7 +17,11 @@ public final class RouteHud implements HudRenderCallback {
     private static final int PAD = 6;
 
     @Override
+    //? if >=1.21 {
+    /*public void onHudRender(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter) {
+    *///?} else {
     public void onHudRender(DrawContext ctx, float tickDelta) {
+    //?}
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.options.hudHidden) return;
 

@@ -47,9 +47,18 @@ public final class CurrencyPackGenerator {
      * If the custom pack exists but isn't enabled, nudge the player (once per session) to turn it on.
      * The pack can't be force-enabled from code reliably, so this is a friendly one-line hint.
      */
+    /** The enabled pack ids (renamed from getEnabledNames in 1.21). */
+    private static java.util.Collection<String> enabledPacks(MinecraftClient client) {
+        //? if >=1.21 {
+        /*return client.getResourcePackManager().getEnabledIds();
+        *///?} else {
+        return client.getResourcePackManager().getEnabledNames();
+        //?}
+    }
+
     public static void remindIfDisabled(MinecraftClient client) {
         if (remindedThisSession || !packExists() || client.player == null) return;
-        boolean enabled = client.getResourcePackManager().getEnabledNames().contains(PACK_PROFILE_NAME);
+        boolean enabled = enabledPacks(client).contains(PACK_PROFILE_NAME);
         if (enabled) {
             remindedThisSession = true;
             return;
@@ -147,8 +156,7 @@ public final class CurrencyPackGenerator {
 
             deleteRecursively(pack);
             if (empty) {
-                boolean wasEnabled = client.getResourcePackManager().getEnabledNames()
-                        .contains(SERVER_PACK_PROFILE_NAME);
+                boolean wasEnabled = enabledPacks(client).contains(SERVER_PACK_PROFILE_NAME);
                 if (wasEnabled) {
                     client.getResourcePackManager().scanPacks();
                     client.getResourcePackManager().disable(SERVER_PACK_PROFILE_NAME);
@@ -194,7 +202,7 @@ public final class CurrencyPackGenerator {
         try {
             var mgr = client.getResourcePackManager();
             mgr.scanPacks();
-            if (!mgr.getEnabledNames().contains(SERVER_PACK_PROFILE_NAME)) {
+            if (!enabledPacks(client).contains(SERVER_PACK_PROFILE_NAME)) {
                 if (mgr.enable(SERVER_PACK_PROFILE_NAME)) {
                     client.options.refreshResourcePacks(mgr);
                     client.reloadResources();
