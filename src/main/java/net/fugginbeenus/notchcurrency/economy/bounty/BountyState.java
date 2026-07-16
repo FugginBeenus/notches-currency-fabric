@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -39,7 +41,7 @@ public class BountyState extends PersistentState {
     public static BountyState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(BountyState::fromNbt, BountyState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, BountyState::new, BountyState::fromNbt, DATA_KEY);
     }
 
     // ---- offers ----
@@ -151,7 +153,11 @@ public class BountyState extends PersistentState {
     // ---- NBT ----
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList offerList = new NbtList();
         for (Bounty b : offers.values()) offerList.add(b.toNbt());
         nbt.put("Offers", offerList);

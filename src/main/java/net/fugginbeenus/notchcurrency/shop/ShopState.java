@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -50,11 +52,7 @@ public class ShopState extends PersistentState {
         }
 
         PersistentStateManager manager = overworld.getPersistentStateManager();
-        return manager.getOrCreate(
-                ShopState::fromNbt,
-                ShopState::new,
-                DATA_KEY
-        );
+        return StateData.getOrCreate(manager, ShopState::new, ShopState::fromNbt, DATA_KEY);
     }
 
     // --- Shop Management ---
@@ -250,7 +248,11 @@ public class ShopState extends PersistentState {
     // --- NBT Serialization ---
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList shopList = new NbtList();
         for (PlayerShop shop : shops.values()) {
             shopList.add(shop.toNbt());

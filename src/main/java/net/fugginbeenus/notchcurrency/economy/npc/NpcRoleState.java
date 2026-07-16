@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.npc;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -29,7 +31,7 @@ public class NpcRoleState extends PersistentState {
     public static NpcRoleState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(NpcRoleState::fromNbt, NpcRoleState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, NpcRoleState::new, NpcRoleState::fromNbt, DATA_KEY);
     }
 
     public void assign(UUID npcId, NpcRole role, @Nullable UUID shopId) {
@@ -51,7 +53,11 @@ public class NpcRoleState extends PersistentState {
     // ---- NBT ----
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList list = new NbtList();
         for (Map.Entry<UUID, Assignment> e : roles.entrySet()) {
             NbtCompound o = new NbtCompound();

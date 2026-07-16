@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.cosmetic;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -27,7 +29,7 @@ public class CosmeticState extends PersistentState {
     public static CosmeticState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(CosmeticState::fromNbt, CosmeticState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, CosmeticState::new, CosmeticState::fromNbt, DATA_KEY);
     }
 
     public boolean owns(UUID player, String offerId) {
@@ -59,7 +61,11 @@ public class CosmeticState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList players = new NbtList();
         for (Map.Entry<UUID, Set<String>> e : owned.entrySet()) {
             NbtCompound entry = new NbtCompound();

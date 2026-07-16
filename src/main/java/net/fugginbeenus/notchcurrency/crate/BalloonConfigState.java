@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.crate;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +18,7 @@ public final class BalloonConfigState extends PersistentState {
 
     public static BalloonConfigState get(ServerWorld world) {
         PersistentStateManager mgr = world.getPersistentStateManager();
-        return mgr.getOrCreate(BalloonConfigState::readNbt, BalloonConfigState::new, "notchcurrency_balloon_cfg");
+        return StateData.getOrCreate(mgr, BalloonConfigState::new, BalloonConfigState::readNbt, "notchcurrency_balloon_cfg");
     }
 
     public BalloonConfigState() {}
@@ -36,7 +38,11 @@ public final class BalloonConfigState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         nbt.putInt("cx", center.getX());
         nbt.putInt("cy", center.getY());
         nbt.putInt("cz", center.getZ());

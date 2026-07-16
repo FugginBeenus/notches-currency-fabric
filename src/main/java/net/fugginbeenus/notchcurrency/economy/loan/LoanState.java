@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.loan;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -39,7 +41,7 @@ public class LoanState extends PersistentState {
     public static LoanState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(LoanState::fromNbt, LoanState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, LoanState::new, LoanState::fromNbt, DATA_KEY);
     }
 
     @Nullable
@@ -81,7 +83,11 @@ public class LoanState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList list = new NbtList();
         for (Map.Entry<UUID, Loan> e : loans.entrySet()) {
             NbtCompound o = new NbtCompound();

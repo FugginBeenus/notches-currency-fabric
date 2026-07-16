@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.core;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -72,7 +74,11 @@ public class BalanceState extends PersistentState {
     /* ---------- Persistence ---------- */
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtCompound map = new NbtCompound();
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
             map.putLong(e.getKey().toString(), e.getValue());
@@ -104,6 +110,6 @@ public class BalanceState extends PersistentState {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
         // 1.20.1 signature: (reader, factory, name)
-        return mgr.getOrCreate(BalanceState::readNbt, BalanceState::new, "notchcurrency_balances");
+        return StateData.getOrCreate(mgr, BalanceState::new, BalanceState::readNbt, "notchcurrency_balances");
     }
 }

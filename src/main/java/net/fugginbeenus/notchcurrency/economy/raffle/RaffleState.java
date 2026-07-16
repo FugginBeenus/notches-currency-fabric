@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.raffle;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -62,7 +64,7 @@ public class RaffleState extends PersistentState {
     public static RaffleState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(RaffleState::fromNbt, RaffleState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, RaffleState::new, RaffleState::fromNbt, DATA_KEY);
     }
 
     // ---- active round ----
@@ -216,7 +218,11 @@ public class RaffleState extends PersistentState {
     // ---- NBT ----
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         nbt.putLong("Round", currentRound);
         nbt.putLong("Pot", pot);
         nbt.putLong("CoinsPool", coinsPool);

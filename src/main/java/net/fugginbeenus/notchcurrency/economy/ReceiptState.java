@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -34,7 +36,7 @@ public class ReceiptState extends PersistentState {
     public static ReceiptState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(ReceiptState::fromNbt, ReceiptState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, ReceiptState::new, ReceiptState::fromNbt, DATA_KEY);
     }
 
     /** Record a receipt (newest first). Called from BalanceStore for every non-zero change. */
@@ -77,7 +79,11 @@ public class ReceiptState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList players = new NbtList();
         for (Map.Entry<UUID, Deque<Receipt>> e : history.entrySet()) {
             if (e.getValue().isEmpty()) continue;

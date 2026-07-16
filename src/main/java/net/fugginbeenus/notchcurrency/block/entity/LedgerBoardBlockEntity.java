@@ -56,8 +56,13 @@ public class LedgerBoardBlockEntity extends BlockEntity {
     // ---- sync ----
 
     @Override
+    //? if >=1.21 {
+    /*protected void writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+        super.writeNbt(nbt, registries);
+    *///?} else {
     public void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
+    //?}
         NbtList list = new NbtList();
         for (EconomyLeaderboard.Entry e : rows) {
             NbtCompound row = new NbtCompound();
@@ -69,8 +74,13 @@ public class LedgerBoardBlockEntity extends BlockEntity {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public void readNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+        super.readNbt(nbt, registries);
+    *///?} else {
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
+    //?}
         List<EconomyLeaderboard.Entry> parsed = new ArrayList<>();
         NbtList list = nbt.getList("Rows", NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < list.size(); i++) {

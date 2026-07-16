@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.adminshop;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -26,7 +28,7 @@ public class AdminShopState extends PersistentState {
     public static AdminShopState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(AdminShopState::fromNbt, AdminShopState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, AdminShopState::new, AdminShopState::fromNbt, DATA_KEY);
     }
 
     public AdminShop create(String name) {
@@ -76,7 +78,11 @@ public class AdminShopState extends PersistentState {
     // ---- NBT ----
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList list = new NbtList();
         for (AdminShop s : shops.values()) list.add(s.toNbt());
         nbt.put("Shops", list);

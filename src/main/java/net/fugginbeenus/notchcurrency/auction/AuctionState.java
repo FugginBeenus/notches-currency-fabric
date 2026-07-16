@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -57,7 +59,7 @@ public final class AuctionState extends PersistentState {
     public static AuctionState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(AuctionState::fromNbt, AuctionState::new, "notchcurrency_auctions");
+        return StateData.getOrCreate(mgr, AuctionState::new, AuctionState::fromNbt, "notchcurrency_auctions");
     }
 
     public static AuctionState fromNbt(NbtCompound tag) {
@@ -138,7 +140,11 @@ public final class AuctionState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound tag, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound tag) {
+    //?}
         // Listings
         NbtList list = new NbtList();
         for (AuctionListing l : listings.values()) {

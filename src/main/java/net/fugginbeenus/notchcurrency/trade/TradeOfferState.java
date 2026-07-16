@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.StateData;
+
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -32,7 +34,7 @@ public class TradeOfferState extends PersistentState {
     public static TradeOfferState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
-        return mgr.getOrCreate(TradeOfferState::fromNbt, TradeOfferState::new, DATA_KEY);
+        return StateData.getOrCreate(mgr, TradeOfferState::new, TradeOfferState::fromNbt, DATA_KEY);
     }
 
     // ---- offers ----
@@ -126,7 +128,11 @@ public class TradeOfferState extends PersistentState {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    *///?} else {
     public NbtCompound writeNbt(NbtCompound nbt) {
+    //?}
         NbtList offerList = new NbtList();
         for (TradeOffer o : offers.values()) offerList.add(o.toNbt());
         nbt.put("Offers", offerList);
