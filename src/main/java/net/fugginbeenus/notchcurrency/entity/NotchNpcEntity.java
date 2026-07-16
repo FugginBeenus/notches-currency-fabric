@@ -20,12 +20,21 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
+//? if >=1.21 {
+/*import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.PlayState;
+*///?} else {
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
+//?}
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
@@ -165,6 +174,20 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     @Override
+    //? if >=1.21 {
+    /*protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(MODEL, MODEL_HUMANOID);
+        builder.add(SKIN_TYPE, SKIN_PRESET);
+        builder.add(SKIN_VALUE, "1");
+        builder.add(SLIM, false);
+        builder.add(SCALE, 1.0f);
+        builder.add(NPC_POSE, POSE_STANDING);
+        builder.add(CUSTOM_POSE, new NbtCompound());
+        builder.add(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        builder.add(ATTACK_PULSE, 0);
+    }
+    *///?} else {
     protected void initDataTracker() {
         super.initDataTracker();
         this.dataTracker.startTracking(MODEL, MODEL_HUMANOID);
@@ -177,6 +200,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.startTracking(POSE_ANIM, ANIM_BREATHE); // alive-by-default
         this.dataTracker.startTracking(ATTACK_PULSE, 0);
     }
+    //?}
 
     @Override
     public boolean tryAttack(net.minecraft.entity.Entity target) {
@@ -263,7 +287,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         };
     }
 
-    /** Keep the nameplate above the visible body: pose changes the height and the model is scaled. */
+    /** Keep the nameplate above the visible body: pose changes the height and the model is scaled.
+     *  1.21 replaced getNameLabelHeight with the entity-attachments system, so on 1.21 the nameplate
+     *  sits at the default height and doesn't follow the pose (cosmetic-only; revisit if wanted). */
+    //? if <1.21 {
     @Override
     public float getNameLabelHeight() {
         float base = switch (getNpcPose()) {
@@ -274,6 +301,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         };
         return base * getScale() + 0.4f;
     }
+    //?}
 
     public String getModelId() { return this.dataTracker.get(MODEL); }
     public void setModelId(String id) { this.dataTracker.set(MODEL, (id == null || id.isEmpty()) ? MODEL_HUMANOID : id); }
@@ -471,9 +499,15 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     @Override
+    //? if >=1.21 {
+    /*public boolean canBeLeashed() {
+        return leashable && super.canBeLeashed();
+    }
+    *///?} else {
     public boolean canBeLeashedBy(PlayerEntity player) {
         return leashable && super.canBeLeashedBy(player);
     }
+    //?}
 
     public int getRegen() { return regen; }
     public void setRegen(int r) { this.regen = Math.max(0, Math.min(10, r)); }
