@@ -1,0 +1,13 @@
+{
+  "entities": ["notchcurrency:notch_npc"],
+  "slots": [
+    "head/hat",
+    "head/face",
+    "chest/necklace",
+    "chest/cape",
+    "chest/back",
+    "legs/belt",
+    "hand/ring",
+    "feet/shoes"
+  ]
+}

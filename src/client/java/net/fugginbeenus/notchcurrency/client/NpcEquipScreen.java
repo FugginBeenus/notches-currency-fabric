@@ -54,18 +54,20 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
 
         // Armor column.
-        ctx.drawText(this.textRenderer, "ARMOR", x + NpcEquipScreenHandler.ARMOR_X, y + NpcEquipScreenHandler.ARMOR_Y - 10,
-                NotchTheme.TEXT_MUTED, false);
         for (int i = 0; i < 4; i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.ARMOR_X - 1, y + NpcEquipScreenHandler.ARMOR_Y - 1 + i * 18);
             ctx.drawText(this.textRenderer, SLOT_LABELS[i], x + NpcEquipScreenHandler.ARMOR_X + 22,
                     y + NpcEquipScreenHandler.ARMOR_Y + 4 + i * 18, NotchTheme.TEXT_DARK, false);
         }
 
+        // Trinket grid beside the armor (only present with the Trinkets mod).
+        for (int i = 0; i < handler.trinketCount(); i++) {
+            NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.TRINKET_X - 1 + (i % 2) * 18,
+                    y + NpcEquipScreenHandler.TRINKET_Y - 1 + (i / 2) * 18);
+        }
+
         // Hands, under a divider.
         NotchWidgets.divider(ctx, x + 12, y + NpcEquipScreenHandler.MAIN_Y - 8, 140);
-        ctx.drawText(this.textRenderer, "HANDS", x + NpcEquipScreenHandler.HAND_X, y + NpcEquipScreenHandler.MAIN_Y - 10 + 4,
-                NotchTheme.TEXT_MUTED, false);
         NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.HAND_X - 1, y + NpcEquipScreenHandler.MAIN_Y - 1);
         ctx.drawText(this.textRenderer, SLOT_LABELS[4], x + NpcEquipScreenHandler.HAND_X + 22,
                 y + NpcEquipScreenHandler.MAIN_Y + 4, NotchTheme.TEXT_DARK, false);
@@ -98,14 +100,20 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
 
-        // Empty gear slots explain what they accept.
-        if (this.focusedSlot != null && !this.focusedSlot.hasStack() && this.focusedSlot.getIndex() < 6
-                && this.focusedSlot.inventory != this.handler.slots.get(6).inventory) {
-            int idx = this.focusedSlot.getIndex();
-            List<Text> lines = List.of(
-                    Text.literal(SLOT_LABELS[idx]).formatted(Formatting.WHITE),
-                    Text.literal(SLOT_HINTS[idx]).formatted(Formatting.GRAY));
-            ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+        // Empty gear and trinket slots explain what they take.
+        if (this.focusedSlot != null && !this.focusedSlot.hasStack()) {
+            int id = this.handler.slots.indexOf(this.focusedSlot);
+            List<Text> lines = null;
+            if (id >= 0 && id < 6) {
+                lines = List.of(
+                        Text.literal(SLOT_LABELS[id]).formatted(Formatting.WHITE),
+                        Text.literal(SLOT_HINTS[id]).formatted(Formatting.GRAY));
+            } else if (id >= 42) {
+                lines = List.of(
+                        Text.literal("Trinket: " + handler.trinketLabel(id - 42)).formatted(Formatting.WHITE),
+                        Text.literal("Accessory slot from the Trinkets mod.").formatted(Formatting.GRAY));
+            }
+            if (lines != null) ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
         }
     }
 

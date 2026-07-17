@@ -27,6 +27,7 @@
   },
   "suggests": {
     "modmenu": "*",
-    "waystones": "*"
+    "waystones": "*",
+    "trinkets": "*"
   }
 }

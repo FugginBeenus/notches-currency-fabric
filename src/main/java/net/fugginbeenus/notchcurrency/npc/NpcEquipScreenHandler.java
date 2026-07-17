@@ -21,14 +21,19 @@ import org.jetbrains.annotations.Nullable;
 public class NpcEquipScreenHandler extends ScreenHandler {
 
     // Slot coordinates (client draws insets at these -1). Gear lives in the left container box;
-    // the right box is the live preview; the player inventory sits below the divider.
+    // the right box is the live preview; the player inventory sits below the divider. Trinket slots
+    // (when the Trinkets mod is present) fill a 2-wide grid beside the armor column.
     public static final int ARMOR_X = 14, ARMOR_Y = 28;              // 4 slots, 18 apart
     public static final int HAND_X = 14, OFF_X = 86, MAIN_Y = 112, OFF_Y = 112; // side by side
     public static final int INV_X = 43, INV_Y = 158, HOTBAR_Y = 216;
+    public static final int TRINKET_X = 116, TRINKET_Y = 28;         // 2 cols × up to 4 rows
+    public static final int MAX_TRINKETS = 8;
 
     private final Inventory equip;
     @Nullable private final NotchNpcEntity npc;
     @Nullable private final java.util.UUID npcId;
+    private final int trinketCount;
+    private final String[] trinketLabels;
 
     /** Where an item wants to be equipped. 1.21 made the vanilla lookup an instance method, so this
      *  replicates the old static logic (Equipment interface, shield to offhand, else main hand). */
@@ -86,6 +91,39 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInv, col, INV_X + col * 18, HOTBAR_Y));
         }
+
+        // 42+: trinket slots, appended last so the fixed index ranges above stay put. The specs come
+        // from Trinkets' synced data, so client and server build identical slot lists; server slots
+        // back straight onto the NPC's trinket inventories (persistence and sync ride the component).
+        int count = 0;
+        String[] labels = new String[0];
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("trinkets")) {
+            var specs = NpcTrinkets.slotSpecs(
+                    net.fugginbeenus.notchcurrency.registry.ModEntities.NOTCH_NPC, MAX_TRINKETS);
+            labels = new String[specs.size()];
+            for (int i = 0; i < specs.size(); i++) {
+                var spec = specs.get(i);
+                labels[i] = spec.slot();
+                int sx = TRINKET_X + (i % 2) * 18;
+                int sy = TRINKET_Y + (i / 2) * 18;
+                Inventory backing = npc != null ? NpcTrinkets.inventoryFor(npc, spec.group(), spec.slot()) : null;
+                this.addSlot(new Slot(backing != null ? backing : new SimpleInventory(spec.index() + 1),
+                        spec.index(), sx, sy));
+                count++;
+            }
+        }
+        this.trinketCount = count;
+        this.trinketLabels = labels;
+    }
+
+    /** How many trinket slots this screen has (0 without the Trinkets mod). */
+    public int trinketCount() {
+        return trinketCount;
+    }
+
+    /** The slot name for trinket slot {@code i} (for the screen's hover hint). */
+    public String trinketLabel(int i) {
+        return trinketLabels[i];
     }
 
     /** The NPC this screen is editing (for the client-side live preview). */
@@ -101,8 +139,8 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         ItemStack stack = slot.getStack();
         ItemStack original = stack.copy();
 
-        if (index < 6) {
-            // NPC slot -> player inventory.
+        if (index < 6 || index >= 42) {
+            // NPC gear or trinket slot -> player inventory.
             if (!this.insertItem(stack, 6, 42, true)) return ItemStack.EMPTY;
         } else {
             // Player inventory -> the item's preferred slot (armor to its piece, else the hands).

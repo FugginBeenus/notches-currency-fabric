@@ -27,6 +27,7 @@ repositories {
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://maven.terraformersmc.com/releases/" } // ModMenu
     maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" } // GeckoLib
+    maven { url = "https://maven.ladysnake.org/releases" } // Trinkets + Cardinal Components
 }
 
 // ===== Dependencies =====
@@ -54,6 +55,11 @@ dependencies {
     // these to yarn); they are NOT shipped and NOT required at runtime (gated by isModLoaded).
     // Jars are per-version: drop each Minecraft version's Waystones + Balm into api-libs/<mc>/.
     modCompileOnly fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar')
+
+    // Trinkets on NPCs — SOFT integration, same deal: compile against the API, gated by isModLoaded.
+    // modLocalRuntime puts it (and Cardinal Components, transitively) in the dev client for testing.
+    modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
+    modLocalRuntime "dev.emi:trinkets:${property('trinkets_version')}"
 }
 
 // ===== Loom Configuration =====
