@@ -1,11 +1,12 @@
 # Notch Currency Mod
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-green.svg)](https://www.minecraft.net/)
-[![Fabric API](https://img.shields.io/badge/Fabric_API-0.92.2-blue.svg)](https://fabricmc.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1-green.svg)](https://www.minecraft.net/)
+[![Fabric API](https://img.shields.io/badge/Fabric_API-required-blue.svg)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/FugginBeenus/notches-currency-fabric)](https://github.com/FugginBeenus/notches-currency-fabric/releases)
 
-A server-side economy mod for Fabric 1.20.1. It started as a simple currency + ATM system and has
+A server-side economy mod for Fabric on Minecraft 1.20.1 and 1.21.1 (grab the jar matching your
+game version). It started as a simple currency + ATM system and has
 grown into a full economy suite: player shops, an auction house, a deeply customizable NPC system,
 and a wide range of money sinks and faucets designed to keep a server's economy balanced.
 
@@ -106,7 +107,8 @@ placeable via ModMenu so it dodges other mods' overlays.
 - Fabric API (required)
 - GeckoLib (required — the NPC system is built on it)
 - ModMenu (optional — opens the config screen)
-- Waystones (optional — enables the teleport fee)
+- Waystones (optional — enables the teleport fee, shown per destination in the waystone menu)
+- Trinkets (optional — adds accessory slots to NPCs on the equipment screen)
 
 ## Development Setup
 

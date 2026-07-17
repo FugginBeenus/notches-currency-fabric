@@ -168,7 +168,7 @@ tasks.register("stampedJar", Jar) {
 
     destinationDirectory = layout.buildDirectory.dir("libs")
     archiveBaseName = base.archivesName.get()
-    archiveVersion = version.toString()
+    archiveVersion = "${version}+${mcVersion}"
     archiveClassifier = "modrinth"
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -179,8 +179,9 @@ tasks.register("stampedJar", Jar) {
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = findProperty("modrinth_project") ?: "gGHT7Irr"
-    versionNumber = version.toString()
-    versionName = "Notch Currency ${version}"
+    // Each Minecraft version publishes as its own Modrinth version (0.5.0+1.20.1, 0.5.0+1.21.1).
+    versionNumber = "${version}+${mcVersion}"
+    versionName = "Notch Currency ${version} for ${mcVersion}"
     versionType = findProperty("modrinth_release_type") ?: "release"
     uploadFile = tasks.named("stampedJar").flatMap { it.archiveFile }
     gameVersions = [property("minecraft_version").toString()]

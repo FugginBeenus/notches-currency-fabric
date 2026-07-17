@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.5.0
+
+The multi-version release: the mod now ships for **Minecraft 1.20.1 and 1.21.1** from one codebase,
+plus a round of tester-requested features.
+
+### Multi-version
+- Full 1.21.1 port — every feature works on both versions; download the jar matching your game
+- One shared codebase (Stonecutter), so future fixes and features land on all supported versions
+
+### NPCs
+- **Equipment screen rework**: shop-style layout with a live NPC preview — gear shows on the model
+  the moment it's equipped — plus hover hints on every slot
+- **Trinkets integration** (optional): eight accessory slots on NPCs when the Trinkets mod is
+  installed; contents persist with the NPC
+
+### Integrations
+- **Waystones**: each destination in the waystone selection menu now shows its teleport fee, with
+  the dimensional fee on cross-dimension trips
+
+### Fixes & polish
+- The balance HUD ducks out of the way of long chat messages (1.21)
+- On 1.21, NPC nameplates sit at the standard height (the pose-follow hook no longer exists there)
+
 ## 0.4.0
 
 The "art + polish" release: every placeholder block and item now has real, hand-made art (some of
