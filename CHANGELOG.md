@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.1
+
+A tester-feedback patch on top of 0.5.0.
+
+### Fixes & polish
+- NPCs hold still and face you while you're interacting with them, instead of wandering off mid-conversation
+- Statue-posed NPCs stay frozen even with animation packs (Fresh Animations / Fresh Moves) installed —
+  other poses still get animated by the pack, so NPCs keep their life
+- Waystone teleport fees now appear in a hover tooltip on each destination (the dimensional fee on
+  cross-dimension trips); this also fixes the fee not showing at all on 1.21
+- The NPC model picker no longer hitches on large modpacks — previews build as you scroll to them
+  rather than all at once
+
 ## 0.5.0
 
 The multi-version release: the mod now ships for **Minecraft 1.20.1 and 1.21.1** from one codebase,

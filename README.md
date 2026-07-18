@@ -107,7 +107,7 @@ placeable via ModMenu so it dodges other mods' overlays.
 - Fabric API (required)
 - GeckoLib (required — the NPC system is built on it)
 - ModMenu (optional — opens the config screen)
-- Waystones (optional — enables the teleport fee, shown per destination in the waystone menu)
+- Waystones (optional — enables the teleport fee, shown when you hover a destination in the waystone menu)
 - Trinkets (optional — adds accessory slots to NPCs on the equipment screen)
 
 ## Development Setup
