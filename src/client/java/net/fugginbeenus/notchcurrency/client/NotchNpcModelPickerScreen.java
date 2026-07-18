@@ -14,7 +14,9 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnGroup;
 import net.minecraft.registry.Registries;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -29,7 +31,27 @@ import java.util.Locale;
  */
 public class NotchNpcModelPickerScreen extends Screen {
 
-    private record Entry(String id, String label, LivingEntity preview) {}
+    /**
+     * One pickable model. The preview entity is built lazily on first draw and cached — building one
+     * per registered entity type up front was the source of the open-the-picker lag on big modpacks.
+     */
+    private static final class Entry {
+        final String id, label;
+        @Nullable final EntityType<?> type;      // null => an NPC model (humanoid / APP.ly)
+        @Nullable final String npcModel, npcSkin;
+        @Nullable LivingEntity preview;          // cached once created
+
+        Entry(String id, String label, @Nullable EntityType<?> type, @Nullable String npcModel, @Nullable String npcSkin) {
+            this.id = id;
+            this.label = label;
+            this.type = type;
+            this.npcModel = npcModel;
+            this.npcSkin = npcSkin;
+        }
+
+        String id() { return id; }
+        String label() { return label; }
+    }
 
     private static final int W = 320, H = 250;
     private static final int COLS = 5, TILE_W = 60, TILE_H = 56;
@@ -67,28 +89,47 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private void buildEntries() {
-        ClientWorld world = MinecraftClient.getInstance().world;
-        if (world == null) return;
-        all.add(new Entry(NotchNpcEntity.MODEL_HUMANOID, "Humanoid", makeNpc(world, NotchNpcEntity.MODEL_HUMANOID, "1")));
+        // No entities are created here — just the list. Previews are built lazily as tiles are drawn.
+        all.add(new Entry(NotchNpcEntity.MODEL_HUMANOID, "Humanoid", null, NotchNpcEntity.MODEL_HUMANOID, "1"));
         if (FabricLoader.getInstance().isModLoaded("apply")) {
-            all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", makeNpc(world, NotchNpcEntity.MODEL_APPLY, "default")));
+            all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
         }
         List<Entry> mobs = new ArrayList<>();
         for (EntityType<?> type : Registries.ENTITY_TYPE) {
+            if (!isLivingLike(type)) continue;
             Identifier id = Registries.ENTITY_TYPE.getId(type);
             if (id == null) continue;
-            try {
-                Entity e = type.create(world);
-                if (e instanceof LivingEntity le) {
-                    faceForward(le);
-                    mobs.add(new Entry("entity:" + id, type.getName().getString(), le));
-                }
-            } catch (Exception ignored) {
-                // Skip entity types that can't be constructed on the client.
-            }
+            mobs.add(new Entry("entity:" + id, type.getName().getString(), type, null, null));
         }
         mobs.sort((a, b) -> a.label().compareToIgnoreCase(b.label()));
         all.addAll(mobs);
+    }
+
+    /** True for entity types that produce a LivingEntity, judged without constructing one. Everything
+     *  living has a real spawn group except the armor stand, which we include by hand. */
+    private static boolean isLivingLike(EntityType<?> type) {
+        return type.getSpawnGroup() != SpawnGroup.MISC || type == EntityType.ARMOR_STAND;
+    }
+
+    /** The preview entity for a tile, built + cached on first use (null if this type won't construct). */
+    @Nullable
+    private LivingEntity preview(Entry e) {
+        if (e.preview != null) return e.preview;
+        ClientWorld world = MinecraftClient.getInstance().world;
+        if (world == null) return null;
+        try {
+            if (e.type != null) {
+                if (e.type.create(world) instanceof LivingEntity le) {
+                    faceForward(le);
+                    e.preview = le;
+                }
+            } else {
+                e.preview = makeNpc(world, e.npcModel, e.npcSkin);
+            }
+        } catch (Exception ignored) {
+            // A type that can't be built on the client stays without a preview (drawn as "?").
+        }
+        return e.preview;
     }
 
     private NotchNpcEntity makeNpc(ClientWorld world, String model, String skinValue) {
@@ -165,13 +206,15 @@ public class NotchNpcModelPickerScreen extends Screen {
     private void drawTile(DrawContext ctx, Entry e, int tx, int ty, boolean hover) {
         NotchWidgets.inset(ctx, tx + 2, ty + 2, TILE_W - 4, TILE_H - 4, hover ? NotchTheme.SLOT_FILL : NotchTheme.DEEP);
         int cx = tx + TILE_W / 2;
+        LivingEntity model = preview(e);
         try {
+            if (model == null) throw new IllegalStateException("no preview");
             // Fit each preview inside its tile using BOTH dimensions (so wide/tall mobs don't bleed
             // into neighbouring tiles), leaving room for the label under it.
-            float h = Math.max(0.5f, e.preview().getHeight());
-            float w = Math.max(0.5f, e.preview().getWidth());
+            float h = Math.max(0.5f, model.getHeight());
+            float w = Math.max(0.5f, model.getWidth());
             int size = (int) Math.max(3, Math.min((TILE_H - 20) / h, (TILE_W - 10) / w));
-            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, e.preview());
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, model);
         } catch (Exception ignored) {
             NotchWidgets.centerText(ctx, this.textRenderer, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);
         }
