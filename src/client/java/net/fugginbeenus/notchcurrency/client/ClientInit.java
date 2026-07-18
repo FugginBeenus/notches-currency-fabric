@@ -47,6 +47,9 @@ public final class ClientInit implements ClientModInitializer {
         // Rebuild the custom-currency resource pack from the admin's art + config, before resources load.
         CurrencyPackGenerator.generate();
 
+        // Our own copy of the player model layer, so animation packs can't hijack the NPC's poses.
+        net.fugginbeenus.notchcurrency.client.npc.NpcModelLayers.register();
+
         // Entity renderers
         EntityRendererRegistry.register(ModEntities.BALLOON, BalloonRenderer::new);
         EntityRendererRegistry.register(ModEntities.NOTCH_NPC,

@@ -21,13 +21,21 @@ import net.minecraft.util.math.RotationAxis;
  */
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerEntityModel<NotchNpcEntity>> {
 
-    private final PlayerEntityModel<NotchNpcEntity> normal;
-    private final PlayerEntityModel<NotchNpcEntity> slim;
+    // Two copies of the model: "live" rides the vanilla player layer, so CEM animation packs (Fresh
+    // Animations / Fresh Moves via OptiFine or EMF) animate it — the life we want on active NPCs.
+    // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace, so the Statue
+    // pose actually holds. render() picks per NPC by pose. Without a pack installed the two are identical.
+    private final PlayerEntityModel<NotchNpcEntity> live;
+    private final PlayerEntityModel<NotchNpcEntity> liveSlim;
+    private final PlayerEntityModel<NotchNpcEntity> frozen;
+    private final PlayerEntityModel<NotchNpcEntity> frozenSlim;
 
     public NotchNpcBipedRenderer(EntityRendererFactory.Context ctx) {
         super(ctx, new NpcPlayerModel(ctx.getPart(EntityModelLayers.PLAYER), false), 0.5f);
-        this.normal = this.model;
-        this.slim = new NpcPlayerModel(ctx.getPart(EntityModelLayers.PLAYER_SLIM), true);
+        this.live = this.model;
+        this.liveSlim = new NpcPlayerModel(ctx.getPart(EntityModelLayers.PLAYER_SLIM), true);
+        this.frozen = new NpcPlayerModel(ctx.getPart(NpcModelLayers.NPC_PLAYER), false);
+        this.frozenSlim = new NpcPlayerModel(ctx.getPart(NpcModelLayers.NPC_PLAYER_SLIM), true);
         this.addFeature(new ArmorFeatureRenderer<>(this,
                 new BipedEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_INNER_ARMOR)),
                 new BipedEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_OUTER_ARMOR)),
@@ -38,7 +46,14 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     public void render(NotchNpcEntity entity, float yaw, float tickDelta, MatrixStack matrices,
                        VertexConsumerProvider vertexConsumers, int light) {
-        this.model = entity.isSlim() ? this.slim : this.normal;
+        // Statue holds only on the pack-immune "frozen" model; every other pose uses the "live" model so
+        // animation packs keep bringing NPCs to life.
+        boolean slim = entity.isSlim();
+        if (entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE) {
+            this.model = slim ? this.frozenSlim : this.frozen;
+        } else {
+            this.model = slim ? this.liveSlim : this.live;
+        }
         // Sitting/Chilling are applied inside NpcPlayerModel.setAngles (they need pivot drops, and
         // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
         this.model.sneaking = entity.isInSneakingPose();
