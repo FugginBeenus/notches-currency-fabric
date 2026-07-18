@@ -177,7 +177,9 @@ tasks.register("stampedJar", Jar) {
 }
 
 modrinth {
-    token = System.getenv("MODRINTH_TOKEN")
+    // Store the token as `modrinthToken` in ~/.gradle/gradle.properties (never the project one — that
+    // gets committed). The env var still works as a fallback for one-off publishes.
+    token = findProperty("modrinthToken") ?: System.getenv("MODRINTH_TOKEN")
     projectId = findProperty("modrinth_project") ?: "gGHT7Irr"
     // Each Minecraft version publishes as its own Modrinth version (0.5.0+1.20.1, 0.5.0+1.21.1).
     versionNumber = "${version}+${mcVersion}"
