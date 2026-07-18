@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+### Fixes
+- The waystone teleport fee now shows the coin in front of the price — drawn from the actual coin item,
+  so it picks up custom currency art. It was rendering with no coin at all in 0.5.1.
+
 ## 0.5.1
 
 A tester-feedback patch on top of 0.5.0.
