@@ -152,6 +152,11 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private int regen = 0; // half-hearts healed every 5 seconds
     @Nullable private net.minecraft.entity.ai.goal.Goal doorGoal = null;
 
+    // While a player is interacting, the NPC holds still and faces them (see TalkGoal). Refreshed on
+    // each interaction; expires so it resumes wandering once the player leaves or a few seconds pass.
+    @Nullable private java.util.UUID talkingTo = null;
+    private int talkingTicks = 0;
+
     // Moves-tab granularity.
     private String followPlayerName = ""; // blank = follow the owner
     private boolean avoidMonsters = false;
@@ -559,8 +564,66 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     protected void initGoals() {
         // Base goals every NPC has; movement goals are swapped in by applyBehaviorGoals().
         this.goalSelector.add(0, new net.minecraft.entity.ai.goal.SwimGoal(this));
+        // Top priority: while a player is interacting, hold still and face them (see startTalking).
+        this.goalSelector.add(0, new TalkGoal());
         this.lookGoal = new LookAtEntityGoal(this, PlayerEntity.class, 8.0f);
         this.goalSelector.add(6, lookGoal);
+    }
+
+    /** A player just interacted: stop wandering and face them for a few seconds (refreshed each time). */
+    public void startTalking(PlayerEntity player) {
+        this.talkingTo = player.getUuid();
+        this.talkingTicks = 160; // ~8s; TalkGoal counts this down and releases when it (or the player) runs out
+    }
+
+    /**
+     * While {@link #talkingTo} is set, this goal grabs the MOVE and LOOK controls — that alone
+     * suspends the wander/look goals — then keeps the NPC stopped and turned toward the player.
+     * Releases once the timer expires or the player walks off (or logs out).
+     */
+    private class TalkGoal extends net.minecraft.entity.ai.goal.Goal {
+        TalkGoal() {
+            this.setControls(java.util.EnumSet.of(Control.MOVE, Control.LOOK));
+        }
+
+        @Nullable
+        private PlayerEntity partner() {
+            if (talkingTo == null || talkingTicks <= 0) return null;
+            PlayerEntity p = getWorld().getPlayerByUuid(talkingTo);
+            if (p == null || p.isRemoved() || squaredDistanceTo(p) > 100.0) return null; // ~10 blocks
+            return p;
+        }
+
+        @Override
+        public boolean canStart() {
+            return partner() != null;
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return partner() != null;
+        }
+
+        @Override
+        public void start() {
+            getNavigation().stop();
+        }
+
+        @Override
+        public void tick() {
+            talkingTicks--;
+            getNavigation().stop();
+            PlayerEntity p = partner();
+            if (p != null) {
+                getLookControl().lookAt(p, 30.0f, 30.0f);
+            }
+        }
+
+        @Override
+        public void stop() {
+            talkingTo = null;
+            talkingTicks = 0;
+        }
     }
 
     /** Swap the movement/combat goals to match the current behavior preset. */
@@ -746,6 +809,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             if (isRuleHidden() && !canEdit(sp)) {
                 return ActionResult.PASS;
             }
+            startTalking(player); // pause + face the player while they're dealing with us
             if (sp.isSneaking() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
             } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
