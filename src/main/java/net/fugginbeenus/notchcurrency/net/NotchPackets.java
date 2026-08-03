@@ -125,6 +125,12 @@ public final class NotchPackets {
     public static final Identifier NPC_STUDIO_SAVE = NotchCurrency.id("npc_studio_save");
     // Client -> server: set the dialogue style (npc uuid, mode ordinal: 0=window 1=chat)
     public static final Identifier NPC_DIALOGUE_MODE = NotchCurrency.id("npc_dialogue_mode");
+    // Client -> server: request this NPC's trigger reactions for editing (npc uuid)
+    public static final Identifier NPC_ACTIONS_OPEN = NotchCurrency.id("npc_actions_open");
+    // Server -> client: the NPC's reactions (npc uuid, actions NBT)
+    public static final Identifier NPC_ACTIONS_DATA = NotchCurrency.id("npc_actions_data");
+    // Client -> server: save edited reactions (npc uuid, actions NBT)
+    public static final Identifier NPC_ACTIONS_SAVE = NotchCurrency.id("npc_actions_save");
 
     // Server -> client: waystone teleport fees, so the selection menu can price each destination
     // (enabled, fee, dimensionalFee; sent on join by WaystoneFeeHandler when Waystones is present)

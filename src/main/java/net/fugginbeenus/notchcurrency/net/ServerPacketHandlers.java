@@ -378,6 +378,27 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_ACTIONS_OPEN, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openActions(player, npc);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_ACTIONS_SAVE, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            net.minecraft.nbt.NbtCompound actions = buf.readNbt();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.saveActions(player, npc, actions);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SET_BEHAVIOR, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int mode = buf.readVarInt();

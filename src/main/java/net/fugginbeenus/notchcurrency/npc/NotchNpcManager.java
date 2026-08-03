@@ -436,6 +436,40 @@ public final class NotchNpcManager {
                 .formatted(Formatting.GREEN), false);
     }
 
+    /** Send the NPC's trigger reactions down for editing. */
+    public static void openActions(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npc.getUuid());
+        buf.writeNbt(npc.getActions().toNbt());
+        Net.sendToClient(sp, NotchPackets.NPC_ACTIONS_DATA, buf);
+    }
+
+    /** Replace the NPC's reactions with an edited set (owner/op re-validated). Same rule as dialogue:
+     *  command actions are admin-only, so a non-op editing an NPC can't smuggle one in. */
+    public static void saveActions(ServerPlayerEntity sp, NotchNpcEntity npc,
+                                   net.minecraft.nbt.NbtCompound nbt) {
+        if (!guard(sp, npc)) return;
+        if (nbt == null) return;
+        var actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
+        boolean strippedCommands = false;
+        if (!sp.hasPermissionLevel(2)) {
+            for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
+                var kept = new java.util.ArrayList<>(actions.get(trigger));
+                strippedCommands |= kept.removeIf(a ->
+                        a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND
+                        || a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
+                actions.set(trigger, kept);
+            }
+        }
+        if (strippedCommands) {
+            sp.sendMessage(Text.literal("Command actions were removed — those are admin-only.")
+                    .formatted(Formatting.YELLOW), false);
+        }
+        npc.setActions(actions);
+        sp.sendMessage(Text.literal("Reactions saved.").formatted(Formatting.GREEN), false);
+    }
+
     // ---- edit actions (all owner/op-gated) ----
 
     public static void setRole(ServerPlayerEntity sp, NotchNpcEntity npc, NpcRole role) {

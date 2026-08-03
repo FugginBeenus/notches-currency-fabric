@@ -674,10 +674,12 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 70, py + 126, 160, 16));
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 146, 160, 16, "Open Equipment",
                 over(mx, my, px + 70, py + 146, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 166, 160, 16, "Presets",
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 166, 160, 16, "Reactions",
                 over(mx, my, px + 70, py + 166, 160, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer, "Presets save this whole setup for reuse in any world.",
-                px + W / 2, py + 186, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 186, 160, 16, "Presets",
+                over(mx, my, px + 70, py + 186, 160, 16));
+        NotchWidgets.centerText(ctx, this.textRenderer, "Reactions: what it does when things happen to it.",
+                px + W / 2, py + 206, NotchTheme.TEXT_MUTED, false);
     }
 
     // ---- input ----
@@ -746,6 +748,12 @@ public class NotchNpcEditorScreen extends Screen {
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 166, 160, 16)) {
+                    NotchWidgets.click();
+                    // Server replies with this NPC's reactions, which opens the editor.
+                    NotchPacketsClient.sendNpcActionsOpen(npcId);
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 186, 160, 16)) {
                     NotchWidgets.click();
                     // Server replies with the preset list, which opens the preset screen.
                     NotchPacketsClient.sendNpcPreset(npcId,

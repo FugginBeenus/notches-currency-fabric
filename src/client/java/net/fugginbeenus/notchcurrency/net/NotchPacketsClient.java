@@ -317,6 +317,18 @@ public final class NotchPacketsClient {
         });
     }
 
+    public static void registerNpcActionsReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_ACTIONS_DATA, (client, buf) -> {
+            UUID npcId = buf.readUuid();
+            net.minecraft.nbt.NbtCompound nbt = buf.readNbt();
+            client.execute(() -> {
+                var parsed = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
+                MinecraftClient.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.NpcActionsScreen(npcId, parsed));
+            });
+        });
+    }
+
     /** The server's custom coin skin, pushed on join — written into a local auto-enabled pack. */
     public static void registerCurrencySyncReceiver() {
         NetClient.registerClientReceiver(NotchPackets.WAYSTONE_FEE_SYNC, (client, buf) -> {
@@ -368,6 +380,19 @@ public final class NotchPacketsClient {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         NetClient.sendToServer(NotchPackets.NPC_STUDIO_OPEN, buf);
+    }
+
+    public static void sendNpcActionsOpen(UUID npcId) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        NetClient.sendToServer(NotchPackets.NPC_ACTIONS_OPEN, buf);
+    }
+
+    public static void sendNpcActionsSave(UUID npcId, net.minecraft.nbt.NbtCompound actionsNbt) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeNbt(actionsNbt);
+        NetClient.sendToServer(NotchPackets.NPC_ACTIONS_SAVE, buf);
     }
 
     public static void sendNpcStudioSave(UUID npcId, net.minecraft.nbt.NbtCompound treeNbt) {
