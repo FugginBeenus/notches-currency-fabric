@@ -91,8 +91,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             return false;
         }
         if (scaled) matrices.pop();
-        // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height).
-        if (npc.hasCustomName() && npc.isCustomNameVisible()) {
+        // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height),
+        // subject to the same range cap the biped path uses so crowds don't pay for unreadable text.
+        boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
+                || this.dispatcher.getSquaredDistanceToCamera(npc) < 32.0 * 32.0;
+        if (npc.hasCustomName() && npc.isCustomNameVisible() && labelInRange) {
             //? if >=1.21 {
             /*this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light, tickDelta);
             *///?} else {

@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -25,14 +26,20 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     // Animations / Fresh Moves via OptiFine or EMF) animate it — the life we want on active NPCs.
     // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace, so the Statue
     // pose actually holds. render() picks per NPC by pose. Without a pack installed the two are identical.
-    private final PlayerEntityModel<NotchNpcEntity> live;
-    private final PlayerEntityModel<NotchNpcEntity> liveSlim;
-    private final PlayerEntityModel<NotchNpcEntity> frozen;
-    private final PlayerEntityModel<NotchNpcEntity> frozenSlim;
+    private final NpcPlayerModel live;
+    private final NpcPlayerModel liveSlim;
+    private final NpcPlayerModel frozen;
+    private final NpcPlayerModel frozenSlim;
+
+    /** Past this, drop the skin's overlay layers (see {@link NpcPlayerModel#setOverlaysVisible}). */
+    private static final double DETAIL_RANGE_SQ = 20.0 * 20.0;
+    /** Past this, skip the floating name. Vanilla caps at 64 blocks, but names are per-entity text that
+     *  batches poorly, and NPCs come in crowds where vanilla mobs come alone — so we cap tighter. */
+    private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
 
     public NotchNpcBipedRenderer(EntityRendererFactory.Context ctx) {
         super(ctx, new NpcPlayerModel(ctx.getPart(EntityModelLayers.PLAYER), false), 0.5f);
-        this.live = this.model;
+        this.live = (NpcPlayerModel) this.model; // the model handed to super() just above
         this.liveSlim = new NpcPlayerModel(ctx.getPart(EntityModelLayers.PLAYER_SLIM), true);
         this.frozen = new NpcPlayerModel(ctx.getPart(NpcModelLayers.NPC_PLAYER), false);
         this.frozenSlim = new NpcPlayerModel(ctx.getPart(NpcModelLayers.NPC_PLAYER_SLIM), true);
@@ -49,11 +56,14 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         // Statue holds only on the pack-immune "frozen" model; every other pose uses the "live" model so
         // animation packs keep bringing NPCs to life.
         boolean slim = entity.isSlim();
+        NpcPlayerModel m;
         if (entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE) {
-            this.model = slim ? this.frozenSlim : this.frozen;
+            m = slim ? this.frozenSlim : this.frozen;
         } else {
-            this.model = slim ? this.liveSlim : this.live;
+            m = slim ? this.liveSlim : this.live;
         }
+        m.setOverlaysVisible(!lodApplies() || distanceToCameraSq(entity) < DETAIL_RANGE_SQ);
+        this.model = m;
         // Sitting/Chilling are applied inside NpcPlayerModel.setAngles (they need pivot drops, and
         // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
         this.model.sneaking = entity.isInSneakingPose();
@@ -96,6 +106,21 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
 
     @Override
     protected boolean hasLabel(NotchNpcEntity entity) {
-        return entity.hasCustomName() && entity.isCustomNameVisible() && !entity.isInvisible();
+        if (!entity.hasCustomName() || !entity.isCustomNameVisible() || entity.isInvisible()) return false;
+        return !lodApplies() || distanceToCameraSq(entity) < LABEL_RANGE_SQ;
+    }
+
+    double distanceToCameraSq(NotchNpcEntity entity) {
+        return this.dispatcher.getSquaredDistanceToCamera(entity);
+    }
+
+    /**
+     * Whether distance-based trimming should run at all. The editor, pose editor and model picker all
+     * draw NPCs through this renderer while a screen is open — and the picker's previews sit at a dummy
+     * position far from the camera, which would strip their overlay layers and names. The crowds we're
+     * optimizing for are always the in-world case, so LOD is limited to it.
+     */
+    static boolean lodApplies() {
+        return MinecraftClient.getInstance().currentScreen == null;
     }
 }

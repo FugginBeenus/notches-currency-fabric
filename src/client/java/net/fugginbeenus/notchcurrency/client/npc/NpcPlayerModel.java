@@ -194,6 +194,21 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         part.roll = angles[idx * 3 + 2] * DEG;
     }
 
+    /**
+     * Toggle the skin's outer "second layer" (hat/jacket/sleeves/pants). These six parts are half the
+     * player model's geometry and they're transparent, so they cost more per part than the base body —
+     * but past a few blocks they're indistinguishable. The renderer hides them at range so a crowd of
+     * NPCs costs roughly what a crowd of simpler mobs does.
+     */
+    public void setOverlaysVisible(boolean visible) {
+        this.hat.visible = visible;
+        this.jacket.visible = visible;
+        this.rightSleeve.visible = visible;
+        this.leftSleeve.visible = visible;
+        this.rightPants.visible = visible;
+        this.leftPants.visible = visible;
+    }
+
     /** Re-sync the skin overlay layers with the mutated parts. */
     private void syncOverlays() {
         this.hat.copyTransform(this.head);
