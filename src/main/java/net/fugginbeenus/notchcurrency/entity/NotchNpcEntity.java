@@ -160,6 +160,14 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     @Nullable private java.util.UUID talkingTo = null;
     private int talkingTicks = 0;
 
+    // Proximity bookkeeping. Both are created only for NPCs that actually use the trigger, so the
+    // ordinary NPC carries two null references and nothing else.
+    @Nullable private java.util.Set<java.util.UUID> proximityInside = null;
+    @Nullable private java.util.Map<java.util.UUID, Integer> proximityFired = null;
+    private static final int PROXIMITY_SCAN_TICKS = 10;
+    /** How long before the same player can set it off again, so pacing around isn't a replay button. */
+    private static final int PROXIMITY_RECHARGE_TICKS = 200;
+
     // Moves-tab granularity.
     private String followPlayerName = ""; // blank = follow the owner
     private boolean avoidMonsters = false;
@@ -770,7 +778,54 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 boolean hidden = manualInvisible || isRuleHidden();
                 if (this.isInvisible() != hidden) this.setInvisible(hidden);
             }
+            tickProximity();
         }
+    }
+
+    /**
+     * Fire the proximity trigger as players walk up. Server-side, called every tick — so the very first
+     * line is the check that costs nothing for the NPCs (nearly all of them) that don't use it.
+     *
+     * <p>Fires on the way IN only, and a player has to leave properly before it can happen again: the
+     * boundary they leave by is wider than the one they arrive at, so standing right on the edge can't
+     * make it stutter.
+     */
+    private void tickProximity() {
+        if (!actions.has(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY)) return;
+        if (this.age % PROXIMITY_SCAN_TICKS != 0) return;
+        if (manualInvisible || isRuleHidden()) return; // a hidden NPC shouldn't greet anyone
+
+        if (proximityInside == null) {
+            proximityInside = new java.util.HashSet<>();
+            proximityFired = new java.util.HashMap<>();
+        }
+        double radius = actions.proximityRadius();
+        double enterSq = radius * radius;
+        double leaveSq = (radius + 2.0) * (radius + 2.0);
+
+        for (net.minecraft.entity.player.PlayerEntity generic : this.getWorld().getPlayers()) {
+            if (!(generic instanceof ServerPlayerEntity player)) continue;
+            if (player.isSpectator() || !player.isAlive()) continue;
+            java.util.UUID id = player.getUuid();
+            double distanceSq = player.squaredDistanceTo(this);
+            if (!proximityInside.contains(id)) {
+                if (distanceSq > enterSq) continue;
+                proximityInside.add(id);
+                Integer last = proximityFired.get(id);
+                if (last == null || this.age - last >= PROXIMITY_RECHARGE_TICKS) {
+                    proximityFired.put(id, this.age);
+                    fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY, player);
+                }
+            } else if (distanceSq > leaveSq) {
+                proximityInside.remove(id);
+            }
+        }
+
+        // Anyone who logged out or changed world counts as gone, and spent cooldowns are dropped so
+        // neither collection grows with everyone who ever walked past.
+        proximityInside.removeIf(id -> this.getWorld().getPlayerByUuid(id) == null);
+        proximityFired.entrySet().removeIf(e ->
+                !proximityInside.contains(e.getKey()) && this.age - e.getValue() > PROXIMITY_RECHARGE_TICKS);
     }
 
     @Override
