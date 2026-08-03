@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.3
+
+### Fixes
+- **Shops now sell the whole stack the listing shows.** A listing of 32 sculk sensors for 15 coins was
+  charging the full 15 but handing over a single item, and only taking one off the stock. Both game
+  versions were affected. Listings that sell single items are unchanged.
+- Removing a listing with more than a stack of items in it returns all of them — it used to stop at 64.
+- Shift-clicking a listing buys whole stacks of it instead of loose items.
+
+### Performance
+- Crowds of NPCs are much lighter to render: the skin's outer layer is dropped past 20 blocks and
+  floating names past 32, so a village full of NPCs costs closer to what ordinary mobs do.
+
 ## 0.5.2
 
 ### Fixes
