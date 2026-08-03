@@ -366,7 +366,7 @@ public final class PlayerShopManager {
             MutableText message = Text.literal("")
                     .append(Text.literal(buyer.getName().getString()).formatted(Formatting.AQUA))
                     .append(Text.literal(" bought ").formatted(Formatting.GREEN))
-                    .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
+                    .append(Text.literal(totalItems + "x ").formatted(Formatting.WHITE))
                     .append(purchased.getName())
                     .append(Text.literal(" for ").formatted(Formatting.GREEN));
 
@@ -388,7 +388,7 @@ public final class PlayerShopManager {
         //  recordSale() above, and are paid out when the owner withdraws or the shop closes.)
 
         // Update statistics
-        listing.recordSale(quantity, totalCoinCost);
+        listing.recordSale(totalItems, totalCoinCost); // totalSold counts units, matching stock
         state.markDirtyAndSave();
 
         // Feedback to buyer
@@ -399,7 +399,7 @@ public final class PlayerShopManager {
         //?}
 
         MutableText buyerMessage = Text.literal("Purchased ")
-                .append(Text.literal(quantity + "x ").formatted(Formatting.WHITE))
+                .append(Text.literal(totalItems + "x ").formatted(Formatting.WHITE))
                 .append(purchased.getName())
                 .append(Text.literal(" for ").formatted(Formatting.GREEN));
 
@@ -418,7 +418,7 @@ public final class PlayerShopManager {
         buyer.sendMessage(buyerMessage, false);
 
         LOGGER.info("{} purchased {}x {} from {}'s shop",
-                buyer.getName().getString(), quantity,
+                buyer.getName().getString(), totalItems,
                 purchased.getName().getString(), shop.getOwnerName());
 
         return PurchaseResult.SUCCESS;
