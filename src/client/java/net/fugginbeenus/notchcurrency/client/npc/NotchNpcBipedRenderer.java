@@ -22,10 +22,11 @@ import net.minecraft.util.math.RotationAxis;
  */
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerEntityModel<NotchNpcEntity>> {
 
-    // Two copies of the model: "live" rides the vanilla player layer, so CEM animation packs (Fresh
-    // Animations / Fresh Moves via OptiFine or EMF) animate it — the life we want on active NPCs.
-    // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace, so the Statue
-    // pose actually holds. render() picks per NPC by pose. Without a pack installed the two are identical.
+    // Two copies of the model. "live" rides the vanilla player layer, so CEM animation packs (Fresh
+    // Animations / Fresh Moves via OptiFine or EMF) animate it — the life we want on nearby NPCs.
+    // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace; render() sends
+    // an NPC there when a pack must not touch it, either because it's posed as a Statue or because it's
+    // too far away to be worth animating. Without a pack installed the two layers are identical.
     private final NpcPlayerModel live;
     private final NpcPlayerModel liveSlim;
     private final NpcPlayerModel frozen;
@@ -33,6 +34,11 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
 
     /** Past this, drop the skin's overlay layers (see {@link NpcPlayerModel#setOverlaysVisible}). */
     private static final double DETAIL_RANGE_SQ = 20.0 * 20.0;
+    /** Past this, render on the private layer so animation packs stop animating the NPC. A CEM pack
+     *  re-evaluates its animations per part per entity per frame, which is the single most expensive
+     *  thing about a crowd of NPCs when one is installed — and at this range nobody can read the
+     *  difference. Set beyond the overlay cut so the two changes don't pop at the same moment. */
+    private static final double ANIM_RANGE_SQ = 28.0 * 28.0;
     /** Past this, skip the floating name. Vanilla caps at 64 blocks, but names are per-entity text that
      *  batches poorly, and NPCs come in crowds where vanilla mobs come alone — so we cap tighter. */
     private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
@@ -53,16 +59,20 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     public void render(NotchNpcEntity entity, float yaw, float tickDelta, MatrixStack matrices,
                        VertexConsumerProvider vertexConsumers, int light) {
-        // Statue holds only on the pack-immune "frozen" model; every other pose uses the "live" model so
-        // animation packs keep bringing NPCs to life.
+        // Negative means "close enough to skip every cut" — that's how previews opt out (see lodApplies).
+        double distSq = lodApplies() ? distanceToCameraSq(entity) : -1.0;
+
+        // The private layer is for anything an animation pack must not touch: Statue always, and any NPC
+        // far enough that its animation can't be read. Nearby non-statue NPCs stay on the vanilla player
+        // layer so packs keep bringing them to life. With no pack installed the two layers are built from
+        // identical model data, so this switch is invisible and costs nothing either way.
+        boolean packFree = entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE
+                || (distSq >= 0 && distSq >= ANIM_RANGE_SQ);
         boolean slim = entity.isSlim();
-        NpcPlayerModel m;
-        if (entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE) {
-            m = slim ? this.frozenSlim : this.frozen;
-        } else {
-            m = slim ? this.liveSlim : this.live;
-        }
-        m.setOverlaysVisible(!lodApplies() || distanceToCameraSq(entity) < DETAIL_RANGE_SQ);
+        NpcPlayerModel m = packFree
+                ? (slim ? this.frozenSlim : this.frozen)
+                : (slim ? this.liveSlim : this.live);
+        m.setOverlaysVisible(distSq < 0 || distSq < DETAIL_RANGE_SQ);
         this.model = m;
         // Sitting/Chilling are applied inside NpcPlayerModel.setAngles (they need pivot drops, and
         // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
