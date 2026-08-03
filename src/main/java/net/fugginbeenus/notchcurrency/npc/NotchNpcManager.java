@@ -453,14 +453,20 @@ public final class NotchNpcManager {
         if (nbt == null) return;
         var actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
         boolean strippedCommands = false;
-        if (!sp.hasPermissionLevel(2)) {
-            for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
-                var kept = new java.util.ArrayList<>(actions.get(trigger));
+        boolean allowCommands = sp.hasPermissionLevel(2);
+        for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
+            var kept = new java.util.ArrayList<>(actions.get(trigger));
+            if (!allowCommands) {
                 strippedCommands |= kept.removeIf(a ->
                         a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND
                         || a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
-                actions.set(trigger, kept);
             }
+            // The screen caps typing at 200, but the packet is whatever the client chose to send.
+            for (var a : kept) {
+                if (a.value().length() > 200) a.setValue(a.value().substring(0, 200));
+                if (a.amount() < 0) a.setAmount(0);
+            }
+            actions.set(trigger, kept);
         }
         if (strippedCommands) {
             sp.sendMessage(Text.literal("Command actions were removed — those are admin-only.")

@@ -164,6 +164,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // ordinary NPC carries two null references and nothing else.
     @Nullable private java.util.Set<java.util.UUID> proximityInside = null;
     @Nullable private java.util.Map<java.util.UUID, Integer> proximityFired = null;
+    /** When each trigger last fired, for the ones that need pacing. Only allocated once one fires. */
+    @Nullable private int[] lastFiredAge = null;
     private static final int PROXIMITY_SCAN_TICKS = 10;
     /** How long before the same player can set it off again, so pacing around isn't a replay button. */
     private static final int PROXIMITY_RECHARGE_TICKS = 200;
@@ -419,6 +421,17 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger trigger,
                      @Nullable ServerPlayerEntity player) {
         if (this.getWorld().isClient || !actions.has(trigger)) return;
+        int cooldown = trigger.cooldownTicks();
+        if (cooldown > 0) {
+            if (lastFiredAge == null) {
+                lastFiredAge = new int[net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values().length];
+                // Far enough back that the first firing always passes, without underflowing the subtraction.
+                java.util.Arrays.fill(lastFiredAge, -100000);
+            }
+            int slot = trigger.ordinal();
+            if (this.age - lastFiredAge[slot] < cooldown) return;
+            lastFiredAge[slot] = this.age;
+        }
         net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger));
     }
 
