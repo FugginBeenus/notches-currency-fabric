@@ -38,6 +38,7 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Appearance: vanilla humanoid, GeckoLib models, or disguise as any entity; preset/player/URL skins
 - Behaviors: stationary, wander, follow, patrol, or guard
 - Poses (presets + a live custom-pose editor) and a visual branching dialogue studio
+- Reactions: have an NPC respond when it's talked to, approached, hurt, killed, or kills something
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
 - Ownership-gated editing, a "pick up" that repacks the config into the item, and saveable presets
 - A public API (`NotchNpcApi`) for other mods to spawn NPCs and register custom roles

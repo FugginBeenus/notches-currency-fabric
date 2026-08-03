@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.0
+
+### NPC Reactions
+NPCs can now react to things that happen to them, not just to a dialogue choice being clicked. Editor →
+Manage → **Reactions**, then pick a moment and say what should happen:
+
+- **When talked to** — before any dialogue or shop opens
+- **When a player comes near** — once as they arrive, re-arming when they leave (range is adjustable)
+- **When hurt** — even if the NPC is protected from the damage
+- **When killed**, and **when it kills something**
+
+Each moment can run up to five actions: say a line, pay or charge coins, give an item, or run a command.
+Lines support the same `%player%`/`%npc%`/`%balance%` placeholders and `&` colours as dialogue. Reactions
+travel with the pick-up item and with presets, so a greeter you build once can be stamped anywhere.
+
+"Say a line" is available as a dialogue choice action too.
+
+### Security
+- Actions that create value — **paying coins** and **giving items** — now require operator permission,
+  the same as the command actions. Previously any NPC owner could write a dialogue choice that paid the
+  player who clicked it, which is an unlimited money supply on a public server. Charging coins is
+  unchanged and still available to every shop owner.
+
 ## 0.5.4
 
 ### Fixes
