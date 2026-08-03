@@ -290,9 +290,13 @@ public final class PlayerShopManager {
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
         if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
 
+        // A listing sells the whole stack the owner put up — 32 sculk sensors for 15 coins sells all
+        // 32 for 15 — so `quantity` counts those bundles. Prices are per bundle; stock is in items.
+        int totalItems = listing.getBundleSize() * quantity;
+
         // Quick check (actual atomic check happens later)
         int available = listing.getStockQuantity();
-        if (available < quantity) return PurchaseResult.INSUFFICIENT_STOCK;
+        if (available < totalItems) return PurchaseResult.INSUFFICIENT_STOCK;
 
         // Check what payment is required
         boolean needsCoins = listing.acceptsCoins() && listing.getCoinPrice() > 0;
@@ -321,7 +325,7 @@ public final class PlayerShopManager {
         }
 
         // ATOMIC: Try to remove stock first (prevents race condition with two buyers)
-        if (!listing.tryRemoveStock(quantity)) {
+        if (!listing.tryRemoveStock(totalItems)) {
             return PurchaseResult.INSUFFICIENT_STOCK;
         }
 
@@ -335,7 +339,7 @@ public final class PlayerShopManager {
         }
 
         // Give items to buyer
-        ItemStack purchased = listing.createSaleStack(quantity);
+        ItemStack purchased = listing.createSaleStack(totalItems);
         giveItemsToPlayer(buyer, purchased);
 
         // Handle earnings - add to shop's pending balance (NOT directly to seller)

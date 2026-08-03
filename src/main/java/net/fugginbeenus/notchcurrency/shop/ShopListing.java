@@ -216,11 +216,22 @@ public class ShopListing {
     }
 
     /**
-     * Creates a copy of the item for sale with the specified quantity.
+     * How many items one purchase hands over: the size of the stack the owner listed. A listing of
+     * 32 sculk sensors for 15 coins sells all 32 for that price, so this is the unit both the price
+     * and the stock draw-down are measured against.
      */
-    public ItemStack createSaleStack(int quantity) {
+    public int getBundleSize() {
+        return Math.max(1, itemForSale.getCount());
+    }
+
+    /**
+     * A copy of the sale item whose count is the total number of items to hand over — which may be
+     * more than the item's max stack size. Callers pass this to the give helper, which splits it into
+     * real stacks; clamping here would silently cap a payout (or a stock refund) at a single stack.
+     */
+    public ItemStack createSaleStack(int totalItems) {
         ItemStack stack = itemForSale.copy();
-        stack.setCount(Math.min(quantity, stack.getMaxCount()));
+        stack.setCount(Math.max(0, totalItems));
         return stack;
     }
 }

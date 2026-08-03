@@ -197,8 +197,14 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
             if (open()) {
                 for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
                     Cell c = cell(i);
-                    if (c != null && c.stock() > 0 && over(mx, my, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
-                        int qty = hasShiftDown() ? Math.min(c.stock(), 64) : 1;
+                    // One buy = one of the stacks shown on the row, so stock has to cover a whole one.
+                    int bundle = c == null ? 1 : Math.max(1, c.icon().getCount());
+                    if (c != null && c.stock() >= bundle && over(mx, my, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
+                        // Shift still means "grab a lot", measured in bundles so it tops out around a
+                        // stack of items the way it did when every listing sold singles.
+                        int qty = hasShiftDown()
+                                ? Math.max(1, Math.min(c.stock() / bundle, Math.max(1, 64 / bundle)))
+                                : 1;
                         NotchWidgets.click();
                         NotchPacketsClient.sendShopPurchase(handler.shopId(), c.listingId(), qty);
                         return true;
