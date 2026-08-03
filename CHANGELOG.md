@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.4
+
+### Fixes
+- Purchase messages now say how many items you actually bought. After the 0.5.3 fix the buyer and the
+  seller were both told "1x" no matter how big the listing's stack was, and the listing's sold counter
+  was under-counting to match.
+
+### Performance
+- With an animation pack installed (Fresh Animations, Fresh Moves), NPCs more than 28 blocks away now
+  render on a model layer the pack doesn't touch, so a crowd stops paying for animation you can't see
+  at that range. Nearby NPCs are animated by the pack exactly as before, and nothing changes for players
+  without one.
+
 ## 0.5.3
 
 ### Fixes
