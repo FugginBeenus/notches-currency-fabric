@@ -43,13 +43,34 @@ public final class NpcActionRunner {
 
     private NpcActionRunner() {}
 
+    private static final org.slf4j.Logger LOGGER =
+            org.slf4j.LoggerFactory.getLogger("NotchCurrency-NpcActions");
+
     public static Outcome run(@Nullable ServerPlayerEntity sp, NotchNpcEntity npc, List<DialogueAction> actions) {
         if (actions == null || actions.isEmpty()) return Outcome.COMPLETED;
+        try {
+            return runAll(sp, npc, actions);
+        } catch (Exception e) {
+            // These run from damage and death handlers as well as dialogue. A bad stored action must
+            // never take the entity down with it.
+            LOGGER.error("NPC action list failed on {}", npc.getUuid(), e);
+            return Outcome.COMPLETED;
+        }
+    }
 
+    private static Outcome runAll(@Nullable ServerPlayerEntity sp, NotchNpcEntity npc, List<DialogueAction> actions) {
         boolean openedScreen = false;
         for (DialogueAction a : actions) {
             switch (a.type()) {
                 case NONE -> { }
+                case SAY_LINE -> {
+                    // Spoken to whoever set it off, the same way dialogue's chat mode does — private,
+                    // so a busy street of NPCs doesn't fill everyone's chat.
+                    if (sp == null || a.value().isBlank()) break;
+                    String name = NpcText.npcName(npc);
+                    sp.sendMessage(Text.literal("<" + name + "> " + NpcText.substitute(a.value(), sp, name))
+                            .formatted(Formatting.WHITE), false);
+                }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
                     NpcDialogueManager.openRole(sp, npc);

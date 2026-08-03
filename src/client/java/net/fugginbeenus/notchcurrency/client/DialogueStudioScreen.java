@@ -207,7 +207,8 @@ public class DialogueStudioScreen extends Screen {
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
         boolean valVisible = !nodeMode && c != null
-                && (at == DialogueAction.Type.GIVE_ITEM || at == DialogueAction.Type.RUN_COMMAND
+                && (at == DialogueAction.Type.SAY_LINE || at == DialogueAction.Type.GIVE_ITEM
+                || at == DialogueAction.Type.RUN_COMMAND
                 || at == DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
         boolean amtVisible = !nodeMode && c != null
                 && (at == DialogueAction.Type.PAY_COINS || at == DialogueAction.Type.CHARGE_COINS
@@ -375,7 +376,11 @@ public class DialogueStudioScreen extends Screen {
                     screenDisplay(a.value()), over(mx, my, px + ED_X + 58, py + 108, 160, 14));
         }
         if (actionValueField.isVisible()) {
-            String hint = (at == DialogueAction.Type.GIVE_ITEM) ? "Item id:" : "Command:";
+            String hint = switch (at) {
+                case GIVE_ITEM -> "Item id:";
+                case SAY_LINE -> "Says:";
+                default -> "Command:";
+            };
             ctx.drawText(this.textRenderer, hint, px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 106, ED_W - 60, 14, NotchTheme.DEEP);
         }
@@ -408,6 +413,7 @@ public class DialogueStudioScreen extends Screen {
     private static String actionName(DialogueAction.Type t) {
         return switch (t) {
             case NONE -> "None";
+            case SAY_LINE -> "Say a line";
             case OPEN_ROLE -> "Open role screen";
             case OPEN_SCREEN -> "Open screen...";
             case PAY_COINS -> "Pay player coins";

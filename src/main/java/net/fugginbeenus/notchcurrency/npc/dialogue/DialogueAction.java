@@ -12,6 +12,9 @@ public class DialogueAction {
     public enum Type {
         /** No-op (placeholder). */
         NONE,
+        /** Say {@code value} to the player who set this off, as a chat line under the NPC's name.
+         *  Supports the same placeholders and {@code &} colours as dialogue pages. */
+        SAY_LINE,
         /** Open the NPC's assigned role feature (shop, bank, auction, ...). Ends the dialogue. */
         OPEN_ROLE,
         /** Open a SPECIFIC economy screen regardless of the NPC's role — {@code value} is an

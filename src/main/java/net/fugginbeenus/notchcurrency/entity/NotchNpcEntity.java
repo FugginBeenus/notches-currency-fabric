@@ -402,6 +402,18 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.actions = a == null ? new net.fugginbeenus.notchcurrency.npc.action.NpcActions() : a;
     }
 
+    /**
+     * Run whatever is wired to a trigger. Server-side only, and cheap to call when nothing is set up —
+     * every hook site calls this unconditionally, so the empty case has to cost next to nothing.
+     *
+     * @param player whoever set it off, or null when nobody did (an NPC drowning, say)
+     */
+    public void fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger trigger,
+                     @Nullable ServerPlayerEntity player) {
+        if (this.getWorld().isClient || !actions.has(trigger)) return;
+        net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger));
+    }
+
     /** Optional goodbye line said in chat when a screen this NPC opened is closed ("" = none). */
     public String getFarewellText() { return farewellText; }
     public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
@@ -819,6 +831,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 return ActionResult.PASS;
             }
             startTalking(player); // pause + face the player while they're dealing with us
+            // Before dialogue or the role screen takes over, so a greeting is read first.
+            fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
             if (sp.isSneaking() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
             } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
@@ -834,6 +848,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (this.getWorld().isClient()) return false;
+        // Fires on being HIT, not on damage getting through. Protection is on by default, so an
+        // "if it takes damage" reading would never run for an ordinary shopkeeper — and a shopkeeper
+        // snapping at someone who punched it is the whole point.
+        if (!this.isDead() && amount > 0) {
+            fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_HURT,
+                    source.getAttacker() instanceof ServerPlayerEntity p ? p : null);
+        }
         if (protectedNpc && (owner != null || ownerType == OwnerType.SERVER)) {
             // Only the void or /kill can remove a protected NPC.
             if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
@@ -847,6 +868,25 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             return false;
         }
         return super.damage(source, amount);
+    }
+
+    @Override
+    public void onDeath(DamageSource source) {
+        // Before super, while the NPC is still in the world and its actions can still reference it.
+        // The killer may be nobody at all — lava and fall damage count.
+        fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_DEATH,
+                source.getAttacker() instanceof ServerPlayerEntity p ? p : null);
+        super.onDeath(source);
+    }
+
+    @Override
+    public boolean onKilledOther(net.minecraft.server.world.ServerWorld world,
+                                 net.minecraft.entity.LivingEntity other) {
+        boolean result = super.onKilledOther(world, other);
+        // A player only comes along when the NPC killed a player — otherwise there's no one to talk to.
+        fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_KILL,
+                other instanceof ServerPlayerEntity p ? p : null);
+        return result;
     }
 
     // ---- NBT ----
