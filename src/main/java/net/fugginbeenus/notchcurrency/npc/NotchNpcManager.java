@@ -417,14 +417,13 @@ public final class NotchNpcManager {
             if (!allowCommands) {
                 for (var choice : node.choices()) {
                     strippedCommands |= choice.actions().removeIf(a ->
-                            a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND
-                            || a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
+                            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.isAdminOnly(a.type()));
                 }
             }
             clean.put(node);
         }
         if (strippedCommands) {
-            sp.sendMessage(Text.literal("Command actions were removed — those are admin-only.")
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed — those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         clean.setStartId(tree.startId());
@@ -452,14 +451,13 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         if (nbt == null) return;
         var actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
-        boolean strippedCommands = false;
-        boolean allowCommands = sp.hasPermissionLevel(2);
+        boolean stripped = false;
+        boolean allowAdminActions = sp.hasPermissionLevel(2);
         for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
             var kept = new java.util.ArrayList<>(actions.get(trigger));
-            if (!allowCommands) {
-                strippedCommands |= kept.removeIf(a ->
-                        a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND
-                        || a.type() == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
+            if (!allowAdminActions) {
+                stripped |= kept.removeIf(a ->
+                        net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.isAdminOnly(a.type()));
             }
             // The screen caps typing at 200, but the packet is whatever the client chose to send.
             for (var a : kept) {
@@ -468,8 +466,8 @@ public final class NotchNpcManager {
             }
             actions.set(trigger, kept);
         }
-        if (strippedCommands) {
-            sp.sendMessage(Text.literal("Command actions were removed — those are admin-only.")
+        if (stripped) {
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed — those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         npc.setActions(actions);

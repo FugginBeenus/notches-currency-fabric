@@ -72,7 +72,10 @@ public class NpcActionsScreen extends Screen {
         return (selected >= 0 && selected < list.size()) ? list.get(selected) : null;
     }
 
-    private static boolean commandsAllowed() {
+    /** Paying coins and giving items mint value, so they're admin-only alongside the command actions
+     *  (see {@link DialogueAction#isAdminOnly}). The server strips them either way; hiding them here
+     *  just means a shop owner isn't offered something that would silently vanish on save. */
+    private static boolean adminActionsAllowed() {
         return MinecraftClient.getInstance().player != null
                 && MinecraftClient.getInstance().player.hasPermissionLevel(2);
     }
@@ -322,9 +325,7 @@ public class NpcActionsScreen extends Screen {
         }
         for (int step = 1; step <= PALETTE.length; step++) {
             DialogueAction.Type next = PALETTE[(at + step) % PALETTE.length];
-            boolean isCommand = next == DialogueAction.Type.RUN_COMMAND
-                    || next == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
-            if (isCommand && !commandsAllowed()) continue;
+            if (DialogueAction.isAdminOnly(next) && !adminActionsAllowed()) continue;
             a.setType(next);
             return;
         }
@@ -358,4 +359,19 @@ public class NpcActionsScreen extends Screen {
 
     @Override
     public boolean shouldPause() { return false; }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
+    }
+    *///?}
 }

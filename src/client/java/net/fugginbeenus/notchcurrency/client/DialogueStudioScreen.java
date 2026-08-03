@@ -709,7 +709,8 @@ public class DialogueStudioScreen extends Screen {
     }
 
     /** Command actions are admin-only: hidden from the cycle for non-ops (server strips them too). */
-    private static boolean commandsAllowed() {
+    /** Commands, and anything that mints coins or items — see {@link DialogueAction#isAdminOnly}. */
+    private static boolean adminActionsAllowed() {
         var p = net.minecraft.client.MinecraftClient.getInstance().player;
         return p != null && p.hasPermissionLevel(2);
     }
@@ -719,8 +720,7 @@ public class DialogueStudioScreen extends Screen {
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type current = a == null ? DialogueAction.Type.NONE : a.type();
         DialogueAction.Type next = types[(current.ordinal() + 1) % types.length];
-        while (!commandsAllowed() && (next == DialogueAction.Type.RUN_COMMAND
-                || next == DialogueAction.Type.RUN_COMMAND_AS_PLAYER)) {
+        while (!adminActionsAllowed() && DialogueAction.isAdminOnly(next)) {
             next = types[(next.ordinal() + 1) % types.length];
         }
         DialogueAction updated = action(actionIdx, true);

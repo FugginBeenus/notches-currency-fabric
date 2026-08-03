@@ -32,6 +32,20 @@ public class DialogueAction {
         RUN_COMMAND_AS_PLAYER
     }
 
+    /**
+     * Actions only an operator may author. Two of these mint value out of nothing — an ordinary
+     * player who could set up an NPC that pays coins or hands out items would have an infinite
+     * money printer, which is exactly what an economy mod must not allow. The command ones are
+     * dangerous for the usual reason.
+     *
+     * <p>The single source of truth for both dialogue choices and trigger reactions, and for both
+     * the editing screens and the server-side save checks.
+     */
+    public static boolean isAdminOnly(Type t) {
+        return t == Type.PAY_COINS || t == Type.GIVE_ITEM
+                || t == Type.RUN_COMMAND || t == Type.RUN_COMMAND_AS_PLAYER;
+    }
+
     private Type type = Type.NONE;
     private String value = "";
     private long amount = 0;
