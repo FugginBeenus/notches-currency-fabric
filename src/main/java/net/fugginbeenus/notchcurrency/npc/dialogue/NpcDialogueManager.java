@@ -2,20 +2,15 @@ package net.fugginbeenus.notchcurrency.npc.dialogue;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
-import net.fugginbeenus.notchcurrency.api.CurrencyApi;
-import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.fugginbeenus.notchcurrency.npc.NpcText;
+import net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,44 +64,12 @@ public final class NpcDialogueManager {
         DialogueChoice choice = node.choices().get(choiceIndex);
         if (!choice.isAvailable(sp, npc)) return; // locked/hidden — client shouldn't send, but re-check
 
-        boolean openedRole = false;
-        for (DialogueAction a : choice.actions()) {
-            switch (a.type()) {
-                case NONE -> { }
-                case OPEN_ROLE -> {
-                    openRole(sp, npc);
-                    openedRole = true;
-                }
-                case OPEN_SCREEN -> {
-                    try {
-                        var role = net.fugginbeenus.notchcurrency.economy.npc.NpcRole.valueOf(a.value());
-                        NpcRoleDispatch.open(sp, role, null, npc);
-                        watchForFarewell(sp, npc);
-                        openedRole = true;
-                    } catch (IllegalArgumentException ignored) {
-                        // Unknown screen id — skip.
-                    }
-                }
-                case PAY_COINS -> {
-                    if (a.amount() > 0) {
-                        CurrencyApi.deposit(sp, a.amount(), TransactionReason.FAUCET, "NPC dialogue reward");
-                    }
-                }
-                case CHARGE_COINS -> {
-                    if (a.amount() > 0 && !CurrencyApi.withdraw(sp, a.amount(), TransactionReason.SINK, "NPC dialogue fee")) {
-                        sp.sendMessage(Text.literal("You can't afford that (" + a.amount() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ").")
-                                .formatted(Formatting.RED), false);
-                        sendNode(sp, npc, node); // stay on this page
-                        return;
-                    }
-                }
-                case GIVE_ITEM -> giveItem(sp, a);
-                case RUN_COMMAND -> runCommand(sp, npc, a.value(), false);
-                case RUN_COMMAND_AS_PLAYER -> runCommand(sp, npc, a.value(), true);
-            }
+        var outcome = NpcActionRunner.run(sp, npc, choice.actions());
+        if (outcome == NpcActionRunner.Outcome.ABORTED) {
+            sendNode(sp, npc, node); // couldn't pay — stay on this page
+            return;
         }
-
-        if (openedRole) return; // the role's screen replaced the dialogue
+        if (outcome == NpcActionRunner.Outcome.OPENED_SCREEN) return; // a screen replaced the dialogue
 
         DialogueNode next = npc.getDialogue().get(choice.next());
         if (next != null) {
@@ -176,13 +139,15 @@ public final class NpcDialogueManager {
                 && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER;
     }
 
-    /** Open the NPC's role feature and, if it has a goodbye line, watch for the screen closing. */
-    private static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    /** Open the NPC's role feature and, if it has a goodbye line, watch for the screen closing.
+     *  Public so {@link NpcActionRunner} can reach it — the farewell bookkeeping lives here. */
+    public static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
         watchForFarewell(sp, npc);
     }
 
-    private static void watchForFarewell(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    /** Watch for the opened screen closing so the NPC can say its goodbye line. */
+    public static void watchForFarewell(ServerPlayerEntity sp, NotchNpcEntity npc) {
         String farewell = npc.getFarewellText();
         if (farewell == null || farewell.isBlank()) return;
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
@@ -237,50 +202,6 @@ public final class NpcDialogueManager {
     }
 
     private static String substitute(String text, ServerPlayerEntity sp, String npcName) {
-        if (text == null) return "";
-        String out = text.replace("%player%", sp.getName().getString()).replace("%npc%", npcName);
-        if (out.contains("%balance%")) {
-            out = out.replace("%balance%", Long.toString(CurrencyApi.getBalance(sp)));
-        }
-        // Classic '&' color/format codes (&6 gold, &l bold, &r reset, ...) render as § formatting.
-        out = out.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
-        return out;
-    }
-
-    private static void giveItem(ServerPlayerEntity sp, DialogueAction a) {
-        Identifier id = Identifier.tryParse(a.value());
-        if (id == null) return;
-        Item item = Registries.ITEM.get(id);
-        if (item == Items.AIR || a.amount() <= 0) return;
-        int remaining = (int) Math.min(a.amount(), 64L * 9L);
-        while (remaining > 0) {
-            int give = Math.min(remaining, item.getMaxCount());
-            sp.getInventory().offerOrDrop(new ItemStack(item, give));
-            remaining -= give;
-        }
-    }
-
-    /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs) — a stored
-     *  command must never outlive its author's authority. */
-    private static boolean ownerMayRunCommands(NotchNpcEntity npc, net.minecraft.server.MinecraftServer server) {
-        if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;
-        UUID owner = npc.getOwner();
-        if (owner == null) return false;
-        ServerPlayerEntity online = server.getPlayerManager().getPlayer(owner);
-        if (online != null) return online.hasPermissionLevel(2);
-        var profile = server.getUserCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
-                : server.getUserCache().getByUuid(owner);
-        return profile.isPresent() && server.getPlayerManager().isOperator(profile.get());
-    }
-
-    private static void runCommand(ServerPlayerEntity sp, NotchNpcEntity npc, String command, boolean asPlayer) {
-        if (command == null || command.isBlank() || sp.getServer() == null) return;
-        if (!ownerMayRunCommands(npc, sp.getServer())) return;
-        String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
-                ? npc.getCustomName().getString() : "NPC";
-        String cmd = substitute(command, sp, npcName);
-        if (cmd.startsWith("/")) cmd = cmd.substring(1);
-        var source = asPlayer ? sp.getCommandSource() : sp.getServer().getCommandSource();
-        sp.getServer().getCommandManager().executeWithPrefix(source, cmd);
+        return NpcText.substitute(text, sp, npcName);
     }
 }

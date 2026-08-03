@@ -140,6 +140,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree dialogue =
             new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
     private DialogueMode dialogueMode = DialogueMode.WINDOW;
+    /** What this NPC does when something happens to it (talked to, hurt, killed, approached). */
+    private net.fugginbeenus.notchcurrency.npc.action.NpcActions actions =
+            new net.fugginbeenus.notchcurrency.npc.action.NpcActions();
     private String farewellText = "";
 
     // Stats: protection toggle (silent/glowing/gravity/nameplate ride on vanilla entity flags).
@@ -392,6 +395,12 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public DialogueMode getDialogueMode() { return dialogueMode; }
     public void setDialogueMode(DialogueMode mode) { this.dialogueMode = mode == null ? DialogueMode.WINDOW : mode; }
+
+    public net.fugginbeenus.notchcurrency.npc.action.NpcActions getActions() { return actions; }
+
+    public void setActions(net.fugginbeenus.notchcurrency.npc.action.NpcActions a) {
+        this.actions = a == null ? new net.fugginbeenus.notchcurrency.npc.action.NpcActions() : a;
+    }
 
     /** Optional goodbye line said in chat when a screen this NPC opened is closed ("" = none). */
     public String getFarewellText() { return farewellText; }
@@ -885,6 +894,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.put("Dialogue", dialogue.toNbt());
         nbt.putString("DialogueMode", dialogueMode.name());
         nbt.putString("Farewell", farewellText);
+        if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
         // Stats — the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
@@ -965,6 +975,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             dialogue = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(nbt.getCompound("Dialogue"));
         }
         if (nbt.contains("Farewell")) farewellText = nbt.getString("Farewell");
+        actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(
+                nbt.contains("Actions") ? nbt.getCompound("Actions") : null);
         if (nbt.contains("DialogueMode")) {
             try {
                 dialogueMode = DialogueMode.valueOf(nbt.getString("DialogueMode"));
