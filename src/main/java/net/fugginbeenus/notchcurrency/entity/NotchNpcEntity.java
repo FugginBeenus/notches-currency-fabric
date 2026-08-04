@@ -152,6 +152,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean pushable = false; // NPCs hold their ground by default (not shoved around)
     private boolean hostileToPlayers = false; // actively hunts non-owner players
     private boolean fightsBack = false;       // revenge-targets whatever hurts it
+    private boolean protectOwner = false;     // fights whoever its owner is fighting
+    private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
     private int regen = 0; // half-hearts healed every 5 seconds
     @Nullable private net.minecraft.entity.ai.goal.Goal doorGoal = null;
 
@@ -512,6 +514,22 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return owner != null ? this.getWorld().getPlayerByUuid(owner) : null;
     }
 
+    public boolean protectsOwner() { return protectOwner; }
+    public void setProtectOwner(boolean protect) {
+        if (this.protectOwner != protect) {
+            this.protectOwner = protect;
+            applyBehaviorGoals();
+        }
+    }
+
+    public boolean attacksMonsters() { return attackMonsters; }
+    public void setAttackMonsters(boolean attack) {
+        if (this.attackMonsters != attack) {
+            this.attackMonsters = attack;
+            applyBehaviorGoals();
+        }
+    }
+
     public boolean avoidsMonsters() { return avoidMonsters; }
     public void setAvoidMonsters(boolean avoid) {
         if (this.avoidMonsters != avoid) {
@@ -711,32 +729,39 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 this.clearPositionTarget(); // waypoints may be far from home
             }
             case GUARD -> {
-                // Fight what comes close, stroll the post while idle, stay leashed to home.
-                net.minecraft.entity.ai.goal.Goal melee =
-                        new net.minecraft.entity.ai.goal.MeleeAttackGoal(this, 1.1, true);
-                this.goalSelector.add(2, melee);
-                behaviorGoals.add(melee);
+                // Stroll the post while idle and stay leashed to home; the fighting itself is set up
+                // below, since Guard is only one of the reasons an NPC might swing at something.
                 net.minecraft.entity.ai.goal.Goal stroll =
                         new net.minecraft.entity.ai.goal.WanderAroundGoal(this, 0.6, 80, false);
                 this.goalSelector.add(5, stroll);
                 behaviorGoals.add(stroll);
-                // Target hostile mobs, but never creepers (iron-golem rule — don't trigger blasts).
-                net.minecraft.entity.ai.goal.Goal targets = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
-                        this, net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
-                        e -> !(e instanceof net.minecraft.entity.mob.CreeperEntity));
-                this.targetSelector.add(1, targets);
-                behaviorTargetGoals.add(targets);
                 applyHomeLeash();
             }
             case STATIONARY -> this.clearPositionTarget();
         }
 
-        // Hostile actions ride along with any behavior (GUARD already brings its own melee goal).
-        if ((hostileToPlayers || fightsBack) && behavior != Behavior.GUARD) {
+        // One melee goal, however many reasons there are to fight — a second would fight itself for
+        // the movement control.
+        boolean fights = behavior == Behavior.GUARD || hostileToPlayers || fightsBack
+                || attackMonsters || protectOwner;
+        if (fights) {
             net.minecraft.entity.ai.goal.Goal melee =
                     new net.minecraft.entity.ai.goal.MeleeAttackGoal(this, 1.1, true);
             this.goalSelector.add(2, melee);
             behaviorGoals.add(melee);
+        }
+        if (behavior == Behavior.GUARD || attackMonsters) {
+            // Hostile mobs, but never creepers (iron-golem rule — don't walk a blast into the shop).
+            net.minecraft.entity.ai.goal.Goal targets = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
+                    this, net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
+                    e -> !(e instanceof net.minecraft.entity.mob.CreeperEntity));
+            this.targetSelector.add(1, targets);
+            behaviorTargetGoals.add(targets);
+        }
+        if (protectOwner) {
+            net.minecraft.entity.ai.goal.Goal protect = new NpcProtectOwnerGoal(this);
+            this.targetSelector.add(1, protect);
+            behaviorTargetGoals.add(protect);
         }
         if (hostileToPlayers) {
             // Hunt ANY player in range — including the owner (hostile means hostile). Vanilla
@@ -1021,6 +1046,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putString("FollowPlayer", followPlayerName);
         nbt.putBoolean("AvoidMonsters", avoidMonsters);
         nbt.putBoolean("WatchPlayers", watchPlayers);
+        nbt.putBoolean("ProtectOwner", protectOwner);
+        nbt.putBoolean("AttackMonsters", attackMonsters);
         // Attribute bases — recorded so they survive the pick-up item (entity NBT has them anyway).
         nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)));
         nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
@@ -1111,6 +1138,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("CustomRole")) setCustomRoleId(nbt.getString("CustomRole"));
         if (nbt.contains("FollowPlayer")) setFollowPlayerName(nbt.getString("FollowPlayer"));
         if (nbt.contains("AvoidMonsters")) avoidMonsters = nbt.getBoolean("AvoidMonsters");
+        if (nbt.contains("ProtectOwner")) protectOwner = nbt.getBoolean("ProtectOwner");
+        if (nbt.contains("AttackMonsters")) attackMonsters = nbt.getBoolean("AttackMonsters");
         if (nbt.contains("WatchPlayers")) setWatchPlayers(nbt.getBoolean("WatchPlayers"));
         if (nbt.contains("StatMaxHealth")) {
             int hp = nbt.getInt("StatMaxHealth");

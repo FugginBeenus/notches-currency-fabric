@@ -73,7 +73,8 @@ public final class NotchNpcManager {
         buf.writeVarInt((int) Math.round(npc.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
         buf.writeVarInt(npc.getRegen());
         buf.writeString(npc.getFollowPlayerName());
-        buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0));
+        buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0)
+                | (npc.protectsOwner() ? 4 : 0) | (npc.attacksMonsters() ? 8 : 0));
         buf.writeString(npc.getFarewellText());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
@@ -207,6 +208,8 @@ public final class NotchNpcManager {
         npc.setFollowPlayerName(followName);
         npc.setAvoidMonsters((movesBits & 1) != 0);
         npc.setWatchPlayers((movesBits & 2) != 0);
+        npc.setProtectOwner((movesBits & 4) != 0);
+        npc.setAttackMonsters((movesBits & 8) != 0);
         npc.setBehavior(mode);
         String desc = switch (mode) {
             case STATIONARY -> "Stationary";

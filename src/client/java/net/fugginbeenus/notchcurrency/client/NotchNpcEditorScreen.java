@@ -335,6 +335,17 @@ public class NotchNpcEditorScreen extends Screen {
     // ---- behavior tab ----
 
     private static final int BEH_X = 50, BEH_W = 200, BEH_H = 15;
+    // The two always-on toggle rows, clear of the patrol row that ends just above them.
+    private static final int TOGGLE_W = 98, TOGGLE_H = 15;
+    private int movesRow1() { return py + 177; }
+    private int movesRow2() { return py + 194; }
+
+    /** One always-on toggle: green when on, plain when off. */
+    private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
+        boolean hover = over(mx, my, x, y, TOGGLE_W, TOGGLE_H);
+        if (on) NotchWidgets.primaryButton(ctx, this.textRenderer, x, y, TOGGLE_W, TOGGLE_H, label, hover);
+        else NotchWidgets.neutralButton(ctx, this.textRenderer, x, y, TOGGLE_W, TOGGLE_H, label, hover);
+    }
     private int behY(int i) { return py + 48 + i * 17; }
 
     private boolean usesRadius() {
@@ -387,23 +398,20 @@ public class NotchNpcEditorScreen extends Screen {
                     over(mx, my, px + BEH_X + 146, cy2, 54, 16));
         }
 
-        // Extras that ride along with any behavior.
-        boolean avoid = (movesBits & 1) != 0, watch = (movesBits & 2) != 0;
-        boolean hoverAvoid = over(mx, my, px + BEH_X, py + 178, 98, 15);
-        boolean hoverWatch = over(mx, my, px + BEH_X + 102, py + 178, 98, 15);
-        if (avoid) NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X, py + 178, 98, 15, "Avoid monsters", hoverAvoid);
-        else NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X, py + 178, 98, 15, "Avoid monsters", hoverAvoid);
-        if (watch) NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 102, py + 178, 98, 15, "Watch players", hoverWatch);
-        else NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 102, py + 178, 98, 15, "Watch players", hoverWatch);
+        // Extras that ride along with any behavior — safety on the first row, fighting on the second.
+        drawToggle(ctx, mx, my, px + BEH_X, movesRow1(), "Avoid monsters", (movesBits & 1) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow1(), "Watch players", (movesBits & 2) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X, movesRow2(), "Protect owner", (movesBits & 4) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow2(), "Fight monsters", (movesBits & 8) != 0);
 
         String hint = switch (currentBehavior) {
             case STATIONARY -> "Stays exactly where you placed it.";
             case WANDER -> "Roams near its home (set where placed).";
             case FOLLOW_OWNER -> "Follows its owner, or the player named above.";
             case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
-            case GUARD -> "Attacks hostile mobs near its post (ignores creepers).";
+            case GUARD -> "Holds a post and fights what comes near (ignores creepers).";
         };
-        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 200, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 213, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickBehavior(int mx, int my) {
@@ -416,15 +424,18 @@ public class NotchNpcEditorScreen extends Screen {
                 return true;
             }
         }
-        if (over(mx, my, px + BEH_X, py + 178, 98, 15)) {
-            movesBits ^= 1;
-            sendBehavior();
-            return true;
-        }
-        if (over(mx, my, px + BEH_X + 102, py + 178, 98, 15)) {
-            movesBits ^= 2;
-            sendBehavior();
-            return true;
+        int[][] toggles = {
+                {px + BEH_X, movesRow1(), 1},
+                {px + BEH_X + 102, movesRow1(), 2},
+                {px + BEH_X, movesRow2(), 4},
+                {px + BEH_X + 102, movesRow2(), 8},
+        };
+        for (int[] t : toggles) {
+            if (over(mx, my, t[0], t[1], TOGGLE_W, TOGGLE_H)) {
+                movesBits ^= t[2];
+                sendBehavior();
+                return true;
+            }
         }
         int cy = py + 140;
         if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER
