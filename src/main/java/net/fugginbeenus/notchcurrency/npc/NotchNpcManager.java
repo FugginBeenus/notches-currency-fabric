@@ -74,7 +74,8 @@ public final class NotchNpcManager {
         buf.writeVarInt(npc.getRegen());
         buf.writeString(npc.getFollowPlayerName());
         buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0)
-                | (npc.protectsOwner() ? 4 : 0) | (npc.attacksMonsters() ? 8 : 0));
+                | (npc.protectsOwner() ? 4 : 0) | (npc.attacksMonsters() ? 8 : 0)
+                | (npc.isHostileToPlayers() ? 16 : 0) | (npc.fightsBack() ? 32 : 0));
         buf.writeString(npc.getFarewellText());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
@@ -100,8 +101,8 @@ public final class NotchNpcManager {
         if (npc.isManualInvisible()) bits |= 128;
         bits |= (npc.getVisibility() & 3) << 8; // bits 8-9 reserved for the visibility rule
         if (npc.isNpcPushable()) bits |= 1024;
-        if (npc.isHostileToPlayers()) bits |= 2048;
-        if (npc.fightsBack()) bits |= 4096;
+        // Bits 2048/4096 used to carry hostile-to-players and fights-back. They live with the rest of
+        // the combat settings on the Moves tab now — see the moves bits below.
         return bits;
     }
 
@@ -117,8 +118,6 @@ public final class NotchNpcManager {
         npc.setManualInvisible((bits & 128) != 0);
         npc.setVisibility((bits >> 8) & 3);
         npc.setNpcPushable((bits & 1024) != 0);
-        npc.setHostileToPlayers((bits & 2048) != 0);
-        npc.setFightsBack((bits & 4096) != 0);
         // Apply the effective invisibility now rather than waiting for the next tick window.
         npc.setInvisible(npc.isManualInvisible() || npc.isRuleHidden());
     }
@@ -210,6 +209,8 @@ public final class NotchNpcManager {
         npc.setWatchPlayers((movesBits & 2) != 0);
         npc.setProtectOwner((movesBits & 4) != 0);
         npc.setAttackMonsters((movesBits & 8) != 0);
+        npc.setHostileToPlayers((movesBits & 16) != 0);
+        npc.setFightsBack((movesBits & 32) != 0);
         npc.setBehavior(mode);
         String desc = switch (mode) {
             case STATIONARY -> "Stationary";

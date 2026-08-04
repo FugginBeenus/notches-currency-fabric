@@ -20,12 +20,13 @@ public class NpcStatsScreen extends Screen {
     private static final int W = 300, H = 266;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
+    // Fighting lives on the Moves tab with the rest of the combat settings — this screen is what the
+    // NPC IS, not who it picks a fight with.
     private static final String[] TOGGLE_NAMES = {
             "Protected", "Silent", "Glowing", "Nameplate",
-            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable",
-            "Hostile: players", "Fights back"};
+            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable"};
     // Explicit bit per toggle (bits 8-9 are reserved for the visibility rule, so Pushable jumps to 1024).
-    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024, 2048, 4096};
+    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024};
 
     private final UUID npcId;
     private int statsBits;
