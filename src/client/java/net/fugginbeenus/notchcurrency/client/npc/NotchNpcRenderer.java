@@ -71,6 +71,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.prevHeadYaw = npc.prevHeadYaw;
         le.setPitch(npc.getPitch());
         le.age = npc.age;
+        copyAnimationState(npc, le);
 
         float scale = npc.getScale();
         boolean scaled = scale > 0f && scale != 1.0f;
@@ -103,6 +104,28 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             //?}
         }
         return true;
+    }
+
+    /**
+     * Put the stand-in in step with the NPC so a disguise walks and swings like the thing it's wearing.
+     *
+     * <p>The stand-in never ticks — it only exists to be drawn — so none of this happens on its own.
+     * Renderers read the walk cycle and the swing straight off the entity, which is why they have to
+     * be set rather than left at zero. One stand-in serves every NPC of a given disguise, so this runs
+     * fresh for each of them.
+     */
+    private static void copyAnimationState(NotchNpcEntity npc, LivingEntity le) {
+        le.limbAnimator.setSpeed(npc.limbAnimator.getSpeed());
+        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.limbAnimator)
+                .notchcurrency$setPos(npc.limbAnimator.getPos());
+        // Both ends of the interpolation, or the limbs stutter between frames.
+        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.limbAnimator)
+                .notchcurrency$setPrevSpeed(npc.limbAnimator.getSpeed(0.0f));
+
+        le.handSwinging = npc.handSwinging;
+        le.handSwingTicks = npc.handSwingTicks;
+        le.handSwingProgress = npc.handSwingProgress;
+        le.lastHandSwingProgress = npc.lastHandSwingProgress;
     }
 
     private Entity getProxy(String typeId) {
