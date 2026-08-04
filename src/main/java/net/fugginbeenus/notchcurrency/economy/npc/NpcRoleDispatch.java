@@ -61,7 +61,9 @@ public final class NpcRoleDispatch {
             case COSMETICS -> net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.openScreen(sp,
                     npc != null ? npc.getUuid() : null);
             case CUSTOM -> customInteract(sp, npc);
-            case NONE -> sp.sendMessage(Text.literal("This NPC hasn't been given a job yet.").formatted(Formatting.GRAY), false);
+            // NONE is a real choice, not a gap: guards, greeters and villagers-with-dialogue all live
+            // here. Saying nothing is the point — anything else nags every time they're talked to.
+            case NONE -> { }
         }
     }
 

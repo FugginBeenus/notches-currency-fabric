@@ -30,7 +30,9 @@ import java.util.UUID;
  */
 public class NotchNpcEditorScreen extends Screen {
 
-    private static final int W = 300, H = 230;
+    // Taller than it needs to be for most tabs — Moves carries three rows of toggles now, and every
+    // tab draws from the top down, so the extra height is just breathing room everywhere else.
+    private static final int W = 300, H = 250;
     // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
     private static final NpcRole[] SELECTABLE = {
             NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
@@ -339,6 +341,7 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int TOGGLE_W = 98, TOGGLE_H = 15;
     private int movesRow1() { return py + 177; }
     private int movesRow2() { return py + 194; }
+    private int movesRow3() { return py + 211; }
 
     /** One always-on toggle: green when on, plain when off. */
     private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
@@ -398,11 +401,14 @@ public class NotchNpcEditorScreen extends Screen {
                     over(mx, my, px + BEH_X + 146, cy2, 54, 16));
         }
 
-        // Extras that ride along with any behavior — safety on the first row, fighting on the second.
+        // Extras that ride along with any behavior. Everything about who it fights is here together,
+        // rather than half of it hiding on the stats screen.
         drawToggle(ctx, mx, my, px + BEH_X, movesRow1(), "Avoid monsters", (movesBits & 1) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow1(), "Watch players", (movesBits & 2) != 0);
         drawToggle(ctx, mx, my, px + BEH_X, movesRow2(), "Protect owner", (movesBits & 4) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow2(), "Fight monsters", (movesBits & 8) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X, movesRow3(), "Fight players", (movesBits & 16) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow3(), "Fight back", (movesBits & 32) != 0);
 
         String hint = switch (currentBehavior) {
             case STATIONARY -> "Stays exactly where you placed it.";
@@ -411,7 +417,7 @@ public class NotchNpcEditorScreen extends Screen {
             case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
             case GUARD -> "Holds a post and fights what comes near (ignores creepers).";
         };
-        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 213, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 231, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickBehavior(int mx, int my) {
@@ -429,6 +435,8 @@ public class NotchNpcEditorScreen extends Screen {
                 {px + BEH_X + 102, movesRow1(), 2},
                 {px + BEH_X, movesRow2(), 4},
                 {px + BEH_X + 102, movesRow2(), 8},
+                {px + BEH_X, movesRow3(), 16},
+                {px + BEH_X + 102, movesRow3(), 32},
         };
         for (int[] t : toggles) {
             if (over(mx, my, t[0], t[1], TOGGLE_W, TOGGLE_H)) {
@@ -906,7 +914,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     private static String roleLabel(NpcRole role) {
         return switch (role) {
-            case NONE -> "None";
+            case NONE -> "Basic"; // not "no role" — it's the plain NPC, and a perfectly good one
             case GREETER -> "Greeter";
             case SHOP -> "Shop";
             case ENCHANTER -> "Enchanter";
