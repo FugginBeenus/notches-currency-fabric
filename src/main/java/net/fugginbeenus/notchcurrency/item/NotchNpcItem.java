@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * The single Notch NPC item. Placing it spawns an NPC: a fresh, owned, blank-slate NPC if the item is
  * plain, or a fully-restored NPC if the item was created by the editor's "Pick up" (carries the config
- * under the {@link NotchNpcManager#ITEM_TAG} tag). Everything else is configured in the editor —
+ * under the {@link NotchNpcManager#ITEM_TAG} tag). Everything else is configured in the editor,
  * deliberately no per-mob spawn eggs or separate mover/editor items.
  */
 public class NotchNpcItem extends Item {
@@ -57,7 +57,7 @@ public class NotchNpcItem extends Item {
             // Restore a packed NPC (from "Pick up").
             npc.readFromItem(StackData.getCompound(stack, NotchNpcManager.ITEM_TAG));
         } else if (player != null) {
-            // Fresh blank NPC — the placer owns it.
+            // Fresh blank NPC: the placer owns it.
             npc.setOwner(player.getUuid(), player.getName().getString());
             npc.setCustomName(Text.literal("NPC"));
             npc.setCustomNameVisible(true);

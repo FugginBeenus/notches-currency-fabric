@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
  *
  * <p>One of the mod's four compat facades for the Stonecutter multi-version port. Minecraft 1.21
  * makes the {@code new Identifier(...)} constructors non-public in favour of the {@code Identifier.of(...)}
- * factories, so every id in the codebase is funnelled through here — on 1.21 only these three method
+ * factories, so every id in the codebase is funnelled through here, on 1.21 only these three method
  * bodies change. On 1.20.1 (this build) they are the plain constructors, so there is no behavior
  * change.
  *

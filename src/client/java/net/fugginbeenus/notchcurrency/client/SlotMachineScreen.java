@@ -21,7 +21,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
 /**
- * The slot machine GUI. Styled like a casino cabinet — a gold frame with a chasing marquee, payline
+ * The slot machine GUI. Styled like a casino cabinet: a gold frame with a chasing marquee, payline
  * markers and a win glow. The reels spin client-side and lock left-to-right; only when the third reel
  * stops does the win/loss land (sound + revealed balance), preserving the tension. A bet is validated
  * client-side (affordable and in range) before the reels ever move.
@@ -107,7 +107,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
                 NotchWidgets.centerText(ctx, this.textRenderer, msg, x + W / 2, y + STATUS_Y,
                         jackpotShown ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_GREEN, true);
             } else {
-                NotchWidgets.centerText(ctx, this.textRenderer, "No win — spin again!",
+                NotchWidgets.centerText(ctx, this.textRenderer, "No win. Spin again!",
                         x + W / 2, y + STATUS_Y, NotchTheme.TEXT_MUTED, false);
             }
         }
@@ -156,7 +156,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         boolean fresh = curSpinId != lastSpinIdSeen;
         if (!fresh && now - spinStartMs > MAX_WAIT_MS) {
             spinning = false;
-            setError("Spin failed — try again.");
+            setError("Spin failed. Try again.");
             return finalReels;
         }
 
@@ -306,7 +306,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
                 playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
-            // Valid bet — start the spin.
+            // Valid bet: start the spin.
             spinning = true;
             spinStartMs = System.currentTimeMillis();
             lastSpinIdSeen = handler.prop(SlotMachineScreenHandler.P_SPINID);
@@ -342,7 +342,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

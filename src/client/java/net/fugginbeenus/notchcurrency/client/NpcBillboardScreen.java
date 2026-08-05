@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * The floating sign over an NPC: up to four lines, typed one per row.
  *
- * <p>Deliberately plain — a sign is a sign. Colour codes and the usual placeholders work, and there's
+ * <p>Deliberately plain: a sign is a sign. Colour codes and the usual placeholders work, and there's
  * a live preview of how each line will read so you don't have to close the screen to check a colour.
  */
 public class NpcBillboardScreen extends Screen {
@@ -131,14 +131,14 @@ public class NpcBillboardScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

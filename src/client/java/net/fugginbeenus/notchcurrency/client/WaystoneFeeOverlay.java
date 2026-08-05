@@ -23,7 +23,7 @@ import java.lang.reflect.Field;
  * ({@link WaystoneFees}).
  *
  * <p>Only ever loaded when the Waystones mod is present (gated in ClientInit). The menu lays out its
- * destinations differently per game version — top-level buttons on 1.20.1, a scrolling list on 1.21 —
+ * destinations differently per game version (top-level buttons on 1.20.1, a scrolling list on 1.21)
  * so the hovered waystone is located per-version, then its dimension is read from the one API-typed
  * field on the button (found by type, not name, so a future Waystones build that moves it just shows
  * nothing rather than breaking).

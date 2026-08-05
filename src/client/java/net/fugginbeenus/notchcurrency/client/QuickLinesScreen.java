@@ -17,14 +17,14 @@ import java.util.UUID;
 
 /**
  * Quick Lines: the no-fuss dialogue path. Type a handful of lines; the NPC says one at random (in
- * chat) every time someone talks to it — perfect for greeters and flavor shopkeepers. Saved as a
+ * chat) every time someone talks to it: perfect for greeters and flavor shopkeepers. Saved as a
  * flat DialogueTree (one page per line, no choices) with the style auto-set to Chat. The full
  * Studio remains the tool for branching conversations.
  */
 public class QuickLinesScreen extends Screen {
 
     private static final int W = 340, H = 232;
-    // 8 lines × 15px ends at y+160 — safely above the edit row at y+169.
+    // 8 lines × 15px ends at y+160, safely above the edit row at y+169.
     private static final int LIST_X = 10, LIST_Y = 40, ROW_H = 15, MAX_LINES = 8;
 
     private final UUID npcId;
@@ -37,7 +37,7 @@ public class QuickLinesScreen extends Screen {
     public QuickLinesScreen(UUID npcId, DialogueTree tree) {
         super(Text.literal("Quick Lines"));
         this.npcId = npcId;
-        // Seed from an existing FLAT tree only — a branching tree must not be flattened here.
+        // Seed from an existing FLAT tree only: a branching tree must not be flattened here.
         if (tree != null && tree.isFlat()) {
             for (DialogueNode n : tree.nodes().values()) {
                 if (!n.text().isBlank() && lines.size() < MAX_LINES) lines.add(n.text());
@@ -91,7 +91,7 @@ public class QuickLinesScreen extends Screen {
                     over(mouseX, mouseY, px + W - 30, ry, 16, ROW_H - 1));
         }
         if (lines.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No lines yet — type one below and Apply.",
+            NotchWidgets.centerText(ctx, this.textRenderer, "No lines yet. Type one below and Apply.",
                     px + W / 2, py + LIST_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
 
@@ -102,7 +102,7 @@ public class QuickLinesScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + W - 76, py + 169, 66, 15, applyLabel,
                 canApply && over(mouseX, mouseY, px + W - 76, py + 169, 66, 15));
         NotchWidgets.centerText(ctx, this.textRenderer,
-                selected >= 0 ? "Editing line " + (selected + 1) + " — click it again to deselect."
+                selected >= 0 ? "Editing line " + (selected + 1) + ". Click it again to deselect."
                         : lines.size() + "/" + MAX_LINES + " lines",
                 px + W / 2, py + 189, NotchTheme.TEXT_MUTED, false);
 
@@ -177,7 +177,7 @@ public class QuickLinesScreen extends Screen {
         }
         NotchPacketsClient.sendNpcStudioSave(npcId, tree.toNbt());
         if (!lines.isEmpty()) {
-            NotchPacketsClient.sendNpcDialogueMode(npcId, 1); // CHAT — that's the point of quick lines
+            NotchPacketsClient.sendNpcDialogueMode(npcId, 1); // CHAT. That's the point of quick lines
         }
         NotchPacketsClient.sendNpcEditorReopen(npcId, 3);
     }
@@ -215,14 +215,14 @@ public class QuickLinesScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

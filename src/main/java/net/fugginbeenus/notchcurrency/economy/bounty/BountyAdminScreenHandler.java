@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * Op-only bounty setup GUI (opened via {@code /bounty admin}). Edits the board config and holds
- * the board's <b>decree</b> items in dedicated slots — placing a decree gates generation to its
+ * the board's <b>decree</b> items in dedicated slots: placing a decree gates generation to its
  * category (no decrees = all categories). Decree slots only accept registered decree items and
  * persist to {@link BountyState} on save/close.
  */

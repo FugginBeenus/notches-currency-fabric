@@ -31,7 +31,7 @@ import java.util.UUID;
 /**
  * The coin flip: a true 50/50. Bet, pick heads or tails, win a configurable payout. When played at a
  * {@link CoinFlipBlock} the block "flips" for a short delay (the {@code FLIPPING} blockstate) and the
- * result is revealed once the spin lands — driven by a tick queue so the reveal art has time to play.
+ * result is revealed once the spin lands: driven by a tick queue so the reveal art has time to play.
  * Played by command it resolves instantly.
  */
 public final class CoinFlipManager {
@@ -78,7 +78,7 @@ public final class CoinFlipManager {
     }
 
     public static void notifyBusy(ServerPlayerEntity sp) {
-        sp.sendMessage(Text.literal("The coin is still in the air — wait for it to land.").formatted(Formatting.YELLOW), false);
+        sp.sendMessage(Text.literal("The coin is still in the air. Wait for it to land.").formatted(Formatting.YELLOW), false);
     }
 
     /** Player hit FLIP in the coin-flip screen: play at the block they opened (delayed reveal). */
@@ -87,7 +87,7 @@ public final class CoinFlipManager {
         resolve(sp, guessHeads, bet, pos);
     }
 
-    /** {@code /coinflip} — no block, resolves instantly. */
+    /** {@code /coinflip}: no block, resolves instantly. */
     public static void flipCommand(ServerPlayerEntity sp, boolean guessHeads, long bet) {
         resolve(sp, guessHeads, bet, null);
     }
@@ -108,7 +108,7 @@ public final class CoinFlipManager {
         if (pos != null) {
             BlockState st = world.getBlockState(pos);
             if (!(st.getBlock() instanceof CoinFlipBlock)) {
-                pos = null; // block gone — fall back to an instant, block-less flip
+                pos = null; // block gone: fall back to an instant, block-less flip
             } else if (st.get(CoinFlipBlock.FLIPPING)) {
                 notifyBusy(sp);
                 return;
@@ -181,10 +181,10 @@ public final class CoinFlipManager {
         if (sp != null) {
             String side = landedHeads ? "HEADS" : "TAILS";
             if (won) {
-                sp.sendMessage(Text.literal("The coin landed " + side + " — you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
+                sp.sendMessage(Text.literal("The coin landed " + side + ". You won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
                         .formatted(Formatting.GREEN), false);
             } else {
-                sp.sendMessage(Text.literal("The coin landed " + side + " — you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                sp.sendMessage(Text.literal("The coin landed " + side + ". You lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                         .formatted(Formatting.RED), false);
             }
         }

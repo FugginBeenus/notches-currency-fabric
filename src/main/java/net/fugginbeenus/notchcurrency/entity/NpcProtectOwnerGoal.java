@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumSet;
 
 /**
- * Fight whoever its person is fighting — both directions, the way a tamed wolf does it: something
+ * Fight whoever its person is fighting, both directions, the way a tamed wolf does it. Something
  * swings at them, or they swing at something.
  *
  * <p>"Its person" is the player it has been pointed at: the one named in Follow if there is one,

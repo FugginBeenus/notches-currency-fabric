@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * on a live server means it never stops. This closes that door on NPCs that already exist.
  *
  * <p>It runs per NPC rather than as one pass at startup, because an NPC sitting in an unloaded chunk
- * can't be swept — it isn't in the world yet. Each NPC carries a stamp of the last sweep it went
+ * can't be swept. It isn't in the world yet. Each NPC carries a stamp of the last sweep it went
  * through, so one that surfaces months later is caught the moment it loads and never checked again.
  */
 public final class NpcActionSweep {
@@ -37,7 +37,7 @@ public final class NpcActionSweep {
         MinecraftServer server = npc.getServer();
         if (server == null) return; // not ready yet; try again next tick
 
-        // Stamp first. Whatever happens below, this NPC has now been looked at — a fault here must
+        // Stamp first. Whatever happens below, this NPC has now been looked at: a fault here must
         // not leave it re-sweeping on every tick forever.
         npc.setActionSweepVersion(CURRENT_VERSION);
 
@@ -60,7 +60,7 @@ public final class NpcActionSweep {
         }
 
         if (removed > 0) {
-            LOGGER.info("Removed {} admin-only action(s) from NPC {} — its owner ({}) isn't an operator",
+            LOGGER.info("Removed {} admin-only action(s) from NPC {}, because its owner ({}) isn't an operator",
                     removed, npc.getUuid(), npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName());
         }
     }

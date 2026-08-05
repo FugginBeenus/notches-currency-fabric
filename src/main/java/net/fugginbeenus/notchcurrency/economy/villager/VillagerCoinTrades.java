@@ -11,7 +11,7 @@ import net.minecraft.village.TradeOfferList;
 
 /**
  * The "lootable" villager currency integration: whenever a villager rolls new trades (level-up),
- * each emerald-priced trade has a small chance to be re-priced in coins instead — a rare find that
+ * each emerald-priced trade has a small chance to be re-priced in coins instead: a rare find that
  * lets players spend currency at vanilla villagers. Higher-value trades (more emeralds) get double
  * the chance, so the lucky finds skew toward the trades worth paying coins for. Conversion is a
  * coin SINK (coins handed to the villager leave the economy).

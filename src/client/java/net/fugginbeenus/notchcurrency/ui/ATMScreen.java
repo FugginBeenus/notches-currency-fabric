@@ -126,7 +126,7 @@ public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
         final int x = (this.width - this.backgroundWidth) / 2;
         final int y = (this.height - this.backgroundHeight) / 2;
 
-        // Window panel — code-drawn from the Notch theme (no texture).
+        // Window panel: code-drawn from the Notch theme (no texture).
         NotchWidgets.panel(ctx, x, y, this.backgroundWidth, this.backgroundHeight);
         ctx.drawText(this.textRenderer, Text.literal("ATM"), x + 8, y + 6, NotchTheme.TEXT_DARK, false);
 
@@ -143,7 +143,7 @@ public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
         int ty = y + PILL_Y + (PILL_H - this.textRenderer.fontHeight) / 2 + 1;
         ctx.drawText(this.textRenderer, label, tx, ty, NotchTheme.TEXT_GOLD, true);
 
-        // Withdraw amount box — the text field renders its text on top.
+        // Withdraw amount box: the text field renders its text on top.
         NotchWidgets.inset(ctx, x + WITHDRAW_FIELD_X, y + WITHDRAW_FIELD_Y,
                 WITHDRAW_FIELD_W, WITHDRAW_FIELD_H, NotchTheme.DEEP);
 
@@ -249,7 +249,7 @@ public class ATMScreen extends HandledScreen<ATMTestScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

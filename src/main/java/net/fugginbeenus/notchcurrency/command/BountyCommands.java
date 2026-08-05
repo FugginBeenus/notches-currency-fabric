@@ -26,7 +26,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 /**
- * {@code /bounty} — players view the board, claim kill rewards, and turn in deliveries. Admins
+ * {@code /bounty}: players view the board, claim kill rewards, and turn in deliveries. Admins
  * post/remove bounties under {@code /bounty admin}. The board itself ({@link BountyManager}) is
  * also reachable from a BOUNTY-role NPC.
  */

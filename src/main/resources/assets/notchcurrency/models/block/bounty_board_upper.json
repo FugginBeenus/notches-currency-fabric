@@ -1,5 +1,5 @@
 {
-  "credit": "Bounty board upper half — invisible occupancy block; the lower half's model spans both.",
+  "credit": "Bounty board upper half: invisible occupancy block; the lower half's model spans both.",
   "textures": {
     "particle": "notchcurrency:block/bounty_board"
   },

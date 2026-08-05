@@ -36,7 +36,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 
 /**
- * "Ledger Board" — a two-block-tall leaderboard monument (door-style halves) that prints the top
+ * "Ledger Board": a two-block-tall leaderboard monument (door-style halves) that prints the top
  * balances to chat on use, from either half (same data as {@code /baltop}). The lower half carries
  * the whole visual (spans up past y=16); the upper is an invisible occupancy block. Faces the placer;
  * breaking either half removes both and only the lower drops.

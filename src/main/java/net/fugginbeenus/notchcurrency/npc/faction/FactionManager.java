@@ -99,7 +99,7 @@ public final class FactionManager {
             msg(sp, "You're already with " + faction.displayName() + ".", Formatting.YELLOW);
             return;
         }
-        // The founder and admins get in regardless — a closed faction shouldn't lock out its own.
+        // The founder and admins get in regardless: a closed faction shouldn't lock out its own.
         if (!faction.isOpenToJoin() && !canManage(sp, faction)) {
             msg(sp, faction.displayName() + " isn't taking new members.", Formatting.RED);
             return;
@@ -129,7 +129,7 @@ public final class FactionManager {
         }
         // A founder leaving would orphan the faction, so send them to disband instead.
         if (faction.isFoundedBy(sp.getUuid()) && !sp.hasPermissionLevel(2)) {
-            msg(sp, "You founded " + faction.displayName() + " — disband it rather than walking out.",
+            msg(sp, "You founded " + faction.displayName() + ". Disband it rather than walking out.",
                     Formatting.RED);
             return;
         }
@@ -142,7 +142,7 @@ public final class FactionManager {
         return a != null && !a.isBlank() && a.equals(b);
     }
 
-    /** Clear a faction id off every loaded NPC — used when a faction is disbanded. */
+    /** Clear a faction id off every loaded NPC, used when a faction is disbanded. */
     private static void clearFromNpcs(@Nullable MinecraftServer server, String factionId) {
         if (server == null) return;
         for (ServerWorld world : server.getWorlds()) {

@@ -20,7 +20,7 @@ import java.util.UUID;
  * Runs loans: borrowing creates coins (up to a cap) that must be repaid with interest before the
  * loan's term expires. Interest compounds each cycle (a SINK when repaid); auto-collect pulls
  * spare balance toward the debt. If a loan goes <b>overdue</b>, a one-time late fee is added and a
- * higher penalty interest rate applies — the consequence for not paying it back in time.
+ * higher penalty interest rate applies: the consequence for not paying it back in time.
  */
 public final class LoanManager {
 
@@ -168,11 +168,11 @@ public final class LoanManager {
                 if (!loan.lateFeeApplied && lateFeePercent > 0) {
                     loan.debt += loan.debt * lateFeePercent / 100;
                     loan.lateFeeApplied = true;
-                    if (online != null) online.sendMessage(Text.literal("⚠ Your loan is OVERDUE — a "
+                    if (online != null) online.sendMessage(Text.literal("⚠ Your loan is OVERDUE. A "
                             + lateFeePercent + "% late fee was added.").formatted(Formatting.RED), false);
                 }
                 loan.debt += loan.debt * overdueInterestPercent / 100;
-                if (online != null) online.sendMessage(Text.literal("Overdue loan penalty interest applied — you owe ")
+                if (online != null) online.sendMessage(Text.literal("Overdue loan penalty interest applied. You owe ")
                         .formatted(Formatting.RED).append(NotchCurrency.coins(loan.debt)).append(Text.literal(".").formatted(Formatting.RED)), false);
             } else {
                 loan.debt += loan.debt * interestPercent / 100;

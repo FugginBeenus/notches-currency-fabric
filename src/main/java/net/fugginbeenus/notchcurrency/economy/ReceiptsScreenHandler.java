@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Backing handler for the receipts screen. The player's recent transaction history is a static
- * snapshot serialized into the opening buf (no live slots) — the client renders it as text rows.
+ * snapshot serialized into the opening buf (no live slots): the client renders it as text rows.
  */
 public class ReceiptsScreenHandler extends ScreenHandler {
 

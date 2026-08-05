@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * The visual dialogue studio: edit an NPC's whole branching conversation. Left pane lists the pages
- * (nodes); right pane edits the selected page's text and choices, or — one level deeper — a single
+ * (nodes); right pane edits the selected page's text and choices, or, one level deeper, a single
  * choice (label, where it leads, its action, its requirement, and lock behavior). Everything edits a
  * local copy of the tree; Save ships it back whole and the server re-validates ownership.
  */
@@ -712,7 +712,7 @@ public class DialogueStudioScreen extends Screen {
     }
 
     /** Command actions are admin-only: hidden from the cycle for non-ops (server strips them too). */
-    /** Commands, and anything that mints coins or items — see {@link DialogueAction#isAdminOnly}. */
+    /** Commands, and anything that mints coins or items: see {@link DialogueAction#isAdminOnly}. */
     private static boolean adminActionsAllowed() {
         var p = net.minecraft.client.MinecraftClient.getInstance().player;
         return p != null && p.hasPermissionLevel(2);
@@ -771,7 +771,7 @@ public class DialogueStudioScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Plain characters insert via charTyped only — forwarding them trips select-all (the
+        // Plain characters insert via charTyped only: forwarding them trips select-all (the
         // "typing 'a' wipes the line" bug). Edit/nav keys are forwarded by the guards.
         if (NotchWidgets.typingInEditBox(keyCode, scanCode, modifiers, nodeTextBox)) return true;
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, renameField, choiceLabelField,
@@ -787,14 +787,14 @@ public class DialogueStudioScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

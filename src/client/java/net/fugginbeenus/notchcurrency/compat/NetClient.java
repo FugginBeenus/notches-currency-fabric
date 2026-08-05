@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
  * Client-side counterpart to {@link Net}: registers server→client receivers and sends client→server
  * packets. Lives in the client source set because it touches {@code ClientPlayNetworking}.
  *
- * <p>Same bridging story as {@link Net} — {@code (Identifier, PacketByteBuf)} on 1.20.1, one generic
+ * <p>Same bridging story as {@link Net}: {@code (Identifier, PacketByteBuf)} on 1.20.1, one generic
  * {@code CustomPayload} on 1.21, contained to these two files. The channel table and payload type
  * live in {@link Net}; {@link Net#declareChannels()} must have run first.
  */

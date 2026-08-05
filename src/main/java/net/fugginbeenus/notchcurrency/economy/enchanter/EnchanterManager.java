@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * The Enchanter service NPC: pay coins to repair gear, buy specific enchantment levels, or extract
- * an enchantment onto a book. Every payment is a SINK — this is one of the economy's drains, and
+ * an enchantment onto a book. Every payment is a SINK. This is one of the economy's drains, and
  * the "buy the exact enchant you want" pitch is the draw. Cost functions are deterministic and
  * shared by the client (display) and server (charge), so the number on the button is the number
  * charged.
@@ -62,7 +62,7 @@ public final class EnchanterManager {
     }
 
     /** Coins to pull an enchant onto a book: a flat handling fee plus a share of the enchant's own
-     *  purchase price — so extraction can never undercut what the enchant is worth (no book farms). */
+     *  purchase price, so extraction can never undercut what the enchant is worth (no book farms). */
     public static long extractPrice(Enchantment ench, int level, Pricing p) {
         return Math.max(1, p.extractBase() + upgradeCost(ench, level, p) * p.extractValuePct() / 100);
     }

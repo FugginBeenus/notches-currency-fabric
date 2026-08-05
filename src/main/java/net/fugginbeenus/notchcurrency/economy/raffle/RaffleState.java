@@ -28,7 +28,7 @@ import java.util.UUID;
  * winner can claim later (even after logging off). A round is everything between draws; a
  * draw moves the pot into an unclaimed {@link Result} and starts a fresh round.
  *
- * Claimed wins are dropped from the history — that keeps it tiny, and any leftover ticket
+ * Claimed wins are dropped from the history, that keeps it tiny, and any leftover ticket
  * for a dropped round simply resolves to a losing ticket on the next restamp.
  */
 public class RaffleState extends PersistentState {
@@ -163,7 +163,7 @@ public class RaffleState extends PersistentState {
     }
 
     /**
-     * Abandon the current round with no payout (admin reset): a clean slate — entries, pot, and
+     * Abandon the current round with no payout (admin reset): a clean slate. Entries, pot, and
      * the whole prize pool (coins + item) are wiped, and a fresh round begins. Old tickets become
      * losing tickets. Does not touch unclaimed wins from earlier draws.
      */
@@ -179,8 +179,8 @@ public class RaffleState extends PersistentState {
     }
 
     /**
-     * Start a fresh round of entries — clears leftover pot/entries and advances the round so old
-     * tickets die — but KEEPS the configured prize pool (used when an admin starts a raffle that
+     * Start a fresh round of entries: clears leftover pot/entries and advances the round so old
+     * tickets die, but KEEPS the configured prize pool (used when an admin starts a raffle that
      * had stale ticket state from earlier).
      */
     public void clearEntries() {

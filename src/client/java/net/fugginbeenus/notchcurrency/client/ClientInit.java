@@ -38,7 +38,7 @@ public final class ClientInit implements ClientModInitializer {
         net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register(
                 (message, overlay) -> { if (!overlay) NotchHud.noteChatMessage(message); });
 
-        // Fee tags on the waystone selection menu — only when Waystones is actually present
+        // Fee tags on the waystone selection menu: only when Waystones is actually present
         // (the overlay class references its GUI classes, so it must not load otherwise).
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
             WaystoneFeeOverlay.register();

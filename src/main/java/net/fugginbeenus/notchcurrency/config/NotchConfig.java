@@ -68,7 +68,7 @@ public final class NotchConfig {
 
     /**
      * Waystone fee: an optional coin SINK charged when a player teleports via a Waystone (soft
-     * integration — only active when the Waystones mod is installed). Dimensional jumps can cost
+     * integration: only active when the Waystones mod is installed). Dimensional jumps can cost
      * more. Broke players are politely denied the teleport.
      */
     public static final class Waystone {
@@ -87,7 +87,7 @@ public final class NotchConfig {
 
     /**
      * Custom currency: the client generates a resource pack ("NotchCurrencyCustom") that reskins
-     * the coin everywhere — item, HUD and the chat glyph all share one texture. Drop a square PNG
+     * the coin everywhere: item, HUD and the chat glyph all share one texture. Drop a square PNG
      * at config/notchcurrency/currency/coin.png (optional coin_tails.png) and/or set a name here;
      * the pack is rebuilt on every game start and deleted when nothing is customized.
      */
@@ -126,7 +126,7 @@ public final class NotchConfig {
          *  high-value enchant can't undercut its worth (anti book-farming). 0 = flat fee only. */
         public int extractValuePercent = 100;
 
-        /** Whether treasure enchantments (Mending etc.) can be bought — at double price. */
+        /** Whether treasure enchantments (Mending etc.) can be bought, at double price. */
         public boolean allowTreasure = true;
 
         /** Coins to uncraft an undamaged item back into its crafting ingredients. */
@@ -161,7 +161,7 @@ public final class NotchConfig {
     /**
      * Loans: players borrow coins (created) up to a cap and repay with interest (the interest is
      * a SINK). Interest compounds each cycle; optionally the loan auto-collects from the player's
-     * balance so debts don't linger. Off by default — it creates money and is an economy lever.
+     * balance so debts don't linger. Off by default. It creates money and is an economy lever.
      */
     public static final class Loan {
         /** Master toggle. */
@@ -185,7 +185,7 @@ public final class NotchConfig {
         /** One-time fee added to the debt (percent) the first time a loan goes overdue. */
         public int lateFeePercent = 10;
 
-        /** Interest rate (percent per cycle) applied once a loan is overdue — the consequence. */
+        /** Interest rate (percent per cycle) applied once a loan is overdue: the consequence. */
         public int overdueInterestPercent = 20;
     }
 
@@ -204,7 +204,7 @@ public final class NotchConfig {
 
     /**
      * Bounty board: auto-generates a rotating set of time-limited bounties (kill/deliver tasks)
-     * from datapack pools, paying coin/item rewards — a controllable money/item FAUCET. Admins
+     * from datapack pools, paying coin/item rewards: a controllable money/item FAUCET. Admins
      * do no per-bounty work; the board keeps itself topped up.
      */
     public static final class Bounty {
@@ -254,7 +254,7 @@ public final class NotchConfig {
 
         /**
          * Allow turning in an old losing ticket for a few free entries into the new raffle
-         * (a consolation: fewer entries than you bought — &lt;5 → 1, &lt;10 → 5, else 10 — and
+         * (a consolation: fewer entries than you bought (&lt;5 → 1, &lt;10 → 5, else 10), and
          * only one redemption per player per round).
          */
         public boolean redeemEnabled = true;
@@ -288,7 +288,7 @@ public final class NotchConfig {
     /**
      * Progressive wealth tax: a periodic sink that taxes only the portion of a balance
      * ABOVE a threshold, so hoarders are throttled but ordinary players are untouched.
-     * Off by default — it's an aggressive lever.
+     * Off by default. It's an aggressive lever.
      */
     public static final class WealthTax {
         /** Master toggle. */

@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * A per-player rolling history of coin transactions — the player-facing receipt log (the admin
+ * A per-player rolling history of coin transactions: the player-facing receipt log (the admin
  * ledger is the file-based {@link EconomyLedger}). Every balance change flows through
  * {@code BalanceStore.mutate}, which records here; the newest {@link #MAX_PER_PLAYER} are kept.
  */

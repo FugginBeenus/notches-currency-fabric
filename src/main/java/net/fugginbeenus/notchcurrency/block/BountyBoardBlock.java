@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 
 /**
- * "Bounty Board" — a two-block-tall notice board (door-style upper/lower halves) that opens the
+ * "Bounty Board": a two-block-tall notice board (door-style upper/lower halves) that opens the
  * bounty screen on use, from either half. Faces the placer; the visual model lives entirely on
  * the LOWER half (it spans up to y=32), the upper half is an invisible occupancy block so nothing
  * can be placed inside the board. Breaking either half removes both; only the lower half drops.

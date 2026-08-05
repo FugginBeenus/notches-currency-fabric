@@ -76,7 +76,7 @@ public final class TradeCommands {
                                         })
                                 )
                         )
-                        // /trade offer — open the create-an-offline-offer screen
+                        // /trade offer: open the create-an-offline-offer screen
                         .then(CommandManager.literal("offer")
                                 .executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayer();
@@ -84,7 +84,7 @@ public final class TradeCommands {
                                     return 1;
                                 })
                         )
-                        // /trade offers — open the board of offers for you + your open offers
+                        // /trade offers: open the board of offers for you + your open offers
                         .then(CommandManager.literal("offers")
                                 .executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayer();

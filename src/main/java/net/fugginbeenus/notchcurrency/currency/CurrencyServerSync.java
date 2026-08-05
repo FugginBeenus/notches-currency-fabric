@@ -17,11 +17,11 @@ import java.nio.file.Path;
 /**
  * Pushes the server's custom-currency skin to every joining player, so the admin sets the coin art
  * + name once (config/notchcurrency/currency/ + the config's currency.itemName) and the whole
- * server sees it — no hand-distributed resource pack. The client writes the payload into a local
+ * server sees it: no hand-distributed resource pack. The client writes the payload into a local
  * "NotchCurrencyServer" pack and auto-enables it. An all-empty payload tells the client to clear
  * any pack left over from a previously customized server.
  *
- * The host of a singleplayer/LAN world is skipped — their own local pack generator already ran.
+ * The host of a singleplayer/LAN world is skipped: their own local pack generator already ran.
  */
 public final class CurrencyServerSync {
 
@@ -54,7 +54,7 @@ public final class CurrencyServerSync {
         try {
             if (!Files.isRegularFile(file)) return null;
             if (Files.size(file) > MAX_TEXTURE_BYTES) {
-                LOGGER.warn("{} is over {} KB and won't be synced to players — shrink the PNG",
+                LOGGER.warn("{} is over {} KB and won't be synced to players. Shrink the PNG",
                         file.getFileName(), MAX_TEXTURE_BYTES / 1024);
                 return null;
             }

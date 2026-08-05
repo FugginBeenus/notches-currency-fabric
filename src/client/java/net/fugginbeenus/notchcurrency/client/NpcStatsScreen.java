@@ -20,7 +20,7 @@ public class NpcStatsScreen extends Screen {
     private static final int W = 300, H = 266;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
-    // Fighting lives on the Moves tab with the rest of the combat settings — this screen is what the
+    // Fighting lives on the Moves tab with the rest of the combat settings. This screen is what the
     // NPC IS, not who it picks a fight with.
     private static final String[] TOGGLE_NAMES = {
             "Protected", "Silent", "Glowing", "Nameplate",
@@ -188,14 +188,14 @@ public class NpcStatsScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

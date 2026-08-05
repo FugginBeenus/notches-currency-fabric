@@ -21,7 +21,7 @@ import net.minecraft.text.Text;
 
 /**
  * The coin-flip betting screen. A scaled-up Notch Coin with a soft gold glow and twinkling sparkles
- * gives it some casino flair. Pick Heads or Tails, set a wager, and hit FLIP — the server closes this
+ * gives it some casino flair. Pick Heads or Tails, set a wager, and hit FLIP: the server closes this
  * screen so the coin-flip block does the spin-and-reveal. Bets are validated client-side before sending.
  */
 public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
@@ -212,7 +212,7 @@ public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

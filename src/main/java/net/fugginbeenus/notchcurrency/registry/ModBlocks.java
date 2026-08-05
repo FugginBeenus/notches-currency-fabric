@@ -50,7 +50,7 @@ public final class ModBlocks {
             new BlockItem(GOLDEN_CACHE, new Item.Settings())
     );
 
-    // Ledger Board — shows the balance leaderboard on use. Placeholder model/texture for now.
+    // Ledger Board: shows the balance leaderboard on use. Placeholder model/texture for now.
     public static final Block LEDGER_BOARD = Registry.register(
             Registries.BLOCK,
             NotchCurrency.id("ledger_board"),
@@ -66,7 +66,7 @@ public final class ModBlocks {
             new BlockItem(LEDGER_BOARD, new Item.Settings())
     );
 
-    // Bounty Board — shows the auto-generated bounties on use. Placeholder model/texture for now.
+    // Bounty Board: shows the auto-generated bounties on use. Placeholder model/texture for now.
     public static final Block BOUNTY_BOARD = Registry.register(
             Registries.BLOCK,
             NotchCurrency.id("bounty_board"),
@@ -82,7 +82,7 @@ public final class ModBlocks {
             new BlockItem(BOUNTY_BOARD, new Item.Settings())
     );
 
-    // Slot Machine — right-click to play the slots. Non-full model, so nonOpaque keeps
+    // Slot Machine: right-click to play the slots. Non-full model, so nonOpaque keeps
     // neighbouring blocks from culling their touching faces (the see-through-world bug).
     public static final Block SLOT_MACHINE = Registry.register(
             Registries.BLOCK,
@@ -99,7 +99,7 @@ public final class ModBlocks {
             new BlockItem(SLOT_MACHINE, new Item.Settings())
     );
 
-    // Coin Flip block — right-click to bet, it "flips" then reveals. Placeholder model/texture.
+    // Coin Flip block: right-click to bet, it "flips" then reveals. Placeholder model/texture.
     public static final Block COIN_FLIP = Registry.register(
             Registries.BLOCK,
             NotchCurrency.id("coin_flip"),

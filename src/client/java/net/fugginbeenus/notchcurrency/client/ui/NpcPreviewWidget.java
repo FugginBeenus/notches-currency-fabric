@@ -22,7 +22,7 @@ public final class NpcPreviewWidget {
         draw(ctx, x, y, w, h, npcId, false);
     }
 
-    /** Draw a waist-up bust (humanoid model only — other models fall back to the full-body fit). */
+    /** Draw a waist-up bust (humanoid model only: other models fall back to the full-body fit). */
     public void drawBust(DrawContext ctx, int x, int y, int w, int h, UUID npcId) {
         draw(ctx, x, y, w, h, npcId, true);
     }

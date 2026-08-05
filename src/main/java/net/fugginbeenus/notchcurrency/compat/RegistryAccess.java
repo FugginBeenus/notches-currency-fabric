@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * registries hand them here once.
  *
  * <p>Server and client are stored separately, and the server wins. In singleplayer both sides live
- * in one JVM with two distinct registry-manager instances — with a single field, the client join
+ * in one JVM with two distinct registry-manager instances, with a single field, the client join
  * overwrote the server's, server-side code then built stacks out of client registry entries, and
  * the first inventory sync crashed encoding them. Server-side (de)serialization must always use the
  * server's registries; the client value only serves a client on a dedicated server.
@@ -27,7 +27,7 @@ public final class RegistryAccess {
 
     /**
      * Lets {@link #get()} tell which side is asking. Registry lookups are identity-based, so code on
-     * the render thread must resolve against the client's registries — in singleplayer, an
+     * the render thread must resolve against the client's registries, in singleplayer, an
      * enchantment read off a synced stack is a client-registry object that the server's registry
      * simply doesn't contain (extracting an enchant silently no-opped on exactly that). Registered
      * once from client init; never set on a dedicated server.
@@ -48,7 +48,7 @@ public final class RegistryAccess {
 
     /**
      * The registry manager to resolve against: the client world's on the render thread, otherwise
-     * the server's. Each side must use its own — the two are distinct instances in singleplayer and
+     * the server's. Each side must use its own: the two are distinct instances in singleplayer and
      * identity-based lookups against the wrong one come back empty.
      */
     public static DynamicRegistryManager get() {

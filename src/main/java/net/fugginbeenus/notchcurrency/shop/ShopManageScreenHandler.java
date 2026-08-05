@@ -24,7 +24,7 @@ import java.util.UUID;
 /**
  * Backing handler for the owner-side shop hub: earnings, name/greeting, open toggle, rent status,
  * and the paginated listing list. Every action applies immediately server-side via
- * SHOP_MANAGE_ACTION — nothing is held until close (the old screen's save-on-close lost edits on
+ * SHOP_MANAGE_ACTION. Nothing is held until close (the old screen's save-on-close lost edits on
  * disconnect). Listing rows ride the same data-carrier slots as the browse screen.
  */
 public class ShopManageScreenHandler extends ScreenHandler {
@@ -143,7 +143,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
                 shop.setOpen(!shop.isOpen());
                 state.markDirtyAndSave();
                 sp.sendMessage(Text.literal(shop.isOpen() ? "Shop is now open for business."
-                        : "Shop closed — nobody can buy until you reopen it.")
+                        : "Shop closed. Nobody can buy until you reopen it.")
                         .formatted(shop.isOpen() ? Formatting.GREEN : Formatting.YELLOW), false);
             }
             case ACTION_EDIT_LISTING -> {
@@ -164,7 +164,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
         sendContentUpdates();
     }
 
-    /** Strip formatting codes and trim — greetings/names are client strings. */
+    /** Strip formatting codes and trim: greetings/names are client strings. */
     private static String clean(String s, int max) {
         String out = (s == null ? "" : s).replace("§", "").trim();
         return out.length() > max ? out.substring(0, max) : out;

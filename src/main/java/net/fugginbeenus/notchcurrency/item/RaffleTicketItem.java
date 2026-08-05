@@ -19,7 +19,7 @@ import java.util.UUID;
  * A physical raffle ticket. It's a personal receipt: the buyer wins by identity, so the
  * ticket is proof/flavour rather than a bearer instrument. Its display is driven entirely
  * by NBT that the server restamps ({@code Status}) when the owner interacts with the raffle,
- * runs {@code /raffle}, or logs in — because items already sitting in inventories can't be
+ * runs {@code /raffle}, or logs in, because items already sitting in inventories can't be
  * mutated retroactively at draw time, the status is resolved lazily on next contact.
  *
  * NBT: {@code Round} (long), {@code Entries} (int), {@code Owner} (UUID), {@code OwnerName}
@@ -130,7 +130,7 @@ public class RaffleTicketItem extends Item {
                 tooltip.add(Text.literal("This raffle is over.").formatted(Formatting.DARK_GRAY));
                 tooltip.add(Text.literal("Turn in for a discount on new entries.").formatted(Formatting.GREEN));
             }
-            default -> tooltip.add(Text.literal("Active — winner not yet drawn.").formatted(Formatting.DARK_GREEN));
+            default -> tooltip.add(Text.literal("Active, winner not yet drawn.").formatted(Formatting.DARK_GREEN));
         }
 
         if (StackData.has(stack, K_OWNER_NAME)) {

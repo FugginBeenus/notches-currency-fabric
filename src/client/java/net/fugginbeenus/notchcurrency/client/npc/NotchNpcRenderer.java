@@ -21,7 +21,7 @@ import java.util.Map;
  * Dispatching renderer for the Notch NPC. Three model paths:
  *  - "humanoid" (default): a vanilla biped with preset/player/URL skins.
  *  - "apply" (only when the {@code apply} mod is installed): the animated GeckoLib model.
- *  - "entity:&lt;id&gt;": a disguise — renders as any vanilla/modded living entity via a cached proxy.
+ *  - "entity:&lt;id&gt;": a disguise, rendered as any vanilla/modded living entity via a cached proxy.
  * Anything that can't render (unknown/non-living type, renderer failure) falls back to the biped.
  */
 public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
@@ -129,7 +129,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     /**
      * Put the stand-in in step with the NPC so a disguise walks and swings like the thing it's wearing.
      *
-     * <p>The stand-in never ticks — it only exists to be drawn — so none of this happens on its own.
+     * <p>The stand-in never ticks (it only exists to be drawn), so none of this happens on its own.
      * Renderers read the walk cycle and the swing straight off the entity, which is why they have to
      * be set rather than left at zero. One stand-in serves every NPC of a given disguise, so this runs
      * fresh for each of them.

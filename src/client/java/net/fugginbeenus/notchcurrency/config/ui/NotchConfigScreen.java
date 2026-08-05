@@ -29,7 +29,7 @@ import java.util.Set;
 /**
  * The settings screen (ModMenu → Notch Currency), rebuilt Jade-style in the mod's own code-drawn
  * theme: a live search bar over ONE scrolling list of every setting, grouped under collapsible
- * section headers — no more category tabs hiding behind scroll arrows. Rows edit in place
+ * section headers: no more category tabs hiding behind scroll arrows. Rows edit in place
  * (toggle pills, drag sliders, cycle buttons, click-to-edit numbers/text), show their tooltip +
  * default on hover, and get a reset arrow when off-default. Edits stay local until Save & Apply
  * persists the file and re-applies every manager; Esc/Cancel discards.
@@ -253,7 +253,7 @@ public final class NotchConfigScreen extends Screen {
         }
     }
 
-    /** A small left-pointing triangle (the per-row "revert" glyph — drawn, not a font char). */
+    /** A small left-pointing triangle (the per-row "revert" glyph: drawn, not a font char). */
     private static void leftTriangle(DrawContext ctx, int cx, int cy, int color) {
         for (int c = 0; c < 4; c++) {
             int half = 3 - c;
@@ -490,14 +490,14 @@ public final class NotchConfigScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

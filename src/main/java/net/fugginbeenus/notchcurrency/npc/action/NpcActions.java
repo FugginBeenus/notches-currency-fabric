@@ -30,7 +30,7 @@ public class NpcActions {
     private final Map<NpcTrigger, List<DialogueAction>> byTrigger = new EnumMap<>(NpcTrigger.class);
     private int proximityRadius = DEFAULT_RADIUS;
 
-    /** The actions for a trigger; never null, and not modifiable — go through {@link #set}. */
+    /** The actions for a trigger; never null, and not modifiable: go through {@link #set}. */
     public List<DialogueAction> get(NpcTrigger trigger) {
         List<DialogueAction> list = byTrigger.get(trigger);
         return list == null ? List.of() : Collections.unmodifiableList(list);

@@ -29,7 +29,7 @@ import java.util.UUID;
 /**
  * The patrol route tool: handed out by the NPC editor's Behavior tab, bound to one NPC. Walk the
  * route and right-click the ground to drop waypoints; sneak + right-click undoes the last one;
- * right-click the AIR to confirm — the tool vanishes and the NPC starts patrolling. While held, the
+ * right-click the AIR to confirm: the tool vanishes and the NPC starts patrolling. While held, the
  * route HUD overlay shows the live count and each waypoint is marked with a particle beacon.
  */
 public class RoutePlannerItem extends Item {
@@ -64,7 +64,7 @@ public class RoutePlannerItem extends Item {
         return ActionResult.CONSUME;
     }
 
-    /** Right-click the air: confirm the route — the tool disappears and the patrol starts. */
+    /** Right-click the air to confirm the route. The tool disappears and the patrol starts. */
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
@@ -109,7 +109,7 @@ public class RoutePlannerItem extends Item {
     private static NotchNpcEntity boundNpc(ItemStack stack, ServerWorld world, ServerPlayerEntity sp) {
         UUID npcId = StackData.getUuid(stack, NPC_KEY);
         if (npcId == null) {
-            sp.sendMessage(Text.literal("This route tool isn't bound to an NPC — get one from the NPC editor.")
+            sp.sendMessage(Text.literal("This route tool isn't bound to an NPC. Get one from the NPC editor.")
                     .formatted(Formatting.RED), false);
             return null;
         }

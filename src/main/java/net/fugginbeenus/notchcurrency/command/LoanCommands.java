@@ -9,7 +9,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 /**
- * {@code /loan} — check your loan ({@code /loan}), borrow ({@code /loan borrow <amount>}), or
+ * {@code /loan}: check your loan ({@code /loan}), borrow ({@code /loan borrow <amount>}), or
  * repay ({@code /loan repay [amount]}, no amount = pay off as much as you can).
  */
 public final class LoanCommands {

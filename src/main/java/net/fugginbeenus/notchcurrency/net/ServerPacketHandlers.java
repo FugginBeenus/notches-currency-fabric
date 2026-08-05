@@ -76,7 +76,7 @@ public final class ServerPacketHandlers {
                             sp.sendMessage(Text.literal("Only the seller can cancel this listing.").formatted(Formatting.RED), false);
                             return;
                         }
-                        // Refund any standing bid before removing — bids escrow coins.
+                        // Refund any standing bid before removing: bids escrow coins.
                         long refunded = state.refundHighestBid(world, l);
                         state.removeListing(listingId);
                         if (refunded > 0) {
@@ -103,7 +103,7 @@ public final class ServerPacketHandlers {
 
                         sp.sendMessage(Text.literal("Cancelled listing for ").formatted(Formatting.GREEN)
                                 .append(l.stack.getName().copy().formatted(Formatting.YELLOW))
-                                .append(Text.literal(" — item returned.").formatted(Formatting.GREEN)), false);
+                                .append(Text.literal(". Item returned.").formatted(Formatting.GREEN)), false);
 
                         // Refresh the open Auction House so the popup updates live.
                         if (sp.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler ah) {
@@ -157,7 +157,7 @@ public final class ServerPacketHandlers {
                             // Turning it off cancels the raffle: wipe entries/pot/prize, void tickets,
                             // and hand the escrowed prize back to the admin.
                             net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.resetAndReturn(player);
-                            player.sendMessage(Text.literal("Raffle cancelled — entries & pot cleared, prize returned, tickets voided.")
+                            player.sendMessage(Text.literal("Raffle cancelled. Entries & pot cleared, prize returned, tickets voided.")
                                     .formatted(Formatting.YELLOW), false);
                             return;
                         }

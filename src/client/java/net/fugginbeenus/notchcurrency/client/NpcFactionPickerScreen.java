@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Which faction an NPC belongs to, chosen from the ones that already exist — never typed, so a
+ * Which faction an NPC belongs to, chosen from the ones that already exist, never typed, so a
  * mistyped name can't quietly create a faction nobody can find.
  *
  * <p>Also the way back for a founder who lost their recruiter: place a new one, pick the faction
@@ -144,14 +144,14 @@ public class NpcFactionPickerScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

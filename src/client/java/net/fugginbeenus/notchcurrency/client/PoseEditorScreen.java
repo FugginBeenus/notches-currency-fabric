@@ -15,7 +15,7 @@ import java.util.UUID;
 
 /**
  * The custom pose editor: pick a body part, drag three sliders (pitch/yaw/roll), watch the live
- * preview move. One part at a time instead of a wall of number fields — same power as EasyNPC's
+ * preview move. One part at a time instead of a wall of number fields, same power as EasyNPC's
  * Basic/Custom pose screens, far less squinting. Every change applies to the NPC instantly.
  */
 public class PoseEditorScreen extends Screen {
@@ -233,14 +233,14 @@ public class PoseEditorScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

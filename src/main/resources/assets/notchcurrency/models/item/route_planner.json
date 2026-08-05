@@ -1,5 +1,5 @@
 {
-  "comment": "PLACEHOLDER — reuses the vanilla stick texture until real wand art.",
+  "comment": "PLACEHOLDER: reuses the vanilla stick texture until real wand art.",
   "parent": "minecraft:item/generated",
   "textures": { "layer0": "minecraft:item/stick" }
 }

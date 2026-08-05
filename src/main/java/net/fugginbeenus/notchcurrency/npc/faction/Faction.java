@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * One faction. Lives in {@link FactionState}, which is the only thing that owns it — a Recruiter NPC
+ * One faction. Lives in {@link FactionState}, which is the only thing that owns it: a Recruiter NPC
  * merely stores this faction's {@link #id()} and points at it. That's deliberate: losing the NPC, to
  * a creeper or a careless pick-up, must never take the faction and its members with it.
  */

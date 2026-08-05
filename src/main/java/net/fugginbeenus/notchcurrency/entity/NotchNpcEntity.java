@@ -40,7 +40,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.UUID;
 
 /**
- * The unified Notch NPC entity — a GeckoLib-animated humanoid that carries its own identity (name,
+ * The unified Notch NPC entity: a GeckoLib-animated humanoid that carries its own identity (name,
  * owner, role) and, in later phases, appearance/behavior/dialogue. Phase 1 keeps it stationary with a
  * look-at goal and a single idle animation; the role stored on the entity decides what interacting
  * with it does (shop, bank, auction, …). Only the owner (or an op) can edit it.
@@ -55,7 +55,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public enum Behavior { STATIONARY, WANDER, FOLLOW_OWNER, PATROL, GUARD }
 
     /** How dialogue plays. WINDOW opens the conversation screen; CHAT says a quick line in chat
-     *  (a random page from the tree) and then opens the role directly — the lightweight style. */
+     *  (a random page from the tree) and then opens the role directly: the lightweight style. */
     public enum DialogueMode { WINDOW, CHAT }
 
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.notch_npc.idle");
@@ -85,7 +85,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> SCALE_Z =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    /** Nudges the floating name up or down — models vary enough that one height never fits all. */
+    /** Nudges the floating name up or down: models vary enough that one height never fits all. */
     private static final TrackedData<Float> NAME_OFFSET =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
     /** Free-floating sign above the NPC, newline-separated. Synced because the client draws it, and
@@ -114,7 +114,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private static final TrackedData<Integer> POSE_ANIM =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
-    /** Bumped on every landed melee hit — the client model plays its attack swing off this, since
+    /** Bumped on every landed melee hit: the client model plays its attack swing off this, since
      *  vanilla's hand-swing animation packet proved unreliable for this entity. */
     private static final TrackedData<Integer> ATTACK_PULSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
@@ -167,7 +167,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean protectOwner = false;     // fights whoever its owner is fighting
     private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
     private boolean fightRivalFactions = false; // takes on anyone flying a different faction's colours
-    /** Which faction it belongs to — an id pointing at the record in FactionState, nothing more.
+    /** Which faction it belongs to: an id pointing at the record in FactionState, nothing more.
      *  The faction itself is never stored here, so losing this NPC never costs anyone their faction. */
     private String factionId = "";
     /** Which round of action rules this NPC has already been brought in line with. */
@@ -252,7 +252,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public boolean tryAttack(net.minecraft.entity.Entity target) {
         boolean hit = super.tryAttack(target);
         if (hit && !this.getWorld().isClient) {
-            // Pulse the swing to clients (wraps safely — the client only watches for CHANGE).
+            // Pulse the swing to clients (wraps safely: the client only watches for CHANGE).
             this.dataTracker.set(ATTACK_PULSE, this.dataTracker.get(ATTACK_PULSE) + 1);
         }
         return hit;
@@ -483,7 +483,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     /**
-     * Run whatever is wired to a trigger. Server-side only, and cheap to call when nothing is set up —
+     * Run whatever is wired to a trigger. Server-side only, and cheap to call when nothing is set up:
      * every hook site calls this unconditionally, so the empty case has to cost next to nothing.
      *
      * @param player whoever set it off, or null when nobody did (an NPC drowning, say)
@@ -524,7 +524,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     /** (Re)apply the door pathfinding flags + open-door goal from {@link #opensDoors}. Called whenever
      *  the toggle changes AND whenever behavior goals are rebuilt, so a behavior swap never drops it.
-     *  NOTE: doors only open while the NPC is actually pathing through one — a Stationary NPC won't. */
+     *  NOTE: doors only open while the NPC is actually pathing through one. A Stationary NPC won't. */
     private void applyDoorCapability() {
         if (this.getNavigation() instanceof net.minecraft.entity.ai.pathing.MobNavigation nav) {
             nav.setCanPathThroughDoors(opensDoors);
@@ -584,7 +584,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     /**
      * Whether something counts as this NPC's own side. An NPC with no faction has no allies, so this
-     * is false for everyone until a faction is actually set — that's what keeps factions inert for
+     * is false for everyone until a faction is actually set. That's what keeps factions inert for
      * anyone who never touches them.
      */
     public boolean isAlly(@Nullable net.minecraft.entity.Entity other) {
@@ -597,7 +597,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return false;
     }
 
-    /** True when the other side belongs to a DIFFERENT faction — not merely "isn't an ally". */
+    /** True when the other side belongs to a DIFFERENT faction, not merely "isn't an ally". */
     public boolean isRivalFaction(@Nullable net.minecraft.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         String theirs = null;
@@ -753,8 +753,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     /**
-     * While {@link #talkingTo} is set, this goal grabs the MOVE and LOOK controls — that alone
-     * suspends the wander/look goals — then keeps the NPC stopped and turned toward the player.
+     * While {@link #talkingTo} is set, this goal grabs the MOVE and LOOK controls (that alone
+     * suspends the wander/look goals), then keeps the NPC stopped and turned toward the player.
      * Releases once the timer expires or the player walks off (or logs out).
      */
     private class TalkGoal extends net.minecraft.entity.ai.goal.Goal {
@@ -824,7 +824,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
         switch (behavior) {
             case WANDER -> {
-                // Short-range strolls every ~2s — livelier than the vanilla far-wander cadence and a
+                // Short-range strolls every ~2s: livelier than the vanilla far-wander cadence and a
                 // better fit for the home leash. canDespawn=false skips the despawn-counter gate.
                 net.minecraft.entity.ai.goal.Goal wander =
                         new net.minecraft.entity.ai.goal.WanderAroundGoal(this, 0.8, 40, false);
@@ -856,7 +856,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             case STATIONARY -> this.clearPositionTarget();
         }
 
-        // One melee goal, however many reasons there are to fight — a second would fight itself for
+        // One melee goal, however many reasons there are to fight: a second would fight itself for
         // the movement control.
         boolean fights = behavior == Behavior.GUARD || hostileToPlayers || fightsBack
                 || attackMonsters || protectOwner || fightRivalFactions;
@@ -867,7 +867,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             behaviorGoals.add(melee);
         }
         if (behavior == Behavior.GUARD || attackMonsters) {
-            // Hostile mobs, but never creepers (iron-golem rule — don't walk a blast into the shop).
+            // Hostile mobs, but never creepers (iron-golem rule: don't walk a blast into the shop).
             net.minecraft.entity.ai.goal.Goal targets = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
                     this, net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
                     e -> !(e instanceof net.minecraft.entity.mob.CreeperEntity));
@@ -880,7 +880,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             behaviorTargetGoals.add(protect);
         }
         if (hostileToPlayers) {
-            // Hunt ANY player in range — including the owner (hostile means hostile). Vanilla
+            // Hunt ANY player in range, including the owner (hostile means hostile). Vanilla
             // targeting already skips creative/spectator players. Its own faction is still spared:
             // a guard that turns on its own people is nobody's idea of a guard.
             net.minecraft.entity.ai.goal.Goal huntPlayers = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
@@ -890,7 +890,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             behaviorTargetGoals.add(huntPlayers);
         }
         if (fightRivalFactions && !factionId.isEmpty()) {
-            // Only people actually flying another faction's colours — bystanders with no faction are
+            // Only people actually flying another faction's colours: bystanders with no faction are
             // left alone, so a faction war doesn't sweep up everyone who never joined.
             net.minecraft.entity.ai.goal.Goal rivals = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
                     this, net.minecraft.entity.LivingEntity.class, 10, true, false,
@@ -949,7 +949,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     /**
-     * Fire the proximity trigger as players walk up. Server-side, called every tick — so the very first
+     * Fire the proximity trigger as players walk up. Server-side, called every tick, so the very first
      * line is the check that costs nothing for the NPCs (nearly all of them) that don't use it.
      *
      * <p>Fires on the way IN only, and a player has to leave properly before it can happen again: the
@@ -1001,7 +1001,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     @Override
     public void checkDespawn() {
-        // Never despawn — these are placed, persistent NPCs. Also keep the despawn counter at zero:
+        // Never despawn. These are placed, persistent NPCs. Also keep the despawn counter at zero:
         // vanilla increments it every AI tick and only resets it here, and WanderAroundGoal refuses
         // to start once it passes 100 (which froze wandering ~5s after placement).
         this.despawnCounter = 0;
@@ -1057,7 +1057,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             if (sp.isSneaking() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
             } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
-                // No dialogue — go straight to the role.
+                // No dialogue: go straight to the role.
                 NotchNpcManager.dispatchRole(sp, this);
             }
         }
@@ -1070,7 +1070,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public boolean damage(DamageSource source, float amount) {
         if (this.getWorld().isClient()) return false;
         // Fires on being HIT, not on damage getting through. Protection is on by default, so an
-        // "if it takes damage" reading would never run for an ordinary shopkeeper — and a shopkeeper
+        // "if it takes damage" reading would never run for an ordinary shopkeeper, and a shopkeeper
         // snapping at someone who punched it is the whole point.
         if (!this.isDead() && amount > 0) {
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_HURT,
@@ -1081,7 +1081,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
                 return super.damage(source, amount);
             }
-            // The hit is cancelled, but Fights Back still needs to know who swung — record the
+            // The hit is cancelled, but Fights Back still needs to know who swung: record the
             // attacker so the RevengeGoal can retaliate even while the NPC itself is unhurtable.
             if (fightsBack && source.getAttacker() instanceof net.minecraft.entity.LivingEntity attacker) {
                 this.setAttacker(attacker);
@@ -1094,7 +1094,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     @Override
     public void onDeath(DamageSource source) {
         // Before super, while the NPC is still in the world and its actions can still reference it.
-        // The killer may be nobody at all — lava and fall damage count.
+        // The killer may be nobody at all: lava and fall damage count.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_DEATH,
                 source.getAttacker() instanceof ServerPlayerEntity p ? p : null);
         super.onDeath(source);
@@ -1104,7 +1104,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public boolean onKilledOther(net.minecraft.server.world.ServerWorld world,
                                  net.minecraft.entity.LivingEntity other) {
         boolean result = super.onKilledOther(world, other);
-        // A player only comes along when the NPC killed a player — otherwise there's no one to talk to.
+        // A player only comes along when the NPC killed a player, otherwise there's no one to talk to.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_KILL,
                 other instanceof ServerPlayerEntity p ? p : null);
         return result;
@@ -1160,7 +1160,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putString("DialogueMode", dialogueMode.name());
         nbt.putString("Farewell", farewellText);
         if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
-        // Stats — the vanilla flags are re-recorded here so they survive the pick-up item too.
+        // Stats: the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
         nbt.putBoolean("StatGlowing", this.isGlowing());
@@ -1183,10 +1183,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putString("Faction", factionId);
         nbt.putInt("ActionSweep", actionSweepVersion);
         nbt.putBoolean("FightRivalFactions", fightRivalFactions);
-        // Attribute bases — recorded so they survive the pick-up item (entity NBT has them anyway).
+        // Attribute bases: recorded so they survive the pick-up item (entity NBT has them anyway).
         nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)));
         nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
-        // Equipment — re-recorded so it survives the pick-up item too.
+        // Equipment: re-recorded so it survives the pick-up item too.
         NbtCompound equip = new NbtCompound();
         for (net.minecraft.entity.EquipmentSlot slot : net.minecraft.entity.EquipmentSlot.values()) {
             net.minecraft.item.ItemStack st = this.getEquippedStack(slot);
@@ -1214,7 +1214,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("SkinValue")) setSkinValue(nbt.getString("SkinValue"));
         if (nbt.contains("Slim")) setSlim(nbt.getBoolean("Slim"));
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
-        // Older NPCs only stored one scale — fall back to it so they stay the shape they were.
+        // Older NPCs only stored one scale: fall back to it so they stay the shape they were.
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : getScale());
         setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : getScale());
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
@@ -1287,7 +1287,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("StatMaxHealth")) {
             int hp = nbt.getInt("StatMaxHealth");
             int speedPct = nbt.contains("StatSpeedPct") ? nbt.getInt("StatSpeedPct") : 30;
-            // Skip when they already match (world reload path — vanilla restored the attributes
+            // Skip when they already match (world reload path: vanilla restored the attributes
             // before us, and re-applying would heal a damaged NPC to full).
             if (hp != (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH))
                     || speedPct != (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100)) {

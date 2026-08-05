@@ -30,7 +30,7 @@ import java.util.UUID;
  */
 public class NotchNpcEditorScreen extends Screen {
 
-    // Taller than it needs to be for most tabs — Moves carries three rows of toggles now, and every
+    // Taller than it needs to be for most tabs: Moves carries three rows of toggles now, and every
     // tab draws from the top down, so the extra height is just breathing room everywhere else.
     private static final int W = 300, H = 268;
     // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
@@ -249,7 +249,7 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 64, 140, 14, "Save Name",
                 over(mx, my, px + 150, py + 64, 140, 14));
 
-        // Where the floating name sits — models vary enough that one height never fits them all.
+        // Where the floating name sits: models vary enough that one height never fits them all.
         drawNameOffsetRow(ctx, mx, my);
         drawSignButton(ctx, mx, my);
 
@@ -288,13 +288,13 @@ public class NotchNpcEditorScreen extends Screen {
 
     }
 
-    // The nameplate nudge sits right under the name it moves. Size isn't here — it needs to be watched
+    // The nameplate nudge sits right under the name it moves. Size isn't here. It needs to be watched
     // in the world, so it lives on the Move, Rotate & Size panel.
     private static final int NAME_Y_ROW = 82;
     private static final int STEP_W = 18, STEP_H = 14;
     private static final int NAME_Y_MINUS_X = 196, NAME_Y_PLUS_X = 272;
 
-    // The floating sign sits under the skin controls, in the right-hand column — the left side of
+    // The floating sign sits under the skin controls, in the right-hand column: the left side of
     // the tab is the preview panel, and a full-width button would cut across it.
     private int signRow() { return py + 196; }
     private int signWidth() { return W - RX - 10; }
@@ -693,7 +693,7 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 80, py + 128, 170, 16));
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 148, 200, 18, "Open Pose Editor",
                 over(mx, my, px + 50, py + 148, 200, 18));
-        // Position, rotation and size all live behind this — it's a floating panel, so you watch the
+        // Position, rotation and size all live behind this. It's a floating panel, so you watch the
         // NPC change out in the world instead of guessing from a tab with no preview.
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 170, 200, 18, "Move, Rotate & Size",
                 over(mx, my, px + 50, py + 170, 200, 18));
@@ -715,7 +715,7 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
         if (over(mx, my, px + 50, py + 148, 200, 18)) {
-            poseId = 7; // custom — the editor's edits show immediately
+            poseId = 7; // custom: the editor's edits show immediately
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
             MinecraftClient.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
@@ -795,7 +795,7 @@ public class NotchNpcEditorScreen extends Screen {
                         NpcRole picked = SELECTABLE[i];
                         if (picked == currentRole) return true;
                         NotchWidgets.tick();
-                        // Leaving SHOP wipes the shop — require confirmation.
+                        // Leaving SHOP wipes the shop: require confirmation.
                         if (currentRole == NpcRole.SHOP) {
                             pendingRole = picked;
                         } else {
@@ -893,7 +893,7 @@ public class NotchNpcEditorScreen extends Screen {
             currentSkinType = NotchNpcEntity.SKIN_PRESET;
             if (currentSkinValue == null || !currentSkinValue.matches("\\d+")) currentSkinValue = "1";
         } else {
-            // Entity disguise — the mob provides its own appearance.
+            // Entity disguise: the mob provides its own appearance.
             currentSkinType = "entity";
             currentSkinValue = "";
         }
@@ -980,7 +980,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     private static String roleLabel(NpcRole role) {
         return switch (role) {
-            case NONE -> "Basic"; // not "no role" — it's the plain NPC, and a perfectly good one
+            case NONE -> "Basic"; // not "no role". It's the plain NPC, and a perfectly good one
             case GREETER -> "Greeter";
             case SHOP -> "Shop";
             case ENCHANTER -> "Enchanter";
@@ -1005,14 +1005,14 @@ public class NotchNpcEditorScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

@@ -134,7 +134,7 @@ public final class NotchWidgets {
         ctx.fill(x, y + 1, x + w, y + 2, NotchTheme.HIGHLIGHT);
     }
 
-    /** Compact number for stack-count overlays: 999, 1k, 9.9k, 120k, 1.2m — keeps big coin prices
+    /** Compact number for stack-count overlays: 999, 1k, 9.9k, 120k, 1.2m. Keeps big coin prices
      *  from spilling across the icon. Show the exact value in the tooltip. */
     public static String compactCount(long n) {
         if (n < 1_000) return Long.toString(n);
@@ -301,7 +301,7 @@ public final class NotchWidgets {
     }
 
     /** The multiline-editor version of {@link #typingInField}: while the box is focused, forward
-     *  only navigation/editing keys (plain letters insert via charTyped — forwarding a bare 'a'
+     *  only navigation/editing keys (plain letters insert via charTyped: forwarding a bare 'a'
      *  trips select-all and the next char wipes the text). UP/DOWN/PGUP/PGDN included for line nav;
      *  ENTER included so newlines still work. */
     public static boolean typingInEditBox(int keyCode, int scanCode, int modifiers,
@@ -317,6 +317,6 @@ public final class NotchWidgets {
                 || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
                 || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
         if (editKey) box.keyPressed(keyCode, scanCode, modifiers);
-        return true; // swallow plain characters — charTyped inserts them
+        return true; // swallow plain characters: charTyped inserts them
     }
 }

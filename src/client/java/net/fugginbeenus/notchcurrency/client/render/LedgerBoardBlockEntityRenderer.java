@@ -32,8 +32,8 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     private static final float FRONT_Z = 0.71f;   // screen front plane in the oriented frame (1 = block front)
     private static final float SCALE = 0.0125f;   // text scale (smaller so full names fit)
     private static final int LINE_H = 13;         // line spacing (text px)
-    private static final int LEFT_X = -55;        // left margin — rank + name start here (text px)
-    private static final int RIGHT_X = 55;        // right margin — balance right-aligns here (text px)
+    private static final int LEFT_X = -55;        // left margin: rank + name start here (text px)
+    private static final int RIGHT_X = 55;        // right margin: balance right-aligns here (text px)
 
     private final TextRenderer text;
 

@@ -64,7 +64,7 @@ public class NotchCurrency implements ModInitializer {
                 new HoverEvent.ItemStackContent(new ItemStack(ModItems.NOTCH_COIN));
 
         // Force white so the coin glyph renders at full brightness (untinted) no matter what colour
-        // the surrounding price text is drawn in — otherwise dark price text darkens the coin.
+        // the surrounding price text is drawn in, otherwise dark price text darkens the coin.
         return t.styled(style -> style
                 .withColor(net.minecraft.text.TextColor.fromRgb(0xFFFFFF))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, content)));
@@ -77,11 +77,11 @@ public class NotchCurrency implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Packet channels must be declared before ANYTHING registers a receiver or sends —
+        // Packet channels must be declared before ANYTHING registers a receiver or sends.
         // TradeManager.init() below registers receivers, so this has to be the first thing that runs.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
 
-        // GeckoLib (animation framework for the Notch NPC entity) — must init before entities.
+        // GeckoLib (animation framework for the Notch NPC entity): must init before entities.
         // 4.8 (the 1.21 build) initializes itself; the manual call only exists on 4.4.
         //? if <1.21
         software.bernie.geckolib.GeckoLib.initialize();
@@ -113,7 +113,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.economy.loan.LoanManager.init();
         net.fugginbeenus.notchcurrency.economy.gambling.GamblingManager.init();
 
-        // (The legacy ShopkeeperEntity system was retired — the Notch NPC SHOP role replaced it.)
+        // (The legacy ShopkeeperEntity system was retired: the Notch NPC SHOP role replaced it.)
 
         // Economy NPC roles (admin shop / banker / auctioneer / mailbox on any NPC)
         NpcRoleInteractionHandler.register();
@@ -135,7 +135,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
 
-        // Waystone fee — soft integration; only hook the event when the Waystones mod is present.
+        // Waystone fee, soft integration; only hook the event when the Waystones mod is present.
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
             net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.register();
         }

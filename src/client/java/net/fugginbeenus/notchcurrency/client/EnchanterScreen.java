@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * The Enchanter, card edition: drop an item in the slot, then Repair it, buy exact enchant levels
  * (Upgrades), pull an enchant onto a book (Extract), or break the item back into its crafting
- * ingredients (Uncraft). Each offer is a card — icon, name, one-line description, coin price —
+ * ingredients (Uncraft). Each offer is a card (icon, name, one-line description, coin price)
  * in a scrollable list. Offers/prices derive from the same code the server validates with.
  */
 public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
@@ -41,7 +41,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
     private int scroll = 0;
     private boolean draggingScroll;
 
-    // Uncraft preview cache (recipe scans are not free — recompute only when the item changes).
+    // Uncraft preview cache (recipe scans are not free: recompute only when the item changes).
     private ItemStack planFor = ItemStack.EMPTY;
     private EnchanterManager.UncraftPlan plan;
 
@@ -199,9 +199,9 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
         EnchanterManager.UncraftPlan p = uncraftPlan();
         if (p == null) {
             if (stack.isDamaged()) {
-                NotchWidgets.centerText(ctx, this.textRenderer, "Repair it first —", x + W / 2, y + LIST_Y + 28,
+                NotchWidgets.centerText(ctx, this.textRenderer, "Repair it first.", x + W / 2, y + LIST_Y + 28,
                         NotchTheme.TEXT_MUTED, false);
-                NotchWidgets.centerText(ctx, this.textRenderer, "worn gear can't be salvaged.", x + W / 2,
+                NotchWidgets.centerText(ctx, this.textRenderer, "Worn gear can't be salvaged.", x + W / 2,
                         y + LIST_Y + 40, NotchTheme.TEXT_MUTED, false);
             } else {
                 NotchWidgets.centerText(ctx, this.textRenderer, "No crafting recipe to reverse.", x + W / 2,
@@ -363,7 +363,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

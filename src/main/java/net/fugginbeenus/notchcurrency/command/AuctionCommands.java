@@ -389,7 +389,7 @@ public final class AuctionCommands {
                                                 return 0;
                                             }
 
-                                            // Refund any standing bid before removing — bids escrow
+                                            // Refund any standing bid before removing: bids escrow
                                             // coins, so cancelling without this destroys them.
                                             long refunded = state.refundHighestBid((ServerWorld) world, l);
                                             state.removeListing(id);

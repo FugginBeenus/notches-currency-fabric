@@ -64,7 +64,7 @@ public final class NpcActionRunner {
             switch (a.type()) {
                 case NONE -> { }
                 case SAY_LINE -> {
-                    // Spoken to whoever set it off, the same way dialogue's chat mode does — private,
+                    // Spoken to whoever set it off, the same way dialogue's chat mode does: private,
                     // so a busy street of NPCs doesn't fill everyone's chat.
                     if (sp == null || a.value().isBlank()) break;
                     String name = NpcText.npcName(npc);
@@ -84,7 +84,7 @@ public final class NpcActionRunner {
                         NpcDialogueManager.watchForFarewell(sp, npc);
                         openedScreen = true;
                     } catch (IllegalArgumentException ignored) {
-                        // Unknown screen id — skip.
+                        // Unknown screen id: skip.
                     }
                 }
                 case PAY_COINS -> {
@@ -126,7 +126,7 @@ public final class NpcActionRunner {
         }
     }
 
-    /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs) — a stored
+    /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs): a stored
      *  command must never outlive its author's authority. */
     public static boolean ownerMayRunCommands(NotchNpcEntity npc, MinecraftServer server) {
         if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;

@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 /**
  * One setting row in the Jade-style config screen. Entries hold a WORKING value seeded from the
- * config, so edits are local until the screen's Save commits every entry back — Cancel/Esc
+ * config, so edits are local until the screen's Save commits every entry back: Cancel/Esc
  * discards everything, and a per-row reset restores the shipped default.
  */
 public abstract class ConfigEntry {

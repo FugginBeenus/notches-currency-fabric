@@ -290,8 +290,8 @@ public final class PlayerShopManager {
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
         if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
 
-        // A listing sells the whole stack the owner put up — 32 sculk sensors for 15 coins sells all
-        // 32 for 15 — so `quantity` counts those bundles. Prices are per bundle; stock is in items.
+        // A listing sells the whole stack the owner put up: 32 sculk sensors for 15 coins sells all
+        // 32 for 15, so `quantity` counts those bundles. Prices are per bundle; stock is in items.
         int totalItems = listing.getBundleSize() * quantity;
 
         // Quick check (actual atomic check happens later)

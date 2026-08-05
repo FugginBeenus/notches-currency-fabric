@@ -153,7 +153,7 @@ public class NpcRecruiterScreen extends Screen {
             NotchWidgets.centerText(ctx, this.textRenderer, "Not taking new members.",
                     px + W / 2, y + 4, NotchTheme.TEXT_MUTED, false);
         } else {
-            String label = fee > 0 ? "Join — " + fee + " " + NotchWidgets.coinName() : "Join";
+            String label = fee > 0 ? "Join for " + fee + " " + NotchWidgets.coinName() : "Join";
             NotchWidgets.primaryButton(ctx, this.textRenderer, px + PAD, y, BTN_W, 18, label,
                     over(mx, my, px + PAD, y, BTN_W, 18));
         }
@@ -164,7 +164,7 @@ public class NpcRecruiterScreen extends Screen {
         }
     }
 
-    /** Founding and Settings share a form — the only difference is what the text field means. */
+    /** Founding and Settings share a form: the only difference is what the text field means. */
     private void renderEditor(DrawContext ctx, int mx, int my) {
         boolean founding = mode == Mode.FOUND;
         ctx.drawText(this.textRenderer, founding ? "Name:" : "Motto:", px + PAD, rowLabel(),
@@ -309,14 +309,14 @@ public class NpcRecruiterScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

@@ -17,10 +17,10 @@ public class DialogueAction {
         SAY_LINE,
         /** Open the NPC's assigned role feature (shop, bank, auction, ...). Ends the dialogue. */
         OPEN_ROLE,
-        /** Open a SPECIFIC economy screen regardless of the NPC's role — {@code value} is an
+        /** Open a SPECIFIC economy screen regardless of the NPC's role: {@code value} is an
          *  {@code NpcRole} name (BANKER, AUCTIONEER, MAILBOX, RAFFLE, BOUNTY, DEALER). Ends the dialogue. */
         OPEN_SCREEN,
-        /** Give the player {@code amount} coins (a FAUCET — use sparingly). */
+        /** Give the player {@code amount} coins (a FAUCET: use sparingly). */
         PAY_COINS,
         /** Charge the player {@code amount} coins (a SINK). Fails the choice if they can't afford it. */
         CHARGE_COINS,
@@ -33,7 +33,7 @@ public class DialogueAction {
     }
 
     /**
-     * Actions only an operator may author. Two of these mint value out of nothing — an ordinary
+     * Actions only an operator may author. Two of these mint value out of nothing: an ordinary
      * player who could set up an NPC that pays coins or hands out items would have an infinite
      * money printer, which is exactly what an economy mod must not allow. The command ones are
      * dangerous for the usual reason.

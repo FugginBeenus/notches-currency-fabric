@@ -92,7 +92,7 @@ public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreen
         // The exchange arrow.
         NotchWidgets.arrowRight(ctx, x + 105, y + 68, NotchTheme.TEXT_MUTED);
 
-        // YOU GET: the requested 3×3 grid (samples — returned on close) + coin price.
+        // YOU GET: the requested 3×3 grid (samples, returned on close) + coin price.
         NotchWidgets.inset(ctx, x + 124, y + 22, 94, 104, NotchTheme.PANEL_MID);
         NotchWidgets.centerText(ctx, this.textRenderer, "YOU GET", x + 171, y + 24, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < TradeOfferCreateScreenHandler.WANT_COUNT; i++) {
@@ -157,7 +157,7 @@ public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreen
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

@@ -22,7 +22,7 @@ public final class NpcText {
     /**
      * Fill in the placeholders and turn {@code &} codes into real formatting. The player is optional:
      * a trigger can fire with nobody attached (an NPC burning to death, say), and a line written for a
-     * player shouldn't print half-substituted noise in that case — the player placeholders just resolve
+     * player shouldn't print half-substituted noise in that case: the player placeholders just resolve
      * to something neutral.
      */
     public static String substitute(String text, @Nullable ServerPlayerEntity sp, String npcName) {

@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 /**
- * Periodic player-shop rent — a money sink charged to open shops each cycle. Rent comes
+ * Periodic player-shop rent: a money sink charged to open shops each cycle. Rent comes
  * out of the shop's own pending earnings first, then the owner's balance (so a busy shop
  * pays its own way). A shop that can't cover rent is frozen (won't sell) for a grace
  * period, then auto-closes. The portion paid from the owner's balance is destroyed and
@@ -110,7 +110,7 @@ public final class ShopRent {
                 } else {
                     notify(server, owner, Text.literal("⚠ ")
                             .append(Text.literal(shop.getShopName()).formatted(Formatting.WHITE))
-                            .append(Text.literal(" is frozen — couldn't pay rent of ").formatted(Formatting.YELLOW))
+                            .append(Text.literal(" is frozen. Couldn't pay rent of ").formatted(Formatting.YELLOW))
                             .append(NotchCurrency.coins(rent))
                             .append(Text.literal(" (" + cycles + "/" + (graceCycles + 1) + ").").formatted(Formatting.YELLOW)));
                 }

@@ -12,7 +12,7 @@ import org.joml.Matrix4f;
 
 /**
  * Version-compat facade for the few client render calls whose signatures churn across Minecraft
- * versions — the item render inside a block-entity renderer and the flat world-space text draw used
+ * versions: the item render inside a block-entity renderer and the flat world-space text draw used
  * by the coin-flip and ledger-board renderers.
  *
  * <p>One of the mod's four compat facades for the Stonecutter port. On 1.21 the
@@ -48,7 +48,7 @@ public final class Render {
     }
 
     /**
-     * Draw a living entity in a GUI with its feet anchored at (x, y), turned toward the mouse —
+     * Draw a living entity in a GUI with its feet anchored at (x, y), turned toward the mouse:
      * the NPC preview used across the editor screens. 1.21 removed this exact vanilla overload in
      * favour of a bounding-box variant, so the 1.21 branch replays the removed method's body (mouse
      * angles, the flip/pitch quaternions, and the yaw save-restore) against the low-level overload.

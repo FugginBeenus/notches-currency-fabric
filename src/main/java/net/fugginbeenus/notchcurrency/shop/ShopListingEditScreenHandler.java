@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Backing handler for the listing editor. The SALE and BARTER slots hold SAMPLES — copied into the
+ * Backing handler for the listing editor. The SALE and BARTER slots hold SAMPLES: copied into the
  * listing on save and always handed back on close; nothing is consumed or created by them, so there
  * is no dupe or loss path. The STOCK bin is a real intake slot: matching stacks dropped in are
  * pulled into the listing's stock count each tick (and cleared); anything that doesn't match just
@@ -142,7 +142,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
                     listingId = null;
                     props.set(P_HAS_LISTING, 0);
                     props.set(P_STOCK, 0);
-                    sp.sendMessage(Text.literal("Listing removed — its stock is back in your inventory.")
+                    sp.sendMessage(Text.literal("Listing removed. Its stock is back in your inventory.")
                             .formatted(Formatting.GREEN), false);
                     NpcShopLogic.openShopManager(sp, shop.getShopId());
                 }
@@ -187,7 +187,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             listingId = created.getId();
             props.set(P_HAS_LISTING, 1);
             state.markDirtyAndSave();
-            sp.sendMessage(Text.literal("Listing created — drop stock into the bin.").formatted(Formatting.GREEN), false);
+            sp.sendMessage(Text.literal("Listing created. Drop stock into the bin.").formatted(Formatting.GREEN), false);
             return;
         }
 
@@ -283,7 +283,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     @Override
     public void onClosed(PlayerEntity player) {
         super.onClosed(player);
-        // Samples always go back — they were never part of the listing.
+        // Samples always go back. They were never part of the listing.
         if (!player.getWorld().isClient) {
             for (int i = 0; i < samples.size(); i++) {
                 ItemStack st = samples.removeStack(i);

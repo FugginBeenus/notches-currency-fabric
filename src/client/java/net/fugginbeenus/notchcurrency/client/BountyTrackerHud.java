@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * The positional bounty tracker, styled on the Location Tooltip HUD: one vector-drawn pill per
- * taken bounty — black translucent background with 1px "vanilla" rounded corners, an item icon
+ * taken bounty: black translucent background with 1px "vanilla" rounded corners, an item icon
  * (the delivery item, or a sword for kill bounties), the task, a live progress bar and countdown.
  * Kill counts come synced; delivery counts read your own inventory so they tick up as you gather.
  *

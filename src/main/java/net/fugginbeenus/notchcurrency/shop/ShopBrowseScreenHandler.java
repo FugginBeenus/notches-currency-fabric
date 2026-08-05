@@ -23,7 +23,7 @@ import java.util.UUID;
  * Backing handler for the buyer-side shop browser. Listings are synced as read-only data-carrier
  * display stacks (bounty-board pattern: the sale item with listing id / price / barter / stock in
  * NBT), refreshed every tick so stock stays live while people shop. Pagination unlocks all 27
- * listings — the old screen showed only the first 6. Purchases go through the existing
+ * listings: the old screen showed only the first 6. Purchases go through the existing
  * SHOP_PURCHASE packet and PlayerShopManager.purchase().
  */
 public class ShopBrowseScreenHandler extends ScreenHandler {
@@ -72,7 +72,7 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
-        // Player inventory (vanilla trade layout — coords match the code-drawn ShopBrowseScreen).
+        // Player inventory (vanilla trade layout: coords match the code-drawn ShopBrowseScreen).
         final int invX = 43, invY = 158;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {

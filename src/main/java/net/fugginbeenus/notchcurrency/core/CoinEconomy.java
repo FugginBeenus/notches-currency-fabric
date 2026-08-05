@@ -93,7 +93,7 @@ public final class CoinEconomy {
         );
 
         // Insert what fits, then ALWAYS drop the remainder. (insertStack returns true when
-        // it places *some* — so a partial fit used to silently discard the overflow.)
+        // it places *some*, so a partial fit used to silently discard the overflow.)
         player.getInventory().insertStack(coins);
         while (!coins.isEmpty()) {
             int n = Math.min(coins.getCount(), coins.getMaxCount());

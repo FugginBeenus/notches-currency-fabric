@@ -18,8 +18,8 @@ import java.util.stream.Stream;
 /**
  * The custom-currency maker. Reads the admin's art from config/notchcurrency/currency/ and a name
  * from the config, and generates a plain resource pack at resourcepacks/NotchCurrencyCustom. One
- * texture (item/coin.png) drives everything — the item, the HUD icon and the chat glyph all point
- * at it — so a single PNG reskins the whole economy. The pack is rebuilt on every game start and
+ * texture (item/coin.png) drives everything: the item, the HUD icon and the chat glyph all point
+ * at it, so a single PNG reskins the whole economy. The pack is rebuilt on every game start and
  * deleted when nothing is customized; the player enables it once in Options → Resource Packs.
  */
 public final class CurrencyPackGenerator {
@@ -72,7 +72,7 @@ public final class CurrencyPackGenerator {
             return;
         }
         remindedThisSession = true;
-        client.player.sendMessage(Text.literal("[Notch Currency] Custom coin art is ready — enable ")
+        client.player.sendMessage(Text.literal("[Notch Currency] Custom coin art is ready. Enable ")
                 .formatted(Formatting.GOLD)
                 .append(Text.literal("\"NotchCurrencyCustom\"").formatted(Formatting.YELLOW))
                 .append(Text.literal(" in Options → Resource Packs to see it.").formatted(Formatting.GOLD)), false);
@@ -97,7 +97,7 @@ public final class CurrencyPackGenerator {
             Path tails = src.resolve("coin_tails.png");
             String itemName = NotchConfigIO.get().currency.itemName.trim();
 
-            // Always start clean — stale packs from an older name/art must not linger.
+            // Always start clean: stale packs from an older name/art must not linger.
             deleteRecursively(target());
 
             boolean hasArt = Files.isRegularFile(coin);
@@ -113,7 +113,7 @@ public final class CurrencyPackGenerator {
                     {
                       "pack": {
                         "pack_format": %d,
-                        "description": "Notch Currency custom coin (generated — edit via config/notchcurrency/currency)"
+                        "description": "Notch Currency custom coin (generated; edit via config/notchcurrency/currency)"
                       }
                     }
                     """.formatted(PACK_FORMAT));
@@ -216,7 +216,7 @@ public final class CurrencyPackGenerator {
                     client.reloadResources();
                 } else if (client.player != null) {
                     client.player.sendMessage(Text.literal(
-                            "[Notch Currency] This server has custom coin art — enable \"NotchCurrencyServer\" in Options → Resource Packs.")
+                            "[Notch Currency] This server has custom coin art. Enable \"NotchCurrencyServer\" in Options → Resource Packs.")
                             .formatted(Formatting.GOLD), false);
                 }
             } else if (contentChanged) {

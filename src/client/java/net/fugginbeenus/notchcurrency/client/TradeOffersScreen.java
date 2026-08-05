@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * The trade-offers board, in the live-trade screen's language: each offer reads as a give → get
- * exchange — the offered item, an arrow, then the coins and/or item wanted in return — with the
+ * exchange (the offered item, an arrow, then the coins and/or item wanted in return) with the
  * from/to detail in the hover tooltip. Offers you can accept up top (paginated), your own open
  * offers below with a cancel button. Accept/cancel go by offer id through TRADE_OFFER_ACTION.
  */
@@ -191,7 +191,7 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
     }
 
     private boolean tooltipFor(DrawContext ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
-        // Only over the row body — the Accept/Cancel button explains itself.
+        // Only over the row body: the Accept/Cancel button explains itself.
         if (r == null || !over(mouseX, mouseY, x + ROW_X, ry, ROW_W - 58, ROW_H)) return false;
         List<Text> lines = new ArrayList<>();
         lines.add(Text.literal(mine ? "They receive:" : "You receive:").formatted(Formatting.GRAY));
@@ -209,9 +209,9 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
             lines.add(Text.literal("  " + st.getCount() + "× ").append(st.getName()));
         }
         if (r.price() <= 0 && r.wants().isEmpty()) {
-            lines.add(Text.literal("  nothing — it's free").formatted(Formatting.GRAY));
+            lines.add(Text.literal("  nothing (it's free)").formatted(Formatting.GRAY));
         }
-        lines.add(Text.literal(mine ? (r.target().isEmpty() ? "Open — anyone can accept" : "Reserved for " + r.target())
+        lines.add(Text.literal(mine ? (r.target().isEmpty() ? "Open to anyone" : "Reserved for " + r.target())
                 : "From " + r.from()).formatted(Formatting.DARK_GRAY));
         ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
         return true;
@@ -260,7 +260,7 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

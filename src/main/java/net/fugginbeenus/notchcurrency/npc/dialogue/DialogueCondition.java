@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
 public class DialogueCondition {
 
     public enum Type {
-        /** No requirement — always passes. An editor placeholder; stripped on save. */
+        /** No requirement, always passes. An editor placeholder; stripped on save. */
         NONE,
         /** Player balance ≥ {@code amount}. */
         HAS_COINS,
@@ -64,7 +64,7 @@ public class DialogueCondition {
     }
 
     /**
-     * Leaving the name blank means "my faction", which is the common case — a guild NPC offering
+     * Leaving the name blank means "my faction", which is the common case: a guild NPC offering
      * something only its own members get. Naming one lets an NPC react to somebody else's colours.
      */
     private boolean matchesFaction(ServerPlayerEntity sp, NotchNpcEntity npc) {

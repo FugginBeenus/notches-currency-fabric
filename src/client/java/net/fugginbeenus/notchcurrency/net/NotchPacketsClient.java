@@ -86,12 +86,12 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_PATROL, buf);
     }
 
-    /** Ask the server to reopen the NPC editor — used by sub-screens' Back buttons. */
+    /** Ask the server to reopen the NPC editor, used by sub-screens' Back buttons. */
     public static void sendNpcEditorReopen(UUID npcId) {
         sendNpcEditorReopen(npcId, 0);
     }
 
-    /** Reopen the NPC editor landing on {@code returnTab} — sub-screens pass their home tab so
+    /** Reopen the NPC editor landing on {@code returnTab}: sub-screens pass their home tab so
      *  "Back" returns you where you came from. */
     public static void sendNpcEditorReopen(UUID npcId, int returnTab) {
         net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen.reopenAtTab = returnTab;
@@ -271,7 +271,7 @@ public final class NotchPacketsClient {
             client.execute(() -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 if (nodeId.isEmpty()) {
-                    // Close signal — only if the dialogue screen is up.
+                    // Close signal: only if the dialogue screen is up.
                     if (mc.currentScreen instanceof net.fugginbeenus.notchcurrency.client.NpcDialogueScreen) {
                         mc.setScreen(null);
                     }
@@ -334,7 +334,7 @@ public final class NotchPacketsClient {
         });
     }
 
-    /** The server's custom coin skin, pushed on join — written into a local auto-enabled pack. */
+    /** The server's custom coin skin, pushed on join: written into a local auto-enabled pack. */
     public static void registerCurrencySyncReceiver() {
         NetClient.registerClientReceiver(NotchPackets.WAYSTONE_FEE_SYNC, (client, buf) -> {
             boolean enabled = buf.readBoolean();

@@ -24,10 +24,10 @@ import java.util.UUID;
  *
  * Two layers:
  * <ul>
- * <li><b>External entities</b> — any NPC mod (APP.ly, EasyNPC, even a villager) can be bound to an
+ * <li><b>External entities</b>: any NPC mod (APP.ly, EasyNPC, even a villager) can be bound to an
  * economy role by UUID via {@link #assignRole}; interacting opens the matching feature. No entity-
  * level dependency needed.</li>
- * <li><b>Notch NPCs</b> — spawn the built-in, fully-customizable NPC programmatically
+ * <li><b>Notch NPCs</b>: spawn the built-in, fully-customizable NPC programmatically
  * ({@link #spawnNpc}, {@link #spawnNpcFromPreset}), stamp saved presets onto it
  * ({@link #applyPreset}), or give it mod-defined behavior with {@link #registerCustomRole} +
  * {@link #setCustomRole}.</li>
@@ -43,7 +43,7 @@ public final class NotchNpcApi {
 
     /**
      * Spawn a blank Notch NPC. With an owner, that player can edit it like a placed one; without,
-     * it's server-owned (op-only editing) — right for permanent modpack NPCs.
+     * it's server-owned (op-only editing): right for permanent modpack NPCs.
      */
     public static NotchNpcEntity spawnNpc(ServerWorld world, Vec3d pos, float yaw,
                                           @Nullable ServerPlayerEntity owner) {

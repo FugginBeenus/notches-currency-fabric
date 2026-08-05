@@ -113,7 +113,7 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
             NotchWidgets.button(ctx, x + SB_X + 1, ty, SB_W - 2, th, false, false);
         }
 
-        // Framed NPC portrait — waist-up bust for the humanoid model.
+        // Framed NPC portrait: waist-up bust for the humanoid model.
         preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
 
         // Divider separating the shop from the player's inventory.
@@ -272,7 +272,7 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

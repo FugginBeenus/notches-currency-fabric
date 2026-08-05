@@ -27,7 +27,7 @@ import net.minecraft.world.World;
 /**
  * A crate block of a fixed type. Right-click opens it (consuming keys); sneak-right-click shows
  * its loot odds. Faces the placer. On a successful open the lid pops up ({@code open=true}) and a
- * scheduled tick closes it again a moment later — a light vanilla "opening" animation to go with
+ * scheduled tick closes it again a moment later: a light vanilla "opening" animation to go with
  * the loot particles.
  */
 public class CrateBlock extends Block {

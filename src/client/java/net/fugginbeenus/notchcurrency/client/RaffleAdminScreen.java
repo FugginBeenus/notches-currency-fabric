@@ -101,7 +101,7 @@ public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
             NotchWidgets.inset(ctx, x + FIELD_X, y + FIELD_Y[i], FIELD_W, FIELD_H, NotchTheme.DEEP);
         }
 
-        // Active toggle (ON green / OFF grey) — master on/off for the raffle.
+        // Active toggle (ON green / OFF grey): master on/off for the raffle.
         ctx.drawText(this.textRenderer, "Active:", x + 12, y + TG_Y + 3, NotchTheme.TEXT_DARK, false);
         if (enabledToggle) {
             NotchWidgets.primaryButton(ctx, this.textRenderer, x + TG_X, y + TG_Y, TG_W, TG_H, "ON",
@@ -209,7 +209,7 @@ public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

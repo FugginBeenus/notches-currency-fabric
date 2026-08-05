@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * {@code /npc} — bind/unbind economy roles on the NPC the admin is looking at. Works on
+ * {@code /npc}: bind/unbind economy roles on the NPC the admin is looking at. Works on
  * any entity (APP.ly, EasyNPC, villagers). All subcommands are op-only.
  */
 public final class NpcCommands {

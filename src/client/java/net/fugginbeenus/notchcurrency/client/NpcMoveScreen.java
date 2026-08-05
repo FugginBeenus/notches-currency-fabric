@@ -14,7 +14,7 @@ import net.minecraft.util.math.MathHelper;
 import java.util.UUID;
 
 /**
- * Move & Rotate: a compact panel docked at the bottom of the screen — the world stays fully visible
+ * Move & Rotate: a compact panel docked at the bottom of the screen, so the world stays fully visible
  * so you watch the actual NPC move live while you nudge it. X/Y/Z nudge buttons (0.1 blocks, Shift =
  * 1), a yaw slider with Face Me, snap-to-block-center, and bring-to-me. Every change applies
  * instantly through the same owner-guarded path as the pose editor.
@@ -60,11 +60,11 @@ public class NpcMoveScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // No dimmed background — the point is watching the NPC in the world while adjusting.
+        // No dimmed background: the point is watching the NPC in the world while adjusting.
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Move, Rotate & Size", px + W / 2, py + 6);
-        // Grip lines at both title corners — the title bar is the drag handle.
+        // Grip lines at both title corners: the title bar is the drag handle.
         for (int g = 0; g < 3; g++) {
             ctx.fill(px + 6, py + 6 + g * 3, px + 26, py + 7 + g * 3, NotchTheme.PANEL_MID);
             ctx.fill(px + W - 26, py + 6 + g * 3, px + W - 6, py + 7 + g * 3, NotchTheme.PANEL_MID);
@@ -114,7 +114,7 @@ public class NpcMoveScreen extends Screen {
         }
 
         // Bottom row: hint + back.
-        ctx.drawText(this.textRenderer, "Nudge 0.1 — hold Shift for 1 block.", px + 10, py + 84,
+        ctx.drawText(this.textRenderer, "Nudge 0.1, hold Shift for 1 block.", px + 10, py + 84,
                 NotchTheme.TEXT_MUTED, false);
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 100, 272, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 10, py + 100, 272, 16));
@@ -293,14 +293,14 @@ public class NpcMoveScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

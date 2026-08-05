@@ -35,12 +35,12 @@ public final class RouteHud implements HudRenderCallback {
                 ? StackData.getString(held, RoutePlannerItem.NPC_NAME_KEY) : "NPC";
         int count = StackData.getInt(held, RoutePlannerItem.COUNT_KEY);
 
-        String title = "Patrol route — " + npcName;
+        String title = "Patrol route: " + npcName;
         String countLine = "Waypoints: " + count + "/16" + (count < 2 ? "  (need 2+)" : "");
         String[] hints = {
-                "Right-click ground — add waypoint",
-                "Sneak + right-click — undo last",
-                "Right-click the air — confirm & finish",
+                "Right-click ground: add waypoint",
+                "Sneak + right-click: undo last",
+                "Right-click the air: confirm & finish",
         };
 
         var tr = client.textRenderer;
@@ -53,7 +53,7 @@ public final class RouteHud implements HudRenderCallback {
         int x = (ctx.getScaledWindowWidth() - w) / 2;
         int y = 6;
 
-        ctx.fill(x, y, x + w, y + h, 0x90101010); // translucent — the world stays visible
+        ctx.fill(x, y, x + w, y + h, 0x90101010); // translucent: the world stays visible
         ctx.fill(x, y, x + w, y + 1, 0x60FFFFFF);
         ctx.fill(x, y + h - 1, x + w, y + h, 0x60000000);
 

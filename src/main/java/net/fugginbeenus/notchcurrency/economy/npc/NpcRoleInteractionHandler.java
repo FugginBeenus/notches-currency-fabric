@@ -31,7 +31,7 @@ public final class NpcRoleInteractionHandler {
 
         MinecraftServer server = sp.getServer();
         NpcRoleState.Assignment a = NpcRoleState.get(server).get(entity.getUuid());
-        if (a == null) return ActionResult.PASS;   // not a role NPC — let others handle it
+        if (a == null) return ActionResult.PASS;   // not a role NPC: let others handle it
 
         NpcRoleDispatch.open(sp, a.role(), a.shopId(), entity);
         return ActionResult.SUCCESS;

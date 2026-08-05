@@ -10,7 +10,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * The loaded bounty pools — objective and reward entries read from datapacks
+ * The loaded bounty pools: objective and reward entries read from datapacks
  * ({@code data/&lt;ns&gt;/notch_bounties/objectives|rewards/*.json}, merged across packs). The
  * generator rolls a rarity, then a weighted objective and reward of that rarity from here.
  */

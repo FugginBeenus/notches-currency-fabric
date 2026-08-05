@@ -88,7 +88,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
                 : "Highest bid after " + currentDays() + " day" + (currentDays() == 1 ? "" : "s") + " wins.";
         ctx.drawText(this.textRenderer, hint, x + 8, y + 104, NotchTheme.TEXT_MUTED, false);
 
-        // Fee note — the listing fee scales with price, so recompute it from the typed value.
+        // Fee note: the listing fee scales with price, so recompute it from the typed value.
         long typedPrice = 0;
         try {
             String pt = priceField.getText();
@@ -182,7 +182,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

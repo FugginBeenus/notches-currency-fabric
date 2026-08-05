@@ -12,14 +12,14 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * {@code /faction} — the safety net behind the Recruiter NPC.
+ * {@code /faction}: the safety net behind the Recruiter NPC.
  *
  * <p>Everything here can also be done in-world at a recruiter, which is how most players will do it.
  * This exists so nobody is ever stranded: if a founder's recruiter is destroyed they can still see,
  * rename and disband what they own, and admins can sort out anything on the server without hunting
  * down an entity.
  *
- * <p>Unlike the rest of the mod's commands this isn't op-only — a founder needs to reach their own
+ * <p>Unlike the rest of the mod's commands this isn't op-only: a founder needs to reach their own
  * faction. Every subcommand still re-checks who may touch what.
  */
 public final class FactionCommands {
@@ -65,7 +65,7 @@ public final class FactionCommands {
             int members = state.memberCount(f.id());
             source.sendFeedback(() -> Text.literal(" • ")
                     .append(Text.literal(f.displayName()).formatted(f.color()))
-                    .append(Text.literal(" (" + f.id() + ") — "
+                    .append(Text.literal(" (" + f.id() + "): "
                             + (members == 1 ? "1 member" : members + " members")).formatted(Formatting.GRAY)), false);
         }
         return 1;
@@ -102,7 +102,7 @@ public final class FactionCommands {
             sp.sendMessage(Text.literal("That isn't your faction.").formatted(Formatting.RED), false);
             return 0;
         }
-        // The id never changes — NPCs point at it, so renaming is display-only on purpose.
+        // The id never changes: NPCs point at it, so renaming is display-only on purpose.
         faction.setDisplayName(name);
         state.touch();
         sp.sendMessage(Text.literal("Renamed to ")

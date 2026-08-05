@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * Drives the server raffle: selling physical tickets, taking the house cut as a {@link
  * TransactionReason#SINK}, accumulating the pot, drawing a weighted winner, and holding the
- * prize until the winner claims it at the raffle. Tickets are personal receipts — the buyer
+ * prize until the winner claims it at the raffle. Tickets are personal receipts: the buyer
  * wins by identity, so a lost ticket never forfeits a prize, but turning the ticket in (or
  * running {@code /raffle claim}) is how you collect.
  *
@@ -121,7 +121,7 @@ public final class RaffleManager {
 
         if (announce) {
             server.getPlayerManager().broadcast(Text.literal(player.getName().getString()).formatted(Formatting.YELLOW)
-                    .append(Text.literal(" entered the raffle — pot is now ").formatted(Formatting.GRAY))
+                    .append(Text.literal(" entered the raffle. Pot is now ").formatted(Formatting.GRAY))
                     .append(NotchCurrency.coins(state.getPot()))
                     .append(Text.literal("!").formatted(Formatting.GRAY)), false);
         }
@@ -217,7 +217,7 @@ public final class RaffleManager {
         if (online != null) {
             online.sendMessage(Text.literal("🎉 You won Raffle #" + round + "! ").formatted(Formatting.GOLD)
                     .append(prizeDescription(prize, prizeItem))
-                    .append(Text.literal(" is waiting — claim it at the raffle or with /raffle claim.").formatted(Formatting.GOLD)), false);
+                    .append(Text.literal(" is waiting. Claim it at the raffle or with /raffle claim.").formatted(Formatting.GOLD)), false);
         }
 
         if (broadcast && announce) {
@@ -225,7 +225,7 @@ public final class RaffleManager {
                     .append(Text.literal(winnerName).formatted(Formatting.YELLOW))
                     .append(Text.literal(" won ").formatted(Formatting.WHITE))
                     .append(prizeDescription(prize, prizeItem))
-                    .append(Text.literal(" — they must claim it at the raffle. A new round starts now.").formatted(Formatting.WHITE)), false);
+                    .append(Text.literal(". They must claim it at the raffle. A new round starts now.").formatted(Formatting.WHITE)), false);
         }
         return true;
     }
@@ -271,7 +271,7 @@ public final class RaffleManager {
 
     /**
      * Set the prize item from the admin's held item (empty hand clears it). The item is
-     * <em>escrowed</em> — taken from the admin and awarded to the winner — so any previously
+     * <em>escrowed</em> (taken from the admin and awarded to the winner), so any previously
      * set prize is returned, and clearing/cancelling hands it back.
      */
     public static void setPrize(ServerPlayerEntity admin) {
@@ -358,7 +358,7 @@ public final class RaffleManager {
             }
 
             // A ticket is only ACTIVE if it's for the current round AND the raffle is running.
-            // Anything else — a past round, or any ticket while the raffle is off — is a dead loser.
+            // Anything else (a past round, or any ticket while the raffle is off) is a dead loser.
             if (enabled && r == current) {
                 RaffleTicketItem.setStatus(st, RaffleTicketItem.STATUS_ACTIVE, 0L);
                 if (o != null && o.equals(me)) {
@@ -417,7 +417,7 @@ public final class RaffleManager {
         }
     }
 
-    /** Public for the raffle screen handler — count expired losing-ticket entries held. */
+    /** Public for the raffle screen handler: count expired losing-ticket entries held. */
     public static int countLoserEntries(ServerPlayerEntity player) {
         PlayerInventory inv = player.getInventory();
         int n = 0;

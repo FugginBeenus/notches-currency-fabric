@@ -11,7 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * {@code /raffle} — opens the raffle screen ({@code info}); players buy tickets ({@code buy}),
+ * {@code /raffle}: opens the raffle screen ({@code info}); players buy tickets ({@code buy}),
  * redeem an old losing ticket for free entries ({@code redeem}) and claim wins ({@code claim}).
  * Ops draw, reset, or open the setup GUI ({@code draw}, {@code reset}, {@code admin}). The
  * screen buttons back these same actions.
@@ -47,7 +47,7 @@ public final class RaffleCommands {
                         .executes(ctx -> {
                             boolean drawn = RaffleManager.draw(ctx.getSource().getServer(), true);
                             ctx.getSource().sendFeedback(() -> Text.literal(drawn
-                                    ? "Raffle drawn." : "No tickets — nothing to draw.").formatted(Formatting.YELLOW), true);
+                                    ? "Raffle drawn." : "No tickets, nothing to draw.").formatted(Formatting.YELLOW), true);
                             return drawn ? 1 : 0;
                         }))
                 .then(CommandManager.literal("admin")

@@ -48,14 +48,14 @@ public final class ModItems {
             new Item(new Item.Settings())
     );
 
-    /** The single Notch NPC item — places a blank NPC (or a packed one from the editor's Pick up). */
+    /** The single Notch NPC item: places a blank NPC (or a packed one from the editor's Pick up). */
     public static final Item NOTCH_NPC_ITEM = Registry.register(
             Registries.ITEM,
             NotchCurrency.id("notch_npc"),
             new NotchNpcItem(new Item.Settings())
     );
 
-    /** Patrol route tool — bound to one NPC by the editor; right-click ground to drop waypoints. */
+    /** Patrol route tool: bound to one NPC by the editor; right-click ground to drop waypoints. */
     public static final Item ROUTE_PLANNER = Registry.register(
             Registries.ITEM,
             NotchCurrency.id("route_planner"),

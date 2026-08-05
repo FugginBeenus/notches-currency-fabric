@@ -13,7 +13,7 @@ import java.util.Random;
 /**
  * The slot machine. Three weighted reels; three-of-a-kind and two-of-a-kind pay a multiplier of the
  * bet. All raw payouts are scaled by a single {@code norm} factor so the machine's expected return
- * equals the configured target RTP ({@code 100% - houseEdge}) regardless of the reel weights — so an
+ * equals the configured target RTP ({@code 100% - houseEdge}) regardless of the reel weights, so an
  * admin only has to set one "house edge" number and the maths stays honest.
  */
 public final class SlotMachineManager {
@@ -59,7 +59,7 @@ public final class SlotMachineManager {
         return 0.0;
     }
 
-    /** Normalised three-of-a-kind payout for a symbol, ×10 (one decimal) — for the GUI paytable. */
+    /** Normalised three-of-a-kind payout for a symbol, ×10 (one decimal), for the GUI paytable. */
     public static int displayMult3x10(SlotSymbol s) {
         return (int) Math.round(s.mult3() * norm * 10.0);
     }

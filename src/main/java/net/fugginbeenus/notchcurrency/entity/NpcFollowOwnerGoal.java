@@ -62,7 +62,7 @@ public class NpcFollowOwnerGoal extends Goal {
         }
         // Countdown re-path (vanilla FollowOwnerGoal pattern). NOTE: goals are only fully ticked
         // every OTHER game tick, so an `age % N` check can permanently miss depending on entity-id
-        // parity — which froze following after the first path. getTickCount() adjusts for that.
+        // parity, which froze following after the first path. getTickCount() adjusts for that.
         if (--this.updateCountdown <= 0) {
             this.updateCountdown = this.getTickCount(10);
             npc.getNavigation().startMovingTo(owner, speed);

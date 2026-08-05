@@ -646,14 +646,14 @@ public final class AuctionState extends PersistentState {
         MinecraftServer server = world.getServer();
         ServerPlayerEntity bidder = server.getPlayerManager().getPlayer(listing.highestBidderUuid);
         if (bidder != null) {
-            BalanceStore.add(bidder, amount, TransactionReason.AUCTION_REFUND, "auction cancelled — bid refunded");
+            BalanceStore.add(bidder, amount, TransactionReason.AUCTION_REFUND, "auction cancelled, bid refunded");
             NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
-            bidder.sendMessage(Text.literal("Your bid was refunded — ")
+            bidder.sendMessage(Text.literal("Your bid was refunded: ")
                     .append(listing.stack.getName().copy().formatted(Formatting.YELLOW))
                     .append(Text.literal(" was cancelled by the seller.").formatted(Formatting.YELLOW)), false);
         } else {
             BalanceStore.add(server, listing.highestBidderUuid, amount,
-                    TransactionReason.AUCTION_REFUND, "auction cancelled — bid refunded (offline)");
+                    TransactionReason.AUCTION_REFUND, "auction cancelled, bid refunded (offline)");
         }
         // Clear so no later path double-refunds.
         listing.highestBid = 0L;

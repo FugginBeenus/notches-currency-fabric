@@ -24,7 +24,7 @@ import java.util.UUID;
  * should happen on the right.
  *
  * <p>Deliberately a smaller palette than the dialogue studio. Opening a shop screen isn't offered
- * here — the Role already does that when a player interacts, and "open a GUI because someone punched
+ * here: the Role already does that when a player interacts, and "open a GUI because someone punched
  * me" isn't a thing anyone wants. What's left is the useful set: say something, move coins, hand over
  * an item, run a command.
  */
@@ -125,7 +125,7 @@ public class NpcActionsScreen extends Screen {
             try {
                 a.setAmount(s.isBlank() ? 0 : Long.parseLong(s.trim()));
             } catch (NumberFormatException ignored) {
-                // half-typed number — leave the last good value alone
+                // half-typed number: leave the last good value alone
             }
         });
         addDrawableChild(amountField);
@@ -363,14 +363,14 @@ public class NpcActionsScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

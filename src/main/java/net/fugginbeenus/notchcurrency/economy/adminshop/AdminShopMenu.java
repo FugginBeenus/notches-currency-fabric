@@ -9,7 +9,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * Renders an admin shop as a friendly clickable chat list — item names with [Buy]/[Sell]
+ * Renders an admin shop as a friendly clickable chat list: item names with [Buy]/[Sell]
  * buttons, no UUIDs shown. This is the interim player-facing UI until the rendered GUI lands.
  */
 public final class AdminShopMenu {
@@ -45,7 +45,7 @@ public final class AdminShopMenu {
             if (e.isDynamic()) {
                 line.append(Text.literal(" ~").formatted(Formatting.AQUA)
                         .styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                Text.literal("Dynamic price — moves with supply & demand")))));
+                                Text.literal("Dynamic price: moves with supply & demand")))));
             }
             player.sendMessage(line, false);
         }

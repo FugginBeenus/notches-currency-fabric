@@ -18,7 +18,7 @@ import java.util.UUID;
 
 /**
  * Runs NPC dialogue: sends nodes to the client (with per-choice availability), and handles clicked
- * choices — re-validating conditions server-side, running the actions in order (coins move through
+ * choices: re-validating conditions server-side, running the actions in order (coins move through
  * the CurrencyApi with SINK/FAUCET tagging), then jumping to the next node or closing. Stateless:
  * the client echoes back the node id + choice index and the server re-derives everything.
  */
@@ -30,7 +30,7 @@ public final class NpcDialogueManager {
 
     /** Play the NPC's dialogue. Returns false if it has none (caller falls back to the role).
      *  WINDOW mode opens the conversation screen; CHAT mode says a quick line (a random page from
-     *  the tree) in chat and then opens the role directly — the lightweight style. */
+     *  the tree) in chat and then opens the role directly: the lightweight style. */
     public static boolean open(ServerPlayerEntity sp, NotchNpcEntity npc) {
         DialogueTree tree = npc.getDialogue();
         if (tree.isEmpty()) return false;
@@ -62,11 +62,11 @@ public final class NpcDialogueManager {
         DialogueNode node = npc.getDialogue().get(nodeId);
         if (node == null || choiceIndex < 0 || choiceIndex >= node.choices().size()) return;
         DialogueChoice choice = node.choices().get(choiceIndex);
-        if (!choice.isAvailable(sp, npc)) return; // locked/hidden — client shouldn't send, but re-check
+        if (!choice.isAvailable(sp, npc)) return; // locked/hidden: client shouldn't send, but re-check
 
         var outcome = NpcActionRunner.run(sp, npc, choice.actions());
         if (outcome == NpcActionRunner.Outcome.ABORTED) {
-            sendNode(sp, npc, node); // couldn't pay — stay on this page
+            sendNode(sp, npc, node); // couldn't pay: stay on this page
             return;
         }
         if (outcome == NpcActionRunner.Outcome.OPENED_SCREEN) return; // a screen replaced the dialogue
@@ -96,7 +96,7 @@ public final class NpcDialogueManager {
         }
 
         // Reaching the role screen is a REAL choice with an OPEN_ROLE action (seeded by default for
-        // role NPCs, but the author can edit or remove it) — not a synthetic appended here.
+        // role NPCs, but the author can edit or remove it), not a synthetic appended here.
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npc.getUuid());
         buf.writeString(npcName);
@@ -140,7 +140,7 @@ public final class NpcDialogueManager {
     }
 
     /** Open the NPC's role feature and, if it has a goodbye line, watch for the screen closing.
-     *  Public so {@link NpcActionRunner} can reach it — the farewell bookkeeping lives here. */
+     *  Public so {@link NpcActionRunner} can reach it: the farewell bookkeeping lives here. */
     public static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
         watchForFarewell(sp, npc);

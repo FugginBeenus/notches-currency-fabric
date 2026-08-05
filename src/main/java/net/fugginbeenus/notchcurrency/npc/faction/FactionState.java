@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Where factions and their members actually live — in the world save, not on any entity.
+ * Where factions and their members actually live, in the world save, not on any entity.
  *
  * <p>This is the point of the whole design: a Recruiter NPC stores nothing but a faction id. Blow the
  * NPC up, pick it up, delete it, and every faction, every member and every founder is still here. The
@@ -58,7 +58,7 @@ public class FactionState extends PersistentState {
 
     public int count() { return factions.size(); }
 
-    /** The faction this player founded, if any — one apiece keeps a non-admin from filling the save. */
+    /** The faction this player founded, if any: one apiece keeps a non-admin from filling the save. */
     @Nullable
     public Faction foundedBy(UUID player) {
         for (Faction f : factions.values()) {

@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * A datapack-defined crate type: a name, how many keys it costs to open, and a weighted loot
- * table (items and/or coins). Loot odds are transparent — the crate shows them on request.
+ * table (items and/or coins). Loot odds are transparent: the crate shows them on request.
  */
 public record CrateDef(String id, String name, int keysRequired, List<LootEntry> loot) {
 

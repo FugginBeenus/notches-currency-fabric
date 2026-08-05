@@ -25,12 +25,12 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
 
     private static final String[] SLOT_LABELS = {"Helmet", "Chest", "Legs", "Boots", "Hand", "Offhand"};
     private static final String[] SLOT_HINTS = {
-            "Any head item — armor, skulls, carved pumpkins.",
+            "Any head item: armor, skulls, carved pumpkins.",
             "Any chestplate (or elytra).",
             "Any leggings.",
             "Any boots.",
-            "Anything — tools, weapons, or just a prop.",
-            "Anything — shields live here."
+            "Anything: tools, weapons, or just a prop.",
+            "Anything. Shields live here."
     };
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
@@ -75,7 +75,7 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         ctx.drawText(this.textRenderer, SLOT_LABELS[5], x + NpcEquipScreenHandler.OFF_X + 22,
                 y + NpcEquipScreenHandler.OFF_Y + 4, NotchTheme.TEXT_DARK, false);
 
-        // Live preview — the real NPC, so gear shows the instant it's equipped.
+        // Live preview: the real NPC, so gear shows the instant it's equipped.
         preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
 
         // Divider + player inventory.
@@ -120,7 +120,7 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

@@ -47,7 +47,7 @@ public final class NotchPackets {
     // ---- Notch NPC editor ----
     // Server -> client: open the NPC editor (npc uuid, roleOrdinal, name, ownerName, canEdit)
     public static final Identifier NPC_EDITOR_OPEN = NotchCurrency.id("npc_editor_open");
-    // Client -> server: reopen the NPC editor (npc uuid) — used by sub-screens' Back buttons
+    // Client -> server: reopen the NPC editor (npc uuid), used by sub-screens' Back buttons
     public static final Identifier NPC_EDITOR_REOPEN = NotchCurrency.id("npc_editor_reopen");
     // Client -> server: set the NPC's role (npc uuid, roleOrdinal)
     public static final Identifier NPC_SET_ROLE = NotchCurrency.id("npc_set_role");
@@ -69,7 +69,7 @@ public final class NotchPackets {
     public static final Identifier NPC_SET_STATS = NotchCurrency.id("npc_set_stats");
     // Client -> server: set NPC slider attributes (npc uuid, max health, speed %, regen)
     public static final Identifier NPC_SET_ATTRS = NotchCurrency.id("npc_set_attrs");
-    // Client -> server: enchanter action (action: 0=repair 1=upgrade 2=extract, enchantment id) —
+    // Client -> server: enchanter action (action: 0=repair 1=upgrade 2=extract, enchantment id),
     // routed to the player's open EnchanterScreenHandler
     public static final Identifier ENCHANTER_ACTION = NotchCurrency.id("enchanter_action");
     // Client -> server: buy a cosmetic (offer id) while the cosmetics shop is open
@@ -79,14 +79,14 @@ public final class NotchPackets {
     // Client -> server: trade offer action (offer id, action: 0=accept 1=cancel)
     public static final Identifier TRADE_OFFER_ACTION = NotchCurrency.id("trade_offer_action");
     // Client -> server: shop manage action (action: 0=rename 1=greeting 2=toggle 3=edit 4=new,
-    // text, hasUuid + listing uuid) — routed to the open ShopManageScreenHandler
+    // text, hasUuid + listing uuid), routed to the open ShopManageScreenHandler
     public static final Identifier SHOP_MANAGE_ACTION = NotchCurrency.id("shop_manage_action");
     // Client -> server: listing editor action (action: 0=save 1=deposit 2=return 3=delete 4=back
-    // 5=clear barter, coin price) — routed to the open ShopListingEditScreenHandler
+    // 5=clear barter, coin price), routed to the open ShopListingEditScreenHandler
     public static final Identifier SHOP_EDIT_ACTION = NotchCurrency.id("shop_edit_action");
     // Client -> server: preset action (npc uuid, action: 0=open 1=save 2=load 3=delete, preset name)
     public static final Identifier NPC_PRESET = NotchCurrency.id("npc_preset");
-    // Server -> client: the saved preset list (npc uuid, count, names) — opens/updates the preset screen
+    // Server -> client: the saved preset list (npc uuid, count, names), which opens/updates the preset screen
     public static final Identifier NPC_PRESET_LIST = NotchCurrency.id("npc_preset_list");
     // Client -> server: open the NPC equipment screen (npc uuid)
     public static final Identifier NPC_EQUIP = NotchCurrency.id("npc_equip");

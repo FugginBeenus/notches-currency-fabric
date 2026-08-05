@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One page of dialogue: an id, what the NPC says (plain text — {@code %player%}/{@code %npc%} are
+ * One page of dialogue: an id, what the NPC says (plain text, so {@code %player%}/{@code %npc%} are
  * substituted at display time), and the choice buttons underneath.
  */
 public class DialogueNode {

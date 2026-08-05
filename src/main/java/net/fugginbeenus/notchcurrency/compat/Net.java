@@ -18,12 +18,12 @@ import java.util.Map;
  *
  * <p>The mod speaks in {@code (Identifier, PacketByteBuf)} pairs, which is the native shape on
  * 1.20.1. From 1.20.2 raw channels became typed {@code CustomPayload} records that must be declared
- * up front, so this facade bridges every id+buffer packet onto one generic {@link RawPayload} — the
+ * up front, so this facade bridges every id+buffer packet onto one generic {@link RawPayload}: the
  * ~40 receiver bodies and their buffer reads stay untouched.
  *
  * <p>The receivers never needed Fabric's {@code responseSender}/{@code networkHandler} params
  * (nothing replies from inside one), so {@link ServerReceiver} is just {@code (server, player, buf)}.
- * Buffers are still created with {@code PacketByteBufs.create()} at the call sites — that helper is
+ * Buffers are still created with {@code PacketByteBufs.create()} at the call sites, that helper is
  * stable across versions. The client-side counterpart lives in {@code NetClient}.
  */
 public final class Net {

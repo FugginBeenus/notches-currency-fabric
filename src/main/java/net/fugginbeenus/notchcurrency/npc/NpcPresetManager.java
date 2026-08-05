@@ -23,10 +23,10 @@ import java.util.UUID;
 
 /**
  * Named NPC presets: a full NPC setup saved as a compressed NBT file under
- * config/notchcurrency/npc_presets/, loadable onto any NPC in any world — build your NPCs once in a
+ * config/notchcurrency/npc_presets/, loadable onto any NPC in any world: build your NPCs once in a
  * test world, stamp them into the real one. Presets are templates: ownership and world-specific bits
  * (shop link, home, patrol route) are stripped, so the target NPC keeps its own owner and location.
- * This is EasyNPC's preset system minus the default/local/world/custom storage maze — one folder.
+ * This is EasyNPC's preset system minus the default/local/world/custom storage maze: one folder.
  */
 public final class NpcPresetManager {
 
@@ -59,7 +59,7 @@ public final class NpcPresetManager {
         try {
             File file = dir().resolve(name + ".nbt").toFile();
             if (!file.isFile() && list().size() >= MAX_PRESETS) {
-                sp.sendMessage(Text.literal("Preset limit reached (" + MAX_PRESETS + ") — delete one first.")
+                sp.sendMessage(Text.literal("Preset limit reached (" + MAX_PRESETS + "). Delete one first.")
                         .formatted(Formatting.RED), false);
                 return;
             }
@@ -81,7 +81,7 @@ public final class NpcPresetManager {
     /**
      * Core preset apply, also usable without a player (API / commands). Returns false when the
      * preset is missing or unreadable. Without an actor, SHOP-role handling is skipped (a player
-     * shop needs a player to own it) — the NPC lands role-less instead.
+     * shop needs a player to own it): the NPC lands role-less instead.
      */
     public static boolean applyPreset(NotchNpcEntity npc, String rawName,
                                       @Nullable ServerPlayerEntity actor) {

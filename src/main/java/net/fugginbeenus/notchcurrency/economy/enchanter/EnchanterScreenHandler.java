@@ -127,7 +127,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
     private void uncraft(ServerPlayerEntity sp, ItemStack stack) {
         EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.getWorld());
         if (plan == null) {
-            String why = stack.isDamaged() ? "Repair it first — worn gear can't be salvaged for full parts."
+            String why = stack.isDamaged() ? "Repair it first. Worn gear can't be salvaged for full parts."
                     : "That item has no crafting recipe to reverse.";
             sp.sendMessage(Text.literal(why).formatted(Formatting.YELLOW), false);
             return;
@@ -163,7 +163,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
     private void upgrade(ServerPlayerEntity sp, ItemStack stack, String enchId) {
         Enchantment ench = enchantFromId(enchId);
         if (ench == null) return;
-        // Re-derive the offer server-side — the client can only pick from what's legitimately offered.
+        // Re-derive the offer server-side: the client can only pick from what's legitimately offered.
         int level = -1;
         for (EnchanterManager.Offer offer : EnchanterManager.upgradeOffers(stack, EnchanterManager.allowTreasure)) {
             if (offer.enchantment() == ench) {

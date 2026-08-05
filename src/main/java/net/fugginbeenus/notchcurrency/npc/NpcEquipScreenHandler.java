@@ -14,7 +14,7 @@ import net.minecraft.screen.slot.Slot;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The NPC equipment screen: four armor slots (typed — only matching armor fits), main/off hand, and
+ * The NPC equipment screen: four armor slots (typed, so only matching armor fits), main/off hand, and
  * the player's inventory. Server-side the slots are backed by {@link NpcEquipmentInventory}, so drops
  * and shift-clicks write directly onto the entity.
  */
@@ -56,7 +56,7 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         //?}
     }
 
-    /** Client constructor — the opening buf carries the NPC id so the live preview can find it. */
+    /** Client constructor: the opening buf carries the NPC id so the live preview can find it. */
     public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, net.minecraft.network.PacketByteBuf buf) {
         this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null,
                 buf.readBoolean() ? buf.readUuid() : null);

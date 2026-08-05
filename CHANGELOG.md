@@ -3,20 +3,20 @@
 ## 0.7.0
 
 ### Factions
-A faction is a real thing on the server — name, colour, founder, members — and players join in person
+A faction is a real thing on the server (name, colour, founder, members), and players join in person
 rather than by command.
 
 - **Recruiter NPC** (new role): shows the faction, with Join and Leave.
 - Set an NPC to Recruiter and it offers to **found a faction** if you don't already run one: name,
   colour, motto, joining fee, open or closed. All editable later from the same NPC.
 - The faction lives on the server and a recruiter only points at it, so **losing the NPC never costs
-  you the faction** — place another and point it at the same one. `/faction` works with no NPC at all.
+  you the faction**. Place another and point it at the same one. `/faction` works with no NPC at all.
 - **NPCs take sides**: point one at a faction from the Role tab and it won't turn on its own people.
   *Fight rivals* takes on other factions while leaving the unaffiliated alone.
 - Dialogue gains an **In faction** requirement.
 
 ### Floating signs
-Up to four lines hovering above an NPC — price boards, titles, welcomes. Colours and the
+Up to four lines hovering above an NPC: price boards, titles, welcomes. Colours and the
 `%player%`/`%npc%`/`%balance%` placeholders work, and the balance shown is the reader's own.
 
 ### NPC combat
@@ -25,11 +25,11 @@ Up to four lines hovering above an NPC — price boards, titles, welcomes. Colou
 - All combat options grouped on the Moves tab instead of split across two screens.
 
 ### Fixes
-- Mobs used as NPC models animate again — walking and attacking were frozen.
+- Mobs used as NPC models animate again. Walking and attacking were frozen.
 - Modded mobs that never spawn naturally now appear in the model picker.
 - The Basic role no longer says the NPC has no job.
 - Per-axis NPC size, set from the Move & Rotate panel; the floating name can be nudged up or down.
-- Coin and item payouts are cleared from NPCs whose owner isn't an operator — 0.6.0 only did that when
+- Coin and item payouts are cleared from NPCs whose owner isn't an operator. 0.6.0 only did that when
   an NPC was next saved, so older dialogue kept paying out.
 
 ## 0.6.0
@@ -38,9 +38,9 @@ Up to four lines hovering above an NPC — price boards, titles, welcomes. Colou
 NPCs can now react to things that happen to them, not just to a dialogue choice being clicked. Editor →
 Manage → **Reactions**, then pick a moment and say what should happen:
 
-- **When talked to** — before any dialogue or shop opens
-- **When a player comes near** — once as they arrive, re-arming when they leave (range is adjustable)
-- **When hurt** — even if the NPC is protected from the damage
+- **When talked to**: before any dialogue or shop opens
+- **When a player comes near**: once as they arrive, re-arming when they leave (range is adjustable)
+- **When hurt**: even if the NPC is protected from the damage
 - **When killed**, and **when it kills something**
 
 Each moment can run up to five actions: say a line, pay or charge coins, give an item, or run a command.
@@ -50,7 +50,7 @@ travel with the pick-up item and with presets, so a greeter you build once can b
 "Say a line" is available as a dialogue choice action too.
 
 ### Security
-- Actions that create value — **paying coins** and **giving items** — now require operator permission,
+- Actions that create value (**paying coins** and **giving items**) now require operator permission,
   the same as the command actions. Previously any NPC owner could write a dialogue choice that paid the
   player who clicked it, which is an unlimited money supply on a public server. Charging coins is
   unchanged and still available to every shop owner.
@@ -74,7 +74,7 @@ travel with the pick-up item and with presets, so a greeter you build once can b
 - **Shops now sell the whole stack the listing shows.** A listing of 32 sculk sensors for 15 coins was
   charging the full 15 but handing over a single item, and only taking one off the stock. Both game
   versions were affected. Listings that sell single items are unchanged.
-- Removing a listing with more than a stack of items in it returns all of them — it used to stop at 64.
+- Removing a listing with more than a stack of items in it returns all of them. It used to stop at 64.
 - Shift-clicking a listing buys whole stacks of it instead of loose items.
 
 ### Performance
@@ -84,7 +84,7 @@ travel with the pick-up item and with presets, so a greeter you build once can b
 ## 0.5.2
 
 ### Fixes
-- The waystone teleport fee now shows the coin in front of the price — drawn from the actual coin item,
+- The waystone teleport fee now shows the coin in front of the price, drawn from the actual coin item,
   so it picks up custom currency art. It was rendering with no coin at all in 0.5.1.
 
 ## 0.5.1
@@ -93,11 +93,11 @@ A tester-feedback patch on top of 0.5.0.
 
 ### Fixes & polish
 - NPCs hold still and face you while you're interacting with them, instead of wandering off mid-conversation
-- Statue-posed NPCs stay frozen even with animation packs (Fresh Animations / Fresh Moves) installed —
-  other poses still get animated by the pack, so NPCs keep their life
+- Statue-posed NPCs stay frozen even with animation packs (Fresh Animations / Fresh Moves) installed.
+  Other poses still get animated by the pack, so NPCs keep their life
 - Waystone teleport fees now appear in a hover tooltip on each destination (the dimensional fee on
   cross-dimension trips); this also fixes the fee not showing at all on 1.21
-- The NPC model picker no longer hitches on large modpacks — previews build as you scroll to them
+- The NPC model picker no longer hitches on large modpacks. Previews build as you scroll to them
   rather than all at once
 
 ## 0.5.0
@@ -106,12 +106,12 @@ The multi-version release: the mod now ships for **Minecraft 1.20.1 and 1.21.1**
 plus a round of tester-requested features.
 
 ### Multi-version
-- Full 1.21.1 port — every feature works on both versions; download the jar matching your game
+- Full 1.21.1 port. Every feature works on both versions; download the jar matching your game
 - One shared codebase (Stonecutter), so future fixes and features land on all supported versions
 
 ### NPCs
-- **Equipment screen rework**: shop-style layout with a live NPC preview — gear shows on the model
-  the moment it's equipped — plus hover hints on every slot
+- **Equipment screen rework**: shop-style layout with a live NPC preview (gear shows on the model
+  the moment it's equipped), plus hover hints on every slot
 - **Trinkets integration** (optional): eight accessory slots on NPCs when the Trinkets mod is
   installed; contents persist with the NPC
 
@@ -133,14 +133,14 @@ feedback is folded in.
 - Real models + textures for the **Slot Machine** (animated marquee lights), **Bounty Board**
   (two-tall notice board), **Crates** (Common/Rare/Epic arched chests whose lids swing open on a
   win), and the **Coin Flip table** (furniture-scale, with a 3D coin that pops up, tumbles, and
-  lands on the result face — heads or tails)
+  lands on the result face, heads or tails)
 - **Ledger Board** renders the live top-balances leaderboard directly on its face, Create
   display-board style (its own block entity + renderer; updates in real time)
 - Cleaner Crate Key sprite; the NPC spawn item now uses the shopkeeper spawn egg
 
 ### Currency maker
 - The custom coin name now flows into **every** message and GUI, not just the item
-- On a server, the admin's coin art + name is **pushed to every player on join** — no
+- On a server, the admin's coin art + name is **pushed to every player on join**: no
   hand-distributed resource pack
 
 ### NPCs & dialogue

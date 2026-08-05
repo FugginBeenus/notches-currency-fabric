@@ -7,7 +7,7 @@ import net.minecraft.util.math.MathHelper;
 
 /**
  * Player model with pose presets layered on top, then an IDLE ANIMATION layered on the pose
- * (statue/breathe/sway/lively — EasyNPC-style life for otherwise frozen NPCs). Poses are applied
+ * (statue/breathe/sway/lively: EasyNPC-style life for otherwise frozen NPCs). Poses are applied
  * AFTER vanilla setAngles because they need per-part absolute values; while the NPC is mid attack
  * swing, the swinging arm is left to vanilla so combat reads properly. Angle/offset values adapted
  * from EasyNPC's baked pose data. Overlay parts are re-synced at the end.
@@ -29,7 +29,7 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         super.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
 
         // Mid attack swing (the model field is the render-time value the swing animates with):
-        // vanilla just animated the main arm — poses must not stomp it.
+        // vanilla just animated the main arm: poses must not stomp it.
         boolean swinging = this.handSwingProgress > 0f;
 
         if (entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE) {
@@ -73,10 +73,10 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         this.body.yaw = -0.2f * wind;
     }
 
-    /** Vanilla resets angles every frame but NOT body/arm pivots — so the Sitting/Chilling pivot
+    /** Vanilla resets angles every frame but NOT body/arm pivots, so the Sitting/Chilling pivot
      *  drops would linger forever after switching poses (torso and arms sunk into the legs). Reset
      *  everything to the biped defaults first; the sneak pose manages its own pivots in vanilla.
-     *  body.roll and head.roll are also never reset by vanilla — zero them here or the idle-sway
+     *  body.roll and head.roll are also never reset by vanilla: zero them here or the idle-sway
      *  additions accumulate frame over frame and the torso literally spins around the neck. */
     private void resetPivots() {
         this.body.roll = 0f;
@@ -167,7 +167,7 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
 
     /** The idle life layer. Statue is handled up-front (vanilla bob removed); Breathe IS the plain
      *  vanilla idle, so only Lively adds anything here: breathing chest, a gentle weight shift, and
-     *  slow people-watching head glances — all additive on top of whatever pose is set. */
+     *  slow people-watching head glances: all additive on top of whatever pose is set. */
     private void applyIdleAnim(NotchNpcEntity entity, float t, boolean swinging) {
         if (entity.getPoseAnim() < NotchNpcEntity.ANIM_LIVELY) return;
 
@@ -196,8 +196,8 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
 
     /**
      * Toggle the skin's outer "second layer" (hat/jacket/sleeves/pants). These six parts are half the
-     * player model's geometry and they're transparent, so they cost more per part than the base body —
-     * but past a few blocks they're indistinguishable. The renderer hides them at range so a crowd of
+     * player model's geometry and they're transparent, so they cost more per part than the base body.
+     * Past a few blocks they're indistinguishable. The renderer hides them at range so a crowd of
      * NPCs costs roughly what a crowd of simpler mobs does.
      */
     public void setOverlaysVisible(boolean visible) {

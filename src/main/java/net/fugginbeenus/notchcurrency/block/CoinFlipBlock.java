@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 /**
  * A coin-flip gambling block. Right-click opens the betting screen (pick a side + wager); after the
  * player commits, the block enters {@link #FLIPPING} for a short spin and then settles on a
- * {@link #FACE}. Those two blockstates are the animation hook — a future model/animated texture can
+ * {@link #FACE}. Those two blockstates are the animation hook: a future model/animated texture can
  * read them without a block entity. While flipping, the block is "busy" and rejects new bets.
  */
 public class CoinFlipBlock extends Block implements BlockEntityProvider {

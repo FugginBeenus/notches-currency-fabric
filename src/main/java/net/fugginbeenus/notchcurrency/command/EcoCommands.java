@@ -46,7 +46,7 @@ public final class EcoCommands {
                         })
         );
 
-        // ===== /receipts (everyone) — your recent transaction history =====
+        // ===== /receipts (everyone). Your recent transaction history =====
         dispatcher.register(
                 CommandManager.literal("receipts")
                         .executes(ctx -> {
@@ -121,14 +121,14 @@ public final class EcoCommands {
                 .append(Text.literal(supply + " ").formatted(Formatting.GOLD)).append(coinIcon()), false);
         src.sendFeedback(() -> Text.literal("Accounts: ").formatted(Formatting.GRAY)
                 .append(Text.literal(String.valueOf(accounts)).formatted(Formatting.WHITE)), false);
-        src.sendFeedback(() -> Text.literal("Since restart — created: ").formatted(Formatting.GRAY)
+        src.sendFeedback(() -> Text.literal("Since restart, created: ").formatted(Formatting.GRAY)
                 .append(Text.literal(String.valueOf(created)).formatted(Formatting.GREEN))
                 .append(Text.literal(", destroyed: ").formatted(Formatting.GRAY))
                 .append(Text.literal(String.valueOf(destroyed)).formatted(Formatting.RED))
                 .append(Text.literal(", net: ").formatted(Formatting.GRAY))
                 .append(Text.literal(String.valueOf(net)).formatted(net >= 0 ? Formatting.GREEN : Formatting.RED)), false);
         if (net > 0) {
-            src.sendFeedback(() -> Text.literal("⚠ Faucets are outpacing sinks — inflation risk.")
+            src.sendFeedback(() -> Text.literal("⚠ Faucets are outpacing sinks: inflation risk.")
                     .formatted(Formatting.YELLOW), false);
         }
         return 1;

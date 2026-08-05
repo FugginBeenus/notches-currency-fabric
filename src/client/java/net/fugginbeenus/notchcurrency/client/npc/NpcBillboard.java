@@ -5,13 +5,13 @@ import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.MinecraftClient;
 
 /**
- * The floating sign over an NPC — a shop's price board, a title, a welcome.
+ * The floating sign over an NPC: a shop's price board, a title, a welcome.
  *
  * <p>This works out WHAT to draw; the renderers draw it, each through vanilla's own name-label
  * routine. Going through that routine is the point: the sign then billboards to face you, picks up
  * the see-through background, and fades out at range exactly like a nameplate.
  *
- * <p>Placeholders are filled in here, on the client, rather than once on the server — {@code %player%}
+ * <p>Placeholders are filled in here, on the client, rather than once on the server: {@code %player%}
  * and {@code %balance%} mean something different to everyone reading the sign.
  */
 public final class NpcBillboard {
@@ -26,7 +26,7 @@ public final class NpcBillboard {
     private NpcBillboard() {}
 
     /**
-     * The sign's lines, bottom line first — that's the order they're drawn in, working upward, which
+     * The sign's lines, bottom line first. That's the order they're drawn in, working upward, which
      * leaves the text reading top-down the way it was typed. Empty when there's no sign to draw.
      */
     public static String[] lines(NotchNpcEntity npc) {

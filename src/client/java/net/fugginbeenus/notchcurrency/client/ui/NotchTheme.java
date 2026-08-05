@@ -2,7 +2,7 @@ package net.fugginbeenus.notchcurrency.client.ui;
 
 /**
  * The Notch Currency GUI palette, sampled from the original hand-made textures so the
- * code-drawn widgets match them. Change a value here and every screen re-themes — no
+ * code-drawn widgets match them. Change a value here and every screen re-themes: no
  * image editing.
  *
  * Colours are ARGB ints (0xAARRGGBB) ready for {@code DrawContext.fill}.

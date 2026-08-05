@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * <p>The enchanter code keeps talking in plain {@link Enchantment} + level; this facade translates.
  * On 1.21 the registry lookups go through {@link RegistryAccess}, so they only work once a server
- * has started or a world is joined — which is always true by the time the enchanter GUI exists.
+ * has started or a world is joined, which is always true by the time the enchanter GUI exists.
  *
  * <p>Rarity is gone entirely on 1.21; {@link #rarityTier} maps the enchantment's data-driven weight
  * back onto the four old tiers (vanilla's rarities used weights 10/5/2/1), so pricing stays put.

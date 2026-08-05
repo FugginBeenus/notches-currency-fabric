@@ -107,7 +107,7 @@ public final class NotchNpcManager {
         bits |= (npc.getVisibility() & 3) << 8; // bits 8-9 reserved for the visibility rule
         if (npc.isNpcPushable()) bits |= 1024;
         // Bits 2048/4096 used to carry hostile-to-players and fights-back. They live with the rest of
-        // the combat settings on the Moves tab now — see the moves bits below.
+        // the combat settings on the Moves tab now: see the moves bits below.
         return bits;
     }
 
@@ -151,7 +151,7 @@ public final class NotchNpcManager {
                                      String model, String skinType, String skinValue, boolean slim,
                                      float scaleX, float scaleY, float scaleZ, float nameOffset) {
         if (!guard(sp, npc)) return;
-        // URL skins are fetched by every client that sees the NPC — only allow real web URLs.
+        // URL skins are fetched by every client that sees the NPC: only allow real web URLs.
         if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
             String lower = skinValue.trim().toLowerCase();
             if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
@@ -190,7 +190,7 @@ public final class NotchNpcManager {
         npc.setPoseAnim(anim);
     }
 
-    /** Move (delta, clamped) and/or rotate (absolute yaw) the whole NPC — the move screen's live
+    /** Move (delta, clamped) and/or rotate (absolute yaw) the whole NPC: the move screen's live
      *  control. The home leash follows so movement behaviors don't drag it back. */
     public static void transform(ServerPlayerEntity sp, NotchNpcEntity npc, double dx, double dy, double dz,
                                  float yawDeg, boolean applyYaw) {
@@ -236,7 +236,7 @@ public final class NotchNpcManager {
         };
         sp.sendMessage(Text.literal("Behavior set: " + desc + ".").formatted(Formatting.GREEN), false);
 
-        // Follow with an unresolvable target does nothing — say why. (Common in dev, where each
+        // Follow with an unresolvable target does nothing: say why. (Common in dev, where each
         // launch gets a fresh random username/UUID.)
         if (mode == NotchNpcEntity.Behavior.FOLLOW_OWNER && npc.resolveFollowTarget() == null) {
             String who = npc.getFollowPlayerName().isEmpty()
@@ -294,7 +294,7 @@ public final class NotchNpcManager {
                 if (!sp.getInventory().insertStack(tool)) {
                     sp.dropItem(tool, false);
                 }
-                sp.sendMessage(Text.literal("Route tool added — walk the route and right-click the ground to drop waypoints.")
+                sp.sendMessage(Text.literal("Route tool added. Walk the route and right-click the ground to drop waypoints.")
                         .formatted(Formatting.GREEN), false);
             }
             case 1 -> {
@@ -358,7 +358,7 @@ public final class NotchNpcManager {
             }
         }
         npc.setBehavior(NotchNpcEntity.Behavior.PATROL);
-        sp.sendMessage(Text.literal("Route confirmed — " + npc.getWaypoints().size()
+        sp.sendMessage(Text.literal("Route confirmed: " + npc.getWaypoints().size()
                 + " waypoints, patrol started." + (removed > 0 ? " The route tool vanished." : ""))
                 .formatted(Formatting.GREEN), false);
     }
@@ -393,7 +393,7 @@ public final class NotchNpcManager {
     public static void createDialogueTemplate(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         npc.setDialogue(buildStarterTree(npc));
-        sp.sendMessage(Text.literal("Starter dialogue created — talk to the NPC to try it.").formatted(Formatting.GREEN), false);
+        sp.sendMessage(Text.literal("Starter dialogue created. Talk to the NPC to try it.").formatted(Formatting.GREEN), false);
     }
 
     public static void clearDialogue(ServerPlayerEntity sp, NotchNpcEntity npc) {
@@ -440,7 +440,7 @@ public final class NotchNpcManager {
             clean.put(node);
         }
         if (strippedCommands) {
-            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed — those are admin-only.")
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed. Those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         clean.setStartId(tree.startId());
@@ -484,7 +484,7 @@ public final class NotchNpcManager {
             actions.set(trigger, kept);
         }
         if (stripped) {
-            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed — those are admin-only.")
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed. Those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         npc.setActions(actions);
@@ -518,7 +518,7 @@ public final class NotchNpcManager {
     }
 
     /** When an NPC with branching dialogue gains a screen role and no choice reaches it yet, add
-     *  the default entry choice to the start page (once — removing it in the Studio sticks). */
+     *  the default entry choice to the start page (once: removing it in the Studio sticks). */
     private static void seedRoleEntryChoice(ServerPlayerEntity sp, NotchNpcEntity npc) {
         var role = npc.getRole();
         if (role == NpcRole.NONE || role == NpcRole.GREETER) return;
@@ -540,7 +540,7 @@ public final class NotchNpcManager {
         start.withChoice(roleEntryChoice(npc));
         sp.sendMessage(Text.literal("Added a \""
                 + net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch.entryLabel(npc.getRole())
-                + "\" choice to its dialogue — edit or remove it in the Studio.")
+                + "\" choice to its dialogue: edit or remove it in the Studio.")
                 .formatted(Formatting.YELLOW), false);
     }
 
@@ -579,7 +579,7 @@ public final class NotchNpcManager {
         if (!sp.getInventory().insertStack(stack)) {
             sp.dropItem(stack, false);
         }
-        sp.sendMessage(Text.literal("Picked up the NPC — place the item to set it down again.").formatted(Formatting.GREEN), false);
+        sp.sendMessage(Text.literal("Picked up the NPC. Place the item to set it down again.").formatted(Formatting.GREEN), false);
     }
 
     public static void delete(ServerPlayerEntity sp, NotchNpcEntity npc) {

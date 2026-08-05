@@ -67,7 +67,7 @@ public final class NpcRoleDispatch {
             }
             case CUSTOM -> customInteract(sp, npc);
             // NONE is a real choice, not a gap: guards, greeters and villagers-with-dialogue all live
-            // here. Saying nothing is the point — anything else nags every time they're talked to.
+            // here. Saying nothing is the point. Anything else nags every time they're talked to.
             case NONE -> { }
         }
     }

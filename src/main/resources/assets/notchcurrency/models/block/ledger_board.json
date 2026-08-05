@@ -1,6 +1,6 @@
 {
 	"format_version": "1.21.11",
-	"credit": "Notch Currency — wide leaderboard display board (spills ~1.75 wide, 2 tall).",
+	"credit": "Notch Currency: wide leaderboard display board (spills ~1.75 wide, 2 tall).",
 	"textures": {
 		"0": "notchcurrency:block/ledger_board",
 		"particle": "notchcurrency:block/ledger_board",

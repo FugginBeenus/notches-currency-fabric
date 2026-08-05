@@ -15,7 +15,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
 /**
- * Backing handler for the raffle screen. Carries no interactive slots — just one read-only
+ * Backing handler for the raffle screen. Carries no interactive slots: just one read-only
  * display slot for the prize item and a {@link PropertyDelegate} of live numbers (pot, your
  * entries, odds inputs, claim status). The values are refreshed from {@link RaffleState}
  * every tick so the pot and odds stay live as other players enter and draws happen.

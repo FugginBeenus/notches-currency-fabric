@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The Trinkets side of the NPC equip screen — SOFT integration: this class references Trinkets
+ * The Trinkets side of the NPC equip screen, SOFT integration: this class references Trinkets
  * types, so callers must gate every call behind {@code isModLoaded("trinkets")} and let the JVM
  * load it lazily (same pattern as the Waystones fee handler).
  *
  * <p>Which slots an NPC has comes from Trinkets' data ({@code data/trinkets/entities/}, where the
  * mod opts the NPC in); that data is synced, so {@link #slotSpecs} answers identically on both
- * sides — the screen handler relies on that to build matching slot lists.
+ * sides: the screen handler relies on that to build matching slot lists.
  */
 public final class NpcTrinkets {
 

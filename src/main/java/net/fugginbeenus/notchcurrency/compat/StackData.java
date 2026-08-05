@@ -11,12 +11,12 @@ import java.util.UUID;
  *
  * <p>This is one of the mod's four "compat facades" for multi-version support (see the Stonecutter
  * scoping plan). The whole codebase routes item-data access through here so that the single
- * breaking change at Minecraft 1.20.5 — the switch from raw NBT to Data Components — is contained
+ * breaking change at Minecraft 1.20.5 (the switch from raw NBT to Data Components) is contained
  * to this one file. On 1.20.1 (this build) every method is a thin passthrough to the stack's NBT,
  * so there is <b>no behavior change</b>; on 1.21+ the same method bodies are swapped to operate on
  * the {@code CUSTOM_DATA} component instead.
  *
- * <p><b>Design rule that makes the migration safe:</b> every accessor is self-contained — it does a
+ * <p><b>Design rule that makes the migration safe:</b> every accessor is self-contained. It does a
  * full read or a full write and never hands out a mutable compound for callers to poke at. That
  * matters because on 1.21 the custom-data component is copy-on-write: grabbing the compound and
  * mutating it in place (the old {@code stack.getOrCreateNbt().putInt(...)} idiom) would silently
@@ -28,10 +28,10 @@ import java.util.UUID;
  *
  * <p>Two distinct concerns live here:
  * <ul>
- *   <li><b>Carrier data</b> — typed key/value accessors ({@link #getInt}, {@link #putString}, …)
+ *   <li><b>Carrier data</b>: typed key/value accessors ({@link #getInt}, {@link #putString}, …)
  *       for items that stash our own {@code nc_*}/named keys on themselves (raffle tickets, the NPC
  *       pickup item, route planner, and the GUI carrier stacks).</li>
- *   <li><b>Whole-stack persistence</b> — {@link #writeStack}/{@link #readStack} for serializing an
+ *   <li><b>Whole-stack persistence</b>: {@link #writeStack}/{@link #readStack} for serializing an
  *       entire ItemStack into world-save data (shop listings, trade offers, auctions, bounties…).
  *       On 1.21 these need the registry manager; that is stashed once at server start and used
  *       internally, so call sites stay registry-free.</li>
@@ -177,7 +177,7 @@ public final class StackData {
     }
 
     /**
-     * True if two stacks are the same item with the same attached data — i.e. they could merge.
+     * True if two stacks are the same item with the same attached data: i.e. they could merge.
      * 1.20.1 calls this {@code ItemStack.canCombine}; 1.21 renamed it (and compares components).
      */
     public static boolean canCombine(ItemStack a, ItemStack b) {
@@ -193,7 +193,7 @@ public final class StackData {
     /**
      * A read-only <b>copy</b> of the stack's custom data (empty compound if none). Use this for the
      * GUI "carrier" readers that pull a handful of {@code nc_*} keys in one method and rely on typed
-     * lookups like {@code t.contains(key, NbtElement.LONG_TYPE)} — replacing {@code stack.getNbt()}
+     * lookups like {@code t.contains(key, NbtElement.LONG_TYPE)}: replacing {@code stack.getNbt()}
      * with this keeps every downstream vanilla read identical while hiding the 1.21 component switch.
      *
      * <p>Returns a copy on purpose: mutating it must never write back (that's what {@link #editData}
@@ -213,8 +213,8 @@ public final class StackData {
      *
      * <p>On 1.20.1 this is the stack's live NBT and {@link #commitData} is effectively a no-op; on
      * 1.21 it is a detached copy of the custom-data component that only takes effect once committed.
-     * Because of that, treat the returned compound as write-only scratch: fill it, then commit —
-     * don't interleave {@link #getInt}-style reads against the same stack before committing.
+     * Because of that, treat the returned compound as write-only scratch: fill it, then commit.
+     * Don't interleave {@link #getInt}-style reads against the same stack before committing.
      */
     public static NbtCompound editData(ItemStack stack) {
         //? if >=1.21 {

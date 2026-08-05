@@ -225,7 +225,7 @@ public class ShopListing {
     }
 
     /**
-     * A copy of the sale item whose count is the total number of items to hand over — which may be
+     * A copy of the sale item whose count is the total number of items to hand over, which may be
      * more than the item's max stack size. Callers pass this to the give helper, which splits it into
      * real stacks; clamping here would silently cap a payout (or a stock refund) at a single stack.
      */

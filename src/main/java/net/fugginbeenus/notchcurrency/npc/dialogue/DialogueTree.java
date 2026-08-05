@@ -54,7 +54,7 @@ public class DialogueTree {
         startId = "";
     }
 
-    /** True when no node has any choices — a flat set of standalone lines (the Quick Lines shape). */
+    /** True when no node has any choices: a flat set of standalone lines (the Quick Lines shape). */
     public boolean isFlat() {
         for (DialogueNode n : nodes.values()) {
             if (!n.choices().isEmpty()) return false;

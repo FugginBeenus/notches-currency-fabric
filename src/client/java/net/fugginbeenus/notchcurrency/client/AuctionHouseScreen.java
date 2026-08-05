@@ -368,7 +368,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 over(mouseX, mouseY, x + PREV_X, y + PREV_Y, PREV_W, PREV_H), true);
         wideArrow(ctx, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H,
                 over(mouseX, mouseY, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H), false);
-        // Flat dark page box — same width/height as the arrows, between them.
+        // Flat dark page box, same width/height as the arrows, between them.
         ctx.fill(x + PREV_X + PREV_W, y + PREV_Y, x + NEXT_X, y + PREV_Y + PREV_H, NotchTheme.DEEP);
         iconButton(ctx, x + STAR_X, y + STAR_Y, STAR_W, STAR_H,
                 over(mouseX, mouseY, x + STAR_X, y + STAR_Y, STAR_W, STAR_H), ICON_STAR);
@@ -1219,7 +1219,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

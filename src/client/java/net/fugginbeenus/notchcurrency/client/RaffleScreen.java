@@ -12,7 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * The raffle panel — a compact, code-drawn showcase: a pulsing gold frame + corner sparkles
+ * The raffle panel: a compact, code-drawn showcase with a pulsing gold frame + corner sparkles
  * behind a 2x prize display, the prize name + pot, your odds, and big buy / claim / redeem
  * buttons. Coins-only raffles show a giant Notch Coin; item raffles show the prize item (hover
  * for full item info). With no raffle running it shows a clean clock placeholder while still
@@ -229,7 +229,7 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

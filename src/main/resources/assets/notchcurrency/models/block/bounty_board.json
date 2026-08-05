@@ -1,6 +1,6 @@
 {
 	"format_version": "1.21.11",
-	"credit": "Notch Currency — code-drawn bounty board, lower half carries the whole visual (open me in Blockbench!)",
+	"credit": "Notch Currency: code-drawn bounty board, lower half carries the whole visual (open me in Blockbench!)",
 	"texture_size": [128, 128],
 	"textures": {
 		"0": "notchcurrency:block/bounty_board",

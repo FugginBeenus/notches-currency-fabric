@@ -48,15 +48,15 @@ dependencies {
     // Config GUI entrypoint: ModMenu (the settings screen itself is code-drawn, no Cloth Config)
     modImplementation("com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
 
-    // GeckoLib — animation/model framework for the Notch NPC entity (hard dependency)
+    // GeckoLib: animation/model framework for the Notch NPC entity (hard dependency)
     modImplementation "software.bernie.geckolib:geckolib-fabric-${property('minecraft_version')}:${property('geckolib_version')}"
 
-    // Waystones fee — SOFT integration. Compile against the Waystones + Balm APIs only (Loom remaps
+    // Waystones fee: SOFT integration. Compile against the Waystones + Balm APIs only (Loom remaps
     // these to yarn); they are NOT shipped and NOT required at runtime (gated by isModLoaded).
     // Jars are per-version: drop each Minecraft version's Waystones + Balm into api-libs/<mc>/.
     modCompileOnly fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar')
 
-    // Trinkets on NPCs — SOFT integration, same deal: compile against the API, gated by isModLoaded.
+    // Trinkets on NPCs: SOFT integration, same deal (compile against the API, gated by isModLoaded).
     // modLocalRuntime puts it (and Cardinal Components, transitively) in the dev client for testing.
     modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
     modLocalRuntime "dev.emi:trinkets:${property('trinkets_version')}"
@@ -177,7 +177,7 @@ tasks.register("stampedJar", Jar) {
 }
 
 modrinth {
-    // Store the token as `modrinthToken` in ~/.gradle/gradle.properties (never the project one — that
+    // Store the token as `modrinthToken` in ~/.gradle/gradle.properties (never the project one, which
     // gets committed). The env var still works as a fallback for one-off publishes.
     token = findProperty("modrinthToken") ?: System.getenv("MODRINTH_TOKEN")
     projectId = findProperty("modrinth_project") ?: "gGHT7Irr"
@@ -190,11 +190,11 @@ modrinth {
     loaders = ["fabric"]
 
     // rootProject, not file(): every publish runs inside a per-version subproject (versions/1.20.1,
-    // …), so a relative path looks for the changelog beside that subproject and never finds it —
+    // …), so a relative path looks for the changelog beside that subproject and never finds it,
     // which is how every release so far went out saying "See commits for changes".
     def changelogFile = rootProject.file("changelogs/${version}.md")
     if (!changelogFile.exists()) {
-        logger.warn("Notch Currency: no changelogs/${version}.md — Modrinth would get a placeholder.")
+        logger.warn("Notch Currency: no changelogs/${version}.md, so Modrinth would get a placeholder.")
     }
     changelog = changelogFile.exists()
             ? changelogFile.text

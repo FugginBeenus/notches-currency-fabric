@@ -17,13 +17,13 @@ import net.minecraft.util.math.RotationAxis;
 /**
  * Vanilla-biped renderer for the default "humanoid" Notch NPC model. Built on the real
  * {@link PlayerEntityModel}, so it gets proper walk/idle limb animation, skin overlay layers, and
- * (via feature renderers) worn armor and held items — with preset / player-name / URL skins from
+ * (via feature renderers) worn armor and held items, with preset / player-name / URL skins from
  * {@link NpcSkins}, the slim variant, and the entity's scale.
  */
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerEntityModel<NotchNpcEntity>> {
 
     // Two copies of the model. "live" rides the vanilla player layer, so CEM animation packs (Fresh
-    // Animations / Fresh Moves via OptiFine or EMF) animate it — the life we want on nearby NPCs.
+    // Animations / Fresh Moves via OptiFine or EMF) animate it: the life we want on nearby NPCs.
     // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace; render() sends
     // an NPC there when a pack must not touch it, either because it's posed as a Statue or because it's
     // too far away to be worth animating. Without a pack installed the two layers are identical.
@@ -36,11 +36,11 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     private static final double DETAIL_RANGE_SQ = 20.0 * 20.0;
     /** Past this, render on the private layer so animation packs stop animating the NPC. A CEM pack
      *  re-evaluates its animations per part per entity per frame, which is the single most expensive
-     *  thing about a crowd of NPCs when one is installed — and at this range nobody can read the
+     *  thing about a crowd of NPCs when one is installed, and at this range nobody can read the
      *  difference. Set beyond the overlay cut so the two changes don't pop at the same moment. */
     private static final double ANIM_RANGE_SQ = 28.0 * 28.0;
     /** Past this, skip the floating name. Vanilla caps at 64 blocks, but names are per-entity text that
-     *  batches poorly, and NPCs come in crowds where vanilla mobs come alone — so we cap tighter. */
+     *  batches poorly, and NPCs come in crowds where vanilla mobs come alone, so we cap tighter. */
     private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
 
     public NotchNpcBipedRenderer(EntityRendererFactory.Context ctx) {
@@ -59,7 +59,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     public void render(NotchNpcEntity entity, float yaw, float tickDelta, MatrixStack matrices,
                        VertexConsumerProvider vertexConsumers, int light) {
-        // Negative means "close enough to skip every cut" — that's how previews opt out (see lodApplies).
+        // Negative means "close enough to skip every cut". That's how previews opt out (see lodApplies).
         double distSq = lodApplies() ? distanceToCameraSq(entity) : -1.0;
 
         // The private layer is for anything an animation pack must not touch: Statue always, and any NPC
@@ -111,7 +111,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
             // Replicate vanilla's swimming/crawling transform (face-down, flat on the ground).
             matrices.multiply(RotationAxis.NEGATIVE_Y.rotationDegrees(bodyYaw));
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90.0f));
-            matrices.translate(0.0f, -1.0f, 0.3f); // vanilla swim offset — sits the crawl on the ground
+            matrices.translate(0.0f, -1.0f, 0.3f); // vanilla swim offset: sits the crawl on the ground
             return;
         }
         //? if >=1.21 {
@@ -165,7 +165,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
 
     /**
      * Whether distance-based trimming should run at all. The editor, pose editor and model picker all
-     * draw NPCs through this renderer while a screen is open — and the picker's previews sit at a dummy
+     * draw NPCs through this renderer while a screen is open, and the picker's previews sit at a dummy
      * position far from the camera, which would strip their overlay layers and names. The crowds we're
      * optimizing for are always the in-world case, so LOD is limited to it.
      */

@@ -8,7 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import java.util.UUID;
 
 /**
- * Plays the studio's local (possibly unsaved) tree in the real conversation window — entirely
+ * Plays the studio's local (possibly unsaved) tree in the real conversation window: entirely
  * client-side. Every choice shows as clickable, actions never run, nothing touches the server.
  * Reaching an end (or pressing ESC) drops you back into the same studio instance, edits intact.
  */
@@ -89,7 +89,7 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
 
     @Override
     protected String bannerText() {
-        return "PREVIEW — actions and requirements don't run";
+        return "PREVIEW: actions and requirements don't run";
     }
 
     @Override

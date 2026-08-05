@@ -32,7 +32,7 @@ import java.util.Locale;
 public class NotchNpcModelPickerScreen extends Screen {
 
     /**
-     * One pickable model. The preview entity is built lazily on first draw and cached — building one
+     * One pickable model. The preview entity is built lazily on first draw and cached: building one
      * per registered entity type up front was the source of the open-the-picker lag on big modpacks.
      */
     private static final class Entry {
@@ -89,7 +89,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private void buildEntries() {
-        // No entities are created here — just the list. Previews are built lazily as tiles are drawn.
+        // No entities are created here: just the list. Previews are built lazily as tiles are drawn.
         all.add(new Entry(NotchNpcEntity.MODEL_HUMANOID, "Humanoid", null, NotchNpcEntity.MODEL_HUMANOID, "1"));
         if (FabricLoader.getInstance().isModLoaded("apply")) {
             all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
@@ -105,13 +105,13 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     /**
-     * Worth offering as a model, judged without building one — building every registered type is what
+     * Worth offering as a model, judged without building one: building every registered type is what
      * used to make this screen crawl on a big modpack.
      *
      * <p>Spawn group is the cheap signal: living things have a real one, boats and arrows are MISC.
      * That misses two cases, so both are let through. Vanilla's armour stand is MISC but perfectly
      * usable. And mods routinely register bosses and their own NPCs as MISC precisely so they never
-     * spawn on their own — excluding those would hide most of what a modpack has to offer. Anything
+     * spawn on their own, excluding those would hide most of what a modpack has to offer. Anything
      * that slips through and isn't really a mob simply has no preview, and falls back to the humanoid
      * if it's picked.
      */
@@ -314,14 +314,14 @@ public class NotchNpcModelPickerScreen extends Screen {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render() — this screen paints its panel after the darkening,
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}

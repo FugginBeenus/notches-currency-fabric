@@ -10,7 +10,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 
 /**
- * The receipts screen: a paginated, read-only list of the player's recent coin transactions — how
+ * The receipts screen: a paginated, read-only list of the player's recent coin transactions, how
  * much moved (+green earned / −red spent), what for, and how long ago. A static snapshot sent when
  * the screen opened. Purely informational, no interaction beyond paging.
  */
@@ -121,7 +121,7 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

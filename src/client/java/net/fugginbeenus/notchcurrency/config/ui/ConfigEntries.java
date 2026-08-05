@@ -25,21 +25,21 @@ final class ConfigEntries {
 
         // ===== Economy =====
         String c = "Economy";
-        e.add(new NumberEntry(c, "Auction listing fee — flat", cfg.auctionListingFeeFlat, 0, 0, 1_000_000,
+        e.add(new NumberEntry(c, "Auction listing fee (flat)", cfg.auctionListingFeeFlat, 0, 0, 1_000_000,
                 v -> cfg.auctionListingFeeFlat = v.intValue(),
                 "Flat coin fee to create an auction listing, on top of the percent fee.",
                 "A money SINK. 0 = no flat fee."));
-        e.add(new NumberEntry(c, "Auction listing fee — % of price", cfg.auctionListingFeePercent, 0, 0, 100,
+        e.add(new NumberEntry(c, "Auction listing fee (% of price)", cfg.auctionListingFeePercent, 0, 0, 100,
                 v -> cfg.auctionListingFeePercent = v.intValue(),
-                "Listing fee as a percent of the asking price — scales with the listing.",
+                "Listing fee as a percent of the asking price, so it scales with the listing.",
                 "A money SINK. 0 = no percent fee."));
-        e.add(new NumberEntry(c, "Auction listing fee — max", cfg.auctionListingFeeMax, 0, 0, 10_000_000,
+        e.add(new NumberEntry(c, "Auction listing fee (max)", cfg.auctionListingFeeMax, 0, 0, 10_000_000,
                 v -> cfg.auctionListingFeeMax = v.intValue(),
                 "Cap on the total listing fee. 0 = uncapped."));
         e.add(new NumberEntry(c, "Auction sale tax (%)", cfg.auctionSaleTaxPercent, 0, 0, 100,
                 v -> cfg.auctionSaleTaxPercent = v.intValue(),
                 "Percent taken from the seller's payout on a sale.", "A money SINK. 0 = no tax."));
-        e.add(new NumberEntry(c, "Auction sale tax — max", cfg.auctionSaleTaxMax, 0, 0, 10_000_000,
+        e.add(new NumberEntry(c, "Auction sale tax (max)", cfg.auctionSaleTaxMax, 0, 0, 10_000_000,
                 v -> cfg.auctionSaleTaxMax = v.intValue(),
                 "Cap on the sale tax per sale. 0 = uncapped."));
 
@@ -47,7 +47,7 @@ final class ConfigEntries {
         c = "Currency";
         e.add(new StringEntry(c, "Coin name", cfg.currency.itemName, "", 64,
                 v -> cfg.currency.itemName = v,
-                "Rename the coin everywhere — the item AND messages/GUIs (\"You won 50 Rupees\").",
+                "Rename the coin everywhere: the item AND messages/GUIs (\"You won 50 Rupees\").",
                 "Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\".",
                 "Drop coin.png in config/notchcurrency/currency/ to reskin the art.",
                 "A resource pack is generated on save; servers push it to every player."));
@@ -57,7 +57,7 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Coin-priced villager trades", cfg.villagerTrades.enabled, true,
                 v -> cfg.villagerTrades.enabled = v,
                 "When villagers roll new trades, some may be priced in coins instead of",
-                "emeralds — a rare find that makes currency spendable at villagers (a SINK)."));
+                "emeralds. A rare find that makes currency spendable at villagers (a SINK)."));
         e.add(new SliderEntry(c, "Conversion chance", cfg.villagerTrades.chancePercent, 10, 0, 100, "%",
                 v -> cfg.villagerTrades.chancePercent = v,
                 "Chance per new emerald trade. High-value trades (8+ emeralds) get double."));
@@ -117,16 +117,16 @@ final class ConfigEntries {
         e.add(new NumberEntry(c, "Full repair cost", cfg.enchanter.repairFullCost, 60, 0, 1_000_000,
                 v -> cfg.enchanter.repairFullCost = v.intValue(),
                 "Coins to fully repair a 100%-damaged item; scales down with less damage."));
-        e.add(new NumberEntry(c, "Enchant price — Common (per level)", cfg.enchanter.costCommon, 15, 0, 100_000,
+        e.add(new NumberEntry(c, "Enchant price: Common (per level)", cfg.enchanter.costCommon, 15, 0, 100_000,
                 v -> cfg.enchanter.costCommon = v.intValue(),
                 "Per-level price for common enchantments (Sharpness, Protection...)."));
-        e.add(new NumberEntry(c, "Enchant price — Uncommon (per level)", cfg.enchanter.costUncommon, 25, 0, 100_000,
+        e.add(new NumberEntry(c, "Enchant price: Uncommon (per level)", cfg.enchanter.costUncommon, 25, 0, 100_000,
                 v -> cfg.enchanter.costUncommon = v.intValue(),
                 "Per-level price for uncommon enchantments."));
-        e.add(new NumberEntry(c, "Enchant price — Rare (per level)", cfg.enchanter.costRare, 45, 0, 100_000,
+        e.add(new NumberEntry(c, "Enchant price: Rare (per level)", cfg.enchanter.costRare, 45, 0, 100_000,
                 v -> cfg.enchanter.costRare = v.intValue(),
                 "Per-level price for rare enchantments."));
-        e.add(new NumberEntry(c, "Enchant price — Very Rare (per level)", cfg.enchanter.costVeryRare, 80, 0, 100_000,
+        e.add(new NumberEntry(c, "Enchant price: Very Rare (per level)", cfg.enchanter.costVeryRare, 80, 0, 100_000,
                 v -> cfg.enchanter.costVeryRare = v.intValue(),
                 "Per-level price for very rare enchantments (Mending, Infinity...)."));
         e.add(new SliderEntry(c, "Global price multiplier", cfg.enchanter.costMultiplierPercent, 100, 1, 1000, "%",
@@ -210,7 +210,7 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Loans enabled", cfg.loan.enabled, false,
                 v -> cfg.loan.enabled = v,
                 "Players borrow coins (created) up to a cap and repay with interest.",
-                "Interest is a SINK. Off by default — it creates money."));
+                "Interest is a SINK. Off by default because it creates money."));
         e.add(new NumberEntry(c, "Borrowing limit (max debt)", cfg.loan.maxDebt, 10_000, 0, 1_000_000_000,
                 v -> cfg.loan.maxDebt = v));
         e.add(new SliderEntry(c, "Interest per cycle", cfg.loan.interestPercentPerCycle, 5, 0, 100, "%",
@@ -256,7 +256,7 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Wealth tax enabled", cfg.wealthTax.enabled, false,
                 v -> cfg.wealthTax.enabled = v,
                 "A periodic SINK that taxes only the wealthy.",
-                "Off by default — it's an aggressive lever."));
+                "Off by default; it's an aggressive lever."));
         e.add(new NumberEntry(c, "Threshold", cfg.wealthTax.threshold, 100_000, 0, Long.MAX_VALUE / 2,
                 v -> cfg.wealthTax.threshold = v,
                 "Only the balance ABOVE this is taxed.", "Players below it pay nothing."));
@@ -273,7 +273,7 @@ final class ConfigEntries {
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,
                 v -> cfg.cosmetic.enabled = v,
-                "The cosmetics shop NPC. Offers are datapack-driven — see",
+                "The cosmetics shop NPC. Offers are datapack-driven. See",
                 "data/notchcurrency/cosmetics/*.json. Buying is a coin SINK."));
 
         // ===== Waystone Fee =====

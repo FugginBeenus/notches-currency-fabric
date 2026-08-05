@@ -127,7 +127,7 @@ public final class BountyManager {
             return;
         }
         if (state.takeCount(player.getUuid()) >= takeLimit) {
-            player.sendMessage(Text.literal("You can only carry " + takeLimit + " bounties at once — finish or wait one out.")
+            player.sendMessage(Text.literal("You can only carry " + takeLimit + " bounties at once. Finish or wait one out.")
                     .formatted(Formatting.RED), false);
             return;
         }
@@ -137,7 +137,7 @@ public final class BountyManager {
         long mins = durationTicks / 20L / 60L;
         player.sendMessage(Text.literal("Took bounty: ").formatted(Formatting.GREEN)
                 .append(Text.literal(offer.describe()).formatted(offer.getRarity().color()))
-                .append(Text.literal(" — finish within " + mins + "m.").formatted(Formatting.GREEN)), false);
+                .append(Text.literal(". Finish within " + mins + "m.").formatted(Formatting.GREEN)), false);
         syncTracker(player);
     }
 
@@ -160,7 +160,7 @@ public final class BountyManager {
             if (next >= b.getRequired()) {
                 player.sendMessage(Text.literal("✔ Bounty complete: ").formatted(Formatting.GREEN)
                         .append(Text.literal(b.describe()).formatted(b.getRarity().color()))
-                        .append(Text.literal(" — collect it at the board!").formatted(Formatting.GREEN)), false);
+                        .append(Text.literal(". Collect it at the board!").formatted(Formatting.GREEN)), false);
             }
         }
     }
@@ -218,7 +218,7 @@ public final class BountyManager {
         if (have < b.getRequired()) {
             player.sendMessage(Text.literal("You need " + b.getRequired() + " ").formatted(Formatting.RED)
                     .append(b.targetName().copy().formatted(Formatting.WHITE))
-                    .append(Text.literal(" — you have " + have + ".").formatted(Formatting.RED)), false);
+                    .append(Text.literal(" (you have " + have + ").").formatted(Formatting.RED)), false);
             return;
         }
 
@@ -228,7 +228,7 @@ public final class BountyManager {
         state.markOfferCompleted(player.getUuid(), offerId); // hide it from their board until it rotates
         player.sendMessage(Text.literal("Delivered " + b.getRequired() + " ").formatted(Formatting.GREEN)
                 .append(b.targetName().copy().formatted(Formatting.WHITE))
-                .append(Text.literal(" — reward: " + b.rewardSummary() + "!").formatted(Formatting.GREEN)), false);
+                .append(Text.literal(". Reward: " + b.rewardSummary() + "!").formatted(Formatting.GREEN)), false);
         syncTracker(player);
     }
 

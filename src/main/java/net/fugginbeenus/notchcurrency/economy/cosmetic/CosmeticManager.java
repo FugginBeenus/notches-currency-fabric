@@ -12,7 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * The cosmetics shop: buy cosmetics for coins (a SINK). A cosmetic is generic — buying it either
+ * The cosmetics shop: buy cosmetics for coins (a SINK). A cosmetic is generic: buying it either
  * gives an item or runs an unlock command, so the shop can sell cosmetics from any mod. One-time
  * cosmetics are recorded per player so they can't be bought twice.
  */

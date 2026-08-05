@@ -22,7 +22,7 @@ import java.util.UUID;
 
 /**
  * The owner-side shop hub: earnings with one-click collect, name/greeting editing, the open/closed
- * switch, rent status, and every listing (paginated — all 27 reachable). Prices use the coin glyph;
+ * switch, rent status, and every listing (paginated: all 27 reachable). Prices use the coin glyph;
  * hovering a listing shows a full tooltip. Rows open the listing editor. All edits apply instantly.
  */
 public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
@@ -128,7 +128,7 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
             NotchWidgets.dangerButton(ctx, this.textRenderer, x + 8, y + 20, 60, 14, "Closed",
                     over(mouseX, mouseY, x + 8, y + 20, 60, 14));
         }
-        String status = rentPaused ? "Rent overdue — paused" : open ? "Selling" : "Sales off";
+        String status = rentPaused ? "Rent overdue, paused" : open ? "Selling" : "Sales off";
         int statusColor = rentPaused ? NotchTheme.TEXT_RED : open ? NotchTheme.TEXT_GREEN : NotchTheme.TEXT_MUTED;
         ctx.drawText(this.textRenderer, status, x + 74, y + 24, statusColor, false);
         int rentCost = handler.prop(ShopManageScreenHandler.P_RENT_COST);
@@ -211,7 +211,7 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
                     over(mouseX, mouseY, x + ROW_X + 204, ry + 1, 32, 15));
         }
         if (!any) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No listings yet — add one below.",
+            NotchWidgets.centerText(ctx, this.textRenderer, "No listings yet. Add one below.",
                     x + W / 2, y + ROWS_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
 
@@ -227,7 +227,7 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
         if (over(mouseX, mouseY, x + 195, y + 59, 14, 14)) {
             ctx.drawTooltip(this.textRenderer, List.of(
-                    Text.literal("Title color — click to cycle"),
+                    Text.literal("Title color (click to cycle)"),
                     Text.literal("Typed &-codes show here too (\"&6Golden Goods\")").formatted(Formatting.GRAY),
                     Text.literal("Press Set to apply").formatted(Formatting.GRAY)), mouseX, mouseY);
         }
@@ -323,7 +323,7 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
     //? if >=1.21 {
     /*@Override
     protected void applyBlur(float delta) {
-        // No 1.21 menu blur behind the mod's screens — they draw crisp panels over the world.
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }
