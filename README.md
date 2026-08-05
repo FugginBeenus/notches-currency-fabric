@@ -39,6 +39,8 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Behaviors: stationary, wander, follow, patrol, or guard
 - Poses (presets + a live custom-pose editor) and a visual branching dialogue studio
 - Reactions: have an NPC respond when it's talked to, approached, hurt, killed, or kills something
+- Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance
+- Floating signs: up to four lines hovering above an NPC, for shop boards and titles
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
 - Ownership-gated editing, a "pick up" that repacks the config into the item, and saveable presets
 - A public API (`NotchNpcApi`) for other mods to spawn NPCs and register custom roles
@@ -65,7 +67,7 @@ opens the NPC's job (shop, bank, …). Quick Lines auto-selects Chat.
 
 ### Economy Roles
 Assign any NPC a role: Shop, Banker, Auctioneer, Mailbox, Raffle, Bounty, Dealer (casino),
-Enchanter, or Cosmetics — plus admin server-shops.
+Enchanter, Cosmetics, or Recruiter (factions) — plus admin server-shops.
 
 ### Sinks & Faucets
 - Enchanter (repair / buy enchants / extract to book), raffle, gambling (slots + coin flip),
@@ -102,6 +104,7 @@ placeable via ModMenu so it dodges other mods' overlays.
 - `/baltop` — richest players
 - `/trade <player>` — live trade; `/trade offer` / `/trade offers` — offline trade offers
 - `/ah`, `/shop`, `/raffle`, `/bounty`, `/crate`, `/loan`, `/slots`, `/coinflip` — feature entry points
+- `/faction` — list, join, leave; found, rename or disband your own
 - `/npc setrole <role>`, `/npc spawn [preset]`, `/eco …` — op tools
 
 ## Dependencies

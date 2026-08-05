@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.7.0
+
+### Factions
+A faction is a real thing on the server — name, colour, founder, members — and players join in person
+rather than by command.
+
+- **Recruiter NPC** (new role): shows the faction, with Join and Leave.
+- Set an NPC to Recruiter and it offers to **found a faction** if you don't already run one: name,
+  colour, motto, joining fee, open or closed. All editable later from the same NPC.
+- The faction lives on the server and a recruiter only points at it, so **losing the NPC never costs
+  you the faction** — place another and point it at the same one. `/faction` works with no NPC at all.
+- **NPCs take sides**: point one at a faction from the Role tab and it won't turn on its own people.
+  *Fight rivals* takes on other factions while leaving the unaffiliated alone.
+- Dialogue gains an **In faction** requirement.
+
+### Floating signs
+Up to four lines hovering above an NPC — price boards, titles, welcomes. Colours and the
+`%player%`/`%npc%`/`%balance%` placeholders work, and the balance shown is the reader's own.
+
+### NPC combat
+- **Protect owner**: fights whoever its person is fighting, both directions.
+- **Fight monsters** without needing the Guard behaviour, so followers are useful in a fight.
+- All combat options grouped on the Moves tab instead of split across two screens.
+
+### Fixes
+- Mobs used as NPC models animate again — walking and attacking were frozen.
+- Modded mobs that never spawn naturally now appear in the model picker.
+- The Basic role no longer says the NPC has no job.
+- Per-axis NPC size, set from the Move & Rotate panel; the floating name can be nudged up or down.
+- Coin and item payouts are cleared from NPCs whose owner isn't an operator — 0.6.0 only did that when
+  an NPC was next saved, so older dialogue kept paying out.
+
 ## 0.6.0
 
 ### NPC Reactions
