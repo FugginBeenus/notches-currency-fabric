@@ -153,7 +153,7 @@ public class NpcRecruiterScreen extends Screen {
             NotchWidgets.centerText(ctx, this.textRenderer, "Not taking new members.",
                     px + W / 2, y + 4, NotchTheme.TEXT_MUTED, false);
         } else {
-            String label = fee > 0 ? "Join for " + fee + " " + NotchWidgets.coinName() : "Join";
+            String label = fee > 0 ? "Join - " + fee + " " + NotchWidgets.coinName() : "Join";
             NotchWidgets.primaryButton(ctx, this.textRenderer, px + PAD, y, BTN_W, 18, label,
                     over(mx, my, px + PAD, y, BTN_W, 18));
         }

@@ -54,7 +54,7 @@ public final class CurrencyServerSync {
         try {
             if (!Files.isRegularFile(file)) return null;
             if (Files.size(file) > MAX_TEXTURE_BYTES) {
-                LOGGER.warn("{} is over {} KB and won't be synced to players. Shrink the PNG",
+                LOGGER.warn("{} is over {} KB and won't be synced to players - shrink the PNG",
                         file.getFileName(), MAX_TEXTURE_BYTES / 1024);
                 return null;
             }

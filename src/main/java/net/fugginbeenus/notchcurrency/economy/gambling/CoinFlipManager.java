@@ -78,7 +78,7 @@ public final class CoinFlipManager {
     }
 
     public static void notifyBusy(ServerPlayerEntity sp) {
-        sp.sendMessage(Text.literal("The coin is still in the air. Wait for it to land.").formatted(Formatting.YELLOW), false);
+        sp.sendMessage(Text.literal("The coin is still in the air - wait for it to land.").formatted(Formatting.YELLOW), false);
     }
 
     /** Player hit FLIP in the coin-flip screen: play at the block they opened (delayed reveal). */
@@ -181,10 +181,10 @@ public final class CoinFlipManager {
         if (sp != null) {
             String side = landedHeads ? "HEADS" : "TAILS";
             if (won) {
-                sp.sendMessage(Text.literal("The coin landed " + side + ". You won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
+                sp.sendMessage(Text.literal("The coin landed " + side + " - you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
                         .formatted(Formatting.GREEN), false);
             } else {
-                sp.sendMessage(Text.literal("The coin landed " + side + ". You lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                sp.sendMessage(Text.literal("The coin landed " + side + " - you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                         .formatted(Formatting.RED), false);
             }
         }

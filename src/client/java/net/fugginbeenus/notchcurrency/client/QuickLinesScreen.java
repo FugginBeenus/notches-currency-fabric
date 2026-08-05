@@ -91,7 +91,7 @@ public class QuickLinesScreen extends Screen {
                     over(mouseX, mouseY, px + W - 30, ry, 16, ROW_H - 1));
         }
         if (lines.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No lines yet. Type one below and Apply.",
+            NotchWidgets.centerText(ctx, this.textRenderer, "No lines yet - type one below and Apply.",
                     px + W / 2, py + LIST_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
 
@@ -102,7 +102,7 @@ public class QuickLinesScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + W - 76, py + 169, 66, 15, applyLabel,
                 canApply && over(mouseX, mouseY, px + W - 76, py + 169, 66, 15));
         NotchWidgets.centerText(ctx, this.textRenderer,
-                selected >= 0 ? "Editing line " + (selected + 1) + ". Click it again to deselect."
+                selected >= 0 ? "Editing line " + (selected + 1) + " - click it again to deselect."
                         : lines.size() + "/" + MAX_LINES + " lines",
                 px + W / 2, py + 189, NotchTheme.TEXT_MUTED, false);
 

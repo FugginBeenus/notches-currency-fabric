@@ -294,7 +294,7 @@ public final class NotchNpcManager {
                 if (!sp.getInventory().insertStack(tool)) {
                     sp.dropItem(tool, false);
                 }
-                sp.sendMessage(Text.literal("Route tool added. Walk the route and right-click the ground to drop waypoints.")
+                sp.sendMessage(Text.literal("Route tool added - walk the route and right-click the ground to drop waypoints.")
                         .formatted(Formatting.GREEN), false);
             }
             case 1 -> {
@@ -358,7 +358,7 @@ public final class NotchNpcManager {
             }
         }
         npc.setBehavior(NotchNpcEntity.Behavior.PATROL);
-        sp.sendMessage(Text.literal("Route confirmed: " + npc.getWaypoints().size()
+        sp.sendMessage(Text.literal("Route confirmed - " + npc.getWaypoints().size()
                 + " waypoints, patrol started." + (removed > 0 ? " The route tool vanished." : ""))
                 .formatted(Formatting.GREEN), false);
     }
@@ -393,7 +393,7 @@ public final class NotchNpcManager {
     public static void createDialogueTemplate(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         npc.setDialogue(buildStarterTree(npc));
-        sp.sendMessage(Text.literal("Starter dialogue created. Talk to the NPC to try it.").formatted(Formatting.GREEN), false);
+        sp.sendMessage(Text.literal("Starter dialogue created - talk to the NPC to try it.").formatted(Formatting.GREEN), false);
     }
 
     public static void clearDialogue(ServerPlayerEntity sp, NotchNpcEntity npc) {
@@ -440,7 +440,7 @@ public final class NotchNpcManager {
             clean.put(node);
         }
         if (strippedCommands) {
-            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed. Those are admin-only.")
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         clean.setStartId(tree.startId());
@@ -484,7 +484,7 @@ public final class NotchNpcManager {
             actions.set(trigger, kept);
         }
         if (stripped) {
-            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed. Those are admin-only.")
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
                     .formatted(Formatting.YELLOW), false);
         }
         npc.setActions(actions);
@@ -579,7 +579,7 @@ public final class NotchNpcManager {
         if (!sp.getInventory().insertStack(stack)) {
             sp.dropItem(stack, false);
         }
-        sp.sendMessage(Text.literal("Picked up the NPC. Place the item to set it down again.").formatted(Formatting.GREEN), false);
+        sp.sendMessage(Text.literal("Picked up the NPC - place the item to set it down again.").formatted(Formatting.GREEN), false);
     }
 
     public static void delete(ServerPlayerEntity sp, NotchNpcEntity npc) {

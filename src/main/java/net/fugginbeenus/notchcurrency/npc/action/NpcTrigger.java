@@ -11,7 +11,7 @@ public enum NpcTrigger {
     // both greeted: see the proximity scan on the entity.
     ON_PROXIMITY("When a player comes near", "Runs once as a player walks into range, and re-arms when they leave.", 0),
     ON_HURT("When hurt", "Runs when the NPC is hit, even if it's protected from the damage.", 40),
-    ON_DEATH("When killed", "Runs as the NPC dies. May have no player attached; a fall or lava counts.", 0),
+    ON_DEATH("When killed", "Runs as the NPC dies. May have no player attached - a fall or lava counts.", 0),
     ON_KILL("When it kills", "Runs when the NPC kills something.", 0);
 
     private final String label;

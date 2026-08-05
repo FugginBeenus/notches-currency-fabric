@@ -110,7 +110,7 @@ public final class ShopRent {
                 } else {
                     notify(server, owner, Text.literal("⚠ ")
                             .append(Text.literal(shop.getShopName()).formatted(Formatting.WHITE))
-                            .append(Text.literal(" is frozen. Couldn't pay rent of ").formatted(Formatting.YELLOW))
+                            .append(Text.literal(" is frozen - couldn't pay rent of ").formatted(Formatting.YELLOW))
                             .append(NotchCurrency.coins(rent))
                             .append(Text.literal(" (" + cycles + "/" + (graceCycles + 1) + ").").formatted(Formatting.YELLOW)));
                 }

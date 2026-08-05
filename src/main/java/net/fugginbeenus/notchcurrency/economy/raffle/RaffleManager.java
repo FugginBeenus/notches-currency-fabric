@@ -121,7 +121,7 @@ public final class RaffleManager {
 
         if (announce) {
             server.getPlayerManager().broadcast(Text.literal(player.getName().getString()).formatted(Formatting.YELLOW)
-                    .append(Text.literal(" entered the raffle. Pot is now ").formatted(Formatting.GRAY))
+                    .append(Text.literal(" entered the raffle - pot is now ").formatted(Formatting.GRAY))
                     .append(NotchCurrency.coins(state.getPot()))
                     .append(Text.literal("!").formatted(Formatting.GRAY)), false);
         }
@@ -217,7 +217,7 @@ public final class RaffleManager {
         if (online != null) {
             online.sendMessage(Text.literal("🎉 You won Raffle #" + round + "! ").formatted(Formatting.GOLD)
                     .append(prizeDescription(prize, prizeItem))
-                    .append(Text.literal(" is waiting. Claim it at the raffle or with /raffle claim.").formatted(Formatting.GOLD)), false);
+                    .append(Text.literal(" is waiting - claim it at the raffle or with /raffle claim.").formatted(Formatting.GOLD)), false);
         }
 
         if (broadcast && announce) {
@@ -225,7 +225,7 @@ public final class RaffleManager {
                     .append(Text.literal(winnerName).formatted(Formatting.YELLOW))
                     .append(Text.literal(" won ").formatted(Formatting.WHITE))
                     .append(prizeDescription(prize, prizeItem))
-                    .append(Text.literal(". They must claim it at the raffle. A new round starts now.").formatted(Formatting.WHITE)), false);
+                    .append(Text.literal(" - they must claim it at the raffle. A new round starts now.").formatted(Formatting.WHITE)), false);
         }
         return true;
     }

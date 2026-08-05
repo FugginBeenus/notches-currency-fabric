@@ -45,7 +45,7 @@ public final class AdminShopMenu {
             if (e.isDynamic()) {
                 line.append(Text.literal(" ~").formatted(Formatting.AQUA)
                         .styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                Text.literal("Dynamic price: moves with supply & demand")))));
+                                Text.literal("Dynamic price - moves with supply & demand")))));
             }
             player.sendMessage(line, false);
         }

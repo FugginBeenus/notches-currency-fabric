@@ -143,7 +143,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
                 shop.setOpen(!shop.isOpen());
                 state.markDirtyAndSave();
                 sp.sendMessage(Text.literal(shop.isOpen() ? "Shop is now open for business."
-                        : "Shop closed. Nobody can buy until you reopen it.")
+                        : "Shop closed - nobody can buy until you reopen it.")
                         .formatted(shop.isOpen() ? Formatting.GREEN : Formatting.YELLOW), false);
             }
             case ACTION_EDIT_LISTING -> {

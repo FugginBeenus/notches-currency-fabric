@@ -59,7 +59,7 @@ public final class NpcPresetManager {
         try {
             File file = dir().resolve(name + ".nbt").toFile();
             if (!file.isFile() && list().size() >= MAX_PRESETS) {
-                sp.sendMessage(Text.literal("Preset limit reached (" + MAX_PRESETS + "). Delete one first.")
+                sp.sendMessage(Text.literal("Preset limit reached (" + MAX_PRESETS + ") - delete one first.")
                         .formatted(Formatting.RED), false);
                 return;
             }

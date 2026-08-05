@@ -73,7 +73,7 @@ public class LoanScreen extends HandledScreen<LoanScreenHandler> {
         if (debt <= 0) {
             ctx.drawText(this.textRenderer, "No active loan.", x + 12, y + 74, NotchTheme.TEXT_MUTED, false);
         } else if (daysLeft <= 0) {
-            ctx.drawText(this.textRenderer, Text.literal("⚠ OVERDUE: penalty interest!").formatted(Formatting.RED), x + 12, y + 74, 0xFFFFFFFF, false);
+            ctx.drawText(this.textRenderer, Text.literal("⚠ OVERDUE - penalty interest!").formatted(Formatting.RED), x + 12, y + 74, 0xFFFFFFFF, false);
         } else {
             ctx.drawText(this.textRenderer, "Due in " + daysLeft + " day" + (daysLeft == 1 ? "" : "s"), x + 12, y + 74, NotchTheme.TEXT_MUTED, false);
         }

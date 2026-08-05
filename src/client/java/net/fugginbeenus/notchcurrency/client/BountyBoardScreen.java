@@ -66,7 +66,7 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
             drawRow(ctx, x, y + OFFERS_Y + i * ROW_H, handler.offerStack(i), mouseX, mouseY);
         }
         if (!anyOffer) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "All done. Check back later!",
+            NotchWidgets.centerText(ctx, this.textRenderer, "All done - check back later!",
                     x + W / 2, y + OFFERS_Y + 14, NotchTheme.TEXT_MUTED, false);
         }
 

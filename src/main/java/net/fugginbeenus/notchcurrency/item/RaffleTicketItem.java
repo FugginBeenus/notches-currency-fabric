@@ -130,7 +130,7 @@ public class RaffleTicketItem extends Item {
                 tooltip.add(Text.literal("This raffle is over.").formatted(Formatting.DARK_GRAY));
                 tooltip.add(Text.literal("Turn in for a discount on new entries.").formatted(Formatting.GREEN));
             }
-            default -> tooltip.add(Text.literal("Active, winner not yet drawn.").formatted(Formatting.DARK_GREEN));
+            default -> tooltip.add(Text.literal("Active - winner not yet drawn.").formatted(Formatting.DARK_GREEN));
         }
 
         if (StackData.has(stack, K_OWNER_NAME)) {

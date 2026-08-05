@@ -66,7 +66,7 @@ public class CrateLoader implements SimpleSynchronousResourceReloadListener {
                 Identifier itemId = net.fugginbeenus.notchcurrency.compat.Reg.parse(l.get("item").getAsString());
                 if (!net.minecraft.registry.Registries.ITEM.containsId(itemId)) {
                     // A misconfigured entry would silently pay out "Air": name the culprit instead.
-                    LOGGER.warn("Crate '{}': unknown item '{}', loot entry skipped", id, itemId);
+                    LOGGER.warn("Crate '{}': unknown item '{}' - loot entry skipped", id, itemId);
                     continue;
                 }
                 loot.add(new CrateDef.LootEntry(true, itemId, min, Math.max(min, max), 0, weight));

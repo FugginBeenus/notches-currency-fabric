@@ -89,7 +89,7 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
 
     @Override
     protected String bannerText() {
-        return "PREVIEW: actions and requirements don't run";
+        return "PREVIEW - actions and requirements don't run";
     }
 
     @Override

@@ -142,7 +142,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
                     listingId = null;
                     props.set(P_HAS_LISTING, 0);
                     props.set(P_STOCK, 0);
-                    sp.sendMessage(Text.literal("Listing removed. Its stock is back in your inventory.")
+                    sp.sendMessage(Text.literal("Listing removed - its stock is back in your inventory.")
                             .formatted(Formatting.GREEN), false);
                     NpcShopLogic.openShopManager(sp, shop.getShopId());
                 }
@@ -187,7 +187,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             listingId = created.getId();
             props.set(P_HAS_LISTING, 1);
             state.markDirtyAndSave();
-            sp.sendMessage(Text.literal("Listing created. Drop stock into the bin.").formatted(Formatting.GREEN), false);
+            sp.sendMessage(Text.literal("Listing created - drop stock into the bin.").formatted(Formatting.GREEN), false);
             return;
         }
 

@@ -72,7 +72,7 @@ public final class CurrencyPackGenerator {
             return;
         }
         remindedThisSession = true;
-        client.player.sendMessage(Text.literal("[Notch Currency] Custom coin art is ready. Enable ")
+        client.player.sendMessage(Text.literal("[Notch Currency] Custom coin art is ready - enable ")
                 .formatted(Formatting.GOLD)
                 .append(Text.literal("\"NotchCurrencyCustom\"").formatted(Formatting.YELLOW))
                 .append(Text.literal(" in Options → Resource Packs to see it.").formatted(Formatting.GOLD)), false);
@@ -113,7 +113,7 @@ public final class CurrencyPackGenerator {
                     {
                       "pack": {
                         "pack_format": %d,
-                        "description": "Notch Currency custom coin (generated; edit via config/notchcurrency/currency)"
+                        "description": "Notch Currency custom coin (generated - edit via config/notchcurrency/currency)"
                       }
                     }
                     """.formatted(PACK_FORMAT));
@@ -216,7 +216,7 @@ public final class CurrencyPackGenerator {
                     client.reloadResources();
                 } else if (client.player != null) {
                     client.player.sendMessage(Text.literal(
-                            "[Notch Currency] This server has custom coin art. Enable \"NotchCurrencyServer\" in Options → Resource Packs.")
+                            "[Notch Currency] This server has custom coin art - enable \"NotchCurrencyServer\" in Options → Resource Packs.")
                             .formatted(Formatting.GOLD), false);
                 }
             } else if (contentChanged) {

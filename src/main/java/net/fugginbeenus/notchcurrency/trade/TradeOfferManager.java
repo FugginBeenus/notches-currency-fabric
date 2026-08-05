@@ -38,7 +38,7 @@ public final class TradeOfferManager {
         }
         if (!leftover.isEmpty()) {
             state.returnMail(sp.getUuid(), leftover); // no room; keep for next time
-            sp.sendMessage(Text.literal("You have trade items waiting. Free up inventory space to receive them.")
+            sp.sendMessage(Text.literal("You have trade items waiting - free up inventory space to receive them.")
                     .formatted(Formatting.YELLOW), false);
         }
         if (items.size() != leftover.size()) {
@@ -124,7 +124,7 @@ public final class TradeOfferManager {
             NotchPackets.sendBalance(accepter, BalanceStore.get(accepter));
         }
         accepter.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.8F, 1.2F);
-        accepter.sendMessage(Text.literal("Trade complete. Received ")
+        accepter.sendMessage(Text.literal("Trade complete - received ")
                 .append(Text.literal(offer.summary()).formatted(Formatting.YELLOW))
                 .append(Text.literal(".").formatted(Formatting.GREEN)).formatted(Formatting.GREEN), false);
 
@@ -156,7 +156,7 @@ public final class TradeOfferManager {
             NotchPackets.sendBalance(creator, BalanceStore.get(creator));
         }
         state.remove(offerId);
-        creator.sendMessage(Text.literal("Offer cancelled. Your items were returned.").formatted(Formatting.GREEN), false);
+        creator.sendMessage(Text.literal("Offer cancelled - your items were returned.").formatted(Formatting.GREEN), false);
         return true;
     }
 

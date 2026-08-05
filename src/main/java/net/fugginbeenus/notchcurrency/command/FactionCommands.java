@@ -65,7 +65,7 @@ public final class FactionCommands {
             int members = state.memberCount(f.id());
             source.sendFeedback(() -> Text.literal(" • ")
                     .append(Text.literal(f.displayName()).formatted(f.color()))
-                    .append(Text.literal(" (" + f.id() + "): "
+                    .append(Text.literal(" (" + f.id() + ") - "
                             + (members == 1 ? "1 member" : members + " members")).formatted(Formatting.GRAY)), false);
         }
         return 1;

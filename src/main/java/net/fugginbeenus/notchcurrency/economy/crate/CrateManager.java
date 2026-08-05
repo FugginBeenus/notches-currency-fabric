@@ -67,7 +67,7 @@ public final class CrateManager {
         // Guard BEFORE keys are consumed: a bad datapack entry must never pay out "Air".
         if (loot.isItem() && !Registries.ITEM.containsId(loot.itemId())) {
             player.sendMessage(Text.literal("This crate is misconfigured (unknown item "
-                    + loot.itemId() + "). Check the server log.").formatted(Formatting.RED), false);
+                    + loot.itemId() + ") - check the server log.").formatted(Formatting.RED), false);
             return;
         }
         consumeKeys(player, def.keysRequired());
@@ -95,7 +95,7 @@ public final class CrateManager {
         CrateDef def = CrateRegistry.get(crateType);
         if (def == null) return;
         int total = def.totalWeight();
-        player.sendMessage(Text.literal("═══ " + def.name() + " Odds ═══").formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Text.literal("═══ " + def.name() + " - Odds ═══").formatted(Formatting.GOLD, Formatting.BOLD), false);
         player.sendMessage(Text.literal("Cost: " + def.keysRequired() + " key" + (def.keysRequired() == 1 ? "" : "s"))
                 .formatted(Formatting.GRAY), false);
         for (CrateDef.LootEntry e : def.loot()) {

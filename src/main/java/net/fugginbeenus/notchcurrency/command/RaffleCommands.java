@@ -47,7 +47,7 @@ public final class RaffleCommands {
                         .executes(ctx -> {
                             boolean drawn = RaffleManager.draw(ctx.getSource().getServer(), true);
                             ctx.getSource().sendFeedback(() -> Text.literal(drawn
-                                    ? "Raffle drawn." : "No tickets, nothing to draw.").formatted(Formatting.YELLOW), true);
+                                    ? "Raffle drawn." : "No tickets - nothing to draw.").formatted(Formatting.YELLOW), true);
                             return drawn ? 1 : 0;
                         }))
                 .then(CommandManager.literal("admin")

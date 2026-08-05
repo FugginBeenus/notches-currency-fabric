@@ -114,7 +114,7 @@ public class NpcMoveScreen extends Screen {
         }
 
         // Bottom row: hint + back.
-        ctx.drawText(this.textRenderer, "Nudge 0.1, hold Shift for 1 block.", px + 10, py + 84,
+        ctx.drawText(this.textRenderer, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 84,
                 NotchTheme.TEXT_MUTED, false);
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 100, 272, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 10, py + 100, 272, 16));

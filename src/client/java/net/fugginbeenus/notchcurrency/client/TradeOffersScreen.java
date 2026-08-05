@@ -209,9 +209,9 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
             lines.add(Text.literal("  " + st.getCount() + "× ").append(st.getName()));
         }
         if (r.price() <= 0 && r.wants().isEmpty()) {
-            lines.add(Text.literal("  nothing (it's free)").formatted(Formatting.GRAY));
+            lines.add(Text.literal("  nothing - it's free").formatted(Formatting.GRAY));
         }
-        lines.add(Text.literal(mine ? (r.target().isEmpty() ? "Open to anyone" : "Reserved for " + r.target())
+        lines.add(Text.literal(mine ? (r.target().isEmpty() ? "Open - anyone can accept" : "Reserved for " + r.target())
                 : "From " + r.from()).formatted(Formatting.DARK_GRAY));
         ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
         return true;

@@ -127,7 +127,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
     private void uncraft(ServerPlayerEntity sp, ItemStack stack) {
         EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.getWorld());
         if (plan == null) {
-            String why = stack.isDamaged() ? "Repair it first. Worn gear can't be salvaged for full parts."
+            String why = stack.isDamaged() ? "Repair it first - worn gear can't be salvaged for full parts."
                     : "That item has no crafting recipe to reverse.";
             sp.sendMessage(Text.literal(why).formatted(Formatting.YELLOW), false);
             return;

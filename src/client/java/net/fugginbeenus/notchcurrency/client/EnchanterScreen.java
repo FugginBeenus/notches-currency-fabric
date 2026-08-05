@@ -199,7 +199,7 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
         EnchanterManager.UncraftPlan p = uncraftPlan();
         if (p == null) {
             if (stack.isDamaged()) {
-                NotchWidgets.centerText(ctx, this.textRenderer, "Repair it first.", x + W / 2, y + LIST_Y + 28,
+                NotchWidgets.centerText(ctx, this.textRenderer, "Repair it first -", x + W / 2, y + LIST_Y + 28,
                         NotchTheme.TEXT_MUTED, false);
                 NotchWidgets.centerText(ctx, this.textRenderer, "Worn gear can't be salvaged.", x + W / 2,
                         y + LIST_Y + 40, NotchTheme.TEXT_MUTED, false);

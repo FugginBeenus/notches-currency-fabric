@@ -53,7 +53,7 @@ public final class EconomyLeaderboard {
         for (Map.Entry<UUID, Long> e : top) {
             lines.add(Text.literal(" " + (rank++) + ". ").formatted(Formatting.YELLOW)
                     .append(Text.literal(nameOf(server, e.getKey())).formatted(Formatting.WHITE))
-                    .append(Text.literal(": ").formatted(Formatting.GRAY))
+                    .append(Text.literal(" - ").formatted(Formatting.GRAY))
                     .append(Text.literal(e.getValue() + " ").formatted(Formatting.GOLD))
                     .append(NotchCurrency.coinIcon()));
         }

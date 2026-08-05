@@ -109,7 +109,7 @@ public class RoutePlannerItem extends Item {
     private static NotchNpcEntity boundNpc(ItemStack stack, ServerWorld world, ServerPlayerEntity sp) {
         UUID npcId = StackData.getUuid(stack, NPC_KEY);
         if (npcId == null) {
-            sp.sendMessage(Text.literal("This route tool isn't bound to an NPC. Get one from the NPC editor.")
+            sp.sendMessage(Text.literal("This route tool isn't bound to an NPC - get one from the NPC editor.")
                     .formatted(Formatting.RED), false);
             return null;
         }

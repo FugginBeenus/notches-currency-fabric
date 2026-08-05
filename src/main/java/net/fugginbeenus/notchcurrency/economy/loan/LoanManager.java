@@ -168,11 +168,11 @@ public final class LoanManager {
                 if (!loan.lateFeeApplied && lateFeePercent > 0) {
                     loan.debt += loan.debt * lateFeePercent / 100;
                     loan.lateFeeApplied = true;
-                    if (online != null) online.sendMessage(Text.literal("⚠ Your loan is OVERDUE. A "
+                    if (online != null) online.sendMessage(Text.literal("⚠ Your loan is OVERDUE - a "
                             + lateFeePercent + "% late fee was added.").formatted(Formatting.RED), false);
                 }
                 loan.debt += loan.debt * overdueInterestPercent / 100;
-                if (online != null) online.sendMessage(Text.literal("Overdue loan penalty interest applied. You owe ")
+                if (online != null) online.sendMessage(Text.literal("Overdue loan penalty interest applied - you owe ")
                         .formatted(Formatting.RED).append(NotchCurrency.coins(loan.debt)).append(Text.literal(".").formatted(Formatting.RED)), false);
             } else {
                 loan.debt += loan.debt * interestPercent / 100;

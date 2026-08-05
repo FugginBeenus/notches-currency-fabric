@@ -25,12 +25,12 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
 
     private static final String[] SLOT_LABELS = {"Helmet", "Chest", "Legs", "Boots", "Hand", "Offhand"};
     private static final String[] SLOT_HINTS = {
-            "Any head item: armor, skulls, carved pumpkins.",
+            "Any head item - armor, skulls, carved pumpkins.",
             "Any chestplate (or elytra).",
             "Any leggings.",
             "Any boots.",
-            "Anything: tools, weapons, or just a prop.",
-            "Anything. Shields live here."
+            "Anything - tools, weapons, or just a prop.",
+            "Anything - shields live here."
     };
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();

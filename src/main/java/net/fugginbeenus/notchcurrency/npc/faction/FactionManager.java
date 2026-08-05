@@ -129,7 +129,7 @@ public final class FactionManager {
         }
         // A founder leaving would orphan the faction, so send them to disband instead.
         if (faction.isFoundedBy(sp.getUuid()) && !sp.hasPermissionLevel(2)) {
-            msg(sp, "You founded " + faction.displayName() + ". Disband it rather than walking out.",
+            msg(sp, "You founded " + faction.displayName() + " - disband it rather than walking out.",
                     Formatting.RED);
             return;
         }

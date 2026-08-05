@@ -107,7 +107,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
                 NotchWidgets.centerText(ctx, this.textRenderer, msg, x + W / 2, y + STATUS_Y,
                         jackpotShown ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_GREEN, true);
             } else {
-                NotchWidgets.centerText(ctx, this.textRenderer, "No win. Spin again!",
+                NotchWidgets.centerText(ctx, this.textRenderer, "No win - spin again!",
                         x + W / 2, y + STATUS_Y, NotchTheme.TEXT_MUTED, false);
             }
         }
@@ -156,7 +156,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         boolean fresh = curSpinId != lastSpinIdSeen;
         if (!fresh && now - spinStartMs > MAX_WAIT_MS) {
             spinning = false;
-            setError("Spin failed. Try again.");
+            setError("Spin failed - try again.");
             return finalReels;
         }
 

@@ -35,12 +35,12 @@ public final class RouteHud implements HudRenderCallback {
                 ? StackData.getString(held, RoutePlannerItem.NPC_NAME_KEY) : "NPC";
         int count = StackData.getInt(held, RoutePlannerItem.COUNT_KEY);
 
-        String title = "Patrol route: " + npcName;
+        String title = "Patrol route - " + npcName;
         String countLine = "Waypoints: " + count + "/16" + (count < 2 ? "  (need 2+)" : "");
         String[] hints = {
-                "Right-click ground: add waypoint",
-                "Sneak + right-click: undo last",
-                "Right-click the air: confirm & finish",
+                "Right-click ground - add waypoint",
+                "Sneak + right-click - undo last",
+                "Right-click the air - confirm & finish",
         };
 
         var tr = client.textRenderer;
