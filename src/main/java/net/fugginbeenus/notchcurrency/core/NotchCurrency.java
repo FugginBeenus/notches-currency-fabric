@@ -181,6 +181,7 @@ public class NotchCurrency implements ModInitializer {
             EcoCommands.register(dispatcher);
             AdminShopCommands.register(dispatcher);
             NpcCommands.register(dispatcher);
+            net.fugginbeenus.notchcurrency.command.FactionCommands.register(dispatcher);
             RaffleCommands.register(dispatcher);
             BountyCommands.register(dispatcher);
             CrateKeyCommands.register(dispatcher);
