@@ -386,6 +386,35 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_STUDIO_OPEN, buf);
     }
 
+    public static void sendRecruiterAction(UUID npcId, int action, String name, String color) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeVarInt(action);
+        buf.writeString(name);
+        buf.writeString(color);
+        NetClient.sendToServer(NotchPackets.NPC_RECRUITER_ACTION, buf);
+    }
+
+    public static void registerRecruiterReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_RECRUITER_OPEN, (client, buf) -> {
+            UUID npcId = buf.readUuid();
+            String factionId = buf.readString();
+            String factionName = buf.readString();
+            String colorName = buf.readString();
+            int members = buf.readVarInt();
+            boolean alreadyIn = buf.readBoolean();
+            boolean canFound = buf.readBoolean();
+            buf.readBoolean(); // may-assign: reserved for the Role tab picker
+            client.execute(() -> {
+                net.minecraft.util.Formatting color = net.minecraft.util.Formatting.byName(colorName);
+                MinecraftClient.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen(npcId, factionId,
+                                factionName, color == null ? net.minecraft.util.Formatting.WHITE : color,
+                                members, alreadyIn, canFound));
+            });
+        });
+    }
+
     public static void sendNpcActionsOpen(UUID npcId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);

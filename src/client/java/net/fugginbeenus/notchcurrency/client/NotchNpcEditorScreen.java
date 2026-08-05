@@ -37,7 +37,7 @@ public class NotchNpcEditorScreen extends Screen {
     private static final NpcRole[] SELECTABLE = {
             NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
             NpcRole.MAILBOX, NpcRole.RAFFLE, NpcRole.BOUNTY, NpcRole.DEALER, NpcRole.ENCHANTER,
-            NpcRole.COSMETICS
+            NpcRole.COSMETICS, NpcRole.RECRUITER
     };
 
     private final UUID npcId;
@@ -953,6 +953,7 @@ public class NotchNpcEditorScreen extends Screen {
             case BOUNTY -> "Bounty";
             case DEALER -> "Dealer";
             case COSMETICS -> "Cosmetics";
+            case RECRUITER -> "Recruiter";
             case CUSTOM -> "Custom (API)";
         };
     }

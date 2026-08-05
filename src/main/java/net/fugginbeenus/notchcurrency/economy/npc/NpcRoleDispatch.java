@@ -60,6 +60,11 @@ public final class NpcRoleDispatch {
             case ENCHANTER -> net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.openScreen(sp);
             case COSMETICS -> net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.openScreen(sp,
                     npc != null ? npc.getUuid() : null);
+            case RECRUITER -> {
+                if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n) {
+                    net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.open(sp, n);
+                }
+            }
             case CUSTOM -> customInteract(sp, npc);
             // NONE is a real choice, not a gap: guards, greeters and villagers-with-dialogue all live
             // here. Saying nothing is the point — anything else nags every time they're talked to.
@@ -79,6 +84,7 @@ public final class NpcRoleDispatch {
             case DEALER -> "Play the slots";
             case ENCHANTER -> "Enchanting services";
             case COSMETICS -> "Browse cosmetics";
+            case RECRUITER -> "Ask about the faction";
             case CUSTOM -> "Let's get to it";
             default -> "Continue";
         };

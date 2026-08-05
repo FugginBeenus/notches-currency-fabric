@@ -33,6 +33,9 @@ public enum NpcRole {
     DEALER,
     /** Opens the cosmetics shop (buy cosmetics from any mod for coins). */
     COSMETICS,
+    /** Recruits for a faction: players join or leave through it, and its owner can found one here.
+     *  The NPC only points at the faction — the faction itself lives in the world save. */
+    RECRUITER,
     /** An API-registered role from another mod ({@code NotchNpcApi.registerCustomRole});
      *  the NPC stores the handler id. Not selectable in the editor. */
     CUSTOM

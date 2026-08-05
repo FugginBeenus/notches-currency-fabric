@@ -378,6 +378,20 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_RECRUITER_ACTION, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            int action = buf.readVarInt();
+            String name = buf.readString(32);
+            String color = buf.readString(24);
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                        && player.squaredDistanceTo(npc) <= 64.0) { // same 8-block reach as dialogue
+                    net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.act(player, npc, action, name, color);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_ACTIONS_OPEN, (server, player, buf) -> {
             UUID id = buf.readUuid();
             server.execute(() -> {

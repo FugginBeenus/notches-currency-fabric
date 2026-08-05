@@ -125,6 +125,12 @@ public final class NotchPackets {
     public static final Identifier NPC_STUDIO_SAVE = NotchCurrency.id("npc_studio_save");
     // Client -> server: set the dialogue style (npc uuid, mode ordinal: 0=window 1=chat)
     public static final Identifier NPC_DIALOGUE_MODE = NotchCurrency.id("npc_dialogue_mode");
+    // Server -> client: open the recruiter screen (npc uuid, faction id/name/colour, members,
+    // whether the viewer is already in it, and whether they may set this NPC's faction)
+    public static final Identifier NPC_RECRUITER_OPEN = NotchCurrency.id("npc_recruiter_open");
+    // Client -> server: recruiter action (npc uuid, action: 0 join / 1 leave / 2 found, name, colour)
+    public static final Identifier NPC_RECRUITER_ACTION = NotchCurrency.id("npc_recruiter_action");
+
     // Client -> server: request this NPC's trigger reactions for editing (npc uuid)
     public static final Identifier NPC_ACTIONS_OPEN = NotchCurrency.id("npc_actions_open");
     // Server -> client: the NPC's reactions (npc uuid, actions NBT)

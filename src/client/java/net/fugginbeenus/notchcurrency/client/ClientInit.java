@@ -119,6 +119,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerNpcDialogueReceiver();
         NotchPacketsClient.registerNpcStudioReceiver();
         NotchPacketsClient.registerNpcActionsReceiver();
+        NotchPacketsClient.registerRecruiterReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
 
         // Trade cancel / complete messages
