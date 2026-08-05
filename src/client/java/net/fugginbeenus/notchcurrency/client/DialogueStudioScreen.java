@@ -220,7 +220,9 @@ public class DialogueStudioScreen extends Screen {
 
         DialogueCondition cd = condition(condIdx, false);
         boolean condReal = cd != null && cd.type() != DialogueCondition.Type.NONE;
-        boolean cvVisible = !nodeMode && c != null && condReal && cd.type() == DialogueCondition.Type.HAS_ITEM;
+        boolean cvVisible = !nodeMode && c != null && condReal
+                && (cd.type() == DialogueCondition.Type.HAS_ITEM
+                || cd.type() == DialogueCondition.Type.IS_FACTION);
         boolean caVisible = !nodeMode && c != null && condReal
                 && (cd.type() == DialogueCondition.Type.HAS_COINS || cd.type() == DialogueCondition.Type.HAS_ITEM);
         condValueField.setVisible(cvVisible);
@@ -449,6 +451,7 @@ public class DialogueStudioScreen extends Screen {
             case HAS_ITEM -> "Has item";
             case IS_OWNER -> "Is owner";
             case IS_OP -> "Is op";
+            case IS_FACTION -> "In faction";
         };
     }
 

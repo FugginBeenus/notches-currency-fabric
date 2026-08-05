@@ -386,6 +386,34 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_STUDIO_OPEN, buf);
     }
 
+    public static void sendFactionPick(UUID npcId, int action, String factionId) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeVarInt(action);
+        buf.writeString(factionId);
+        NetClient.sendToServer(NotchPackets.NPC_FACTION_PICK, buf);
+    }
+
+    public static void registerFactionListReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_FACTION_LIST, (client, buf) -> {
+            UUID npcId = buf.readUuid();
+            String currentId = buf.readString();
+            int count = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen.Entry> entries =
+                    new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                String id = buf.readString();
+                String name = buf.readString();
+                net.minecraft.util.Formatting color = net.minecraft.util.Formatting.byName(buf.readString());
+                int members = buf.readVarInt();
+                entries.add(new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen.Entry(
+                        id, name, color == null ? net.minecraft.util.Formatting.WHITE : color, members));
+            }
+            client.execute(() -> MinecraftClient.getInstance().setScreen(
+                    new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen(npcId, currentId, entries)));
+        });
+    }
+
     public static void sendRecruiterAction(UUID npcId, int action, String name, String color) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);

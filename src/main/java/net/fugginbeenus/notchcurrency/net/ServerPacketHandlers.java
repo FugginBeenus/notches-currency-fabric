@@ -378,6 +378,22 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_FACTION_PICK, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            int action = buf.readVarInt();
+            String factionId = buf.readString(32);
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    if (action == net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_LIST) {
+                        net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.sendList(player, npc);
+                    } else {
+                        net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.pick(player, npc, action, factionId);
+                    }
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_RECRUITER_ACTION, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int action = buf.readVarInt();

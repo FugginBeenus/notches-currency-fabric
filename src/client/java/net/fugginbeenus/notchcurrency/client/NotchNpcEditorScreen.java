@@ -532,6 +532,14 @@ public class NotchNpcEditorScreen extends Screen {
             if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
             else NotchWidgets.neutralButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
         }
+        // Allegiance sits with the role: it's who the NPC answers to, not how it looks or moves.
+        NotchWidgets.divider(ctx, px + 8, py + 158, W - 16);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 40, py + 164, 220, 16, "Faction...",
+                over(mx, my, px + 40, py + 164, 220, 16));
+        NotchWidgets.centerText(ctx, this.textRenderer,
+                "Recruiters sign players up; guards use it to tell friend from foe.",
+                px + W / 2, py + 184, NotchTheme.TEXT_MUTED, false);
+
         // Confirmation before leaving the SHOP role (it closes the shop + returns its stock).
         if (pendingRole != null) {
             int by = py + H - 54;
@@ -743,6 +751,13 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 0 && clickAppearance(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 1 && clickBehavior(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 2) {
+                if (pendingRole == null && over(mx, my, px + 40, py + 164, 220, 16)) {
+                    NotchWidgets.click();
+                    // The server replies with the factions this player may use, which opens the picker.
+                    NotchPacketsClient.sendFactionPick(npcId,
+                            net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_LIST, "");
+                    return true;
+                }
                 // Handle the pending SHOP-change confirmation first.
                 if (pendingRole != null) {
                     int by = py + H - 54;

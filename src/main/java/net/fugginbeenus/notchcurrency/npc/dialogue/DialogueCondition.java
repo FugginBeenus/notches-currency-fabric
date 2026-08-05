@@ -27,7 +27,9 @@ public class DialogueCondition {
         /** Player owns this NPC. */
         IS_OWNER,
         /** Player is an operator. */
-        IS_OP
+        IS_OP,
+        /** Player is in a faction: the one named in {@code value}, or this NPC's own if left blank. */
+        IS_FACTION
     }
 
     private Type type = Type.HAS_COINS;
@@ -57,7 +59,20 @@ public class DialogueCondition {
             case HAS_ITEM -> countItem(sp) >= amount;
             case IS_OWNER -> npc.isOwnedBy(sp);
             case IS_OP -> sp.hasPermissionLevel(2);
+            case IS_FACTION -> matchesFaction(sp, npc);
         };
+    }
+
+    /**
+     * Leaving the name blank means "my faction", which is the common case — a guild NPC offering
+     * something only its own members get. Naming one lets an NPC react to somebody else's colours.
+     */
+    private boolean matchesFaction(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        String wanted = value == null || value.isBlank() ? npc.getFactionId() : value.trim();
+        if (wanted.isEmpty()) return false; // no faction to be in
+        String theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
+                .get(sp.getServerWorld()).factionIdOf(sp.getUuid());
+        return wanted.equals(theirs);
     }
 
     private long countItem(ServerPlayerEntity sp) {

@@ -45,6 +45,63 @@ public final class RecruiterManager {
         Net.sendToClient(sp, NotchPackets.NPC_RECRUITER_OPEN, buf);
     }
 
+    public static final int PICK_LIST = 0;
+    public static final int PICK_SET = 1;
+    public static final int PICK_CLEAR = 2;
+
+    /**
+     * The faction picker behind the Role tab. This is how a founder who lost their recruiter gets
+     * back on their feet: place a new one, pick the faction they already own, carry on. Without it
+     * they'd be stuck, since founding is only offered on an unassigned recruiter and they've already
+     * used their one faction.
+     */
+    public static void pick(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String factionId) {
+        if (!npc.canEdit(sp)) return;
+        FactionState state = FactionState.get(sp.getServerWorld());
+
+        if (action == PICK_SET) {
+            Faction faction = state.get(factionId);
+            if (faction == null) {
+                sp.sendMessage(Text.literal("No faction by that name.").formatted(Formatting.RED), false);
+                return;
+            }
+            // Admins can point an NPC at anything; everyone else only at factions they founded.
+            if (!FactionManager.canManage(sp, faction)) {
+                sp.sendMessage(Text.literal("That isn't your faction.").formatted(Formatting.RED), false);
+                return;
+            }
+            npc.setFactionId(faction.id());
+            sp.sendMessage(Text.literal("")
+                    .append(Text.literal(faction.displayName()).formatted(faction.color()))
+                    .append(Text.literal(" now flies here.").formatted(Formatting.GREEN)), false);
+        } else if (action == PICK_CLEAR) {
+            npc.setFactionId("");
+            sp.sendMessage(Text.literal("Faction cleared.").formatted(Formatting.YELLOW), false);
+        }
+        sendList(sp, npc);
+    }
+
+    /** Send the factions this player may point the NPC at. */
+    public static void sendList(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!npc.canEdit(sp)) return;
+        FactionState state = FactionState.get(sp.getServerWorld());
+        java.util.List<Faction> offered = new java.util.ArrayList<>();
+        for (Faction f : state.all()) {
+            if (FactionManager.canManage(sp, f)) offered.add(f);
+        }
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npc.getUuid());
+        buf.writeString(npc.getFactionId());
+        buf.writeVarInt(offered.size());
+        for (Faction f : offered) {
+            buf.writeString(f.id());
+            buf.writeString(f.displayName());
+            buf.writeString(f.color().getName());
+            buf.writeVarInt(state.memberCount(f.id()));
+        }
+        Net.sendToClient(sp, NotchPackets.NPC_FACTION_LIST, buf);
+    }
+
     /** Handle a button on that screen. Everything is re-checked here; the client is never trusted. */
     public static void act(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String name, String color) {
         FactionState state = FactionState.get(sp.getServerWorld());
