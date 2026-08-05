@@ -88,6 +88,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     /** Nudges the floating name up or down — models vary enough that one height never fits all. */
     private static final TrackedData<Float> NAME_OFFSET =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    /** Free-floating sign above the NPC, newline-separated. Synced because the client draws it, and
+     *  because placeholders like %balance% have to resolve per viewer. */
+    private static final TrackedData<String> BILLBOARD =
+            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
     /** Pose preset: 0 standing, 1 sitting, 2 sneaking, 3 sleeping. */
     private static final TrackedData<Integer> NPC_POSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
@@ -217,6 +221,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         builder.add(SCALE_Y, 1.0f);
         builder.add(SCALE_Z, 1.0f);
         builder.add(NAME_OFFSET, 0.0f);
+        builder.add(BILLBOARD, "");
         builder.add(NPC_POSE, POSE_STANDING);
         builder.add(CUSTOM_POSE, new NbtCompound());
         builder.add(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -233,6 +238,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.startTracking(SCALE_Y, 1.0f);
         this.dataTracker.startTracking(SCALE_Z, 1.0f);
         this.dataTracker.startTracking(NAME_OFFSET, 0.0f);
+        this.dataTracker.startTracking(BILLBOARD, "");
         this.dataTracker.startTracking(NPC_POSE, POSE_STANDING);
         this.dataTracker.startTracking(CUSTOM_POSE, new NbtCompound());
         this.dataTracker.startTracking(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -363,6 +369,30 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public float getScaleZ() { return this.dataTracker.get(SCALE_Z); }
     public void setScaleZ(float scale) { this.dataTracker.set(SCALE_Z, clampNpcScale(scale)); }
+
+    public static final int MAX_BILLBOARD_LINES = 4;
+    public static final int MAX_BILLBOARD_LINE_LENGTH = 48;
+
+    /** The floating sign's lines, newline-separated; empty means no sign. */
+    public String getBillboard() { return this.dataTracker.get(BILLBOARD); }
+
+    public void setBillboard(String text) {
+        if (text == null || text.isBlank()) {
+            this.dataTracker.set(BILLBOARD, "");
+            return;
+        }
+        StringBuilder out = new StringBuilder();
+        int lines = 0;
+        for (String line : text.split("\\n", -1)) {
+            if (lines >= MAX_BILLBOARD_LINES) break;
+            String trimmed = line.length() > MAX_BILLBOARD_LINE_LENGTH
+                    ? line.substring(0, MAX_BILLBOARD_LINE_LENGTH) : line;
+            if (lines > 0) out.append('\n');
+            out.append(trimmed);
+            lines++;
+        }
+        this.dataTracker.set(BILLBOARD, out.toString());
+    }
 
     /** How far to nudge the floating name, in blocks. */
     public float getNameOffset() { return this.dataTracker.get(NAME_OFFSET); }
@@ -1104,6 +1134,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putFloat("ScaleY", getScaleY());
         nbt.putFloat("ScaleZ", getScaleZ());
         nbt.putFloat("NameOffset", getNameOffset());
+        nbt.putString("Billboard", getBillboard());
         nbt.putInt("NpcPose", getNpcPose());
         nbt.put("CustomPose", this.dataTracker.get(CUSTOM_POSE).copy());
         nbt.putInt("PoseAnim", getPoseAnim());
@@ -1180,6 +1211,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : getScale());
         setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : getScale());
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
+        if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
         if (nbt.contains("CustomPose")) {

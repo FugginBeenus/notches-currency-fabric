@@ -66,12 +66,13 @@ public final class NotchPacketsClient {
             String followName = buf.readString(16);
             int movesBits = buf.readVarInt();
             String farewell = buf.readString(160);
+            String billboard = buf.readString(400);
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
                     scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
-                    regen, followName, movesBits, farewell);
+                    regen, followName, movesBits, farewell, billboard);
             client.execute(() -> MinecraftClient.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });
@@ -384,6 +385,13 @@ public final class NotchPacketsClient {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         NetClient.sendToServer(NotchPackets.NPC_STUDIO_OPEN, buf);
+    }
+
+    public static void sendNpcBillboard(UUID npcId, String text) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeString(text);
+        NetClient.sendToServer(NotchPackets.NPC_BILLBOARD, buf);
     }
 
     public static void sendFactionPick(UUID npcId, int action, String factionId) {

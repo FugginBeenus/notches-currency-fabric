@@ -78,6 +78,25 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
         this.model.sneaking = entity.isInSneakingPose();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+
+        // After the body, so the sign shows even on an NPC with its nameplate turned off.
+        String[] sign = NpcBillboard.lines(entity);
+        double y = entity.getNameOffset() + NpcBillboard.BASE_GAP;
+        for (String line : sign) {
+            if (!line.isBlank()) {
+                matrices.push();
+                matrices.translate(0.0, y, 0.0);
+                //? if >=1.21 {
+                /*super.renderLabelIfPresent(entity, net.minecraft.text.Text.literal(line), matrices,
+                        vertexConsumers, light, tickDelta);
+                *///?} else {
+                super.renderLabelIfPresent(entity, net.minecraft.text.Text.literal(line), matrices,
+                        vertexConsumers, light);
+                //?}
+                matrices.pop();
+            }
+            y += NpcBillboard.LINE_HEIGHT;
+        }
     }
 
     @Override

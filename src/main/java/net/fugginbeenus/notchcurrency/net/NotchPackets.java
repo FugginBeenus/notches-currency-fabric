@@ -125,6 +125,8 @@ public final class NotchPackets {
     public static final Identifier NPC_STUDIO_SAVE = NotchCurrency.id("npc_studio_save");
     // Client -> server: set the dialogue style (npc uuid, mode ordinal: 0=window 1=chat)
     public static final Identifier NPC_DIALOGUE_MODE = NotchCurrency.id("npc_dialogue_mode");
+    // Client -> server: set the NPC's floating sign (npc uuid, newline-separated lines)
+    public static final Identifier NPC_BILLBOARD = NotchCurrency.id("npc_billboard");
     // Client -> server: faction picker (npc uuid, action: 0 list / 1 set / 2 clear, faction id)
     public static final Identifier NPC_FACTION_PICK = NotchCurrency.id("npc_faction_pick");
     // Server -> client: the factions this NPC could belong to (npc uuid, current id, then each entry)

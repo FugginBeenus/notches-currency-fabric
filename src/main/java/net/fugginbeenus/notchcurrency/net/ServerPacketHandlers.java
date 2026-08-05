@@ -378,6 +378,17 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_BILLBOARD, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            String text = buf.readString(400);
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setBillboard(player, npc, text);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_FACTION_PICK, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int action = buf.readVarInt();

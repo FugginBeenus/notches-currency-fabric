@@ -74,6 +74,7 @@ public class NotchNpcEditorScreen extends Screen {
     private TextFieldWidget followField;
     private TextFieldWidget farewellField;
     private String currentFarewell;
+    private String currentBillboard;
     private NotchNpcEntity preview;
 
     /** Which tab the NEXT editor open should land on. Sub-screens (pose editor, studio, stats…) set
@@ -89,6 +90,7 @@ public class NotchNpcEditorScreen extends Screen {
         this.currentRole = roleFromOrdinal(state.roleOrdinal());
         this.currentName = state.name() == null ? "" : state.name();
         this.currentFarewell = state.farewell() == null ? "" : state.farewell();
+        this.currentBillboard = state.billboard() == null ? "" : state.billboard();
         this.ownerName = state.ownerName() == null ? "" : state.ownerName();
         this.canEdit = state.canEdit();
         this.currentModel = (state.model() == null || state.model().isEmpty())
@@ -249,6 +251,7 @@ public class NotchNpcEditorScreen extends Screen {
 
         // Where the floating name sits — models vary enough that one height never fits them all.
         drawNameOffsetRow(ctx, mx, my);
+        drawSignButton(ctx, mx, my);
 
         // Model: current name + Change button (opens the vanilla/modded model picker)
         ctx.drawText(this.textRenderer, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
@@ -290,6 +293,17 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int NAME_Y_ROW = 82;
     private static final int STEP_W = 18, STEP_H = 14;
     private static final int NAME_Y_MINUS_X = 196, NAME_Y_PLUS_X = 272;
+
+    // The floating sign sits under the skin controls, in the room the taller panel left.
+    private static final int PAD_L = 14;
+    private int signRow() { return py + 196; }
+
+    private void drawSignButton(DrawContext ctx, int mx, int my) {
+        int y = signRow();
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + PAD_L, y, W - PAD_L * 2, 15,
+                currentBillboard.isBlank() ? "Add a floating sign..." : "Floating sign...",
+                over(mx, my, px + PAD_L, y, W - PAD_L * 2, 15));
+    }
 
     private void drawNameOffsetRow(DrawContext ctx, int mx, int my) {
         int y = py + NAME_Y_ROW;
@@ -852,6 +866,11 @@ public class NotchNpcEditorScreen extends Screen {
             if (over(mx, my, px + 118, py + 140, 174, 14)) { currentSlim = !currentSlim; sendAppearance(); return true; }
             if (over(mx, my, px + 118, py + 157, 12, 12)) { togglePlayerSkin(); return true; }
             if (over(mx, my, px + 118, py + 175, 12, 12)) { toggleUrlSkin(); return true; }
+        }
+        if (over(mx, my, px + PAD_L, signRow(), W - PAD_L * 2, 15)) {
+            NotchWidgets.click();
+            MinecraftClient.getInstance().setScreen(new NpcBillboardScreen(npcId, currentBillboard));
+            return true;
         }
         // Nameplate nudge (size axes live on the Pose tab).
         if (over(mx, my, px + NAME_Y_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {

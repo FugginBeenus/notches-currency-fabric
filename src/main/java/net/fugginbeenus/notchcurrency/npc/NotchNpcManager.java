@@ -81,6 +81,7 @@ public final class NotchNpcManager {
                 | (npc.isHostileToPlayers() ? 16 : 0) | (npc.fightsBack() ? 32 : 0)
                 | (npc.fightsRivalFactions() ? 64 : 0));
         buf.writeString(npc.getFarewellText());
+        buf.writeString(npc.getBillboard());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
@@ -160,6 +161,12 @@ public final class NotchNpcManager {
             }
         }
         npc.setAppearance(model, skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
+    }
+
+    /** The floating sign. Caps live on the entity, so a hand-made packet can't post a wall of text. */
+    public static void setBillboard(ServerPlayerEntity sp, NotchNpcEntity npc, String text) {
+        if (!guard(sp, npc)) return;
+        npc.setBillboard(text);
     }
 
     public static void setPose(ServerPlayerEntity sp, NotchNpcEntity npc, int pose) {

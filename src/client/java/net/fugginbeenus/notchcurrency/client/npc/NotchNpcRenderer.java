@@ -106,6 +106,23 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             //?}
             matrices.pop();
         }
+        // The disguise's own renderer knows nothing about our sign, so draw it here too.
+        String[] sign = NpcBillboard.lines(npc);
+        double signY = npc.getNameOffset() + NpcBillboard.BASE_GAP;
+        for (String line : sign) {
+            if (!line.isBlank()) {
+                matrices.push();
+                matrices.translate(0.0, signY, 0.0);
+                //? if >=1.21 {
+                /*this.renderLabelIfPresent(npc, net.minecraft.text.Text.literal(line), matrices, vcp,
+                        light, tickDelta);
+                *///?} else {
+                this.renderLabelIfPresent(npc, net.minecraft.text.Text.literal(line), matrices, vcp, light);
+                //?}
+                matrices.pop();
+            }
+            signY += NpcBillboard.LINE_HEIGHT;
+        }
         return true;
     }
 
