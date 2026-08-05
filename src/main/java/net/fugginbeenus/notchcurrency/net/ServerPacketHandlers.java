@@ -399,11 +399,14 @@ public final class ServerPacketHandlers {
             int action = buf.readVarInt();
             String name = buf.readString(32);
             String color = buf.readString(24);
+            int fee = buf.readVarInt();
+            boolean open = buf.readBoolean();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
                         && player.squaredDistanceTo(npc) <= 64.0) { // same 8-block reach as dialogue
-                    net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.act(player, npc, action, name, color);
+                    net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.act(player, npc, action,
+                            name, color, fee, open);
                 }
             });
         });

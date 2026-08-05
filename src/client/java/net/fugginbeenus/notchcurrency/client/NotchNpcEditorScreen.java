@@ -536,9 +536,10 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.divider(ctx, px + 8, py + 158, W - 16);
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 40, py + 164, 220, 16, "Faction...",
                 over(mx, my, px + 40, py + 164, 220, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer,
-                "Recruiters sign players up; guards use it to tell friend from foe.",
+        NotchWidgets.centerText(ctx, this.textRenderer, "Recruiters sign players up.",
                 px + W / 2, py + 184, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, "Guards use it to tell friend from foe.",
+                px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
 
         // Confirmation before leaving the SHOP role (it closes the shop + returns its stock).
         if (pendingRole != null) {

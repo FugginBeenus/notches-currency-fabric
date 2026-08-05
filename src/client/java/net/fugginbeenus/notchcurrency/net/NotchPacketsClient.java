@@ -414,12 +414,15 @@ public final class NotchPacketsClient {
         });
     }
 
-    public static void sendRecruiterAction(UUID npcId, int action, String name, String color) {
+    public static void sendRecruiterAction(UUID npcId, int action, String name, String color,
+                                          int fee, boolean open) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeVarInt(action);
         buf.writeString(name);
         buf.writeString(color);
+        buf.writeVarInt(fee);
+        buf.writeBoolean(open);
         NetClient.sendToServer(NotchPackets.NPC_RECRUITER_ACTION, buf);
     }
 
@@ -433,12 +436,16 @@ public final class NotchPacketsClient {
             boolean alreadyIn = buf.readBoolean();
             boolean canFound = buf.readBoolean();
             buf.readBoolean(); // may-assign: reserved for the Role tab picker
+            String motto = buf.readString();
+            int fee = buf.readVarInt();
+            boolean open = buf.readBoolean();
+            boolean canManage = buf.readBoolean();
             client.execute(() -> {
                 net.minecraft.util.Formatting color = net.minecraft.util.Formatting.byName(colorName);
                 MinecraftClient.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen(npcId, factionId,
                                 factionName, color == null ? net.minecraft.util.Formatting.WHITE : color,
-                                members, alreadyIn, canFound));
+                                members, alreadyIn, canFound, motto, fee, open, canManage));
             });
         });
     }

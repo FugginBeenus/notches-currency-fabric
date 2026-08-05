@@ -99,6 +99,20 @@ public final class FactionManager {
             msg(sp, "You're already with " + faction.displayName() + ".", Formatting.YELLOW);
             return;
         }
+        // The founder and admins get in regardless — a closed faction shouldn't lock out its own.
+        if (!faction.isOpenToJoin() && !canManage(sp, faction)) {
+            msg(sp, faction.displayName() + " isn't taking new members.", Formatting.RED);
+            return;
+        }
+        int fee = faction.joinFee();
+        if (fee > 0 && !canManage(sp, faction)) {
+            if (!net.fugginbeenus.notchcurrency.api.CurrencyApi.withdraw(sp, fee,
+                    net.fugginbeenus.notchcurrency.economy.TransactionReason.SINK, "faction dues")) {
+                msg(sp, "Joining costs " + fee + " "
+                        + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".", Formatting.RED);
+                return;
+            }
+        }
         state.join(sp.getUuid(), factionId);
         sp.sendMessage(Text.literal("You joined ")
                 .formatted(Formatting.GREEN)

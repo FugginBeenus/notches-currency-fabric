@@ -20,6 +20,8 @@ public final class RecruiterManager {
     public static final int ACTION_JOIN = 0;
     public static final int ACTION_LEAVE = 1;
     public static final int ACTION_FOUND = 2;
+    /** Save the faction's settings: {@code name} is the motto, {@code extra} packs fee + open flag. */
+    public static final int ACTION_SETTINGS = 3;
 
     private RecruiterManager() {}
 
@@ -42,6 +44,11 @@ public final class RecruiterManager {
         buf.writeBoolean(faction != null && faction.id().equals(state.factionIdOf(sp.getUuid())));
         buf.writeBoolean(canFound);
         buf.writeBoolean(mayAssign);
+        buf.writeString(faction == null ? "" : faction.motto());
+        buf.writeVarInt(faction == null ? 0 : faction.joinFee());
+        buf.writeBoolean(faction == null || faction.isOpenToJoin());
+        // Only whoever runs the faction gets the settings pane.
+        buf.writeBoolean(faction != null && FactionManager.canManage(sp, faction));
         Net.sendToClient(sp, NotchPackets.NPC_RECRUITER_OPEN, buf);
     }
 
@@ -103,7 +110,8 @@ public final class RecruiterManager {
     }
 
     /** Handle a button on that screen. Everything is re-checked here; the client is never trusted. */
-    public static void act(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String name, String color) {
+    public static void act(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String name, String color,
+                           int fee, boolean open) {
         FactionState state = FactionState.get(sp.getServerWorld());
         String factionId = npc.getFactionId();
 
@@ -131,7 +139,26 @@ public final class RecruiterManager {
                 Formatting chosen = Formatting.byName(color);
                 Faction created = FactionManager.create(sp, name,
                         chosen == null || !chosen.isColor() ? Formatting.WHITE : chosen);
-                if (created != null) npc.setFactionId(created.id());
+                if (created != null) {
+                    created.setJoinFee(fee);
+                    created.setOpenToJoin(open);
+                    state.touch();
+                    npc.setFactionId(created.id());
+                }
+            }
+            case ACTION_SETTINGS -> {
+                Faction faction = state.get(factionId);
+                if (faction == null || !FactionManager.canManage(sp, faction)) {
+                    sp.sendMessage(Text.literal("That isn't your faction.").formatted(Formatting.RED), false);
+                    return;
+                }
+                faction.setMotto(name); // the settings pane sends the motto in the name slot
+                faction.setJoinFee(fee);
+                faction.setOpenToJoin(open);
+                Formatting chosen = Formatting.byName(color);
+                if (chosen != null && chosen.isColor()) faction.setColor(chosen);
+                state.touch();
+                sp.sendMessage(Text.literal("Saved.").formatted(Formatting.GREEN), false);
             }
             default -> { return; }
         }
