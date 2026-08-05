@@ -96,19 +96,29 @@ public class NotchNpcModelPickerScreen extends Screen {
         }
         List<Entry> mobs = new ArrayList<>();
         for (EntityType<?> type : Registries.ENTITY_TYPE) {
-            if (!isLivingLike(type)) continue;
             Identifier id = Registries.ENTITY_TYPE.getId(type);
-            if (id == null) continue;
+            if (id == null || !isLivingLike(type, id)) continue;
             mobs.add(new Entry("entity:" + id, type.getName().getString(), type, null, null));
         }
         mobs.sort((a, b) -> a.label().compareToIgnoreCase(b.label()));
         all.addAll(mobs);
     }
 
-    /** True for entity types that produce a LivingEntity, judged without constructing one. Everything
-     *  living has a real spawn group except the armor stand, which we include by hand. */
-    private static boolean isLivingLike(EntityType<?> type) {
-        return type.getSpawnGroup() != SpawnGroup.MISC || type == EntityType.ARMOR_STAND;
+    /**
+     * Worth offering as a model, judged without building one — building every registered type is what
+     * used to make this screen crawl on a big modpack.
+     *
+     * <p>Spawn group is the cheap signal: living things have a real one, boats and arrows are MISC.
+     * That misses two cases, so both are let through. Vanilla's armour stand is MISC but perfectly
+     * usable. And mods routinely register bosses and their own NPCs as MISC precisely so they never
+     * spawn on their own — excluding those would hide most of what a modpack has to offer. Anything
+     * that slips through and isn't really a mob simply has no preview, and falls back to the humanoid
+     * if it's picked.
+     */
+    private static boolean isLivingLike(EntityType<?> type, Identifier id) {
+        if (type.getSpawnGroup() != SpawnGroup.MISC) return true;
+        if (type == EntityType.ARMOR_STAND) return true;
+        return !"minecraft".equals(id.getNamespace());
     }
 
     /** The preview entity for a tile, built + cached on first use (null if this type won't construct). */
