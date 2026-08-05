@@ -143,14 +143,14 @@ public class NotchNpcEditorScreen extends Screen {
         farewellField.setText(currentFarewell);
         addDrawableChild(farewellField);
 
-        playerField = new TextFieldWidget(this.textRenderer, px + 152, py + 141, 134, 9, Text.literal("Player"));
+        playerField = new TextFieldWidget(this.textRenderer, px + 152, py + 159, 134, 9, Text.literal("Player"));
         playerField.setMaxLength(16);
         playerField.setDrawsBackground(false);
         playerField.setPlaceholder(Text.literal("player name").formatted(Formatting.DARK_GRAY));
         if (NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) playerField.setText(currentSkinValue);
         addDrawableChild(playerField);
 
-        urlField = new TextFieldWidget(this.textRenderer, px + 152, py + 159, 134, 9, Text.literal("URL"));
+        urlField = new TextFieldWidget(this.textRenderer, px + 152, py + 177, 134, 9, Text.literal("URL"));
         urlField.setMaxLength(256);
         urlField.setDrawsBackground(false);
         urlField.setPlaceholder(Text.literal("skin URL").formatted(Formatting.DARK_GRAY));
@@ -247,10 +247,13 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 64, 140, 14, "Save Name",
                 over(mx, my, px + 150, py + 64, 140, 14));
 
+        // Where the floating name sits — models vary enough that one height never fits them all.
+        drawNameOffsetRow(ctx, mx, my);
+
         // Model: current name + Change button (opens the vanilla/modded model picker)
-        ctx.drawText(this.textRenderer, "Model:", px + RX, py + 86, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, trim(modelDisplayName(currentModel), 15), px + 150, py + 86, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 224, py + 82, 66, 14, "Change...", over(mx, my, px + 224, py + 82, 66, 14));
+        ctx.drawText(this.textRenderer, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
+        ctx.drawText(this.textRenderer, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 224, py + 100, 66, 14, "Change...", over(mx, my, px + 224, py + 100, 66, 14));
 
         // Skin controls per model
         if (isApplyModel()) {
@@ -264,63 +267,39 @@ public class NotchNpcEditorScreen extends Screen {
             }
         } else if (isHumanoid()) {
             boolean preset = NotchNpcEntity.SKIN_PRESET.equals(currentSkinType);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 104, 20, 16, "<", over(mx, my, px + 118, py + 104, 20, 16));
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 268, py + 104, 20, 16, ">", over(mx, my, px + 268, py + 104, 20, 16));
-            NotchWidgets.centerText(ctx, this.textRenderer, "Preset " + presetIndex(), px + 203, py + 108,
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 122, 20, 16, "<", over(mx, my, px + 118, py + 122, 20, 16));
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 268, py + 122, 20, 16, ">", over(mx, my, px + 268, py + 122, 20, 16));
+            NotchWidgets.centerText(ctx, this.textRenderer, "Preset " + presetIndex(), px + 203, py + 126,
                     preset ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 122, 174, 14,
-                    currentSlim ? "Arms: Slim" : "Arms: Wide", over(mx, my, px + 118, py + 122, 174, 14));
+            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 140, 174, 14,
+                    currentSlim ? "Arms: Slim" : "Arms: Wide", over(mx, my, px + 118, py + 140, 174, 14));
             // Player-name skin (checkbox enables)
-            drawCheck(ctx, px + 118, py + 139, NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType));
-            NotchWidgets.inset(ctx, px + 150, py + 138, 138, 13, NotchTheme.DEEP);
-            // Custom URL skin (checkbox enables)
-            drawCheck(ctx, px + 118, py + 157, NotchNpcEntity.SKIN_URL.equals(currentSkinType));
+            drawCheck(ctx, px + 118, py + 157, NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType));
             NotchWidgets.inset(ctx, px + 150, py + 156, 138, 13, NotchTheme.DEEP);
+            // Custom URL skin (checkbox enables)
+            drawCheck(ctx, px + 118, py + 175, NotchNpcEntity.SKIN_URL.equals(currentSkinType));
+            NotchWidgets.inset(ctx, px + 150, py + 174, 138, 13, NotchTheme.DEEP);
         } else {
-            NotchWidgets.centerText(ctx, this.textRenderer, "This mob uses its own look.", px + 203, py + 116, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.textRenderer, "This mob uses its own look.", px + 203, py + 134, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Size on each axis, plus where the floating name sits — models vary enough that one
-        // height never fits them all.
-        drawStepper(ctx, mx, my, NAME_Y_ROW, "Name Y:", String.format("%+.1f", currentNameOffset),
-                RX, LOOK_MINUS_X, LOOK_PLUS_X);
     }
 
-    // Look tab keeps the nameplate nudge, where the old size row sat — it's about the label, not the body.
-    private static final int NAME_Y_ROW = 200;
-    // Size lives on Pose, with the rest of what the body is doing.
-    private static final int SIZE_ROW_1 = 196, SIZE_ROW_2 = 212, SIZE_ROW_3 = 228;
+    // The nameplate nudge sits right under the name it moves. Size isn't here — it needs to be watched
+    // in the world, so it lives on the Move, Rotate & Size panel.
+    private static final int NAME_Y_ROW = 82;
+    private static final int STEP_W = 18, STEP_H = 14;
+    private static final int NAME_Y_MINUS_X = 196, NAME_Y_PLUS_X = 272;
 
-    private static final int STEP_W = 20, STEP_H = 15;
-    // The two tabs lay out in different columns, so each passes its own.
-    private static final int LOOK_MINUS_X = 150, LOOK_PLUS_X = 214;
-    private static final int POSE_LABEL_X = 50, POSE_MINUS_X = 110, POSE_PLUS_X = 214;
-
-    /** A size stepper row: -/+ clamp to the same range the entity does, then push the change. */
-    private boolean steppedScale(int mx, int my, int rowY, java.util.function.Consumer<Float> set, float value) {
-        if (over(mx, my, px + POSE_MINUS_X, py + rowY, STEP_W, STEP_H)) {
-            set.accept(Math.max(0.3f, round1(value - 0.1f)));
-            sendAppearance();
-            return true;
-        }
-        if (over(mx, my, px + POSE_PLUS_X, py + rowY, STEP_W, STEP_H)) {
-            set.accept(Math.min(3.0f, round1(value + 0.1f)));
-            sendAppearance();
-            return true;
-        }
-        return false;
-    }
-
-    private void drawStepper(DrawContext ctx, int mx, int my, int rowY, String label, String value,
-                             int labelX, int minusX, int plusX) {
-        int y = py + rowY;
-        ctx.drawText(this.textRenderer, label, px + labelX, y + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + minusX, y, STEP_W, STEP_H, "-",
-                over(mx, my, px + minusX, y, STEP_W, STEP_H));
-        NotchWidgets.centerText(ctx, this.textRenderer, value,
-                px + (minusX + STEP_W + plusX) / 2, y + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + plusX, y, STEP_W, STEP_H, "+",
-                over(mx, my, px + plusX, y, STEP_W, STEP_H));
+    private void drawNameOffsetRow(DrawContext ctx, int mx, int my) {
+        int y = py + NAME_Y_ROW;
+        ctx.drawText(this.textRenderer, "Name Y:", px + RX, y + 3, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + NAME_Y_MINUS_X, y, STEP_W, STEP_H, "-",
+                over(mx, my, px + NAME_Y_MINUS_X, y, STEP_W, STEP_H));
+        NotchWidgets.centerText(ctx, this.textRenderer, String.format("%+.1f", currentNameOffset),
+                px + 245, y + 3, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + NAME_Y_PLUS_X, y, STEP_W, STEP_H, "+",
+                over(mx, my, px + NAME_Y_PLUS_X, y, STEP_W, STEP_H));
     }
 
     private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
@@ -687,17 +666,12 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 80, py + 128, 170, 16));
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 148, 200, 18, "Open Pose Editor",
                 over(mx, my, px + 50, py + 148, 200, 18));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 170, 200, 18, "Move & Rotate NPC",
+        // Position, rotation and size all live behind this — it's a floating panel, so you watch the
+        // NPC change out in the world instead of guessing from a tab with no preview.
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 170, 200, 18, "Move, Rotate & Size",
                 over(mx, my, px + 50, py + 170, 200, 18));
-
-        // How big the body is, next to how it's holding itself.
-        NotchWidgets.divider(ctx, px + 8, py + 192, W - 16);
-        drawStepper(ctx, mx, my, SIZE_ROW_1, "Width:", String.format("%.1fx", currentScale),
-                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
-        drawStepper(ctx, mx, my, SIZE_ROW_2, "Height:", String.format("%.1fx", currentScaleY),
-                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
-        drawStepper(ctx, mx, my, SIZE_ROW_3, "Depth:", String.format("%.1fx", currentScaleZ),
-                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
+        NotchWidgets.centerText(ctx, this.textRenderer, "Opens a movable panel; the world stays visible.",
+                px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickPose(int mx, int my) {
@@ -719,9 +693,6 @@ public class NotchNpcEditorScreen extends Screen {
             MinecraftClient.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
-        if (steppedScale(mx, my, SIZE_ROW_1, v -> currentScale = v, currentScale)) return true;
-        if (steppedScale(mx, my, SIZE_ROW_2, v -> currentScaleY = v, currentScaleY)) return true;
-        if (steppedScale(mx, my, SIZE_ROW_3, v -> currentScaleZ = v, currentScaleZ)) return true;
         if (over(mx, my, px + 50, py + 170, 200, 18)) {
             MinecraftClient.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
@@ -842,7 +813,7 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
         // Model: open the picker
-        if (over(mx, my, px + 224, py + 82, 66, 14)) {
+        if (over(mx, my, px + 224, py + 100, 66, 14)) {
             MinecraftClient.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
             return true;
         }
@@ -857,17 +828,17 @@ public class NotchNpcEditorScreen extends Screen {
                 }
             }
         } else if (isHumanoid()) {
-            if (over(mx, my, px + 118, py + 104, 20, 16)) { cyclePreset(-1); return true; }
-            if (over(mx, my, px + 268, py + 104, 20, 16)) { cyclePreset(1); return true; }
-            if (over(mx, my, px + 118, py + 122, 174, 14)) { currentSlim = !currentSlim; sendAppearance(); return true; }
-            if (over(mx, my, px + 118, py + 139, 12, 12)) { togglePlayerSkin(); return true; }
-            if (over(mx, my, px + 118, py + 157, 12, 12)) { toggleUrlSkin(); return true; }
+            if (over(mx, my, px + 118, py + 122, 20, 16)) { cyclePreset(-1); return true; }
+            if (over(mx, my, px + 268, py + 122, 20, 16)) { cyclePreset(1); return true; }
+            if (over(mx, my, px + 118, py + 140, 174, 14)) { currentSlim = !currentSlim; sendAppearance(); return true; }
+            if (over(mx, my, px + 118, py + 157, 12, 12)) { togglePlayerSkin(); return true; }
+            if (over(mx, my, px + 118, py + 175, 12, 12)) { toggleUrlSkin(); return true; }
         }
         // Nameplate nudge (size axes live on the Pose tab).
-        if (over(mx, my, px + LOOK_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
+        if (over(mx, my, px + NAME_Y_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
             currentNameOffset = Math.max(-2.0f, round1(currentNameOffset - 0.1f)); sendAppearance(); return true;
         }
-        if (over(mx, my, px + LOOK_PLUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
+        if (over(mx, my, px + NAME_Y_PLUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
             currentNameOffset = Math.min(3.0f, round1(currentNameOffset + 0.1f)); sendAppearance(); return true;
         }
         return false;

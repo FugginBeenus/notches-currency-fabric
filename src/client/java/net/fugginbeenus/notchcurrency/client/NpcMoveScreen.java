@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 public class NpcMoveScreen extends Screen {
 
-    private static final int W = 292, H = 104;
+    private static final int W = 292, H = 126;
     private static final int SLIDER_X = 40, SLIDER_W = 130, SLIDER_H = 12;
 
     private final UUID npcId;
@@ -63,7 +63,7 @@ public class NpcMoveScreen extends Screen {
         // No dimmed background — the point is watching the NPC in the world while adjusting.
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Move & Rotate", px + W / 2, py + 6);
+        NotchWidgets.title(ctx, this.textRenderer, "Move, Rotate & Size", px + W / 2, py + 6);
         // Grip lines at both title corners — the title bar is the drag handle.
         for (int g = 0; g < 3; g++) {
             ctx.fill(px + 6, py + 6 + g * 3, px + 26, py + 7 + g * 3, NotchTheme.PANEL_MID);
@@ -95,11 +95,29 @@ public class NpcMoveScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + 232, ny, 50, 14, "To Me",
                 over(mouseX, mouseY, px + 232, ny, 50, 14));
 
+        // Size row: one group per axis. Sizing lives here rather than on a tab because the whole point
+        // is watching the NPC change out in the world while you do it.
+        int zy = py + 60;
+        NotchNpcEntity npc = findNpc();
+        float[] sizes = npc == null ? new float[]{1f, 1f, 1f}
+                : new float[]{npc.getScale(), npc.getScaleY(), npc.getScaleZ()};
+        String[] dims = {"W", "H", "D"};
+        for (int a = 0; a < 3; a++) {
+            int gx = px + 8 + a * 92;
+            ctx.drawText(this.textRenderer, dims[a], gx, zy + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 12, zy, 14, 14, "-",
+                    over(mouseX, mouseY, gx + 12, zy, 14, 14));
+            NotchWidgets.centerText(ctx, this.textRenderer, String.format("%.1fx", sizes[a]),
+                    gx + 46, zy + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 62, zy, 14, 14, "+",
+                    over(mouseX, mouseY, gx + 62, zy, 14, 14));
+        }
+
         // Bottom row: hint + back.
-        ctx.drawText(this.textRenderer, "Nudge 0.1 — hold Shift for 1 block.", px + 10, py + 62,
+        ctx.drawText(this.textRenderer, "Nudge 0.1 — hold Shift for 1 block.", px + 10, py + 84,
                 NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 78, 272, 16, "Back to Editor",
-                over(mouseX, mouseY, px + 10, py + 78, 272, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 100, 272, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 10, py + 100, 272, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -137,7 +155,13 @@ public class NpcMoveScreen extends Screen {
                 bringToMe();
                 return true;
             }
-            if (over(mx, my, px + 10, py + 78, 272, 16)) {
+            int zy = py + 60;
+            for (int a = 0; a < 3; a++) {
+                int gx = px + 8 + a * 92;
+                if (over(mx, my, gx + 12, zy, 14, 14)) { NotchWidgets.tick(); resize(a, -0.1f); return true; }
+                if (over(mx, my, gx + 62, zy, 14, 14)) { NotchWidgets.tick(); resize(a, 0.1f); return true; }
+            }
+            if (over(mx, my, px + 10, py + 100, 272, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 4);
                 return true;
@@ -199,6 +223,18 @@ public class NpcMoveScreen extends Screen {
     private void nudge(int axis, double step) {
         NotchPacketsClient.sendNpcTransform(npcId,
                 axis == 0 ? step : 0, axis == 1 ? step : 0, axis == 2 ? step : 0, 0, false);
+    }
+
+    /** Resize one axis. The rest of the appearance is read back off the NPC so this panel doesn't
+     *  need to know anything about models or skins to leave them alone. */
+    private void resize(int axis, float step) {
+        NotchNpcEntity npc = findNpc();
+        if (npc == null) return;
+        float x = npc.getScale(), y = npc.getScaleY(), z = npc.getScaleZ();
+        float updated = Math.max(0.3f, Math.min(3.0f, Math.round(((axis == 0 ? x : axis == 1 ? y : z) + step) * 10f) / 10f));
+        if (axis == 0) x = updated; else if (axis == 1) y = updated; else z = updated;
+        NotchPacketsClient.sendNpcSetAppearance(npcId, npc.getModelId(), npc.getSkinType(),
+                npc.getSkinValue(), npc.isSlim(), x, y, z, npc.getNameOffset());
     }
 
     /** Rotate the NPC to look at the player. */
