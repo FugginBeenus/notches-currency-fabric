@@ -51,11 +51,11 @@ public class NpcProtectOwnerGoal extends TrackTargetGoal {
         return canTrack(pick, TargetPredicate.DEFAULT);
     }
 
-    /** Never the owner, never itself, and never a player who can't be hurt anyway. */
+    /** Never the owner, never itself, never its own faction, and never a player who can't be hurt. */
     private boolean worthAttacking(@Nullable LivingEntity e, PlayerEntity owner) {
         if (e == null || !e.isAlive() || e == npc || e == owner) return false;
         if (e instanceof PlayerEntity p && (p.isCreative() || p.isSpectator())) return false;
-        return true;
+        return !npc.isAlly(e);
     }
 
     @Override

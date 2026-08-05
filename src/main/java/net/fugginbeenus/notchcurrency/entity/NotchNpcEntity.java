@@ -162,6 +162,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean fightsBack = false;       // revenge-targets whatever hurts it
     private boolean protectOwner = false;     // fights whoever its owner is fighting
     private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
+    private boolean fightRivalFactions = false; // takes on anyone flying a different faction's colours
     /** Which faction it belongs to — an id pointing at the record in FactionState, nothing more.
      *  The faction itself is never stored here, so losing this NPC never costs anyone their faction. */
     private String factionId = "";
@@ -549,6 +550,34 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return owner != null ? this.getWorld().getPlayerByUuid(owner) : null;
     }
 
+    /**
+     * Whether something counts as this NPC's own side. An NPC with no faction has no allies, so this
+     * is false for everyone until a faction is actually set — that's what keeps factions inert for
+     * anyone who never touches them.
+     */
+    public boolean isAlly(@Nullable net.minecraft.entity.Entity other) {
+        if (factionId.isEmpty() || other == null) return false;
+        if (other instanceof NotchNpcEntity npc) return factionId.equals(npc.getFactionId());
+        if (other instanceof ServerPlayerEntity sp) {
+            return factionId.equals(net.fugginbeenus.notchcurrency.npc.faction.FactionState
+                    .get(sp.getServerWorld()).factionIdOf(sp.getUuid()));
+        }
+        return false;
+    }
+
+    /** True when the other side belongs to a DIFFERENT faction — not merely "isn't an ally". */
+    public boolean isRivalFaction(@Nullable net.minecraft.entity.Entity other) {
+        if (factionId.isEmpty() || other == null) return false;
+        String theirs = null;
+        if (other instanceof NotchNpcEntity npc) {
+            theirs = npc.getFactionId();
+        } else if (other instanceof ServerPlayerEntity sp) {
+            theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
+                    .get(sp.getServerWorld()).factionIdOf(sp.getUuid());
+        }
+        return theirs != null && !theirs.isEmpty() && !theirs.equals(factionId);
+    }
+
     public String getFactionId() { return factionId; }
     public void setFactionId(String id) {
         String next = id == null ? "" : id;
@@ -562,6 +591,14 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void setProtectOwner(boolean protect) {
         if (this.protectOwner != protect) {
             this.protectOwner = protect;
+            applyBehaviorGoals();
+        }
+    }
+
+    public boolean fightsRivalFactions() { return fightRivalFactions; }
+    public void setFightRivalFactions(boolean fight) {
+        if (this.fightRivalFactions != fight) {
+            this.fightRivalFactions = fight;
             applyBehaviorGoals();
         }
     }
@@ -787,7 +824,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         // One melee goal, however many reasons there are to fight — a second would fight itself for
         // the movement control.
         boolean fights = behavior == Behavior.GUARD || hostileToPlayers || fightsBack
-                || attackMonsters || protectOwner;
+                || attackMonsters || protectOwner || fightRivalFactions;
         if (fights) {
             net.minecraft.entity.ai.goal.Goal melee =
                     new net.minecraft.entity.ai.goal.MeleeAttackGoal(this, 1.1, true);
@@ -809,11 +846,22 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
         if (hostileToPlayers) {
             // Hunt ANY player in range — including the owner (hostile means hostile). Vanilla
-            // targeting already skips creative/spectator players.
+            // targeting already skips creative/spectator players. Its own faction is still spared:
+            // a guard that turns on its own people is nobody's idea of a guard.
             net.minecraft.entity.ai.goal.Goal huntPlayers = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
-                    this, net.minecraft.entity.player.PlayerEntity.class, 10, true, false, null);
+                    this, net.minecraft.entity.player.PlayerEntity.class, 10, true, false,
+                    e -> !isAlly(e));
             this.targetSelector.add(2, huntPlayers);
             behaviorTargetGoals.add(huntPlayers);
+        }
+        if (fightRivalFactions && !factionId.isEmpty()) {
+            // Only people actually flying another faction's colours — bystanders with no faction are
+            // left alone, so a faction war doesn't sweep up everyone who never joined.
+            net.minecraft.entity.ai.goal.Goal rivals = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
+                    this, net.minecraft.entity.LivingEntity.class, 10, true, false,
+                    this::isRivalFaction);
+            this.targetSelector.add(2, rivals);
+            behaviorTargetGoals.add(rivals);
         }
         if (fightsBack) {
             net.minecraft.entity.ai.goal.Goal revenge = new net.minecraft.entity.ai.goal.RevengeGoal(this);
@@ -1096,6 +1144,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putBoolean("ProtectOwner", protectOwner);
         nbt.putBoolean("AttackMonsters", attackMonsters);
         nbt.putString("Faction", factionId);
+        nbt.putBoolean("FightRivalFactions", fightRivalFactions);
         // Attribute bases — recorded so they survive the pick-up item (entity NBT has them anyway).
         nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)));
         nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
@@ -1193,6 +1242,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("ProtectOwner")) protectOwner = nbt.getBoolean("ProtectOwner");
         if (nbt.contains("AttackMonsters")) attackMonsters = nbt.getBoolean("AttackMonsters");
         if (nbt.contains("Faction")) factionId = nbt.getString("Faction");
+        if (nbt.contains("FightRivalFactions")) fightRivalFactions = nbt.getBoolean("FightRivalFactions");
         if (nbt.contains("WatchPlayers")) setWatchPlayers(nbt.getBoolean("WatchPlayers"));
         if (nbt.contains("StatMaxHealth")) {
             int hp = nbt.getInt("StatMaxHealth");

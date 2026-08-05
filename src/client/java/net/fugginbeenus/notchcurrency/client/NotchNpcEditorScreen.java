@@ -32,7 +32,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     // Taller than it needs to be for most tabs — Moves carries three rows of toggles now, and every
     // tab draws from the top down, so the extra height is just breathing room everywhere else.
-    private static final int W = 300, H = 250;
+    private static final int W = 300, H = 268;
     // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
     private static final NpcRole[] SELECTABLE = {
             NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
@@ -360,6 +360,7 @@ public class NotchNpcEditorScreen extends Screen {
     private int movesRow1() { return py + 177; }
     private int movesRow2() { return py + 194; }
     private int movesRow3() { return py + 211; }
+    private int movesRow4() { return py + 228; }
 
     /** One always-on toggle: green when on, plain when off. */
     private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
@@ -427,6 +428,7 @@ public class NotchNpcEditorScreen extends Screen {
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow2(), "Fight monsters", (movesBits & 8) != 0);
         drawToggle(ctx, mx, my, px + BEH_X, movesRow3(), "Fight players", (movesBits & 16) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow3(), "Fight back", (movesBits & 32) != 0);
+        drawToggle(ctx, mx, my, px + BEH_X, movesRow4(), "Fight rivals", (movesBits & 64) != 0);
 
         String hint = switch (currentBehavior) {
             case STATIONARY -> "Stays exactly where you placed it.";
@@ -435,7 +437,7 @@ public class NotchNpcEditorScreen extends Screen {
             case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
             case GUARD -> "Holds a post and fights what comes near (ignores creepers).";
         };
-        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 231, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 248, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickBehavior(int mx, int my) {
@@ -455,6 +457,7 @@ public class NotchNpcEditorScreen extends Screen {
                 {px + BEH_X + 102, movesRow2(), 8},
                 {px + BEH_X, movesRow3(), 16},
                 {px + BEH_X + 102, movesRow3(), 32},
+                {px + BEH_X, movesRow4(), 64},
         };
         for (int[] t : toggles) {
             if (over(mx, my, t[0], t[1], TOGGLE_W, TOGGLE_H)) {

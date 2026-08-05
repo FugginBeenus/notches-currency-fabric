@@ -78,7 +78,8 @@ public final class NotchNpcManager {
         buf.writeString(npc.getFollowPlayerName());
         buf.writeVarInt((npc.avoidsMonsters() ? 1 : 0) | (npc.watchesPlayers() ? 2 : 0)
                 | (npc.protectsOwner() ? 4 : 0) | (npc.attacksMonsters() ? 8 : 0)
-                | (npc.isHostileToPlayers() ? 16 : 0) | (npc.fightsBack() ? 32 : 0));
+                | (npc.isHostileToPlayers() ? 16 : 0) | (npc.fightsBack() ? 32 : 0)
+                | (npc.fightsRivalFactions() ? 64 : 0));
         buf.writeString(npc.getFarewellText());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
@@ -215,6 +216,7 @@ public final class NotchNpcManager {
         npc.setAttackMonsters((movesBits & 8) != 0);
         npc.setHostileToPlayers((movesBits & 16) != 0);
         npc.setFightsBack((movesBits & 32) != 0);
+        npc.setFightRivalFactions((movesBits & 64) != 0);
         npc.setBehavior(mode);
         String desc = switch (mode) {
             case STATIONARY -> "Stationary";
