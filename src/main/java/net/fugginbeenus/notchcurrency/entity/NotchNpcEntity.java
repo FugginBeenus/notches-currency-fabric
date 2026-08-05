@@ -162,6 +162,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean fightsBack = false;       // revenge-targets whatever hurts it
     private boolean protectOwner = false;     // fights whoever its owner is fighting
     private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
+    /** Which faction it belongs to — an id pointing at the record in FactionState, nothing more.
+     *  The faction itself is never stored here, so losing this NPC never costs anyone their faction. */
+    private String factionId = "";
     private int regen = 0; // half-hearts healed every 5 seconds
     @Nullable private net.minecraft.entity.ai.goal.Goal doorGoal = null;
 
@@ -544,6 +547,15 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             return this.getServer().getPlayerManager().getPlayer(followPlayerName);
         }
         return owner != null ? this.getWorld().getPlayerByUuid(owner) : null;
+    }
+
+    public String getFactionId() { return factionId; }
+    public void setFactionId(String id) {
+        String next = id == null ? "" : id;
+        if (!this.factionId.equals(next)) {
+            this.factionId = next;
+            applyBehaviorGoals(); // targeting rules change with allegiance
+        }
     }
 
     public boolean protectsOwner() { return protectOwner; }
@@ -1083,6 +1095,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putBoolean("WatchPlayers", watchPlayers);
         nbt.putBoolean("ProtectOwner", protectOwner);
         nbt.putBoolean("AttackMonsters", attackMonsters);
+        nbt.putString("Faction", factionId);
         // Attribute bases — recorded so they survive the pick-up item (entity NBT has them anyway).
         nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)));
         nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
@@ -1179,6 +1192,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("AvoidMonsters")) avoidMonsters = nbt.getBoolean("AvoidMonsters");
         if (nbt.contains("ProtectOwner")) protectOwner = nbt.getBoolean("ProtectOwner");
         if (nbt.contains("AttackMonsters")) attackMonsters = nbt.getBoolean("AttackMonsters");
+        if (nbt.contains("Faction")) factionId = nbt.getString("Faction");
         if (nbt.contains("WatchPlayers")) setWatchPlayers(nbt.getBoolean("WatchPlayers"));
         if (nbt.contains("StatMaxHealth")) {
             int hp = nbt.getInt("StatMaxHealth");
