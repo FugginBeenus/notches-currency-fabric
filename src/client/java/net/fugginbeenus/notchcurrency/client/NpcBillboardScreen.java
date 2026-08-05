@@ -20,9 +20,10 @@ import java.util.UUID;
  */
 public class NpcBillboardScreen extends Screen {
 
-    private static final int W = 300, H = 214;
+    private static final int W = 300, H = 244;
     private static final int PAD = 14;
-    private static final int ROW_H = 22;
+    // Tall enough for the field plus the preview line under it, with air between rows.
+    private static final int ROW_H = 30;
 
     private final UUID npcId;
     private final String[] lines = new String[NotchNpcEntity.MAX_BILLBOARD_LINES];

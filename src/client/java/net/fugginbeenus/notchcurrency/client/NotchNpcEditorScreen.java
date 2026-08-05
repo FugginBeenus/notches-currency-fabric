@@ -294,15 +294,16 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int STEP_W = 18, STEP_H = 14;
     private static final int NAME_Y_MINUS_X = 196, NAME_Y_PLUS_X = 272;
 
-    // The floating sign sits under the skin controls, in the room the taller panel left.
-    private static final int PAD_L = 14;
+    // The floating sign sits under the skin controls, in the right-hand column — the left side of
+    // the tab is the preview panel, and a full-width button would cut across it.
     private int signRow() { return py + 196; }
+    private int signWidth() { return W - RX - 10; }
 
     private void drawSignButton(DrawContext ctx, int mx, int my) {
         int y = signRow();
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + PAD_L, y, W - PAD_L * 2, 15,
-                currentBillboard.isBlank() ? "Add a floating sign..." : "Floating sign...",
-                over(mx, my, px + PAD_L, y, W - PAD_L * 2, 15));
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + RX, y, signWidth(), 15,
+                currentBillboard.isBlank() ? "Add a floating sign..." : "Edit floating sign...",
+                over(mx, my, px + RX, y, signWidth(), 15));
     }
 
     private void drawNameOffsetRow(DrawContext ctx, int mx, int my) {
@@ -867,7 +868,7 @@ public class NotchNpcEditorScreen extends Screen {
             if (over(mx, my, px + 118, py + 157, 12, 12)) { togglePlayerSkin(); return true; }
             if (over(mx, my, px + 118, py + 175, 12, 12)) { toggleUrlSkin(); return true; }
         }
-        if (over(mx, my, px + PAD_L, signRow(), W - PAD_L * 2, 15)) {
+        if (over(mx, my, px + RX, signRow(), signWidth(), 15)) {
             NotchWidgets.click();
             MinecraftClient.getInstance().setScreen(new NpcBillboardScreen(npcId, currentBillboard));
             return true;
