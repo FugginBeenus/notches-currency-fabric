@@ -189,8 +189,16 @@ modrinth {
     gameVersions = [property("minecraft_version").toString()]
     loaders = ["fabric"]
 
-    def changelogFile = file("changelogs/${version}.md")
-    changelog = changelogFile.exists() ? changelogFile.text : "See commits for changes."
+    // rootProject, not file(): every publish runs inside a per-version subproject (versions/1.20.1,
+    // …), so a relative path looks for the changelog beside that subproject and never finds it —
+    // which is how every release so far went out saying "See commits for changes".
+    def changelogFile = rootProject.file("changelogs/${version}.md")
+    if (!changelogFile.exists()) {
+        logger.warn("Notch Currency: no changelogs/${version}.md — Modrinth would get a placeholder.")
+    }
+    changelog = changelogFile.exists()
+            ? changelogFile.text
+            : "See https://github.com/FugginBeenus/notches-currency-fabric/releases/tag/v${version}"
 
     dependencies {
         required.project "fabric-api"
