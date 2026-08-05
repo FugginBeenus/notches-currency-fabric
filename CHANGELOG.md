@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.1
+
+No behaviour changes. Every em dash is gone from the mod's writing, in-game text included, so the
+punctuation reads the way a person writes rather than the way a machine does.
+
+Most lines just changed punctuation. A few were reworded where no punctuation mark read well:
+
+- A recruiter's join button says **Join for 100 Coins** instead of "Join - 100 Coins".
+- Turning in a bounty you're short on says **You need 5 Zombie (you have 2)**.
+- Config labels group with brackets, so **Auction listing fee (max)** instead of "Auction listing
+  fee - max".
+
 ## 0.7.0
 
 ### Factions
