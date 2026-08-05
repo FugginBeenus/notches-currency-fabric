@@ -128,7 +128,7 @@ public final class NpcActionRunner {
 
     /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs) — a stored
      *  command must never outlive its author's authority. */
-    private static boolean ownerMayRunCommands(NotchNpcEntity npc, MinecraftServer server) {
+    public static boolean ownerMayRunCommands(NotchNpcEntity npc, MinecraftServer server) {
         if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;
         UUID owner = npc.getOwner();
         if (owner == null) return false;
