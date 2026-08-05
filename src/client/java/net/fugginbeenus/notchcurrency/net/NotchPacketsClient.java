@@ -46,6 +46,9 @@ public final class NotchPacketsClient {
             String skinValue = buf.readString();
             boolean slim = buf.readBoolean();
             float scale = buf.readFloat();
+            float scaleY = buf.readFloat();
+            float scaleZ = buf.readFloat();
+            float nameOffset = buf.readFloat();
             int behaviorOrdinal = buf.readVarInt();
             int wanderRadius = buf.readVarInt();
             int dialogueNodes = buf.readVarInt();
@@ -64,7 +67,8 @@ public final class NotchPacketsClient {
             int movesBits = buf.readVarInt();
             String farewell = buf.readString(160);
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
-                    npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim, scale,
+                    npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
+                    scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
                     regen, followName, movesBits, farewell);
@@ -412,14 +416,19 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SET_BEHAVIOR, buf);
     }
 
-    public static void sendNpcSetAppearance(UUID npcId, String model, String skinType, String skinValue, boolean slim, float scale) {
+    public static void sendNpcSetAppearance(UUID npcId, String model, String skinType, String skinValue,
+                                            boolean slim, float scaleX, float scaleY, float scaleZ,
+                                            float nameOffset) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
         buf.writeString(model);
         buf.writeString(skinType);
         buf.writeString(skinValue);
         buf.writeBoolean(slim);
-        buf.writeFloat(scale);
+        buf.writeFloat(scaleX);
+        buf.writeFloat(scaleY);
+        buf.writeFloat(scaleZ);
+        buf.writeFloat(nameOffset);
         NetClient.sendToServer(NotchPackets.NPC_SET_APPEARANCE, buf);
     }
 

@@ -58,6 +58,9 @@ public final class NotchNpcManager {
         buf.writeString(npc.getSkinValue());
         buf.writeBoolean(npc.isSlim());
         buf.writeFloat(npc.getScale());
+        buf.writeFloat(npc.getScaleY());
+        buf.writeFloat(npc.getScaleZ());
+        buf.writeFloat(npc.getNameOffset());
         buf.writeVarInt(npc.getBehavior().ordinal());
         buf.writeVarInt(npc.getWanderRadius());
         buf.writeVarInt(npc.getDialogue().size());
@@ -143,7 +146,8 @@ public final class NotchNpcManager {
     }
 
     public static void setAppearance(ServerPlayerEntity sp, NotchNpcEntity npc,
-                                     String model, String skinType, String skinValue, boolean slim, float scale) {
+                                     String model, String skinType, String skinValue, boolean slim,
+                                     float scaleX, float scaleY, float scaleZ, float nameOffset) {
         if (!guard(sp, npc)) return;
         // URL skins are fetched by every client that sees the NPC — only allow real web URLs.
         if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
@@ -154,7 +158,7 @@ public final class NotchNpcManager {
                 return;
             }
         }
-        npc.setAppearance(model, skinType, skinValue, slim, scale);
+        npc.setAppearance(model, skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
     }
 
     public static void setPose(ServerPlayerEntity sp, NotchNpcEntity npc, int pose) {

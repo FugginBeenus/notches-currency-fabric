@@ -50,7 +50,7 @@ public class NotchNpcEditorScreen extends Screen {
     private String currentName;
     private String currentModel, currentSkinType, currentSkinValue;
     private boolean currentSlim;
-    private float currentScale;
+    private float currentScale, currentScaleY, currentScaleZ, currentNameOffset;
     private NotchNpcEntity.Behavior currentBehavior;
     private int currentRadius;
     private int dialogueNodes;
@@ -98,6 +98,9 @@ public class NotchNpcEditorScreen extends Screen {
         this.currentSkinValue = state.skinValue() == null ? "" : state.skinValue();
         this.currentSlim = state.slim();
         this.currentScale = state.scale() <= 0 ? 1.0f : state.scale();
+        this.currentScaleY = state.scaleY() <= 0 ? 1.0f : state.scaleY();
+        this.currentScaleZ = state.scaleZ() <= 0 ? 1.0f : state.scaleZ();
+        this.currentNameOffset = state.nameOffset();
         NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
         this.currentBehavior = (state.behaviorOrdinal() >= 0 && state.behaviorOrdinal() < modes.length)
                 ? modes[state.behaviorOrdinal()] : NotchNpcEntity.Behavior.STATIONARY;
@@ -277,11 +280,41 @@ public class NotchNpcEditorScreen extends Screen {
             NotchWidgets.centerText(ctx, this.textRenderer, "This mob uses its own look.", px + 203, py + 116, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Size
-        ctx.drawText(this.textRenderer, "Size:", px + RX, py + 200, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 150, py + 196, 20, 16, "-", over(mx, my, px + 150, py + 196, 20, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer, String.format("%.1fx", currentScale), px + 190, py + 200, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 214, py + 196, 20, 16, "+", over(mx, my, px + 214, py + 196, 20, 16));
+        // Size on each axis, plus where the floating name sits — models vary enough that one
+        // height never fits them all.
+        drawStepper(ctx, mx, my, GEO_ROW_1, "Width:", String.format("%.1fx", currentScale));
+        drawStepper(ctx, mx, my, GEO_ROW_2, "Height:", String.format("%.1fx", currentScaleY));
+        drawStepper(ctx, mx, my, GEO_ROW_3, "Depth:", String.format("%.1fx", currentScaleZ));
+        drawStepper(ctx, mx, my, GEO_ROW_4, "Name Y:", String.format("%+.1f", currentNameOffset));
+    }
+
+    // The geometry block: three size axes and the nameplate nudge, in the room the taller panel gives.
+    private static final int GEO_ROW_1 = 178, GEO_ROW_2 = 194, GEO_ROW_3 = 210, GEO_ROW_4 = 226;
+    private static final int STEP_MINUS_X = 150, STEP_PLUS_X = 214, STEP_W = 20, STEP_H = 15;
+
+    /** A size stepper row: -/+ clamp to the same range the entity does, then push the change. */
+    private boolean steppedScale(int mx, int my, int rowY, java.util.function.Consumer<Float> set, float value) {
+        if (over(mx, my, px + STEP_MINUS_X, py + rowY, STEP_W, STEP_H)) {
+            set.accept(Math.max(0.3f, round1(value - 0.1f)));
+            sendAppearance();
+            return true;
+        }
+        if (over(mx, my, px + STEP_PLUS_X, py + rowY, STEP_W, STEP_H)) {
+            set.accept(Math.min(3.0f, round1(value + 0.1f)));
+            sendAppearance();
+            return true;
+        }
+        return false;
+    }
+
+    private void drawStepper(DrawContext ctx, int mx, int my, int rowY, String label, String value) {
+        int y = py + rowY;
+        ctx.drawText(this.textRenderer, label, px + RX, y + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + STEP_MINUS_X, y, STEP_W, STEP_H, "-",
+                over(mx, my, px + STEP_MINUS_X, y, STEP_W, STEP_H));
+        NotchWidgets.centerText(ctx, this.textRenderer, value, px + 190, y + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + STEP_PLUS_X, y, STEP_W, STEP_H, "+",
+                over(mx, my, px + STEP_PLUS_X, y, STEP_W, STEP_H));
     }
 
     private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
@@ -812,9 +845,16 @@ public class NotchNpcEditorScreen extends Screen {
             if (over(mx, my, px + 118, py + 139, 12, 12)) { togglePlayerSkin(); return true; }
             if (over(mx, my, px + 118, py + 157, 12, 12)) { toggleUrlSkin(); return true; }
         }
-        // Size
-        if (over(mx, my, px + 150, py + 196, 20, 16)) { currentScale = Math.max(0.5f, round1(currentScale - 0.1f)); sendAppearance(); return true; }
-        if (over(mx, my, px + 214, py + 196, 20, 16)) { currentScale = Math.min(2.0f, round1(currentScale + 0.1f)); sendAppearance(); return true; }
+        // Size axes + nameplate nudge.
+        if (steppedScale(mx, my, GEO_ROW_1, v -> currentScale = v, currentScale)) return true;
+        if (steppedScale(mx, my, GEO_ROW_2, v -> currentScaleY = v, currentScaleY)) return true;
+        if (steppedScale(mx, my, GEO_ROW_3, v -> currentScaleZ = v, currentScaleZ)) return true;
+        if (over(mx, my, px + STEP_MINUS_X, py + GEO_ROW_4, STEP_W, STEP_H)) {
+            currentNameOffset = Math.max(-2.0f, round1(currentNameOffset - 0.1f)); sendAppearance(); return true;
+        }
+        if (over(mx, my, px + STEP_PLUS_X, py + GEO_ROW_4, STEP_W, STEP_H)) {
+            currentNameOffset = Math.min(3.0f, round1(currentNameOffset + 0.1f)); sendAppearance(); return true;
+        }
         return false;
     }
 
@@ -895,7 +935,8 @@ public class NotchNpcEditorScreen extends Screen {
     private static float round1(float v) { return Math.round(v * 10f) / 10f; }
 
     private void sendAppearance() {
-        NotchPacketsClient.sendNpcSetAppearance(npcId, currentModel, currentSkinType, currentSkinValue, currentSlim, currentScale);
+        NotchPacketsClient.sendNpcSetAppearance(npcId, currentModel, currentSkinType, currentSkinValue,
+                currentSlim, currentScale, currentScaleY, currentScaleZ, currentNameOffset);
     }
 
     private NotchNpcEntity findPreview() {

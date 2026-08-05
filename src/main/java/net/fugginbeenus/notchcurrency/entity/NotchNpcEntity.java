@@ -78,7 +78,15 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
     private static final TrackedData<Boolean> SLIM =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    /** Width. Kept under the original name so existing NPCs keep their size on load. */
     private static final TrackedData<Float> SCALE =
+            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> SCALE_Y =
+            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> SCALE_Z =
+            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    /** Nudges the floating name up or down — models vary enough that one height never fits all. */
+    private static final TrackedData<Float> NAME_OFFSET =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
     /** Pose preset: 0 standing, 1 sitting, 2 sneaking, 3 sleeping. */
     private static final TrackedData<Integer> NPC_POSE =
@@ -202,6 +210,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         builder.add(SKIN_VALUE, "1");
         builder.add(SLIM, false);
         builder.add(SCALE, 1.0f);
+        builder.add(SCALE_Y, 1.0f);
+        builder.add(SCALE_Z, 1.0f);
+        builder.add(NAME_OFFSET, 0.0f);
         builder.add(NPC_POSE, POSE_STANDING);
         builder.add(CUSTOM_POSE, new NbtCompound());
         builder.add(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -215,6 +226,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.startTracking(SKIN_VALUE, "1");
         this.dataTracker.startTracking(SLIM, false);
         this.dataTracker.startTracking(SCALE, 1.0f);
+        this.dataTracker.startTracking(SCALE_Y, 1.0f);
+        this.dataTracker.startTracking(SCALE_Z, 1.0f);
+        this.dataTracker.startTracking(NAME_OFFSET, 0.0f);
         this.dataTracker.startTracking(NPC_POSE, POSE_STANDING);
         this.dataTracker.startTracking(CUSTOM_POSE, new NbtCompound());
         this.dataTracker.startTracking(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -319,7 +333,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             case POSE_SITTING, POSE_CHILLING -> 1.35f;
             default -> 1.95f;
         };
-        return base * getScale() + 0.4f;
+        return base * getScaleY() + 0.4f; // height follows the vertical axis, not the width
     }
     //?}
 
@@ -335,16 +349,34 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public boolean isSlim() { return this.dataTracker.get(SLIM); }
     public void setSlim(boolean slim) { this.dataTracker.set(SLIM, slim); }
 
+    private static float clampNpcScale(float s) { return Math.max(0.3f, Math.min(3.0f, s)); }
+
     public float getScale() { return this.dataTracker.get(SCALE); }
-    public void setScale(float scale) { this.dataTracker.set(SCALE, Math.max(0.3f, Math.min(3.0f, scale))); }
+    public void setScale(float scale) { this.dataTracker.set(SCALE, clampNpcScale(scale)); }
+
+    public float getScaleY() { return this.dataTracker.get(SCALE_Y); }
+    public void setScaleY(float scale) { this.dataTracker.set(SCALE_Y, clampNpcScale(scale)); }
+
+    public float getScaleZ() { return this.dataTracker.get(SCALE_Z); }
+    public void setScaleZ(float scale) { this.dataTracker.set(SCALE_Z, clampNpcScale(scale)); }
+
+    /** How far to nudge the floating name, in blocks. */
+    public float getNameOffset() { return this.dataTracker.get(NAME_OFFSET); }
+    public void setNameOffset(float offset) {
+        this.dataTracker.set(NAME_OFFSET, Math.max(-2.0f, Math.min(3.0f, offset)));
+    }
 
     /** Apply a full appearance in one call (used by the editor packet). */
-    public void setAppearance(String model, String skinType, String skinValue, boolean slim, float scale) {
+    public void setAppearance(String model, String skinType, String skinValue, boolean slim,
+                              float scaleX, float scaleY, float scaleZ, float nameOffset) {
         setModelId(model);
         setSkinType(skinType);
         setSkinValue(skinValue);
         setSlim(slim);
-        setScale(scale);
+        setScale(scaleX);
+        setScaleY(scaleY);
+        setScaleZ(scaleZ);
+        setNameOffset(nameOffset);
     }
 
     // ---- behavior ----
@@ -1009,6 +1041,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putString("SkinValue", getSkinValue());
         nbt.putBoolean("Slim", isSlim());
         nbt.putFloat("Scale", getScale());
+        nbt.putFloat("ScaleY", getScaleY());
+        nbt.putFloat("ScaleZ", getScaleZ());
+        nbt.putFloat("NameOffset", getNameOffset());
         nbt.putInt("NpcPose", getNpcPose());
         nbt.put("CustomPose", this.dataTracker.get(CUSTOM_POSE).copy());
         nbt.putInt("PoseAnim", getPoseAnim());
@@ -1079,6 +1114,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("SkinValue")) setSkinValue(nbt.getString("SkinValue"));
         if (nbt.contains("Slim")) setSlim(nbt.getBoolean("Slim"));
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
+        // Older NPCs only stored one scale — fall back to it so they stay the shape they were.
+        setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : getScale());
+        setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : getScale());
+        if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
         if (nbt.contains("CustomPose")) {

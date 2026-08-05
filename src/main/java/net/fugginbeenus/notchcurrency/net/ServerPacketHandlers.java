@@ -598,11 +598,15 @@ public final class ServerPacketHandlers {
             String skinType = buf.readString(16);
             String skinValue = buf.readString(256); // player name or skin URL (client field caps at 256)
             boolean slim = buf.readBoolean();
-            float scale = buf.readFloat();
+            float scaleX = buf.readFloat();
+            float scaleY = buf.readFloat();
+            float scaleZ = buf.readFloat();
+            float nameOffset = buf.readFloat();
             server.execute(() -> {
                 net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
-                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setAppearance(player, npc, model, skinType, skinValue, slim, scale);
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setAppearance(player, npc, model,
+                            skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
                 }
             });
         });

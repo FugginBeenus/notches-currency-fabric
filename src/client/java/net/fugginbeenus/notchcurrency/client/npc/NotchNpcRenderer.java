@@ -73,11 +73,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.age = npc.age;
         copyAnimationState(npc, le);
 
-        float scale = npc.getScale();
-        boolean scaled = scale > 0f && scale != 1.0f;
+        float sx = npc.getScale(), sy = npc.getScaleY(), sz = npc.getScaleZ();
+        boolean scaled = sx != 1.0f || sy != 1.0f || sz != 1.0f;
         if (scaled) {
             matrices.push();
-            matrices.scale(scale, scale, scale);
+            matrices.scale(sx, sy, sz);
         }
         try {
             @SuppressWarnings("unchecked")
@@ -97,11 +97,14 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
                 || this.dispatcher.getSquaredDistanceToCamera(npc) < 32.0 * 32.0;
         if (npc.hasCustomName() && npc.isCustomNameVisible() && labelInRange) {
+            matrices.push();
+            matrices.translate(0.0, npc.getNameOffset(), 0.0);
             //? if >=1.21 {
             /*this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light, tickDelta);
             *///?} else {
             this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light);
             //?}
+            matrices.pop();
         }
         return true;
     }

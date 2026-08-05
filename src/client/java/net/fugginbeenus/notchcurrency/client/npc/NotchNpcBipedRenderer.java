@@ -105,8 +105,28 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     protected void scale(NotchNpcEntity entity, MatrixStack matrices, float amount) {
         // Scale only the model here (not the name label, which is rendered separately).
-        float s = entity.getScale();
-        if (s > 0f && s != 1.0f) matrices.scale(s, s, s);
+        float sx = entity.getScale(), sy = entity.getScaleY(), sz = entity.getScaleZ();
+        if (sx != 1.0f || sy != 1.0f || sz != 1.0f) matrices.scale(sx, sy, sz);
+    }
+
+    @Override
+    //? if >=1.21 {
+    /*protected void renderLabelIfPresent(NotchNpcEntity entity, net.minecraft.text.Text text,
+                                       MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                       int light, float tickDelta) {
+    *///?} else {
+    protected void renderLabelIfPresent(NotchNpcEntity entity, net.minecraft.text.Text text,
+                                       MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                       int light) {
+    //?}
+        matrices.push();
+        matrices.translate(0.0, entity.getNameOffset(), 0.0);
+        //? if >=1.21 {
+        /*super.renderLabelIfPresent(entity, text, matrices, vertexConsumers, light, tickDelta);
+        *///?} else {
+        super.renderLabelIfPresent(entity, text, matrices, vertexConsumers, light);
+        //?}
+        matrices.pop();
     }
 
     @Override
