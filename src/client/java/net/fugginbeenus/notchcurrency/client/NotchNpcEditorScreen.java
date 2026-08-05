@@ -282,24 +282,28 @@ public class NotchNpcEditorScreen extends Screen {
 
         // Size on each axis, plus where the floating name sits — models vary enough that one
         // height never fits them all.
-        drawStepper(ctx, mx, my, GEO_ROW_1, "Width:", String.format("%.1fx", currentScale));
-        drawStepper(ctx, mx, my, GEO_ROW_2, "Height:", String.format("%.1fx", currentScaleY));
-        drawStepper(ctx, mx, my, GEO_ROW_3, "Depth:", String.format("%.1fx", currentScaleZ));
-        drawStepper(ctx, mx, my, GEO_ROW_4, "Name Y:", String.format("%+.1f", currentNameOffset));
+        drawStepper(ctx, mx, my, NAME_Y_ROW, "Name Y:", String.format("%+.1f", currentNameOffset),
+                RX, LOOK_MINUS_X, LOOK_PLUS_X);
     }
 
-    // The geometry block: three size axes and the nameplate nudge, in the room the taller panel gives.
-    private static final int GEO_ROW_1 = 178, GEO_ROW_2 = 194, GEO_ROW_3 = 210, GEO_ROW_4 = 226;
-    private static final int STEP_MINUS_X = 150, STEP_PLUS_X = 214, STEP_W = 20, STEP_H = 15;
+    // Look tab keeps the nameplate nudge, where the old size row sat — it's about the label, not the body.
+    private static final int NAME_Y_ROW = 200;
+    // Size lives on Pose, with the rest of what the body is doing.
+    private static final int SIZE_ROW_1 = 196, SIZE_ROW_2 = 212, SIZE_ROW_3 = 228;
+
+    private static final int STEP_W = 20, STEP_H = 15;
+    // The two tabs lay out in different columns, so each passes its own.
+    private static final int LOOK_MINUS_X = 150, LOOK_PLUS_X = 214;
+    private static final int POSE_LABEL_X = 50, POSE_MINUS_X = 110, POSE_PLUS_X = 214;
 
     /** A size stepper row: -/+ clamp to the same range the entity does, then push the change. */
     private boolean steppedScale(int mx, int my, int rowY, java.util.function.Consumer<Float> set, float value) {
-        if (over(mx, my, px + STEP_MINUS_X, py + rowY, STEP_W, STEP_H)) {
+        if (over(mx, my, px + POSE_MINUS_X, py + rowY, STEP_W, STEP_H)) {
             set.accept(Math.max(0.3f, round1(value - 0.1f)));
             sendAppearance();
             return true;
         }
-        if (over(mx, my, px + STEP_PLUS_X, py + rowY, STEP_W, STEP_H)) {
+        if (over(mx, my, px + POSE_PLUS_X, py + rowY, STEP_W, STEP_H)) {
             set.accept(Math.min(3.0f, round1(value + 0.1f)));
             sendAppearance();
             return true;
@@ -307,14 +311,16 @@ public class NotchNpcEditorScreen extends Screen {
         return false;
     }
 
-    private void drawStepper(DrawContext ctx, int mx, int my, int rowY, String label, String value) {
+    private void drawStepper(DrawContext ctx, int mx, int my, int rowY, String label, String value,
+                             int labelX, int minusX, int plusX) {
         int y = py + rowY;
-        ctx.drawText(this.textRenderer, label, px + RX, y + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + STEP_MINUS_X, y, STEP_W, STEP_H, "-",
-                over(mx, my, px + STEP_MINUS_X, y, STEP_W, STEP_H));
-        NotchWidgets.centerText(ctx, this.textRenderer, value, px + 190, y + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + STEP_PLUS_X, y, STEP_W, STEP_H, "+",
-                over(mx, my, px + STEP_PLUS_X, y, STEP_W, STEP_H));
+        ctx.drawText(this.textRenderer, label, px + labelX, y + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + minusX, y, STEP_W, STEP_H, "-",
+                over(mx, my, px + minusX, y, STEP_W, STEP_H));
+        NotchWidgets.centerText(ctx, this.textRenderer, value,
+                px + (minusX + STEP_W + plusX) / 2, y + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + plusX, y, STEP_W, STEP_H, "+",
+                over(mx, my, px + plusX, y, STEP_W, STEP_H));
     }
 
     private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
@@ -683,6 +689,15 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 50, py + 148, 200, 18));
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 170, 200, 18, "Move & Rotate NPC",
                 over(mx, my, px + 50, py + 170, 200, 18));
+
+        // How big the body is, next to how it's holding itself.
+        NotchWidgets.divider(ctx, px + 8, py + 192, W - 16);
+        drawStepper(ctx, mx, my, SIZE_ROW_1, "Width:", String.format("%.1fx", currentScale),
+                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
+        drawStepper(ctx, mx, my, SIZE_ROW_2, "Height:", String.format("%.1fx", currentScaleY),
+                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
+        drawStepper(ctx, mx, my, SIZE_ROW_3, "Depth:", String.format("%.1fx", currentScaleZ),
+                POSE_LABEL_X, POSE_MINUS_X, POSE_PLUS_X);
     }
 
     private boolean clickPose(int mx, int my) {
@@ -704,6 +719,9 @@ public class NotchNpcEditorScreen extends Screen {
             MinecraftClient.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
+        if (steppedScale(mx, my, SIZE_ROW_1, v -> currentScale = v, currentScale)) return true;
+        if (steppedScale(mx, my, SIZE_ROW_2, v -> currentScaleY = v, currentScaleY)) return true;
+        if (steppedScale(mx, my, SIZE_ROW_3, v -> currentScaleZ = v, currentScaleZ)) return true;
         if (over(mx, my, px + 50, py + 170, 200, 18)) {
             MinecraftClient.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
@@ -845,14 +863,11 @@ public class NotchNpcEditorScreen extends Screen {
             if (over(mx, my, px + 118, py + 139, 12, 12)) { togglePlayerSkin(); return true; }
             if (over(mx, my, px + 118, py + 157, 12, 12)) { toggleUrlSkin(); return true; }
         }
-        // Size axes + nameplate nudge.
-        if (steppedScale(mx, my, GEO_ROW_1, v -> currentScale = v, currentScale)) return true;
-        if (steppedScale(mx, my, GEO_ROW_2, v -> currentScaleY = v, currentScaleY)) return true;
-        if (steppedScale(mx, my, GEO_ROW_3, v -> currentScaleZ = v, currentScaleZ)) return true;
-        if (over(mx, my, px + STEP_MINUS_X, py + GEO_ROW_4, STEP_W, STEP_H)) {
+        // Nameplate nudge (size axes live on the Pose tab).
+        if (over(mx, my, px + LOOK_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
             currentNameOffset = Math.max(-2.0f, round1(currentNameOffset - 0.1f)); sendAppearance(); return true;
         }
-        if (over(mx, my, px + STEP_PLUS_X, py + GEO_ROW_4, STEP_W, STEP_H)) {
+        if (over(mx, my, px + LOOK_PLUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
             currentNameOffset = Math.min(3.0f, round1(currentNameOffset + 0.1f)); sendAppearance(); return true;
         }
         return false;
