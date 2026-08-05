@@ -92,8 +92,9 @@ public class NpcRecruiterScreen extends Screen {
         }
     }
 
-    // Rows used by the Found and Settings panes.
-    private int rowLabel() { return py + 50; }
+    // Rows used by the Found and Settings panes. The label sits clear above its field rather than
+    // on the same line, which buried it under the inset.
+    private int rowLabel() { return py + 38; }
     private int rowColor() { return py + 76; }
     private int rowFee() { return py + 98; }
     private int rowOpen() { return py + 120; }
@@ -271,10 +272,9 @@ public class NpcRecruiterScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    /** Bigger jumps once the numbers get large, so setting a real fee isn't a hundred clicks. */
+    /** Tens by default; hold Shift for hundreds when setting a steep fee. */
     private int feeStep() {
-        if (hasShiftDown()) return 100;
-        return fee >= 1000 ? 100 : fee >= 100 ? 25 : 5;
+        return hasShiftDown() ? 100 : 10;
     }
 
     private void send(int action, String text) {
