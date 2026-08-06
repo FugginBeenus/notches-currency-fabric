@@ -444,6 +444,10 @@ public class NotchNpcEditorScreen extends Screen {
         drawToggle(ctx, mx, my, px + BEH_X, movesRow3(), "Fight players", (movesBits & 16) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow3(), "Fight back", (movesBits & 32) != 0);
         drawToggle(ctx, mx, my, px + BEH_X, movesRow4(), "Fight rivals", (movesBits & 64) != 0);
+        // The schedule decides when each of the above applies, so its way in belongs here
+        // rather than behind another tab.
+        NotchWidgets.goldButton(ctx, this.textRenderer, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H,
+                "Schedule", over(mx, my, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H));
 
         String hint = switch (currentBehavior) {
             case STATIONARY -> "Stays exactly where you placed it.";
@@ -464,6 +468,10 @@ public class NotchNpcEditorScreen extends Screen {
                 updateWidgetVisibility(); // the follow field only shows in FOLLOW mode
                 return true;
             }
+        }
+        if (over(mx, my, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H)) {
+            net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendNpcScheduleOpen(npcId);
+            return true;
         }
         int[][] toggles = {
                 {px + BEH_X, movesRow1(), 1},

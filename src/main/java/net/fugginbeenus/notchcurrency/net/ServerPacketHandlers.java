@@ -636,6 +636,38 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_OPEN, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openSchedule(player, npc);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_SAVE, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            net.minecraft.nbt.NbtCompound nbt = buf.readNbt();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.saveSchedule(player, npc, nbt);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_TOOL, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            int entryIndex = buf.readVarInt();
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.giveScheduleTool(player, npc, entryIndex);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SHARE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             int action = buf.readVarInt();

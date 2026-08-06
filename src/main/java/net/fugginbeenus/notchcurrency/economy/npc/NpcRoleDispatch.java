@@ -36,6 +36,14 @@ public final class NpcRoleDispatch {
      *  NPC entity (needed for the SHOP role's per-NPC shop lookup). */
     public static void open(ServerPlayerEntity sp, NpcRole role, @Nullable UUID target, @Nullable Entity npc) {
         if (role == null) role = NpcRole.NONE;
+        // Opening hours are checked here rather than at the right-click, because this is the one door
+        // every route goes through: the direct interaction, a dialogue choice that opens a screen, and
+        // roles bound to other mods' entities through the API. Guarding the door beats guarding the
+        // paths to it, since the next path added is guarded before it is written.
+        if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n && !n.isRoleOpenNow()) {
+            net.fugginbeenus.notchcurrency.npc.NpcText.say(sp, n, n.closedLineNow());
+            return;
+        }
         MinecraftServer server = sp.getServer();
         switch (role) {
             case ADMIN_SHOP -> {

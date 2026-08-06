@@ -66,10 +66,8 @@ public final class NpcActionRunner {
                 case SAY_LINE -> {
                     // Spoken to whoever set it off, the same way dialogue's chat mode does: private,
                     // so a busy street of NPCs doesn't fill everyone's chat.
-                    if (sp == null || a.value().isBlank()) break;
-                    String name = NpcText.npcName(npc);
-                    sp.sendMessage(Text.literal("<" + name + "> " + NpcText.substitute(a.value(), sp, name))
-                            .formatted(Formatting.WHITE), false);
+                    if (sp == null) break;
+                    NpcText.say(sp, npc, a.value());
                 }
                 case OPEN_ROLE -> {
                     if (sp == null) break;

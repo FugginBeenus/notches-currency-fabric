@@ -25,6 +25,20 @@ public final class NpcText {
      * player shouldn't print half-substituted noise in that case: the player placeholders just resolve
      * to something neutral.
      */
+    /**
+     * One NPC line, to one player, formatted the way dialogue's chat mode does it.
+     *
+     * <p>Private on purpose: a busy street of NPCs must not fill everybody's chat. Lives here so the
+     * reaction actions and the closed-for-business reply speak with one voice instead of drifting
+     * apart the first time either is touched.
+     */
+    public static void say(ServerPlayerEntity sp, NotchNpcEntity npc, String line) {
+        if (sp == null || line == null || line.isBlank()) return;
+        String name = npcName(npc);
+        sp.sendMessage(net.minecraft.text.Text.literal("<" + name + "> " + substitute(line, sp, name))
+                .formatted(net.minecraft.util.Formatting.WHITE), false);
+    }
+
     public static String substitute(String text, @Nullable ServerPlayerEntity sp, String npcName) {
         if (text == null) return "";
         String out = text

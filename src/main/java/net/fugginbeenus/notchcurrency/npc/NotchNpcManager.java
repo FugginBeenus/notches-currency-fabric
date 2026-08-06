@@ -491,6 +491,121 @@ public final class NotchNpcManager {
         sp.sendMessage(Text.literal("Reactions saved.").formatted(Formatting.GREEN), false);
     }
 
+    public static void openSchedule(ServerPlayerEntity sp, NotchNpcEntity npc) {
+        if (!guard(sp, npc)) return;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npc.getUuid());
+        // Whether a schedule can run here at all. Sent with the data so the screen can explain itself
+        // instead of the owner building a whole day that silently never advances.
+        buf.writeBoolean(net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule
+                .dimensionSupports(npc.getWorld()));
+        buf.writeNbt(npc.getSchedule().toNbt());
+        Net.sendToClient(sp, NotchPackets.NPC_SCHEDULE_DATA, buf);
+    }
+
+    /**
+     * Replace the NPC's schedule with an edited one (owner/op re-validated).
+     *
+     * <p>Entry actions go through the same admin gate as reactions and dialogue. A schedule entry can
+     * pay coins and run commands exactly like a reaction can, so it is exactly as capable of minting
+     * money, and it would be a poor place to leave the third door unlocked.
+     */
+    public static void saveSchedule(ServerPlayerEntity sp, NotchNpcEntity npc,
+                                    net.minecraft.nbt.NbtCompound nbt) {
+        if (!guard(sp, npc)) return;
+        if (nbt == null) return;
+        var schedule = net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt);
+        boolean stripped = false;
+        boolean allowAdminActions = sp.hasPermissionLevel(2);
+
+        var cleaned = new java.util.ArrayList<net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry>();
+        for (var entry : schedule.entries()) {
+            var kept = new java.util.ArrayList<>(entry.onBegin());
+            if (!allowAdminActions) {
+                stripped |= kept.removeIf(a ->
+                        net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.isAdminOnly(a.type()));
+            }
+            for (var a : kept) {
+                if (a.value().length() > 200) a.setValue(a.value().substring(0, 200));
+                if (a.amount() < 0) a.setAmount(0);
+            }
+            String closed = entry.closedLine();
+            if (closed.length() > 200) closed = closed.substring(0, 200);
+            cleaned.add(entry.withActions(kept).withClosedLine(closed));
+        }
+        schedule.setEntries(cleaned);
+
+        if (stripped) {
+            sp.sendMessage(Text.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
+                    .formatted(Formatting.YELLOW), false);
+        }
+        npc.setSchedule(schedule);
+        int broken = schedule.brokenCount();
+        if (broken > 0) {
+            sp.sendMessage(Text.literal("Schedule saved. " + broken
+                            + (broken == 1 ? " entry still needs a spot." : " entries still need a spot."))
+                    .formatted(Formatting.YELLOW), false);
+        } else {
+            sp.sendMessage(Text.literal("Schedule saved.").formatted(Formatting.GREEN), false);
+        }
+    }
+
+    /**
+     * Hand over the spot-marking tool for one schedule entry.
+     *
+     * <p>Deliberately the same item as the patrol route tool. Pointing at a block is the same job
+     * whether it's the third waypoint of a round or the bed an NPC sleeps in, and one familiar tool
+     * beats a second one that behaves almost identically.
+     */
+    public static void giveScheduleTool(ServerPlayerEntity sp, NotchNpcEntity npc, int entryIndex) {
+        if (!guard(sp, npc)) return;
+        var entry = npc.getSchedule().get(entryIndex);
+        if (entry == null) {
+            sp.sendMessage(Text.literal("That schedule entry is gone.").formatted(Formatting.RED), false);
+            return;
+        }
+        ItemStack tool = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.ROUTE_PLANNER);
+        StackData.putUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUuid());
+        StackData.putString(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY,
+                net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc));
+        StackData.putInt(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.ENTRY_KEY, entryIndex);
+        if (!sp.getInventory().insertStack(tool)) {
+            sp.dropItem(tool, false);
+        }
+        boolean bed = entry.stance() == net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.SLEEP;
+        sp.sendMessage(Text.literal(bed
+                        ? "Right-click the bed for the " + entry.clock() + " entry. Right-click the air to cancel."
+                        : "Right-click the spot for the " + entry.clock() + " entry. Right-click the air to cancel.")
+                .formatted(Formatting.GREEN), false);
+    }
+
+    /** Record the marked spot and drop the owner straight back into the schedule screen. */
+    public static void setScheduleAnchor(ServerPlayerEntity sp, NotchNpcEntity npc, int entryIndex,
+                                         net.minecraft.util.math.BlockPos pos, float facing) {
+        if (!guard(sp, npc)) return;
+        var schedule = npc.getSchedule();
+        var entry = schedule.get(entryIndex);
+        if (entry == null) {
+            sp.sendMessage(Text.literal("That schedule entry is gone.").formatted(Formatting.RED), false);
+            return;
+        }
+        var entries = new java.util.ArrayList<>(schedule.entries());
+        entries.set(entryIndex, entry.withAnchor(pos, facing));
+        schedule.setEntries(entries);
+        npc.setSchedule(schedule);
+        sp.sendMessage(Text.literal("Spot set for the " + entry.clock() + " entry.").formatted(Formatting.GREEN), false);
+        openSchedule(sp, npc);
+    }
+
+    /** Used when the owner cancels out of the tool: put them back where they came from. */
+    public static void reopenScheduleFor(ServerPlayerEntity sp, ItemStack tool) {
+        UUID npcId = StackData.getUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY);
+        if (npcId == null) return;
+        if (sp.getServerWorld().getEntity(npcId) instanceof NotchNpcEntity npc) {
+            openSchedule(sp, npc);
+        }
+    }
+
     // ---- edit actions (all owner/op-gated) ----
 
     public static void setRole(ServerPlayerEntity sp, NotchNpcEntity npc, NpcRole role) {

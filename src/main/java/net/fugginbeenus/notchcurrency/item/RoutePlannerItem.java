@@ -37,6 +37,9 @@ public class RoutePlannerItem extends Item {
     public static final String NPC_KEY = "RouteNpc";
     public static final String NPC_NAME_KEY = "RouteNpcName";
     public static final String COUNT_KEY = "RouteCount"; // synced for the HUD overlay
+    /** Present when this tool is marking one schedule entry's spot instead of walking a route.
+     *  Same tool and the same right-click, because it is the same job: point at a block. */
+    public static final String ENTRY_KEY = "ScheduleEntry";
 
     public RoutePlannerItem(Settings settings) {
         super(settings.maxCount(1));
@@ -56,6 +59,14 @@ public class RoutePlannerItem extends Item {
         if (npc == null) return ActionResult.CONSUME;
 
         BlockPos pos = context.getBlockPos().offset(context.getSide());
+        if (StackData.has(context.getStack(), ENTRY_KEY)) {
+            // A bed is clicked directly rather than beside: sleeping means being in it, not next to it.
+            BlockPos target = isBed(world, context.getBlockPos()) ? context.getBlockPos() : pos;
+            NotchNpcManager.setScheduleAnchor(sp, npc,
+                    StackData.getInt(context.getStack(), ENTRY_KEY), target, sp.getYaw());
+            context.getStack().decrement(1);
+            return ActionResult.CONSUME;
+        }
         if (sp.isSneaking()) {
             NotchNpcManager.removeLastWaypoint(sp, npc);
         } else {
@@ -72,6 +83,13 @@ public class RoutePlannerItem extends Item {
             return TypedActionResult.success(stack);
         }
         if (user instanceof ServerPlayerEntity sp) {
+            if (StackData.has(stack, ENTRY_KEY)) {
+                // Nothing to confirm when marking a single spot: this is the way to back out.
+                stack.decrement(1);
+                sp.sendMessage(Text.literal("Spot unchanged.").formatted(Formatting.GRAY), false);
+                NotchNpcManager.reopenScheduleFor(sp, stack);
+                return TypedActionResult.success(stack);
+            }
             NotchNpcEntity npc = boundNpc(stack, (ServerWorld) world, sp);
             if (npc != null) {
                 NotchNpcManager.confirmRoute(sp, npc);
@@ -88,6 +106,7 @@ public class RoutePlannerItem extends Item {
         boolean held = selected || sp.getOffHandStack() == stack;
         if (!held || world.getTime() % 10 != 0) return;
 
+        if (StackData.has(stack, ENTRY_KEY)) return; // nothing to beacon: no route being built
         UUID npcId = StackData.getUuid(stack, NPC_KEY);
         if (npcId == null) return;
         if (!(((ServerWorld) world).getEntity(npcId) instanceof NotchNpcEntity npc)) return;
@@ -103,6 +122,10 @@ public class RoutePlannerItem extends Item {
                         wp.getX() + 0.5, wp.getY() + 0.3 + i * 0.55, wp.getZ() + 0.5, 1, 0, 0, 0, 0);
             }
         }
+    }
+
+    private static boolean isBed(World world, BlockPos pos) {
+        return world.getBlockState(pos).getBlock() instanceof net.minecraft.block.BedBlock;
     }
 
     @Nullable

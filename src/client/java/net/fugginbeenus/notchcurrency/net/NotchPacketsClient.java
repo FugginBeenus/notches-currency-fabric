@@ -235,6 +235,42 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SHARE, buf);
     }
 
+    public static void sendNpcScheduleOpen(UUID npcId) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        NetClient.sendToServer(NotchPackets.NPC_SCHEDULE_OPEN, buf);
+    }
+
+    public static void sendNpcScheduleSave(UUID npcId, net.minecraft.nbt.NbtCompound nbt) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeNbt(nbt);
+        NetClient.sendToServer(NotchPackets.NPC_SCHEDULE_SAVE, buf);
+    }
+
+    /** Ask for the anchor tool bound to one schedule entry. */
+    public static void sendNpcScheduleTool(UUID npcId, int entryIndex) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeVarInt(entryIndex);
+        NetClient.sendToServer(NotchPackets.NPC_SCHEDULE_TOOL, buf);
+    }
+
+    public static void registerNpcScheduleReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_SCHEDULE_DATA, (client, buf) -> {
+            UUID npcId = buf.readUuid();
+            boolean dimensionOk = buf.readBoolean();
+            net.minecraft.nbt.NbtCompound nbt = buf.readNbt();
+            client.execute(() -> {
+                var schedule = nbt == null
+                        ? new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule()
+                        : net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt);
+                MinecraftClient.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.NpcScheduleScreen(npcId, dimensionOk, schedule));
+            });
+        });
+    }
+
     public static void registerNpcPresetReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_PRESET_LIST, (client, buf) -> {
             UUID npcId = buf.readUuid();

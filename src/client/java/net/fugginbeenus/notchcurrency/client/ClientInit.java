@@ -122,6 +122,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerRecruiterReceiver();
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
+        NotchPacketsClient.registerNpcScheduleReceiver();
 
         // Trade cancel / complete messages
         NetClient.registerClientReceiver(NotchPackets.TRADE_CANCEL, (client, buf) -> {

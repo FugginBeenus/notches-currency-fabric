@@ -149,6 +149,14 @@ public final class NotchPackets {
     public static final Identifier NPC_ACTIONS_DATA = NotchCurrency.id("npc_actions_data");
     // Client -> server: save edited reactions (npc uuid, actions NBT)
     public static final Identifier NPC_ACTIONS_SAVE = NotchCurrency.id("npc_actions_save");
+    // Client -> server: ask for the NPC's schedule (npc uuid)
+    public static final Identifier NPC_SCHEDULE_OPEN = NotchCurrency.id("npc_schedule_open");
+    // Server -> client: the schedule (npc uuid, whether this dimension has a day, NBT)
+    public static final Identifier NPC_SCHEDULE_DATA = NotchCurrency.id("npc_schedule_data");
+    // Client -> server: an edited schedule (npc uuid, NBT)
+    public static final Identifier NPC_SCHEDULE_SAVE = NotchCurrency.id("npc_schedule_save");
+    // Client -> server: hand over the spot-marking tool bound to one schedule entry (npc uuid, entry index)
+    public static final Identifier NPC_SCHEDULE_TOOL = NotchCurrency.id("npc_schedule_tool");
 
     // Server -> client: waystone teleport fees, so the selection menu can price each destination
     // (enabled, fee, dimensionalFee; sent on join by WaystoneFeeHandler when Waystones is present)
