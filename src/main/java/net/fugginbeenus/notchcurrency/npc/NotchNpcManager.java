@@ -46,7 +46,11 @@ public final class NotchNpcManager {
             sp.sendMessage(Text.literal("Only the owner can edit this NPC.").formatted(Formatting.RED), false);
             return;
         }
-        String name = (npc.hasCustomName() && npc.getCustomName() != null) ? npc.getCustomName().getString() : "";
+        // Back to '&' on the way out. The name is stored with real § codes because that is what
+        // renders, but the editor field has to show what was typed or every save would hand back
+        // section signs and the codes would stop being editable.
+        String name = (npc.hasCustomName() && npc.getCustomName() != null)
+                ? npc.getCustomName().getString().replace('\u00a7', '&') : "";
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npc.getUuid());
         buf.writeVarInt(npc.getRole().ordinal());
@@ -82,6 +86,9 @@ public final class NotchNpcManager {
                 | (npc.fightsRivalFactions() ? 64 : 0));
         buf.writeString(npc.getFarewellText());
         buf.writeString(npc.getBillboard());
+        buf.writeString(npc.getSubtitle());
+        buf.writeString(npc.getVoice());
+        buf.writeVarInt(npc.getVoicePitch());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
@@ -629,6 +636,30 @@ public final class NotchNpcManager {
         }
     }
 
+    /**
+     * The personality bits: the small line under the name, and the voice.
+     *
+     * <p>One setter for both because they are one editing session in the player's head, and a second
+     * near-identical packet for a second string is how a protocol turns into a junk drawer.
+     */
+    public static void setFlavor(ServerPlayerEntity sp, NotchNpcEntity npc,
+                                 String subtitle, String voice, int voicePitch) {
+        if (!guard(sp, npc)) return;
+        npc.setSubtitle(subtitle);
+        // Only real, registered sounds: an unknown id would be a silent NPC with no clue why.
+        String cleaned = voice == null ? "" : voice.trim();
+        if (!cleaned.isEmpty()) {
+            net.minecraft.util.Identifier id = net.minecraft.util.Identifier.tryParse(cleaned);
+            if (id == null || !net.minecraft.registry.Registries.SOUND_EVENT.containsId(id)) {
+                sp.sendMessage(Text.literal("No sound called '" + cleaned + "'.").formatted(Formatting.RED), false);
+                cleaned = npc.getVoice();
+            }
+        }
+        npc.setVoice(cleaned);
+        npc.setVoicePitch(voicePitch);
+        npc.playVoice(); // hear the change straight away rather than guessing at a number
+    }
+
     // ---- edit actions (all owner/op-gated) ----
 
     public static void setRole(ServerPlayerEntity sp, NotchNpcEntity npc, NpcRole role) {
@@ -699,7 +730,8 @@ public final class NotchNpcManager {
             npc.setCustomName(null);
             npc.setCustomNameVisible(false);
         } else {
-            npc.setCustomName(Text.literal(trimmed));
+            // The same '&' codes shop titles and dialogue already use, so "&6Carol" is a gold name.
+            npc.setCustomName(Text.literal(NpcText.colorize(trimmed)));
             npc.setCustomNameVisible(true);
         }
         sp.sendMessage(Text.literal("NPC name updated.").formatted(Formatting.GREEN), false);

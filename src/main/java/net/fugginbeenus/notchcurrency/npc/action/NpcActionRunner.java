@@ -125,9 +125,10 @@ public final class NpcActionRunner {
         if (line == null || line.isBlank()) return;
         if (!(npc.getWorld() instanceof net.minecraft.server.world.ServerWorld world)) return;
         double r2 = EARSHOT * EARSHOT;
+        npc.playVoice(); // once for the room, not once per person in it
         for (ServerPlayerEntity near : world.getPlayers()) {
             if (near.squaredDistanceTo(npc) <= r2) {
-                NpcText.say(near, npc, line);
+                NpcText.sendLine(near, npc, line);
             }
         }
     }

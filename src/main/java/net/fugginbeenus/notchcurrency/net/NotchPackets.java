@@ -157,6 +157,8 @@ public final class NotchPackets {
     public static final Identifier NPC_SCHEDULE_SAVE = NotchCurrency.id("npc_schedule_save");
     // Client -> server: hand over the spot-marking tool bound to one schedule entry (npc uuid, entry index)
     public static final Identifier NPC_SCHEDULE_TOOL = NotchCurrency.id("npc_schedule_tool");
+    // Client -> server: personality (npc uuid, subtitle, voice sound id, pitch percent)
+    public static final Identifier NPC_SET_FLAVOR = NotchCurrency.id("npc_set_flavor");
 
     // Server -> client: waystone teleport fees, so the selection menu can price each destination
     // (enabled, fee, dimensionalFee; sent on join by WaystoneFeeHandler when Waystones is present)

@@ -13,5 +13,5 @@ public record NpcEditorState(UUID npcId, int roleOrdinal, String name, String ow
                              int statsBits, int dialogueMode, int waypointCount, int patrolSpeedIdx,
                              int patrolWaitIdx, int poseId, int poseAnim, int maxHealth, int speedPct,
                              int regen, String followName, int movesBits, String farewell,
-                             String billboard) {
+                             String billboard, String subtitle, String voice, int voicePitch) {
 }

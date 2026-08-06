@@ -92,6 +92,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
      *  because placeholders like %balance% have to resolve per viewer. */
     private static final TrackedData<String> BILLBOARD =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
+    /** One small line under the name: a job, a title, a rank. Synced for the same reasons the sign is. */
+    private static final TrackedData<String> SUBTITLE =
+            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
     /** Pose preset: 0 standing, 1 sitting, 2 sneaking, 3 sleeping. */
     private static final TrackedData<Integer> NPC_POSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
@@ -172,6 +175,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private String factionId = "";
     /** Which round of action rules this NPC has already been brought in line with. */
     private int actionSweepVersion = 0;
+    /** Voice: the sound id it speaks with and the pitch, as a percentage of normal. */
+    private String voiceSound = "";
+    private int voicePitch = 100;
 
     /** The NPC's day. Empty and disabled costs nothing: see {@link #tickSchedule()}. */
     private net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule schedule =
@@ -243,6 +249,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         builder.add(SCALE_Z, 1.0f);
         builder.add(NAME_OFFSET, 0.0f);
         builder.add(BILLBOARD, "");
+        builder.add(SUBTITLE, "");
         builder.add(NPC_POSE, POSE_STANDING);
         builder.add(CUSTOM_POSE, new NbtCompound());
         builder.add(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -260,6 +267,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.startTracking(SCALE_Z, 1.0f);
         this.dataTracker.startTracking(NAME_OFFSET, 0.0f);
         this.dataTracker.startTracking(BILLBOARD, "");
+        this.dataTracker.startTracking(SUBTITLE, "");
         this.dataTracker.startTracking(NPC_POSE, POSE_STANDING);
         this.dataTracker.startTracking(CUSTOM_POSE, new NbtCompound());
         this.dataTracker.startTracking(POSE_ANIM, ANIM_BREATHE); // alive-by-default
@@ -390,6 +398,47 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public float getScaleZ() { return this.dataTracker.get(SCALE_Z); }
     public void setScaleZ(float scale) { this.dataTracker.set(SCALE_Z, clampNpcScale(scale)); }
+
+    public static final int MAX_SUBTITLE_LENGTH = 32;
+
+    /** The small line under the name. Empty means none. */
+    public String getSubtitle() { return this.dataTracker.get(SUBTITLE); }
+
+    public void setSubtitle(String text) {
+        String out = text == null ? "" : text.replace('\n', ' ').trim();
+        if (out.length() > MAX_SUBTITLE_LENGTH) out = out.substring(0, MAX_SUBTITLE_LENGTH);
+        this.dataTracker.set(SUBTITLE, out);
+    }
+
+    /** Sound id spoken on interaction, empty for a silent NPC, and its pitch as a percentage.
+     *  Not tracked: the server plays the sound, so the client never needs to know. */
+    public String getVoice() { return voiceSound; }
+
+    public void setVoice(String soundId) {
+        this.voiceSound = soundId == null ? "" : soundId;
+    }
+
+    public int getVoicePitch() { return voicePitch; }
+
+    public void setVoicePitch(int percent) {
+        this.voicePitch = Math.max(50, Math.min(200, percent));
+    }
+
+    /**
+     * Say something out loud, if this NPC has been given a voice.
+     *
+     * <p>Pitch is what turns one villager grunt into a cast: the same sound at 60% and at 150% reads
+     * as two different people. Played at the NPC so it falls off with distance like any other mob.
+     */
+    public void playVoice() {
+        if (voiceSound.isEmpty() || this.isSilent()) return;
+        net.minecraft.util.Identifier id = net.minecraft.util.Identifier.tryParse(voiceSound);
+        if (id == null) return;
+        net.minecraft.sound.SoundEvent sound = net.minecraft.registry.Registries.SOUND_EVENT.get(id);
+        if (sound == null) return;
+        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), sound,
+                net.minecraft.sound.SoundCategory.NEUTRAL, 1.0f, voicePitch / 100.0f);
+    }
 
     public static final int MAX_BILLBOARD_LINES = 4;
     public static final int MAX_BILLBOARD_LINE_LENGTH = 48;
@@ -1296,6 +1345,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 return ActionResult.PASS;
             }
             startTalking(player); // pause + face the player while they're dealing with us
+            playVoice();           // a grunt as it turns to you, the way a villager answers
             // Before dialogue or the role screen takes over, so a greeting is read first.
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
             if (sp.isSneaking() && canEdit(sp)) {
@@ -1406,6 +1456,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
         if (schedule.isEnabled() || !schedule.isEmpty()) nbt.put("Schedule", schedule.toNbt());
         if (poseBeforeSchedule >= 0) nbt.putInt("PoseBeforeSchedule", poseBeforeSchedule);
+        if (!getSubtitle().isEmpty()) nbt.putString("Subtitle", getSubtitle());
+        if (!voiceSound.isEmpty()) nbt.putString("Voice", voiceSound);
+        if (voicePitch != 100) nbt.putInt("VoicePitch", voicePitch);
         // Stats: the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
@@ -1499,6 +1552,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(
                 nbt.contains("Actions") ? nbt.getCompound("Actions") : null);
         poseBeforeSchedule = nbt.contains("PoseBeforeSchedule") ? nbt.getInt("PoseBeforeSchedule") : -1;
+        setSubtitle(nbt.getString("Subtitle"));
+        setVoice(nbt.getString("Voice"));
+        setVoicePitch(nbt.contains("VoicePitch") ? nbt.getInt("VoicePitch") : 100);
         setSchedule(nbt.contains("Schedule")
                 ? net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt.getCompound("Schedule"))
                 : new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule());

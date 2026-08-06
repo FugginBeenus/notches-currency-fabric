@@ -67,12 +67,15 @@ public final class NotchPacketsClient {
             int movesBits = buf.readVarInt();
             String farewell = buf.readString(160);
             String billboard = buf.readString(400);
+            String subtitle = buf.readString(64);
+            String voice = buf.readString(128);
+            int voicePitch = buf.readVarInt();
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
                     scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
-                    regen, followName, movesBits, farewell, billboard);
+                    regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch);
             client.execute(() -> MinecraftClient.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });
@@ -233,6 +236,15 @@ public final class NotchPacketsClient {
         buf.writeVarInt(action);
         buf.writeString(payload, net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
         NetClient.sendToServer(NotchPackets.NPC_SHARE, buf);
+    }
+
+    public static void sendNpcFlavor(UUID npcId, String subtitle, String voice, int voicePitch) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeString(subtitle);
+        buf.writeString(voice);
+        buf.writeVarInt(voicePitch);
+        NetClient.sendToServer(NotchPackets.NPC_SET_FLAVOR, buf);
     }
 
     public static void sendNpcScheduleOpen(UUID npcId) {

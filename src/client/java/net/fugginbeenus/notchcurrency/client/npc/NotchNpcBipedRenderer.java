@@ -146,6 +146,22 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         super.renderLabelIfPresent(entity, text, matrices, vertexConsumers, light);
         //?}
         matrices.pop();
+
+        // The subtitle hangs below the name, where a job title belongs. Drawn through the same label
+        // routine so it billboards, fades and backgrounds exactly like the name above it.
+        String subtitle = entity.getSubtitle();
+        if (!subtitle.isEmpty()) {
+            matrices.push();
+            matrices.translate(0.0, entity.getNameOffset() - NpcBillboard.LINE_HEIGHT, 0.0);
+            net.minecraft.text.Text line = net.minecraft.text.Text.literal(
+                    net.fugginbeenus.notchcurrency.npc.NpcText.colorize(subtitle));
+            //? if >=1.21 {
+            /*super.renderLabelIfPresent(entity, line, matrices, vertexConsumers, light, tickDelta);
+            *///?} else {
+            super.renderLabelIfPresent(entity, line, matrices, vertexConsumers, light);
+            //?}
+            matrices.pop();
+        }
     }
 
     @Override

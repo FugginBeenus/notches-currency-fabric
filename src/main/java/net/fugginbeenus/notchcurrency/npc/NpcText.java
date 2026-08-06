@@ -34,6 +34,19 @@ public final class NpcText {
      */
     public static void say(ServerPlayerEntity sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
+        npc.playVoice(); // every line it speaks gets its voice, not just the first hello
+        sendLine(sp, npc, line);
+    }
+
+    /**
+     * The text half of {@link #say}, without the voice.
+     *
+     * <p>Exists because a line spoken to a crowd is still one NPC speaking once. The sound is already
+     * heard by everyone in range, so voicing it per reader would stack a dozen copies of the same
+     * grunt on top of each other.
+     */
+    public static void sendLine(ServerPlayerEntity sp, NotchNpcEntity npc, String line) {
+        if (sp == null || line == null || line.isBlank()) return;
         String name = npcName(npc);
         sp.sendMessage(net.minecraft.text.Text.literal("<" + name + "> " + substitute(line, sp, name))
                 .formatted(net.minecraft.util.Formatting.WHITE), false);
@@ -47,7 +60,12 @@ public final class NpcText {
         if (out.contains("%balance%")) {
             out = out.replace("%balance%", sp == null ? "0" : Long.toString(CurrencyApi.getBalance(sp)));
         }
-        // Classic '&' color/format codes (&6 gold, &l bold, &r reset, ...) render as § formatting.
-        return out.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
+        return colorize(out);
+    }
+
+    /** Classic '&' colour/format codes (&6 gold, &l bold, &r reset) rendered as § formatting. The one
+     *  copy, so a name, a sign, a shop title and a spoken line all understand the same codes. */
+    public static String colorize(String text) {
+        return text == null ? "" : text.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
     }
 }

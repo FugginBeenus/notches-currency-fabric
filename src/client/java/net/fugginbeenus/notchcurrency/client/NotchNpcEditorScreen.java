@@ -72,6 +72,11 @@ public class NotchNpcEditorScreen extends Screen {
 
     private int px, py;
     private TextFieldWidget nameField;
+    private TextFieldWidget subtitleField;
+    /** Personality, held here between the packet arriving and the widgets being built. */
+    private String currentSubtitle = "";
+    private String currentVoice = "";
+    private int currentVoicePitch = 100;
     private TextFieldWidget playerField;
     private TextFieldWidget urlField;
     private TextFieldWidget followField;
@@ -94,6 +99,9 @@ public class NotchNpcEditorScreen extends Screen {
         this.currentName = state.name() == null ? "" : state.name();
         this.currentFarewell = state.farewell() == null ? "" : state.farewell();
         this.currentBillboard = state.billboard() == null ? "" : state.billboard();
+        this.currentSubtitle = state.subtitle() == null ? "" : state.subtitle();
+        this.currentVoice = state.voice() == null ? "" : state.voice();
+        this.currentVoicePitch = state.voicePitch();
         this.ownerName = state.ownerName() == null ? "" : state.ownerName();
         this.canEdit = state.canEdit();
         this.currentModel = (state.model() == null || state.model().isEmpty())
@@ -141,6 +149,12 @@ public class NotchNpcEditorScreen extends Screen {
         nameField.setText(currentName);
         addDrawableChild(nameField);
 
+        subtitleField = new TextFieldWidget(this.textRenderer, px + 152, py + 84, 136, 9, Text.literal("Subtitle"));
+        subtitleField.setMaxLength(NotchNpcEntity.MAX_SUBTITLE_LENGTH);
+        subtitleField.setDrawsBackground(false);
+        subtitleField.setText(currentSubtitle);
+        addDrawableChild(subtitleField);
+
         farewellField = new TextFieldWidget(this.textRenderer, px + 78, py + 175, 158, 9, Text.literal("Goodbye"));
         farewellField.setMaxLength(150);
         farewellField.setDrawsBackground(false);
@@ -174,8 +188,10 @@ public class NotchNpcEditorScreen extends Screen {
 
     private void updateWidgetVisibility() {
         nameField.visible = (tab == 0);
+        subtitleField.visible = (tab == 0);
         farewellField.visible = (tab == 3);
         nameField.setFocusUnlocked(tab == 0);
+        subtitleField.setFocusUnlocked(tab == 0);
         boolean hum = (tab == 0 && isHumanoid());
         playerField.visible = hum;
         urlField.visible = hum;
@@ -255,6 +271,28 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.inset(ctx, px + 150, py + 46, 140, 14, NotchTheme.DEEP);
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 64, 140, 14, "Save Name",
                 over(mx, my, px + 150, py + 64, 140, 14));
+        if (over(mx, my, px + 150, py + 46, 140, 14)) {
+            tooltip = java.util.List.of(
+                    Text.literal("Name").formatted(Formatting.WHITE),
+                    Text.literal("Colour it with & codes: &6Carol").formatted(Formatting.GRAY),
+                    Text.literal("Same codes as dialogue and signs.").formatted(Formatting.DARK_GRAY));
+        }
+
+        // A job under the name. Small, and it reads as a title rather than a second name.
+        ctx.drawText(this.textRenderer, "Title:", px + RX, py + 86, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + 150, py + 81, 140, 13, NotchTheme.DEEP);
+        if (subtitleField.getText().isEmpty()) {
+            ctx.drawText(this.textRenderer, "Blacksmith", px + 154, py + 84, 0xFF555555, false);
+        }
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 97, 140, 14, "Save Title",
+                over(mx, my, px + 150, py + 97, 140, 14));
+        if (over(mx, my, px + 150, py + 81, 140, 14) || over(mx, my, px + 150, py + 97, 140, 14)) {
+            tooltip = java.util.List.of(
+                    Text.literal("Title").formatted(Formatting.WHITE),
+                    Text.literal("A small line under the name.").formatted(Formatting.GRAY),
+                    Text.literal("Takes & colour codes too. Shows only").formatted(Formatting.GRAY),
+                    Text.literal("when the nameplate is on.").formatted(Formatting.DARK_GRAY));
+        }
 
         // Where the floating name sits: models vary enough that one height never fits them all.
         drawNameOffsetRow(ctx, mx, my);
@@ -475,6 +513,90 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
     }
 
+    /**
+     * The voices worth offering, as sound ids paired with a plain name.
+     *
+     * <p>Deliberately a short list of vanilla voices rather than every sound in the game. Pitch is
+     * what actually makes a cast: the same villager grunt at 70% and 130% reads as two people, so a
+     * handful of voices times a pitch slider covers far more ground than a long menu would.
+     */
+    private static final String[][] VOICES = {
+            {"", "Silent"},
+            {"entity.villager.ambient", "Villager"},
+            {"entity.villager.trade", "Trader"},
+            {"entity.wandering_trader.ambient", "Wanderer"},
+            {"entity.pillager.ambient", "Gruff"},
+            {"entity.piglin.ambient", "Snorty"},
+            {"entity.witch.ambient", "Cackle"},
+            {"entity.evoker.ambient", "Mystic"},
+            {"entity.allay.ambient_without_item", "Chime"},
+            {"entity.cat.ambient", "Cat"},
+            {"entity.wolf.ambient", "Dog"},
+            {"entity.parrot.ambient", "Bird"},
+    };
+
+    private int voiceIndex() {
+        String id = currentVoice.startsWith("minecraft:") ? currentVoice.substring(10) : currentVoice;
+        for (int i = 0; i < VOICES.length; i++) {
+            if (VOICES[i][0].equals(id)) return i;
+        }
+        return 0;
+    }
+
+    private void sendFlavor() {
+        NotchPacketsClient.sendNpcFlavor(npcId, subtitleField.getText(), currentVoice, currentVoicePitch);
+    }
+
+    /** The voice row on the Talk tab: which sound, how high, and hear it. */
+    private void drawVoiceRow(DrawContext ctx, int mx, int my) {
+        NotchWidgets.divider(ctx, px + 8, py + 192, W - 16);
+        ctx.drawText(this.textRenderer, "Voice:", px + 22, py + 204, NotchTheme.TEXT_DARK, false);
+        boolean voiceHover = over(mx, my, px + 75, py + 200, 90, 14);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 75, py + 200, 90, 14,
+                VOICES[voiceIndex()][1], voiceHover);
+        if (voiceHover) {
+            tooltip = java.util.List.of(
+                    Text.literal("Voice").formatted(Formatting.WHITE),
+                    Text.literal("A short sound when it is spoken to,").formatted(Formatting.GRAY),
+                    Text.literal("and on every line it says.").formatted(Formatting.GRAY),
+                    Text.literal("Click to cycle. Silent NPCs stay silent.").formatted(Formatting.DARK_GRAY));
+        }
+
+        ctx.drawText(this.textRenderer, "Pitch:", px + 172, py + 204, NotchTheme.TEXT_DARK, false);
+        boolean downHover = over(mx, my, px + 208, py + 200, 16, 14);
+        boolean upHover = over(mx, my, px + 254, py + 200, 16, 14);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 208, py + 200, 16, 14, "-", downHover);
+        NotchWidgets.centerText(ctx, this.textRenderer, currentVoicePitch + "%", px + 239, py + 204,
+                NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 254, py + 200, 16, 14, "+", upHover);
+        if (downHover || upHover) {
+            tooltip = java.util.List.of(
+                    Text.literal("Pitch").formatted(Formatting.WHITE),
+                    Text.literal("Low for big and slow, high for small").formatted(Formatting.GRAY),
+                    Text.literal("and quick. This is what makes a cast").formatted(Formatting.GRAY),
+                    Text.literal("out of one sound.").formatted(Formatting.DARK_GRAY));
+        }
+    }
+
+    private boolean clickVoiceRow(int mx, int my) {
+        if (over(mx, my, px + 75, py + 200, 90, 14)) {
+            currentVoice = VOICES[(voiceIndex() + 1) % VOICES.length][0];
+            sendFlavor(); // the server plays it back, so cycling auditions the voices
+            return true;
+        }
+        if (over(mx, my, px + 208, py + 200, 16, 14)) {
+            currentVoicePitch = Math.max(50, currentVoicePitch - (hasShiftDown() ? 5 : 10));
+            sendFlavor();
+            return true;
+        }
+        if (over(mx, my, px + 254, py + 200, 16, 14)) {
+            currentVoicePitch = Math.min(200, currentVoicePitch + (hasShiftDown() ? 5 : 10));
+            sendFlavor();
+            return true;
+        }
+        return false;
+    }
+
     private boolean clickBehavior(int mx, int my) {
         NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
         for (int i = 0; i < modes.length; i++) {
@@ -647,6 +769,7 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.textRenderer, styleHint, px + W / 2, py + 160, NotchTheme.TEXT_MUTED, false);
 
         // Optional goodbye line, said in chat when a screen this NPC opened closes.
+        drawVoiceRow(ctx, mx, my);
         ctx.drawText(this.textRenderer, "Goodbye:", px + 22, py + 175, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 75, py + 171, 164, 13, NotchTheme.PANEL_MID);
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + 244, py + 171, 34, 13, "Set",
@@ -790,6 +913,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
             if (tab == 0 && clickAppearance(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 1 && clickBehavior(mx, my)) { NotchWidgets.tick(); return true; }
+            if (tab == 3 && clickVoiceRow(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 2) {
                 if (pendingRole == null && over(mx, my, px + 40, py + 164, 220, 16)) {
                     NotchWidgets.click();
@@ -868,6 +992,10 @@ public class NotchNpcEditorScreen extends Screen {
         if (over(mx, my, px + 150, py + 64, 140, 14)) {
             currentName = nameField.getText();
             NotchPacketsClient.sendNpcSetName(npcId, currentName);
+            return true;
+        }
+        if (over(mx, my, px + 150, py + 97, 140, 14)) {
+            sendFlavor();
             return true;
         }
         // Model: open the picker
@@ -975,7 +1103,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
         // Plain characters insert via charTyped only (guards against the select-all wipe).
-        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField, farewellField)) {
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, subtitleField, playerField, urlField, followField, farewellField)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
