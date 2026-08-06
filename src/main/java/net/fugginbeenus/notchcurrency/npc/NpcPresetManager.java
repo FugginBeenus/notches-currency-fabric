@@ -213,6 +213,10 @@ public final class NpcPresetManager {
         tag.remove("Home");
         tag.remove("Waypoints");
         tag.remove("ActionSweep");
+        // The schedule itself is worth carrying (times, stances, what it says on arrival);
+        // its coordinates are not. They arrive flagged as needing a spot, which is what the
+        // editor's repair flow walks the new owner through.
+        net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.stripAnchors(tag, "Schedule");
     }
 
     /** File-safe preset name: lowercase, spaces to underscores, [a-z0-9_-] only, max 32 chars. */

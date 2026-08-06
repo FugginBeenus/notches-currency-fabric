@@ -172,6 +172,25 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private String factionId = "";
     /** Which round of action rules this NPC has already been brought in line with. */
     private int actionSweepVersion = 0;
+
+    /** The NPC's day. Empty and disabled costs nothing: see {@link #tickSchedule()}. */
+    private net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule schedule =
+            new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule();
+    /** Which entry is currently applied, or -1 for "nothing applied yet". Never saved: the whole
+     *  point of the schedule is that this can be re-derived from the clock at any moment. */
+    private int scheduleActive = -1;
+
+    // A running schedule steers the NPC through these rather than through the configured behaviour,
+    // home and radius. Driving the saved fields directly would have the schedule quietly rewriting
+    // what the owner set on the Moves tab, and switching the schedule off would leave that damage
+    // behind. Kept out of NBT on purpose: they are derived, and they rebuild themselves on load.
+    @Nullable private Behavior scheduleBehavior = null;
+    /** The pose the owner chose, parked here while a Sleep entry borrows the real one. -1 when
+     *  the schedule is not holding it. Saved, so an NPC that unloads mid-nap still wakes up in
+     *  the pose its owner picked rather than snapping to standing. */
+    private int poseBeforeSchedule = -1;
+    @Nullable private net.minecraft.util.math.BlockPos scheduleHome = null;
+    private int scheduleRadius = 8;
     private int regen = 0; // half-hearts healed every 5 seconds
     @Nullable private net.minecraft.entity.ai.goal.Goal doorGoal = null;
 
@@ -480,6 +499,33 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public void setActions(net.fugginbeenus.notchcurrency.npc.action.NpcActions a) {
         this.actions = a == null ? new net.fugginbeenus.notchcurrency.npc.action.NpcActions() : a;
+    }
+
+    public net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule getSchedule() { return schedule; }
+
+    public void setSchedule(net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule s) {
+        this.schedule = s == null ? new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule() : s;
+        this.scheduleActive = -1; // re-derive on the next check rather than trusting the old index
+    }
+
+    /**
+     * Whether the NPC's role can be used right now.
+     *
+     * <p>Answers yes unless the owner has both built a schedule and asked for its opening hours to be
+     * kept, which is the toggle that lets a schedule be pure choreography for anyone who wants the
+     * shop open around the clock.
+     */
+    public boolean isRoleOpenNow() {
+        if (!schedule.isActive() || !schedule.enforceHours()) return true;
+        var entry = schedule.activeAt(this.getWorld().getTimeOfDay());
+        return entry == null || entry.roleOpen();
+    }
+
+    /** What to say when someone tries to use the role outside its hours. */
+    public String closedLineNow() {
+        var entry = schedule.isActive() ? schedule.activeAt(this.getWorld().getTimeOfDay()) : null;
+        if (entry != null && !entry.closedLine().isBlank()) return entry.closedLine();
+        return "Sorry, we're closed right now.";
     }
 
     /**
@@ -822,7 +868,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             behaviorGoals.add(flee);
         }
 
-        switch (behavior) {
+        switch (movementBehavior()) {
             case WANDER -> {
                 // Short-range strolls every ~2s: livelier than the vanilla far-wander cadence and a
                 // better fit for the home leash. canDespawn=false skips the despawn-counter gate.
@@ -906,9 +952,28 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyDoorCapability(); // re-assert door pathing/goal after the goal list is rebuilt
     }
 
+    /**
+     * Where the NPC is actually being moved to right now: the schedule when one is running, the
+     * Moves tab otherwise. Combat deliberately keeps reading the configured behaviour instead, since
+     * a guard standing a scheduled post is still a guard.
+     */
+    private Behavior movementBehavior() {
+        return scheduleBehavior != null ? scheduleBehavior : behavior;
+    }
+
+    @Nullable
+    private net.minecraft.util.math.BlockPos leashHome() {
+        return scheduleBehavior != null ? scheduleHome : homePos;
+    }
+
+    private int leashRadius() {
+        return scheduleBehavior != null ? scheduleRadius : wanderRadius;
+    }
+
     private void applyHomeLeash() {
-        if (homePos != null) {
-            this.setPositionTarget(homePos, Math.max(2, wanderRadius));
+        net.minecraft.util.math.BlockPos home = leashHome();
+        if (home != null) {
+            this.setPositionTarget(home, Math.max(2, leashRadius()));
         }
     }
 
@@ -916,14 +981,18 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void tickMovement() {
         super.tickMovement();
         if (!this.getWorld().isClient) {
-            if (behavior == Behavior.STATIONARY) {
+            if (movementBehavior() == Behavior.STATIONARY) {
+                // Reading the leash point rather than the configured home is what gives a scheduled
+                // NPC its commute: the same walk-back that returns a guard to its post after a fight
+                // is what carries a shopkeeper to the counter at opening time, and to bed at night.
+                net.minecraft.util.math.BlockPos post = leashHome();
                 if (this.getTarget() != null && this.getTarget().isAlive()) {
                     // In combat (hostile/fights-back): let the attack goal chase.
-                } else if (homePos != null && this.squaredDistanceTo(
-                        homePos.getX() + 0.5, homePos.getY(), homePos.getZ() + 0.5) > 2.25) {
+                } else if (post != null && this.squaredDistanceTo(
+                        post.getX() + 0.5, post.getY(), post.getZ() + 0.5) > 2.25) {
                     // Combat over (or shoved): walk back to the post before locking down again.
                     this.getNavigation().startMovingTo(
-                            homePos.getX() + 0.5, homePos.getY(), homePos.getZ() + 0.5, 1.0);
+                            post.getX() + 0.5, post.getY(), post.getZ() + 0.5, 1.0);
                 } else {
                     this.getNavigation().stop();
                     this.setVelocity(0, this.getVelocity().y, 0);
@@ -944,8 +1013,110 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 if (this.isInvisible() != hidden) this.setInvisible(hidden);
             }
             tickProximity();
+            tickSchedule();
             net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(this);
         }
+    }
+
+    /**
+     * Advance the NPC's day.
+     *
+     * <p>Called every tick, and built so that costs almost nothing. An NPC with no schedule leaves on
+     * the first line. One with a schedule looks at the clock once a second, and while it is still
+     * inside the same entry (which is nearly always) it leaves on the third. Only a real transition,
+     * a handful of times a day, does any work. A town of scheduled NPCs is idle between those.
+     *
+     * <p>Nothing here remembers where the NPC "was up to". The active entry is derived from the time
+     * of day every check, which is why an NPC can be unloaded for a week and still pick up correctly:
+     * there is no progress to lose.
+     */
+    private void tickSchedule() {
+        boolean runnable = schedule.isActive()
+                && net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.getWorld());
+        if (!runnable) {
+            // Switched off, emptied, or carried somewhere with no day: hand the NPC back to whatever
+            // the Moves tab says instead of leaving it frozen in the last stance it was given.
+            if (scheduleBehavior != null) releaseSchedule();
+            return;
+        }
+        if (this.age % 20 != 0) return;
+
+        int idx = schedule.indexAt(this.getWorld().getTimeOfDay());
+        if (idx == scheduleActive) return;
+
+        // A first application after loading is not a transition. Firing entry actions here would mean
+        // a shopkeeper announcing opening hours every time somebody walks into the chunk.
+        boolean transition = scheduleActive != -1;
+        scheduleActive = idx;
+        applyScheduleEntry(schedule.get(idx), transition);
+    }
+
+    /**
+     * Put the NPC into an entry's stance by driving the behaviour it already has.
+     *
+     * <p>The override fields are set together and the goal list rebuilt once at the end. Going
+     * through the public setters would rebuild it three times and, worse, would write the entry's
+     * spot and radius over the owner's own settings.
+     */
+    private void applyScheduleEntry(@Nullable net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry entry,
+                                    boolean fireActions) {
+        if (entry == null) {
+            releaseSchedule();
+            return;
+        }
+        scheduleHome = entry.anchor();
+        switch (entry.stance()) {
+            case WANDER -> {
+                scheduleBehavior = Behavior.WANDER;
+                scheduleRadius = entry.radius();
+            }
+            case PATROL -> {
+                scheduleBehavior = Behavior.PATROL;
+                scheduleHome = null; // waypoints may run well outside any leash
+            }
+            // Both mean "be at that block". The stationary walk-back in tickMovement does the
+            // travelling, so there is no second pathing system to keep in step with the first.
+            case STAND, SLEEP -> {
+                scheduleBehavior = Behavior.STATIONARY;
+                scheduleRadius = 2;
+            }
+        }
+        holdPose(entry.stance() == net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.SLEEP
+                ? POSE_SLEEPING : -1);
+        applyBehaviorGoals();
+
+        if (fireActions && !entry.onBegin().isEmpty()) {
+            net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(null, this, entry.onBegin());
+        }
+    }
+
+    /** Drop the schedule's grip and let the configured behaviour take back over. */
+    private void releaseSchedule() {
+        scheduleBehavior = null;
+        scheduleHome = null;
+        scheduleActive = -1;
+        holdPose(-1);
+        applyBehaviorGoals();
+    }
+
+    /** Borrow the pose for a stance that needs one, or hand it back. Pass -1 to release. */
+    private void holdPose(int wanted) {
+        if (wanted >= 0) {
+            if (poseBeforeSchedule < 0) poseBeforeSchedule = getNpcPose();
+            if (getNpcPose() != wanted) setNpcPose(wanted);
+        } else if (poseBeforeSchedule >= 0) {
+            setNpcPose(poseBeforeSchedule);
+            poseBeforeSchedule = -1;
+        }
+    }
+
+    /** The entry governing right now, or null when no schedule is running. Read by the goal and by
+     *  the opening-hours check, both of which want the same answer. */
+    @Nullable
+    public net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry currentScheduleEntry() {
+        if (!schedule.isActive()) return null;
+        if (!net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.getWorld())) return null;
+        return schedule.activeAt(this.getWorld().getTimeOfDay());
     }
 
     /**
@@ -1160,6 +1331,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putString("DialogueMode", dialogueMode.name());
         nbt.putString("Farewell", farewellText);
         if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
+        if (schedule.isEnabled() || !schedule.isEmpty()) nbt.put("Schedule", schedule.toNbt());
+        if (poseBeforeSchedule >= 0) nbt.putInt("PoseBeforeSchedule", poseBeforeSchedule);
         // Stats: the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
@@ -1252,6 +1425,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("Farewell")) farewellText = nbt.getString("Farewell");
         actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(
                 nbt.contains("Actions") ? nbt.getCompound("Actions") : null);
+        poseBeforeSchedule = nbt.contains("PoseBeforeSchedule") ? nbt.getInt("PoseBeforeSchedule") : -1;
+        setSchedule(nbt.contains("Schedule")
+                ? net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt.getCompound("Schedule"))
+                : new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule());
         if (nbt.contains("DialogueMode")) {
             try {
                 dialogueMode = DialogueMode.valueOf(nbt.getString("DialogueMode"));
