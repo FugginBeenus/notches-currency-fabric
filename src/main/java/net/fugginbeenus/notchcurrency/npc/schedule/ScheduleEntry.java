@@ -78,6 +78,24 @@ public record ScheduleEntry(
         return problem() != null;
     }
 
+    /**
+     * The held direction as a compass point.
+     *
+     * <p>Minecraft yaw runs 0 at south and clockwise from there, which nobody has ever found
+     * intuitive, so the editor shows a bearing instead of a number.
+     */
+    public String facingLabel() {
+        String[] points = {"South", "South-west", "West", "North-west",
+                           "North", "North-east", "East", "South-east"};
+        float deg = ((facing % 360f) + 360f) % 360f; // Math.floorMod is integers only
+        int i = (int) Math.round(deg / 45.0) % 8;
+        return points[i];
+    }
+
+    public ScheduleEntry withFacing(float yaw) {
+        return new ScheduleEntry(time, stance, anchor, radius, yaw, roleOpen, closedLine, label, onBegin);
+    }
+
     /** Clock reading for the editor. Minecraft's day starts at 06:00, not midnight. */
     public String clock() {
         return formatClock(time);

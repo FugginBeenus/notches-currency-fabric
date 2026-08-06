@@ -220,6 +220,23 @@ public class NpcScheduleScreen extends Screen {
             }
         }
 
+        if (e.stance() == NpcStance.STAND) {
+            // Same slot the radius uses for Wander: only one of them is ever relevant at a time.
+            ctx.drawText(this.textRenderer, "Faces", x, py + 138, NotchTheme.TEXT_DARK, false);
+            boolean ccw = over(mouseX, mouseY, x + 60, py + 135, 18, 14);
+            boolean cw = over(mouseX, mouseY, x + 158, py + 135, 18, 14);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 135, 18, 14, "<", ccw);
+            NotchWidgets.centerText(ctx, this.textRenderer, e.facingLabel(), x + 118, py + 138,
+                    NotchTheme.TEXT_LIGHT, false);
+            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 158, py + 135, 18, 14, ">", cw);
+            if (ccw || cw) {
+                tooltip = List.of(
+                        Text.literal("Faces").formatted(Formatting.WHITE),
+                        Text.literal("Which way it looks once it settles.").formatted(Formatting.GRAY),
+                        Text.literal("It still turns to whoever talks to it").formatted(Formatting.GRAY),
+                        Text.literal("and goes back to this afterwards.").formatted(Formatting.DARK_GRAY));
+            }
+        }
         if (e.stance() == NpcStance.WANDER) {
             ctx.drawText(this.textRenderer, "Radius", x, py + 138, NotchTheme.TEXT_DARK, false);
             NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 135, 18, 14, "-",
@@ -372,6 +389,19 @@ public class NpcScheduleScreen extends Screen {
             NotchWidgets.click();
             requestAnchorTool(selected);
             return true;
+        }
+        if (e.stance() == NpcStance.STAND) {
+            float step = fine ? 15f : 45f;
+            if (over(mx, my, x + 60, py + 135, 18, 14)) {
+                NotchWidgets.tick();
+                entries.set(selected, e.withFacing(e.facing() - step));
+                return true;
+            }
+            if (over(mx, my, x + 158, py + 135, 18, 14)) {
+                NotchWidgets.tick();
+                entries.set(selected, e.withFacing(e.facing() + step));
+                return true;
+            }
         }
         if (e.stance() == NpcStance.WANDER) {
             if (over(mx, my, x + 60, py + 135, 18, 14)) {

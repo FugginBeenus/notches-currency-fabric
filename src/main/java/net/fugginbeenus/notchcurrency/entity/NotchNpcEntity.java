@@ -1045,6 +1045,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 } else {
                     this.getNavigation().stop();
                     this.setVelocity(0, this.getVelocity().y, 0);
+                    holdScheduleFacing();
                 }
             }
             // Re-assert the configured pose in case vanilla logic reset it.
@@ -1210,6 +1211,24 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (lookGoal == null) return;
         this.goalSelector.remove(lookGoal);
         if (watchPlayers) this.goalSelector.add(6, lookGoal);
+    }
+
+    /**
+     * Turn a settled NPC to the direction its Stand entry asked for.
+     *
+     * <p>Set here in tickMovement, which runs before the goals do, so anything with a live opinion
+     * about where the NPC is looking still wins: it turns to face whoever is talking to it, tracks a
+     * player if Watch players is on, and looks at what it is fighting. This is the resting angle it
+     * returns to once nothing else is asking, which is what "facing the counter" actually means.
+     */
+    private void holdScheduleFacing() {
+        if (talkingTo != null || this.getTarget() != null || this.isSleeping()) return;
+        var entry = currentScheduleEntry();
+        if (entry == null || entry.stance() != net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.STAND) return;
+        float want = entry.facing();
+        this.setYaw(want);
+        this.setBodyYaw(want);
+        this.setHeadYaw(want);
     }
 
     /** Drop the schedule's grip and let the configured behaviour take back over. */

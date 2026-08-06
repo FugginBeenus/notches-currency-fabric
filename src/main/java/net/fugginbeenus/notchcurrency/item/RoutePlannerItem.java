@@ -146,7 +146,11 @@ public class RoutePlannerItem extends Item {
             // wall puts the spot in front of it instead of inside it.
             target = clicked.offset(side);
         }
-        NotchNpcManager.setScheduleAnchor(sp, npc, StackData.getInt(stack, ENTRY_KEY), target, sp.getYaw());
+        // Face back the way you came from. You mark a spot by looking at it, so storing your own
+        // yaw would point the NPC further away from you; turned around, it stands there looking at
+        // where you were, which is what marking a counter from the customer's side should mean.
+        NotchNpcManager.setScheduleAnchor(sp, npc, StackData.getInt(stack, ENTRY_KEY), target,
+                sp.getYaw() + 180f);
         consume(sp, stack);
     }
 
