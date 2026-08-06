@@ -72,7 +72,6 @@ public class NotchNpcEditorScreen extends Screen {
 
     private int px, py;
     private TextFieldWidget nameField;
-    private TextFieldWidget subtitleField;
     /** Personality, held here between the packet arriving and the widgets being built. */
     private String currentSubtitle = "";
     private String currentVoice = "";
@@ -149,11 +148,6 @@ public class NotchNpcEditorScreen extends Screen {
         nameField.setText(currentName);
         addDrawableChild(nameField);
 
-        subtitleField = new TextFieldWidget(this.textRenderer, px + 154, py + 219, 98, 9, Text.literal("Subtitle"));
-        subtitleField.setMaxLength(NotchNpcEntity.MAX_SUBTITLE_LENGTH);
-        subtitleField.setDrawsBackground(false);
-        subtitleField.setText(currentSubtitle);
-        addDrawableChild(subtitleField);
 
         farewellField = new TextFieldWidget(this.textRenderer, px + 78, py + 175, 158, 9, Text.literal("Goodbye"));
         farewellField.setMaxLength(150);
@@ -188,10 +182,8 @@ public class NotchNpcEditorScreen extends Screen {
 
     private void updateWidgetVisibility() {
         nameField.visible = (tab == 0);
-        subtitleField.visible = (tab == 0);
         farewellField.visible = (tab == 3);
         nameField.setFocusUnlocked(tab == 0);
-        subtitleField.setFocusUnlocked(tab == 0);
         boolean hum = (tab == 0 && isHumanoid());
         playerField.visible = hum;
         urlField.visible = hum;
@@ -282,7 +274,6 @@ public class NotchNpcEditorScreen extends Screen {
 
         // Where the floating name sits: models vary enough that one height never fits them all.
         drawNameOffsetRow(ctx, mx, my);
-        drawTitleRow(ctx, mx, my);
         drawSignButton(ctx, mx, my);
 
         // Model: current name + Change button (opens the vanilla/modded model picker)
@@ -330,32 +321,11 @@ public class NotchNpcEditorScreen extends Screen {
     // the tab is the preview panel, and a full-width button would cut across it.
     private int signRow() { return py + 196; }
     private int signWidth() { return W - RX - 10; }
-
-    /** Row constants for the title, which sits with the floating sign: both are text on the NPC. */
-    private int titleRow() { return py + 216; }
-
-    private void drawTitleRow(DrawContext ctx, int mx, int my) {
-        int y = titleRow();
-        ctx.drawText(this.textRenderer, "Title:", px + RX, y + 3, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + 150, y, 106, 13, NotchTheme.DEEP);
-        if (subtitleField.getText().isEmpty()) {
-            ctx.drawText(this.textRenderer, "Blacksmith", px + 154, y + 3, 0xFF555555, false);
-        }
-        boolean setHover = over(mx, my, px + 260, y, 30, 13);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 260, y, 30, 13, "Set", setHover);
-        if (setHover || over(mx, my, px + 150, y, 106, 13)) {
-            tooltip = java.util.List.of(
-                    Text.literal("Title").formatted(Formatting.WHITE),
-                    Text.literal("A small line under the name.").formatted(Formatting.GRAY),
-                    Text.literal("Takes & colour codes. Shows only when").formatted(Formatting.GRAY),
-                    Text.literal("the nameplate is on.").formatted(Formatting.DARK_GRAY));
-        }
-    }
-
     private void drawSignButton(DrawContext ctx, int mx, int my) {
         int y = signRow();
         NotchWidgets.neutralButton(ctx, this.textRenderer, px + RX, y, signWidth(), 15,
-                currentBillboard.isBlank() ? "Add a floating sign..." : "Edit floating sign...",
+                currentBillboard.isBlank() && currentSubtitle.isBlank()
+                        ? "Add floating text..." : "Edit floating text...",
                 over(mx, my, px + RX, y, signWidth(), 15));
     }
 
@@ -552,7 +522,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private void sendFlavor() {
-        NotchPacketsClient.sendNpcFlavor(npcId, subtitleField.getText(), currentVoice, currentVoicePitch);
+        NotchPacketsClient.sendNpcFlavor(npcId, currentSubtitle, currentVoice, currentVoicePitch);
     }
 
     /** The voice row on the Talk tab: which sound, how high, and hear it. */
@@ -1002,10 +972,6 @@ public class NotchNpcEditorScreen extends Screen {
             NotchPacketsClient.sendNpcSetName(npcId, currentName);
             return true;
         }
-        if (over(mx, my, px + 260, titleRow(), 30, 13)) {
-            sendFlavor();
-            return true;
-        }
         // Model: open the picker
         if (over(mx, my, px + 224, py + 100, 66, 14)) {
             MinecraftClient.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
@@ -1030,7 +996,8 @@ public class NotchNpcEditorScreen extends Screen {
         }
         if (over(mx, my, px + RX, signRow(), signWidth(), 15)) {
             NotchWidgets.click();
-            MinecraftClient.getInstance().setScreen(new NpcBillboardScreen(npcId, currentBillboard));
+            MinecraftClient.getInstance().setScreen(
+                    new NpcBillboardScreen(npcId, currentBillboard, currentSubtitle, currentVoice, currentVoicePitch));
             return true;
         }
         // Nameplate nudge (size axes live on the Pose tab).
@@ -1111,7 +1078,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
         // Plain characters insert via charTyped only (guards against the select-all wipe).
-        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, subtitleField, playerField, urlField, followField, farewellField)) {
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField, farewellField)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

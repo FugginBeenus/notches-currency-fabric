@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 public class NpcBillboardScreen extends Screen {
 
-    private static final int W = 300, H = 244;
+    private static final int W = 300, H = 272;
     private static final int PAD = 14;
     // Tall enough for the field plus the preview line under it, with air between rows.
     private static final int ROW_H = 30;
@@ -28,12 +28,21 @@ public class NpcBillboardScreen extends Screen {
     private final UUID npcId;
     private final String[] lines = new String[NotchNpcEntity.MAX_BILLBOARD_LINES];
     private final TextFieldWidget[] fields = new TextFieldWidget[NotchNpcEntity.MAX_BILLBOARD_LINES];
+    private TextFieldWidget titleField;
+    private String title;
+    // Carried through untouched so the title can be saved on the one packet that owns it, without
+    // this screen needing to know or care what a voice is.
+    private final String voice;
+    private final int voicePitch;
 
     private int px, py;
 
-    public NpcBillboardScreen(UUID npcId, String existing) {
-        super(Text.literal("Sign"));
+    public NpcBillboardScreen(UUID npcId, String existing, String title, String voice, int voicePitch) {
+        super(Text.literal("Floating text"));
         this.npcId = npcId;
+        this.title = title == null ? "" : title;
+        this.voice = voice == null ? "" : voice;
+        this.voicePitch = voicePitch;
         String[] typed = existing == null || existing.isBlank() ? new String[0] : existing.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
             lines[i] = i < typed.length ? typed[i] : "";
@@ -56,8 +65,19 @@ public class NpcBillboardScreen extends Screen {
             fields[i].setChangedListener(s -> lines[idx] = s);
             addDrawableChild(fields[i]);
         }
+
+        titleField = new TextFieldWidget(this.textRenderer, px + PAD + 4, titleRow() + 4,
+                W - PAD * 2 - 8, 10, Text.literal("Title"));
+        titleField.setMaxLength(NotchNpcEntity.MAX_SUBTITLE_LENGTH);
+        titleField.setDrawsBackground(false);
+        titleField.setText(title);
+        titleField.setChangedListener(s -> title = s);
+        addDrawableChild(titleField);
+
         setInitialFocus(fields[0]);
     }
+
+    private int titleRow() { return py + 178; }
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
@@ -67,7 +87,7 @@ public class NpcBillboardScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Floating Sign", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.textRenderer, "Floating Text", px + W / 2, py + 8);
         NotchWidgets.centerText(ctx, this.textRenderer, "Text that hovers above this NPC.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.centerText(ctx, this.textRenderer, "Top line first. Leave a row empty to skip it.",
@@ -81,6 +101,18 @@ public class NpcBillboardScreen extends Screen {
                 ctx.drawText(this.textRenderer, this.textRenderer.trimToWidth(preview, W - PAD * 2 - 8),
                         px + PAD + 4, rowY(i) + 17, 0xFFFFFF, true);
             }
+        }
+
+        // Both kinds of floating text live here: the sign above the head, the title under the name.
+        NotchWidgets.divider(ctx, px + PAD, py + 166, W - PAD * 2);
+        ctx.drawText(this.textRenderer, "Title, under the name", px + PAD, titleRow() - 10,
+                NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + PAD, titleRow(), W - PAD * 2, 16, NotchTheme.DEEP);
+        if (title.isEmpty()) {
+            ctx.drawText(this.textRenderer, "Blacksmith", px + PAD + 4, titleRow() + 4, 0xFF555555, false);
+        } else {
+            ctx.drawText(this.textRenderer, NotchWidgets.colorize(title), px + PAD + 4, titleRow() + 20,
+                    0xFFFFFF, true);
         }
 
         NotchWidgets.centerText(ctx, this.textRenderer, "&-colours, %player%, %npc% and %balance% all work.",
@@ -112,12 +144,14 @@ public class NpcBillboardScreen extends Screen {
 
     private void save(String text) {
         NotchPacketsClient.sendNpcBillboard(npcId, text);
+        NotchPacketsClient.sendNpcFlavor(npcId, title, voice, voicePitch);
         NotchPacketsClient.sendNpcEditorReopen(npcId, 0); // back to Look, where the button lives
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, fields)) return true;
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, titleField)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
