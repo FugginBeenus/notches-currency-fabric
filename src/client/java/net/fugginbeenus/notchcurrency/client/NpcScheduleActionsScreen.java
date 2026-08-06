@@ -28,7 +28,10 @@ import java.util.function.Consumer;
  */
 public class NpcScheduleActionsScreen extends Screen {
 
-    private static final int W = 300, H = 200;
+    private static final int W = 300, H = 216;
+    // Rows, kept as constants because they used to be scattered literals and the value row ended
+    // up drawn straight over the buttons.
+    private static final int BTN_Y = 128, VALUE_Y = 150, AMOUNT_Y = 170, SAVE_Y = 192;
     private static final int LIST_X = 12, LIST_Y = 40, LIST_W = W - 24, LIST_H = 84;
     private static final int ROW_H = 16;
 
@@ -59,7 +62,7 @@ public class NpcScheduleActionsScreen extends Screen {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
 
-        valueField = new TextFieldWidget(this.textRenderer, px + 60, py + 136, W - 76, 10, Text.empty());
+        valueField = new TextFieldWidget(this.textRenderer, px + 60, py + VALUE_Y + 3, W - 80, 10, Text.empty());
         valueField.setMaxLength(200);
         valueField.setDrawsBackground(false);
         valueField.setChangedListener(s -> {
@@ -68,7 +71,7 @@ public class NpcScheduleActionsScreen extends Screen {
         });
         addDrawableChild(valueField);
 
-        amountField = new TextFieldWidget(this.textRenderer, px + 60, py + 156, 60, 10, Text.empty());
+        amountField = new TextFieldWidget(this.textRenderer, px + 60, py + AMOUNT_Y + 3, 60, 10, Text.empty());
         amountField.setMaxLength(9);
         amountField.setDrawsBackground(false);
         amountField.setChangedListener(s -> {
@@ -131,32 +134,32 @@ public class NpcScheduleActionsScreen extends Screen {
             }
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, py + 128, 54, 14, "Add",
-                over(mouseX, mouseY, px + LIST_X, py + 128, 54, 14));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 58, py + 128, 54, 14, "Remove",
-                over(mouseX, mouseY, px + LIST_X + 58, py + 128, 54, 14));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, py + BTN_Y, 54, 14, "Add",
+                over(mouseX, mouseY, px + LIST_X, py + BTN_Y, 54, 14));
+        NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 58, py + BTN_Y, 54, 14, "Remove",
+                over(mouseX, mouseY, px + LIST_X + 58, py + BTN_Y, 54, 14));
         DialogueAction sel = current();
         if (sel != null) {
-            NotchWidgets.goldButton(ctx, this.textRenderer, px + LIST_X + 116, py + 128, 100, 14,
+            NotchWidgets.goldButton(ctx, this.textRenderer, px + LIST_X + 116, py + BTN_Y, 100, 14,
                     NpcActionEditing.actionName(sel.type()),
-                    over(mouseX, mouseY, px + LIST_X + 116, py + 128, 100, 14));
+                    over(mouseX, mouseY, px + LIST_X + 116, py + BTN_Y, 100, 14));
         }
 
         if (sel != null && NpcActionEditing.needsValue(sel.type())) {
-            ctx.drawText(this.textRenderer, "Text", px + 14, py + 136, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, px + 56, py + 133, W - 70, 14, NotchTheme.DEEP);
+            ctx.drawText(this.textRenderer, "Text", px + 14, py + VALUE_Y + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + 56, py + VALUE_Y, W - 72, 14, NotchTheme.DEEP);
             if (valueField.getText().isEmpty()) {
                 ctx.drawText(this.textRenderer, NpcActionEditing.valueHint(sel.type()),
-                        px + 60, py + 136, 0xFF555555, false);
+                        px + 60, py + VALUE_Y + 3, 0xFF555555, false);
             }
         }
         if (sel != null && NpcActionEditing.needsAmount(sel.type())) {
-            ctx.drawText(this.textRenderer, "Amount", px + 14, py + 156, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, px + 56, py + 153, 68, 14, NotchTheme.DEEP);
+            ctx.drawText(this.textRenderer, "Amount", px + 14, py + AMOUNT_Y + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + 56, py + AMOUNT_Y, 68, 14, NotchTheme.DEEP);
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + W / 2 - 70, py + 176, 140, 16, "Save & Back",
-                over(mouseX, mouseY, px + W / 2 - 70, py + 176, 140, 16));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + W / 2 - 70, py + SAVE_Y, 140, 16, "Save & Back",
+                over(mouseX, mouseY, px + W / 2 - 70, py + SAVE_Y, 140, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -174,7 +177,7 @@ public class NpcScheduleActionsScreen extends Screen {
                     return true;
                 }
             }
-            if (over(mx, my, px + LIST_X, py + 128, 54, 14)) {
+            if (over(mx, my, px + LIST_X, py + BTN_Y, 54, 14)) {
                 if (working.size() >= ScheduleEntry.MAX_ACTIONS) {
                     say("That's as many as one entry can run.");
                     return true;
@@ -187,20 +190,20 @@ public class NpcScheduleActionsScreen extends Screen {
                 syncFields();
                 return true;
             }
-            if (over(mx, my, px + LIST_X + 58, py + 128, 54, 14) && current() != null) {
+            if (over(mx, my, px + LIST_X + 58, py + BTN_Y, 54, 14) && current() != null) {
                 NotchWidgets.click();
                 working.remove(selected);
                 selected = Math.min(selected, working.size() - 1);
                 syncFields();
                 return true;
             }
-            if (current() != null && over(mx, my, px + LIST_X + 116, py + 128, 100, 14)) {
+            if (current() != null && over(mx, my, px + LIST_X + 116, py + BTN_Y, 100, 14)) {
                 NotchWidgets.tick();
                 NpcActionEditing.cycleType(current());
                 syncFields();
                 return true;
             }
-            if (over(mx, my, px + W / 2 - 70, py + 176, 140, 16)) {
+            if (over(mx, my, px + W / 2 - 70, py + SAVE_Y, 140, 16)) {
                 NotchWidgets.click();
                 saveAndBack();
                 return true;

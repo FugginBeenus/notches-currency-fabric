@@ -1014,6 +1014,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             }
             tickProximity();
             tickSchedule();
+            tickScheduleSleep();
             net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(this);
         }
     }
@@ -1088,6 +1089,62 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (fireActions && !entry.onBegin().isEmpty()) {
             net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(null, this, entry.onBegin());
         }
+    }
+
+    /**
+     * Get an NPC on a Sleep entry actually into its bed, the way a villager does.
+     *
+     * <p>Posing it asleep is not enough on its own. Lying down is one thing; being <em>in</em> the bed
+     * is another, and that comes from vanilla's own sleep call: it claims the bed, snaps the body onto
+     * it, and orients it to the headboard. Without that an NPC stands beside the bed doing a lying-down
+     * impression, which is what it was doing.
+     *
+     * <p>It also has to stop looking around. The watch-players goal keeps turning the head, which on a
+     * sleeping body reads as broken, so that goal is stood down for as long as the NPC is asleep.
+     */
+    private void tickScheduleSleep() {
+        var entry = currentScheduleEntry();
+        boolean wantsBed = entry != null
+                && entry.stance() == net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.SLEEP
+                && entry.anchor() != null;
+
+        if (!wantsBed) {
+            if (this.isSleeping()) {
+                this.wakeUp();
+                restoreLookGoal();
+            }
+            return;
+        }
+
+        net.minecraft.util.math.BlockPos bed = entry.anchor();
+        if (this.isSleeping()) {
+            // Somebody mined the bed out from under it: stand up rather than float there.
+            if (!(this.getWorld().getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock)) {
+                this.wakeUp();
+                restoreLookGoal();
+                return;
+            }
+            this.getNavigation().stop();
+            return;
+        }
+
+        // Still walking over. Climb in once close enough to reach it.
+        if (!(this.getWorld().getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock)) return;
+        double dx = bed.getX() + 0.5 - this.getX();
+        double dz = bed.getZ() + 0.5 - this.getZ();
+        if (dx * dx + dz * dz > 4.0 || Math.abs(bed.getY() - this.getY()) > 2.0) return;
+
+        this.sleep(bed);
+        this.getNavigation().stop();
+        if (lookGoal != null) this.goalSelector.remove(lookGoal);
+    }
+
+    /** Put the watch-players goal back after a nap. Removing first is what keeps a second copy of it
+     *  from stacking up, the same way the toggle itself does it. */
+    private void restoreLookGoal() {
+        if (lookGoal == null) return;
+        this.goalSelector.remove(lookGoal);
+        if (watchPlayers) this.goalSelector.add(6, lookGoal);
     }
 
     /** Drop the schedule's grip and let the configured behaviour take back over. */
