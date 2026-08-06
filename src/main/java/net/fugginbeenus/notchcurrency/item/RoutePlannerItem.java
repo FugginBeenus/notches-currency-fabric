@@ -132,10 +132,20 @@ public class RoutePlannerItem extends Item {
             consume(sp, stack); // bound to nothing reachable: don't leave a dead tool behind
             return;
         }
-        boolean bed = world.getBlockState(clicked).getBlock() instanceof net.minecraft.block.BedBlock;
-        // Step off the face that was clicked rather than always upward, so clicking the side of a
-        // wall puts the spot in front of it instead of inside it.
-        BlockPos target = bed ? clicked : clicked.offset(side);
+        net.minecraft.block.BlockState state = world.getBlockState(clicked);
+        BlockPos target;
+        if (state.getBlock() instanceof net.minecraft.block.BedBlock) {
+            // A bed is two blocks and the sleeper belongs in the head half: that is the end vanilla
+            // lies a player at, and the end the renderer measures its offset from. Storing the foot
+            // instead leaves the body shifted a block down the bed, hanging off the end of it.
+            target = state.get(net.minecraft.block.BedBlock.PART) == net.minecraft.block.enums.BedPart.FOOT
+                    ? clicked.offset(state.get(net.minecraft.block.BedBlock.FACING))
+                    : clicked;
+        } else {
+            // Step off the face that was clicked rather than always upward, so clicking the side of a
+            // wall puts the spot in front of it instead of inside it.
+            target = clicked.offset(side);
+        }
         NotchNpcManager.setScheduleAnchor(sp, npc, StackData.getInt(stack, ENTRY_KEY), target, sp.getYaw());
         consume(sp, stack);
     }

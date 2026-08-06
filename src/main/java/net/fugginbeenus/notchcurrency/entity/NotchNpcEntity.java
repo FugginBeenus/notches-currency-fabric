@@ -1116,7 +1116,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             return;
         }
 
-        net.minecraft.util.math.BlockPos bed = entry.anchor();
+        net.minecraft.util.math.BlockPos bed = bedHead(entry.anchor());
         if (this.isSleeping()) {
             // Somebody mined the bed out from under it: stand up rather than float there.
             if (!(this.getWorld().getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock)) {
@@ -1137,6 +1137,22 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.sleep(bed);
         this.getNavigation().stop();
         if (lookGoal != null) this.goalSelector.remove(lookGoal);
+    }
+
+    /**
+     * Resolve a bed anchor to the head half of the bed.
+     *
+     * <p>Anchors are normalised when they're set, but schedules built before that, and any hand-edited
+     * config, can still point at the foot. Doing it again here costs a block lookup and saves the NPC
+     * lying a block down the bed with half of it hanging off the end.
+     */
+    private net.minecraft.util.math.BlockPos bedHead(net.minecraft.util.math.BlockPos pos) {
+        net.minecraft.block.BlockState state = this.getWorld().getBlockState(pos);
+        if (state.getBlock() instanceof net.minecraft.block.BedBlock
+                && state.get(net.minecraft.block.BedBlock.PART) == net.minecraft.block.enums.BedPart.FOOT) {
+            return pos.offset(state.get(net.minecraft.block.BedBlock.FACING));
+        }
+        return pos;
     }
 
     /** Put the watch-players goal back after a nap. Removing first is what keeps a second copy of it

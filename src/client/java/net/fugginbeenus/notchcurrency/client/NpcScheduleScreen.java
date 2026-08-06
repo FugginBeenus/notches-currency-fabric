@@ -172,12 +172,19 @@ public class NpcScheduleScreen extends Screen {
         int x = px + PANE_X;
 
         ctx.drawText(this.textRenderer, "Starts at", x, py + 44, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 41, 18, 14, "-",
-                over(mouseX, mouseY, x + 60, py + 41, 18, 14));
+        boolean minusHover = over(mouseX, mouseY, x + 60, py + 41, 18, 14);
+        boolean plusHover = over(mouseX, mouseY, x + 114, py + 41, 18, 14);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 41, 18, 14, "-", minusHover);
         NotchWidgets.centerText(ctx, this.textRenderer, e.clock(), x + 96, py + 44, NotchTheme.TEXT_LIGHT, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 114, py + 41, 18, 14, "+",
-                over(mouseX, mouseY, x + 114, py + 41, 18, 14));
-        ctx.drawText(this.textRenderer, "Shift = 15 min", x + 138, py + 44, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 114, py + 41, 18, 14, "+", plusHover);
+        if (minusHover || plusHover) {
+            // The step note used to sit here as text and ran off the panel edge.
+            tooltip = List.of(
+                    Text.literal("Starts at").formatted(Formatting.WHITE),
+                    Text.literal("Click for an hour.").formatted(Formatting.GRAY),
+                    Text.literal("Hold Shift for 15 minutes.").formatted(Formatting.GRAY),
+                    Text.literal("Minecraft's day starts at 06:00.").formatted(Formatting.DARK_GRAY));
+        }
 
         ctx.drawText(this.textRenderer, "Does", x, py + 66, NotchTheme.TEXT_DARK, false);
         boolean stanceHover = over(mouseX, mouseY, x + 60, py + 63, 72, 14);
