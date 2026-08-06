@@ -636,6 +636,20 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SHARE, (server, player, buf) -> {
+            UUID id = buf.readUuid();
+            int action = buf.readVarInt();
+            // Read the payload on the network thread, but cap it here: this is the one packet whose
+            // contents come from another player's clipboard.
+            String payload = buf.readString(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
+            server.execute(() -> {
+                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NpcShareManager.action(player, npc, action, payload);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SET_APPEARANCE, (server, player, buf) -> {
             UUID id = buf.readUuid();
             String model = buf.readString(64);

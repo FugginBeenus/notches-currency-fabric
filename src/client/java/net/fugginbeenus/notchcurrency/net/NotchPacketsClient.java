@@ -227,6 +227,14 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_PRESET, buf);
     }
 
+    public static void sendNpcShare(UUID npcId, int action, String payload) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(npcId);
+        buf.writeVarInt(action);
+        buf.writeString(payload, net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
+        NetClient.sendToServer(NotchPackets.NPC_SHARE, buf);
+    }
+
     public static void registerNpcPresetReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_PRESET_LIST, (client, buf) -> {
             UUID npcId = buf.readUuid();
@@ -242,6 +250,21 @@ public final class NotchPacketsClient {
                     s.setPresets(names);
                 } else {
                     mc.setScreen(new net.fugginbeenus.notchcurrency.client.NpcPresetScreen(npcId, names));
+                }
+            });
+        });
+
+        // The clipboard only exists on the client, so the code is built server-side and handed back
+        // here to be put on it.
+        NetClient.registerClientReceiver(NotchPackets.NPC_SHARE_CODE, (client, buf) -> {
+            String code = buf.readString(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
+            client.execute(() -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                mc.keyboard.setClipboard(code);
+                if (mc.player != null) {
+                    mc.player.sendMessage(net.minecraft.text.Text.literal(
+                                    "Share code copied. Paste it anywhere, or into a .npc file.")
+                            .formatted(net.minecraft.util.Formatting.GREEN), false);
                 }
             });
         });

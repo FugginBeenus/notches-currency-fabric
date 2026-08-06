@@ -102,7 +102,21 @@ public final class NpcPresetManager {
             msg(actor, "Couldn't read the preset: " + e.getMessage(), Formatting.RED);
             return false;
         }
-        stripWorldSpecific(tag); // belt & braces for hand-edited files
+        applyTag(npc, tag, actor);
+        msg(actor, "Preset '" + name + "' applied.", Formatting.GREEN);
+        return true;
+    }
+
+    /**
+     * Stamp a config tag onto an existing NPC, keeping that NPC's own identity and place in the
+     * world. Shared by presets and by imported share codes: both are "somebody else's NPC config
+     * landing on this one", and the ownership and shop bookkeeping has to go the same way for both.
+     *
+     * <p>The tag is stripped again here even when the caller already did it. This is the doorway
+     * every foreign config comes through, so it is the place that has to be right.
+     */
+    public static void applyTag(NotchNpcEntity npc, NbtCompound tag, @Nullable ServerPlayerEntity actor) {
+        stripWorldSpecific(tag); // belt & braces for hand-edited files and pasted codes
 
         NpcRole role = NpcRole.NONE;
         try {
@@ -128,8 +142,6 @@ public final class NpcPresetManager {
         if (role == NpcRole.SHOP) {
             NotchNpcManager.ensureShopForNpc(actor.getServerWorld(), npc, actor);
         }
-        msg(actor, "Preset '" + name + "' applied.", Formatting.GREEN);
-        return true;
     }
 
     private static void msg(@Nullable ServerPlayerEntity actor, String text, Formatting color) {
@@ -181,14 +193,26 @@ public final class NpcPresetManager {
         return dir;
     }
 
-    /** Presets carry no ownership or world-specific data. */
-    private static void stripWorldSpecific(NbtCompound tag) {
+    /**
+     * Presets carry no ownership or world-specific data.
+     *
+     * <p>Dropping "ActionSweep" is the security-relevant one. Paying coins and giving items are
+     * admin-only, but nothing checks that when the action actually runs (unlike commands, which
+     * re-check at the point of use). The guarantee rests on {@link
+     * net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep}, and the sweep skips any NPC already
+     * stamped with the current version. A tag stamped by an operator's NPC would carry that stamp
+     * onto whoever loads it, and the pay actions inside it would survive on an NPC owned by someone
+     * with no such permission: an endless coin faucet for the cost of loading a preset. Clearing the
+     * stamp means the sweep looks at the NPC fresh, under its new owner's permissions.
+     */
+    public static void stripWorldSpecific(NbtCompound tag) {
         tag.remove("Owner");
         tag.remove("OwnerName");
         tag.remove("OwnerType");
         tag.remove("RoleTarget");
         tag.remove("Home");
         tag.remove("Waypoints");
+        tag.remove("ActionSweep");
     }
 
     /** File-safe preset name: lowercase, spaces to underscores, [a-z0-9_-] only, max 32 chars. */

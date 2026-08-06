@@ -4,6 +4,8 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.NpcPresetManager;
+import net.fugginbeenus.notchcurrency.npc.NpcShareCodec;
+import net.fugginbeenus.notchcurrency.npc.NpcShareManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -20,7 +22,15 @@ import java.util.UUID;
  */
 public class NpcPresetScreen extends Screen {
 
-    private static final int W = 300, H = 224;
+    private static final int W = 300, H = 252;
+
+    // Share row. Presets stay on this server; these four move an NPC off it entirely.
+    private static final int SHARE_Y = 204, SHARE_H = 15;
+    private static final int COPY_X = 16, COPY_W = 78;
+    private static final int PASTE_X = 98, PASTE_W = 78;
+    private static final int TOFILE_X = 180, TOFILE_W = 50;
+    private static final int FROMFILE_X = 234, FROMFILE_W = 50;
+    private static final int BACK_Y = 226;
     private static final int LIST_X = 14, LIST_Y = 22, LIST_W = 272, LIST_H = 116;
     private static final int ROW_H = 16, VISIBLE_ROWS = 7;
 
@@ -106,8 +116,20 @@ public class NpcPresetScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.textRenderer, px + 218, py + 170, 66, 14, "Save",
                 over(mouseX, mouseY, px + 218, py + 170, 66, 14));
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 196, 160, 16, "Back to Editor",
-                over(mouseX, mouseY, px + 70, py + 196, 160, 16));
+        NotchWidgets.divider(ctx, px + 8, py + 189, W - 16);
+        ctx.drawText(this.textRenderer, "Share across worlds (file uses the name above)",
+                px + 16, py + 194, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H, "Copy code",
+                over(mouseX, mouseY, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H));
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H, "Paste code",
+                over(mouseX, mouseY, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H));
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H, "To file",
+                over(mouseX, mouseY, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H));
+        NotchWidgets.neutralButton(ctx, this.textRenderer, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H, "From file",
+                over(mouseX, mouseY, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H));
+
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + BACK_Y, 160, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 70, py + BACK_Y, 160, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -146,7 +168,54 @@ public class NpcPresetScreen extends Screen {
                 }
                 return true;
             }
-            if (over(mx, my, px + 70, py + 196, 160, 16)) {
+            if (over(mx, my, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H)) {
+                NotchWidgets.click();
+                // The server builds the code and sends it back; the clipboard write happens there.
+                NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_COPY, "");
+                return true;
+            }
+            if (over(mx, my, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H)) {
+                NotchWidgets.click();
+                String code = this.client == null ? "" : this.client.keyboard.getClipboard();
+                // Checked here too so an unrelated clipboard says so instantly instead of after a
+                // round trip. The server still validates: this is convenience, not the gate.
+                if (!NpcShareCodec.looksLikeCode(code)) {
+                    say("There's no NPC share code on your clipboard.", Formatting.RED);
+                    return true;
+                }
+                // Writing an over-long string to the buffer throws, and the packet itself would be
+                // refused by the connection. Say so instead, and point at the route that has room.
+                if (code.strip().length() > NpcShareCodec.MAX_WIRE_CHARS) {
+                    say("That code is too big to paste. Save it as a .npc file and use 'From file'.",
+                            Formatting.RED);
+                    return true;
+                }
+                NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_PASTE, code);
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // back to the editor, preview updated
+                return true;
+            }
+            if (over(mx, my, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H)) {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) {
+                    say("Type a name in the box above first.", Formatting.RED);
+                    return true;
+                }
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_SAVE_FILE, name);
+                return true;
+            }
+            if (over(mx, my, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H)) {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) {
+                    say("Type the file's name in the box above first.", Formatting.RED);
+                    return true;
+                }
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_LOAD_FILE, name);
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
+                return true;
+            }
+            if (over(mx, my, px + 70, py + BACK_Y, 160, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // return to the NPC editor
                 return true;
@@ -175,6 +244,13 @@ public class NpcPresetScreen extends Screen {
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
+    }
+
+    /** Client-side complaint, for the cases the server never needs to hear about. */
+    private void say(String text, Formatting color) {
+        if (this.client != null && this.client.player != null) {
+            this.client.player.sendMessage(Text.literal(text).formatted(color), false);
+        }
     }
 
     @Override

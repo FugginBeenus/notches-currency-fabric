@@ -88,6 +88,11 @@ public final class NotchPackets {
     public static final Identifier NPC_PRESET = NotchCurrency.id("npc_preset");
     // Server -> client: the saved preset list (npc uuid, count, names), which opens/updates the preset screen
     public static final Identifier NPC_PRESET_LIST = NotchCurrency.id("npc_preset_list");
+    // Client -> server: share action (npc uuid, action: 0=copy 1=paste 2=save file 3=load file,
+    // payload is the pasted code for 1 and a file name for 2/3)
+    public static final Identifier NPC_SHARE = NotchCurrency.id("npc_share");
+    // Server -> client: a freshly built share code for the client to put on the clipboard
+    public static final Identifier NPC_SHARE_CODE = NotchCurrency.id("npc_share_code");
     // Client -> server: open the NPC equipment screen (npc uuid)
     public static final Identifier NPC_EQUIP = NotchCurrency.id("npc_equip");
     // Client -> server: patrol edit (npc uuid, action, value): 0=give route tool, 1=clear route,
