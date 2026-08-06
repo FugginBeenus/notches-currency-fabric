@@ -1,0 +1,263 @@
+package net.fugginbeenus.notchcurrency.client;
+
+import net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
+import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
+import net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * What one schedule entry does the moment it begins: say a line, hand something over, run a command.
+ *
+ * <p>Opens over the schedule screen and hands the edited list straight back to it, rather than
+ * talking to the server itself. The schedule is saved in one piece, so an entry's actions have no
+ * business travelling separately.
+ *
+ * <p>The action vocabulary and its admin gate come from {@link NpcActionEditing}, shared with the
+ * reactions screen. An entry can pay coins and run commands exactly like a reaction can, so it has to
+ * be gated exactly like one.
+ */
+public class NpcScheduleActionsScreen extends Screen {
+
+    private static final int W = 300, H = 200;
+    private static final int LIST_X = 12, LIST_Y = 40, LIST_W = W - 24, LIST_H = 84;
+    private static final int ROW_H = 16;
+
+    private final Screen parent;
+    private final String entryLabel;
+    private final List<DialogueAction> working = new ArrayList<>();
+    private final Consumer<List<DialogueAction>> onSave;
+
+    private int selected = -1;
+    private int px, py;
+    private TextFieldWidget valueField;
+    private TextFieldWidget amountField;
+
+    public NpcScheduleActionsScreen(Screen parent, String entryLabel,
+                                    List<DialogueAction> actions, Consumer<List<DialogueAction>> onSave) {
+        super(Text.literal("When it starts"));
+        this.parent = parent;
+        this.entryLabel = entryLabel;
+        this.onSave = onSave;
+        for (DialogueAction a : actions) {
+            working.add(DialogueAction.fromNbt(a.toNbt())); // edit a copy: Back must really mean back
+        }
+        if (!working.isEmpty()) selected = 0;
+    }
+
+    @Override
+    protected void init() {
+        px = (this.width - W) / 2;
+        py = (this.height - H) / 2;
+
+        valueField = new TextFieldWidget(this.textRenderer, px + 60, py + 136, W - 76, 10, Text.empty());
+        valueField.setMaxLength(200);
+        valueField.setDrawsBackground(false);
+        valueField.setChangedListener(s -> {
+            DialogueAction a = current();
+            if (a != null && NpcActionEditing.needsValue(a.type())) a.setValue(s);
+        });
+        addDrawableChild(valueField);
+
+        amountField = new TextFieldWidget(this.textRenderer, px + 60, py + 156, 60, 10, Text.empty());
+        amountField.setMaxLength(9);
+        amountField.setDrawsBackground(false);
+        amountField.setChangedListener(s -> {
+            DialogueAction a = current();
+            if (a == null || !NpcActionEditing.needsAmount(a.type())) return;
+            try {
+                a.setAmount(s.isBlank() ? 0 : Long.parseLong(s));
+            } catch (NumberFormatException ignored) {
+                // half-typed number: leave the last good value alone
+            }
+        });
+        addDrawableChild(amountField);
+
+        syncFields();
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private DialogueAction current() {
+        return selected >= 0 && selected < working.size() ? working.get(selected) : null;
+    }
+
+    /** Point the two text boxes at the selected row, and hide the ones it has no use for. */
+    private void syncFields() {
+        DialogueAction a = current();
+        boolean wantsValue = a != null && NpcActionEditing.needsValue(a.type());
+        boolean wantsAmount = a != null && NpcActionEditing.needsAmount(a.type());
+        valueField.visible = wantsValue;
+        amountField.visible = wantsAmount;
+        if (wantsValue && !valueField.getText().equals(a.value())) valueField.setText(a.value());
+        if (wantsAmount && !amountField.getText().equals(String.valueOf(a.amount()))) {
+            amountField.setText(String.valueOf(a.amount()));
+        }
+    }
+
+    @Override
+    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        //? if >=1.21 {
+        /*renderInGameBackground(ctx);
+        *///?} else {
+        this.renderBackground(ctx);
+        //?}
+        NotchWidgets.panel(ctx, px, py, W, H);
+        NotchWidgets.title(ctx, this.textRenderer, "At " + entryLabel, px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.textRenderer, "Runs once, as this part of the day begins.",
+                px + W / 2, py + 24, NotchTheme.TEXT_MUTED, false);
+
+        NotchWidgets.inset(ctx, px + LIST_X, py + LIST_Y, LIST_W, LIST_H, NotchTheme.DEEP);
+        if (working.isEmpty()) {
+            NotchWidgets.centerText(ctx, this.textRenderer, "Nothing yet. Add one below.",
+                    px + W / 2, py + LIST_Y + LIST_H / 2 - 4, NotchTheme.TEXT_MUTED, false);
+        }
+        for (int i = 0; i < working.size(); i++) {
+            int ry = py + LIST_Y + 2 + i * ROW_H;
+            boolean hover = over(mouseX, mouseY, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2);
+            String text = NpcActionEditing.describe(working.get(i));
+            if (i == selected) {
+                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
+            }
+        }
+
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, py + 128, 54, 14, "Add",
+                over(mouseX, mouseY, px + LIST_X, py + 128, 54, 14));
+        NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 58, py + 128, 54, 14, "Remove",
+                over(mouseX, mouseY, px + LIST_X + 58, py + 128, 54, 14));
+        DialogueAction sel = current();
+        if (sel != null) {
+            NotchWidgets.goldButton(ctx, this.textRenderer, px + LIST_X + 116, py + 128, 100, 14,
+                    NpcActionEditing.actionName(sel.type()),
+                    over(mouseX, mouseY, px + LIST_X + 116, py + 128, 100, 14));
+        }
+
+        if (sel != null && NpcActionEditing.needsValue(sel.type())) {
+            ctx.drawText(this.textRenderer, "Text", px + 14, py + 136, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + 56, py + 133, W - 70, 14, NotchTheme.DEEP);
+            if (valueField.getText().isEmpty()) {
+                ctx.drawText(this.textRenderer, NpcActionEditing.valueHint(sel.type()),
+                        px + 60, py + 136, 0xFF555555, false);
+            }
+        }
+        if (sel != null && NpcActionEditing.needsAmount(sel.type())) {
+            ctx.drawText(this.textRenderer, "Amount", px + 14, py + 156, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + 56, py + 153, 68, 14, NotchTheme.DEEP);
+        }
+
+        NotchWidgets.primaryButton(ctx, this.textRenderer, px + W / 2 - 70, py + 176, 140, 16, "Save & Back",
+                over(mouseX, mouseY, px + W / 2 - 70, py + 176, 140, 16));
+
+        super.render(ctx, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            int mx = (int) mouseX, my = (int) mouseY;
+            for (int i = 0; i < working.size(); i++) {
+                int ry = py + LIST_Y + 2 + i * ROW_H;
+                if (over(mx, my, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2)) {
+                    NotchWidgets.tick();
+                    selected = i;
+                    syncFields();
+                    return true;
+                }
+            }
+            if (over(mx, my, px + LIST_X, py + 128, 54, 14)) {
+                if (working.size() >= ScheduleEntry.MAX_ACTIONS) {
+                    say("That's as many as one entry can run.");
+                    return true;
+                }
+                NotchWidgets.click();
+                DialogueAction a = new DialogueAction();
+                a.setType(DialogueAction.Type.SAY_LINE);
+                working.add(a);
+                selected = working.size() - 1;
+                syncFields();
+                return true;
+            }
+            if (over(mx, my, px + LIST_X + 58, py + 128, 54, 14) && current() != null) {
+                NotchWidgets.click();
+                working.remove(selected);
+                selected = Math.min(selected, working.size() - 1);
+                syncFields();
+                return true;
+            }
+            if (current() != null && over(mx, my, px + LIST_X + 116, py + 128, 100, 14)) {
+                NotchWidgets.tick();
+                NpcActionEditing.cycleType(current());
+                syncFields();
+                return true;
+            }
+            if (over(mx, my, px + W / 2 - 70, py + 176, 140, 16)) {
+                NotchWidgets.click();
+                saveAndBack();
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void saveAndBack() {
+        List<DialogueAction> kept = new ArrayList<>();
+        for (DialogueAction a : working) {
+            // Drop half-finished rows rather than storing something that silently does nothing.
+            if (NpcActionEditing.needsValue(a.type()) && a.value().isBlank()) continue;
+            kept.add(a);
+        }
+        onSave.accept(kept);
+        if (this.client != null) this.client.setScreen(parent);
+    }
+
+    @Override
+    public void close() {
+        saveAndBack();
+    }
+
+    private void say(String text) {
+        if (this.client != null && this.client.player != null) {
+            this.client.player.sendMessage(Text.literal(text).formatted(Formatting.RED), false);
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, valueField, amountField)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
+        return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
+    }
+
+    //? if >=1.21 {
+    /*@Override
+    protected void applyBlur(float delta) {
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
+        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
+    }
+    *///?}
+}

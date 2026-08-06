@@ -5,6 +5,7 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.action.NpcActions;
 import net.fugginbeenus.notchcurrency.npc.action.NpcTrigger;
+import net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -34,16 +35,6 @@ public class NpcActionsScreen extends Screen {
     private static final int TRIG_X = 10, TRIG_Y = 42, TRIG_W = 116, TRIG_H = 18;
     private static final int ED_X = 134, ED_W = W - ED_X - 10;
     private static final int ROW_H = 16;
-
-    /** The action types worth offering for a trigger (see the class note). */
-    private static final DialogueAction.Type[] PALETTE = {
-            DialogueAction.Type.SAY_LINE,
-            DialogueAction.Type.PAY_COINS,
-            DialogueAction.Type.CHARGE_COINS,
-            DialogueAction.Type.GIVE_ITEM,
-            DialogueAction.Type.RUN_COMMAND,
-            DialogueAction.Type.RUN_COMMAND_AS_PLAYER,
-    };
 
     private final UUID npcId;
     private final Map<NpcTrigger, List<DialogueAction>> working = new EnumMap<>(NpcTrigger.class);
@@ -75,33 +66,6 @@ public class NpcActionsScreen extends Screen {
     /** Paying coins and giving items mint value, so they're admin-only alongside the command actions
      *  (see {@link DialogueAction#isAdminOnly}). The server strips them either way; hiding them here
      *  just means a shop owner isn't offered something that would silently vanish on save. */
-    private static boolean adminActionsAllowed() {
-        return MinecraftClient.getInstance().player != null
-                && MinecraftClient.getInstance().player.hasPermissionLevel(2);
-    }
-
-    private static boolean needsValue(DialogueAction.Type t) {
-        return t == DialogueAction.Type.SAY_LINE || t == DialogueAction.Type.GIVE_ITEM
-                || t == DialogueAction.Type.RUN_COMMAND || t == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
-    }
-
-    private static boolean needsAmount(DialogueAction.Type t) {
-        return t == DialogueAction.Type.PAY_COINS || t == DialogueAction.Type.CHARGE_COINS
-                || t == DialogueAction.Type.GIVE_ITEM;
-    }
-
-    private static String actionName(DialogueAction.Type t) {
-        return switch (t) {
-            case SAY_LINE -> "Say a line";
-            case PAY_COINS -> "Pay player coins";
-            case CHARGE_COINS -> "Charge coins";
-            case GIVE_ITEM -> "Give item";
-            case RUN_COMMAND -> "Server command";
-            case RUN_COMMAND_AS_PLAYER -> "Player command";
-            default -> "None";
-        };
-    }
-
     @Override
     protected void init() {
         px = (this.width - W) / 2;
@@ -112,7 +76,7 @@ public class NpcActionsScreen extends Screen {
         valueField.setDrawsBackground(false);
         valueField.setChangedListener(s -> {
             DialogueAction a = current();
-            if (a != null && needsValue(a.type())) a.setValue(s);
+            if (a != null && NpcActionEditing.needsValue(a.type())) a.setValue(s);
         });
         addDrawableChild(valueField);
 
@@ -121,7 +85,7 @@ public class NpcActionsScreen extends Screen {
         amountField.setDrawsBackground(false);
         amountField.setChangedListener(s -> {
             DialogueAction a = current();
-            if (a == null || !needsAmount(a.type())) return;
+            if (a == null || !NpcActionEditing.needsAmount(a.type())) return;
             try {
                 a.setAmount(s.isBlank() ? 0 : Long.parseLong(s.trim()));
             } catch (NumberFormatException ignored) {
@@ -137,8 +101,8 @@ public class NpcActionsScreen extends Screen {
      *  change listeners can't write the old row's text into the new one). */
     private void syncFields() {
         DialogueAction a = current();
-        boolean value = a != null && needsValue(a.type());
-        boolean amount = a != null && needsAmount(a.type());
+        boolean value = a != null && NpcActionEditing.needsValue(a.type());
+        boolean amount = a != null && NpcActionEditing.needsAmount(a.type());
         valueField.setVisible(value);
         valueField.setText(value ? a.value() : "");
         amountField.setVisible(amount);
@@ -186,7 +150,7 @@ public class NpcActionsScreen extends Screen {
         for (int i = 0; i < list.size(); i++) {
             int ry = rowY(i);
             boolean hover = over(mouseX, mouseY, px + ED_X, ry, ED_W - 20, ROW_H);
-            String label = this.textRenderer.trimToWidth(actionName(list.get(i).type()), ED_W - 28);
+            String label = this.textRenderer.trimToWidth(NpcActionEditing.actionName(list.get(i).type()), ED_W - 28);
             if (i == selected) {
                 NotchWidgets.primaryButton(ctx, this.textRenderer, px + ED_X, ry, ED_W - 20, ROW_H, label, hover);
             } else {
@@ -208,7 +172,7 @@ public class NpcActionsScreen extends Screen {
         DialogueAction a = current();
         if (a != null) {
             NotchWidgets.divider(ctx, px + ED_X, py + 144, ED_W);
-            if (needsValue(a.type())) {
+            if (NpcActionEditing.needsValue(a.type())) {
                 String hint = switch (a.type()) {
                     case SAY_LINE -> "Says:";
                     case GIVE_ITEM -> "Item id:";
@@ -217,7 +181,7 @@ public class NpcActionsScreen extends Screen {
                 ctx.drawText(this.textRenderer, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 147, ED_W - 44, 14, NotchTheme.DEEP);
             }
-            if (needsAmount(a.type())) {
+            if (NpcActionEditing.needsAmount(a.type())) {
                 ctx.drawText(this.textRenderer, "Amount:", px + ED_X, py + 172, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 167, 64, 14, NotchTheme.DEEP);
             }
@@ -273,7 +237,7 @@ public class NpcActionsScreen extends Screen {
                 if (over(mx, my, px + ED_X, rowY(i), ED_W - 20, ROW_H)) {
                     NotchWidgets.click();
                     if (i == selected) {
-                        cycleType(list.get(i)); // clicking the selected row again cycles what it does
+                        NpcActionEditing.cycleType(list.get(i)); // clicking the selected row again cycles what it does
                     } else {
                         selected = i;
                     }
@@ -317,27 +281,13 @@ public class NpcActionsScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    /** Step an action to the next kind, skipping the command kinds when the player isn't an admin. */
-    private void cycleType(DialogueAction a) {
-        int at = 0;
-        for (int i = 0; i < PALETTE.length; i++) {
-            if (PALETTE[i] == a.type()) { at = i; break; }
-        }
-        for (int step = 1; step <= PALETTE.length; step++) {
-            DialogueAction.Type next = PALETTE[(at + step) % PALETTE.length];
-            if (DialogueAction.isAdminOnly(next) && !adminActionsAllowed()) continue;
-            a.setType(next);
-            return;
-        }
-    }
-
     private void save() {
         NpcActions out = new NpcActions();
         for (NpcTrigger t : NpcTrigger.values()) {
             List<DialogueAction> kept = new ArrayList<>();
             for (DialogueAction a : working.get(t)) {
                 // Drop half-finished rows rather than storing something that silently does nothing.
-                if (needsValue(a.type()) && a.value().isBlank()) continue;
+                if (NpcActionEditing.needsValue(a.type()) && a.value().isBlank()) continue;
                 kept.add(a);
             }
             out.set(t, kept);

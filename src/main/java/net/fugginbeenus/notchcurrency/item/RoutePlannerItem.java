@@ -59,14 +59,8 @@ public class RoutePlannerItem extends Item {
         if (npc == null) return ActionResult.CONSUME;
 
         BlockPos pos = context.getBlockPos().offset(context.getSide());
-        if (StackData.has(context.getStack(), ENTRY_KEY)) {
-            // A bed is clicked directly rather than beside: sleeping means being in it, not next to it.
-            BlockPos target = isBed(world, context.getBlockPos()) ? context.getBlockPos() : pos;
-            NotchNpcManager.setScheduleAnchor(sp, npc,
-                    StackData.getInt(context.getStack(), ENTRY_KEY), target, sp.getYaw());
-            context.getStack().decrement(1);
-            return ActionResult.CONSUME;
-        }
+        // Spot marking never arrives here: UseBlockCallback takes it first, because some blocks
+        // (beds above all) swallow the click before an item is ever asked about it.
         if (sp.isSneaking()) {
             NotchNpcManager.removeLastWaypoint(sp, npc);
         } else {
@@ -85,7 +79,7 @@ public class RoutePlannerItem extends Item {
         if (user instanceof ServerPlayerEntity sp) {
             if (StackData.has(stack, ENTRY_KEY)) {
                 // Nothing to confirm when marking a single spot: this is the way to back out.
-                stack.decrement(1);
+                consume(sp, stack);
                 sp.sendMessage(Text.literal("Spot unchanged.").formatted(Formatting.GRAY), false);
                 NotchNpcManager.reopenScheduleFor(sp, stack);
                 return TypedActionResult.success(stack);
@@ -124,8 +118,33 @@ public class RoutePlannerItem extends Item {
         }
     }
 
-    private static boolean isBed(World world, BlockPos pos) {
-        return world.getBlockState(pos).getBlock() instanceof net.minecraft.block.BedBlock;
+    /**
+     * Record the clicked block as one schedule entry's spot, then take the tool back.
+     *
+     * <p>A bed is taken as clicked rather than the block beside it: sleeping means being in it. For
+     * anything else the block above is the spot, since that is where a body stands.
+     */
+    public static void markScheduleSpot(ServerPlayerEntity sp, ItemStack stack, BlockPos clicked,
+                                        net.minecraft.util.math.Direction side) {
+        ServerWorld world = sp.getServerWorld();
+        NotchNpcEntity npc = boundNpc(stack, world, sp);
+        if (npc == null) {
+            consume(sp, stack); // bound to nothing reachable: don't leave a dead tool behind
+            return;
+        }
+        boolean bed = world.getBlockState(clicked).getBlock() instanceof net.minecraft.block.BedBlock;
+        // Step off the face that was clicked rather than always upward, so clicking the side of a
+        // wall puts the spot in front of it instead of inside it.
+        BlockPos target = bed ? clicked : clicked.offset(side);
+        NotchNpcManager.setScheduleAnchor(sp, npc, StackData.getInt(stack, ENTRY_KEY), target, sp.getYaw());
+        consume(sp, stack);
+    }
+
+    /** Take the tool out of the player's hands. Its whole job was one click. */
+    public static void consume(ServerPlayerEntity sp, ItemStack stack) {
+        stack.decrement(1);
+        sp.getInventory().markDirty();
+        sp.currentScreenHandler.sendContentUpdates();
     }
 
     @Nullable

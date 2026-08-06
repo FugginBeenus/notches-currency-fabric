@@ -226,6 +226,24 @@ public class NotchCurrency implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
 
+        // A block gets first refusal on a right-click, before the held item is consulted. That is
+        // fine everywhere except when marking a schedule spot: clicking a bed would try to put the
+        // player to sleep and the tool would never see the click at all. Intercepting here is the
+        // only way the tool gets told about the one block it most needs to be pointed at.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
+            if (world.isClient() || !(player instanceof net.minecraft.server.network.ServerPlayerEntity sp)) {
+                return net.minecraft.util.ActionResult.PASS;
+            }
+            net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+            if (!(held.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem)
+                    || !net.fugginbeenus.notchcurrency.compat.StackData.has(
+                            held, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.ENTRY_KEY)) {
+                return net.minecraft.util.ActionResult.PASS;
+            }
+            net.fugginbeenus.notchcurrency.item.RoutePlannerItem.markScheduleSpot(sp, held, hit.getBlockPos(), hit.getSide());
+            return net.minecraft.util.ActionResult.SUCCESS;
+        });
+
         // Flush & close the economy audit log when the server stops.
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> EconomyLedger.close());
     }

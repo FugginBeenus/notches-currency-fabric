@@ -32,7 +32,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     // Taller than it needs to be for most tabs: Moves carries three rows of toggles now, and every
     // tab draws from the top down, so the extra height is just breathing room everywhere else.
-    private static final int W = 300, H = 268;
+    private static final int W = 300, H = 282;
     // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
     private static final NpcRole[] SELECTABLE = {
             NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
@@ -41,6 +41,9 @@ public class NotchNpcEditorScreen extends Screen {
     };
 
     private final UUID npcId;
+    /** Set during a draw when the cursor is over something worth explaining, and painted last so
+     *  it lands above the panel. Hints that would be clipped to "..." live here instead. */
+    @org.jetbrains.annotations.Nullable private java.util.List<Text> tooltip = null;
     private final String ownerName;
     private final boolean canEdit;
     private final boolean applyInstalled = FabricLoader.getInstance().isModLoaded("apply");
@@ -186,6 +189,7 @@ public class NotchNpcEditorScreen extends Screen {
         *///?} else {
         this.renderBackground(ctx);
         //?}
+        tooltip = null;
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "NPC Editor", px + W / 2, py + 8);
         drawTabs(ctx, mouseX, mouseY);
@@ -198,6 +202,9 @@ public class NotchNpcEditorScreen extends Screen {
             case 5 -> drawManage(ctx, mouseX, mouseY);
         }
         super.render(ctx, mouseX, mouseY, delta);
+        if (tooltip != null) {
+            ctx.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
+        }
     }
 
     // ---- tabs ----
@@ -372,10 +379,10 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int BEH_X = 50, BEH_W = 200, BEH_H = 15;
     // The two always-on toggle rows, clear of the patrol row that ends just above them.
     private static final int TOGGLE_W = 98, TOGGLE_H = 15;
-    private int movesRow1() { return py + 177; }
-    private int movesRow2() { return py + 194; }
-    private int movesRow3() { return py + 211; }
-    private int movesRow4() { return py + 228; }
+    private int movesRow1() { return py + 190; }
+    private int movesRow2() { return py + 207; }
+    private int movesRow3() { return py + 224; }
+    private int movesRow4() { return py + 241; }
 
     /** One always-on toggle: green when on, plain when off. */
     private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
@@ -401,7 +408,20 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
 
-        int cy = py + 140;
+        // Sixth in the list rather than a chip among the toggles: choosing a schedule is choosing
+        // how the NPC moves, which is what every other button in this column is for.
+        boolean schedHover = over(mx, my, px + BEH_X, behY(5), BEH_W, BEH_H);
+        NotchWidgets.goldButton(ctx, this.textRenderer, px + BEH_X, behY(5), BEH_W, BEH_H,
+                "Daily Schedule", schedHover);
+        if (schedHover) {
+            tooltip = java.util.List.of(
+                    Text.literal("Daily Schedule").formatted(Formatting.GOLD),
+                    Text.literal("Sleep, open the shop, wander, walk a round,").formatted(Formatting.GRAY),
+                    Text.literal("all on a clock. Overrides the choice above").formatted(Formatting.GRAY),
+                    Text.literal("while it is running.").formatted(Formatting.GRAY));
+        }
+
+        int cy = py + 152;
         if (usesRadius()) {
             ctx.drawText(this.textRenderer, "Radius:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
             NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 50, cy, 20, 16, "-",
@@ -444,10 +464,6 @@ public class NotchNpcEditorScreen extends Screen {
         drawToggle(ctx, mx, my, px + BEH_X, movesRow3(), "Fight players", (movesBits & 16) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow3(), "Fight back", (movesBits & 32) != 0);
         drawToggle(ctx, mx, my, px + BEH_X, movesRow4(), "Fight rivals", (movesBits & 64) != 0);
-        // The schedule decides when each of the above applies, so its way in belongs here
-        // rather than behind another tab.
-        NotchWidgets.goldButton(ctx, this.textRenderer, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H,
-                "Schedule", over(mx, my, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H));
 
         String hint = switch (currentBehavior) {
             case STATIONARY -> "Stays exactly where you placed it.";
@@ -456,7 +472,7 @@ public class NotchNpcEditorScreen extends Screen {
             case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
             case GUARD -> "Holds a post and fights what comes near (ignores creepers).";
         };
-        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 248, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickBehavior(int mx, int my) {
@@ -469,7 +485,7 @@ public class NotchNpcEditorScreen extends Screen {
                 return true;
             }
         }
-        if (over(mx, my, px + BEH_X + 102, movesRow4(), TOGGLE_W, TOGGLE_H)) {
+        if (over(mx, my, px + BEH_X, behY(5), BEH_W, BEH_H)) {
             net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendNpcScheduleOpen(npcId);
             return true;
         }
@@ -489,7 +505,7 @@ public class NotchNpcEditorScreen extends Screen {
                 return true;
             }
         }
-        int cy = py + 140;
+        int cy = py + 152;
         if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER
                 && over(mx, my, px + BEH_X + 166, cy, 34, 14)) {
             sendBehavior(); // picks up the field text

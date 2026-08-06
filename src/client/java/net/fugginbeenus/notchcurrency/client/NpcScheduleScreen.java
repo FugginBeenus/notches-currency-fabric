@@ -39,6 +39,8 @@ public class NpcScheduleScreen extends Screen {
     private boolean enforceHours;
     private int selected = -1;
     private int scroll = 0;
+    /** Painted last so it sits above the panel. Anything that would need trimming goes here. */
+    @org.jetbrains.annotations.Nullable private List<Text> tooltip = null;
 
     public NpcScheduleScreen(UUID npcId, boolean dimensionOk, NpcSchedule schedule) {
         super(Text.literal("Schedule"));
@@ -86,6 +88,7 @@ public class NpcScheduleScreen extends Screen {
         *///?} else {
         this.renderBackground(ctx);
         //?}
+        tooltip = null;
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.textRenderer, "Daily Schedule", px + W / 2, py + 8);
@@ -140,6 +143,7 @@ public class NpcScheduleScreen extends Screen {
                 over(mouseX, mouseY, px + 232, py + 211, 96, 14));
 
         super.render(ctx, mouseX, mouseY, delta);
+        if (tooltip != null) ctx.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
     }
 
     /** The gentle version of "no". Says why, and points at what to use instead. */
@@ -176,9 +180,13 @@ public class NpcScheduleScreen extends Screen {
         ctx.drawText(this.textRenderer, "Shift = 15 min", x + 138, py + 44, NotchTheme.TEXT_MUTED, false);
 
         ctx.drawText(this.textRenderer, "Does", x, py + 66, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, x + 60, py + 63, 72, 14, e.stance().label(),
-                over(mouseX, mouseY, x + 60, py + 63, 72, 14));
-        ctx.drawText(this.textRenderer, wrapHint(e.stance().hint()), x, py + 82, NotchTheme.TEXT_MUTED, false);
+        boolean stanceHover = over(mouseX, mouseY, x + 60, py + 63, 72, 14);
+        NotchWidgets.primaryButton(ctx, this.textRenderer, x + 60, py + 63, 72, 14, e.stance().label(), stanceHover);
+        if (stanceHover) {
+            tooltip = List.of(Text.literal(e.stance().label()).formatted(Formatting.WHITE),
+                    Text.literal(e.stance().hint()).formatted(Formatting.GRAY),
+                    Text.literal("Click to cycle.").formatted(Formatting.DARK_GRAY));
+        }
 
         // The spot, and the repair prompt when there isn't one.
         String problem = e.problem();
@@ -193,8 +201,16 @@ public class NpcScheduleScreen extends Screen {
             ctx.drawText(this.textRenderer, "not needed", x + 60, py + 104, NotchTheme.TEXT_MUTED, false);
         }
         if (e.stance().needsSpot()) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, x, py + 116, 90, 14, "Set with tool",
-                    over(mouseX, mouseY, x, py + 116, 90, 14));
+            boolean spotHover = over(mouseX, mouseY, x, py + 116, 90, 14);
+            NotchWidgets.primaryButton(ctx, this.textRenderer, x, py + 116, 90, 14, "Set with tool", spotHover);
+            if (spotHover) {
+                tooltip = List.of(
+                        Text.literal("Set with tool").formatted(Formatting.WHITE),
+                        Text.literal(e.stance() == NpcStance.SLEEP
+                                ? "Hands you a tool. Right-click the bed."
+                                : "Hands you a tool. Right-click the spot.").formatted(Formatting.GRAY),
+                        Text.literal("Right-click the air to cancel.").formatted(Formatting.DARK_GRAY));
+            }
         }
 
         if (e.stance() == NpcStance.WANDER) {
@@ -207,10 +223,29 @@ public class NpcScheduleScreen extends Screen {
                     over(mouseX, mouseY, x + 114, py + 135, 18, 14));
         }
 
+        int acts = e.onBegin().size();
+        boolean actHover = over(mouseX, mouseY, x, py + 178, 146, 14);
+        NotchWidgets.goldButton(ctx, this.textRenderer, x, py + 178, 146, 14,
+                acts == 0 ? "When it starts..." : "When it starts (" + acts + ")", actHover);
+        if (actHover) {
+            tooltip = List.of(
+                    Text.literal("When it starts").formatted(Formatting.GOLD),
+                    Text.literal("Say a line, hand something over, run a").formatted(Formatting.GRAY),
+                    Text.literal("command. Runs once as this block begins.").formatted(Formatting.GRAY),
+                    Text.literal("This is how a shop restocks at opening.").formatted(Formatting.DARK_GRAY));
+        }
+
         toggleRow(ctx, x, py + 158, 106, 40, "Role usable now", e.roleOpen(), mouseX, mouseY);
-        if (!enforceHours) {
-            ctx.drawText(this.textRenderer, "(opening hours are off, so this is ignored)",
-                    x, py + 176, NotchTheme.TEXT_MUTED, false);
+        if (over(mouseX, mouseY, x, py + 158, 146, 14)) {
+            List<Text> lines = new ArrayList<>();
+            lines.add(Text.literal("Role usable now").formatted(Formatting.WHITE));
+            lines.add(Text.literal(e.roleOpen()
+                    ? "Players can use this NPC's role during this block."
+                    : "Players are turned away during this block.").formatted(Formatting.GRAY));
+            if (!enforceHours) {
+                lines.add(Text.literal("Ignored: Keep opening hours is off.").formatted(Formatting.YELLOW));
+            }
+            tooltip = lines;
         }
     }
 
@@ -224,11 +259,6 @@ public class NpcScheduleScreen extends Screen {
         } else {
             NotchWidgets.neutralButton(ctx, this.textRenderer, x + labelW, y, btnW, 14, "OFF", hover);
         }
-    }
-
-    private String wrapHint(String hint) {
-        return this.textRenderer.getWidth(hint) <= PANE_W - 8 ? hint
-                : this.textRenderer.trimToWidth(hint, PANE_W - 20) + "...";
     }
 
     @Override
@@ -351,6 +381,21 @@ public class NpcScheduleScreen extends Screen {
         if (over(mx, my, x + 106, py + 158, 40, 14)) {
             NotchWidgets.tick();
             entries.set(selected, e.withRoleOpen(!e.roleOpen()));
+            return true;
+        }
+        if (over(mx, my, x, py + 178, 146, 14)) {
+            NotchWidgets.click();
+            // Hands the edited list straight back to this screen. The schedule is saved in one
+            // piece, so an entry's actions have no business making their own trip to the server.
+            final int editing = selected;
+            if (this.client != null) {
+                this.client.setScreen(new NpcScheduleActionsScreen(this, e.clock(), e.onBegin(),
+                        updated -> {
+                            if (editing >= 0 && editing < entries.size()) {
+                                entries.set(editing, entries.get(editing).withActions(updated));
+                            }
+                        }));
+            }
             return true;
         }
         return false;

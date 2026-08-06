@@ -66,8 +66,14 @@ public final class NpcActionRunner {
                 case SAY_LINE -> {
                     // Spoken to whoever set it off, the same way dialogue's chat mode does: private,
                     // so a busy street of NPCs doesn't fill everyone's chat.
-                    if (sp == null) break;
-                    NpcText.say(sp, npc, a.value());
+                    if (sp != null) {
+                        NpcText.say(sp, npc, a.value());
+                        break;
+                    }
+                    // Nobody set it off: a schedule turning over, or a death with no killer. The line
+                    // still has an audience, it's just whoever is standing close enough to hear it.
+                    // Skipping these would quietly make "announce opening time" do nothing at all.
+                    sayNearby(npc, a.value());
                 }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
@@ -109,6 +115,21 @@ public final class NpcActionRunner {
             }
         }
         return openedScreen ? Outcome.OPENED_SCREEN : Outcome.COMPLETED;
+    }
+
+    /** Earshot for a line nobody triggered. Wide enough to carry across a market square, short
+     *  enough that a town of scheduled NPCs doesn't turn into a wall of chat. */
+    private static final double EARSHOT = 16.0;
+
+    private static void sayNearby(NotchNpcEntity npc, String line) {
+        if (line == null || line.isBlank()) return;
+        if (!(npc.getWorld() instanceof net.minecraft.server.world.ServerWorld world)) return;
+        double r2 = EARSHOT * EARSHOT;
+        for (ServerPlayerEntity near : world.getPlayers()) {
+            if (near.squaredDistanceTo(npc) <= r2) {
+                NpcText.say(near, npc, line);
+            }
+        }
     }
 
     private static void giveItem(ServerPlayerEntity sp, DialogueAction a) {

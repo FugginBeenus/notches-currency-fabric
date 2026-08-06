@@ -564,6 +564,10 @@ public final class NotchNpcManager {
             sp.sendMessage(Text.literal("That schedule entry is gone.").formatted(Formatting.RED), false);
             return;
         }
+        // Clear any tool from a previous attempt first. Opening the picker, changing your mind and
+        // opening it again is ordinary behaviour, and it must not leave an inventory full of
+        // near-identical tools pointing at entries that may not exist any more.
+        clearScheduleTools(sp);
         ItemStack tool = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.ROUTE_PLANNER);
         StackData.putUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUuid());
         StackData.putString(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY,
@@ -595,6 +599,25 @@ public final class NotchNpcManager {
         npc.setSchedule(schedule);
         sp.sendMessage(Text.literal("Spot set for the " + entry.clock() + " entry.").formatted(Formatting.GREEN), false);
         openSchedule(sp, npc);
+    }
+
+    /**
+     * Remove every schedule-marking tool from a player's inventory.
+     *
+     * <p>Route tools are left alone: those are mid-job by nature, since a route takes many clicks.
+     * A spot tool is spent in one, so a leftover one is always litter.
+     */
+    public static void clearScheduleTools(ServerPlayerEntity sp) {
+        var inv = sp.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack st = inv.getStack(i);
+            if (st.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem
+                    && StackData.has(st, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.ENTRY_KEY)) {
+                inv.setStack(i, ItemStack.EMPTY);
+            }
+        }
+        inv.markDirty();
+        sp.currentScreenHandler.sendContentUpdates();
     }
 
     /** Used when the owner cancels out of the tool: put them back where they came from. */
