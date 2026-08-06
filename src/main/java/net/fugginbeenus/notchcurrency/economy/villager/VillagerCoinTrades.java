@@ -9,16 +9,6 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOfferList;
 
-/**
- * The "lootable" villager currency integration: whenever a villager rolls new trades (level-up),
- * each emerald-priced trade has a small chance to be re-priced in coins instead: a rare find that
- * lets players spend currency at vanilla villagers. Higher-value trades (more emeralds) get double
- * the chance, so the lucky finds skew toward the trades worth paying coins for. Conversion is a
- * coin SINK (coins handed to the villager leave the economy).
- *
- * Called from {@code VillagerEntityMixin} after vanilla's fillRecipes; converted offers persist
- * with the villager's normal Offers NBT. Config: {@code villagerTrades} in notchcurrency.json.
- */
 public final class VillagerCoinTrades {
 
     private static boolean enabled = true;
@@ -33,7 +23,6 @@ public final class VillagerCoinTrades {
         coinsPerEmerald = Math.max(1, cfg.villagerTrades.coinsPerEmerald);
     }
 
-    /** Rolls every emerald-priced offer for coin conversion. Runs right after vanilla fills trades. */
     public static void convert(VillagerEntity villager) {
         if (!enabled || chancePercent <= 0 || villager.getWorld().isClient()) return;
 

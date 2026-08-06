@@ -7,11 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The loaded cosmetic offers, keyed by id (the datapack filename), insertion-ordered so the shop
- * shows them in a stable order. Populated from {@code data/<ns>/cosmetics/*.json} by
- * {@link CosmeticLoader}, merged across packs.
- */
 public final class CosmeticRegistry {
 
     private static final Map<String, CosmeticOffer> OFFERS = new LinkedHashMap<>();

@@ -117,9 +117,6 @@ public class GoldenCacheBlock extends Block {
         //?}
     }
 
-    /**
-     * Client-side idle sparkles while the cache sits in the world.
-     */
     @Override
     public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
         // 10% chance each tick to spawn a "firefly"

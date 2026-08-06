@@ -10,10 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * A server-owned shop with infinite stock. Sells items to players (a coin SINK) and
- * buys items from players (a coin FAUCET), with optional dynamic pricing per entry.
- */
 public class AdminShop {
 
     private final UUID id;
@@ -50,7 +46,6 @@ public class AdminShop {
         return null;
     }
 
-    /** Recover all entries' dynamic prices toward baseline. */
     public void decayAll() {
         for (AdminShopEntry e : entries) e.decay();
     }

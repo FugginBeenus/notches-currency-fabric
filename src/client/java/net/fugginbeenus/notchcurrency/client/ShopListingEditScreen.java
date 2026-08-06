@@ -17,12 +17,6 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The listing editor. Drop a SAMPLE of what you're selling (its count = how many per sale), set a
- * coin price and/or a barter sample, then fill the STOCK bin: drop stacks of the item into it and
- * they're pulled into the listing's stock. Samples and unmatched bin items return on close. Prices
- * show the coin glyph with a live "Buyer pays" summary. Widely spaced so nothing overlaps.
- */
 public class ShopListingEditScreen extends HandledScreen<ShopListingEditScreenHandler> {
 
     private static final int W = 210, H = 240;

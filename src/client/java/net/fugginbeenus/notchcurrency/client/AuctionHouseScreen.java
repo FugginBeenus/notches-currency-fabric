@@ -452,7 +452,6 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         drawIcon(ctx, bx, by, w, h, icon, NotchTheme.TEXT_DARK);
     }
 
-    /** Centers a 1-bit-per-char glyph bitmap (rows of '#') inside the button. */
     private void drawIcon(DrawContext ctx, int bx, int by, int bw, int bh, String[] rows, int color) {
         int iw = rows[0].length(), ih = rows.length;
         int ox = bx + (bw - iw) / 2;

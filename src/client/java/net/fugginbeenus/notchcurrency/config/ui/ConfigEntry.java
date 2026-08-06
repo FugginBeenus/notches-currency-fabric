@@ -2,11 +2,6 @@ package net.fugginbeenus.notchcurrency.config.ui;
 
 import java.util.function.Consumer;
 
-/**
- * One setting row in the Jade-style config screen. Entries hold a WORKING value seeded from the
- * config, so edits are local until the screen's Save commits every entry back: Cancel/Esc
- * discards everything, and a per-row reset restores the shipped default.
- */
 public abstract class ConfigEntry {
 
     public final String category;
@@ -19,22 +14,18 @@ public abstract class ConfigEntry {
         this.tooltip = tooltip;
     }
 
-    /** Write the working value back into the live config object (called on Save). */
     public abstract void commit();
 
-    /** True while the working value equals the shipped default. */
     public abstract boolean isDefault();
 
-    /** Restore the shipped default (the row's reset arrow). */
     public abstract void reset();
 
     public boolean matches(String query) {
         return label.toLowerCase().contains(query) || category.toLowerCase().contains(query);
     }
 
-    /* ---------------------------------- types ---------------------------------- */
+    /*types*/
 
-    /** ON/OFF pill toggle. */
     public static final class BoolEntry extends ConfigEntry {
         public boolean value;
         private final boolean def;
@@ -53,7 +44,6 @@ public abstract class ConfigEntry {
         @Override public void reset() { value = def; }
     }
 
-    /** Click-to-edit number (backs both int and long config fields; clamped to [min, max]). */
     public static final class NumberEntry extends ConfigEntry {
         public long value;
         public final long min, max;
@@ -76,7 +66,6 @@ public abstract class ConfigEntry {
         @Override public void reset() { value = def; }
     }
 
-    /** Draggable slider for bounded ints, with a suffix readout ("85%"). */
     public static final class SliderEntry extends ConfigEntry {
         public int value;
         public final int min, max;
@@ -104,7 +93,6 @@ public abstract class ConfigEntry {
         @Override public void reset() { value = def; }
     }
 
-    /** Cycle button over a fixed set of options (e.g. the HUD anchor). */
     public static final class SelectEntry extends ConfigEntry {
         public final String[] options;
         public int index;
@@ -132,7 +120,6 @@ public abstract class ConfigEntry {
         @Override public void reset() { index = defIndex; }
     }
 
-    /** Click-to-edit free text (coin name, webhook URL). */
     public static final class StringEntry extends ConfigEntry {
         public String value;
         public final int maxLength;

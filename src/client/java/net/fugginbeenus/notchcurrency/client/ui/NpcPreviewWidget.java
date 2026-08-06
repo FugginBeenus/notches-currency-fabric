@@ -8,21 +8,14 @@ import net.minecraft.entity.Entity;
 
 import java.util.UUID;
 
-/**
- * Draws a live preview of a Notch NPC (found by uuid in the client world) inside a boxed panel: the
- * whole figure fit to the frame and facing the viewer, so it reads cleanly (no awkward head-crop).
- * Reused by the shop and cosmetics screens so buyers see who they're dealing with.
- */
 public final class NpcPreviewWidget {
 
     private NotchNpcEntity cached;
 
-    /** Draw the NPC's full figure fit to the box. No-op-ish (empty inset) if the NPC can't be found. */
     public void draw(DrawContext ctx, int x, int y, int w, int h, UUID npcId) {
         draw(ctx, x, y, w, h, npcId, false);
     }
 
-    /** Draw a waist-up bust (humanoid model only: other models fall back to the full-body fit). */
     public void drawBust(DrawContext ctx, int x, int y, int w, int h, UUID npcId) {
         draw(ctx, x, y, w, h, npcId, true);
     }

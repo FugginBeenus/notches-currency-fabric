@@ -8,11 +8,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Rolls a fresh bounty from the loaded {@link BountyPools}: pick a rarity (weighted), then a
- * weighted objective and a matching reward of that rarity. Generated bounties are non-repeatable
- * (one completion per player) and expire after {@code durationTicks}.
- */
 public final class BountyGenerator {
 
     private BountyGenerator() {}

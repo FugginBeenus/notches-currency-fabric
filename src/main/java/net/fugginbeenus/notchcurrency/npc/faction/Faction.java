@@ -6,11 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-/**
- * One faction. Lives in {@link FactionState}, which is the only thing that owns it: a Recruiter NPC
- * merely stores this faction's {@link #id()} and points at it. That's deliberate: losing the NPC, to
- * a creeper or a careless pick-up, must never take the faction and its members with it.
- */
 public class Faction {
 
     public static final int MAX_ID_LENGTH = 24;
@@ -21,13 +16,9 @@ public class Faction {
     private final String id;
     private String displayName;
     private Formatting color;
-    /** Who founded it. Keeps management rights with a person, not with an entity that can die. */
     @Nullable private UUID founder;
-    /** One line of pitch, shown to anyone weighing up whether to sign on. */
     private String motto = "";
-    /** What it costs to join, in coins. Zero is free. */
     private int joinFee = 0;
-    /** Closed factions still show themselves off; they just don't take walk-ins. */
     private boolean openToJoin = true;
 
     public Faction(String id, String displayName, Formatting color, @Nullable UUID founder) {
@@ -70,10 +61,6 @@ public class Faction {
         return founder != null && founder.equals(player);
     }
 
-    /**
-     * Turn a typed name into an id: lowercase, spaces to underscores, nothing exotic. Returns null if
-     * nothing usable survives, so a name of pure punctuation can't become a faction with a blank id.
-     */
     @Nullable
     public static String toId(String name) {
         if (name == null) return null;

@@ -15,12 +15,6 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The "create a trade offer" screen backing handler, laid out like the live-trade screen: a 3×3
- * GIVE grid of real items (escrowed into the offer on submit, with optional attached coins), and a
- * REQUESTED sample slot (its count = how many; copied and always returned). Price/coins/target come
- * from the client via TRADE_OFFER_CREATE. Anything left in the slots is returned on close.
- */
 public class TradeOfferCreateScreenHandler extends ScreenHandler {
 
     // Two-column layout (matches the live-trade screen): a 3×3 grid per side.
@@ -61,7 +55,6 @@ public class TradeOfferCreateScreenHandler extends ScreenHandler {
     public ItemStack giveStack(int i) { return samples.getStack(i); }
     public ItemStack wantStack(int i) { return samples.getStack(GIVE_COUNT + i); }
 
-    /** Submit the offer. The give grid is consumed (escrowed); the want grid holds samples. */
     public void submit(ServerPlayerEntity sp, long price, long giveCoins, String targetName) {
         List<ItemStack> given = new ArrayList<>();
         for (int i = 0; i < GIVE_COUNT; i++) {

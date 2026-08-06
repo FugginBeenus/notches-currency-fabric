@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** World-persistent storage for all admin shops. Stored in the overworld save. */
 public class AdminShopState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_adminshops";
@@ -49,7 +48,6 @@ public class AdminShopState extends PersistentState {
         return shops.get(shopId);
     }
 
-    /** Find by exact (case-insensitive) name, else null. */
     @Nullable
     public AdminShop getByName(String name) {
         for (AdminShop s : shops.values()) {
@@ -66,7 +64,6 @@ public class AdminShopState extends PersistentState {
     private int decayCounter = 0;
     private static final int DECAY_INTERVAL = 200;
 
-    /** Call every server tick; decays dynamic prices toward baseline on an interval. */
     public void tickDecay() {
         if (shops.isEmpty()) return;
         if (++decayCounter < DECAY_INTERVAL) return;
@@ -101,7 +98,6 @@ public class AdminShopState extends PersistentState {
         return state;
     }
 
-    /** Helper for command tab-style listing. */
     public List<String> shopNames() {
         List<String> names = new ArrayList<>();
         for (AdminShop s : shops.values()) names.add(s.getName());

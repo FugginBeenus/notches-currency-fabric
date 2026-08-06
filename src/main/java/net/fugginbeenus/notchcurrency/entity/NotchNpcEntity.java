@@ -39,23 +39,12 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
-/**
- * The unified Notch NPC entity: a GeckoLib-animated humanoid that carries its own identity (name,
- * owner, role) and, in later phases, appearance/behavior/dialogue. Phase 1 keeps it stationary with a
- * look-at goal and a single idle animation; the role stored on the entity decides what interacting
- * with it does (shop, bank, auction, …). Only the owner (or an op) can edit it.
- */
 public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public enum OwnerType { PLAYER, SERVER }
 
-    /** Movement preset. STATIONARY holds position; WANDER roams around a home point within a radius;
-     *  FOLLOW_OWNER tags along behind the owner (teleporting to catch up if left far behind);
-     *  PATROL walks its waypoint route in a loop; GUARD holds its post and attacks hostile mobs. */
     public enum Behavior { STATIONARY, WANDER, FOLLOW_OWNER, PATROL, GUARD }
 
-    /** How dialogue plays. WINDOW opens the conversation screen; CHAT says a quick line in chat
-     *  (a random page from the tree) and then opens the role directly: the lightweight style. */
     public enum DialogueMode { WINDOW, CHAT }
 
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.notch_npc.idle");
@@ -78,24 +67,18 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
     private static final TrackedData<Boolean> SLIM =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    /** Width. Kept under the original name so existing NPCs keep their size on load. */
     private static final TrackedData<Float> SCALE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> SCALE_Y =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> SCALE_Z =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    /** Nudges the floating name up or down: models vary enough that one height never fits all. */
     private static final TrackedData<Float> NAME_OFFSET =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    /** Free-floating sign above the NPC, newline-separated. Synced because the client draws it, and
-     *  because placeholders like %balance% have to resolve per viewer. */
     private static final TrackedData<String> BILLBOARD =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    /** One small line under the name: a job, a title, a rank. Synced for the same reasons the sign is. */
     private static final TrackedData<String> SUBTITLE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    /** Pose preset: 0 standing, 1 sitting, 2 sneaking, 3 sleeping. */
     private static final TrackedData<Integer> NPC_POSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -108,21 +91,15 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public static final int POSE_WAVING = 6;   // arm raised in greeting
     public static final int POSE_CUSTOM = 7;   // per-part rotations from the pose editor
 
-    /** Per-part custom rotations (degrees), keyed "0".."5" (head, body, r-arm, l-arm, r-leg, l-leg)
-     *  as int arrays [x,y,z]. Synced so the client model can apply them. */
     private static final TrackedData<NbtCompound> CUSTOM_POSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.NBT_COMPOUND);
 
-    /** Idle animation layered on top of whatever pose is active (synced for the client model). */
     private static final TrackedData<Integer> POSE_ANIM =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
-    /** Bumped on every landed melee hit: the client model plays its attack swing off this, since
-     *  vanilla's hand-swing animation packet proved unreliable for this entity. */
     private static final TrackedData<Integer> ATTACK_PULSE =
             DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
-    /** Client-side: the age at which the latest attack swing started (model animates 8 ticks). */
     public float clientSwingStartAge = -1000f;
     private int lastSeenAttackPulse = -1;
 
@@ -131,7 +108,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public static final int ANIM_LIVELY = 2;  // breathing chest + body sway + slow head glances
     public static final int ANIM_COUNT = 3;
 
-    /** Client-side cache of CUSTOM_POSE as 18 floats (6 parts × pitch/yaw/roll, degrees). */
     @Nullable private float[] customPoseCache = null;
 
     // Config (persisted in NBT; also packed into the NPC item on pick-up).
@@ -155,7 +131,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree dialogue =
             new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
     private DialogueMode dialogueMode = DialogueMode.WINDOW;
-    /** What this NPC does when something happens to it (talked to, hurt, killed, approached). */
     private net.fugginbeenus.notchcurrency.npc.action.NpcActions actions =
             new net.fugginbeenus.notchcurrency.npc.action.NpcActions();
     private String farewellText = "";
@@ -170,20 +145,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean protectOwner = false;     // fights whoever its owner is fighting
     private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
     private boolean fightRivalFactions = false; // takes on anyone flying a different faction's colours
-    /** Which faction it belongs to: an id pointing at the record in FactionState, nothing more.
-     *  The faction itself is never stored here, so losing this NPC never costs anyone their faction. */
     private String factionId = "";
-    /** Which round of action rules this NPC has already been brought in line with. */
     private int actionSweepVersion = 0;
-    /** Voice: the sound id it speaks with and the pitch, as a percentage of normal. */
     private String voiceSound = "";
     private int voicePitch = 100;
 
-    /** The NPC's day. Empty and disabled costs nothing: see {@link #tickSchedule()}. */
     private net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule schedule =
             new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule();
-    /** Which entry is currently applied, or -1 for "nothing applied yet". Never saved: the whole
-     *  point of the schedule is that this can be re-derived from the clock at any moment. */
     private int scheduleActive = -1;
 
     // A running schedule steers the NPC through these rather than through the configured behaviour,
@@ -191,9 +159,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // what the owner set on the Moves tab, and switching the schedule off would leave that damage
     // behind. Kept out of NBT on purpose: they are derived, and they rebuild themselves on load.
     @Nullable private Behavior scheduleBehavior = null;
-    /** The pose the owner chose, parked here while a Sleep entry borrows the real one. -1 when
-     *  the schedule is not holding it. Saved, so an NPC that unloads mid-nap still wakes up in
-     *  the pose its owner picked rather than snapping to standing. */
     private int poseBeforeSchedule = -1;
     @Nullable private net.minecraft.util.math.BlockPos scheduleHome = null;
     private int scheduleRadius = 8;
@@ -209,10 +174,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // ordinary NPC carries two null references and nothing else.
     @Nullable private java.util.Set<java.util.UUID> proximityInside = null;
     @Nullable private java.util.Map<java.util.UUID, Integer> proximityFired = null;
-    /** When each trigger last fired, for the ones that need pacing. Only allocated once one fires. */
     @Nullable private int[] lastFiredAge = null;
     private static final int PROXIMITY_SCAN_TICKS = 10;
-    /** How long before the same player can set it off again, so pacing around isn't a replay button. */
     private static final int PROXIMITY_RECHARGE_TICKS = 200;
 
     // Moves-tab granularity.
@@ -321,13 +284,11 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return out;
     }
 
-    /** The custom-pose rotations (degrees, 6 parts × pitch/yaw/roll), or null when unset. */
     @Nullable
     public float[] getCustomPoseAngles() {
         return customPoseCache;
     }
 
-    /** Set one part's custom rotation (degrees); {@code part == -1} clears the whole pose. */
     public void setCustomPosePart(int part, int x, int y, int z) {
         NbtCompound pose = this.dataTracker.get(CUSTOM_POSE).copy();
         if (part < 0) {
@@ -360,9 +321,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         };
     }
 
-    /** Keep the nameplate above the visible body: pose changes the height and the model is scaled.
-     *  1.21 replaced getNameLabelHeight with the entity-attachments system, so on 1.21 the nameplate
-     *  sits at the default height and doesn't follow the pose (cosmetic-only; revisit if wanted). */
     //? if <1.21 {
     @Override
     public float getNameLabelHeight() {
@@ -401,7 +359,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public static final int MAX_SUBTITLE_LENGTH = 32;
 
-    /** The small line under the name. Empty means none. */
     public String getSubtitle() { return this.dataTracker.get(SUBTITLE); }
 
     public void setSubtitle(String text) {
@@ -410,8 +367,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.set(SUBTITLE, out);
     }
 
-    /** Sound id spoken on interaction, empty for a silent NPC, and its pitch as a percentage.
-     *  Not tracked: the server plays the sound, so the client never needs to know. */
     public String getVoice() { return voiceSound; }
 
     public void setVoice(String soundId) {
@@ -424,12 +379,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.voicePitch = Math.max(50, Math.min(200, percent));
     }
 
-    /**
-     * Say something out loud, if this NPC has been given a voice.
-     *
-     * <p>Pitch is what turns one villager grunt into a cast: the same sound at 60% and at 150% reads
-     * as two different people. Played at the NPC so it falls off with distance like any other mob.
-     */
     public void playVoice() {
         if (voiceSound.isEmpty() || this.isSilent()) return;
         net.minecraft.util.Identifier id = net.minecraft.util.Identifier.tryParse(voiceSound);
@@ -443,7 +392,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public static final int MAX_BILLBOARD_LINES = 4;
     public static final int MAX_BILLBOARD_LINE_LENGTH = 48;
 
-    /** The floating sign's lines, newline-separated; empty means no sign. */
     public String getBillboard() { return this.dataTracker.get(BILLBOARD); }
 
     public void setBillboard(String text) {
@@ -464,13 +412,11 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.dataTracker.set(BILLBOARD, out.toString());
     }
 
-    /** How far to nudge the floating name, in blocks. */
     public float getNameOffset() { return this.dataTracker.get(NAME_OFFSET); }
     public void setNameOffset(float offset) {
         this.dataTracker.set(NAME_OFFSET, Math.max(-2.0f, Math.min(3.0f, offset)));
     }
 
-    /** Apply a full appearance in one call (used by the editor packet). */
     public void setAppearance(String model, String skinType, String skinValue, boolean slim,
                               float scaleX, float scaleY, float scaleZ, float nameOffset) {
         setModelId(model);
@@ -499,16 +445,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyBehaviorGoals();
     }
 
-    /** Set the home/leash point (called on placement). */
     public void setHome(net.minecraft.util.math.BlockPos pos) {
         this.homePos = pos == null ? null : pos.toImmutable();
         applyBehaviorGoals();
     }
 
-    /** Patrol route (looped in order). The patrol goal reads this live. */
     public java.util.List<net.minecraft.util.math.BlockPos> getWaypoints() { return waypoints; }
 
-    /** Add a patrol waypoint (capped at 16). Returns false when full. */
     public boolean addWaypoint(net.minecraft.util.math.BlockPos pos) {
         if (waypoints.size() >= 16) return false;
         waypoints.add(pos.toImmutable());
@@ -519,7 +462,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         waypoints.clear();
     }
 
-    /** Remove the most recently added waypoint (route tool undo). Returns false if the route is empty. */
     public boolean removeLastWaypoint() {
         if (waypoints.isEmpty()) return false;
         waypoints.remove(waypoints.size() - 1);
@@ -529,7 +471,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public float getPatrolSpeed() { return patrolSpeed; }
     public void setPatrolSpeed(float speed) { this.patrolSpeed = Math.max(0.3f, Math.min(1.5f, speed)); }
 
-    /** How long the NPC lingers at each waypoint before moving on (game ticks, 0 = no pause). */
     public int getPatrolWaitTicks() { return patrolWaitTicks; }
     public void setPatrolWaitTicks(int ticks) { this.patrolWaitTicks = Math.max(0, Math.min(600, ticks)); }
 
@@ -557,32 +498,18 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.scheduleActive = -1; // re-derive on the next check rather than trusting the old index
     }
 
-    /**
-     * Whether the NPC's role can be used right now.
-     *
-     * <p>Answers yes unless the owner has both built a schedule and asked for its opening hours to be
-     * kept, which is the toggle that lets a schedule be pure choreography for anyone who wants the
-     * shop open around the clock.
-     */
     public boolean isRoleOpenNow() {
         if (!schedule.isActive() || !schedule.enforceHours()) return true;
         var entry = schedule.activeAt(this.getWorld().getTimeOfDay());
         return entry == null || entry.roleOpen();
     }
 
-    /** What to say when someone tries to use the role outside its hours. */
     public String closedLineNow() {
         var entry = schedule.isActive() ? schedule.activeAt(this.getWorld().getTimeOfDay()) : null;
         if (entry != null && !entry.closedLine().isBlank()) return entry.closedLine();
         return "Sorry, we're closed right now.";
     }
 
-    /**
-     * Run whatever is wired to a trigger. Server-side only, and cheap to call when nothing is set up:
-     * every hook site calls this unconditionally, so the empty case has to cost next to nothing.
-     *
-     * @param player whoever set it off, or null when nobody did (an NPC drowning, say)
-     */
     public void fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger trigger,
                      @Nullable ServerPlayerEntity player) {
         if (this.getWorld().isClient || !actions.has(trigger)) return;
@@ -600,7 +527,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger));
     }
 
-    /** Optional goodbye line said in chat when a screen this NPC opened is closed ("" = none). */
     public String getFarewellText() { return farewellText; }
     public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
 
@@ -611,15 +537,11 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public boolean opensDoors() { return opensDoors; }
 
-    /** Toggle door use: adds/removes the open-door goal and the pathfinding permissions. */
     public void setOpensDoors(boolean open) {
         this.opensDoors = open;
         applyDoorCapability();
     }
 
-    /** (Re)apply the door pathfinding flags + open-door goal from {@link #opensDoors}. Called whenever
-     *  the toggle changes AND whenever behavior goals are rebuilt, so a behavior swap never drops it.
-     *  NOTE: doors only open while the NPC is actually pathing through one. A Stationary NPC won't. */
     private void applyDoorCapability() {
         if (this.getNavigation() instanceof net.minecraft.entity.ai.pathing.MobNavigation nav) {
             nav.setCanPathThroughDoors(opensDoors);
@@ -668,7 +590,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (this.followPlayerName.length() > 16) this.followPlayerName = this.followPlayerName.substring(0, 16);
     }
 
-    /** Who FOLLOW mode walks after: the named player when set, otherwise the owner. */
     @Nullable
     public PlayerEntity resolveFollowTarget() {
         if (!followPlayerName.isEmpty() && this.getServer() != null) {
@@ -677,11 +598,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return owner != null ? this.getWorld().getPlayerByUuid(owner) : null;
     }
 
-    /**
-     * Whether something counts as this NPC's own side. An NPC with no faction has no allies, so this
-     * is false for everyone until a faction is actually set. That's what keeps factions inert for
-     * anyone who never touches them.
-     */
+    // False for everyone until a faction is set, which is what keeps factions inert by default.
     public boolean isAlly(@Nullable net.minecraft.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         if (other instanceof NotchNpcEntity npc) return factionId.equals(npc.getFactionId());
@@ -692,7 +609,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return false;
     }
 
-    /** True when the other side belongs to a DIFFERENT faction, not merely "isn't an ally". */
     public boolean isRivalFaction(@Nullable net.minecraft.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         String theirs = null;
@@ -767,7 +683,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public String getCustomRoleId() { return customRoleId; }
     public void setCustomRoleId(String id) { this.customRoleId = id == null ? "" : id; }
 
-    /** True while the day/night visibility rule says this NPC should be hidden right now. */
     public boolean isRuleHidden() {
         if (visibility == VIS_DAY) return !this.getWorld().isDay();
         if (visibility == VIS_NIGHT) return this.getWorld().isDay();
@@ -788,7 +703,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public int getRegen() { return regen; }
     public void setRegen(int r) { this.regen = Math.max(0, Math.min(10, r)); }
 
-    /** Apply the slider attributes (max health, walk speed) and heal to the new cap. */
     public void setBaseStats(int maxHealth, int speedPct) {
         int hp = Math.max(2, Math.min(100, maxHealth));
         double speed = Math.max(0.1, Math.min(0.6, speedPct / 100.0));
@@ -799,7 +713,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.setHealth(hp);
     }
 
-    /** One-line-per-fact diagnostic dump for {@code /npc debug}. */
     public java.util.List<String> debugSummary(ServerPlayerEntity viewer) {
         java.util.List<String> out = new java.util.ArrayList<>();
         out.add("behavior=" + behavior + " radius=" + wanderRadius
@@ -841,17 +754,11 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.goalSelector.add(6, lookGoal);
     }
 
-    /** A player just interacted: stop wandering and face them for a few seconds (refreshed each time). */
     public void startTalking(PlayerEntity player) {
         this.talkingTo = player.getUuid();
         this.talkingTicks = 160; // ~8s; TalkGoal counts this down and releases when it (or the player) runs out
     }
 
-    /**
-     * While {@link #talkingTo} is set, this goal grabs the MOVE and LOOK controls (that alone
-     * suspends the wander/look goals), then keeps the NPC stopped and turned toward the player.
-     * Releases once the timer expires or the player walks off (or logs out).
-     */
     private class TalkGoal extends net.minecraft.entity.ai.goal.Goal {
         TalkGoal() {
             this.setControls(java.util.EnumSet.of(Control.MOVE, Control.LOOK));
@@ -897,7 +804,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
     }
 
-    /** Swap the movement/combat goals to match the current behavior preset. */
     private void applyBehaviorGoals() {
         for (net.minecraft.entity.ai.goal.Goal g : behaviorGoals) {
             this.goalSelector.remove(g);
@@ -1001,11 +907,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyDoorCapability(); // re-assert door pathing/goal after the goal list is rebuilt
     }
 
-    /**
-     * Where the NPC is actually being moved to right now: the schedule when one is running, the
-     * Moves tab otherwise. Combat deliberately keeps reading the configured behaviour instead, since
-     * a guard standing a scheduled post is still a guard.
-     */
+    // Combat deliberately still reads the configured behaviour: a guard on a scheduled post is a guard.
     private Behavior movementBehavior() {
         return scheduleBehavior != null ? scheduleBehavior : behavior;
     }
@@ -1069,18 +971,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
     }
 
-    /**
-     * Advance the NPC's day.
-     *
-     * <p>Called every tick, and built so that costs almost nothing. An NPC with no schedule leaves on
-     * the first line. One with a schedule looks at the clock once a second, and while it is still
-     * inside the same entry (which is nearly always) it leaves on the third. Only a real transition,
-     * a handful of times a day, does any work. A town of scheduled NPCs is idle between those.
-     *
-     * <p>Nothing here remembers where the NPC "was up to". The active entry is derived from the time
-     * of day every check, which is why an NPC can be unloaded for a week and still pick up correctly:
-     * there is no progress to lose.
-     */
     private void tickSchedule() {
         boolean runnable = schedule.isActive()
                 && net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.getWorld());
@@ -1102,13 +992,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyScheduleEntry(schedule.get(idx), transition);
     }
 
-    /**
-     * Put the NPC into an entry's stance by driving the behaviour it already has.
-     *
-     * <p>The override fields are set together and the goal list rebuilt once at the end. Going
-     * through the public setters would rebuild it three times and, worse, would write the entry's
-     * spot and radius over the owner's own settings.
-     */
+    // Fields set together and goals rebuilt once. The public setters would overwrite the owner's own settings.
     private void applyScheduleEntry(@Nullable net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry entry,
                                     boolean fireActions) {
         if (entry == null) {
@@ -1141,17 +1025,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
     }
 
-    /**
-     * Get an NPC on a Sleep entry actually into its bed, the way a villager does.
-     *
-     * <p>Posing it asleep is not enough on its own. Lying down is one thing; being <em>in</em> the bed
-     * is another, and that comes from vanilla's own sleep call: it claims the bed, snaps the body onto
-     * it, and orients it to the headboard. Without that an NPC stands beside the bed doing a lying-down
-     * impression, which is what it was doing.
-     *
-     * <p>It also has to stop looking around. The watch-players goal keeps turning the head, which on a
-     * sleeping body reads as broken, so that goal is stood down for as long as the NPC is asleep.
-     */
+    // Posing it asleep is not sleeping: vanilla sleep() is what claims the bed and snaps it on.
     private void tickScheduleSleep() {
         var entry = currentScheduleEntry();
         boolean wantsBed = entry != null
@@ -1189,13 +1063,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (lookGoal != null) this.goalSelector.remove(lookGoal);
     }
 
-    /**
-     * Resolve a bed anchor to the head half of the bed.
-     *
-     * <p>Anchors are normalised when they're set, but schedules built before that, and any hand-edited
-     * config, can still point at the foot. Doing it again here costs a block lookup and saves the NPC
-     * lying a block down the bed with half of it hanging off the end.
-     */
+    // Head half of the bed, or the body lies a block down it and hangs off the end.
     private net.minecraft.util.math.BlockPos bedHead(net.minecraft.util.math.BlockPos pos) {
         net.minecraft.block.BlockState state = this.getWorld().getBlockState(pos);
         if (state.getBlock() instanceof net.minecraft.block.BedBlock
@@ -1205,22 +1073,14 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return pos;
     }
 
-    /** Put the watch-players goal back after a nap. Removing first is what keeps a second copy of it
-     *  from stacking up, the same way the toggle itself does it. */
+    // Remove before adding, or a nap leaves a second copy of the goal running.
     private void restoreLookGoal() {
         if (lookGoal == null) return;
         this.goalSelector.remove(lookGoal);
         if (watchPlayers) this.goalSelector.add(6, lookGoal);
     }
 
-    /**
-     * Turn a settled NPC to the direction its Stand entry asked for.
-     *
-     * <p>Set here in tickMovement, which runs before the goals do, so anything with a live opinion
-     * about where the NPC is looking still wins: it turns to face whoever is talking to it, tracks a
-     * player if Watch players is on, and looks at what it is fighting. This is the resting angle it
-     * returns to once nothing else is asking, which is what "facing the counter" actually means.
-     */
+    // Runs before the goals, so talking, watching and combat all still win. This is the resting angle.
     private void holdScheduleFacing() {
         if (talkingTo != null || this.getTarget() != null || this.isSleeping()) return;
         var entry = currentScheduleEntry();
@@ -1231,7 +1091,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.setHeadYaw(want);
     }
 
-    /** Drop the schedule's grip and let the configured behaviour take back over. */
     private void releaseSchedule() {
         scheduleBehavior = null;
         scheduleHome = null;
@@ -1240,7 +1099,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyBehaviorGoals();
     }
 
-    /** Borrow the pose for a stance that needs one, or hand it back. Pass -1 to release. */
     private void holdPose(int wanted) {
         if (wanted >= 0) {
             if (poseBeforeSchedule < 0) poseBeforeSchedule = getNpcPose();
@@ -1251,8 +1109,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
     }
 
-    /** The entry governing right now, or null when no schedule is running. Read by the goal and by
-     *  the opening-hours check, both of which want the same answer. */
     @Nullable
     public net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry currentScheduleEntry() {
         if (!schedule.isActive()) return null;
@@ -1260,14 +1116,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return schedule.activeAt(this.getWorld().getTimeOfDay());
     }
 
-    /**
-     * Fire the proximity trigger as players walk up. Server-side, called every tick, so the very first
-     * line is the check that costs nothing for the NPCs (nearly all of them) that don't use it.
-     *
-     * <p>Fires on the way IN only, and a player has to leave properly before it can happen again: the
-     * boundary they leave by is wider than the one they arrive at, so standing right on the edge can't
-     * make it stutter.
-     */
     private void tickProximity() {
         if (!actions.has(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY)) return;
         if (this.age % PROXIMITY_SCAN_TICKS != 0) return;
@@ -1343,7 +1191,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return owner != null && owner.equals(player.getUuid());
     }
 
-    /** Owner or an operator may open the editor and change anything. */
     public boolean canEdit(ServerPlayerEntity player) {
         return isOwnedBy(player) || player.hasPermissionLevel(2);
     }
@@ -1437,8 +1284,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         readConfig(nbt);
     }
 
-    /** Shared serializer used by both entity NBT and the "pick up" item. Excludes the custom name,
-     *  which the caller handles (entity NBT stores it already; the item stores it separately). */
+    // Excludes the custom name; the caller handles that.
     public void writeConfig(NbtCompound nbt) {
         nbt.putString("Role", role.name());
         if (roleTarget != null) nbt.putUuid("RoleTarget", roleTarget);
@@ -1631,7 +1477,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyBehaviorGoals();
     }
 
-    /** Pack this NPC's full config (including its display name) into a compound for the NPC item. */
     public NbtCompound writeToItem() {
         NbtCompound tag = new NbtCompound();
         writeConfig(tag);
@@ -1641,7 +1486,6 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return tag;
     }
 
-    /** Restore config from an NPC item's packed compound (owner/role/name). */
     public void readFromItem(NbtCompound tag) {
         readConfig(tag);
         if (tag.contains("Name")) {

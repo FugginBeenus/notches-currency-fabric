@@ -15,16 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The NPC's day, laid out as a list of times down the left and the selected block of time on the
- * right. Edits a local copy and sends the whole schedule on Save, the same way the dialogue studio
- * and the reactions screen work, so the big editor packet doesn't have to grow again.
- *
- * <p>Two things this screen owes the player beyond editing. It refuses to pretend in a dimension with
- * no day, since a schedule built in the Nether would never advance and nothing else would say so. And
- * it treats an entry with no spot as work-in-progress rather than an error: the banner counts them,
- * "Fix next" jumps to the first one and hands over the tool already bound to it.
- */
 public class NpcScheduleScreen extends Screen {
 
     private static final int W = 340, H = 236;
@@ -39,7 +29,6 @@ public class NpcScheduleScreen extends Screen {
     private boolean enforceHours;
     private int selected = -1;
     private int scroll = 0;
-    /** Painted last so it sits above the panel. Anything that would need trimming goes here. */
     @org.jetbrains.annotations.Nullable private List<Text> tooltip = null;
 
     public NpcScheduleScreen(UUID npcId, boolean dimensionOk, NpcSchedule schedule) {
@@ -146,7 +135,6 @@ public class NpcScheduleScreen extends Screen {
         if (tooltip != null) ctx.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
     }
 
-    /** The gentle version of "no". Says why, and points at what to use instead. */
     private void renderNoDayHere(DrawContext ctx, int mouseX, int mouseY, int px, int py) {
         NotchWidgets.centerText(ctx, this.textRenderer, "Schedules aren't available in this dimension.",
                 px + W / 2, py + 90, NotchTheme.TEXT_DARK, false);
@@ -273,7 +261,6 @@ public class NpcScheduleScreen extends Screen {
         }
     }
 
-    /** Label plus an ON/OFF button, the same shape the raffle admin screen uses. */
     private void toggleRow(DrawContext ctx, int x, int y, int labelW, int btnW, String label,
                            boolean on, int mouseX, int mouseY) {
         ctx.drawText(this.textRenderer, label, x, y + 3, NotchTheme.TEXT_DARK, false);
@@ -438,11 +425,6 @@ public class NpcScheduleScreen extends Screen {
         return false;
     }
 
-    /**
-     * Save first, then ask for the tool. The tool marks the spot on the server's copy of the
-     * schedule, so the server has to be holding the same entries this screen is showing, or the
-     * spot would land on an entry that doesn't exist yet.
-     */
     private void requestAnchorTool(int entryIndex) {
         save();
         NotchPacketsClient.sendNpcScheduleTool(npcId, entryIndex);

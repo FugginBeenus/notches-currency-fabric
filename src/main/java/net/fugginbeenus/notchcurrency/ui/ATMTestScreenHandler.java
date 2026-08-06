@@ -112,22 +112,12 @@ public class ATMTestScreenHandler extends ScreenHandler {
         }
     }
 
-    /**
-     * Deposit X coins into the player's balance via CoinEconomy, then push the new
-     * balance to the client (the HUD/ATM screen read it from there).
-     */
     private void depositAmount(ServerPlayerEntity sp, int amount) {
         if (amount <= 0) return;
         CoinEconomy.depositToBalance(sp, amount);
         NotchPackets.sendBalance(sp, BalanceStore.get(sp));
     }
 
-    /**
-     * Called from the ATM client screen when the player presses the Withdraw button.
-     * The client should send the desired amount (parsed from the text field) here.
-     *
-     * This method safely no-ops on the client; the actual logic only runs server-side.
-     */
     public void withdraw(int amount) {
         if (amount <= 0) {
             return;

@@ -7,11 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 
-/**
- * Transparent route-planning overlay: while the player holds a bound route tool, a translucent
- * panel at the top of the screen shows which NPC the route is for, the live waypoint count, and
- * the three controls. Replaces the old chat-message-only flow.
- */
 public final class RouteHud implements HudRenderCallback {
 
     private static final int PAD = 6;

@@ -11,11 +11,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-/**
- * Backing handler for the loan application GUI: no slots, just a live {@link PropertyDelegate}
- * of the viewer's loan (debt, limit, interest, term, days left). Borrow/repay are sent by packet
- * with the amount typed on the client.
- */
 public class LoanScreenHandler extends ScreenHandler {
 
     public static final int P_ENABLED   = 0;

@@ -15,15 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * World-persistent loan ledger (overworld save): each player's outstanding debt, its repayment
- * due time (game time), and whether the one-time late fee has been charged. Debt of 0 = no loan.
- */
 public class LoanState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_loans";
 
-    /** One player's loan. */
     public static final class Loan {
         public long debt;
         public long dueTime;         // game time the loan must be repaid by
@@ -54,7 +49,6 @@ public class LoanState extends PersistentState {
         return l == null ? 0L : l.debt;
     }
 
-    /** Open a fresh loan (sets the due time) or top up an existing one (keeps its due time). */
     public void borrow(UUID player, long amount, long dueTime) {
         Loan l = loans.get(player);
         if (l == null) {
@@ -65,7 +59,6 @@ public class LoanState extends PersistentState {
         markDirty();
     }
 
-    /** Adjust an existing loan's debt (removing it at 0). */
     public void setDebt(UUID player, long debt) {
         Loan l = loans.get(player);
         if (l == null) return;

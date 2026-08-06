@@ -16,21 +16,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 
-/**
- * Prices the destination the mouse is over in the Waystones selection menu: a small badge with the
- * teleport fee (the dimensional fee for cross-dimension trips), fronted by the coin item sprite so it
- * follows the player's custom currency art. Fee values are synced from the server on join
- * ({@link WaystoneFees}).
- *
- * <p>Only ever loaded when the Waystones mod is present (gated in ClientInit). The menu lays out its
- * destinations differently per game version (top-level buttons on 1.20.1, a scrolling list on 1.21)
- * so the hovered waystone is located per-version, then its dimension is read from the one API-typed
- * field on the button (found by type, not name, so a future Waystones build that moves it just shows
- * nothing rather than breaking).
- */
 public final class WaystoneFeeOverlay {
 
-    /** The coin item, drawn as a sprite (like the shop screens) so it tracks custom currency art. */
     private static final ItemStack COIN =
             new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
@@ -68,7 +55,6 @@ public final class WaystoneFeeOverlay {
         drawFeeBadge(screen, ctx, mc.textRenderer, mouseX, mouseY, fee, crossDimension);
     }
 
-    /** A little floating panel by the cursor: a "Teleport Fee" label over the coin sprite and price. */
     private static void drawFeeBadge(Screen screen, DrawContext ctx, TextRenderer tr,
                                      int mouseX, int mouseY, int fee, boolean crossDimension) {
         String label = crossDimension ? "Teleport Fee (other dimension)" : "Teleport Fee";
@@ -96,7 +82,6 @@ public final class WaystoneFeeOverlay {
         ctx.getMatrices().pop();
     }
 
-    /** The waystone the mouse is currently over, or null. The menu's layout differs per game version. */
     @Nullable
     private static Object hoveredWaystone(Screen screen, int mouseX, int mouseY) {
         //? if >=1.21 {
@@ -143,7 +128,6 @@ public final class WaystoneFeeOverlay {
     }
     *///?}
 
-    /** Read the waystone off a button by its one API-typed field (found by type, not name). */
     @Nullable
     private static Object readWaystone(Object button) {
         for (Class<?> cls = button.getClass(); cls != null && cls != Object.class; cls = cls.getSuperclass()) {

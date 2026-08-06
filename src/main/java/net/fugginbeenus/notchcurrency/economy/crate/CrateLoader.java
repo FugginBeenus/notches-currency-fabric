@@ -18,10 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Loads crate definitions from {@code data/&lt;namespace&gt;/crates/*.json} (one crate per file,
- * id = filename), merged across packs; the mod ships defaults. Reloads on {@code /reload}.
- */
 public class CrateLoader implements SimpleSynchronousResourceReloadListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-Crates");

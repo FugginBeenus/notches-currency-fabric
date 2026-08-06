@@ -15,11 +15,6 @@ import net.minecraft.util.Formatting;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Preset library: saved NPC setups (config/notchcurrency/npc_presets/) that can be stamped onto the
- * NPC being edited. Pick a preset and Load, or type a name and Save the current NPC. The server
- * re-sends the list after every action, so the screen always shows what's really on disk.
- */
 public class NpcPresetScreen extends Screen {
 
     private static final int W = 300, H = 252;
@@ -50,7 +45,6 @@ public class NpcPresetScreen extends Screen {
         return npcId.equals(id);
     }
 
-    /** Fresh list from the server after a save/load/delete. */
     public void setPresets(List<String> names) {
         this.presets = names;
         if (selected >= names.size()) selected = -1;
@@ -246,7 +240,6 @@ public class NpcPresetScreen extends Screen {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    /** Client-side complaint, for the cases the server never needs to hear about. */
     private void say(String text, Formatting color) {
         if (this.client != null && this.client.player != null) {
             this.client.player.sendMessage(Text.literal(text).formatted(color), false);

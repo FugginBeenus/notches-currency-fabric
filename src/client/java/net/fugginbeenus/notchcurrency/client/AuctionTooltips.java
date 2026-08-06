@@ -17,7 +17,6 @@ public final class AuctionTooltips {
 
     private AuctionTooltips() {}
 
-    /** Called from ClientInit to register the tooltip callback. */
     public static void init() {
         ItemTooltipCallback.EVENT.register(AuctionTooltips::onTooltip);
     }

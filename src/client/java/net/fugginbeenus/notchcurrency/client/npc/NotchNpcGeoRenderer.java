@@ -8,11 +8,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
-/**
- * GeckoLib renderer for the "apply" model path: the animated APP.ly humanoid, with its themed skins
- * (resolved by {@link NotchNpcGeoModel}) and the entity's scale. Used only when the model is set to
- * APP.ly and that mod is installed; otherwise the NPC renders as the default biped.
- */
 public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
 
     public NotchNpcGeoRenderer(EntityRendererFactory.Context ctx) {

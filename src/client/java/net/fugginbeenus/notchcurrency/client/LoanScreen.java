@@ -14,10 +14,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Loan application GUI: shows your debt, limit, interest and due date, lets you type an amount and
- * borrow or repay, and previews the resulting debt. Code-drawn in the {@link NotchWidgets} style.
- */
 public class LoanScreen extends HandledScreen<LoanScreenHandler> {
 
     private static final int W = 200, H = 158;

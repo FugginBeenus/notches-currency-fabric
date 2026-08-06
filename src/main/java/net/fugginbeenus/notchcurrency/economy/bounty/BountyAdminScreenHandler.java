@@ -22,12 +22,6 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Op-only bounty setup GUI (opened via {@code /bounty admin}). Edits the board config and holds
- * the board's <b>decree</b> items in dedicated slots: placing a decree gates generation to its
- * category (no decrees = all categories). Decree slots only accept registered decree items and
- * persist to {@link BountyState} on save/close.
- */
 public class BountyAdminScreenHandler extends ScreenHandler {
 
     public static final int DECREE_SLOTS = 4;
@@ -45,7 +39,6 @@ public class BountyAdminScreenHandler extends ScreenHandler {
     private final SimpleInventory decreeInv = new SimpleInventory(DECREE_SLOTS);
     private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
 
-    /** Slot that only accepts items registered as decrees. */
     private static final class DecreeSlot extends Slot {
         DecreeSlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
         @Override public boolean canInsert(ItemStack s) {
@@ -97,7 +90,6 @@ public class BountyAdminScreenHandler extends ScreenHandler {
         props.set(A_DURATION, b.durationMinutes);
     }
 
-    /** Persist the decree slots back to the board state (called on save and close). */
     public void persistDecrees(ServerPlayerEntity sp) {
         List<ItemStack> items = new ArrayList<>();
         for (int i = 0; i < DECREE_SLOTS; i++) {

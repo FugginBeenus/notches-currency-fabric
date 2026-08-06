@@ -13,11 +13,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 
-/**
- * Op-only bounty setup GUI (opened via {@code /bounty admin}). Edit the board settings and place
- * decree items in the slots to gate which categories generate (empty = all). Save &amp; Apply
- * persists; Regenerate rolls a fresh set now.
- */
 public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
 
     private static final int W = 200, H = 246;

@@ -11,18 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Shared formatting for the balance leaderboard, used by both {@code /baltop} and the
- * Ledger Board block so they render identically.
- */
 public final class EconomyLeaderboard {
 
     private EconomyLeaderboard() {}
 
-    /** One ranked row: resolved name + balance. For the in-world Ledger Board renderer. */
     public record Entry(String name, long balance) {}
 
-    /** The top {@code limit} balances as compact name/balance rows (no header). Empty if none. */
     public static List<Entry> topEntries(MinecraftServer server, int limit) {
         List<Entry> out = new ArrayList<>();
         BalanceState.get(server).snapshot().entrySet().stream()
@@ -33,7 +27,6 @@ public final class EconomyLeaderboard {
         return out;
     }
 
-    /** The header + ranked lines for the top {@code limit} balances. Empty list if none. */
     public static List<Text> topLines(MinecraftServer server, int limit) {
         List<Map.Entry<UUID, Long>> top = BalanceState.get(server).snapshot()
                 .entrySet().stream()
@@ -60,7 +53,6 @@ public final class EconomyLeaderboard {
         return lines;
     }
 
-    /** Resolve a UUID to a username via the server user cache, falling back to a short id. */
     public static String nameOf(MinecraftServer server, UUID id) {
         try {
             var cache = server.getUserCache();

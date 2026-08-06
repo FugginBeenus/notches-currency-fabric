@@ -14,12 +14,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Op-only raffle setup GUI (opened via {@code /raffle admin}). Inventory is shown so the admin
- * can drag a template item into the "new prize" slot; the read-only slot shows what's currently
- * configured. Fields cover the coins pool, ticket price, house cut and draw interval (in IRL
- * days); Save &amp; Apply persists, Draw Now / Reset act immediately.
- */
 public class RaffleAdminScreen extends HandledScreen<RaffleAdminScreenHandler> {
 
     private static final int W = 200, H = 250;

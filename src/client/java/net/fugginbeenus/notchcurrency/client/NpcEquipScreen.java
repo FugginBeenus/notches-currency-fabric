@@ -12,12 +12,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.List;
 
-/**
- * The NPC equipment screen, laid out like the shop screens: the typed gear slots in a recessed
- * container on the left, a framed live preview of the NPC on the right (gear appears on the model
- * the moment it lands in a slot), and the player inventory below. Shift-click routes armor to its
- * piece and everything else to the hands; empty slots explain what they take on hover.
- */
 public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
 
     private static final int W = 248, H = 240;

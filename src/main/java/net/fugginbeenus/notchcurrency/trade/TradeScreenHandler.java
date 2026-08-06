@@ -15,14 +15,9 @@ import net.minecraft.screen.slot.Slot;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Two 3x3 panes + money fields + confirm.
- * Mirrors each player's left/self 3x3 into the partner's right/read-only 3x3 in real time.
- */
 public class TradeScreenHandler extends ScreenHandler {
 
     private final PlayerEntity player;
-    /** Null on client stub; non-null on the server. */
     TradeManager.TradeSession session = null;
     private final boolean leftSideSelf;
 
@@ -51,7 +46,6 @@ public class TradeScreenHandler extends ScreenHandler {
     private int invStart, invEnd;
     private int hotbarStart, hotbarEnd;
 
-    /** Fires whenever the 3×3 "self" grid changes; mirrors to partner (server-side). */
     private final InventoryChangedListener selfListener = inv -> {
         if (session != null && inv == selfInv) {
             unreadySelfAndSync();   // <-- NEW
@@ -86,7 +80,6 @@ public class TradeScreenHandler extends ScreenHandler {
         selfInv.addListener(selfListener);
     }
 
-    /** Build slots for both 3×3 panes and the embedded player inventory/hotbar. */
     private void buildSlots() {
         // --- Self 3x3 offer grid (locked when ready) ---
         int leftX = SELF_GRID_X, leftY = SELF_GRID_Y;

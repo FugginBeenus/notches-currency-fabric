@@ -21,12 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Backing handler for the owner-side shop hub: earnings, name/greeting, open toggle, rent status,
- * and the paginated listing list. Every action applies immediately server-side via
- * SHOP_MANAGE_ACTION. Nothing is held until close (the old screen's save-on-close lost edits on
- * disconnect). Listing rows ride the same data-carrier slots as the browse screen.
- */
 public class ShopManageScreenHandler extends ScreenHandler {
 
     public static final int ROWS = 6;
@@ -54,13 +48,11 @@ public class ShopManageScreenHandler extends ScreenHandler {
         @Override public boolean canTakeItems(PlayerEntity p) { return false; }
     }
 
-    /** Client constructor: the opening buf carries the shop identity. */
     public ShopManageScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
         this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256),
                 ShopBrowseScreenHandler.readNpcId(buf), null);
     }
 
-    /** Server constructor. */
     public ShopManageScreenHandler(int syncId, PlayerInventory inv, UUID shopId, String shopName,
                                    String greeting, @Nullable UUID npcId, @Nullable PlayerShop shop) {
         super(ModScreenHandlers.SHOP_MANAGE, syncId);
@@ -164,7 +156,6 @@ public class ShopManageScreenHandler extends ScreenHandler {
         sendContentUpdates();
     }
 
-    /** Strip formatting codes and trim: greetings/names are client strings. */
     private static String clean(String s, int max) {
         String out = (s == null ? "" : s).replace("§", "").trim();
         return out.length() > max ? out.substring(0, max) : out;

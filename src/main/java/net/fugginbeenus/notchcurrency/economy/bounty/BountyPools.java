@@ -9,18 +9,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-/**
- * The loaded bounty pools: objective and reward entries read from datapacks
- * ({@code data/&lt;ns&gt;/notch_bounties/objectives|rewards/*.json}, merged across packs). The
- * generator rolls a rarity, then a weighted objective and reward of that rarity from here.
- */
 public final class BountyPools {
 
-    /** An objective the board can ask for: kill/fetch a target, count in [min,max], with a rarity+weight+category. */
     public record ObjectiveEntry(BountyType type, Identifier target, int min, int max,
                                  BountyRarity rarity, int weight, String category) {}
 
-    /** A reward: coins in [min,max], or an item in [min,max]. */
     public record RewardEntry(boolean item, Identifier itemId, int min, int max,
                               BountyRarity rarity, int weight) {}
 
@@ -40,7 +33,6 @@ public final class BountyPools {
         DECREES.put(item, category);
     }
 
-    /** The category an item unlocks as a decree, or null if the item isn't a decree. */
     public static String decreeCategory(Identifier item) {
         return DECREES.get(item);
     }
@@ -65,16 +57,11 @@ public final class BountyPools {
         return REWARDS.size();
     }
 
-    /**
-     * Pick a weighted objective of the given rarity, restricted to {@code categories} (null = any).
-     * Falls back to any rarity within the same category set if none match the exact rarity.
-     */
     public static ObjectiveEntry pickObjective(BountyRarity rarity, @org.jetbrains.annotations.Nullable Set<String> categories, Random rng) {
         ObjectiveEntry e = weightedObjective(rarity, categories, rng);
         return e != null ? e : weightedObjective(null, categories, rng);
     }
 
-    /** Pick a weighted reward of the given rarity (falls back to any rarity if none match). */
     public static RewardEntry pickReward(BountyRarity rarity, Random rng) {
         RewardEntry e = weightedReward(rarity, rng);
         return e != null ? e : weightedReward(null, rng);

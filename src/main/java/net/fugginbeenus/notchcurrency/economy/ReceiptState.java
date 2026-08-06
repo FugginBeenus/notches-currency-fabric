@@ -18,17 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * A per-player rolling history of coin transactions: the player-facing receipt log (the admin
- * ledger is the file-based {@link EconomyLedger}). Every balance change flows through
- * {@code BalanceStore.mutate}, which records here; the newest {@link #MAX_PER_PLAYER} are kept.
- */
 public class ReceiptState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_receipts";
     public static final int MAX_PER_PLAYER = 50;
 
-    /** One transaction receipt. delta is signed (+ earned / − spent). */
     public record Receipt(long time, long delta, long balanceAfter, String reason, String detail) {}
 
     private final Map<UUID, Deque<Receipt>> history = new HashMap<>();
@@ -39,7 +33,6 @@ public class ReceiptState extends PersistentState {
         return StateData.getOrCreate(mgr, ReceiptState::new, ReceiptState::fromNbt, DATA_KEY);
     }
 
-    /** Record a receipt (newest first). Called from BalanceStore for every non-zero change. */
     public static void record(MinecraftServer server, UUID id, long delta, long balanceAfter,
                               TransactionReason reason, String detail) {
         if (delta == 0 || server == null || id == null) return;
@@ -52,7 +45,6 @@ public class ReceiptState extends PersistentState {
         state.markDirty();
     }
 
-    /** The player's receipts, newest first. */
     public List<Receipt> recent(UUID id) {
         Deque<Receipt> q = history.get(id);
         return q == null ? List.of() : new ArrayList<>(q);

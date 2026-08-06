@@ -22,20 +22,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * World-persistent raffle state (overworld save). Tracks the current round's prize pot and
- * per-player entry counts, the round counter, and a history of <em>unclaimed</em> wins so a
- * winner can claim later (even after logging off). A round is everything between draws; a
- * draw moves the pot into an unclaimed {@link Result} and starts a fresh round.
- *
- * Claimed wins are dropped from the history, that keeps it tiny, and any leftover ticket
- * for a dropped round simply resolves to a losing ticket on the next restamp.
- */
 public class RaffleState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_raffle";
 
-    /** An unclaimed prize owed to the winner of a finished round (coins and/or an item). */
     public static final class Result {
         public final long round;
         public final UUID winner;
@@ -73,7 +63,6 @@ public class RaffleState extends PersistentState {
         return currentRound;
     }
 
-    /** Record a ticket purchase: credit the pot and add to the buyer's entry count. */
     public void recordPurchase(UUID buyer, String name, int count, long potShare) {
         tickets.merge(buyer, count, Integer::sum);
         names.put(buyer, name);
@@ -85,7 +74,6 @@ public class RaffleState extends PersistentState {
         return pot;
     }
 
-    /** Admin-set guaranteed coin prize for this round (added to the ticket pot for the winner). */
     public long getCoinsPool() {
         return coinsPool;
     }
@@ -95,7 +83,6 @@ public class RaffleState extends PersistentState {
         markDirty();
     }
 
-    /** The item prize for the current round (empty if it's a coins-only raffle). */
     public ItemStack getPrizeItem() {
         return prizeItem;
     }
@@ -128,7 +115,6 @@ public class RaffleState extends PersistentState {
         markDirty();
     }
 
-    /** Pick a winner weighted by entry count, or null if nobody entered. */
     @Nullable
     public UUID drawWinner(Random random) {
         int total = getTotalTickets();
@@ -144,10 +130,6 @@ public class RaffleState extends PersistentState {
         return last;
     }
 
-    /**
-     * Close the current round: file the pot as an unclaimed win for {@code winner}, advance
-     * the round counter, and clear the active entries. Returns the round number just drawn.
-     */
     public long recordResult(UUID winner, String winnerName, long prize) {
         long drawn = currentRound;
         unclaimed.put(drawn, new Result(drawn, winner, winnerName, prize, prizeItem));
@@ -162,11 +144,6 @@ public class RaffleState extends PersistentState {
         return drawn;
     }
 
-    /**
-     * Abandon the current round with no payout (admin reset): a clean slate. Entries, pot, and
-     * the whole prize pool (coins + item) are wiped, and a fresh round begins. Old tickets become
-     * losing tickets. Does not touch unclaimed wins from earlier draws.
-     */
     public void resetRound() {
         currentRound++;
         pot = 0L;
@@ -178,11 +155,6 @@ public class RaffleState extends PersistentState {
         markDirty();
     }
 
-    /**
-     * Start a fresh round of entries: clears leftover pot/entries and advances the round so old
-     * tickets die, but KEEPS the configured prize pool (used when an admin starts a raffle that
-     * had stale ticket state from earlier).
-     */
     public void clearEntries() {
         currentRound++;
         pot = 0L;
@@ -207,7 +179,6 @@ public class RaffleState extends PersistentState {
         return out;
     }
 
-    /** Remove and return all unclaimed wins for a player (call when paying them out). */
     public List<Result> claimWins(UUID player) {
         List<Result> won = getUnclaimedWins(player);
         for (Result r : won) unclaimed.remove(r.round);

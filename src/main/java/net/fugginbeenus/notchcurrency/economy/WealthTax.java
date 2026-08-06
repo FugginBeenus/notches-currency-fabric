@@ -16,14 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Progressive wealth tax: a periodic money sink. Each cycle it taxes only the portion of
- * a balance above the configured threshold, so the wealthy are throttled while ordinary
- * players pay nothing. Taxed coins are destroyed (logged as {@link TransactionReason#SINK}).
- *
- * Timing uses an in-memory tick accumulator, so the first cycle lands one interval after
- * server start (acceptable for a coarse daily-ish tax; tune via config).
- */
 public final class WealthTax {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-WealthTax");

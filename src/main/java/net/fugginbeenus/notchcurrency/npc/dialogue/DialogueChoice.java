@@ -9,11 +9,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One clickable button on a dialogue node: a label, gate conditions (all must pass), actions run in
- * order, and an optional next node to jump to. If the conditions fail, the button shows locked
- * (greyed), or is hidden entirely when {@code hideWhenLocked} is set.
- */
 public class DialogueChoice {
 
     private String label = "";
@@ -49,7 +44,6 @@ public class DialogueChoice {
         return this;
     }
 
-    /** True if every condition passes for this player. */
     public boolean isAvailable(ServerPlayerEntity sp, NotchNpcEntity npc) {
         for (DialogueCondition c : conditions) {
             if (!c.test(sp, npc)) return false;

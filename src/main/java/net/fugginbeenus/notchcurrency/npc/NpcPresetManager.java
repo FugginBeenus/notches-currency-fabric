@@ -21,13 +21,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Named NPC presets: a full NPC setup saved as a compressed NBT file under
- * config/notchcurrency/npc_presets/, loadable onto any NPC in any world: build your NPCs once in a
- * test world, stamp them into the real one. Presets are templates: ownership and world-specific bits
- * (shop link, home, patrol route) are stripped, so the target NPC keeps its own owner and location.
- * This is EasyNPC's preset system minus the default/local/world/custom storage maze: one folder.
- */
 public final class NpcPresetManager {
 
     private static final int MAX_PRESETS = 64;
@@ -78,11 +71,6 @@ public final class NpcPresetManager {
         applyPreset(npc, rawName, sp);
     }
 
-    /**
-     * Core preset apply, also usable without a player (API / commands). Returns false when the
-     * preset is missing or unreadable. Without an actor, SHOP-role handling is skipped (a player
-     * shop needs a player to own it): the NPC lands role-less instead.
-     */
     public static boolean applyPreset(NotchNpcEntity npc, String rawName,
                                       @Nullable ServerPlayerEntity actor) {
         String name = sanitize(rawName);
@@ -107,14 +95,6 @@ public final class NpcPresetManager {
         return true;
     }
 
-    /**
-     * Stamp a config tag onto an existing NPC, keeping that NPC's own identity and place in the
-     * world. Shared by presets and by imported share codes: both are "somebody else's NPC config
-     * landing on this one", and the ownership and shop bookkeeping has to go the same way for both.
-     *
-     * <p>The tag is stripped again here even when the caller already did it. This is the doorway
-     * every foreign config comes through, so it is the place that has to be right.
-     */
     public static void applyTag(NotchNpcEntity npc, NbtCompound tag, @Nullable ServerPlayerEntity actor) {
         stripWorldSpecific(tag); // belt & braces for hand-edited files and pasted codes
 
@@ -193,18 +173,6 @@ public final class NpcPresetManager {
         return dir;
     }
 
-    /**
-     * Presets carry no ownership or world-specific data.
-     *
-     * <p>Dropping "ActionSweep" is the security-relevant one. Paying coins and giving items are
-     * admin-only, but nothing checks that when the action actually runs (unlike commands, which
-     * re-check at the point of use). The guarantee rests on {@link
-     * net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep}, and the sweep skips any NPC already
-     * stamped with the current version. A tag stamped by an operator's NPC would carry that stamp
-     * onto whoever loads it, and the pay actions inside it would survive on an NPC owned by someone
-     * with no such permission: an endless coin faucet for the cost of loading a preset. Clearing the
-     * stamp means the sweep looks at the NPC fresh, under its new owner's permissions.
-     */
     public static void stripWorldSpecific(NbtCompound tag) {
         tag.remove("Owner");
         tag.remove("OwnerName");
@@ -219,7 +187,6 @@ public final class NpcPresetManager {
         net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.stripAnchors(tag, "Schedule");
     }
 
-    /** File-safe preset name: lowercase, spaces to underscores, [a-z0-9_-] only, max 32 chars. */
     private static String sanitize(String name) {
         String clean = (name == null ? "" : name).trim().toLowerCase().replace(' ', '_')
                 .replaceAll("[^a-z0-9_\\-]", "");

@@ -24,13 +24,6 @@ import net.minecraft.util.Identifier;
 
 import java.util.Map;
 
-/**
- * Backing handler for the Enchanter screen: one real input slot for the item being worked on, plus
- * the player inventory. Actions (repair / buy enchant level / extract to book) arrive via
- * {@link NotchPackets#ENCHANTER_ACTION}; the server recomputes offers and costs from the slot, so
- * the client can't invent prices. Costs are synced as properties so the display always matches the
- * server's config. Anything left in the slot is returned on close.
- */
 public class EnchanterScreenHandler extends ScreenHandler {
 
     public static final int INPUT_X = 12, INPUT_Y = 22;
@@ -75,7 +68,6 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Open this screen for the player. */
     public static void open(ServerPlayerEntity sp) {
         sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
                 (syncId, inv, p) -> new EnchanterScreenHandler(syncId, inv),
@@ -92,7 +84,6 @@ public class EnchanterScreenHandler extends ScreenHandler {
     public boolean treasureAllowedProp() { return props.get(P_TREASURE) != 0; }
     public int uncraftCostProp() { return props.get(P_UNCRAFT_COST); }
 
-    /** The synced price knobs, so the client's card prices always match the server's config. */
     public EnchanterManager.Pricing pricing() {
         return new EnchanterManager.Pricing(props.get(P_COST_COMMON), props.get(P_COST_UNCOMMON),
                 props.get(P_COST_RARE), props.get(P_COST_VERY_RARE), props.get(P_TREASURE_MULT),
@@ -123,7 +114,6 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Break the item back into its crafting ingredients for a fee (one craft's worth per click). */
     private void uncraft(ServerPlayerEntity sp, ItemStack stack) {
         EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.getWorld());
         if (plan == null) {

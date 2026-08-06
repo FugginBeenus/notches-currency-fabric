@@ -18,15 +18,10 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**
- * A slot-machine gambling block. Right-click opens the slots screen. Faces the placer so the
- * reels/lever front is what you see (the model is directional).
- */
 public class SlotMachineBlock extends Block {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
 
-    /** Fits the model: pedestal + cabinet + marquee (same shape regardless of facing). */
     private static final net.minecraft.util.shape.VoxelShape SHAPE = net.minecraft.util.shape.VoxelShapes.union(
             Block.createCuboidShape(1, 0, 1, 15, 3, 15),
             Block.createCuboidShape(2, 3, 2, 14, 13, 14),

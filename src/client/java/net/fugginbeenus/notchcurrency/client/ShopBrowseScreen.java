@@ -18,12 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The buyer-side shop, drawn entirely in code as a vanilla villager-style trade screen: a scrollable
- * list of trade rows (item + coin/barter price) on the left, a scrollbar, a framed NPC portrait on
- * the right, and the player inventory below. Click a trade to buy one (Shift = a stack). Styled with
- * NotchTheme so it reads like a stock trading screen but in the mod's look.
- */
 public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
 
     private static final int W = 248, H = 240;
@@ -31,7 +25,6 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     private static final int SB_X = 160, SB_Y = 22, SB_W = 8, SB_H = 126;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
 
-    /** The coin item, drawn as the cost icon in trade rows (like vanilla's emerald). */
     private static final ItemStack COIN =
             new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
@@ -137,7 +130,6 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
         }
     }
 
-    /** A small right-pointing arrow, like the vanilla trade arrow. */
     private static void arrow(DrawContext ctx, int x, int y, int color) {
         ctx.fill(x, y + 3, x + 10, y + 5, color);
         for (int i = 0; i < 4; i++) {
@@ -145,7 +137,6 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
         }
     }
 
-    /** A red cross over the arrow for sold-out trades. */
     private static void cross(DrawContext ctx, int x, int y) {
         for (int i = 0; i < 8; i++) {
             ctx.fill(x + i, y + i, x + i + 2, y + i + 2, NotchTheme.ACCENT_RED);

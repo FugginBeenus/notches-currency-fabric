@@ -14,12 +14,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 
-/**
- * Vanilla-biped renderer for the default "humanoid" Notch NPC model. Built on the real
- * {@link PlayerEntityModel}, so it gets proper walk/idle limb animation, skin overlay layers, and
- * (via feature renderers) worn armor and held items, with preset / player-name / URL skins from
- * {@link NpcSkins}, the slim variant, and the entity's scale.
- */
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerEntityModel<NotchNpcEntity>> {
 
     // Two copies of the model. "live" rides the vanilla player layer, so CEM animation packs (Fresh
@@ -31,16 +25,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     private final NpcPlayerModel liveSlim;
     private final NpcPlayerModel frozen;
     private final NpcPlayerModel frozenSlim;
-
-    /** Past this, drop the skin's overlay layers (see {@link NpcPlayerModel#setOverlaysVisible}). */
     private static final double DETAIL_RANGE_SQ = 20.0 * 20.0;
-    /** Past this, render on the private layer so animation packs stop animating the NPC. A CEM pack
-     *  re-evaluates its animations per part per entity per frame, which is the single most expensive
-     *  thing about a crowd of NPCs when one is installed, and at this range nobody can read the
-     *  difference. Set beyond the overlay cut so the two changes don't pop at the same moment. */
     private static final double ANIM_RANGE_SQ = 28.0 * 28.0;
-    /** Past this, skip the floating name. Vanilla caps at 64 blocks, but names are per-entity text that
-     *  batches poorly, and NPCs come in crowds where vanilla mobs come alone, so we cap tighter. */
     private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
 
     public NotchNpcBipedRenderer(EntityRendererFactory.Context ctx) {
@@ -178,13 +164,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     double distanceToCameraSq(NotchNpcEntity entity) {
         return this.dispatcher.getSquaredDistanceToCamera(entity);
     }
-
-    /**
-     * Whether distance-based trimming should run at all. The editor, pose editor and model picker all
-     * draw NPCs through this renderer while a screen is open, and the picker's previews sit at a dummy
-     * position far from the camera, which would strip their overlay layers and names. The crowds we're
-     * optimizing for are always the in-world case, so LOD is limited to it.
-     */
     static boolean lodApplies() {
         return MinecraftClient.getInstance().currentScreen == null;
     }

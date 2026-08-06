@@ -17,10 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Persistent state for all player shops in the world.
- * Saved to data/notchcurrency_shops.dat
- */
 public class ShopState extends PersistentState {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-ShopState");
@@ -57,10 +53,6 @@ public class ShopState extends PersistentState {
 
     // --- Shop Management ---
 
-    /**
-     * Creates a new shop for a player.
-     * @return The created shop, or null if the player has reached their shop limit
-     */
     @Nullable
     public PlayerShop createShop(UUID ownerId, String ownerName, String shopName, int maxShopsPerPlayer) {
         Set<UUID> existing = ownerShops.getOrDefault(ownerId, Collections.emptySet());
@@ -78,10 +70,6 @@ public class ShopState extends PersistentState {
         return shop;
     }
 
-    /**
-     * Deletes a shop. Only the owner can delete their shop.
-     * @return true if deleted, false if not found or not owned
-     */
     public boolean deleteShop(UUID shopId, UUID requesterId) {
         PlayerShop shop = shops.get(shopId);
         if (shop == null) return false;
@@ -106,10 +94,6 @@ public class ShopState extends PersistentState {
         return true;
     }
 
-    /**
-     * Add an existing shop object to the state.
-     * Used when creating shops through the Merchant License.
-     */
     public void addShop(PlayerShop shop) {
         shops.put(shop.getShopId(), shop);
         ownerShops.computeIfAbsent(shop.getOwnerId(), k -> new HashSet<>()).add(shop.getShopId());
@@ -122,10 +106,6 @@ public class ShopState extends PersistentState {
         markDirty();
     }
 
-    /**
-     * Remove a shop from the state (internal use, no ownership check).
-     * Used when claiming items from a destroyed shopkeeper.
-     */
     public void removeShop(UUID shopId) {
         PlayerShop shop = shops.remove(shopId);
         if (shop == null) return;
@@ -146,9 +126,6 @@ public class ShopState extends PersistentState {
         markDirty();
     }
 
-    /**
-     * Update shop ownership (admin transfer).
-     */
     public void updateShopOwnership(UUID shopId, UUID newOwnerId, String newOwnerName) {
         PlayerShop shop = shops.get(shopId);
         if (shop == null) return;
@@ -289,12 +266,6 @@ public class ShopState extends PersistentState {
         markDirty();
     }
 
-    /**
-     * Clean up orphaned shop data.
-     * Call this periodically or on server start.
-     * @param world The server world to check for NPCs
-     * @return Number of orphaned links cleaned up
-     */
     public int cleanupOrphans(net.minecraft.server.world.ServerWorld world) {
         int cleaned = 0;
         List<UUID> orphanedNpcs = new java.util.ArrayList<>();

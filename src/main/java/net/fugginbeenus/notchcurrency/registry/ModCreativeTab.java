@@ -12,10 +12,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
 
-/**
- * Registers Notch Currency items to creative tabs.
- * Creates a custom "Notch Currency" tab and adds items to relevant vanilla tabs.
- */
 public class ModCreativeTab {
 
     // Custom Notch Currency creative tab

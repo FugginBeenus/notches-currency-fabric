@@ -2,17 +2,6 @@ package net.fugginbeenus.notchcurrency.npc.schedule;
 
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.Behavior;
 
-/**
- * What an NPC is doing during one block of its day.
- *
- * <p>Each stance is a thin cover over a behaviour the NPC already has, which is the whole point: a
- * schedule decides <em>when</em>, and the movement code that has been working all along decides
- * <em>how</em>. Nothing here drives the NPC directly.
- *
- * <p>{@link #STAND} and {@link #SLEEP} are the two that need the NPC to travel to a particular block
- * first, which is what {@code NpcScheduleGoal} exists for. {@link #WANDER} and {@link #PATROL} hand
- * over to goals that already know what to do and leave that goal idle.
- */
 public enum NpcStance {
 
     SLEEP("Sleep", "Walks to the bed and lies in it until the next entry.", Behavior.STATIONARY, true),
@@ -41,12 +30,10 @@ public enum NpcStance {
         return hint;
     }
 
-    /** The existing behaviour this stance switches the NPC into. */
     public Behavior behavior() {
         return behavior;
     }
 
-    /** True when the entry is unusable without a spot, which is what the repair flow looks for. */
     public boolean needsSpot() {
         return needsSpot;
     }

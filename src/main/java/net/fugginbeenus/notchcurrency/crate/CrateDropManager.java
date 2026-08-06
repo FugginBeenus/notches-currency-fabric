@@ -18,7 +18,6 @@ import java.util.*;
 public final class CrateDropManager {
     private CrateDropManager() {}
 
-    /** falling entity UUID -> loot to spill on ground impact */
     private static final Map<UUID, List<ItemStack>> TRACKED = new HashMap<>();
     private static boolean INIT = false;
 
@@ -76,7 +75,6 @@ public final class CrateDropManager {
         });
     }
 
-    /** Start watching this falling barrel; we’ll pop this loot when it hits the ground. */
     public static void track(FallingBlockEntity falling, List<ItemStack> loot) {
         if (falling == null || falling.getUuid() == null) return;
 

@@ -18,12 +18,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Backing handler for the "list an item" screen: a single real input slot the player drops
- * the item into, plus their inventory. Price and duration are entered on the client and
- * submitted via {@link NotchPackets#AUCTION_LIST}; the server reads the slot here so the item
- * is authoritative. Anything left in the slot is returned to the player on close.
- */
 public class AuctionListingScreenHandler extends ScreenHandler {
 
     public static final int INPUT_X = 80, INPUT_Y = 24;
@@ -55,7 +49,6 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Open this screen for the player. */
     public static void open(ServerPlayerEntity sp) {
         sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
                 (syncId, inv, p) -> new AuctionListingScreenHandler(syncId, inv),
@@ -66,7 +59,6 @@ public class AuctionListingScreenHandler extends ScreenHandler {
     public int feePercent() { return props.get(P_FEE_PERCENT); }
     public int feeMax() { return props.get(P_FEE_MAX); }
 
-    /** The listing fee the client should show for a typed price (mirrors AuctionConfig.listingFee). */
     public long feeFor(long price) {
         long fee = feeFlat();
         if (feePercent() > 0 && price > 0) fee += (long) Math.floor(price * (feePercent() / 100.0));
@@ -74,7 +66,6 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         return Math.max(0, fee);
     }
 
-    /** Create the listing from the slot's item at the given price/duration. */
     public boolean listFromInput(ServerPlayerEntity sp, long price, int days) {
         ItemStack item = input.getStack(0);
         if (item.isEmpty()) {

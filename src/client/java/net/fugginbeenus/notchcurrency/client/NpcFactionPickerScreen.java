@@ -12,16 +12,8 @@ import net.minecraft.util.Formatting;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Which faction an NPC belongs to, chosen from the ones that already exist, never typed, so a
- * mistyped name can't quietly create a faction nobody can find.
- *
- * <p>Also the way back for a founder who lost their recruiter: place a new one, pick the faction
- * they already own, and it's flying their colours again.
- */
 public class NpcFactionPickerScreen extends Screen {
 
-    /** One faction as offered by the server. */
     public record Entry(String id, String name, Formatting color, int members) {}
 
     private static final int W = 280, H = 210;

@@ -77,12 +77,6 @@ public final class ModScreenHandlers {
 
     private ModScreenHandlers() {}
 
-    /** Call once from NotchCurrency.onInitialize() */
-    /**
-     * Register a plain screen handler. Fabric's ScreenHandlerRegistry.registerSimple was removed, so
-     * this uses the vanilla registry directly: the two-arg ScreenHandlerType constructor and
-     * VANILLA_FEATURES both exist on 1.20.1 and 1.21, so no version gate is needed.
-     */
     private static <T extends net.minecraft.screen.ScreenHandler> ScreenHandlerType<T> simple(
             net.minecraft.util.Identifier id, ScreenHandlerType.Factory<T> factory) {
         return Registry.register(Registries.SCREEN_HANDLER, id,

@@ -24,11 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * World-persistent bounty board (overworld save): the board <b>offers</b> (auto-generated +
- * admin-posted) and each player's <b>taken</b> bounties (personal copies with their own deadline
- * and progress). Take-first: kills only count toward taken bounties, collected back at the board.
- */
 public class BountyState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_bounties";
@@ -65,7 +60,6 @@ public class BountyState extends PersistentState {
         return s != null && s.contains(offerId);
     }
 
-    /** Mark an offer finished for a player (so it stays hidden from their board until it rotates). */
     public void markOfferCompleted(UUID player, UUID offerId) {
         if (offers.containsKey(offerId)) { // only worth tracking while the offer still exists
             completed.computeIfAbsent(player, k -> new HashSet<>()).add(offerId);
@@ -115,7 +109,6 @@ public class BountyState extends PersistentState {
         if (m != null && m.remove(offerId) != null) markDirty();
     }
 
-    /** Drop any taken bounties whose deadline has passed. Returns how many were dropped. */
     public int cleanupExpired(UUID player, long now) {
         Map<UUID, TakenBounty> m = taken.get(player);
         if (m == null) return 0;
@@ -138,7 +131,6 @@ public class BountyState extends PersistentState {
         markDirty();
     }
 
-    /** Categories the board may generate: the placed decrees' categories, or null (= all) if none. */
     @Nullable
     public Set<String> activeCategories() {
         if (decrees.isEmpty()) return null;

@@ -244,7 +244,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         return listingsInv;
     }
 
-    /** Called by the Reload button and when filters/sort/view change. */
     public void reload() {
         // Only the server actually rebuilds from AuctionState.
         if (!(world instanceof ServerWorld)) {
@@ -331,12 +330,10 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         };
     }
 
-    /** Used by the popup renderer to draw the player's own listings. */
     public SimpleInventory getUserPopupInventory() {
         return userPopupInv;
     }
 
-    /** For click-to-buy mapping from slot → listing UUID. */
     public UUID getListingIdForSlot(int slotIndex) {
         if (slotIndex < 0 || slotIndex >= LISTING_SIZE) return null;
         return listingIds[slotIndex];
@@ -344,7 +341,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
     // ======== INTERNAL RELOAD LOGIC ========
 
-    /** Client-side: just clear; the server will push real contents via slot sync. */
     private void clearInventoriesClientSide() {
         for (int i = 0; i < listingsInv.size(); i++) {
             listingsInv.setStack(i, ItemStack.EMPTY);
@@ -355,7 +351,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Server-side: re-reads AuctionState, recomputes pages, fills both inventories. */
     private void rebuildFromAuctionState() {
         if (!(world instanceof ServerWorld serverWorld)) {
             clearInventoriesClientSide();
@@ -445,7 +440,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         syncProperties();
     }
 
-    /** Convenience: when page changes but filter/sort is already applied. */
     private void reloadPageContents() {
         reload();
     }
@@ -505,7 +499,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         return true;
     }
 
-    /** Handle button clicks from the client (prev/next/filter/sort/reload). */
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
         if (!(player instanceof ServerPlayerEntity)) {
@@ -527,7 +520,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         return true;
     }
 
-    /** Shift-click behavior – AH grid is read-only. */
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
         // Prevent any quick-move into / out of the listing grid

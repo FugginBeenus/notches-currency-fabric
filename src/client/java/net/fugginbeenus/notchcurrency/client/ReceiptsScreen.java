@@ -9,11 +9,6 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 
-/**
- * The receipts screen: a paginated, read-only list of the player's recent coin transactions, how
- * much moved (+green earned / −red spent), what for, and how long ago. A static snapshot sent when
- * the screen opened. Purely informational, no interaction beyond paging.
- */
 public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
 
     private static final int W = 256, H = 222;
@@ -43,7 +38,6 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
         return (hours / 24) + "d ago";
     }
 
-    /** Friendly label: prefer the human detail, else a tidied reason name. */
     private static String label(ReceiptState.Receipt r) {
         if (r.detail() != null && !r.detail().isEmpty()) return r.detail();
         String s = r.reason().toLowerCase().replace('_', ' ');

@@ -22,12 +22,6 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
-/**
- * A coin-flip gambling block. Right-click opens the betting screen (pick a side + wager); after the
- * player commits, the block enters {@link #FLIPPING} for a short spin and then settles on a
- * {@link #FACE}. Those two blockstates are the animation hook: a future model/animated texture can
- * read them without a block entity. While flipping, the block is "busy" and rejects new bets.
- */
 public class CoinFlipBlock extends Block implements BlockEntityProvider {
 
     public static final BooleanProperty FLIPPING = BooleanProperty.of("flipping");
@@ -50,8 +44,6 @@ public class CoinFlipBlock extends Block implements BlockEntityProvider {
         builder.add(FLIPPING, FACE);
     }
 
-    /** Fits the oversized furniture-scale table (legs + apron + overhanging top + standing coin);
-     *  the shape spills the block like the model. */
     private static final VoxelShape SHAPE = VoxelShapes.union(
             Block.createCuboidShape(-3, 0, -3, 2, 12, 2),
             Block.createCuboidShape(14, 0, -3, 19, 12, 2),

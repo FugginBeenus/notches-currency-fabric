@@ -21,26 +21,18 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-/**
- * Server-side operations for the Notch NPC: opening the owner editor, dispatching the NPC's role on
- * interact, and the edit actions (set role/name, pick up, delete). All mutating actions are gated on
- * {@link NotchNpcEntity#canEdit} (owner or op).
- */
 public final class NotchNpcManager {
 
-    /** Item NBT tag holding a packed NPC config (owner/role/name). */
     public static final String ITEM_TAG = "NotchNpc";
 
     private NotchNpcManager() {}
 
     // ---- interaction ----
 
-    /** Interacting with the NPC (non-editing) runs its role. */
     public static void dispatchRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
     }
 
-    /** Open the editor for an owner/op (sends the current state to the client). */
     public static void openEditor(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!npc.canEdit(sp)) {
             sp.sendMessage(Text.literal("Only the owner can edit this NPC.").formatted(Formatting.RED), false);
@@ -99,8 +91,6 @@ public final class NotchNpcManager {
                 ? modes[modeOrdinal] : NotchNpcEntity.DialogueMode.WINDOW);
     }
 
-    /** Pack the stat toggles into a bitmask (1=protected 2=silent 4=glowing 8=nameplate 16=no gravity
-     *  32=opens doors 64=leashable 128=invisible; bits 8-9 = visibility rule 0/1/2 always/day/night). */
     public static int statsBits(NotchNpcEntity npc) {
         int bits = 0;
         if (npc.isProtectedNpc()) bits |= 1;
@@ -134,7 +124,6 @@ public final class NotchNpcManager {
         npc.setInvisible(npc.isManualInvisible() || npc.isRuleHidden());
     }
 
-    /** Slider attributes from the stats screen: max health, walk speed, regen. */
     public static void setAttrs(ServerPlayerEntity sp, NotchNpcEntity npc, int maxHealth, int speedPct, int regen) {
         if (!guard(sp, npc)) return;
         npc.setBaseStats(maxHealth, speedPct);
@@ -143,7 +132,6 @@ public final class NotchNpcManager {
 
     // ---- equipment ----
 
-    /** Open the NPC equipment screen (armor + hands backed live by the entity). */
     public static void openEquipScreen(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("NPC Equipment"),
@@ -170,7 +158,7 @@ public final class NotchNpcManager {
         npc.setAppearance(model, skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
     }
 
-    /** The floating sign. Caps live on the entity, so a hand-made packet can't post a wall of text. */
+    // Caps live on the entity, so a hand-made packet cannot post a wall of text.
     public static void setBillboard(ServerPlayerEntity sp, NotchNpcEntity npc, String text) {
         if (!guard(sp, npc)) return;
         npc.setBillboard(text);
@@ -181,8 +169,6 @@ public final class NotchNpcManager {
         npc.setNpcPose(pose);
     }
 
-    /** Pose-editor slider edit: set one part's rotation (or reset all with part = -1) and make sure
-     *  the custom pose is what's showing. */
     public static void setPosePart(ServerPlayerEntity sp, NotchNpcEntity npc, int part, int x, int y, int z) {
         if (!guard(sp, npc)) return;
         npc.setCustomPosePart(part, x, y, z);
@@ -191,14 +177,11 @@ public final class NotchNpcManager {
         }
     }
 
-    /** Set the idle animation layered on the pose (statue/breathe/sway/lively). */
     public static void setPoseAnim(ServerPlayerEntity sp, NotchNpcEntity npc, int anim) {
         if (!guard(sp, npc)) return;
         npc.setPoseAnim(anim);
     }
 
-    /** Move (delta, clamped) and/or rotate (absolute yaw) the whole NPC: the move screen's live
-     *  control. The home leash follows so movement behaviors don't drag it back. */
     public static void transform(ServerPlayerEntity sp, NotchNpcEntity npc, double dx, double dy, double dz,
                                  float yawDeg, boolean applyYaw) {
         if (!guard(sp, npc)) return;
@@ -258,7 +241,7 @@ public final class NotchNpcManager {
         }
     }
 
-    /** Patrol speed presets (index shared with the editor's Speed cycle). */
+    // Index is shared with the editor's Speed and Wait cycles: reorder one and reorder both.
     public static final float[] PATROL_SPEEDS = {0.6f, 0.9f, 1.2f};
     public static final String[] PATROL_SPEED_NAMES = {"Stroll", "Walk", "Jog"};
 
@@ -272,7 +255,6 @@ public final class NotchNpcManager {
         return best;
     }
 
-    /** Waypoint dwell-time presets in ticks (index shared with the editor's Wait cycle). */
     public static final int[] PATROL_WAITS = {0, 40, 100, 200, 400};
     public static final String[] PATROL_WAIT_NAMES = {"None", "2s", "5s", "10s", "20s"};
 
@@ -286,9 +268,6 @@ public final class NotchNpcManager {
         return best;
     }
 
-    /** Patrol edits: 0 = hand out a bound route tool, 1 = clear the route,
-     *  2 = finalize (take the route tools back), 3 = set speed ({@code value} = preset index),
-     *  4 = set waypoint dwell time ({@code value} = preset index). */
     public static void patrolAction(ServerPlayerEntity sp, NotchNpcEntity npc, int action, int value) {
         if (!guard(sp, npc)) return;
         switch (action) {
@@ -323,8 +302,6 @@ public final class NotchNpcManager {
         }
     }
 
-    /** Route-tool click: add a waypoint at the clicked spot. Actionbar feedback (the HUD overlay
-     *  shows the running count) so the chat doesn't fill up while walking a long route. */
     public static void addWaypointAt(ServerPlayerEntity sp, NotchNpcEntity npc, net.minecraft.util.math.BlockPos pos) {
         if (!guard(sp, npc)) return;
         if (npc.addWaypoint(pos)) {
@@ -335,7 +312,6 @@ public final class NotchNpcManager {
         }
     }
 
-    /** Route-tool sneak-click: undo the last waypoint. */
     public static void removeLastWaypoint(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         if (npc.removeLastWaypoint()) {
@@ -346,8 +322,6 @@ public final class NotchNpcManager {
         }
     }
 
-    /** Confirm the route: the tool disappears, and the NPC starts walking it. Needs 2+ waypoints
-     *  (with fewer, the tool stays so the player can keep planning). */
     public static void confirmRoute(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         if (npc.getWaypoints().size() < 2) {
@@ -372,7 +346,6 @@ public final class NotchNpcManager {
 
     // ---- dialogue setup ----
 
-    /** Build the friendly starter conversation used to seed new dialogues. */
     private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree buildStarterTree(NotchNpcEntity npc) {
         var tree = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
 
@@ -396,7 +369,6 @@ public final class NotchNpcManager {
         return tree;
     }
 
-    /** Fill the NPC with the starter conversation the owner can build on. */
     public static void createDialogueTemplate(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         npc.setDialogue(buildStarterTree(npc));
@@ -409,8 +381,6 @@ public final class NotchNpcManager {
         sp.sendMessage(Text.literal("Dialogue cleared.").formatted(Formatting.GREEN), false);
     }
 
-    /** Send the full dialogue tree to the owner's client for editing in the studio. An NPC with no
-     *  dialogue gets the starter template pre-loaded (nothing is saved until the studio saves). */
     public static void openStudio(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         var tree = npc.getDialogue().isEmpty() ? buildStarterTree(npc) : npc.getDialogue();
@@ -420,8 +390,7 @@ public final class NotchNpcManager {
         Net.sendToClient(sp, NotchPackets.NPC_STUDIO_DATA, buf);
     }
 
-    /** Replace the NPC's dialogue with a studio-edited tree (owner/op re-validated). The client
-     *  can't be trusted with sizes: clamp text to 500 chars, choices to 6 per page, drop blank ids. */
+    // Sizes come from the client, so everything is clamped here rather than trusted.
     public static void saveDialogue(ServerPlayerEntity sp, NotchNpcEntity npc,
                                     net.minecraft.nbt.NbtCompound treeNbt) {
         if (!guard(sp, npc)) return;
@@ -459,7 +428,6 @@ public final class NotchNpcManager {
                 .formatted(Formatting.GREEN), false);
     }
 
-    /** Send the NPC's trigger reactions down for editing. */
     public static void openActions(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         PacketByteBuf buf = PacketByteBufs.create();
@@ -468,8 +436,6 @@ public final class NotchNpcManager {
         Net.sendToClient(sp, NotchPackets.NPC_ACTIONS_DATA, buf);
     }
 
-    /** Replace the NPC's reactions with an edited set (owner/op re-validated). Same rule as dialogue:
-     *  command actions are admin-only, so a non-op editing an NPC can't smuggle one in. */
     public static void saveActions(ServerPlayerEntity sp, NotchNpcEntity npc,
                                    net.minecraft.nbt.NbtCompound nbt) {
         if (!guard(sp, npc)) return;
@@ -510,13 +476,7 @@ public final class NotchNpcManager {
         Net.sendToClient(sp, NotchPackets.NPC_SCHEDULE_DATA, buf);
     }
 
-    /**
-     * Replace the NPC's schedule with an edited one (owner/op re-validated).
-     *
-     * <p>Entry actions go through the same admin gate as reactions and dialogue. A schedule entry can
-     * pay coins and run commands exactly like a reaction can, so it is exactly as capable of minting
-     * money, and it would be a poor place to leave the third door unlocked.
-     */
+    // Entry actions take the same admin gate as reactions: an entry can mint coins exactly like one.
     public static void saveSchedule(ServerPlayerEntity sp, NotchNpcEntity npc,
                                     net.minecraft.nbt.NbtCompound nbt) {
         if (!guard(sp, npc)) return;
@@ -557,13 +517,6 @@ public final class NotchNpcManager {
         }
     }
 
-    /**
-     * Hand over the spot-marking tool for one schedule entry.
-     *
-     * <p>Deliberately the same item as the patrol route tool. Pointing at a block is the same job
-     * whether it's the third waypoint of a round or the bed an NPC sleeps in, and one familiar tool
-     * beats a second one that behaves almost identically.
-     */
     public static void giveScheduleTool(ServerPlayerEntity sp, NotchNpcEntity npc, int entryIndex) {
         if (!guard(sp, npc)) return;
         var entry = npc.getSchedule().get(entryIndex);
@@ -590,7 +543,6 @@ public final class NotchNpcManager {
                 .formatted(Formatting.GREEN), false);
     }
 
-    /** Record the marked spot and drop the owner straight back into the schedule screen. */
     public static void setScheduleAnchor(ServerPlayerEntity sp, NotchNpcEntity npc, int entryIndex,
                                          net.minecraft.util.math.BlockPos pos, float facing) {
         if (!guard(sp, npc)) return;
@@ -608,12 +560,8 @@ public final class NotchNpcManager {
         openSchedule(sp, npc);
     }
 
-    /**
-     * Remove every schedule-marking tool from a player's inventory.
-     *
-     * <p>Route tools are left alone: those are mid-job by nature, since a route takes many clicks.
-     * A spot tool is spent in one, so a leftover one is always litter.
-     */
+    // Route tools are left alone. A route takes many clicks; a spot tool is spent in one, so a
+    // leftover spot tool is always litter.
     public static void clearScheduleTools(ServerPlayerEntity sp) {
         var inv = sp.getInventory();
         for (int i = 0; i < inv.size(); i++) {
@@ -627,7 +575,6 @@ public final class NotchNpcManager {
         sp.currentScreenHandler.sendContentUpdates();
     }
 
-    /** Used when the owner cancels out of the tool: put them back where they came from. */
     public static void reopenScheduleFor(ServerPlayerEntity sp, ItemStack tool) {
         UUID npcId = StackData.getUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY);
         if (npcId == null) return;
@@ -636,12 +583,6 @@ public final class NotchNpcManager {
         }
     }
 
-    /**
-     * The personality bits: the small line under the name, and the voice.
-     *
-     * <p>One setter for both because they are one editing session in the player's head, and a second
-     * near-identical packet for a second string is how a protocol turns into a junk drawer.
-     */
     public static void setFlavor(ServerPlayerEntity sp, NotchNpcEntity npc,
                                  String subtitle, String voice, int voicePitch) {
         if (!guard(sp, npc)) return;
@@ -676,8 +617,6 @@ public final class NotchNpcManager {
         sp.sendMessage(Text.literal("Role set to " + role.name() + ".").formatted(Formatting.GREEN), false);
     }
 
-    /** The default "Browse the shop"-style choice: a NORMAL choice with an OPEN_ROLE action, so
-     *  the author can rename or delete it in the Studio (it is never forced back). */
     private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice roleEntryChoice(NotchNpcEntity npc) {
         var entry = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice(
                 net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch.entryLabel(npc.getRole()), "");
@@ -686,8 +625,6 @@ public final class NotchNpcManager {
         return entry;
     }
 
-    /** When an NPC with branching dialogue gains a screen role and no choice reaches it yet, add
-     *  the default entry choice to the start page (once: removing it in the Studio sticks). */
     private static void seedRoleEntryChoice(ServerPlayerEntity sp, NotchNpcEntity npc) {
         var role = npc.getRole();
         if (role == NpcRole.NONE || role == NpcRole.GREETER) return;
@@ -737,7 +674,6 @@ public final class NotchNpcManager {
         sp.sendMessage(Text.literal("NPC name updated.").formatted(Formatting.GREEN), false);
     }
 
-    /** Pack the NPC back into an item (config preserved) and hand it to the player. */
     public static void pickUp(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         // Return & close any linked shop so it isn't orphaned when the entity is removed.
@@ -761,7 +697,6 @@ public final class NotchNpcManager {
 
     // ---- shop linkage (SHOP role) ----
 
-    /** Ensure a {@link PlayerShop} exists and is linked to this NPC's UUID (creates one if missing). */
     public static void ensureShopForNpc(ServerWorld world, NotchNpcEntity npc, ServerPlayerEntity fallbackOwner) {
         ShopState state = ShopState.get(world);
         if (state.getShopByNpc(npc.getUuid()) != null) return;

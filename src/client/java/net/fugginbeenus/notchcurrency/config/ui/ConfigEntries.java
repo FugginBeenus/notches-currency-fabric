@@ -10,12 +10,6 @@ import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.StringEntry;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Every setting shown by the config screen, bound to a live {@link NotchConfig}. Categories appear
- * in this order; Currency stays near the top so the maker is easy to find. Compared to the old
- * Cloth screen this also exposes the per-rarity enchant prices, treasure multiplier, extract value
- * charge and uncraft fee that were config-file-only before.
- */
 final class ConfigEntries {
 
     private ConfigEntries() {}

@@ -26,18 +26,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * The settings screen (ModMenu → Notch Currency), rebuilt Jade-style in the mod's own code-drawn
- * theme: a live search bar over ONE scrolling list of every setting, grouped under collapsible
- * section headers: no more category tabs hiding behind scroll arrows. Rows edit in place
- * (toggle pills, drag sliders, cycle buttons, click-to-edit numbers/text), show their tooltip +
- * default on hover, and get a reset arrow when off-default. Edits stay local until Save & Apply
- * persists the file and re-applies every manager; Esc/Cancel discards.
- */
 public final class NotchConfigScreen extends Screen {
 
     private static final int ROW_H = 17, HEADER_H = 18;
-    /** Sections stay folded/unfolded across reopens within a session. */
     private static final Set<String> COLLAPSED = new HashSet<>();
 
     private final Screen parent;
@@ -55,7 +46,6 @@ public final class NotchConfigScreen extends Screen {
     private ConfigEntry editing;
     private int editingY;
 
-    /** One laid-out line: a section header (entry == null) or a setting row. */
     private record Row(String header, ConfigEntry entry, int y) {}
     private final List<Row> rows = new ArrayList<>();
     private int contentH;
@@ -89,7 +79,7 @@ public final class NotchConfigScreen extends Screen {
         closeEdit(false);
     }
 
-    /* -------------------------------- layout -------------------------------- */
+    /* layout */
 
     private void buildRows() {
         rows.clear();
@@ -115,7 +105,7 @@ public final class NotchConfigScreen extends Screen {
         return Math.max(0, contentH - (listBottom - listTop));
     }
 
-    /* -------------------------------- render -------------------------------- */
+    /* render */
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
@@ -253,7 +243,6 @@ public final class NotchConfigScreen extends Screen {
         }
     }
 
-    /** A small left-pointing triangle (the per-row "revert" glyph: drawn, not a font char). */
     private static void leftTriangle(DrawContext ctx, int cx, int cy, int color) {
         for (int c = 0; c < 4; c++) {
             int half = 3 - c;
@@ -273,7 +262,7 @@ public final class NotchConfigScreen extends Screen {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
-    /* -------------------------------- input -------------------------------- */
+    /* input */
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -451,7 +440,7 @@ public final class NotchConfigScreen extends Screen {
         //?}
     }
 
-    /* -------------------------------- saving -------------------------------- */
+    /* saving */
 
     private void saveAndApply() {
         closeEdit(true);

@@ -21,23 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Runs a list of {@link DialogueAction}s. One implementation serves both dialogue choices and
- * {@link NpcTrigger} reactions, so an action behaves the same wherever it was set off.
- *
- * <p>The player is optional. A dialogue choice always has one; a trigger might not (an NPC dying to
- * lava, for instance). Actions that only make sense for a player are skipped in that case rather than
- * guessing a target.
- */
 public final class NpcActionRunner {
 
-    /** What the caller needs to know after the list has run. */
     public enum Outcome {
-        /** Everything ran; carry on. */
         COMPLETED,
-        /** A screen was opened and has taken over the player's view. */
         OPENED_SCREEN,
-        /** An action failed in a way that should undo the interaction (couldn't afford a charge). */
         ABORTED
     }
 
@@ -117,8 +105,6 @@ public final class NpcActionRunner {
         return openedScreen ? Outcome.OPENED_SCREEN : Outcome.COMPLETED;
     }
 
-    /** Earshot for a line nobody triggered. Wide enough to carry across a market square, short
-     *  enough that a town of scheduled NPCs doesn't turn into a wall of chat. */
     private static final double EARSHOT = 16.0;
 
     private static void sayNearby(NotchNpcEntity npc, String line) {
@@ -146,8 +132,6 @@ public final class NpcActionRunner {
         }
     }
 
-    /** Commands only run for NPCs whose owner is an operator (or server-owned NPCs): a stored
-     *  command must never outlive its author's authority. */
     public static boolean ownerMayRunCommands(NotchNpcEntity npc, MinecraftServer server) {
         if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;
         UUID owner = npc.getOwner();

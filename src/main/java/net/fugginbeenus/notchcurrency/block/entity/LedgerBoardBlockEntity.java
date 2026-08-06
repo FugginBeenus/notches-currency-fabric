@@ -17,16 +17,9 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Backs the Ledger Board's in-world display. The server refreshes the top balances every few seconds
- * and syncs them to nearby clients (via the standard block-entity update packet); the client renderer
- * draws the cached rows onto the tablet face. Only the LOWER half of the board owns an entity.
- */
 public class LedgerBoardBlockEntity extends BlockEntity {
 
-    /** How many ranks to show on the board. */
     public static final int ROWS = 6;
-    /** Refresh cadence (ticks). 40 = twice a second is plenty for a leaderboard. */
     private static final int REFRESH_TICKS = 40;
 
     private List<EconomyLeaderboard.Entry> rows = new ArrayList<>();

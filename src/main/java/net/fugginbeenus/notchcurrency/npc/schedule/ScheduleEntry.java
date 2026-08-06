@@ -10,26 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One block of an NPC's day: from {@link #time} until whatever entry comes next.
- *
- * <p>An entry describes a <em>state</em>, never an event, which is what lets a schedule be re-derived
- * from the clock alone after the NPC has been unloaded for a week. The one exception is
- * {@link #onBegin}, which fires as the entry starts and is deliberately skipped when an NPC is simply
- * loading back in, so a shop announces opening at eight rather than every time somebody wanders into
- * the chunk.
- *
- * @param time       world time of day this entry begins, 0 to 23999
- * @param stance     what the NPC does for the duration
- * @param anchor     the spot, bed, or wander centre; null until the owner points at one
- * @param radius     how far to stray, {@link NpcStance#WANDER} only
- * @param facing     yaw to hold once in place, {@link NpcStance#STAND} only
- * @param roleOpen   whether the NPC's role can be used during this entry, subject to
- *                   {@link NpcSchedule#enforceHours()}
- * @param closedLine what to say when someone tries to use a closed role, blank for the default
- * @param label      the owner's name for this entry, purely for the editor
- * @param onBegin    actions to run on entering, capped at {@link #MAX_ACTIONS}
- */
 public record ScheduleEntry(
         int time,
         NpcStance stance,
@@ -46,7 +26,6 @@ public record ScheduleEntry(
     public static final int MIN_RADIUS = 2, MAX_RADIUS = 32;
     public static final int DAY_LENGTH = 24000;
 
-    /** Canonicalises every field, so nothing downstream has to re-check a hand-edited file. */
     public ScheduleEntry {
         time = Math.floorMod(time, DAY_LENGTH);
         if (stance == null) stance = NpcStance.STAND;
@@ -62,10 +41,6 @@ public record ScheduleEntry(
         return new ScheduleEntry(time, stance, null, 8, 0f, true, "", "", List.of());
     }
 
-    /**
-     * Why this entry can't run, or null when it's fine. The editor shows this and the runtime skips
-     * the entry rather than walking the NPC at a spot that isn't there.
-     */
     @Nullable
     public String problem() {
         if (stance.needsSpot() && anchor == null) {
@@ -78,12 +53,6 @@ public record ScheduleEntry(
         return problem() != null;
     }
 
-    /**
-     * The held direction as a compass point.
-     *
-     * <p>Minecraft yaw runs 0 at south and clockwise from there, which nobody has ever found
-     * intuitive, so the editor shows a bearing instead of a number.
-     */
     public String facingLabel() {
         String[] points = {"South", "South-west", "West", "North-west",
                            "North", "North-east", "East", "South-east"};
@@ -96,7 +65,6 @@ public record ScheduleEntry(
         return new ScheduleEntry(time, stance, anchor, radius, yaw, roleOpen, closedLine, label, onBegin);
     }
 
-    /** Clock reading for the editor. Minecraft's day starts at 06:00, not midnight. */
     public String clock() {
         return formatClock(time);
     }
@@ -107,7 +75,6 @@ public record ScheduleEntry(
         return String.format("%02d:%02d", hours, minutes);
     }
 
-    /** Inverse of {@link #formatClock}, for the editor's time stepper. */
     public static int ticksForClock(int hours, int minutes) {
         int h = Math.floorMod(hours - 6, 24);
         return Math.floorMod(h * 1000 + minutes * 1000 / 60, DAY_LENGTH);
@@ -145,7 +112,6 @@ public record ScheduleEntry(
         return new ScheduleEntry(time, stance, anchor, radius, facing, roleOpen, closedLine, label, actions);
     }
 
-    /** Drops the spot, keeping everything else. Used when an NPC travels to another world. */
     public ScheduleEntry withoutAnchor() {
         return withAnchor(null, facing);
     }

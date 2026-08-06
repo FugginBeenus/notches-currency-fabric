@@ -7,14 +7,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.UUID;
 
-/**
- * Thin facade used by the rest of the mod. Delegates to the world-persistent
- * {@link BalanceState} and records every change to the {@link EconomyLedger}.
- *
- * Balances are {@code long}. Mutators come in a plain form (reason defaults to
- * {@link TransactionReason#UNSPECIFIED}) and a reason-tagged form; callers should
- * prefer the tagged form so the audit log can distinguish faucets from sinks.
- */
 public final class BalanceStore {
 
     private BalanceStore() {}
@@ -26,7 +18,6 @@ public final class BalanceStore {
     @FunctionalInterface
     private interface Op { long apply(BalanceState state); }
 
-    /** Apply a mutation, then log the actual (clamped) delta to the ledger. */
     private static long mutate(MinecraftServer server, UUID id, Op op,
                                TransactionReason reason, String detail) {
         BalanceState st = state(server);

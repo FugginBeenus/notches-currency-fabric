@@ -12,11 +12,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-/**
- * Backing handler for the coin-flip betting screen: no slots, just a live {@link PropertyDelegate}
- * of the viewer's balance, bet limits and payout. The player picks heads/tails and a wager on the
- * client and hits FLIP, which sends the COINFLIP_FLIP packet; the block does the reveal.
- */
 public class CoinFlipScreenHandler extends ScreenHandler {
 
     public static final int P_ENABLED = 0;

@@ -89,13 +89,10 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_PATROL, buf);
     }
 
-    /** Ask the server to reopen the NPC editor, used by sub-screens' Back buttons. */
     public static void sendNpcEditorReopen(UUID npcId) {
         sendNpcEditorReopen(npcId, 0);
     }
 
-    /** Reopen the NPC editor landing on {@code returnTab}: sub-screens pass their home tab so
-     *  "Back" returns you where you came from. */
     public static void sendNpcEditorReopen(UUID npcId, int returnTab) {
         net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen.reopenAtTab = returnTab;
         PacketByteBuf buf = PacketByteBufs.create();
@@ -120,7 +117,6 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_POSE_PART, buf);
     }
 
-    /** Set the idle animation layered on the pose (statue/breathe/sway/lively). */
     public static void sendNpcSetAnim(UUID npcId, int anim) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
@@ -128,7 +124,6 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SET_ANIM, buf);
     }
 
-    /** Move (delta blocks) and/or rotate (absolute yaw, when applyYaw) the whole NPC. */
     public static void sendNpcTransform(UUID npcId, double dx, double dy, double dz, float yawDeg, boolean applyYaw) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeUuid(npcId);
@@ -405,7 +400,6 @@ public final class NotchPacketsClient {
         });
     }
 
-    /** The server's custom coin skin, pushed on join: written into a local auto-enabled pack. */
     public static void registerCurrencySyncReceiver() {
         NetClient.registerClientReceiver(NotchPackets.WAYSTONE_FEE_SYNC, (client, buf) -> {
             boolean enabled = buf.readBoolean();
@@ -423,7 +417,6 @@ public final class NotchPacketsClient {
         });
     }
 
-    /** The taken-bounty list for the on-screen tracker HUD. */
     public static void registerBountyTrackerReceiver() {
         NetClient.registerClientReceiver(NotchPackets.BOUNTY_TRACKER, (client, buf) -> {
             int count = buf.readVarInt();
@@ -443,14 +436,12 @@ public final class NotchPacketsClient {
         });
     }
 
-    /** When set, the next NPC_STUDIO_DATA reply opens Quick Lines instead of the full studio. */
     private static boolean nextStudioOpensQuickLines = false;
 
     public static void sendNpcStudioOpen(UUID npcId) {
         sendNpcStudioOpen(npcId, false);
     }
 
-    /** {@code quickLines} routes the server's tree reply into the Quick Lines editor. */
     public static void sendNpcStudioOpen(UUID npcId, boolean quickLines) {
         nextStudioOpensQuickLines = quickLines;
         PacketByteBuf buf = PacketByteBufs.create();

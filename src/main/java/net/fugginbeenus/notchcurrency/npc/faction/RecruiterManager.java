@@ -9,23 +9,15 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * The Recruiter NPC: how factions are joined, left and founded without anyone learning a command.
- *
- * <p>The NPC is a doorway, not a container. It holds a faction id and nothing else, so whatever
- * happens to it, the faction on the other side is untouched.
- */
 public final class RecruiterManager {
 
     public static final int ACTION_JOIN = 0;
     public static final int ACTION_LEAVE = 1;
     public static final int ACTION_FOUND = 2;
-    /** Save the faction's settings: {@code name} is the motto, {@code extra} packs fee + open flag. */
     public static final int ACTION_SETTINGS = 3;
 
     private RecruiterManager() {}
 
-    /** Show the recruiter screen for whoever just talked to it. */
     public static void open(ServerPlayerEntity sp, NotchNpcEntity npc) {
         FactionState state = FactionState.get(sp.getServerWorld());
         String factionId = npc.getFactionId();
@@ -56,12 +48,6 @@ public final class RecruiterManager {
     public static final int PICK_SET = 1;
     public static final int PICK_CLEAR = 2;
 
-    /**
-     * The faction picker behind the Role tab. This is how a founder who lost their recruiter gets
-     * back on their feet: place a new one, pick the faction they already own, carry on. Without it
-     * they'd be stuck, since founding is only offered on an unassigned recruiter and they've already
-     * used their one faction.
-     */
     public static void pick(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String factionId) {
         if (!npc.canEdit(sp)) return;
         FactionState state = FactionState.get(sp.getServerWorld());
@@ -88,7 +74,6 @@ public final class RecruiterManager {
         sendList(sp, npc);
     }
 
-    /** Send the factions this player may point the NPC at. */
     public static void sendList(ServerPlayerEntity sp, NotchNpcEntity npc) {
         if (!npc.canEdit(sp)) return;
         FactionState state = FactionState.get(sp.getServerWorld());
@@ -109,7 +94,6 @@ public final class RecruiterManager {
         Net.sendToClient(sp, NotchPackets.NPC_FACTION_LIST, buf);
     }
 
-    /** Handle a button on that screen. Everything is re-checked here; the client is never trusted. */
     public static void act(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String name, String color,
                            int fee, boolean open) {
         FactionState state = FactionState.get(sp.getServerWorld());

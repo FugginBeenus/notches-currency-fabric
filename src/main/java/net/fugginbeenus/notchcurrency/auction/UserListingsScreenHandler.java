@@ -8,10 +8,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 
-/**
- * Small 2x4 inventory used for the "Your Listings" popup.
- * Purely visual for now – you can later fill this from AuctionState.
- */
 public class UserListingsScreenHandler extends ScreenHandler {
 
     public static final int COLUMNS = 4;

@@ -22,11 +22,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-/**
- * {@code /adminshop}: admins create/configure server shops; everyone can buy/sell.
- * Buy/sell take raw UUID args but players never type them: they come from the clickable
- * chat menu ({@link AdminShopMenu}).
- */
 public final class AdminShopCommands {
 
     private AdminShopCommands() {}

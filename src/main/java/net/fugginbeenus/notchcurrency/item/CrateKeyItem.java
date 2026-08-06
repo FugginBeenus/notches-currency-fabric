@@ -12,10 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * A universal Crate Key: bought with coins (a sink) or earned. Right-click a crate block while
- * holding keys to open it; higher-tier crates cost more keys.
- */
 public class CrateKeyItem extends Item {
 
     public CrateKeyItem(Settings settings) {

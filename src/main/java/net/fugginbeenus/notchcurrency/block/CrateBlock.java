@@ -24,22 +24,13 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
-/**
- * A crate block of a fixed type. Right-click opens it (consuming keys); sneak-right-click shows
- * its loot odds. Faces the placer. On a successful open the lid pops up ({@code open=true}) and a
- * scheduled tick closes it again a moment later: a light vanilla "opening" animation to go with
- * the loot particles.
- */
 public class CrateBlock extends Block {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
     public static final BooleanProperty OPEN = Properties.OPEN;
 
-    /** How long the lid stays up after opening (ticks). */
     private static final int OPEN_TICKS = 30;
 
-    /** The oversized chest spills its block (~24 wide, 20 tall, 18 deep); the shape follows the
-     *  model so selection/collision feel right. Wider than deep, so it swaps with facing. */
     private static final VoxelShape SHAPE_NS = Block.createCuboidShape(-4, 0, -1, 20, 20, 17);
     private static final VoxelShape SHAPE_EW = Block.createCuboidShape(-1, 0, -4, 17, 20, 20);
 
@@ -98,7 +89,6 @@ public class CrateBlock extends Block {
         return ActionResult.CONSUME;
     }
 
-    /** Pop the lid open and schedule it to close. Called by CrateManager only when an open succeeds. */
     public static void animateOpen(World world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
         if (state.getBlock() instanceof CrateBlock && !state.get(OPEN)) {

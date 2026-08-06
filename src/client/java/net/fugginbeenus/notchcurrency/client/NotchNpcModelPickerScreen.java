@@ -24,17 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Model picker for the NPC editor: a searchable, scrollable grid of live model previews. Includes the
- * Humanoid default, the APP.ly model (if installed), and every registered <b>living</b> entity type
- * (mobs/animals/monsters) as a disguise option. Selecting applies the model and returns to the editor.
- */
 public class NotchNpcModelPickerScreen extends Screen {
 
-    /**
-     * One pickable model. The preview entity is built lazily on first draw and cached: building one
-     * per registered entity type up front was the source of the open-the-picker lag on big modpacks.
-     */
     private static final class Entry {
         final String id, label;
         @Nullable final EntityType<?> type;      // null => an NPC model (humanoid / APP.ly)
@@ -104,24 +95,12 @@ public class NotchNpcModelPickerScreen extends Screen {
         all.addAll(mobs);
     }
 
-    /**
-     * Worth offering as a model, judged without building one: building every registered type is what
-     * used to make this screen crawl on a big modpack.
-     *
-     * <p>Spawn group is the cheap signal: living things have a real one, boats and arrows are MISC.
-     * That misses two cases, so both are let through. Vanilla's armour stand is MISC but perfectly
-     * usable. And mods routinely register bosses and their own NPCs as MISC precisely so they never
-     * spawn on their own, excluding those would hide most of what a modpack has to offer. Anything
-     * that slips through and isn't really a mob simply has no preview, and falls back to the humanoid
-     * if it's picked.
-     */
     private static boolean isLivingLike(EntityType<?> type, Identifier id) {
         if (type.getSpawnGroup() != SpawnGroup.MISC) return true;
         if (type == EntityType.ARMOR_STAND) return true;
         return !"minecraft".equals(id.getNamespace());
     }
 
-    /** The preview entity for a tile, built + cached on first use (null if this type won't construct). */
     @Nullable
     private LivingEntity preview(Entry e) {
         if (e.preview != null) return e.preview;
@@ -293,7 +272,6 @@ public class NotchNpcModelPickerScreen extends Screen {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    /** Map a mouse-Y over the scrollbar track to a scroll row. */
     private void scrollbarTo(double my, int gridH) {
         int totalRows = (filtered.size() + COLS - 1) / COLS;
         int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);

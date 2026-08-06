@@ -19,17 +19,10 @@ import java.util.UUID;
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coinIcon;
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coins;
 
-/**
- * Registration of all server-bound packet receivers (client -> server):
- * balance requests, auction bids, ATM withdrawals, and player-shop operations.
- *
- * Extracted from the mod initializer to keep {@link NotchCurrency} small.
- */
 public final class ServerPacketHandlers {
 
     private ServerPacketHandlers() {}
 
-    /** Call once from NotchCurrency.onInitialize(). */
     public static void register() {
         // Server handles client's explicit balance request
         Net.registerServerReceiver(

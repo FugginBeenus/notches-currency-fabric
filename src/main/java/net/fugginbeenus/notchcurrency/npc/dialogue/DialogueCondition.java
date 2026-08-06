@@ -10,25 +10,14 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
-/**
- * A requirement gating a dialogue choice. All conditions on a choice must pass; failing choices
- * render locked (greyed) or hidden, per the choice's setting. Economy-native: coin and item checks
- * out of the box.
- */
 public class DialogueCondition {
 
     public enum Type {
-        /** No requirement, always passes. An editor placeholder; stripped on save. */
         NONE,
-        /** Player balance ≥ {@code amount}. */
         HAS_COINS,
-        /** Player carries ≥ {@code amount} of item {@code value} (an item id). */
         HAS_ITEM,
-        /** Player owns this NPC. */
         IS_OWNER,
-        /** Player is an operator. */
         IS_OP,
-        /** Player is in a faction: the one named in {@code value}, or this NPC's own if left blank. */
         IS_FACTION
     }
 
@@ -63,10 +52,6 @@ public class DialogueCondition {
         };
     }
 
-    /**
-     * Leaving the name blank means "my faction", which is the common case: a guild NPC offering
-     * something only its own members get. Naming one lets an NPC react to somebody else's colours.
-     */
     private boolean matchesFaction(ServerPlayerEntity sp, NotchNpcEntity npc) {
         String wanted = value == null || value.isBlank() ? npc.getFactionId() : value.trim();
         if (wanted.isEmpty()) return false; // no faction to be in

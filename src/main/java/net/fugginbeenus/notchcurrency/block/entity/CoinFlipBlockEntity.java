@@ -10,11 +10,6 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Backs the coin-flip table's animated coin. When a flip starts, the manager stamps the world time
- * and the reveal duration here and syncs it; the renderer uses them to arc + spin the coin and land
- * it as the {@code FLIPPING}/{@code FACE} blockstates settle. Idle, the coin just lies on the felt.
- */
 public class CoinFlipBlockEntity extends BlockEntity {
 
     private long flipStartTick = -1;
@@ -27,7 +22,6 @@ public class CoinFlipBlockEntity extends BlockEntity {
     public long flipStartTick() { return flipStartTick; }
     public int revealTicks() { return revealTicks; }
 
-    /** Called server-side when a flip begins; records the timing and pushes it to nearby clients. */
     public void startFlip(long worldTime, int reveal) {
         this.flipStartTick = worldTime;
         this.revealTicks = reveal;

@@ -16,10 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * World-persistent record of which one-time cosmetics each player already owns, so they can't
- * re-buy them. Repeatable cosmetics (one_time = false) are never recorded here.
- */
 public class CosmeticState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_cosmetics";

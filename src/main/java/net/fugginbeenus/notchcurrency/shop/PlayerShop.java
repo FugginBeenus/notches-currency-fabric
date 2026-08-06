@@ -9,12 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-/**
- * Represents a player-owned shop.
- *
- * A shop can be linked to a ShopkeeperEntity for the storefront,
- * but the shop data and logic are managed entirely by NotchCurrency.
- */
 public class PlayerShop {
 
     public static final int MAX_LISTINGS = 27;  // 3 rows of 9, like a chest
@@ -107,23 +101,16 @@ public class PlayerShop {
         return pendingBalance;
     }
 
-    /**
-     * Withdraw the pending balance. Returns the amount withdrawn.
-     */
     public long withdrawBalance() {
         long amount = pendingBalance;
         pendingBalance = 0;
         return amount;
     }
 
-    /**
-     * Add earnings to the pending balance (called when a sale is made).
-     */
     public void addToPendingBalance(long amount) {
         pendingBalance += amount;
     }
 
-    /** Deduct up to {@code amount} from the pending balance; returns what was actually taken. */
     public long payFromPending(long amount) {
         long take = Math.min(Math.max(0L, amount), pendingBalance);
         pendingBalance -= take;
@@ -175,10 +162,6 @@ public class PlayerShop {
         this.isOpen = open;
     }
 
-    /**
-     * Transfer ownership of the shop (admin only).
-     * Package-private to restrict access.
-     */
     void transferOwnership(UUID newOwnerId, String newOwnerName) {
         this.ownerId = newOwnerId;
         this.ownerName = newOwnerName;
@@ -234,7 +217,6 @@ public class PlayerShop {
         return items;
     }
 
-    /** How many barter stacks are waiting to be collected (non-destructive, for GUI display). */
     public int getPendingBarterCount() {
         return pendingBarterItems.size();
     }

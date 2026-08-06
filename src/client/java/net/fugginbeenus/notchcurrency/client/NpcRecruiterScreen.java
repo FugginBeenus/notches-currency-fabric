@@ -12,13 +12,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-/**
- * The recruiter: where a player joins or leaves a faction, and where whoever runs it sets it up.
- *
- * <p>Three faces, depending on who's looking. A visitor sees the faction's pitch and a Join button.
- * Whoever runs it also gets a Settings pane. An owner standing at a recruiter with no faction is
- * offered the chance to start one.
- */
 public class NpcRecruiterScreen extends Screen {
 
     private static final int W = 280, H = 224;
@@ -26,7 +19,6 @@ public class NpcRecruiterScreen extends Screen {
     private static final int BTN_W = W - PAD * 2;
     private static final int ROW_H = 16;
 
-    /** The colours a faction can pick, in the order they cycle. */
     private static final Formatting[] COLORS = {
             Formatting.WHITE, Formatting.RED, Formatting.GOLD, Formatting.YELLOW, Formatting.GREEN,
             Formatting.AQUA, Formatting.BLUE, Formatting.LIGHT_PURPLE, Formatting.DARK_PURPLE, Formatting.GRAY,
@@ -164,7 +156,6 @@ public class NpcRecruiterScreen extends Screen {
         }
     }
 
-    /** Founding and Settings share a form: the only difference is what the text field means. */
     private void renderEditor(DrawContext ctx, int mx, int my) {
         boolean founding = mode == Mode.FOUND;
         ctx.drawText(this.textRenderer, founding ? "Name:" : "Motto:", px + PAD, rowLabel(),
@@ -272,7 +263,6 @@ public class NpcRecruiterScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    /** Tens by default; hold Shift for hundreds when setting a steep fee. */
     private int feeStep() {
         return hasShiftDown() ? 100 : 10;
     }
@@ -281,7 +271,6 @@ public class NpcRecruiterScreen extends Screen {
         NotchPacketsClient.sendRecruiterAction(npcId, action, text, color().getName(), fee, openToJoin);
     }
 
-    /** Swap panes: drop the old widgets and lay the new ones out. */
     private void rebuildPane() {
         this.clearChildren();
         this.init();

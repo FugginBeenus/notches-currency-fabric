@@ -7,15 +7,6 @@ import net.minecraft.nbt.NbtElement;
 
 import java.util.UUID;
 
-/**
- * Represents a single item listing in a player shop.
- *
- * Supports two payment modes:
- * - Coin price (virtual currency from player balance)
- * - Item price (barter - trade items for items)
- *
- * Both can be active simultaneously (buyer chooses which to use).
- */
 public class ShopListing {
 
     private final UUID id;
@@ -38,9 +29,6 @@ public class ShopListing {
         this.totalEarned = 0;
     }
 
-    /**
-     * Constructor for client-side reconstruction from packet data.
-     */
     public ShopListing(UUID id, ItemStack itemForSale, int stockQuantity, int coinPrice,
                        ItemStack barterItem, int barterCount) {
         this.id = id;
@@ -135,10 +123,6 @@ public class ShopListing {
         this.stockQuantity = Math.max(0, this.stockQuantity + amount);
     }
 
-    /**
-     * Attempt to remove stock atomically.
-     * @return true if stock was successfully removed, false if insufficient stock
-     */
     public synchronized boolean tryRemoveStock(int amount) {
         if (amount <= 0) {
             return false;
@@ -215,20 +199,10 @@ public class ShopListing {
         return listing;
     }
 
-    /**
-     * How many items one purchase hands over: the size of the stack the owner listed. A listing of
-     * 32 sculk sensors for 15 coins sells all 32 for that price, so this is the unit both the price
-     * and the stock draw-down are measured against.
-     */
     public int getBundleSize() {
         return Math.max(1, itemForSale.getCount());
     }
 
-    /**
-     * A copy of the sale item whose count is the total number of items to hand over, which may be
-     * more than the item's max stack size. Callers pass this to the give helper, which splits it into
-     * real stacks; clamping here would silently cap a payout (or a stock refund) at a single stack.
-     */
     public ItemStack createSaleStack(int totalItems) {
         ItemStack stack = itemForSale.copy();
         stack.setCount(Math.max(0, totalItems));

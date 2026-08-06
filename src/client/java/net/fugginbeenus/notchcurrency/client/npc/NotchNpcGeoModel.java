@@ -5,10 +5,6 @@ import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.util.Identifier;
 import software.bernie.geckolib.model.GeoModel;
 
-/**
- * GeckoLib model resolver for the Notch NPC. Phase 1 uses a single placeholder humanoid rig +
- * texture; Phase 2 will resolve model/texture through the appearance/model-provider system.
- */
 public class NotchNpcGeoModel extends GeoModel<NotchNpcEntity> {
 
     private static final Identifier MODEL = NotchCurrency.id("geo/notch_npc.geo.json");

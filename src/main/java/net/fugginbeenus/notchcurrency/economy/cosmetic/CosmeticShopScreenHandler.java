@@ -21,11 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Backing handler for the cosmetics shop: a vanilla-style item grid (real read-only slots so the
- * client renders icons) with an optional NPC bust. Offers carry name/price/owned in NBT and refresh
- * each tick so "owned" updates right after a purchase. Purchases go through COSMETIC_BUY.
- */
 public class CosmeticShopScreenHandler extends ScreenHandler {
 
     // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
@@ -45,7 +40,6 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
         @Override public boolean canTakeItems(PlayerEntity p) { return false; }
     }
 
-    /** Client constructor: the opening buf carries the linked NPC uuid (or a no-npc marker). */
     public CosmeticShopScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
         this(syncId, inv, buf.readBoolean() ? buf.readUuid() : null);
     }
@@ -71,7 +65,6 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
         refresh();
     }
 
-    /** Open for the player, passing the linked NPC uuid for the preview. */
     public static void open(ServerPlayerEntity sp, @Nullable UUID npcId) {
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("Cosmetics"),
                 (syncId, inv, p) -> new CosmeticShopScreenHandler(syncId, inv, npcId),

@@ -2,10 +2,6 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 
 import net.minecraft.util.Formatting;
 
-/**
- * Bounty rarity tiers (à la Bountiful). Rarity drives how often a bounty of that tier is rolled
- * and pairs a harder objective with a bigger reward. {@code weight} is the default roll weight.
- */
 public enum BountyRarity {
     COMMON(Formatting.WHITE, 60),
     UNCOMMON(Formatting.GREEN, 25),
@@ -24,7 +20,6 @@ public enum BountyRarity {
         return color;
     }
 
-    /** A darker, saturated ARGB accent that stays readable on the light GUI panel. */
     public int accentArgb() {
         return switch (this) {
             case COMMON -> 0xFF8A8A8A;

@@ -15,20 +15,8 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The positional bounty tracker, styled on the Location Tooltip HUD: one vector-drawn pill per
- * taken bounty: black translucent background with 1px "vanilla" rounded corners, an item icon
- * (the delivery item, or a sword for kill bounties), the task, a live progress bar and countdown.
- * Kill counts come synced; delivery counts read your own inventory so they tick up as you gather.
- *
- * Anchor (6 positions), offsets, scale and opacity live in the {@code hud} section of
- * config/notchcurrency.json, editable in-game via ModMenu → Notch Currency → HUD. The HUD reads
- * the LOCAL file, so on a server every player positions it around their own modded HUD elements.
- * The tracker keybind toggles it and it hides itself when you carry no bounties.
- */
 public final class BountyTrackerHud implements HudRenderCallback {
 
-    /** One tracked bounty as synced by BOUNTY_TRACKER. */
     public record Entry(String desc, boolean kill, String targetItemId, int prog, int req,
                         long expiry, String rarity) {}
 
@@ -119,9 +107,8 @@ public final class BountyTrackerHud implements HudRenderCallback {
         ctx.getMatrices().pop();
     }
 
-    /* ---------------- Location Tooltip's vector pill helpers ---------------- */
+    /* Location Tooltip's pill helpers */
 
-    /** Rounded rect; when r<=1 uses the crisp 1px "vanilla" corner treatment. */
     private static void fillRound(DrawContext ctx, int x, int y, int w, int h, int r, int argb) {
         r = (r <= 1) ? 1 : Math.min(r, Math.min(w, h) / 2);
         if (r == 1) {

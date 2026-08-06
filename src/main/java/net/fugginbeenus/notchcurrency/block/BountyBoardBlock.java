@@ -29,12 +29,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 
-/**
- * "Bounty Board": a two-block-tall notice board (door-style upper/lower halves) that opens the
- * bounty screen on use, from either half. Faces the placer; the visual model lives entirely on
- * the LOWER half (it spans up to y=32), the upper half is an invisible occupancy block so nothing
- * can be placed inside the board. Breaking either half removes both; only the lower half drops.
- */
 public class BountyBoardBlock extends Block {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
@@ -88,7 +82,6 @@ public class BountyBoardBlock extends Block {
         }
     }
 
-    /** Door-style: if the other half stops matching, this half becomes air (keeps the pair in sync). */
     @Override
     public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState,
                                                 WorldAccess world, BlockPos pos, BlockPos neighborPos) {
@@ -110,7 +103,6 @@ public class BountyBoardBlock extends Block {
         return super.canPlaceAt(state, world, pos);
     }
 
-    /** Creative players breaking the upper half: remove the lower without dropping a second board. */
     @Override
     //? if >=1.21 {
     /*public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {

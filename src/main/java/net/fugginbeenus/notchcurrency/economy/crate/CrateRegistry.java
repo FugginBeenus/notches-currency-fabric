@@ -6,10 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * The loaded crate definitions, keyed by id (the datapack filename). Populated from
- * {@code data/&lt;ns&gt;/crates/*.json} by {@link CrateLoader}, merged across packs.
- */
 public final class CrateRegistry {
 
     private static final Map<String, CrateDef> CRATES = new LinkedHashMap<>();
@@ -33,7 +29,6 @@ public final class CrateRegistry {
         return CRATES.size();
     }
 
-    /** Weighted-pick one loot entry from a crate, or null if it has no loot. */
     @Nullable
     public static CrateDef.LootEntry roll(CrateDef def, Random rng) {
         int total = def.totalWeight();

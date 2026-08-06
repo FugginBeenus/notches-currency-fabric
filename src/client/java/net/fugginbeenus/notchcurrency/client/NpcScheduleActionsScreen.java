@@ -15,17 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * What one schedule entry does the moment it begins: say a line, hand something over, run a command.
- *
- * <p>Opens over the schedule screen and hands the edited list straight back to it, rather than
- * talking to the server itself. The schedule is saved in one piece, so an entry's actions have no
- * business travelling separately.
- *
- * <p>The action vocabulary and its admin gate come from {@link NpcActionEditing}, shared with the
- * reactions screen. An entry can pay coins and run commands exactly like a reaction can, so it has to
- * be gated exactly like one.
- */
 public class NpcScheduleActionsScreen extends Screen {
 
     private static final int W = 300, H = 216;
@@ -93,7 +82,6 @@ public class NpcScheduleActionsScreen extends Screen {
         return selected >= 0 && selected < working.size() ? working.get(selected) : null;
     }
 
-    /** Point the two text boxes at the selected row, and hide the ones it has no use for. */
     private void syncFields() {
         DialogueAction a = current();
         boolean wantsValue = a != null && NpcActionEditing.needsValue(a.type());

@@ -20,12 +20,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
-/**
- * The slot machine GUI. Styled like a casino cabinet: a gold frame with a chasing marquee, payline
- * markers and a win glow. The reels spin client-side and lock left-to-right; only when the third reel
- * stops does the win/loss land (sound + revealed balance), preserving the tension. A bet is validated
- * client-side (affordable and in range) before the reels ever move.
- */
 public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
     private static final int W = 200, H = 196;

@@ -15,12 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Quick Lines: the no-fuss dialogue path. Type a handful of lines; the NPC says one at random (in
- * chat) every time someone talks to it: perfect for greeters and flavor shopkeepers. Saved as a
- * flat DialogueTree (one page per line, no choices) with the style auto-set to Chat. The full
- * Studio remains the tool for branching conversations.
- */
 public class QuickLinesScreen extends Screen {
 
     private static final int W = 340, H = 232;
@@ -167,7 +161,6 @@ public class QuickLinesScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    /** Ship the lines as a flat tree and switch the NPC to Chat style (random line per talk). */
     private void save() {
         DialogueTree tree = new DialogueTree();
         for (int i = 0; i < lines.size(); i++) {

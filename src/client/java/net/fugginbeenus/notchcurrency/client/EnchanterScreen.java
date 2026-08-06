@@ -21,12 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The Enchanter, card edition: drop an item in the slot, then Repair it, buy exact enchant levels
- * (Upgrades), pull an enchant onto a book (Extract), or break the item back into its crafting
- * ingredients (Uncraft). Each offer is a card (icon, name, one-line description, coin price)
- * in a scrollable list. Offers/prices derive from the same code the server validates with.
- */
 public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
 
     private static final int W = 256, H = 238;
@@ -53,7 +47,6 @@ public class EnchanterScreen extends HandledScreen<EnchanterScreenHandler> {
         this.playerInventoryTitleX = -1000;
     }
 
-    /** One card: the enchantment, the level shown, its cost, and the book stack (icon + tooltip). */
     private record Card(Enchantment ench, int level, long cost, ItemStack book) {}
 
     private static ItemStack bookOf(Enchantment ench, int level) {

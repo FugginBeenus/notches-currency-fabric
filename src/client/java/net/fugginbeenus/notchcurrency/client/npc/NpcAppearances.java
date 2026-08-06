@@ -8,11 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Client-side catalog of built-in NPC appearance variants (id → display name + texture). Phase 2
- * ships the placeholder humanoid skins (adapted from APP.ly). Later this becomes the client half of
- * the model-provider registry that other mods can extend.
- */
 public final class NpcAppearances {
 
     public record Variant(String id, String displayName, Identifier texture) {}

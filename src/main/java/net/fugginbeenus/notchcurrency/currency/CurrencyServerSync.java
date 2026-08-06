@@ -14,25 +14,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Pushes the server's custom-currency skin to every joining player, so the admin sets the coin art
- * + name once (config/notchcurrency/currency/ + the config's currency.itemName) and the whole
- * server sees it: no hand-distributed resource pack. The client writes the payload into a local
- * "NotchCurrencyServer" pack and auto-enables it. An all-empty payload tells the client to clear
- * any pack left over from a previously customized server.
- *
- * The host of a singleplayer/LAN world is skipped: their own local pack generator already ran.
- */
 public final class CurrencyServerSync {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-CurrencySync");
 
-    /** Keep each texture comfortably under the 1 MB S2C payload limit. */
     private static final int MAX_TEXTURE_BYTES = 256 * 1024;
 
     private CurrencyServerSync() {}
 
-    /** Called on player join. Sends the server's coin skin (or an explicit "nothing customized"). */
     public static void send(ServerPlayerEntity sp) {
         if (sp.getServer() != null && sp.getServer().isHost(sp.getGameProfile())) return;
 

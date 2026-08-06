@@ -19,12 +19,6 @@ import net.minecraft.util.math.RotationAxis;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Draws the live leaderboard flat on the Ledger Board's tablet, Create display-board style. The
- * transform mirrors Create's FlapDisplayRenderer: centre → rotateY(horizontalAngle) → unCentre puts
- * us in a facing-oriented block-space frame, then we step to the plaque, scale, flip Y, and nudge a
- * texel off the surface. Full-bright, no shadow. PLATE_TOP/FRONT_Z/SCALE tune the placement.
- */
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 
     // --- tunables (block units unless noted) ---

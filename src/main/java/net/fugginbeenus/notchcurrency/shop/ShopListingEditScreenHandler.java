@@ -20,13 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-/**
- * Backing handler for the listing editor. The SALE and BARTER slots hold SAMPLES: copied into the
- * listing on save and always handed back on close; nothing is consumed or created by them, so there
- * is no dupe or loss path. The STOCK bin is a real intake slot: matching stacks dropped in are
- * pulled into the listing's stock count each tick (and cleared); anything that doesn't match just
- * sits there and returns on close. Every action applies immediately server-side (SHOP_EDIT_ACTION).
- */
 public class ShopListingEditScreenHandler extends ScreenHandler {
 
     public static final int SALE_X = 12, SALE_Y = 24;
@@ -55,13 +48,11 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     @Nullable private final PlayerShop shop; // server side only
     @Nullable private UUID listingId;        // null until first save on a new listing
 
-    /** Client constructor. */
     public ShopListingEditScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
         this(syncId, inv, buf.readBoolean(), buf.readString(64), buf.readString(64),
                 buf.readVarInt(), buf.readVarInt(), null, null);
     }
 
-    /** Server constructor. */
     public ShopListingEditScreenHandler(int syncId, PlayerInventory inv, boolean hasListing,
                                         String saleDesc, String barterDesc, int price, int stock,
                                         @Nullable PlayerShop shop, @Nullable UUID listingId) {
@@ -89,7 +80,6 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         }
     }
 
-    /** Open the editor for a listing (null id = create a new one). */
     public static void open(ServerPlayerEntity sp, PlayerShop shop, @Nullable UUID listingId) {
         ShopListing listing = listingId == null ? null : shop.getListing(listingId);
         boolean has = listing != null;

@@ -16,13 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-/**
- * Periodic player-shop rent: a money sink charged to open shops each cycle. Rent comes
- * out of the shop's own pending earnings first, then the owner's balance (so a busy shop
- * pays its own way). A shop that can't cover rent is frozen (won't sell) for a grace
- * period, then auto-closes. The portion paid from the owner's balance is destroyed and
- * tagged {@link TransactionReason#SINK}.
- */
 public final class ShopRent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-ShopRent");
@@ -38,7 +31,6 @@ public final class ShopRent {
 
     private ShopRent() {}
 
-    /** What one rent cycle costs a shop with this many listings (0 when rent is disabled). */
     public static long rentFor(int listingCount) {
         return enabled ? baseRent + perListing * listingCount : 0L;
     }

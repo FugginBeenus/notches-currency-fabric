@@ -9,10 +9,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
-/**
- * {@code /slots} opens the slot machine. {@code /coinflip <heads|tails> <bet>} does a quick,
- * block-less coin flip that resolves instantly.
- */
 public final class GamblingCommands {
 
     private GamblingCommands() {}

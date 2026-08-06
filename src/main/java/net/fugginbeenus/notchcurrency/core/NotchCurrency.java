@@ -57,7 +57,6 @@ public class NotchCurrency implements ModInitializer {
         return net.fugginbeenus.notchcurrency.compat.Reg.id(path);
     }
 
-    /** Gold coin glyph with a hover that shows the Notch Coin item. */
     public static Text coinIcon() {
         MutableText t = Text.literal("\uE000");  // Character mapped in minecraft:default font
         HoverEvent.ItemStackContent content =
@@ -70,7 +69,6 @@ public class NotchCurrency implements ModInitializer {
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, content)));
     }
 
-    /** Convenience: "123 <coinIcon>" */
     public static Text coins(long amount) {
         return Text.literal(Long.toString(amount) + " ").append(coinIcon());
     }

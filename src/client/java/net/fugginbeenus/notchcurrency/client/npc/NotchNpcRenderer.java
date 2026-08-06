@@ -17,13 +17,6 @@ import net.minecraft.util.Identifier;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Dispatching renderer for the Notch NPC. Three model paths:
- *  - "humanoid" (default): a vanilla biped with preset/player/URL skins.
- *  - "apply" (only when the {@code apply} mod is installed): the animated GeckoLib model.
- *  - "entity:&lt;id&gt;": a disguise, rendered as any vanilla/modded living entity via a cached proxy.
- * Anything that can't render (unknown/non-living type, renderer failure) falls back to the biped.
- */
 public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
 
     private final NotchNpcBipedRenderer biped;
@@ -58,7 +51,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         biped.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
     }
 
-    /** Render the NPC as another entity type. Returns false (→ caller draws the biped) on any failure. */
     private boolean renderDisguise(NotchNpcEntity npc, String typeId, float yaw, float tickDelta,
                                    MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         Entity proxy = getProxy(typeId);
@@ -126,14 +118,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         return true;
     }
 
-    /**
-     * Put the stand-in in step with the NPC so a disguise walks and swings like the thing it's wearing.
-     *
-     * <p>The stand-in never ticks (it only exists to be drawn), so none of this happens on its own.
-     * Renderers read the walk cycle and the swing straight off the entity, which is why they have to
-     * be set rather than left at zero. One stand-in serves every NPC of a given disguise, so this runs
-     * fresh for each of them.
-     */
     private static void copyAnimationState(NotchNpcEntity npc, LivingEntity le) {
         le.limbAnimator.setSpeed(npc.limbAnimator.getSpeed());
         ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.limbAnimator)

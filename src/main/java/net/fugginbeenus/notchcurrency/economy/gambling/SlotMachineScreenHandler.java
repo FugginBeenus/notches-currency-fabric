@@ -12,12 +12,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-/**
- * Backing handler for the slot machine: no slots, just a live {@link PropertyDelegate} of the
- * viewer's balance, bet limits, the last spin's reels/win, and the normalised paytable. The bet
- * amount is sent by packet (the client types it) and drives {@link SlotMachineManager#spin}; the
- * result is read back through the properties, which refresh every tick.
- */
 public class SlotMachineScreenHandler extends ScreenHandler {
 
     public static final int P_ENABLED = 0;
@@ -51,7 +45,6 @@ public class SlotMachineScreenHandler extends ScreenHandler {
 
     public int prop(int i) { return props.get(i); }
 
-    /** Take a bet and spin. Called from the SLOTS_SPIN packet receiver. */
     public void spin(long bet) {
         if (!(playerInv.player instanceof ServerPlayerEntity sp)) return;
         SlotMachineManager.SpinResult r = SlotMachineManager.spin(sp, bet);

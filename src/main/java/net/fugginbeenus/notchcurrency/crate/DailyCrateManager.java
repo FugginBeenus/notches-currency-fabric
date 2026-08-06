@@ -72,10 +72,6 @@ public final class DailyCrateManager {
         }
     }
 
-    /**
-     * Remove all existing balloon entities in the spawn area (and beyond)
-     * Returns count of removed balloons
-     */
     private static int clearExistingBalloons(ServerWorld world, BalloonConfigState cfg) {
         int cleared = 0;
 
@@ -169,10 +165,6 @@ public final class DailyCrateManager {
         cfg.markDirty();
     }
 
-    /**
-     * Force spawn a new wave of balloons (for admin use)
-     * Clears existing balloons first
-     */
     public static void forceSpawn(ServerWorld world) {
         BalloonConfigState cfg = BalloonConfigState.get(world);
         int cleared = clearExistingBalloons(world, cfg);

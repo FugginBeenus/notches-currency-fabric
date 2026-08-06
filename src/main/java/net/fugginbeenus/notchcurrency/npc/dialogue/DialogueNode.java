@@ -7,10 +7,6 @@ import net.minecraft.nbt.NbtList;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One page of dialogue: an id, what the NPC says (plain text, so {@code %player%}/{@code %npc%} are
- * substituted at display time), and the choice buttons underneath.
- */
 public class DialogueNode {
 
     private String id;

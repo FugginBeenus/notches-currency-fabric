@@ -15,16 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * A physical raffle ticket. It's a personal receipt: the buyer wins by identity, so the
- * ticket is proof/flavour rather than a bearer instrument. Its display is driven entirely
- * by NBT that the server restamps ({@code Status}) when the owner interacts with the raffle,
- * runs {@code /raffle}, or logs in, because items already sitting in inventories can't be
- * mutated retroactively at draw time, the status is resolved lazily on next contact.
- *
- * NBT: {@code Round} (long), {@code Entries} (int), {@code Owner} (UUID), {@code OwnerName}
- * (string), {@code Status} (ACTIVE/WINNER/LOSER), {@code Prize} (long, winner display only).
- */
 public class RaffleTicketItem extends Item {
 
     public static final String STATUS_ACTIVE = "ACTIVE";
@@ -66,7 +56,6 @@ public class RaffleTicketItem extends Item {
         return StackData.getInt(stack, K_ENTRIES);
     }
 
-    /** Update the entry count on an existing ticket (used when a player buys more entries). */
     public static void setEntries(ItemStack stack, int entries) {
         StackData.putInt(stack, K_ENTRIES, entries);
     }

@@ -16,21 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Runs NPC dialogue: sends nodes to the client (with per-choice availability), and handles clicked
- * choices: re-validating conditions server-side, running the actions in order (coins move through
- * the CurrencyApi with SINK/FAUCET tagging), then jumping to the next node or closing. Stateless:
- * the client echoes back the node id + choice index and the server re-derives everything.
- */
 public final class NpcDialogueManager {
 
     private static final double MAX_TALK_DIST_SQ = 8.0 * 8.0;
 
     private NpcDialogueManager() {}
 
-    /** Play the NPC's dialogue. Returns false if it has none (caller falls back to the role).
-     *  WINDOW mode opens the conversation screen; CHAT mode says a quick line (a random page from
-     *  the tree) in chat and then opens the role directly: the lightweight style. */
     public static boolean open(ServerPlayerEntity sp, NotchNpcEntity npc) {
         DialogueTree tree = npc.getDialogue();
         if (tree.isEmpty()) return false;
@@ -55,7 +46,6 @@ public final class NpcDialogueManager {
         return true;
     }
 
-    /** A choice was clicked on the client. Validate, run actions, advance or close. */
     public static void choose(ServerPlayerEntity sp, UUID npcId, String nodeId, int choiceIndex) {
         if (!(sp.getServerWorld().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
         if (sp.squaredDistanceTo(npc) > MAX_TALK_DIST_SQ) return;
@@ -81,7 +71,6 @@ public final class NpcDialogueManager {
 
     // ---- helpers ----
 
-    /** Send a node to the client (empty node id in this packet means "close the dialogue screen"). */
     public static void sendNode(ServerPlayerEntity sp, NotchNpcEntity npc, DialogueNode node) {
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
@@ -132,21 +121,17 @@ public final class NpcDialogueManager {
     private static final List<PendingOpen> pendingOpens = new ArrayList<>();
     private static final java.util.Map<UUID, FarewellWatch> farewells = new java.util.HashMap<>();
 
-    /** True when interacting should be able to reach a screen/feature beyond the dialogue. */
     private static boolean hasRoleScreen(NotchNpcEntity npc) {
         var role = npc.getRole();
         return role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
                 && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER;
     }
 
-    /** Open the NPC's role feature and, if it has a goodbye line, watch for the screen closing.
-     *  Public so {@link NpcActionRunner} can reach it: the farewell bookkeeping lives here. */
     public static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
         watchForFarewell(sp, npc);
     }
 
-    /** Watch for the opened screen closing so the NPC can say its goodbye line. */
     public static void watchForFarewell(ServerPlayerEntity sp, NotchNpcEntity npc) {
         String farewell = npc.getFarewellText();
         if (farewell == null || farewell.isBlank()) return;
@@ -155,7 +140,6 @@ public final class NpcDialogueManager {
         farewells.put(sp.getUuid(), new FarewellWatch(npcName, farewell));
     }
 
-    /** Server tick: fire delayed role opens, and say goodbyes when the opened screen closes. */
     public static void tick(net.minecraft.server.MinecraftServer server) {
         if (!pendingOpens.isEmpty()) {
             var it = pendingOpens.iterator();

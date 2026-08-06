@@ -23,17 +23,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-/**
- * The single place that turns a {@link NpcRole} into an opened economy feature. Shared by the built-in
- * {@code NotchNpcEntity} (its role lives on the entity) and by {@link NpcRoleInteractionHandler} (roles
- * bound to external entities via the API), so both paths behave identically.
- */
 public final class NpcRoleDispatch {
 
     private NpcRoleDispatch() {}
 
-    /** Open the feature for {@code role}. {@code target} is the ADMIN_SHOP shop id; {@code npc} is the
-     *  NPC entity (needed for the SHOP role's per-NPC shop lookup). */
     public static void open(ServerPlayerEntity sp, NpcRole role, @Nullable UUID target, @Nullable Entity npc) {
         if (role == null) role = NpcRole.NONE;
         // Opening hours are checked here rather than at the right-click, because this is the one door
@@ -80,7 +73,6 @@ public final class NpcRoleDispatch {
         }
     }
 
-    /** The label for the synthetic "enter my shop" choice appended to a role NPC's dialogue window. */
     public static String entryLabel(NpcRole role) {
         return switch (role) {
             case SHOP, ADMIN_SHOP -> "Browse the shop";
@@ -98,7 +90,6 @@ public final class NpcRoleDispatch {
         };
     }
 
-    /** CUSTOM role: hand the interaction to the handler another mod registered via the API. */
     private static void customInteract(ServerPlayerEntity sp, @Nullable Entity npc) {
         if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n) {
             var handler = net.fugginbeenus.notchcurrency.api.NotchNpcApi.customRole(n.getCustomRoleId());

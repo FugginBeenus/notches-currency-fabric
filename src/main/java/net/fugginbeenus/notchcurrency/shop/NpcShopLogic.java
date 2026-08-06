@@ -15,27 +15,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Server-side logic for NPC shops and player shops.
- *
- * Provides helper methods for:
- * - Legacy NPC shop purchases (single item transactions)
- * - Opening player shop GUIs
- * - NPC-to-shop linking
- */
 public final class NpcShopLogic {
 
     private NpcShopLogic() {}
 
-    /**
-     * Perform a simple purchase (legacy API for basic NPC shops).
-     *
-     * @param buyer    the player buying
-     * @param price    price per item in coins
-     * @param item     item being sold (template stack)
-     * @param quantity how many items to buy
-     * @return true if success, false otherwise
-     */
     public static boolean performPurchase(ServerPlayerEntity buyer,
                                           int price,
                                           ItemStack item,
@@ -75,9 +58,6 @@ public final class NpcShopLogic {
         return true;
     }
 
-    /**
-     * Open a player shop GUI for browsing/purchasing.
-     */
     public static void openShopBrowser(ServerPlayerEntity player, UUID shopId) {
         ShopState state = ShopState.get(player.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -99,15 +79,11 @@ public final class NpcShopLogic {
                 });
     }
 
-    /** Append the linked NPC uuid (for the shop screen's live preview), or a "no npc" marker. */
     private static void writeNpcId(PacketByteBuf buf, @Nullable UUID npcId) {
         buf.writeBoolean(npcId != null);
         if (npcId != null) buf.writeUuid(npcId);
     }
 
-    /**
-     * Open a player shop GUI for owner management.
-     */
     public static void openShopManager(ServerPlayerEntity owner, UUID shopId) {
         ShopState state = ShopState.get(owner.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -134,9 +110,6 @@ public final class NpcShopLogic {
                 });
     }
 
-    /**
-     * Open the appropriate shop GUI based on whether the player is the owner.
-     */
     public static void openShop(ServerPlayerEntity player, UUID shopId) {
         ShopState state = ShopState.get(player.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -153,10 +126,6 @@ public final class NpcShopLogic {
         }
     }
 
-    /**
-     * Try to open a shop linked to an NPC.
-     * @return true if a shop was found and opened
-     */
     public static boolean openShopFromNpc(ServerPlayerEntity player, UUID npcId) {
         ShopState state = ShopState.get(player.getServerWorld());
         PlayerShop shop = state.getShopByNpc(npcId);

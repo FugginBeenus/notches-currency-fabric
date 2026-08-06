@@ -19,11 +19,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
-/**
- * The coin-flip betting screen. A scaled-up Notch Coin with a soft gold glow and twinkling sparkles
- * gives it some casino flair. Pick Heads or Tails, set a wager, and hit FLIP: the server closes this
- * screen so the coin-flip block does the spin-and-reveal. Bets are validated client-side before sending.
- */
 public class CoinFlipScreen extends HandledScreen<CoinFlipScreenHandler> {
 
     private static final int W = 200, H = 196;

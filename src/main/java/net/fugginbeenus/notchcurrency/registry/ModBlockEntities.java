@@ -8,7 +8,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
-/** Block entities: the Ledger Board (live leaderboard) and the Coin Flip table (animated coin). */
 public final class ModBlockEntities {
 
     public static final BlockEntityType<LedgerBoardBlockEntity> LEDGER_BOARD =
@@ -21,6 +20,5 @@ public final class ModBlockEntities {
 
     private ModBlockEntities() {}
 
-    /** Force class-load so the static registration runs. */
     public static void register() {}
 }

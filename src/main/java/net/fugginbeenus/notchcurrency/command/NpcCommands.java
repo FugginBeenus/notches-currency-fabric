@@ -22,10 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-/**
- * {@code /npc}: bind/unbind economy roles on the NPC the admin is looking at. Works on
- * any entity (APP.ly, EasyNPC, villagers). All subcommands are op-only.
- */
 public final class NpcCommands {
 
     private static final double REACH = 5.0;
@@ -107,7 +103,6 @@ public final class NpcCommands {
         );
     }
 
-    /** Spawn a Notch NPC where the admin stands, optionally stamped from a preset. */
     private static int spawn(ServerCommandSource src, @Nullable String preset) {
         ServerPlayerEntity p = src.getPlayer();
         if (p == null) {

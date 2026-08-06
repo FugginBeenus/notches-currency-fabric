@@ -14,15 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-/**
- * Backing handler for the raffle screen. Carries no interactive slots: just one read-only
- * display slot for the prize item and a {@link PropertyDelegate} of live numbers (pot, your
- * entries, odds inputs, claim status). The values are refreshed from {@link RaffleState}
- * every tick so the pot and odds stay live as other players enter and draws happen.
- *
- * Buttons drive {@link RaffleManager} actions; nothing here trusts client input beyond the
- * fixed button ids.
- */
 public class RaffleScreenHandler extends ScreenHandler {
 
     public static final int P_ENABLED     = 0;

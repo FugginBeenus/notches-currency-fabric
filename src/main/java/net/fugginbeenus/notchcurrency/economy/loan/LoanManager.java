@@ -16,12 +16,6 @@ import net.minecraft.util.Formatting;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Runs loans: borrowing creates coins (up to a cap) that must be repaid with interest before the
- * loan's term expires. Interest compounds each cycle (a SINK when repaid); auto-collect pulls
- * spare balance toward the debt. If a loan goes <b>overdue</b>, a one-time late fee is added and a
- * higher penalty interest rate applies: the consequence for not paying it back in time.
- */
 public final class LoanManager {
 
     private static final long TICKS_PER_DAY = 24L * 60L * 60L * 20L;
@@ -101,7 +95,6 @@ public final class LoanManager {
                 .append(Text.literal(", due in " + termDays + " days.").formatted(Formatting.GRAY)), false);
     }
 
-    /** Repay up to {@code amount} (or the whole debt if {@code amount <= 0}). */
     public static void repay(ServerPlayerEntity player, long amount) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -188,7 +181,6 @@ public final class LoanManager {
         return ow == null ? 0L : ow.getTime();
     }
 
-    /** Real-days until this player's loan is due (negative = overdue), or 0 if no loan. */
     public static int daysLeft(MinecraftServer server, UUID player) {
         LoanState.Loan l = LoanState.get(server).get(player);
         if (l == null || l.debt <= 0) return 0;

@@ -8,10 +8,6 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Renders an admin shop as a friendly clickable chat list: item names with [Buy]/[Sell]
- * buttons, no UUIDs shown. This is the interim player-facing UI until the rendered GUI lands.
- */
 public final class AdminShopMenu {
 
     private AdminShopMenu() {}

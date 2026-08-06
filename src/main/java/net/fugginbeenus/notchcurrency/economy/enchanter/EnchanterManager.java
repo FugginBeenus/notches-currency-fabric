@@ -14,13 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The Enchanter service NPC: pay coins to repair gear, buy specific enchantment levels, or extract
- * an enchantment onto a book. Every payment is a SINK. This is one of the economy's drains, and
- * the "buy the exact enchant you want" pitch is the draw. Cost functions are deterministic and
- * shared by the client (display) and server (charge), so the number on the button is the number
- * charged.
- */
 public final class EnchanterManager {
 
     private EnchanterManager() {}
@@ -51,18 +44,14 @@ public final class EnchanterManager {
         extractValuePercent = Math.max(0, cfg.enchanter.extractValuePercent);
     }
 
-    /** The price knobs bundled up, so the client screen prices with the SERVER's synced values. */
     public record Pricing(int common, int uncommon, int rare, int veryRare, int treasurePct, int globalPct,
                           int extractBase, int extractValuePct) {}
 
-    /** The server's live pricing (from config). The handler syncs it to clients as properties. */
     public static Pricing pricing() {
         return new Pricing(costCommon, costUncommon, costRare, costVeryRare,
                 treasureMultiplierPercent, costMultiplierPercent, extractCost, extractValuePercent);
     }
 
-    /** Coins to pull an enchant onto a book: a flat handling fee plus a share of the enchant's own
-     *  purchase price, so extraction can never undercut what the enchant is worth (no book farms). */
     public static long extractPrice(Enchantment ench, int level, Pricing p) {
         return Math.max(1, p.extractBase() + upgradeCost(ench, level, p) * p.extractValuePct() / 100);
     }
@@ -76,13 +65,11 @@ public final class EnchanterManager {
         EnchanterScreenHandler.open(sp);
     }
 
-    /** Coins to fully repair the stack (0 = nothing to repair). Scales with missing durability. */
     public static long repairCost(ItemStack stack, int fullCost) {
         if (stack.isEmpty() || !stack.isDamaged() || fullCost <= 0) return 0;
         return Math.max(1, Math.round(fullCost * (double) stack.getDamage() / stack.getMaxDamage()));
     }
 
-    /** Coins for buying {@code level} of an enchant (one level step). Rarer + higher = pricier. */
     public static long upgradeCost(Enchantment ench, int level, Pricing p) {
         int base = switch (Ench.rarityTier(ench)) {
             case Ench.COMMON -> p.common();
@@ -95,18 +82,10 @@ public final class EnchanterManager {
         return Math.max(1, cost * p.globalPct() / 100);
     }
 
-    /** One purchasable upgrade: the enchantment and the level being bought. */
     public record Offer(Enchantment enchantment, int level) {}
 
-    /** An uncraft quote: how many of the item one craft consumes, and what comes back. */
     public record UncraftPlan(int consumed, List<ItemStack> returns) {}
 
-    /**
-     * Work out what the item breaks back into: the first crafting recipe whose output is this item.
-     * Same code runs client-side (preview) and server-side (validation), so the display matches the
-     * result. Null when there's no recipe, the stack is too small for one craft, or the item is
-     * damaged (no salvaging worn-out gear for full materials).
-     */
     @org.jetbrains.annotations.Nullable
     public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.World world) {
         if (stack.isEmpty() || stack.isDamaged()) return null;
@@ -147,11 +126,6 @@ public final class EnchanterManager {
         return null;
     }
 
-    /**
-     * Every next-level the stack can take: its existing enchants below max level, plus compatible
-     * new ones at level I. Curses never; treasure only when allowed. Registry-ordered, so the
-     * client's rows and the server's validation always agree.
-     */
     public static List<Offer> upgradeOffers(ItemStack stack, boolean treasureAllowed) {
         List<Offer> offers = new ArrayList<>();
         if (stack.isEmpty()) return offers;

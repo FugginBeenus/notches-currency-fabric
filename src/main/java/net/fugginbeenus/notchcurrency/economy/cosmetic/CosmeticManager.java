@@ -11,11 +11,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * The cosmetics shop: buy cosmetics for coins (a SINK). A cosmetic is generic: buying it either
- * gives an item or runs an unlock command, so the shop can sell cosmetics from any mod. One-time
- * cosmetics are recorded per player so they can't be bought twice.
- */
 public final class CosmeticManager {
 
     private static boolean enabled = true;
@@ -42,7 +37,6 @@ public final class CosmeticManager {
         CosmeticShopScreenHandler.open(sp, npcId);
     }
 
-    /** Attempt to buy the offer with the given id for the player. */
     public static void buy(ServerPlayerEntity sp, String offerId) {
         if (!enabled) return;
         CosmeticOffer offer = CosmeticRegistry.get(offerId);

@@ -23,10 +23,6 @@ import java.util.UUID;
 
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coinIcon;
 
-/**
- * Admin economy commands ({@code /eco give|take|set|stats}) and the public
- * {@code /baltop} leaderboard. Visibility tooling for tuning the economy.
- */
 public final class EcoCommands {
 
     private static final int TOP_LIMIT = 10;

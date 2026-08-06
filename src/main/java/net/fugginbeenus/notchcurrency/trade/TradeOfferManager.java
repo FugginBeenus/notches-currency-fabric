@@ -16,18 +16,12 @@ import net.minecraft.util.Formatting;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Runs the offline trade-offer flow: create (escrow items), accept (swap coins/items, offline-safe
- * via the mailbox), cancel (return the escrow), and mailbox delivery on login. Coin transfers are
- * tagged TRADE (a transfer, not a sink/faucet) so the economy totals stay honest.
- */
 public final class TradeOfferManager {
 
     public static final int MAX_PER_PLAYER = 10;
 
     private TradeOfferManager() {}
 
-    /** Deliver any items owed to the player from earlier offline resolutions. Call on JOIN. */
     public static void deliverMail(ServerPlayerEntity sp) {
         TradeOfferState state = TradeOfferState.get(sp.getServer());
         if (!state.hasMail(sp.getUuid())) return;
@@ -46,8 +40,6 @@ public final class TradeOfferManager {
         }
     }
 
-    /** Create an offer. {@code offered} stacks must already be removed from the creator (escrowed by
-     *  the GUI); {@code offeredCoins} are charged here (escrowed into the offer). */
     public static boolean createOffer(ServerPlayerEntity creator, List<ItemStack> offered, long offeredCoins,
                                       long price, List<ItemStack> requested, String targetName) {
         TradeOfferState state = TradeOfferState.get(creator.getServer());
@@ -72,7 +64,6 @@ public final class TradeOfferManager {
         return true;
     }
 
-    /** Accept an offer. Returns false (with a message) if it can't be completed. */
     public static boolean accept(ServerPlayerEntity accepter, UUID offerId) {
         TradeOfferState state = TradeOfferState.get(accepter.getServer());
         TradeOffer offer = state.get(offerId);
@@ -140,7 +131,6 @@ public final class TradeOfferManager {
         return true;
     }
 
-    /** Cancel an offer and return the escrowed items and coins to the creator. */
     public static boolean cancel(ServerPlayerEntity creator, UUID offerId) {
         TradeOfferState state = TradeOfferState.get(creator.getServer());
         TradeOffer offer = state.get(offerId);
@@ -172,8 +162,6 @@ public final class TradeOfferManager {
         return copies;
     }
 
-    /** Merge stacks of the same item type into one total each, so "have enough?" checks and
-     *  removals are correct even when the want grid holds duplicates of one item. */
     private static List<ItemStack> aggregate(List<ItemStack> stacks) {
         java.util.List<ItemStack> totals = new java.util.ArrayList<>();
         for (ItemStack st : stacks) {

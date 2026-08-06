@@ -17,12 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The trade-offers board, in the live-trade screen's language: each offer reads as a give → get
- * exchange (the offered item, an arrow, then the coins and/or item wanted in return) with the
- * from/to detail in the hover tooltip. Offers you can accept up top (paginated), your own open
- * offers below with a cancel button. Accept/cancel go by offer id through TRADE_OFFER_ACTION.
- */
 public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
 
     private static final int W = 248, H = 236;
@@ -68,7 +62,6 @@ public class TradeOffersScreen extends HandledScreen<TradeOffersScreenHandler> {
                 t.getString("nc_from"), t.getString("nc_target"));
     }
 
-    /** Give → get, drawn like the live-trade screen: icons with counts, not text. */
     private void drawRow(DrawContext ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
         int x = this.x;
         boolean hover = over(mouseX, mouseY, x + ROW_X, ry, ROW_W, ROW_H);

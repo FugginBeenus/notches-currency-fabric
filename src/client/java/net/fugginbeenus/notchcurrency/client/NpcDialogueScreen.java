@@ -17,11 +17,6 @@ import net.minecraft.text.Text;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The in-game NPC conversation view: a live portrait of the talking NPC, its name, the current node's
- * text in a speech panel, and the choice buttons (locked choices show greyed). Clicking a choice asks
- * the server, which sends the next node or a close signal.
- */
 public class NpcDialogueScreen extends Screen {
 
     private static final int W = 280, H = 190;
@@ -131,14 +126,11 @@ public class NpcDialogueScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    /** A choice was clicked ({@code i} = index into the visible arrays). The live screen asks the
-     *  server; the preview subclass navigates its local tree instead. */
     protected void onChoice(int i) {
         chose = true; // one click per page; the server sends the next page or closes
         NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, indices[i]);
     }
 
-    /** Optional muted line under the title (the preview marks itself with it). */
     protected String bannerText() {
         return "";
     }

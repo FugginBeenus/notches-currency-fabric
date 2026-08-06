@@ -19,11 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * World-persistent store of standing trade offers plus a per-player item mailbox. The mailbox holds
- * items owed to a player who was offline when a trade resolved (payment to the creator, or a
- * returned offer on cancel); they are handed over on the player's next login.
- */
 public class TradeOfferState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_trade_offers";
@@ -53,7 +48,6 @@ public class TradeOfferState extends PersistentState {
         if (offers.remove(id) != null) markDirty();
     }
 
-    /** Offers the given player may accept (target match or open), excluding their own. */
     public List<TradeOffer> incomingFor(UUID playerUuid, String playerName) {
         List<TradeOffer> out = new ArrayList<>();
         for (TradeOffer o : offers.values()) {
@@ -62,7 +56,6 @@ public class TradeOfferState extends PersistentState {
         return out;
     }
 
-    /** Offers the given player created. */
     public List<TradeOffer> outgoingBy(UUID playerUuid) {
         List<TradeOffer> out = new ArrayList<>();
         for (TradeOffer o : offers.values()) {
@@ -90,14 +83,12 @@ public class TradeOfferState extends PersistentState {
         return m != null && !m.isEmpty();
     }
 
-    /** Remove and return everything in a player's mailbox. */
     public List<ItemStack> claimMail(UUID player) {
         List<ItemStack> m = mailbox.remove(player);
         if (m != null) markDirty();
         return m == null ? List.of() : m;
     }
 
-    /** Put items back in the mailbox (e.g. the player's inventory filled up mid-delivery). */
     public void returnMail(UUID player, List<ItemStack> leftover) {
         if (leftover.isEmpty()) return;
         mailbox.computeIfAbsent(player, k -> new ArrayList<>()).addAll(leftover);

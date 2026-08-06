@@ -14,11 +14,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Resolves the humanoid skin texture for a Notch NPC: bundled presets (1–12), a live player-name skin
- * (Mojang lookup), or a custom URL skin: both fetched asynchronously and cached. Adapted from the old
- * shopkeeper renderer. Robust best-effort: falls back to the default skin while loading or on failure.
- */
 public final class NpcSkins {
 
     public static final int PRESET_COUNT = 12;

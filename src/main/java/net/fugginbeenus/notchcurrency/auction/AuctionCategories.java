@@ -6,20 +6,6 @@ import net.minecraft.util.Identifier;
 
 import java.util.Locale;
 
-/**
- * Helper for classifying auction listings into simple categories for the
- * star-button filters. Inspired by vanilla creative tabs.
- *
- * Categories:
- *  - "blocks"
- *  - "furniture"
- *  - "mobs"
- *  - "gear"
- *  - "seasonal"
- *  - "valuables"
- *  - "books"
- *  - "other"
- */
 public final class AuctionCategories {
 
     private AuctionCategories() {}

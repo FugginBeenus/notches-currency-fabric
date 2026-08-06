@@ -11,16 +11,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * What an NPC does when something happens to it: a short list of {@link DialogueAction}s per
- * {@link NpcTrigger}. Deliberately the same action type dialogue choices use, so anything you can do
- * from a conversation you can also do from a trigger, and there's only one thing to learn.
- *
- * <p>Stored in the NPC's config, so triggers travel with the pick-up item and with presets.
- */
 public class NpcActions {
 
-    /** Per trigger. Small on purpose: this is meant to stay readable, not become a scripting language. */
     public static final int MAX_PER_TRIGGER = 5;
 
     public static final int DEFAULT_RADIUS = 8;
@@ -30,13 +22,11 @@ public class NpcActions {
     private final Map<NpcTrigger, List<DialogueAction>> byTrigger = new EnumMap<>(NpcTrigger.class);
     private int proximityRadius = DEFAULT_RADIUS;
 
-    /** The actions for a trigger; never null, and not modifiable: go through {@link #set}. */
     public List<DialogueAction> get(NpcTrigger trigger) {
         List<DialogueAction> list = byTrigger.get(trigger);
         return list == null ? List.of() : Collections.unmodifiableList(list);
     }
 
-    /** Whether anything is wired to this trigger. Checked before per-tick work, so keep it cheap. */
     public boolean has(NpcTrigger trigger) {
         List<DialogueAction> list = byTrigger.get(trigger);
         return list != null && !list.isEmpty();

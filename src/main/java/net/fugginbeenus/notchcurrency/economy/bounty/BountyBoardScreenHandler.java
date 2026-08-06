@@ -20,12 +20,6 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Backing handler for the bounty board GUI. Board offers and the viewer's taken bounties are
- * synced as read-only data-carrying display stacks (each carrying the bounty id + task/reward/
- * progress/expiry in NBT); the screen renders rows from these and sends actions by id. Refreshed
- * every tick so progress and timers stay live.
- */
 public class BountyBoardScreenHandler extends ScreenHandler {
 
     public static final int OFFER_SLOTS = 5;

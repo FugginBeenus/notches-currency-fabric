@@ -12,12 +12,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-/**
- * The floating sign over an NPC: up to four lines, typed one per row.
- *
- * <p>Deliberately plain: a sign is a sign. Colour codes and the usual placeholders work, and there's
- * a live preview of how each line will read so you don't have to close the screen to check a colour.
- */
 public class NpcBillboardScreen extends Screen {
 
     private static final int W = 300, H = 272;

@@ -7,11 +7,6 @@ import net.minecraft.client.MinecraftClient;
 
 import java.util.UUID;
 
-/**
- * Plays the studio's local (possibly unsaved) tree in the real conversation window: entirely
- * client-side. Every choice shows as clickable, actions never run, nothing touches the server.
- * Reaching an end (or pressing ESC) drops you back into the same studio instance, edits intact.
- */
 public class PreviewDialogueScreen extends NpcDialogueScreen {
 
     private final DialogueStudioScreen studio;
@@ -58,7 +53,6 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
         return out;
     }
 
-    /** The client-side stand-in for the server's substitute(): local player name + HUD balance. */
     private static String substituteLocal(String text, String npcName) {
         MinecraftClient c = MinecraftClient.getInstance();
         String playerName = c.player != null ? c.player.getName().getString() : "player";

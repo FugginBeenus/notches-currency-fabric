@@ -15,22 +15,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
-/**
- * The custom-currency maker. Reads the admin's art from config/notchcurrency/currency/ and a name
- * from the config, and generates a plain resource pack at resourcepacks/NotchCurrencyCustom. One
- * texture (item/coin.png) drives everything: the item, the HUD icon and the chat glyph all point
- * at it, so a single PNG reskins the whole economy. The pack is rebuilt on every game start and
- * deleted when nothing is customized; the player enables it once in Options → Resource Packs.
- */
 public final class CurrencyPackGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-CurrencyPack");
 
     public static final String PACK_DIR_NAME = "NotchCurrencyCustom";
-    /** How the pack shows up in ResourcePackManager's enabled-names list. */
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
 
-    /** The pack a server's pushed coin skin lands in (kept apart from the player's own art). */
     public static final String SERVER_PACK_DIR_NAME = "NotchCurrencyServer";
     public static final String SERVER_PACK_PROFILE_NAME = "file/" + SERVER_PACK_DIR_NAME;
 
@@ -38,16 +29,10 @@ public final class CurrencyPackGenerator {
 
     private CurrencyPackGenerator() {}
 
-    /** True when a generated pack exists on disk (used for the enable-it hint on world join). */
     public static boolean packExists() {
         return Files.isDirectory(target());
     }
 
-    /**
-     * If the custom pack exists but isn't enabled, nudge the player (once per session) to turn it on.
-     * The pack can't be force-enabled from code reliably, so this is a friendly one-line hint.
-     */
-    /** Resource-pack format for the running game version (15 on 1.20.1, 34 on 1.21.1). */
     private static final int PACK_FORMAT =
             //? if >=1.21 {
             /*34;
@@ -55,7 +40,6 @@ public final class CurrencyPackGenerator {
             15;
             //?}
 
-    /** The enabled pack ids (renamed from getEnabledNames in 1.21). */
     private static java.util.Collection<String> enabledPacks(MinecraftClient client) {
         //? if >=1.21 {
         /*return client.getResourcePackManager().getEnabledIds();
@@ -86,7 +70,6 @@ public final class CurrencyPackGenerator {
         return FabricLoader.getInstance().getConfigDir().resolve("notchcurrency").resolve("currency");
     }
 
-    /** Regenerate the pack from the current config + art. Safe to call any time. */
     public static void generate() {
         try {
             Path src = sourceDir();
@@ -140,12 +123,6 @@ public final class CurrencyPackGenerator {
         }
     }
 
-    /**
-     * Applies a server-pushed coin skin (CURRENCY_SYNC): writes it into the separate
-     * NotchCurrencyServer pack, auto-enables it and hot-reloads resources. An all-empty payload
-     * clears the pack (the server stopped customizing, or a previous server's skin lingers).
-     * Runs on the client thread.
-     */
     public static void applyServerData(MinecraftClient client, String itemName, byte[] coin, byte[] tails) {
         try {
             Path pack = FabricLoader.getInstance().getGameDir().resolve("resourcepacks")
@@ -205,7 +182,6 @@ public final class CurrencyPackGenerator {
         }
     }
 
-    /** Best-effort enable + reload; falls back to a chat hint if the pack can't be auto-enabled. */
     private static void enableServerPack(MinecraftClient client, boolean contentChanged) {
         try {
             var mgr = client.getResourcePackManager();

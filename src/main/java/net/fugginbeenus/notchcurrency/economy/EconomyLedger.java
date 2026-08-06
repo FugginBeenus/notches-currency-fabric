@@ -25,17 +25,6 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Central economy audit log. Every balance change should flow through
- * {@link #record} (BalanceStore does this for all callers).
- *
- * Responsibilities:
- *  - append a structured line to a per-day JSON-lines file inside the world save
- *  - mirror admin-relevant events to a Discord webhook (opt-in)
- *  - keep running faucet/sink totals for /eco stats
- *
- * All I/O is best-effort and guarded; a logging failure never affects the economy.
- */
 public final class EconomyLedger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-Ledger");
@@ -54,16 +43,6 @@ public final class EconomyLedger {
     // Shared async HTTP client for the webhook.
     private static volatile HttpClient httpClient;
 
-    /**
-     * Record a single balance change.
-     *
-     * @param server      the server (for name resolution + save path)
-     * @param playerId    affected player's UUID
-     * @param delta       signed change (positive = credit, negative = debit)
-     * @param newBalance  the player's balance after the change
-     * @param reason      why it changed
-     * @param detail      optional human-readable extra context (nullable)
-     */
     public static void record(MinecraftServer server, UUID playerId, long delta,
                               long newBalance, TransactionReason reason, @Nullable String detail) {
         if (server == null || playerId == null || delta == 0) return;
@@ -162,7 +141,6 @@ public final class EconomyLedger {
         return writer;
     }
 
-    /** Close the open ledger file (call on server stop). */
     public static void close() {
         synchronized (FILE_LOCK) {
             if (writer != null) {

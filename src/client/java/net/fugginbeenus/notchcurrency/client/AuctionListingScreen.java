@@ -14,11 +14,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * The "List an Item" screen: drop an item into the input slot, type a price, pick a sale type
- * (Buy Now or a 1/3/7-day auction via a clear segmented selector), and hit List It. Code-drawn
- * in the {@link NotchWidgets} style; the server reads the slot and creates the listing.
- */
 public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHandler> {
 
     private static final int W = 176, H = 224;

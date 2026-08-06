@@ -12,25 +12,10 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Version-compat facade for server-side custom networking (registering client→server receivers and
- * sending server→client packets).
- *
- * <p>The mod speaks in {@code (Identifier, PacketByteBuf)} pairs, which is the native shape on
- * 1.20.1. From 1.20.2 raw channels became typed {@code CustomPayload} records that must be declared
- * up front, so this facade bridges every id+buffer packet onto one generic {@link RawPayload}: the
- * ~40 receiver bodies and their buffer reads stay untouched.
- *
- * <p>The receivers never needed Fabric's {@code responseSender}/{@code networkHandler} params
- * (nothing replies from inside one), so {@link ServerReceiver} is just {@code (server, player, buf)}.
- * Buffers are still created with {@code PacketByteBufs.create()} at the call sites, that helper is
- * stable across versions. The client-side counterpart lives in {@code NetClient}.
- */
 public final class Net {
 
     private Net() {}
 
-    /** A client→server packet handler. */
     @FunctionalInterface
     public interface ServerReceiver {
         void receive(MinecraftServer server, ServerPlayerEntity player, PacketByteBuf buf);
@@ -79,13 +64,6 @@ public final class Net {
     }
     *///?}
 
-    /**
-     * Declare every packet channel. On 1.21+ payload types must be registered in both directions on
-     * both sides before anything can send or receive, so this walks {@link NotchPackets}' id fields
-     * once at init. A no-op on 1.20.1, where channels are ad-hoc.
-     *
-     * <p>Must run before any receiver is registered or any packet is sent.
-     */
     public static void declareChannels() {
         //? if >=1.21 {
         /*if (!CHANNELS.isEmpty()) return;
@@ -106,7 +84,6 @@ public final class Net {
         *///?}
     }
 
-    /** Register a receiver for a client→server channel. */
     public static void registerServerReceiver(Identifier id, ServerReceiver receiver) {
         //? if >=1.21 {
         /*ServerPlayNetworking.registerGlobalReceiver(channel(id), (payload, context) ->
@@ -117,7 +94,6 @@ public final class Net {
         //?}
     }
 
-    /** Send a server→client packet to one player. */
     public static void sendToClient(ServerPlayerEntity player, Identifier id, PacketByteBuf buf) {
         //? if >=1.21 {
         /*ServerPlayNetworking.send(player, new RawPayload(channel(id), toBytes(buf)));

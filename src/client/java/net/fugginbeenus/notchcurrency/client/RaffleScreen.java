@@ -11,13 +11,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * The raffle panel: a compact, code-drawn showcase with a pulsing gold frame + corner sparkles
- * behind a 2x prize display, the prize name + pot, your odds, and big buy / claim / redeem
- * buttons. Coins-only raffles show a giant Notch Coin; item raffles show the prize item (hover
- * for full item info). With no raffle running it shows a clean clock placeholder while still
- * letting winners claim.
- */
 public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
 
     private static final int W = 198;
@@ -117,7 +110,6 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
         }
     }
 
-    /** Clean "nothing running" state: a muted case with a faded clock + a short message. */
     private void drawPlaceholder(DrawContext ctx, int x, int y) {
         drawCase(ctx, x + CASE_X, y + CASE_Y, CASE_W, CASE_H, true);
         int cx = x + CASE_X + CASE_W / 2, cy = y + CASE_Y + CASE_H / 2;
@@ -136,7 +128,6 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
         NotchWidgets.centerText(ctx, this.textRenderer, "Check back soon!", x + W / 2, y + 100, NotchTheme.TEXT_MUTED, false);
     }
 
-    /** Pulsing gold frame ring + twinkling corner sparkles behind the showcase. */
     private void drawGlow(DrawContext ctx, int cx, int cy) {
         float t = (System.currentTimeMillis() % 2000L) / 2000f;
         float pulse = 0.5f + 0.5f * (float) Math.sin(t * Math.PI * 2);
@@ -162,7 +153,6 @@ public class RaffleScreen extends HandledScreen<RaffleScreenHandler> {
         ctx.fill(x, y - s, x + 1, y + s + 1, color);
     }
 
-    /** Dark display case with a gold inner border (or a muted grey one when {@code muted}). */
     private void drawCase(DrawContext ctx, int x, int y, int w, int h, boolean muted) {
         ctx.fill(x, y, x + w, y + h, NotchTheme.OUTLINE);
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, muted ? 0xFF555555 : NotchTheme.DEEP);

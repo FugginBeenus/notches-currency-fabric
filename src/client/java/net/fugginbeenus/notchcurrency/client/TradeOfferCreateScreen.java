@@ -12,12 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Create an offline trade offer, laid out like the live-trade screen: a YOU GIVE 3×3 grid (drop the
- * actual items) with a coin pill under it, an arrow, and a YOU GET column (requested item sample +
- * coin pill), then who it's for and a big Create button. Everything in the grid comes back if you
- * close without creating.
- */
 public class TradeOfferCreateScreen extends HandledScreen<TradeOfferCreateScreenHandler> {
 
     private static final int W = 226, H = 256;

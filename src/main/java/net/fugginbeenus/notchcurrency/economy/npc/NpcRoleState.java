@@ -15,15 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * World-persistent map of NPC entity UUID → economy role assignment.
- * Stored in the overworld save.
- */
 public class NpcRoleState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_npc_roles";
 
-    /** A role plus its optional target (a shopId for ADMIN_SHOP). */
     public record Assignment(NpcRole role, @Nullable UUID shopId) {}
 
     private final Map<UUID, Assignment> roles = new HashMap<>();

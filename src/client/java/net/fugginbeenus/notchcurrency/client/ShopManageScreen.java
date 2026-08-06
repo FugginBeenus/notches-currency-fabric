@@ -20,11 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The owner-side shop hub: earnings with one-click collect, name/greeting editing, the open/closed
- * switch, rent status, and every listing (paginated: all 27 reachable). Prices use the coin glyph;
- * hovering a listing shows a full tooltip. Rows open the listing editor. All edits apply instantly.
- */
 public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
     private static final int W = 256, H = 244;
@@ -46,11 +41,9 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
 
     private int rowY(int i) { return this.y + ROWS_Y + i * ROW_STEP; }
 
-    /** Preset title colors the swatch cycles through (0 = default white, then &-code chars). */
     private static final char[] TITLE_COLORS =
             {0, '6', 'e', 'a', '2', 'b', '3', '9', 'd', '5', 'c', '4', '7'};
 
-    /** The first &-color code in the name, or 0 when uncolored. */
     private char firstColorCode() {
         String s = nameField == null ? "" : nameField.getText();
         for (int i = 0; i + 1 < s.length(); i++) {
@@ -67,7 +60,6 @@ public class ShopManageScreen extends HandledScreen<ShopManageScreenHandler> {
         return f == null || f.getColorValue() == null ? 0xFFFFFFFF : 0xFF000000 | f.getColorValue();
     }
 
-    /** Swatch click: swap the leading &-color code for the next preset (mid-name codes untouched). */
     private void cycleTitleColor() {
         char cur = firstColorCode();
         int idx = 0;

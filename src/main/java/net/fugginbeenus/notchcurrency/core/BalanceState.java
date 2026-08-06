@@ -12,13 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * World-saved storage for player balances.
- * File name: leveldata/data/notchcurrency_balances.dat
- *
- * Balances are stored as {@code long} so a server economy can grow past the
- * ~2.1 billion limit of {@code int} without silently overflowing.
- */
 public class BalanceState extends PersistentState {
 
     private static final String KEY_ROOT = "balances";
@@ -52,19 +45,16 @@ public class BalanceState extends PersistentState {
         return add(id, -Math.max(0L, delta));
     }
 
-    /** Immutable snapshot of every known balance (for /baltop and /eco stats). */
     public java.util.Map<UUID, Long> snapshot() {
         return java.util.Map.copyOf(balances);
     }
 
-    /** Sum of all balances = total money supply in circulation. */
     public long totalSupply() {
         long sum = 0L;
         for (long v : balances.values()) sum += v;
         return sum;
     }
 
-    /** Number of accounts with a non-zero balance. */
     public int accountCount() {
         int n = 0;
         for (long v : balances.values()) if (v > 0) n++;

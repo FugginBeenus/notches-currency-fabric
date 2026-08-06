@@ -18,14 +18,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.world.World;
 
-/**
- * Op-only raffle setup GUI (opened via {@code /raffle admin}). The admin can browse their
- * inventory, drop a template item into the "new prize" slot, set the coins pool / ticket price /
- * house cut / draw interval, toggle the raffle, then Save &amp; Apply, Draw Now or Reset.
- *
- * The prize is a faucet template: a copy is awarded to the winner, so the admin keeps the item
- * they place (it's returned on close). A read-only slot shows the currently configured prize.
- */
 public class RaffleAdminScreenHandler extends ScreenHandler {
 
     public static final int A_PRICE    = 0;
@@ -96,7 +88,6 @@ public class RaffleAdminScreenHandler extends ScreenHandler {
         currentInv.setStack(0, RaffleState.get(sp.getServer()).getPrizeItem().copy());
     }
 
-    /** Escrow the item in the input slot as the prize; return any previously-set prize. */
     public void applyPrizeFromInput(ServerPlayerEntity sp) {
         ItemStack template = inputInv.getStack(0);
         if (!template.isEmpty()) {

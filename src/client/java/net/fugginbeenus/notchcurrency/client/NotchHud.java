@@ -9,13 +9,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
-/**
- * Balance HUD anchored to the right edge of the hotbar; text grows left and pushes the icon left.
- *
- * It auto-hides when vanilla HUD elements would overlap it, like:
- * - Underwater air bubbles
- * - Mounted on a creature with lots of hearts (e.g. horses with > 1 row of HP)
- */
 public final class NotchHud implements HudRenderCallback {
 
     private static long BALANCE = 0;
@@ -36,7 +29,6 @@ public final class NotchHud implements HudRenderCallback {
     // When a game message is wide enough to reach under the HUD, hide it for chat's fade-out.
     private static long chatClashUntil = 0;
 
-    /** Called for every game chat message (from ClientInit); only consulted on 1.21. */
     public static void noteChatMessage(net.minecraft.text.Text message) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null) return;
@@ -56,7 +48,6 @@ public final class NotchHud implements HudRenderCallback {
         BALANCE = value;
     }
 
-    /** Latest balance the client has been told about; also used by the ATM screen. */
     public static long getBalance() {
         return BALANCE;
     }
@@ -111,9 +102,6 @@ public final class NotchHud implements HudRenderCallback {
         ctx.drawText(mc.textRenderer, s, textX, textY, 0xFFFFFF, true);
     }
 
-    /**
-     * Decide when the balance HUD should hide to avoid overlapping vanilla HUD bars.
-     */
     private static boolean shouldHide(MinecraftClient mc) {
         if (mc.options.hudHidden) return true;
 

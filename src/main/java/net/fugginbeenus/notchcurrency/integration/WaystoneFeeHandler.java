@@ -14,12 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Charges a coin fee (a SINK) when a player teleports via a Waystone. This is a SOFT integration:
- * the class references Waystones + Balm types, so it is only ever loaded/registered when the
- * Waystones mod is present (see the isModLoaded guard in NotchCurrency). A player who can't afford
- * the fee has the teleport cancelled with a message. Everything is config-driven and off by default.
- */
 public final class WaystoneFeeHandler {
 
     private static boolean enabled = false;
@@ -29,7 +23,6 @@ public final class WaystoneFeeHandler {
 
     private WaystoneFeeHandler() {}
 
-    /** Read config into the local statics. Safe to call even when Waystones is absent. */
     public static void applyConfig(NotchConfig cfg) {
         enabled = cfg.waystone.enabled;
         fee = Math.max(0, cfg.waystone.fee);
@@ -37,7 +30,6 @@ public final class WaystoneFeeHandler {
         announce = cfg.waystone.announce;
     }
 
-    /** Hook the Waystones teleport event. Only call when the Waystones mod is loaded. */
     public static void register() {
         Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, WaystoneFeeHandler::onPre);
 

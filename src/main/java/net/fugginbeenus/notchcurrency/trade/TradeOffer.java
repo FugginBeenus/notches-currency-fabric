@@ -10,13 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * A standing, offline trade offer: a player escrows up to a 3×3 grid of item stacks plus optional
- * coins, and names a price (coins and/or one requested item stack). Another player: a specific
- * named target, or anyone if no name was set: can accept it later, even if the creator is offline.
- * Payment goes to the creator (coins to their balance by UUID, items to their mailbox), and the
- * escrowed items/coins go to the accepter.
- */
 public class TradeOffer {
 
     private final UUID id;
@@ -54,12 +47,10 @@ public class TradeOffer {
     public boolean requestsItems() { return !requestedItems.isEmpty(); }
     public boolean isOpen() { return targetName.isEmpty(); }
 
-    /** The headline stack, used for the board icon and chat messages. */
     public ItemStack firstOffered() {
         return offeredItems.isEmpty() ? ItemStack.EMPTY : offeredItems.get(0);
     }
 
-    /** A short human label for messages: the first item's name, plus "+ N more" / the coins. */
     public String summary() {
         StringBuilder sb = new StringBuilder();
         if (!offeredItems.isEmpty()) {
@@ -73,7 +64,6 @@ public class TradeOffer {
         return sb.length() > 0 ? sb.toString() : "nothing";
     }
 
-    /** Whether the named player is allowed to accept this offer (target match, or open). */
     public boolean acceptableBy(String playerName) {
         return isOpen() || targetName.equalsIgnoreCase(playerName);
     }

@@ -10,12 +10,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * {@code /raffle}: opens the raffle screen ({@code info}); players buy tickets ({@code buy}),
- * redeem an old losing ticket for free entries ({@code redeem}) and claim wins ({@code claim}).
- * Ops draw, reset, or open the setup GUI ({@code draw}, {@code reset}, {@code admin}). The
- * screen buttons back these same actions.
- */
 public final class RaffleCommands {
 
     private RaffleCommands() {}

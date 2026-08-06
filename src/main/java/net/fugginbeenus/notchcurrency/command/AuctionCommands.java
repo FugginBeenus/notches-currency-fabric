@@ -40,7 +40,6 @@ import java.util.UUID;
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coinIcon;
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coins;
 
-/** Extracted from the mod initializer; registered from NotchCurrency.onInitialize(). */
 public final class AuctionCommands {
 
     private AuctionCommands() {}

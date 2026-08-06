@@ -19,13 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Backing handler for the buyer-side shop browser. Listings are synced as read-only data-carrier
- * display stacks (bounty-board pattern: the sale item with listing id / price / barter / stock in
- * NBT), refreshed every tick so stock stays live while people shop. Pagination unlocks all 27
- * listings: the old screen showed only the first 6. Purchases go through the existing
- * SHOP_PURCHASE packet and PlayerShopManager.purchase().
- */
 public class ShopBrowseScreenHandler extends ScreenHandler {
 
     // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
@@ -49,17 +42,14 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
         @Override public boolean canTakeItems(PlayerEntity p) { return false; }
     }
 
-    /** Read the optional linked-NPC uuid appended by NpcShopLogic (used in the client ctor's this()). */
     static UUID readNpcId(PacketByteBuf buf) {
         return buf.readBoolean() ? buf.readUuid() : null;
     }
 
-    /** Client constructor: the opening buf carries the shop identity. */
     public ShopBrowseScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
         this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256), readNpcId(buf), null);
     }
 
-    /** Server constructor: holds the live shop for per-tick refresh. */
     public ShopBrowseScreenHandler(int syncId, PlayerInventory inv, UUID shopId, String shopName,
                                    String greeting, @Nullable UUID npcId, @Nullable PlayerShop shop) {
         super(ModScreenHandlers.SHOP_BROWSE, syncId);
@@ -112,9 +102,6 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
         }
     }
 
-    /** The sale item, carrying everything a row needs to render and buy. Shared with the manage hub.
-     *  Keeps the per-sale count so the row icon shows vanilla stacking numbers, and embeds the full
-     *  barter stack so the row can draw its icon like a villager trade ingredient. */
     static ItemStack displayStack(ShopListing listing) {
         ItemStack carrier = listing.getItemForSale().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;

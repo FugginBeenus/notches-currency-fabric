@@ -12,13 +12,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * Buy/sell logic for {@link AdminShop}s.
- *
- * Buying from the shop destroys coins ({@link TransactionReason#SINK}); selling to the
- * shop creates coins ({@link TransactionReason#FAUCET}). Admin shops have infinite
- * stock; dynamic pricing (per {@link AdminShopEntry}) is what keeps the faucet in check.
- */
 public final class AdminShopManager {
 
     private AdminShopManager() {}
@@ -28,7 +21,6 @@ public final class AdminShopManager {
         INVALID_QUANTITY, INSUFFICIENT_FUNDS, INSUFFICIENT_ITEMS
     }
 
-    /** Buy {@code qty} bundles from the shop (coins out = SINK). */
     public static Result buy(ServerPlayerEntity buyer, AdminShop shop, AdminShopEntry entry, int qty) {
         if (entry == null) return Result.ENTRY_NOT_FOUND;
         if (qty <= 0 || qty > 256) return Result.INVALID_QUANTITY;
@@ -63,7 +55,6 @@ public final class AdminShopManager {
         return Result.SUCCESS;
     }
 
-    /** Sell {@code qty} bundles to the shop (coins in = FAUCET). */
     public static Result sell(ServerPlayerEntity seller, AdminShop shop, AdminShopEntry entry, int qty) {
         if (entry == null) return Result.ENTRY_NOT_FOUND;
         if (qty <= 0 || qty > 256) return Result.INVALID_QUANTITY;

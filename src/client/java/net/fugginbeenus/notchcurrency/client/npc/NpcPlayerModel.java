@@ -5,13 +5,6 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.math.MathHelper;
 
-/**
- * Player model with pose presets layered on top, then an IDLE ANIMATION layered on the pose
- * (statue/breathe/sway/lively: EasyNPC-style life for otherwise frozen NPCs). Poses are applied
- * AFTER vanilla setAngles because they need per-part absolute values; while the NPC is mid attack
- * swing, the swinging arm is left to vanilla so combat reads properly. Angle/offset values adapted
- * from EasyNPC's baked pose data. Overlay parts are re-synced at the end.
- */
 public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
 
     private final boolean thinArms;
@@ -41,8 +34,6 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         syncOverlays();
     }
 
-    /** Statue mode: cancel vanilla's built-in idle arm bob (the exact inverse of the terms
-     *  BipedEntityModel adds every frame) so the NPC is genuinely frozen. */
     private void removeVanillaArmBob(float t) {
         float bobRoll = MathHelper.cos(t * 0.09f) * 0.05f + 0.05f;
         float bobPitch = MathHelper.sin(t * 0.067f) * 0.05f;
@@ -52,13 +43,8 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         this.leftArm.pitch += bobPitch;
     }
 
-    /** How long the custom attack swing plays, in ticks. */
     private static final float SWING_TICKS = 8f;
 
-    /** A big readable attack swing: raise the right arm overhead and chop, with a shoulder twist.
-     *  Driven primarily by the entity's own ATTACK_PULSE sync (vanilla's hand-swing packet proved
-     *  unreliable for this entity; the render-time progress is kept as a fallback). Applied LAST so
-     *  it wins over pose + idle in every pose. */
     private void applyAttackSwing(NotchNpcEntity entity, float t) {
         float p = this.handSwingProgress;
         if (p <= 0f) {
@@ -73,11 +59,6 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         this.body.yaw = -0.2f * wind;
     }
 
-    /** Vanilla resets angles every frame but NOT body/arm pivots, so the Sitting/Chilling pivot
-     *  drops would linger forever after switching poses (torso and arms sunk into the legs). Reset
-     *  everything to the biped defaults first; the sneak pose manages its own pivots in vanilla.
-     *  body.roll and head.roll are also never reset by vanilla: zero them here or the idle-sway
-     *  additions accumulate frame over frame and the torso literally spins around the neck. */
     private void resetPivots() {
         this.body.roll = 0f;
         this.head.roll = 0f;
@@ -165,9 +146,6 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         }
     }
 
-    /** The idle life layer. Statue is handled up-front (vanilla bob removed); Breathe IS the plain
-     *  vanilla idle, so only Lively adds anything here: breathing chest, a gentle weight shift, and
-     *  slow people-watching head glances: all additive on top of whatever pose is set. */
     private void applyIdleAnim(NotchNpcEntity entity, float t, boolean swinging) {
         if (entity.getPoseAnim() < NotchNpcEntity.ANIM_LIVELY) return;
 
@@ -187,19 +165,12 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         this.leftArm.pitch += MathHelper.sin(t * 0.013f) * 0.03f;
     }
 
-    /** Apply one part's custom rotation (degrees; a zeroed part keeps a neutral stance). */
     private static void applyRot(ModelPart part, float[] angles, int idx) {
         part.pitch = angles[idx * 3] * DEG;
         part.yaw = angles[idx * 3 + 1] * DEG;
         part.roll = angles[idx * 3 + 2] * DEG;
     }
 
-    /**
-     * Toggle the skin's outer "second layer" (hat/jacket/sleeves/pants). These six parts are half the
-     * player model's geometry and they're transparent, so they cost more per part than the base body.
-     * Past a few blocks they're indistinguishable. The renderer hides them at range so a crowd of
-     * NPCs costs roughly what a crowd of simpler mobs does.
-     */
     public void setOverlaysVisible(boolean visible) {
         this.hat.visible = visible;
         this.jacket.visible = visible;
@@ -209,7 +180,6 @@ public class NpcPlayerModel extends PlayerEntityModel<NotchNpcEntity> {
         this.leftPants.visible = visible;
     }
 
-    /** Re-sync the skin overlay layers with the mutated parts. */
     private void syncOverlays() {
         this.hat.copyTransform(this.head);
         this.jacket.copyTransform(this.body);

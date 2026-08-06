@@ -2,11 +2,6 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 
 import net.minecraft.nbt.NbtCompound;
 
-/**
- * A bounty a player has <em>taken</em> from the board (Bountiful-style): a personal copy of the
- * offer with its own completion deadline and (for KILL bounties) accumulated progress. Kills only
- * count toward taken bounties, and the reward is collected by returning to the board.
- */
 public class TakenBounty {
 
     private final Bounty bounty;         // copy of the offer (its id identifies this taken bounty)

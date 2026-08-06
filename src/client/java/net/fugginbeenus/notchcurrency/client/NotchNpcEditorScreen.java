@@ -22,12 +22,6 @@ import net.minecraft.util.Identifier;
 
 import java.util.UUID;
 
-/**
- * Owner-only Notch NPC editor. The Appearance tab shows a live preview of the actual NPC (so edits are
- * reflected instantly) with a model selector (Humanoid default; APP.ly if installed), skin controls
- * per model (humanoid preset cycling + slim; APP.ly themed variants), and a size control. Code-drawn
- * with {@link NotchWidgets}; edits go to the server, which re-validates ownership.
- */
 public class NotchNpcEditorScreen extends Screen {
 
     // Taller than it needs to be for most tabs: Moves carries three rows of toggles now, and every
@@ -41,8 +35,6 @@ public class NotchNpcEditorScreen extends Screen {
     };
 
     private final UUID npcId;
-    /** Set during a draw when the cursor is over something worth explaining, and painted last so
-     *  it lands above the panel. Hints that would be clipped to "..." live here instead. */
     @org.jetbrains.annotations.Nullable private java.util.List<Text> tooltip = null;
     private final String ownerName;
     private final boolean canEdit;
@@ -72,7 +64,6 @@ public class NotchNpcEditorScreen extends Screen {
 
     private int px, py;
     private TextFieldWidget nameField;
-    /** Personality, held here between the packet arriving and the widgets being built. */
     private String currentSubtitle = "";
     private String currentVoice = "";
     private int currentVoicePitch = 100;
@@ -84,9 +75,6 @@ public class NotchNpcEditorScreen extends Screen {
     private String currentBillboard;
     private NotchNpcEntity preview;
 
-    /** Which tab the NEXT editor open should land on. Sub-screens (pose editor, studio, stats…) set
-     *  this to their home tab right before sending the reopen packet, so Back returns you to where
-     *  you came from instead of the first tab. Consumed (reset to 0) on construction. */
     public static int reopenAtTab = 0;
 
     public NotchNpcEditorScreen(net.fugginbeenus.notchcurrency.client.npc.NpcEditorState state) {
@@ -342,7 +330,6 @@ public class NotchNpcEditorScreen extends Screen {
 
     private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
 
-    /** Fit the preview to the current model's size so big disguises don't overflow the panel. */
     private int previewSize() {
         // Fit the model to the preview box using both dimensions. In drawEntity, rendered pixels ≈
         // size × blocks, so size = boxPixels / blocks; take the tighter of width/height so nothing
@@ -400,7 +387,6 @@ public class NotchNpcEditorScreen extends Screen {
     private int movesRow3() { return py + 224; }
     private int movesRow4() { return py + 241; }
 
-    /** One always-on toggle: green when on, plain when off. */
     private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
         boolean hover = over(mx, my, x, y, TOGGLE_W, TOGGLE_H);
         if (on) NotchWidgets.primaryButton(ctx, this.textRenderer, x, y, TOGGLE_W, TOGGLE_H, label, hover);
@@ -491,13 +477,6 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
     }
 
-    /**
-     * The voices worth offering, as sound ids paired with a plain name.
-     *
-     * <p>Deliberately a short list of vanilla voices rather than every sound in the game. Pitch is
-     * what actually makes a cast: the same villager grunt at 70% and 130% reads as two people, so a
-     * handful of voices times a pitch slider covers far more ground than a long menu would.
-     */
     private static final String[][] VOICES = {
             {"", "Silent"},
             {"entity.villager.ambient", "Villager"},
@@ -525,7 +504,6 @@ public class NotchNpcEditorScreen extends Screen {
         NotchPacketsClient.sendNpcFlavor(npcId, currentSubtitle, currentVoice, currentVoicePitch);
     }
 
-    /** The voice row on the Talk tab: which sound, how high, and hear it. */
     private void drawVoiceRow(DrawContext ctx, int mx, int my) {
         NotchWidgets.divider(ctx, px + 8, py + 214, W - 16);
         ctx.drawText(this.textRenderer, "Voice:", px + 22, py + 226, NotchTheme.TEXT_DARK, false);
@@ -1010,7 +988,6 @@ public class NotchNpcEditorScreen extends Screen {
         return false;
     }
 
-    /** Called by the model picker when a model is chosen. */
     public void applyModel(String model) {
         currentModel = model;
         if (NotchNpcEntity.MODEL_APPLY.equals(model)) {

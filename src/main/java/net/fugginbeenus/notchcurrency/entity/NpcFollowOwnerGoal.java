@@ -5,11 +5,6 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.EnumSet;
 
-/**
- * Follow-the-owner movement for a Notch NPC in FOLLOW_OWNER mode. Walks toward the owner when they
- * get more than a few blocks away, and quietly teleports to catch up if they're left far behind
- * (so the NPC can't be permanently lost). Only added to the goal selector while the mode is active.
- */
 public class NpcFollowOwnerGoal extends Goal {
 
     private static final double START_DIST_SQ = 9.0;   // start walking beyond 3 blocks

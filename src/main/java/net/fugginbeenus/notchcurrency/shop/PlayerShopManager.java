@@ -19,10 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Business logic for player shop operations.
- * Handles purchases, stock management, and owner payouts.
- */
 public final class PlayerShopManager {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-PlayerShopManager");
@@ -37,9 +33,6 @@ public final class PlayerShopManager {
 
     // --- Shop Creation ---
 
-    /**
-     * Creates a new shop for a player.
-     */
     @Nullable
     public static PlayerShop createShop(ServerPlayerEntity player, String shopName) {
         ShopState state = ShopState.get(player.getServerWorld());
@@ -64,9 +57,6 @@ public final class PlayerShopManager {
         return shop;
     }
 
-    /**
-     * Deletes a player's shop.
-     */
     public static boolean deleteShop(ServerPlayerEntity player, UUID shopId) {
         ShopState state = ShopState.get(player.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -93,10 +83,6 @@ public final class PlayerShopManager {
 
     // --- Listing Management ---
 
-    /**
-     * Adds a new listing to a shop.
-     * The item is taken from the player's inventory as initial stock.
-     */
     public static boolean addListing(ServerPlayerEntity owner, UUID shopId, ItemStack item, int coinPrice) {
         ShopState state = ShopState.get(owner.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -142,9 +128,6 @@ public final class PlayerShopManager {
         return true;
     }
 
-    /**
-     * Adds stock to an existing listing.
-     */
     public static boolean addStock(ServerPlayerEntity owner, UUID shopId, UUID listingId, ItemStack items) {
         ShopState state = ShopState.get(owner.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -178,9 +161,6 @@ public final class PlayerShopManager {
         return true;
     }
 
-    /**
-     * Updates the price of a listing.
-     */
     public static boolean updatePrice(ServerPlayerEntity owner, UUID shopId, UUID listingId, int newPrice) {
         ShopState state = ShopState.get(owner.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -210,9 +190,6 @@ public final class PlayerShopManager {
         return true;
     }
 
-    /**
-     * Sets a barter (item) price for a listing.
-     */
     public static boolean setBarterPrice(ServerPlayerEntity owner, UUID shopId, UUID listingId,
                                          ItemStack requiredItem, int requiredCount) {
         ShopState state = ShopState.get(owner.getServerWorld());
@@ -242,9 +219,6 @@ public final class PlayerShopManager {
         return true;
     }
 
-    /**
-     * Removes a listing and returns remaining stock to owner.
-     */
     public static boolean removeListing(ServerPlayerEntity owner, UUID shopId, UUID listingId) {
         ShopState state = ShopState.get(owner.getServerWorld());
         PlayerShop shop = state.getShop(shopId);
@@ -273,10 +247,6 @@ public final class PlayerShopManager {
 
     // --- Purchasing ---
 
-    /**
-     * Unified purchase method - handles BOTH coin AND barter prices (additive).
-     * If a listing has both a coin price and a barter item, buyer must pay BOTH.
-     */
     public static PurchaseResult purchase(ServerPlayerEntity buyer, UUID shopId, UUID listingId, int quantity) {
         MinecraftServer server = buyer.getServer();
         ShopState state = ShopState.get(server);
@@ -466,18 +436,6 @@ public final class PlayerShopManager {
         }
     }
 
-
-    /**
-     * Return ALL of a shop's contents to its owner: pending coin balance, pending
-     * barter items, and every listing's remaining stock.
-     *
-     * This is the single canonical path used by /shop delete, admin delete, shopkeeper
-     * death, and NPC deletion, so that coins/items can never be lost or duplicated by
-     * different routes handling the pending stores differently.
-     *
-     * Coins are paid to the owner's account by UUID (works while offline); items go to
-     * the owner's inventory only if they are currently online.
-     */
     public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, @Nullable ServerPlayerEntity owner) {
         // Pending coin balance is the single source of truth for shop earnings.
         long totalCurrency = shop.withdrawBalance();
@@ -525,9 +483,6 @@ public final class PlayerShopManager {
                 totalCurrency, itemsToReturn.size(), shop.getShopId(), shop.getOwnerName());
     }
 
-    /**
-     * Transfer shop ownership to another player.
-     */
     public static boolean transferOwnership(MinecraftServer server, UUID shopId, UUID newOwnerId, String newOwnerName) {
         ShopState state = ShopState.get(server);
         PlayerShop shop = state.getShop(shopId);

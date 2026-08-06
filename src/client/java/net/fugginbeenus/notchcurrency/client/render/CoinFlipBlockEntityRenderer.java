@@ -16,11 +16,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.world.World;
 
-/**
- * Renders the coin-flip table's coin as the real notch coin item. Idle, it lies flat on the felt
- * showing the last-landed face; when a flip is running (per the block entity's start tick + reveal
- * duration) it arcs into the air and tumbles, then drops back to the felt as the FACE settles.
- */
 public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlipBlockEntity> {
 
     private static final float TABLE_Y = 0.96f;  // felt surface height (block units)

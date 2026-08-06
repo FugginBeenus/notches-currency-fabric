@@ -20,15 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Reactions: what an NPC does when something happens to it. Pick a moment on the left, list what
- * should happen on the right.
- *
- * <p>Deliberately a smaller palette than the dialogue studio. Opening a shop screen isn't offered
- * here: the Role already does that when a player interacts, and "open a GUI because someone punched
- * me" isn't a thing anyone wants. What's left is the useful set: say something, move coins, hand over
- * an item, run a command.
- */
 public class NpcActionsScreen extends Screen {
 
     private static final int W = 340, H = 232;
@@ -63,9 +54,6 @@ public class NpcActionsScreen extends Screen {
         return (selected >= 0 && selected < list.size()) ? list.get(selected) : null;
     }
 
-    /** Paying coins and giving items mint value, so they're admin-only alongside the command actions
-     *  (see {@link DialogueAction#isAdminOnly}). The server strips them either way; hiding them here
-     *  just means a shop owner isn't offered something that would silently vanish on save. */
     @Override
     protected void init() {
         px = (this.width - W) / 2;
@@ -97,8 +85,6 @@ public class NpcActionsScreen extends Screen {
         syncFields();
     }
 
-    /** Push the selected action into the text fields (selection changes before setText, so the
-     *  change listeners can't write the old row's text into the new one). */
     private void syncFields() {
         DialogueAction a = current();
         boolean value = a != null && NpcActionEditing.needsValue(a.type());

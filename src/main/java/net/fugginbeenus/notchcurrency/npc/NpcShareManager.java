@@ -16,23 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Moving an NPC between worlds.
- *
- * <p>Presets solve "build it once, stamp it everywhere <em>here</em>". This solves the other half:
- * getting an NPC off this server entirely. Export hands the player a line of text; import takes one
- * back. Because it is only text, it travels however players already talk to each other, and it works
- * the same whether they're on a server or in their own single-player world.
- *
- * <p>The same text is written to and read from {@code config/notchcurrency/npc_share/*.npc} for
- * anyone who would rather hand over a file, which is the natural route in single player where the
- * config folder is right there.
- *
- * <p>Everything here treats an incoming code as written by a stranger. It is owner-gated like every
- * other NPC edit, the config is stripped of ownership and of its action-sweep stamp on the way in
- * (see {@link NpcPresetManager#stripWorldSpecific}), and nothing in a code can grant its author any
- * permission the importing player doesn't already have.
- */
 public final class NpcShareManager {
 
     private NpcShareManager() {}
@@ -49,7 +32,6 @@ public final class NpcShareManager {
         }
     }
 
-    /** Build the code and send it back for the client to put on the clipboard. */
     private static void copy(ServerPlayerEntity sp, NotchNpcEntity npc) {
         String code = exportCode(npc);
         if (code == null) {
@@ -123,7 +105,6 @@ public final class NpcShareManager {
         paste(sp, npc, code);
     }
 
-    /** Null when the NPC somehow can't be serialized, which callers report rather than throw. */
     private static String exportCode(NotchNpcEntity npc) {
         NbtCompound tag = npc.writeToItem();
         NpcPresetManager.stripWorldSpecific(tag);
@@ -140,7 +121,6 @@ public final class NpcShareManager {
         return dir;
     }
 
-    /** File-safe name, matching the preset rules so the two folders behave the same. */
     private static String sanitize(String name) {
         String clean = (name == null ? "" : name).trim().toLowerCase().replace(' ', '_')
                 .replaceAll("[^a-z0-9_\\-]", "");

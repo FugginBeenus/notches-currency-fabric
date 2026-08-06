@@ -8,11 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * An NPC's whole branching conversation: nodes by id + which node starts it. Lives on the entity
- * (NBT) so it persists and travels with the pick-up item. Empty tree = the NPC has no dialogue and
- * interaction goes straight to its role.
- */
 public class DialogueTree {
 
     private final Map<String, DialogueNode> nodes = new LinkedHashMap<>();
@@ -54,7 +49,6 @@ public class DialogueTree {
         startId = "";
     }
 
-    /** True when no node has any choices: a flat set of standalone lines (the Quick Lines shape). */
     public boolean isFlat() {
         for (DialogueNode n : nodes.values()) {
             if (!n.choices().isEmpty()) return false;
@@ -62,8 +56,6 @@ public class DialogueTree {
         return true;
     }
 
-    /** Rename a page, preserving page order and fixing up the start id and every choice that led to
-     *  it. Returns false when the old id doesn't exist or the new id is blank/taken. */
     public boolean renameNode(String oldId, String newId) {
         if (newId == null || newId.isEmpty() || nodes.containsKey(newId)) return false;
         DialogueNode node = nodes.get(oldId);

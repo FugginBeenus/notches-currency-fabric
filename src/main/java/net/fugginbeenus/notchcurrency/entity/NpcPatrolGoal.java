@@ -6,11 +6,6 @@ import net.minecraft.util.math.BlockPos;
 import java.util.EnumSet;
 import java.util.List;
 
-/**
- * Walks the NPC's waypoint route in a loop (PATROL mode). Starts at the nearest waypoint, advances
- * on arrival, and re-paths on a countdown (never {@code age % N}: goals only fully tick every other
- * game tick). Reads the waypoint list live, so route edits apply immediately.
- */
 public class NpcPatrolGoal extends Goal {
 
     private static final double ARRIVE_DIST_SQ = 6.25; // within 2.5 blocks = arrived

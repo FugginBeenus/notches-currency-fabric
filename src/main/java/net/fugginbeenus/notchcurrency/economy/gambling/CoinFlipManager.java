@@ -28,12 +28,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * The coin flip: a true 50/50. Bet, pick heads or tails, win a configurable payout. When played at a
- * {@link CoinFlipBlock} the block "flips" for a short delay (the {@code FLIPPING} blockstate) and the
- * result is revealed once the spin lands: driven by a tick queue so the reveal art has time to play.
- * Played by command it resolves instantly.
- */
 public final class CoinFlipManager {
 
     private static final Random RNG = new Random();
@@ -41,10 +35,8 @@ public final class CoinFlipManager {
     private static int payoutPercent = 195;
     private static int revealTicks = 30;
 
-    /** Which coin-flip block a player last opened, so the FLIP packet knows where to animate. */
     private static final Map<UUID, BlockPos> pendingBlock = new HashMap<>();
 
-    /** Bets awaiting their delayed reveal (block flips only). */
     private static final List<Pending> queue = new ArrayList<>();
 
     private record Pending(ServerWorld world, BlockPos pos, UUID player,
@@ -65,7 +57,6 @@ public final class CoinFlipManager {
 
     // ---- entry points ----
 
-    /** Right-clicked a coin-flip block: remember it and open the betting screen. */
     public static void openScreen(ServerPlayerEntity sp, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
             sp.sendMessage(Text.literal("Gambling is disabled on this server.").formatted(Formatting.RED), false);
@@ -81,13 +72,11 @@ public final class CoinFlipManager {
         sp.sendMessage(Text.literal("The coin is still in the air - wait for it to land.").formatted(Formatting.YELLOW), false);
     }
 
-    /** Player hit FLIP in the coin-flip screen: play at the block they opened (delayed reveal). */
     public static void flipFromScreen(ServerPlayerEntity sp, boolean guessHeads, long bet) {
         BlockPos pos = pendingBlock.get(sp.getUuid());
         resolve(sp, guessHeads, bet, pos);
     }
 
-    /** {@code /coinflip}: no block, resolves instantly. */
     public static void flipCommand(ServerPlayerEntity sp, boolean guessHeads, long bet) {
         resolve(sp, guessHeads, bet, null);
     }
@@ -150,7 +139,6 @@ public final class CoinFlipManager {
         }
     }
 
-    /** Land the coin: settle the block face, pay out, and tell the player. */
     private static void applyReveal(ServerWorld world, BlockPos pos, UUID player,
                                     long bet, boolean won, boolean landedHeads) {
         if (pos != null) {

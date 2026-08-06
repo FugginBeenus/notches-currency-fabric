@@ -9,12 +9,6 @@ import net.minecraft.text.Text;
 
 import java.util.UUID;
 
-/**
- * Stats & abilities editor: three attribute sliders (max health, walk speed, regeneration) plus the
- * toggle grid (protection, silence, glowing, doors, leash, invisibility...). EasyNPC spreads this
- * over four attribute screens; one panel covers the parts people actually use. Toggles apply
- * instantly; sliders apply on release.
- */
 public class NpcStatsScreen extends Screen {
 
     private static final int W = 300, H = 266;

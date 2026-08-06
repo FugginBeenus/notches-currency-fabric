@@ -17,12 +17,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-/**
- * Loads bounty pools from datapacks: JSON arrays under
- * {@code data/&lt;namespace&gt;/notch_bounties/objectives/*.json} and {@code .../rewards/*.json},
- * merged across all packs (the mod ships defaults; server packs add or override). Reloads on
- * {@code /reload}.
- */
 public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-BountyPools");

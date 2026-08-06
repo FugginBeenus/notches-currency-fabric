@@ -14,11 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-/**
- * Loads cosmetic offers from {@code data/<namespace>/cosmetics/*.json} (one offer per file,
- * id = filename), merged across packs; the mod ships an example. Reloads on {@code /reload}, so
- * admins can add/edit cosmetics for any mod without a restart.
- */
 public class CosmeticLoader implements SimpleSynchronousResourceReloadListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-Cosmetics");

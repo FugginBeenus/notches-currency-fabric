@@ -51,11 +51,6 @@ public final class AuctionState extends PersistentState {
         return get(world.getServer());
     }
 
-    /**
-     * Auctions are global: always stored in the overworld's persistent state, so a
-     * listing is visible regardless of which dimension the seller or buyer is in.
-     * (Balances and player shops are overworld-only too.)
-     */
     public static AuctionState get(MinecraftServer server) {
         ServerWorld overworld = server.getOverworld();
         PersistentStateManager mgr = overworld.getPersistentStateManager();
@@ -181,10 +176,6 @@ public final class AuctionState extends PersistentState {
 
     // ----- Helper to strip auction NBT from items -----
 
-    /**
-     * Removes all auction-related NBT tags from an item so its normal tooltip returns.
-     * Call this before giving purchased/returned items to players.
-     */
     private static void stripAuctionTags(ItemStack stack) {
         if (StackData.hasData(stack)) {
             NbtCompound tag = StackData.editData(stack);
@@ -216,10 +207,6 @@ public final class AuctionState extends PersistentState {
         scheduleReminder(player.getUuid(), now + 900L);
     }
 
-    /**
-     * Called from NotchCurrency each tick to send login reminders
-     * when a player has pending winnings.
-     */
     public void checkLoginReminders(ServerWorld world) {
         if (loginReminders.isEmpty()) return;
 
@@ -273,7 +260,6 @@ public final class AuctionState extends PersistentState {
 
     // ----- API used by commands / GUIs -----
 
-    /** All current listings (backed by PersistentState). */
     public Collection<AuctionListing> getListings() {
         return Collections.unmodifiableCollection(listings.values());
     }
@@ -292,10 +278,6 @@ public final class AuctionState extends PersistentState {
         return addListing(world, seller, stack, price, category, defaultDurationTicks);
     }
 
-    /**
-     * Overload that supports a custom duration.
-     * durationTicks <= 0  => no time limit (buy-now listing).
-     */
     public AuctionListing addListing(ServerWorld world,
                                      ServerPlayerEntity seller,
                                      ItemStack stack,
@@ -334,12 +316,6 @@ public final class AuctionState extends PersistentState {
         return listing;
     }
 
-    /**
-     * Attempt to buy a listing at its fixed price.
-     * - Fails if expired (for timed auctions).
-     * - Fails if there are bids (use /ah bid instead).
-     * Supports offline seller & full-inventory buyer via mailbox.
-     */
     public void buyListing(ServerPlayerEntity buyer, UUID id) {
         AuctionListing listing = listings.get(id);
         if (listing == null) {
@@ -632,12 +608,6 @@ public final class AuctionState extends PersistentState {
         markDirty();
     }
 
-    /**
-     * Refund the reserved coins of a timed auction's highest bidder, if any. Bids escrow the coins
-     * at bid time (see placeBid), so any path that removes a still-live listing with a standing bid
-     * MUST call this or those coins are destroyed. Offline-safe: credits by UUID. Returns the amount
-     * refunded (0 if there was no bid).
-     */
     public long refundHighestBid(ServerWorld world, AuctionListing listing) {
         if (listing == null || listing.highestBidderUuid == null || listing.highestBid <= 0) {
             return 0L;
@@ -662,16 +632,6 @@ public final class AuctionState extends PersistentState {
         return amount;
     }
 
-    /**
-     * Called once per world tick from NotchCurrency.
-     * Handles:
-     *  - Timed auction expiry (payout to seller + item to winner / mailbox)
-     *  - Returning unsold items on expired auctions with no bids (mailbox-safe)
-     *
-     * Coins are already reserved at bid time and refunded on outbid,
-     * so here we only CREDIT the seller for the winning bid, or store
-     * those coins into mailbox if needed.
-     */
     private int tickCounter = 0;
     private static final int TICK_INTERVAL = 20; // Check once per second instead of every tick
 
@@ -904,10 +864,6 @@ public final class AuctionState extends PersistentState {
         }
     }
 
-    /**
-     * Claim all pending coins + items for this player.
-     * Used by /ah claim (no args).
-     */
     public void claimAll(ServerWorld world, ServerPlayerEntity player) {
         if (pendingWinnings.isEmpty()) {
             player.sendMessage(

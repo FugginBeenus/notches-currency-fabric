@@ -13,11 +13,6 @@ import net.minecraft.text.Text;
 
 import java.util.UUID;
 
-/**
- * The custom pose editor: pick a body part, drag three sliders (pitch/yaw/roll), watch the live
- * preview move. One part at a time instead of a wall of number fields, same power as EasyNPC's
- * Basic/Custom pose screens, far less squinting. Every change applies to the NPC instantly.
- */
 public class PoseEditorScreen extends Screen {
 
     private static final int W = 340, H = 226;

@@ -14,7 +14,6 @@ import java.util.Random;
 
 public final class GoldenCacheManager {
 
-    /** Loot table used by the golden cache (e.g. data/notchcurrency/loot_tables/golden_cache.json). */
     public static final Identifier LOOT = NotchCurrency.id("golden_cache");
 
     public static boolean ANNOUNCE = true;
@@ -33,7 +32,6 @@ public final class GoldenCacheManager {
         // scheduled-spawn loop can be wired up later without touching the initializer.
     }
 
-    /** Admin/testing: force a cache near a point within radius. Returns placed location or null. */
     public static BlockPos spawnNear(ServerWorld world, BlockPos center, int radius) {
         if (radius < 1) radius = 1;
 
@@ -69,7 +67,6 @@ public final class GoldenCacheManager {
         c.currencyPerStackMax = CURRENCY_PER_STACK_MAX;
     }
 
-    /** Admin/testing: force a cache exactly at the given position (snapped to safe top ground). */
     public static BlockPos spawnAt(ServerWorld world, int x, int y, int z) {
         int safeY = Math.max(
                 y,
@@ -79,10 +76,6 @@ public final class GoldenCacheManager {
         return placeCacheBlock(world, pos) ? pos : null;
     }
 
-    /**
-     * Places the GOLDEN_CACHE block at/above the given position.
-     * GoldenCacheBlock handles loot on break.
-     */
     private static boolean placeCacheBlock(ServerWorld world, BlockPos pos) {
         BlockPos place = pos;
 

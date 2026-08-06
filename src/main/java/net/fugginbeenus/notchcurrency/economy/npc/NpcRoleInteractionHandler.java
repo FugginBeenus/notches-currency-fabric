@@ -11,11 +11,6 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Opens the right economy feature when a player interacts with an NPC that has been
- * bound to a {@link NpcRole} (via {@code /npc} or the NPC API). Any entity can carry a
- * role, so this works with APP.ly, EasyNPC, villagers, etc.
- */
 public final class NpcRoleInteractionHandler {
 
     private NpcRoleInteractionHandler() {}

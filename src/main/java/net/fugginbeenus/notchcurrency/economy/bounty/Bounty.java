@@ -12,12 +12,6 @@ import net.minecraft.util.Identifier;
 
 import java.util.UUID;
 
-/**
- * A single bounty: kill N of a mob, or deliver N of an item, for a coin and/or item reward.
- * Rewards are a money/item FAUCET. Generated bounties carry a rarity and an expiry; admin-posted
- * ones are permanent ({@code expiresGameTime == 0}). Repeatable bounties can be done again;
- * others pay once per player.
- */
 public class Bounty {
 
     private final UUID id;
@@ -60,7 +54,6 @@ public class Bounty {
         return expiresGameTime > 0 && now >= expiresGameTime;
     }
 
-    /** Display name of the target mob/item. */
     public Text targetName() {
         if (type == BountyType.KILL) {
             EntityType<?> et = Registries.ENTITY_TYPE.get(target);
@@ -69,14 +62,12 @@ public class Bounty {
         return new ItemStack(Registries.ITEM.get(target)).getName();
     }
 
-    /** Human-readable task line, e.g. "Kill 10 Zombie" or "Deliver 32 Iron Ingot". */
     public String describe() {
         if (!description.isEmpty()) return description;
         String verb = type == BountyType.KILL ? "Kill " : "Deliver ";
         return verb + required + " " + targetName().getString();
     }
 
-    /** Short reward summary for the board, e.g. "50 coins" / "1 Diamond" / "50 coins + 1 Diamond". */
     public String rewardSummary() {
         StringBuilder sb = new StringBuilder();
         if (rewardCoins > 0) sb.append(rewardCoins).append(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word());

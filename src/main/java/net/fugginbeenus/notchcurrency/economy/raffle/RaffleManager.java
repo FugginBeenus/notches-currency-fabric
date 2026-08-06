@@ -22,17 +22,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Drives the server raffle: selling physical tickets, taking the house cut as a {@link
- * TransactionReason#SINK}, accumulating the pot, drawing a weighted winner, and holding the
- * prize until the winner claims it at the raffle. Tickets are personal receipts: the buyer
- * wins by identity, so a lost ticket never forfeits a prize, but turning the ticket in (or
- * running {@code /raffle claim}) is how you collect.
- *
- * Because items already in inventories can't be mutated at draw time, ticket statuses
- * (active / winning / expired-loser) are restamped lazily via {@link #refreshTickets} on any
- * contact with the raffle. Expired losing tickets can be redeemed for a discount on new entries.
- */
 public final class RaffleManager {
 
     private static final Random RANDOM = new Random();
@@ -73,7 +62,6 @@ public final class RaffleManager {
 
     // ---- ticket sales ----
 
-    /** Buy {@code qty} entries for {@code player}. */
     public static void buyTicket(ServerPlayerEntity player, int qty) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -127,7 +115,6 @@ public final class RaffleManager {
         }
     }
 
-    /** Turn in one old losing ticket for a few free entries into the current round. */
     public static void redeemTicket(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -173,14 +160,12 @@ public final class RaffleManager {
                 .append(Text.literal("! You now hold " + have + " (" + oddsString(state, have) + " to win).").formatted(Formatting.GREEN)), false);
     }
 
-    /** &lt;5 entries → 1, &lt;10 → 5, else → 10 (a consolation that's always a net loss). */
     private static int redeemEntriesFor(int oldEntries) {
         if (oldEntries < 5) return 1;
         if (oldEntries < 10) return 5;
         return 10;
     }
 
-    /** One ticket per round: update the player's existing ticket to their new total, or issue one. */
     private static void issueOrUpdateTicket(ServerPlayerEntity player, RaffleState state) {
         int have = state.getTickets(player.getUuid());
         long roundNow = state.getCurrentRound();
@@ -195,7 +180,6 @@ public final class RaffleManager {
 
     // ---- drawing ----
 
-    /** Draw a winner and file the pot as an unclaimed prize. Returns false if nobody entered. */
     public static boolean draw(MinecraftServer server, boolean broadcast) {
         RaffleState state = RaffleState.get(server);
         UUID winnerId = state.drawWinner(RANDOM);
@@ -232,7 +216,6 @@ public final class RaffleManager {
 
     // ---- claiming ----
 
-    /** Pay out every unclaimed prize this player has won and consume the matching tickets. */
     public static void claim(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -269,11 +252,6 @@ public final class RaffleManager {
 
     // ---- admin: prize item + opening the screen ----
 
-    /**
-     * Set the prize item from the admin's held item (empty hand clears it). The item is
-     * <em>escrowed</em> (taken from the admin and awarded to the winner), so any previously
-     * set prize is returned, and clearing/cancelling hands it back.
-     */
     public static void setPrize(ServerPlayerEntity admin) {
         MinecraftServer server = admin.getServer();
         if (server == null) return;
@@ -313,7 +291,6 @@ public final class RaffleManager {
         }
     }
 
-    /** Wipe the round and hand any escrowed prize item back to the admin (cancel/reset). */
     public static void resetAndReturn(ServerPlayerEntity admin) {
         MinecraftServer server = admin.getServer();
         if (server == null) return;
@@ -324,7 +301,6 @@ public final class RaffleManager {
         refreshAllOnline(server);
     }
 
-    /** Open the code-drawn raffle screen for the player. */
     public static void openScreen(ServerPlayerEntity sp) {
         refreshTickets(sp);
         sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
@@ -334,7 +310,6 @@ public final class RaffleManager {
 
     // ---- ticket restamping ----
 
-    /** Resolve the status of every raffle ticket in the player's inventory against current state. */
     public static void refreshTickets(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -370,7 +345,6 @@ public final class RaffleManager {
         }
     }
 
-    /** Restamp every online player's tickets (after a draw/reset/disable so they update at once). */
     public static void refreshAllOnline(MinecraftServer server) {
         if (server == null) return;
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
@@ -378,7 +352,6 @@ public final class RaffleManager {
         }
     }
 
-    /** Refresh tickets on login and nudge the player if they have a prize waiting. */
     public static void remindOnJoin(ServerPlayerEntity player) {
         refreshTickets(player);
         MinecraftServer server = player.getServer();
@@ -394,7 +367,6 @@ public final class RaffleManager {
 
     // ---- inventory helpers ----
 
-    /** The player's own ticket for the given round, or null. */
     private static ItemStack findActiveTicket(ServerPlayerEntity player, long round) {
         PlayerInventory inv = player.getInventory();
         for (int i = 0; i < inv.size(); i++) {
@@ -417,7 +389,6 @@ public final class RaffleManager {
         }
     }
 
-    /** Public for the raffle screen handler: count expired losing-ticket entries held. */
     public static int countLoserEntries(ServerPlayerEntity player) {
         PlayerInventory inv = player.getInventory();
         int n = 0;
@@ -431,7 +402,6 @@ public final class RaffleManager {
         return n;
     }
 
-    /** Total unclaimed coin prize this player is owed (for the screen's claim banner). */
     public static long unclaimedPrizeTotal(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (server == null) return 0L;
@@ -440,13 +410,11 @@ public final class RaffleManager {
         return total;
     }
 
-    /** Whether this player has any unclaimed win (coins or item). */
     public static boolean hasUnclaimedWin(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         return server != null && !RaffleState.get(server).getUnclaimedWins(player.getUuid()).isEmpty();
     }
 
-    /** "<n> coins", "<item> xN", or "<item> + <n> coins" depending on what the round awards. */
     private static Text prizeDescription(long coins, ItemStack item) {
         boolean hasItem = !item.isEmpty();
         if (hasItem && coins > 0) {
@@ -480,7 +448,6 @@ public final class RaffleManager {
         return houseCutPercent;
     }
 
-    /** Whether this player can still redeem an old ticket this round (for the screen's button). */
     public static boolean canRedeem(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (!enabled || !redeemEnabled || server == null) return false;

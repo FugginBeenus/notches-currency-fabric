@@ -6,11 +6,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 
-/**
- * A live 6-slot {@link Inventory} view of an NPC's equipment (helmet, chest, legs, boots, main hand,
- * off hand). Writes go straight onto the entity, so the equipment GUI needs no copy/return step and
- * changes persist/sync immediately.
- */
 public class NpcEquipmentInventory implements Inventory {
 
     public static final EquipmentSlot[] ORDER = {

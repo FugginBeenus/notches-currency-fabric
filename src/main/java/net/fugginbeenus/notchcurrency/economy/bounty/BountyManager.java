@@ -24,12 +24,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * Runs the bounty board (Bountiful-style, take-first): auto-generates a rotating set of offers
- * from datapack {@link BountyPools}, lets players <b>take</b> offers (up to a limit) which start a
- * personal timer + kill tracking, then pays claims / item turn-ins back at the board (a coin+item
- * FAUCET). Admin-posted offers are permanent and coexist with the generated ones.
- */
 public final class BountyManager {
 
     private static final Random RNG = new Random();
@@ -167,7 +161,6 @@ public final class BountyManager {
 
     // ---- collecting ----
 
-    /** Collect every completed KILL bounty (or just {@code only}) from the player's taken list. */
     public static void claim(ServerPlayerEntity player, @Nullable UUID only) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -232,8 +225,6 @@ public final class BountyManager {
         syncTracker(player);
     }
 
-    /** Sync the player's taken bounties to their on-screen tracker HUD. Call after anything that
-     *  changes the taken list or its progress (take, kill progress, claim, turn-in, join). */
     public static void syncTracker(ServerPlayerEntity player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -280,7 +271,6 @@ public final class BountyManager {
                 Text.literal("Bounty Board")));
     }
 
-    /** Top the board up to the target count immediately (on board placement / first open). */
     public static void ensurePopulated(MinecraftServer server) {
         if (!enabled || activeCount <= 0) return;
         BountyState state = BountyState.get(server);
@@ -308,7 +298,6 @@ public final class BountyManager {
         return activeCount;
     }
 
-    /** Clear all generated offers and immediately roll a fresh set (respecting decrees). */
     public static void regenerate(MinecraftServer server) {
         BountyState state = BountyState.get(server);
         long now = worldTime(server);

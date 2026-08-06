@@ -35,12 +35,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 
-/**
- * "Ledger Board": a two-block-tall leaderboard monument (door-style halves) that prints the top
- * balances to chat on use, from either half (same data as {@code /baltop}). The lower half carries
- * the whole visual (spans up past y=16); the upper is an invisible occupancy block. Faces the placer;
- * breaking either half removes both and only the lower drops.
- */
 public class LedgerBoardBlock extends Block implements BlockEntityProvider {
 
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
@@ -141,7 +135,6 @@ public class LedgerBoardBlock extends Block implements BlockEntityProvider {
         return state.rotate(mirror.getRotation(state.get(FACING)));
     }
 
-    /** Only the lower half owns the entity that fetches + shows the live leaderboard. */
     @Nullable
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {

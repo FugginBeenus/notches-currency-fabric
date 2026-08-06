@@ -13,10 +13,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.Collection;
 
-/**
- * {@code /crate}: players buy keys ({@code buykey}) and peek loot odds ({@code odds}); ops hand
- * out keys ({@code givekey}). Crates themselves are opened by right-clicking the crate block.
- */
 public final class CrateKeyCommands {
 
     private CrateKeyCommands() {}

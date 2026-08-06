@@ -14,23 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * The Trinkets side of the NPC equip screen, SOFT integration: this class references Trinkets
- * types, so callers must gate every call behind {@code isModLoaded("trinkets")} and let the JVM
- * load it lazily (same pattern as the Waystones fee handler).
- *
- * <p>Which slots an NPC has comes from Trinkets' data ({@code data/trinkets/entities/}, where the
- * mod opts the NPC in); that data is synced, so {@link #slotSpecs} answers identically on both
- * sides: the screen handler relies on that to build matching slot lists.
- */
 public final class NpcTrinkets {
 
-    /** One concrete trinket slot: its group/slot key, the index within that slot's capacity. */
     public record Spec(String group, String slot, int index) {}
 
     private NpcTrinkets() {}
 
-    /** The NPC type's trinket slots, deterministically ordered, capped to what the screen can show. */
     public static List<Spec> slotSpecs(EntityType<?> type, int max) {
         List<Spec> specs = new ArrayList<>();
         Map<String, SlotGroup> groups = new TreeMap<>(TrinketsApi.getEntitySlots(type));
@@ -46,7 +35,6 @@ public final class NpcTrinkets {
         return specs;
     }
 
-    /** The live trinket inventory backing a slot on this NPC, or null if the component is absent. */
     @Nullable
     public static Inventory inventoryFor(NotchNpcEntity npc, String group, String slot) {
         return TrinketsApi.getTrinketComponent(npc)

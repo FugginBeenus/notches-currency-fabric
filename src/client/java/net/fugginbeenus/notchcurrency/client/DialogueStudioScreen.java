@@ -18,12 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The visual dialogue studio: edit an NPC's whole branching conversation. Left pane lists the pages
- * (nodes); right pane edits the selected page's text and choices, or, one level deeper, a single
- * choice (label, where it leads, its action, its requirement, and lock behavior). Everything edits a
- * local copy of the tree; Save ships it back whole and the server re-validates ownership.
- */
 public class DialogueStudioScreen extends Screen {
 
     private static final int W = 400, H = 260;
@@ -153,7 +147,6 @@ public class DialogueStudioScreen extends Screen {
         return n.choices().get(choiceIdx);
     }
 
-    /** The choice's action in slot {@code idx} ({@code create} = grow the list to reach it). */
     private DialogueAction action(int idx, boolean create) {
         DialogueChoice c = choice();
         if (c == null) return null;
@@ -164,7 +157,6 @@ public class DialogueStudioScreen extends Screen {
         return c.actions().get(idx);
     }
 
-    /** The choice's condition in slot {@code idx} ({@code create} = grow the list to reach it). */
     private DialogueCondition condition(int idx, boolean create) {
         DialogueChoice c = choice();
         if (c == null) return null;
@@ -177,7 +169,6 @@ public class DialogueStudioScreen extends Screen {
         return c.conditions().get(idx);
     }
 
-    /** Whether an action/condition slot has something real in it (drives the tab's • marker). */
     private boolean actionSlotUsed(int idx) {
         DialogueAction a = action(idx, false);
         return a != null && a.type() != DialogueAction.Type.NONE;
@@ -188,8 +179,6 @@ public class DialogueStudioScreen extends Screen {
         return c != null && c.type() != DialogueCondition.Type.NONE;
     }
 
-    /** Re-fill widgets from the model (call after changing selection/mode). Order matters: set the
-     *  selection FIRST so setText's changed-listener writes back the same value harmlessly. */
     private void refreshFields() {
         DialogueNode n = node();
         DialogueChoice c = choice();
@@ -426,7 +415,6 @@ public class DialogueStudioScreen extends Screen {
         };
     }
 
-    /** Screens an OPEN_SCREEN action can target (value = NpcRole name). */
     private static final String[] SCREEN_IDS = {"BANKER", "AUCTIONEER", "MAILBOX", "RAFFLE", "BOUNTY", "DEALER", "ENCHANTER", "COSMETICS"};
     private static final String[] SCREEN_NAMES = {"Bank (ATM)", "Auction House", "Mailbox", "Raffle", "Bounty Board", "Slot Machine", "Enchanter", "Cosmetics"};
 
@@ -455,7 +443,6 @@ public class DialogueStudioScreen extends Screen {
         };
     }
 
-    /** The two [1][2] slot tabs for actions/requirements; a • marks a configured slot. */
     private void drawSlotTabs(DrawContext ctx, int x, int y, int selected, boolean used0, boolean used1,
                               int mx, int my) {
         for (int i = 0; i < 2; i++) {
@@ -652,7 +639,6 @@ public class DialogueStudioScreen extends Screen {
 
     // ---- edit operations ----
 
-    /** The NPC's display name for the preview window (found in the client world by uuid). */
     private String npcDisplayName() {
         var c = net.minecraft.client.MinecraftClient.getInstance();
         if (c.world != null) {
@@ -667,7 +653,6 @@ public class DialogueStudioScreen extends Screen {
         return "NPC";
     }
 
-    /** Strip empty (NONE) action/condition editor slots so the saved tree stays clean. */
     private void normalize() {
         for (DialogueNode n : tree.nodes().values()) {
             for (DialogueChoice c : n.choices()) {
@@ -711,8 +696,6 @@ public class DialogueStudioScreen extends Screen {
         c.setNext(options.get((idx + 1) % options.size()));
     }
 
-    /** Command actions are admin-only: hidden from the cycle for non-ops (server strips them too). */
-    /** Commands, and anything that mints coins or items: see {@link DialogueAction#isAdminOnly}. */
     private static boolean adminActionsAllowed() {
         var p = net.minecraft.client.MinecraftClient.getInstance().player;
         return p != null && p.hasPermissionLevel(2);

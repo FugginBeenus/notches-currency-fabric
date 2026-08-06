@@ -21,12 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Bounty board GUI (Bountiful-style, take-first): the top section lists available offers with a
- * [Take] button; the bottom lists your taken bounties with live progress/timers and a
- * [Collect]/[Turn in] button. Code-drawn in the {@link NotchWidgets} style with rarity accents +
- * reward icons; row details show on hover. Actions are sent to the server by bounty id.
- */
 public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
 
     private static final int W = 240, H = 290;
@@ -90,7 +84,6 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
     private static final ItemStack COIN =
             new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
-    /** Draw one bounty row; returns nothing but the click handler mirrors the layout. */
     private void drawRow(DrawContext ctx, int x, int y, ItemStack stack, int mouseX, int mouseY) {
         if (stack.isEmpty() || !StackData.hasData(stack)) return;
         NbtCompound t = StackData.getData(stack);
@@ -170,7 +163,6 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         drawHoverDetails(ctx, mouseX, mouseY);
     }
 
-    /** Hover a row to see reward + time left + rarity. */
     private void drawHoverDetails(DrawContext ctx, int mouseX, int mouseY) {
         int[] hit = rowAt(mouseX, mouseY);
         if (hit == null) return;
@@ -191,7 +183,6 @@ public class BountyBoardScreen extends HandledScreen<BountyBoardScreenHandler> {
         ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
     }
 
-    /** Which row is under the cursor: {section (0=offer,1=taken), index}, or null. */
     private int[] rowAt(int mx, int my) {
         for (int i = 0; i < BountyBoardScreenHandler.OFFER_SLOTS; i++) {
             int ry = this.y + OFFERS_Y + i * ROW_H;

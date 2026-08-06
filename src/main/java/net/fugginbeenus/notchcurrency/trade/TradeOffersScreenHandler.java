@@ -18,12 +18,6 @@ import net.minecraft.text.Text;
 
 import java.util.List;
 
-/**
- * Backing handler for the trade-offers board: offers you can accept (incoming, paginated) plus your
- * own open offers (outgoing, cancelable), synced as read-only data-carrier stacks (offered item +
- * price/requested/creator in NBT). Refreshed each tick so the board stays live as offers resolve.
- * Actions go through the TRADE_OFFER_ACTION packet by offer id.
- */
 public class TradeOffersScreenHandler extends ScreenHandler {
 
     public static final int INCOMING = 5, OUTGOING = 5;

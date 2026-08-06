@@ -2,11 +2,6 @@ package net.fugginbeenus.notchcurrency.economy.gambling;
 
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 
-/**
- * Shared gambling state: the master toggle and bet limits used by both the slot machine and the
- * coin flip. {@link #init()} and {@link #applyConfig} fan out to the two sub-managers so the rest
- * of the mod only has to wire up one entry point.
- */
 public final class GamblingManager {
 
     private static boolean enabled = true;
@@ -32,12 +27,10 @@ public final class GamblingManager {
     public static long getMinBet()    { return minBet; }
     public static long getMaxBet()    { return maxBet; }
 
-    /** Clamp a requested bet into the allowed range. */
     public static long clampBet(long bet) {
         return Math.max(minBet, Math.min(maxBet, bet));
     }
 
-    /** True if {@code bet} is a legal bet the player can actually afford (checked by callers). */
     public static boolean betInRange(long bet) {
         return bet >= minBet && bet <= maxBet;
     }

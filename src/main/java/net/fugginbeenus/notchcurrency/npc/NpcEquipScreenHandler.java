@@ -13,11 +13,6 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * The NPC equipment screen: four armor slots (typed, so only matching armor fits), main/off hand, and
- * the player's inventory. Server-side the slots are backed by {@link NpcEquipmentInventory}, so drops
- * and shift-clicks write directly onto the entity.
- */
 public class NpcEquipScreenHandler extends ScreenHandler {
 
     // Slot coordinates (client draws insets at these -1). Gear lives in the left container box;
@@ -35,8 +30,6 @@ public class NpcEquipScreenHandler extends ScreenHandler {
     private final int trinketCount;
     private final String[] trinketLabels;
 
-    /** Where an item wants to be equipped. 1.21 made the vanilla lookup an instance method, so this
-     *  replicates the old static logic (Equipment interface, shield to offhand, else main hand). */
     private static EquipmentSlot preferredSlot(ItemStack stack) {
         //? if >=1.21 {
         /*net.minecraft.item.Equipment eq = net.minecraft.item.Equipment.fromStack(stack);
@@ -47,7 +40,6 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         //?}
     }
 
-    /** 1.21 split the ARMOR slot type into humanoid and animal armor. */
     private static boolean isArmor(EquipmentSlot slot) {
         //? if >=1.21 {
         /*return slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR;
@@ -56,13 +48,11 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         //?}
     }
 
-    /** Client constructor: the opening buf carries the NPC id so the live preview can find it. */
     public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, net.minecraft.network.PacketByteBuf buf) {
         this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null,
                 buf.readBoolean() ? buf.readUuid() : null);
     }
 
-    /** Server constructor. */
     public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, Inventory equip, @Nullable NotchNpcEntity npc) {
         this(syncId, playerInv, equip, npc, npc != null ? npc.getUuid() : null);
     }
@@ -116,17 +106,14 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         this.trinketLabels = labels;
     }
 
-    /** How many trinket slots this screen has (0 without the Trinkets mod). */
     public int trinketCount() {
         return trinketCount;
     }
 
-    /** The slot name for trinket slot {@code i} (for the screen's hover hint). */
     public String trinketLabel(int i) {
         return trinketLabels[i];
     }
 
-    /** The NPC this screen is editing (for the client-side live preview). */
     @Nullable
     public java.util.UUID npcId() {
         return npcId;
@@ -170,7 +157,6 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         return npc == null || (npc.isAlive() && player.squaredDistanceTo(npc) <= 64.0);
     }
 
-    /** A typed equipment slot: armor slots only accept their matching piece; hands accept anything. */
     private static class EquipSlot extends Slot {
         private final EquipmentSlot type;
 

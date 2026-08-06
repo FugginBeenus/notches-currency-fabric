@@ -20,10 +20,6 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Random;
 
-/**
- * Runs crates: opening a crate consumes coin-bought keys and rolls a weighted reward (items or
- * a coin FAUCET) from the datapack loot table, with transparent odds. Buying keys is a coin SINK.
- */
 public final class CrateManager {
 
     private static final Random RNG = new Random();

@@ -17,11 +17,6 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The cosmetics shop, drawn as the same vanilla trade-style screen as the buyer shop: a recessed
- * container of cosmetic rows (icon + name + coin price, or an "Owned" tag) with a scrollbar and a
- * framed NPC portrait. Click a row to buy it. Styled with NotchTheme.
- */
 public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler> {
 
     private static final int W = 248, H = 240;
@@ -29,7 +24,6 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     private static final int SB_X = 160, SB_Y = 22, SB_W = 8, SB_H = 126;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
 
-    /** The coin item, drawn as the cost icon in rows (like vanilla's emerald). */
     private static final ItemStack COIN =
             new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
 
@@ -112,7 +106,6 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
         }
     }
 
-    /** A small right-pointing arrow, like the vanilla trade arrow. */
     private static void arrow(DrawContext ctx, int x, int y, int color) {
         ctx.fill(x, y + 3, x + 10, y + 5, color);
         for (int i = 0; i < 4; i++) {

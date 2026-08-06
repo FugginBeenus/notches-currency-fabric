@@ -13,12 +13,6 @@ import net.minecraft.util.math.MathHelper;
 
 import java.util.UUID;
 
-/**
- * Move & Rotate: a compact panel docked at the bottom of the screen, so the world stays fully visible
- * so you watch the actual NPC move live while you nudge it. X/Y/Z nudge buttons (0.1 blocks, Shift =
- * 1), a yaw slider with Face Me, snap-to-block-center, and bring-to-me. Every change applies
- * instantly through the same owner-guarded path as the pose editor.
- */
 public class NpcMoveScreen extends Screen {
 
     private static final int W = 292, H = 126;
@@ -225,8 +219,6 @@ public class NpcMoveScreen extends Screen {
                 axis == 0 ? step : 0, axis == 1 ? step : 0, axis == 2 ? step : 0, 0, false);
     }
 
-    /** Resize one axis. The rest of the appearance is read back off the NPC so this panel doesn't
-     *  need to know anything about models or skins to leave them alone. */
     private void resize(int axis, float step) {
         NotchNpcEntity npc = findNpc();
         if (npc == null) return;
@@ -237,7 +229,6 @@ public class NpcMoveScreen extends Screen {
                 npc.getSkinValue(), npc.isSlim(), x, y, z, npc.getNameOffset());
     }
 
-    /** Rotate the NPC to look at the player. */
     private void faceMe() {
         NotchNpcEntity npc = findNpc();
         MinecraftClient c = MinecraftClient.getInstance();
@@ -249,7 +240,6 @@ public class NpcMoveScreen extends Screen {
         sendYaw();
     }
 
-    /** Snap X/Z to the centre of the block the NPC stands in. */
     private void centerOnBlock() {
         NotchNpcEntity npc = findNpc();
         if (npc == null) return;
@@ -258,7 +248,6 @@ public class NpcMoveScreen extends Screen {
         NotchPacketsClient.sendNpcTransform(npcId, dx, 0, dz, 0, false);
     }
 
-    /** Teleport the NPC to where the player is standing. */
     private void bringToMe() {
         NotchNpcEntity npc = findNpc();
         MinecraftClient c = MinecraftClient.getInstance();

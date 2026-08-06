@@ -17,18 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Where factions and their members actually live, in the world save, not on any entity.
- *
- * <p>This is the point of the whole design: a Recruiter NPC stores nothing but a faction id. Blow the
- * NPC up, pick it up, delete it, and every faction, every member and every founder is still here. The
- * founder can place a new recruiter and carry on.
- */
 public class FactionState extends PersistentState {
 
     private static final String DATA_KEY = "notchcurrency_factions";
 
-    /** Plenty for a server's worth of guilds, and a bound on what a griefer can spam into the save. */
     public static final int MAX_FACTIONS = 64;
 
     private final Map<String, Faction> factions = new LinkedHashMap<>();
@@ -58,7 +50,6 @@ public class FactionState extends PersistentState {
 
     public int count() { return factions.size(); }
 
-    /** The faction this player founded, if any: one apiece keeps a non-admin from filling the save. */
     @Nullable
     public Faction foundedBy(UUID player) {
         for (Faction f : factions.values()) {
@@ -76,11 +67,6 @@ public class FactionState extends PersistentState {
         return true;
     }
 
-    /**
-     * Remove a faction and everyone in it. Membership is cleared here so nobody is left pointing at a
-     * faction that no longer exists; NPCs pointing at it are cleaned up by the manager, which can
-     * reach the world's entities.
-     */
     public boolean remove(String id) {
         if (factions.remove(id) == null) return false;
         membership.entrySet().removeIf(e -> e.getValue().equals(id));
