@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.8.1
+
+Small things, all aimed at the same problem: a street of NPCs reading as a row of identical
+mannequins.
+
+### Names and titles
+- **Names take colour codes.** `&6Carol` is a gold name, using the same codes dialogue, signs and
+  shop titles already understand. Nothing new to turn on, just type them in the name field.
+- **A title under the name.** Blacksmith, Harbourmaster, Night Watch, whatever the NPC is for. It
+  lives on the floating text screen with the sign, since one is text above the head and the other is
+  text below the name. That screen is now called **Floating Text** and the Look tab button opens it.
+
+### Voices
+An NPC can be given a voice: a short sound when it is spoken to, and on every line it says. Twelve
+vanilla voices to pick from, with a pitch control from 50% to 200% beside it.
+
+The pitch is the part worth playing with. The same villager grunt at 70% and at 130% reads as two
+completely different people, so a short list of voices and a slider gets you a whole cast. Cycling
+through them plays each one, so you can hear what you are choosing. Talk tab, at the bottom.
+
+### Schedules
+- **A Stand entry can face a direction.** Pick a bearing and the NPC holds it once it settles, so a
+  shopkeeper faces across the counter instead of whichever way it happened to arrive. It still turns
+  to whoever talks to it and goes back afterwards.
+- Marking a spot points the NPC back the way you came from, so marking a counter from the customer's
+  side leaves the NPC looking at the customer.
+
+If you built a Stand entry before this update, it has been quietly storing a direction all along and
+never using it. It will start using it now, so a few NPCs may turn on their heels the first time you
+load the world.
+
 ## 0.8.0
 
 ### Daily schedules
