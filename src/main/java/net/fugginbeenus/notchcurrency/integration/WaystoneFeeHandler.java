@@ -1,6 +1,11 @@
 package net.fugginbeenus.notchcurrency.integration;
 
+// Balm dropped its api package and moved the entry point up a level for its 1.21.11 build.
+//? if >=1.21.11 {
+/*import net.blay09.mods.balm.Balm;
+*///?} else {
 import net.blay09.mods.balm.api.Balm;
+//?}
 //? if >=1.21 {
 /*import net.blay09.mods.waystones.api.event.WaystoneTeleportEvent;
 *///?} else {
