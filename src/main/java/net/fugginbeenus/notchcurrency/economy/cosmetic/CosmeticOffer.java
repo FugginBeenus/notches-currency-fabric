@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.economy.cosmetic;
 
 import com.google.gson.JsonObject;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public record CosmeticOffer(String id, String name, ItemStack icon, long price, boolean oneTime,
                             boolean isCommand, ItemStack itemReward, String command) {
@@ -39,9 +39,9 @@ public record CosmeticOffer(String id, String name, ItemStack icon, long price, 
         return new CosmeticOffer(id, name, icon, Math.max(0, price), oneTime, isCommand, itemReward, command);
     }
 
-    private static net.minecraft.item.Item itemOf(String idStr) {
-        Identifier id = Identifier.tryParse(idStr);
-        net.minecraft.item.Item item = id == null ? null : Registries.ITEM.get(id);
+    private static net.minecraft.world.item.Item itemOf(String idStr) {
+        ResourceLocation id = ResourceLocation.tryParse(idStr);
+        net.minecraft.world.item.Item item = id == null ? null : BuiltInRegistries.ITEM.get(id);
         return (item == null || item == Items.AIR) ? Items.PAPER : item;
     }
 }

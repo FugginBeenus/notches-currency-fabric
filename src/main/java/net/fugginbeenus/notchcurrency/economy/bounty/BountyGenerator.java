@@ -1,12 +1,12 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.ItemStack;
 
 public final class BountyGenerator {
 
@@ -30,7 +30,7 @@ public final class BountyGenerator {
         long coins = 0L;
         ItemStack item = ItemStack.EMPTY;
         if (rew.item()) {
-            item = new ItemStack(Registries.ITEM.get(rew.itemId()), Math.max(1, amount));
+            item = new ItemStack(BuiltInRegistries.ITEM.get(rew.itemId()), Math.max(1, amount));
         } else {
             coins = (long) amount * rewardMultPercent / 100;   // global scale
             if (maxCoinReward > 0) coins = Math.min(coins, maxCoinReward); // hard cap

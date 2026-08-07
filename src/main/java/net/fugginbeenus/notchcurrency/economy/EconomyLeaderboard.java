@@ -2,10 +2,9 @@ package net.fugginbeenus.notchcurrency.economy;
 
 import net.fugginbeenus.notchcurrency.core.BalanceState;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ public final class EconomyLeaderboard {
         return out;
     }
 
-    public static List<Text> topLines(MinecraftServer server, int limit) {
+    public static List<Component> topLines(MinecraftServer server, int limit) {
         List<Map.Entry<UUID, Long>> top = BalanceState.get(server).snapshot()
                 .entrySet().stream()
                 .filter(e -> e.getValue() > 0)
@@ -35,19 +34,19 @@ public final class EconomyLeaderboard {
                 .limit(limit)
                 .toList();
 
-        List<Text> lines = new ArrayList<>();
+        List<Component> lines = new ArrayList<>();
         if (top.isEmpty()) {
-            lines.add(Text.literal("No balances yet.").formatted(Formatting.GRAY));
+            lines.add(Component.literal("No balances yet.").withStyle(ChatFormatting.GRAY));
             return lines;
         }
 
-        lines.add(Text.literal("─── Top Balances ───").formatted(Formatting.GOLD));
+        lines.add(Component.literal("─── Top Balances ───").withStyle(ChatFormatting.GOLD));
         int rank = 1;
         for (Map.Entry<UUID, Long> e : top) {
-            lines.add(Text.literal(" " + (rank++) + ". ").formatted(Formatting.YELLOW)
-                    .append(Text.literal(nameOf(server, e.getKey())).formatted(Formatting.WHITE))
-                    .append(Text.literal(" - ").formatted(Formatting.GRAY))
-                    .append(Text.literal(e.getValue() + " ").formatted(Formatting.GOLD))
+            lines.add(Component.literal(" " + (rank++) + ". ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(nameOf(server, e.getKey())).withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" - ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(e.getValue() + " ").withStyle(ChatFormatting.GOLD))
                     .append(NotchCurrency.coinIcon()));
         }
         return lines;
@@ -55,9 +54,9 @@ public final class EconomyLeaderboard {
 
     public static String nameOf(MinecraftServer server, UUID id) {
         try {
-            var cache = server.getUserCache();
+            var cache = server.getProfileCache();
             if (cache != null) {
-                var profile = cache.getByUuid(id);
+                var profile = cache.get(id);
                 if (profile.isPresent() && profile.get().getName() != null) {
                     return profile.get().getName();
                 }

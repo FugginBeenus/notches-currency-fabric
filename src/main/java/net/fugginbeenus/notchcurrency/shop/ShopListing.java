@@ -1,10 +1,9 @@
 package net.fugginbeenus.notchcurrency.shop;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public class ShopListing {
@@ -159,9 +158,9 @@ public class ShopListing {
 
     // --- NBT Serialization ---
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putUuid("Id", id);
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
+        nbt.putUUID("Id", id);
         nbt.put("Item", StackData.writeStack(itemForSale));
         nbt.putInt("Stock", stockQuantity);
         nbt.putInt("CoinPrice", coinPrice);
@@ -177,18 +176,18 @@ public class ShopListing {
         return nbt;
     }
 
-    public static ShopListing fromNbt(NbtCompound nbt) {
-        UUID id = nbt.getUuid("Id");
+    public static ShopListing fromNbt(CompoundTag nbt) {
+        UUID id = nbt.getUUID("Id");
         ShopListing listing = new ShopListing(id);
 
-        if (nbt.contains("Item", NbtElement.COMPOUND_TYPE)) {
+        if (nbt.contains("Item", Tag.TAG_COMPOUND)) {
             listing.itemForSale = StackData.readStack(nbt.getCompound("Item"));
         }
 
         listing.stockQuantity = nbt.getInt("Stock");
         listing.coinPrice = nbt.getInt("CoinPrice");
 
-        if (nbt.contains("ItemPrice", NbtElement.COMPOUND_TYPE)) {
+        if (nbt.contains("ItemPrice", Tag.TAG_COMPOUND)) {
             listing.itemPrice = StackData.readStack(nbt.getCompound("ItemPrice"));
             listing.itemPriceCount = nbt.getInt("ItemPriceCount");
         }

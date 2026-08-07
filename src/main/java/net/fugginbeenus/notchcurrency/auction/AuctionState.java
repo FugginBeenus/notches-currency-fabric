@@ -7,22 +7,21 @@ import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -31,7 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.HashMap;
 
-public final class AuctionState extends PersistentState {
+public final class AuctionState extends SavedData {
 
     // UUID → listing
     private final Map<UUID, AuctionListing> listings = new LinkedHashMap<>();
@@ -45,33 +44,33 @@ public final class AuctionState extends PersistentState {
     public AuctionState() {
     }
 
-    // ----- PersistentState plumbing -----
+    // ----- SavedData plumbing -----
 
-    public static AuctionState get(ServerWorld world) {
+    public static AuctionState get(ServerLevel world) {
         return get(world.getServer());
     }
 
     public static AuctionState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, AuctionState::new, AuctionState::fromNbt, "notchcurrency_auctions");
     }
 
-    public static AuctionState fromNbt(NbtCompound tag) {
+    public static AuctionState fromNbt(CompoundTag tag) {
         AuctionState s = new AuctionState();
 
         // Listings
-        NbtList list = tag.getList("Listings", NbtElement.COMPOUND_TYPE);
+        ListTag list = tag.getList("Listings", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound e = list.getCompound(i);
+            CompoundTag e = list.getCompound(i);
             AuctionListing l = AuctionListing.fromNbt(e);
             s.listings.put(l.id, l);
         }
 
         // Pending winnings
-        NbtList pendingList = tag.getList("PendingWinnings", NbtElement.COMPOUND_TYPE);
+        ListTag pendingList = tag.getList("PendingWinnings", Tag.TAG_COMPOUND);
         for (int i = 0; i < pendingList.size(); i++) {
-            NbtCompound e = pendingList.getCompound(i);
+            CompoundTag e = pendingList.getCompound(i);
             PendingWinnings pw = PendingWinnings.fromNbt(e);
             s.pendingWinnings.put(pw.listingId, pw);
         }
@@ -106,11 +105,11 @@ public final class AuctionState extends PersistentState {
             this.finalPrice = finalPrice;
         }
 
-        public NbtCompound toNbt() {
-            NbtCompound tag = new NbtCompound();
-            tag.putUuid("Id", listingId);
-            tag.putUuid("Seller", sellerUuid);
-            tag.putUuid("Winner", winnerUuid);
+        public CompoundTag toNbt() {
+            CompoundTag tag = new CompoundTag();
+            tag.putUUID("Id", listingId);
+            tag.putUUID("Seller", sellerUuid);
+            tag.putUUID("Winner", winnerUuid);
             tag.putString("SellerName", sellerName);
             tag.putString("WinnerName", winnerName);
             tag.putLong("FinalPrice", finalPrice);
@@ -118,10 +117,10 @@ public final class AuctionState extends PersistentState {
             return tag;
         }
 
-        public static PendingWinnings fromNbt(NbtCompound tag) {
-            UUID id = tag.getUuid("Id");
-            UUID seller = tag.getUuid("Seller");
-            UUID winner = tag.getUuid("Winner");
+        public static PendingWinnings fromNbt(CompoundTag tag) {
+            UUID id = tag.getUUID("Id");
+            UUID seller = tag.getUUID("Seller");
+            UUID winner = tag.getUUID("Winner");
             String sellerName = tag.getString("SellerName");
             String winnerName = tag.getString("WinnerName");
             long price = tag.getLong("FinalPrice");
@@ -136,19 +135,19 @@ public final class AuctionState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound tag, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound tag) {
+    public CompoundTag save(CompoundTag tag) {
     //?}
         // Listings
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (AuctionListing l : listings.values()) {
             list.add(l.toNbt());
         }
         tag.put("Listings", list);
 
         // Pending winnings
-        NbtList pendingList = new NbtList();
+        ListTag pendingList = new ListTag();
         for (PendingWinnings pw : pendingWinnings.values()) {
             pendingList.add(pw.toNbt());
         }
@@ -165,20 +164,20 @@ public final class AuctionState extends PersistentState {
 
     public void removePending(UUID id) {
         if (pendingWinnings.remove(id) != null) {
-            markDirty();
+            setDirty();
         }
     }
 
     public void addPending(PendingWinnings pw) {
         pendingWinnings.put(pw.listingId, pw);
-        markDirty();
+        setDirty();
     }
 
     // ----- Helper to strip auction NBT from items -----
 
     private static void stripAuctionTags(ItemStack stack) {
         if (StackData.hasData(stack)) {
-            NbtCompound tag = StackData.editData(stack);
+            CompoundTag tag = StackData.editData(stack);
             tag.remove("nc_price");
             tag.remove("nc_seller");
             tag.remove("nc_created");
@@ -201,16 +200,16 @@ public final class AuctionState extends PersistentState {
         loginReminders.put(playerUuid, triggerTime);
     }
 
-    public void onPlayerJoin(ServerPlayerEntity player) {
-        long now = player.getWorld().getTime();
+    public void onPlayerJoin(ServerPlayer player) {
+        long now = player.level().getGameTime();
         // 45 seconds = 45 * 20 = 900 ticks
-        scheduleReminder(player.getUuid(), now + 900L);
+        scheduleReminder(player.getUUID(), now + 900L);
     }
 
-    public void checkLoginReminders(ServerWorld world) {
+    public void checkLoginReminders(ServerLevel world) {
         if (loginReminders.isEmpty()) return;
 
-        long now = world.getTime();
+        long now = world.getGameTime();
         Iterator<Map.Entry<UUID, Long>> it = loginReminders.entrySet().iterator();
 
         while (it.hasNext()) {
@@ -222,7 +221,7 @@ public final class AuctionState extends PersistentState {
                 continue;
             }
 
-            ServerPlayerEntity p = world.getServer().getPlayerManager().getPlayer(uuid);
+            ServerPlayer p = world.getServer().getPlayerList().getPlayer(uuid);
             if (p == null) {
                 // Player went offline again; drop this reminder
                 it.remove();
@@ -234,21 +233,21 @@ public final class AuctionState extends PersistentState {
                     .anyMatch(pw -> pw.winnerUuid.equals(uuid) || pw.sellerUuid.equals(uuid));
 
             if (hasPending) {
-                MutableText claim = Text.literal("[Claim All]")
-                        .formatted(Formatting.GOLD, Formatting.BOLD)
-                        .styled(style -> style
+                MutableComponent claim = Component.literal("[Claim All]")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                        .withStyle(style -> style
                                 .withClickEvent(new ClickEvent(
                                         ClickEvent.Action.RUN_COMMAND,
                                         "/ah claim"
                                 ))
                                 .withHoverEvent(new HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
-                                        Text.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items")
+                                        Component.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items")
                                 )));
 
-                p.sendMessage(
-                        Text.literal("You have unclaimed auction rewards! ")
-                                .formatted(Formatting.YELLOW)
+                p.displayClientMessage(
+                        Component.literal("You have unclaimed auction rewards! ")
+                                .withStyle(ChatFormatting.YELLOW)
                                 .append(claim),
                         false
                 );
@@ -269,8 +268,8 @@ public final class AuctionState extends PersistentState {
     }
 
     // default addListing (3-day timed listing, can be overridden)
-    public AuctionListing addListing(ServerWorld world,
-                                     ServerPlayerEntity seller,
+    public AuctionListing addListing(ServerLevel world,
+                                     ServerPlayer seller,
                                      ItemStack stack,
                                      long price,
                                      String category) {
@@ -278,31 +277,31 @@ public final class AuctionState extends PersistentState {
         return addListing(world, seller, stack, price, category, defaultDurationTicks);
     }
 
-    public AuctionListing addListing(ServerWorld world,
-                                     ServerPlayerEntity seller,
+    public AuctionListing addListing(ServerLevel world,
+                                     ServerPlayer seller,
                                      ItemStack stack,
                                      long price,
                                      String category,
                                      long durationTicks) {
 
         UUID id = UUID.randomUUID();
-        long now = world.getTime();  // global tick time, never wraps
+        long now = world.getGameTime();  // global tick time, never wraps
 
         long expires = (durationTicks <= 0L) ? 0L : now + durationTicks;
 
         // Tag the stack so client tooltip can read everything
         ItemStack listingStack = stack.copy();
-        NbtCompound tag = StackData.editData(listingStack);
+        CompoundTag tag = StackData.editData(listingStack);
         tag.putLong("nc_price", price);
         tag.putString("nc_seller", seller.getName().getString());
-        tag.putUuid("nc_listing_id", id);
+        tag.putUUID("nc_listing_id", id);
         tag.putLong("nc_created", now);
         tag.putLong("nc_expires", expires);
         StackData.commitData(listingStack, tag);
 
         AuctionListing listing = new AuctionListing(
                 id,
-                seller.getUuid(),
+                seller.getUUID(),
                 seller.getName().getString(),
                 listingStack,
                 price,
@@ -312,40 +311,40 @@ public final class AuctionState extends PersistentState {
         );
 
         listings.put(id, listing);
-        markDirty();
+        setDirty();
         return listing;
     }
 
-    public void buyListing(ServerPlayerEntity buyer, UUID id) {
+    public void buyListing(ServerPlayer buyer, UUID id) {
         AuctionListing listing = listings.get(id);
         if (listing == null) {
-            buyer.sendMessage(Text.literal("No listing with that id."), false);
+            buyer.displayClientMessage(Component.literal("No listing with that id."), false);
             return;
         }
 
-        if (buyer.getUuid().equals(listing.sellerUuid)) {
-            buyer.sendMessage(Text.literal("You cannot buy your own listing."), false);
+        if (buyer.getUUID().equals(listing.sellerUuid)) {
+            buyer.displayClientMessage(Component.literal("You cannot buy your own listing."), false);
             return;
         }
 
         // Expiry check: expiresGameTime <= 0 => no time limit (buy-now)
-        ServerWorld world = buyer.getServerWorld();
-        long now = world.getTime();  // use global tick time
+        ServerLevel world = buyer.serverLevel();
+        long now = world.getGameTime();  // use global tick time
         if (listing.expiresGameTime > 0L && now >= listing.expiresGameTime) {
-            buyer.sendMessage(
-                    Text.literal("This listing has expired.").formatted(Formatting.RED),
+            buyer.displayClientMessage(
+                    Component.literal("This listing has expired.").withStyle(ChatFormatting.RED),
                     false
             );
             listings.remove(id);
-            markDirty();
+            setDirty();
             return;
         }
 
         // If this is a timed auction with any bids, force /ah bid instead
         if (listing.expiresGameTime > 0L && listing.highestBid > 0L) {
-            buyer.sendMessage(
-                    Text.literal("This is a timed auction. Use /ah bid instead.")
-                            .formatted(Formatting.RED),
+            buyer.displayClientMessage(
+                    Component.literal("This is a timed auction. Use /ah bid instead.")
+                            .withStyle(ChatFormatting.RED),
                     false
             );
             return;
@@ -355,7 +354,7 @@ public final class AuctionState extends PersistentState {
         long price = listing.price;
 
         if (bal < price) {
-            buyer.sendMessage(Text.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), false);
+            buyer.displayClientMessage(Component.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), false);
             return;
         }
 
@@ -364,8 +363,8 @@ public final class AuctionState extends PersistentState {
         NotchPackets.sendBalance(buyer, BalanceStore.get(buyer));
 
         // Pay seller if online; if offline, store coins in mailbox
-        ServerPlayerEntity sellerPlayer =
-                buyer.getServer().getPlayerManager().getPlayer(listing.sellerUuid);
+        ServerPlayer sellerPlayer =
+                buyer.getServer().getPlayerList().getPlayer(listing.sellerUuid);
 
         boolean sellerPaidNow = false;
 
@@ -381,29 +380,29 @@ public final class AuctionState extends PersistentState {
             }
 
             int count = listing.stack.getCount();
-            Text itemName = listing.stack.getName().copy().formatted(Formatting.WHITE);
+            Component itemName = listing.stack.getHoverName().copy().withStyle(ChatFormatting.WHITE);
             String buyerName = buyer.getName().getString();
 
-            MutableText sellerMsg = Text.literal("Sold ")
-                    .formatted(Formatting.GREEN)
-                    .append(Text.literal(count + "x ").formatted(Formatting.GREEN))
+            MutableComponent sellerMsg = Component.literal("Sold ")
+                    .withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal(count + "x ").withStyle(ChatFormatting.GREEN))
                     .append(itemName)
-                    .append(Text.literal(" to " + buyerName + " for ").formatted(Formatting.GREEN))
-                    .append(Text.literal(String.valueOf(gross) + " ").formatted(Formatting.GREEN))
+                    .append(Component.literal(" to " + buyerName + " for ").withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal(String.valueOf(gross) + " ").withStyle(ChatFormatting.GREEN))
                     .append(NotchCurrency.coinIcon());
 
             if (tax > 0) {
-                sellerMsg.append(Text.literal(" (")
-                        .append(Text.literal(String.valueOf(tax) + " ")
-                                .formatted(Formatting.RED))
+                sellerMsg.append(Component.literal(" (")
+                        .append(Component.literal(String.valueOf(tax) + " ")
+                                .withStyle(ChatFormatting.RED))
                         .append(NotchCurrency.coinIcon())
-                        .append(Text.literal(" auction fee)").formatted(Formatting.RED)));
+                        .append(Component.literal(" auction fee)").withStyle(ChatFormatting.RED)));
             }
 
-            sellerMsg.append(Text.literal("!").formatted(Formatting.GREEN));
+            sellerMsg.append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-            sellerPlayer.sendMessage(sellerMsg, false);
-            sellerPlayer.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+            sellerPlayer.displayClientMessage(sellerMsg, false);
+            sellerPlayer.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
             sellerPaidNow = true;
         }
 
@@ -414,13 +413,13 @@ public final class AuctionState extends PersistentState {
         stripAuctionTags(prize);
 
         ItemStack toGive = prize.copy();
-        boolean inserted = buyer.getInventory().insertStack(toGive);
+        boolean inserted = buyer.getInventory().add(toGive);
         if (!inserted && !toGive.isEmpty()) {
             // Both sides might be partially offline -> mailbox holds obligations.
             PendingWinnings pw = new PendingWinnings(
                     listing.id,
                     listing.sellerUuid,
-                    buyer.getUuid(),
+                    buyer.getUUID(),
                     listing.sellerName,
                     buyer.getName().getString(),
                     prize.copy(),
@@ -428,9 +427,9 @@ public final class AuctionState extends PersistentState {
             );
             addPending(pw);
 
-            MutableText claim = Text.literal("[Claim Item]")
-                    .formatted(Formatting.GREEN, Formatting.BOLD)
-                    .styled(style -> style
+            MutableComponent claim = Component.literal("[Claim Item]")
+                    .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+                    .withStyle(style -> style
                             .withClickEvent(
                                     new ClickEvent(
                                             ClickEvent.Action.RUN_COMMAND,
@@ -440,36 +439,36 @@ public final class AuctionState extends PersistentState {
                             .withHoverEvent(
                                     new HoverEvent(
                                             HoverEvent.Action.SHOW_TEXT,
-                                            Text.literal("Click to claim your purchased item")
+                                            Component.literal("Click to claim your purchased item")
                                     )
                             ));
 
-            buyer.sendMessage(
-                    Text.literal("Your inventory was full. ")
-                            .formatted(Formatting.YELLOW)
+            buyer.displayClientMessage(
+                    Component.literal("Your inventory was full. ")
+                            .withStyle(ChatFormatting.YELLOW)
                             .append(claim)
-                            .append(Text.literal(" to receive your item from the mailbox.")),
+                            .append(Component.literal(" to receive your item from the mailbox.")),
                     false
             );
         }
 
         listings.remove(id);
-        markDirty();
+        setDirty();
 
         int count = listing.stack.getCount();
-        Text itemName = listing.stack.getName().copy().formatted(Formatting.WHITE);
+        Component itemName = listing.stack.getHoverName().copy().withStyle(ChatFormatting.WHITE);
 
-        Text buyerMsg = Text.literal("Purchased ")
-                .formatted(Formatting.GREEN)
-                .append(Text.literal(count + "x ").formatted(Formatting.GREEN))
+        Component buyerMsg = Component.literal("Purchased ")
+                .withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(count + "x ").withStyle(ChatFormatting.GREEN))
                 .append(itemName)
-                .append(Text.literal(" for ").formatted(Formatting.GREEN))
-                .append(Text.literal(String.valueOf(price) + " ").formatted(Formatting.GREEN))
+                .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(String.valueOf(price) + " ").withStyle(ChatFormatting.GREEN))
                 .append(NotchCurrency.coinIcon())
-                .append(Text.literal("!").formatted(Formatting.GREEN));
+                .append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-        buyer.sendMessage(buyerMsg, false);
-        buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+        buyer.displayClientMessage(buyerMsg, false);
+        buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
         // If seller was offline, their coins are in mailbox and will be claimable via /ah claim
         if (!sellerPaidNow && sellerPlayer == null) {
@@ -477,42 +476,42 @@ public final class AuctionState extends PersistentState {
         }
     }
 
-    public void placeBid(ServerWorld world,
-                         ServerPlayerEntity bidder,
+    public void placeBid(ServerLevel world,
+                         ServerPlayer bidder,
                          UUID id,
                          long amount) {
 
         AuctionListing listing = listings.get(id);
         if (listing == null) {
-            bidder.sendMessage(
-                    Text.literal("No listing with that id.").formatted(Formatting.RED),
+            bidder.displayClientMessage(
+                    Component.literal("No listing with that id.").withStyle(ChatFormatting.RED),
                     false
             );
             return;
         }
 
-        long now = world.getTime();
+        long now = world.getGameTime();
         if (listing.expiresGameTime > 0L && now >= listing.expiresGameTime) {
-            bidder.sendMessage(
-                    Text.literal("This auction has expired.").formatted(Formatting.RED),
+            bidder.displayClientMessage(
+                    Component.literal("This auction has expired.").withStyle(ChatFormatting.RED),
                     false
             );
             return;
         }
 
         if (listing.expiresGameTime <= 0L) {
-            bidder.sendMessage(
-                    Text.literal("This is a buy-now listing. Click to purchase.")
-                            .formatted(Formatting.RED),
+            bidder.displayClientMessage(
+                    Component.literal("This is a buy-now listing. Click to purchase.")
+                            .withStyle(ChatFormatting.RED),
                     false
             );
             return;
         }
 
-        if (bidder.getUuid().equals(listing.sellerUuid)) {
-            bidder.sendMessage(
-                    Text.literal("You can't bid on your own listing.")
-                            .formatted(Formatting.RED),
+        if (bidder.getUUID().equals(listing.sellerUuid)) {
+            bidder.displayClientMessage(
+                    Component.literal("You can't bid on your own listing.")
+                            .withStyle(ChatFormatting.RED),
                     false
             );
             return;
@@ -522,10 +521,10 @@ public final class AuctionState extends PersistentState {
         long minBid = baseline + 1;
 
         if (amount < minBid) {
-            bidder.sendMessage(
-                    Text.literal("Minimum bid is " + minBid + " ")
+            bidder.displayClientMessage(
+                    Component.literal("Minimum bid is " + minBid + " ")
                             .append(NotchCurrency.coinIcon())
-                            .formatted(Formatting.RED),
+                            .withStyle(ChatFormatting.RED),
                     false
             );
             return;
@@ -533,9 +532,9 @@ public final class AuctionState extends PersistentState {
 
         long bal = BalanceStore.get(bidder);
         if (bal < amount) {
-            bidder.sendMessage(
-                    Text.literal("Insufficient funds for that bid.")
-                            .formatted(Formatting.RED),
+            bidder.displayClientMessage(
+                    Component.literal("Insufficient funds for that bid.")
+                            .withStyle(ChatFormatting.RED),
                     false
             );
             return;
@@ -544,18 +543,18 @@ public final class AuctionState extends PersistentState {
         // Refund previous highest bidder (if any). Offline-safe: an offline bidder is still credited
         // by UUID, otherwise their reserved coins would be destroyed when outbid while away.
         if (listing.highestBidderUuid != null && listing.highestBid > 0) {
-            ServerPlayerEntity prevTop = world.getServer().getPlayerManager()
+            ServerPlayer prevTop = world.getServer().getPlayerList()
                     .getPlayer(listing.highestBidderUuid);
             if (prevTop != null) {
                 BalanceStore.add(prevTop, listing.highestBid, TransactionReason.AUCTION_REFUND, "outbid refund");
                 NotchPackets.sendBalance(prevTop, BalanceStore.get(prevTop));
-                prevTop.sendMessage(
-                        Text.literal("Your bid was refunded on ")
-                                .append(listing.stack.getName().copy())
-                                .formatted(Formatting.YELLOW),
+                prevTop.displayClientMessage(
+                        Component.literal("Your bid was refunded on ")
+                                .append(listing.stack.getHoverName().copy())
+                                .withStyle(ChatFormatting.YELLOW),
                         false
                 );
-                prevTop.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
+                prevTop.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
             } else {
                 BalanceStore.add(world.getServer(), listing.highestBidderUuid, listing.highestBid,
                         TransactionReason.AUCTION_REFUND, "outbid refund (offline)");
@@ -567,60 +566,60 @@ public final class AuctionState extends PersistentState {
         NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
 
         listing.highestBid = amount;
-        listing.highestBidderUuid = bidder.getUuid();
+        listing.highestBidderUuid = bidder.getUUID();
         listing.highestBidderName = bidder.getName().getString();
 
         // Sync bid info into the listing's stack NBT for client tooltip
-        NbtCompound tag = StackData.editData(listing.stack);
+        CompoundTag tag = StackData.editData(listing.stack);
         tag.putLong("nc_highest_bid", listing.highestBid);
         tag.putString("nc_highest_bidder", listing.highestBidderName);
         StackData.commitData(listing.stack, tag);
 
-        bidder.sendMessage(
-                Text.literal("You bid " + amount + " ")
+        bidder.displayClientMessage(
+                Component.literal("You bid " + amount + " ")
                         .append(NotchCurrency.coinIcon())
-                        .append(Text.literal(" on "))
-                        .append(listing.stack.getName().copy())
-                        .formatted(Formatting.GREEN),
+                        .append(Component.literal(" on "))
+                        .append(listing.stack.getHoverName().copy())
+                        .withStyle(ChatFormatting.GREEN),
                 false
         );
-        bidder.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
+        bidder.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
 
         // Notify seller if online
-        ServerPlayerEntity seller = world.getServer().getPlayerManager()
+        ServerPlayer seller = world.getServer().getPlayerList()
                 .getPlayer(listing.sellerUuid);
         if (seller != null) {
-            seller.sendMessage(
-                    Text.literal(listing.highestBidderName + " bid " + amount + " ")
+            seller.displayClientMessage(
+                    Component.literal(listing.highestBidderName + " bid " + amount + " ")
                             .append(NotchCurrency.coinIcon())
-                            .append(Text.literal(" on your listing."))
-                            .formatted(Formatting.YELLOW),
+                            .append(Component.literal(" on your listing."))
+                            .withStyle(ChatFormatting.YELLOW),
                     false
             );
-            seller.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
+            seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
         }
 
-        markDirty();
+        setDirty();
     }
 
     public void removeListing(UUID id) {
         listings.remove(id);
-        markDirty();
+        setDirty();
     }
 
-    public long refundHighestBid(ServerWorld world, AuctionListing listing) {
+    public long refundHighestBid(ServerLevel world, AuctionListing listing) {
         if (listing == null || listing.highestBidderUuid == null || listing.highestBid <= 0) {
             return 0L;
         }
         long amount = listing.highestBid;
         MinecraftServer server = world.getServer();
-        ServerPlayerEntity bidder = server.getPlayerManager().getPlayer(listing.highestBidderUuid);
+        ServerPlayer bidder = server.getPlayerList().getPlayer(listing.highestBidderUuid);
         if (bidder != null) {
             BalanceStore.add(bidder, amount, TransactionReason.AUCTION_REFUND, "auction cancelled - bid refunded");
             NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
-            bidder.sendMessage(Text.literal("Your bid was refunded - ")
-                    .append(listing.stack.getName().copy().formatted(Formatting.YELLOW))
-                    .append(Text.literal(" was cancelled by the seller.").formatted(Formatting.YELLOW)), false);
+            bidder.displayClientMessage(Component.literal("Your bid was refunded - ")
+                    .append(listing.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" was cancelled by the seller.").withStyle(ChatFormatting.YELLOW)), false);
         } else {
             BalanceStore.add(server, listing.highestBidderUuid, amount,
                     TransactionReason.AUCTION_REFUND, "auction cancelled - bid refunded (offline)");
@@ -635,7 +634,7 @@ public final class AuctionState extends PersistentState {
     private int tickCounter = 0;
     private static final int TICK_INTERVAL = 20; // Check once per second instead of every tick
 
-    public void tick(ServerWorld world) {
+    public void tick(ServerLevel world) {
         // Only process every TICK_INTERVAL ticks (1 second) - auctions don't need tick-precise expiry
         tickCounter++;
         if (tickCounter % TICK_INTERVAL != 0) {
@@ -646,7 +645,7 @@ public final class AuctionState extends PersistentState {
             return;
         }
 
-        long now = world.getTime();
+        long now = world.getGameTime();
         Iterator<AuctionListing> it = listings.values().iterator();
 
         while (it.hasNext()) {
@@ -661,12 +660,12 @@ public final class AuctionState extends PersistentState {
             }
 
             // Auction is expired here
-            ServerPlayerEntity seller = world.getServer().getPlayerManager()
+            ServerPlayer seller = world.getServer().getPlayerList()
                     .getPlayer(listing.sellerUuid);
 
             if (listing.highestBid > 0L && listing.highestBidderUuid != null) {
                 // There is a winning bidder
-                ServerPlayerEntity winner = world.getServer().getPlayerManager()
+                ServerPlayer winner = world.getServer().getPlayerList()
                         .getPlayer(listing.highestBidderUuid);
 
                 long finalPrice = listing.highestBid;
@@ -676,7 +675,7 @@ public final class AuctionState extends PersistentState {
 
                 ItemStack prize = listing.stack.copy();
                 stripAuctionTags(prize);
-                Text itemName = listing.stack.getName().copy().formatted(Formatting.WHITE);
+                Component itemName = listing.stack.getHoverName().copy().withStyle(ChatFormatting.WHITE);
 
                 boolean sellerPaidNow = false;
 
@@ -687,43 +686,43 @@ public final class AuctionState extends PersistentState {
                         NotchPackets.sendBalance(seller, BalanceStore.get(seller));
                     }
 
-                    MutableText sellerMsg = Text.literal("Your auction for ")
-                            .formatted(Formatting.GREEN)
+                    MutableComponent sellerMsg = Component.literal("Your auction for ")
+                            .withStyle(ChatFormatting.GREEN)
                             .append(itemName)
-                            .append(Text.literal(" was won by " +
+                            .append(Component.literal(" was won by " +
                                     (listing.highestBidderName != null ? listing.highestBidderName : "Unknown") +
-                                    " for ").formatted(Formatting.GREEN))
+                                    " for ").withStyle(ChatFormatting.GREEN))
                             .append(NotchCurrency.coins(finalPrice));
 
                     if (tax > 0) {
-                        sellerMsg.append(Text.literal(" (")
-                                .append(Text.literal(String.valueOf(tax) + " ")
-                                        .formatted(Formatting.RED))
+                        sellerMsg.append(Component.literal(" (")
+                                .append(Component.literal(String.valueOf(tax) + " ")
+                                        .withStyle(ChatFormatting.RED))
                                 .append(NotchCurrency.coinIcon())
-                                .append(Text.literal(" auction fee)").formatted(Formatting.RED)));
+                                .append(Component.literal(" auction fee)").withStyle(ChatFormatting.RED)));
                     }
 
-                    sellerMsg.append(Text.literal("!").formatted(Formatting.GREEN));
+                    sellerMsg.append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-                    seller.sendMessage(sellerMsg, false);
-                    seller.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+                    seller.displayClientMessage(sellerMsg, false);
+                    seller.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
                     sellerPaidNow = true;
                 }
 
                 if (winner != null) {
                     ItemStack toGive = prize.copy();
-                    boolean inserted = winner.getInventory().insertStack(toGive);
+                    boolean inserted = winner.getInventory().add(toGive);
 
                     if (inserted || toGive.isEmpty()) {
                         // Fully delivered now
-                        Text winMsg = Text.literal("You won the auction for ")
-                                .formatted(Formatting.GREEN)
+                        Component winMsg = Component.literal("You won the auction for ")
+                                .withStyle(ChatFormatting.GREEN)
                                 .append(itemName)
-                                .append(Text.literal(" for ").formatted(Formatting.GREEN))
+                                .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
                                 .append(NotchCurrency.coins(finalPrice))
-                                .append(Text.literal("!").formatted(Formatting.GREEN));
+                                .append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-                        winner.sendMessage(winMsg, false);
+                        winner.displayClientMessage(winMsg, false);
                         winner.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
                     } else {
                         // Inventory full – store pending & send clickable "Claim Item"
@@ -740,9 +739,9 @@ public final class AuctionState extends PersistentState {
                         );
                         addPending(pw);
 
-                        MutableText claim = Text.literal("[Claim Item]")
-                                .formatted(Formatting.GREEN, Formatting.BOLD)
-                                .styled(style -> style
+                        MutableComponent claim = Component.literal("[Claim Item]")
+                                .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+                                .withStyle(style -> style
                                         .withClickEvent(
                                                 new ClickEvent(
                                                         ClickEvent.Action.RUN_COMMAND,
@@ -752,20 +751,20 @@ public final class AuctionState extends PersistentState {
                                         .withHoverEvent(
                                                 new HoverEvent(
                                                         HoverEvent.Action.SHOW_TEXT,
-                                                        Text.literal("Click to claim your winnings")
+                                                        Component.literal("Click to claim your winnings")
                                                 )
                                         ));
 
-                        Text msg = Text.literal("Inventory full! ")
-                                .formatted(Formatting.YELLOW)
+                        Component msg = Component.literal("Inventory full! ")
+                                .withStyle(ChatFormatting.YELLOW)
                                 .append(claim)
-                                .append(Text.literal(" to receive ")
-                                        .formatted(Formatting.YELLOW))
-                                .append(prize.getName().copy().formatted(Formatting.WHITE))
-                                .append(Text.literal(".").formatted(Formatting.YELLOW));
+                                .append(Component.literal(" to receive ")
+                                        .withStyle(ChatFormatting.YELLOW))
+                                .append(prize.getHoverName().copy().withStyle(ChatFormatting.WHITE))
+                                .append(Component.literal(".").withStyle(ChatFormatting.YELLOW));
 
-                        winner.sendMessage(msg, false);
-                        winner.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
+                        winner.displayClientMessage(msg, false);
+                        winner.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
                     }
                 } else {
                     // Winner offline: store pending so they can /ah claim later
@@ -784,13 +783,13 @@ public final class AuctionState extends PersistentState {
                 }
 
                 it.remove();
-                markDirty();
+                setDirty();
             } else {
                 // No bids: return item to seller or mailbox, then remove listing.
                 if (seller != null) {
                     ItemStack toReturn = listing.stack.copy();
                     stripAuctionTags(toReturn);
-                    boolean inserted = seller.getInventory().insertStack(toReturn);
+                    boolean inserted = seller.getInventory().add(toReturn);
                     if (!inserted && !toReturn.isEmpty()) {
                         // Inventory full -> mailbox instead of drop
                         PendingWinnings pw = new PendingWinnings(
@@ -804,9 +803,9 @@ public final class AuctionState extends PersistentState {
                         );
                         addPending(pw);
 
-                        MutableText claim = Text.literal("[Claim Item]")
-                                .formatted(Formatting.GOLD, Formatting.BOLD)
-                                .styled(style -> style
+                        MutableComponent claim = Component.literal("[Claim Item]")
+                                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                                .withStyle(style -> style
                                         .withClickEvent(
                                                 new ClickEvent(
                                                         ClickEvent.Action.RUN_COMMAND,
@@ -816,30 +815,30 @@ public final class AuctionState extends PersistentState {
                                         .withHoverEvent(
                                                 new HoverEvent(
                                                         HoverEvent.Action.SHOW_TEXT,
-                                                        Text.literal("Click to claim your returned item")
+                                                        Component.literal("Click to claim your returned item")
                                                 )
                                         ));
 
-                        seller.sendMessage(
-                                Text.literal("Your auction for ")
-                                        .append(listing.stack.getName().copy())
-                                        .append(Text.literal(" expired with no bids. "))
+                        seller.displayClientMessage(
+                                Component.literal("Your auction for ")
+                                        .append(listing.stack.getHoverName().copy())
+                                        .append(Component.literal(" expired with no bids. "))
                                         .append(claim)
-                                        .append(Text.literal(" to retrieve your item from the mailbox."))
-                                        .formatted(Formatting.YELLOW),
+                                        .append(Component.literal(" to retrieve your item from the mailbox."))
+                                        .withStyle(ChatFormatting.YELLOW),
                                 false
                         );
-                        seller.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
+                        seller.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
 
                     } else {
-                        seller.sendMessage(
-                                Text.literal("Your auction for ")
-                                        .append(listing.stack.getName().copy())
-                                        .append(Text.literal(" expired with no bids. Item returned."))
-                                        .formatted(Formatting.YELLOW),
+                        seller.displayClientMessage(
+                                Component.literal("Your auction for ")
+                                        .append(listing.stack.getHoverName().copy())
+                                        .append(Component.literal(" expired with no bids. Item returned."))
+                                        .withStyle(ChatFormatting.YELLOW),
                                 false
                         );
-                        seller.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
+                        seller.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
 
                     }
                 } else {
@@ -859,22 +858,22 @@ public final class AuctionState extends PersistentState {
                 }
 
                 it.remove();
-                markDirty();
+                setDirty();
             }
         }
     }
 
-    public void claimAll(ServerWorld world, ServerPlayerEntity player) {
+    public void claimAll(ServerLevel world, ServerPlayer player) {
         if (pendingWinnings.isEmpty()) {
-            player.sendMessage(
-                    Text.literal("You have no pending auction rewards.")
-                            .formatted(Formatting.GRAY),
+            player.displayClientMessage(
+                    Component.literal("You have no pending auction rewards.")
+                            .withStyle(ChatFormatting.GRAY),
                     false
             );
             return;
         }
 
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         boolean claimedSomething = false;
 
         Iterator<PendingWinnings> it = pendingWinnings.values().iterator();
@@ -887,14 +886,14 @@ public final class AuctionState extends PersistentState {
                 BalanceStore.add(player, amt, TransactionReason.AUCTION, "claimed auction winnings");
                 NotchPackets.sendBalance(player, BalanceStore.get(player));
 
-                player.sendMessage(
-                        Text.literal("Claimed ")
-                                .append(Text.literal(String.valueOf(amt) + " ").formatted(Formatting.GOLD))
+                player.displayClientMessage(
+                        Component.literal("Claimed ")
+                                .append(Component.literal(String.valueOf(amt) + " ").withStyle(ChatFormatting.GOLD))
                                 .append(NotchCurrency.coinIcon())
-                                .append(Text.literal(" from auction winnings.").formatted(Formatting.GREEN)),
+                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)),
                         false
                 );
-                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+                player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
 
                 pw.finalPrice = 0L;
                 claimedSomething = true;
@@ -904,21 +903,21 @@ public final class AuctionState extends PersistentState {
             if (pw.winnerUuid.equals(uuid) && !pw.stack.isEmpty()) {
                 ItemStack toGive = pw.stack.copy();
                 stripAuctionTags(toGive); // Safety strip in case of old pending data
-                boolean inserted = player.getInventory().insertStack(toGive);
+                boolean inserted = player.getInventory().add(toGive);
 
                 if (!inserted && !toGive.isEmpty()) {
                     // Still no room; keep in mailbox
-                    player.sendMessage(
-                            Text.literal("Your inventory is full. "
+                    player.displayClientMessage(
+                            Component.literal("Your inventory is full. "
                                             + "Free up space and run /ah claim again.")
-                                    .formatted(Formatting.RED),
+                                    .withStyle(ChatFormatting.RED),
                             false
                     );
                 } else {
-                    player.sendMessage(
-                            Text.literal("Claimed auction item: ")
-                                    .append(pw.stack.getName().copy())
-                                    .formatted(Formatting.GREEN),
+                    player.displayClientMessage(
+                            Component.literal("Claimed auction item: ")
+                                    .append(pw.stack.getHoverName().copy())
+                                    .withStyle(ChatFormatting.GREEN),
                             false
                     );
                     player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
@@ -934,13 +933,13 @@ public final class AuctionState extends PersistentState {
         }
 
         if (!claimedSomething) {
-            player.sendMessage(
-                    Text.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
-                            .formatted(Formatting.GRAY),
+            player.displayClientMessage(
+                    Component.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
+                            .withStyle(ChatFormatting.GRAY),
                     false
             );
         }
 
-        markDirty();
+        setDirty();
     }
 }

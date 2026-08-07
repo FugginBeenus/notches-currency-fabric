@@ -3,19 +3,19 @@ package net.fugginbeenus.notchcurrency.trade;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.PressableWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
-public class TradeScreen extends HandledScreen<TradeScreenHandler> {
+public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
 
-    private static final Identifier TEX = NotchCurrency.id("textures/gui/trade.png");
+    private static final ResourceLocation TEX = NotchCurrency.id("textures/gui/trade.png");
 
     // === Panel (your texture) ===
     private static final int TEX_U = 2, TEX_V = 2;
@@ -51,7 +51,7 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
     private static final int RIGHT_PILL_DX = 2;
     private static final int RIGHT_PILL_DY = -6;
 
-    // Text padding inside each pill
+    // Component padding inside each pill
     private static final int FIELD_INSET_X = 5;
     private static final int FIELD_INSET_Y = 1;
 
@@ -66,54 +66,54 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
     @SuppressWarnings("unused")
     private static final boolean HIDE_BUTTON_ART = false;
 
-    private TextFieldWidget selfMoneyField;   // editable
-    private TextFieldWidget otherMoneyField;  // read-only
+    private EditBox selfMoneyField;   // editable
+    private EditBox otherMoneyField;  // read-only
     private boolean ready = false;
 
-    public TradeScreen(TradeScreenHandler handler, PlayerInventory inv, Text title) {
+    public TradeScreen(TradeScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth  = PANEL_W;
-        this.backgroundHeight = PANEL_H;
-        this.titleX = this.titleY = 9999;
-        this.playerInventoryTitleX = this.playerInventoryTitleY = 9999;
+        this.imageWidth  = PANEL_W;
+        this.imageHeight = PANEL_H;
+        this.titleLabelX = this.titleLabelY = 9999;
+        this.inventoryLabelX = this.inventoryLabelY = 9999;
     }
 
     @Override
     protected void init() {
         super.init();
-        final int x = (this.width - backgroundWidth) / 2;
-        final int y = (this.height - backgroundHeight) / 2;
+        final int x = (this.width - imageWidth) / 2;
+        final int y = (this.height - imageHeight) / 2;
 
         // --- Left (your offer) field ---
-        selfMoneyField = new TextFieldWidget(
-                this.textRenderer,
+        selfMoneyField = new EditBox(
+                this.font,
                 x + LEFT_PILL_X + LEFT_PILL_DX + FIELD_INSET_X,
                 y + LEFT_PILL_Y + LEFT_PILL_DY + FIELD_INSET_Y,
                 FIELD_W, FIELD_H,
-                Text.literal(""));
+                Component.literal(""));
         selfMoneyField.setMaxLength(10);
-        selfMoneyField.setText("0");
-        selfMoneyField.setDrawsBackground(false); // transparent: show pill art
+        selfMoneyField.setValue("0");
+        selfMoneyField.setBordered(false); // transparent: show pill art
         selfMoneyField.setVisible(true);
         selfMoneyField.setEditable(true);
-        selfMoneyField.setChangedListener(s -> sendUpdate());
-        addDrawableChild(selfMoneyField);
+        selfMoneyField.setResponder(s -> sendUpdate());
+        addRenderableWidget(selfMoneyField);
 
         // --- Right (their offer) field (read-only mirror) ---
-        otherMoneyField = new TextFieldWidget(
-                this.textRenderer,
+        otherMoneyField = new EditBox(
+                this.font,
                 x + RIGHT_PILL_X + RIGHT_PILL_DX + FIELD_INSET_X,
                 y + RIGHT_PILL_Y + RIGHT_PILL_DY + FIELD_INSET_Y,
                 FIELD_W, FIELD_H,
-                Text.literal(""));
-        otherMoneyField.setDrawsBackground(false);
+                Component.literal(""));
+        otherMoneyField.setBordered(false);
         otherMoneyField.setEditable(false);
         otherMoneyField.setVisible(true);
         otherMoneyField.setFocused(false);
-        addDrawableChild(otherMoneyField);
+        addRenderableWidget(otherMoneyField);
 
         // --- Invisible Confirm/Ready hitbox over the green button art ---
-        addDrawableChild(new InvisibleButton(
+        addRenderableWidget(new InvisibleButton(
                 x + CONFIRM_X, y + CONFIRM_Y, CONFIRM_W, CONFIRM_H,
                 this::toggleReady));
 
@@ -128,7 +128,7 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
     private void sendUpdate() {
         int money = 0;
         try {
-            money = Integer.parseInt(selfMoneyField.getText().trim());
+            money = Integer.parseInt(selfMoneyField.getValue().trim());
         } catch (NumberFormatException ignored) {}
         var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
         buf.writeVarInt(Math.max(0, money));
@@ -137,12 +137,12 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Keep the other player's amount mirrored into the right field
-        int other = this.handler.getProperties().get(1);
+        int other = this.menu.getProperties().get(1);
         String want = Integer.toString(other);
-        if (!want.equals(otherMoneyField.getText())) {
-            otherMoneyField.setText(want);
+        if (!want.equals(otherMoneyField.getValue())) {
+            otherMoneyField.setValue(want);
         }
 
         //? if <1.21 {
@@ -151,42 +151,42 @@ public class TradeScreen extends HandledScreen<TradeScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
 
         // Draw "CONFIRM"/"READY" label (independent nudge from hitbox)
-        int bx = (this.width - backgroundWidth) / 2 + CONFIRM_X + CONFIRM_LABEL_DX;
-        int by = (this.height - backgroundHeight) / 2 + CONFIRM_Y + CONFIRM_LABEL_DY;
+        int bx = (this.width - imageWidth) / 2 + CONFIRM_X + CONFIRM_LABEL_DX;
+        int by = (this.height - imageHeight) / 2 + CONFIRM_Y + CONFIRM_LABEL_DY;
         String label = ready ? "READY" : "CONFIRM";
-        int lw = this.textRenderer.getWidth(label);
+        int lw = this.font.width(label);
         int lx = bx + (CONFIRM_W - lw) / 2;
-        int ly = by + (CONFIRM_H - this.textRenderer.fontHeight) / 2;
+        int ly = by + (CONFIRM_H - this.font.lineHeight) / 2;
         int color = ready ? 0x4CF06C : 0xFFFFFF; // green when ready
-        ctx.drawText(this.textRenderer, label, lx, ly, color, false);
+        ctx.drawString(this.font, label, lx, ly, color, false);
 
-        drawMouseoverTooltip(ctx, mouseX, mouseY);
+        renderTooltip(ctx, mouseX, mouseY);
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        int x = (this.width - backgroundWidth) / 2;
-        int y = (this.height - backgroundHeight) / 2;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        int x = (this.width - imageWidth) / 2;
+        int y = (this.height - imageHeight) / 2;
 
         // Draw full panel background (includes baked-in button)
-        ctx.drawTexture(TEX, x, y, TEX_U, TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
+        ctx.blit(TEX, x, y, TEX_U, TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
     }
 
     // ----- Invisible clickable widget (renders nothing) -----
-    private static final class InvisibleButton extends PressableWidget {
+    private static final class InvisibleButton extends AbstractButton {
         private final Runnable onClick;
 
         InvisibleButton(int x, int y, int w, int h, Runnable onClick) {
-            super(x, y, w, h, Text.empty());
+            super(x, y, w, h, Component.empty());
             this.onClick = onClick;
         }
         @Override public void onPress() { onClick.run(); }
         //? if >=1.21 {
-        /*@Override protected void renderWidget(DrawContext ctx, int mouseX, int mouseY, float delta) { }
+        /*@Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
         *///?} else {
-        @Override protected void renderButton(DrawContext ctx, int mouseX, int mouseY, float delta) { /* invisible */ }
+        @Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { /* invisible */ }
         //?}
-        @Override protected void appendClickableNarrations(NarrationMessageBuilder builder) { /* no narration */ }
+        @Override protected void updateWidgetNarration(NarrationElementOutput builder) { /* no narration */ }
     }
 
     @Override

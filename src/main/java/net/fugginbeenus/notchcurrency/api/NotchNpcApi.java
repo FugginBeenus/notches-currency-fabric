@@ -5,13 +5,13 @@ import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleState;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NpcPresetManager;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -27,27 +27,27 @@ public final class NotchNpcApi {
 
     // ---- Notch NPCs: spawning & presets ----
 
-    public static NotchNpcEntity spawnNpc(ServerWorld world, Vec3d pos, float yaw,
-                                          @Nullable ServerPlayerEntity owner) {
+    public static NotchNpcEntity spawnNpc(ServerLevel world, Vec3 pos, float yaw,
+                                          @Nullable ServerPlayer owner) {
         NotchNpcEntity npc = new NotchNpcEntity(ModEntities.NOTCH_NPC, world);
-        npc.refreshPositionAndAngles(pos.x, pos.y, pos.z, yaw, 0f);
-        npc.setHeadYaw(yaw);
-        npc.setBodyYaw(yaw);
+        npc.moveTo(pos.x, pos.y, pos.z, yaw, 0f);
+        npc.setYHeadRot(yaw);
+        npc.setYBodyRot(yaw);
         if (owner != null) {
-            npc.setOwner(owner.getUuid(), owner.getName().getString());
+            npc.setOwner(owner.getUUID(), owner.getName().getString());
         } else {
             npc.setOwnerType(NotchNpcEntity.OwnerType.SERVER);
         }
-        npc.setCustomName(Text.literal("NPC"));
+        npc.setCustomName(Component.literal("NPC"));
         npc.setCustomNameVisible(true);
-        npc.setHome(BlockPos.ofFloored(pos));
-        world.spawnEntity(npc);
+        npc.setHome(BlockPos.containing(pos));
+        world.addFreshEntity(npc);
         return npc;
     }
 
     @Nullable
-    public static NotchNpcEntity spawnNpcFromPreset(ServerWorld world, Vec3d pos, float yaw,
-                                                    String presetName, @Nullable ServerPlayerEntity owner) {
+    public static NotchNpcEntity spawnNpcFromPreset(ServerLevel world, Vec3 pos, float yaw,
+                                                    String presetName, @Nullable ServerPlayer owner) {
         NotchNpcEntity npc = spawnNpc(world, pos, yaw, owner);
         if (!NpcPresetManager.applyPreset(npc, presetName, owner)) {
             npc.discard();
@@ -57,7 +57,7 @@ public final class NotchNpcApi {
     }
 
     public static boolean applyPreset(NotchNpcEntity npc, String presetName,
-                                      @Nullable ServerPlayerEntity actor) {
+                                      @Nullable ServerPlayer actor) {
         return NpcPresetManager.applyPreset(npc, presetName, actor);
     }
 
@@ -67,13 +67,13 @@ public final class NotchNpcApi {
 
     // ---- Notch NPCs: custom roles ----
 
-    public static void registerCustomRole(Identifier id, NpcCustomRole handler) {
+    public static void registerCustomRole(ResourceLocation id, NpcCustomRole handler) {
         if (id != null && handler != null) {
             CUSTOM_ROLES.put(id.toString(), handler);
         }
     }
 
-    public static void setCustomRole(NotchNpcEntity npc, Identifier id) {
+    public static void setCustomRole(NotchNpcEntity npc, ResourceLocation id) {
         npc.setCustomRoleId(id == null ? "" : id.toString());
         npc.setRole(NpcRole.CUSTOM);
     }

@@ -4,17 +4,16 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.List;
 import java.util.UUID;
 
 public class NpcFactionPickerScreen extends Screen {
 
-    public record Entry(String id, String name, Formatting color, int members) {}
+    public record Entry(String id, String name, ChatFormatting color, int members) {}
 
     private static final int W = 280, H = 210;
     private static final int LIST_X = 12, LIST_Y = 44, ROW_H = 18, VISIBLE = 7;
@@ -27,7 +26,7 @@ public class NpcFactionPickerScreen extends Screen {
     private int scroll;
 
     public NpcFactionPickerScreen(UUID npcId, String currentId, List<Entry> factions) {
-        super(Text.literal("Faction"));
+        super(Component.literal("Faction"));
         this.npcId = npcId;
         this.currentId = currentId == null ? "" : currentId;
         this.factions = factions;
@@ -42,22 +41,22 @@ public class NpcFactionPickerScreen extends Screen {
     private int rowY(int i) { return py + LIST_Y + i * ROW_H; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Faction", px + W / 2, py + 8);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Who this NPC stands with.",
+        NotchWidgets.title(ctx, this.font, "Faction", px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.font, "Who this NPC stands with.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
 
         NotchWidgets.inset(ctx, px + LIST_X - 2, py + LIST_Y - 4, W - 20, VISIBLE * ROW_H + 6, NotchTheme.PANEL_MID);
         if (factions.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No factions you can use yet.",
+            NotchWidgets.centerText(ctx, this.font, "No factions you can use yet.",
                     px + W / 2, py + LIST_Y + 34, NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "Found one at a Recruiter NPC.",
+            NotchWidgets.centerText(ctx, this.font, "Found one at a Recruiter NPC.",
                     px + W / 2, py + LIST_Y + 46, NotchTheme.TEXT_MUTED, false);
         }
         for (int i = 0; i < VISIBLE && i + scroll < factions.size(); i++) {
@@ -66,25 +65,25 @@ public class NpcFactionPickerScreen extends Screen {
             boolean selected = f.id().equals(currentId);
             boolean hover = over(mouseX, mouseY, px + LIST_X, ry, W - 24, ROW_H - 2);
             if (selected) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, ry, W - 24, ROW_H - 2, "", hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, ry, W - 24, ROW_H - 2, "", hover);
             } else {
                 NotchWidgets.button(ctx, px + LIST_X, ry, W - 24, ROW_H - 2, hover, false);
             }
-            ctx.drawText(this.textRenderer, Text.literal(f.name()).formatted(f.color()),
+            ctx.drawString(this.font, Component.literal(f.name()).withStyle(f.color()),
                     px + LIST_X + 6, ry + 4, 0xFFFFFF, selected);
             String members = f.members() == 1 ? "1 member" : f.members() + " members";
-            ctx.drawText(this.textRenderer, members, px + W - 92, ry + 4,
+            ctx.drawString(this.font, members, px + W - 92, ry + 4,
                     selected ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_MUTED, false);
         }
         if (factions.size() > VISIBLE) {
-            NotchWidgets.centerText(ctx, this.textRenderer,
+            NotchWidgets.centerText(ctx, this.font,
                     (scroll + 1) + "-" + Math.min(factions.size(), scroll + VISIBLE) + " of " + factions.size(),
                     px + W / 2, py + LIST_Y + VISIBLE * ROW_H + 6, NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 12, py + H - 26, 120, 16, "No faction",
+        NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
                 over(mouseX, mouseY, px + 12, py + H - 26, 120, 16));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + W - 132, py + H - 26, 120, 16, "Back",
+        NotchWidgets.neutralButton(ctx, this.font, px + W - 132, py + H - 26, 120, 16, "Back",
                 over(mouseX, mouseY, px + W - 132, py + H - 26, 120, 16));
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -131,7 +130,7 @@ public class NpcFactionPickerScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean isPauseScreen() { return false; }
 
     //? if >=1.21 {
     /*@Override
@@ -142,7 +141,7 @@ public class NpcFactionPickerScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

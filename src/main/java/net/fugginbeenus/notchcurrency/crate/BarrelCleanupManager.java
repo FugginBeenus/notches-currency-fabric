@@ -1,22 +1,21 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BarrelBlockEntity;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import java.util.*;
 
 public final class BarrelCleanupManager {
     private BarrelCleanupManager() {}
 
     // Track per-dimension
-    private static final Map<ServerWorld, Set<BlockPos>> TRACKED = new HashMap<>();
+    private static final Map<ServerLevel, Set<BlockPos>> TRACKED = new HashMap<>();
     private static boolean INIT = false;
 
     public static void init() {
@@ -25,22 +24,22 @@ public final class BarrelCleanupManager {
         ServerTickEvents.END_SERVER_TICK.register(BarrelCleanupManager::tick);
     }
 
-    public static void track(ServerWorld world, BlockPos pos) {
-        TRACKED.computeIfAbsent(world, w -> new HashSet<>()).add(pos.toImmutable());
+    public static void track(ServerLevel world, BlockPos pos) {
+        TRACKED.computeIfAbsent(world, w -> new HashSet<>()).add(pos.immutable());
     }
 
     private static void tick(MinecraftServer server) {
         if (TRACKED.isEmpty()) return;
 
         for (var entry : new ArrayList<>(TRACKED.entrySet())) {
-            ServerWorld world = entry.getKey();
+            ServerLevel world = entry.getKey();
             Set<BlockPos> positions = entry.getValue();
             if (positions.isEmpty()) continue;
 
             var toRemove = new ArrayList<BlockPos>();
             for (BlockPos pos : positions) {
                 // If block changed, stop tracking
-                if (!world.getBlockState(pos).isOf(Blocks.BARREL)) {
+                if (!world.getBlockState(pos).is(Blocks.BARREL)) {
                     toRemove.add(pos);
                     continue;
                 }
@@ -49,10 +48,10 @@ public final class BarrelCleanupManager {
 
                 // If empty -> poof and remove the barrel
                 if (isEmpty(barrel)) {
-                    world.syncWorldEvent(2001, pos, net.minecraft.block.Block.getRawIdFromState(Blocks.BARREL.getDefaultState())); // break particles
-                    world.playSound(null, pos, SoundEvents.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 0.9f, 1.0f);
-                    world.setBlockState(pos, Blocks.AIR.getDefaultState(), net.minecraft.block.Block.NOTIFY_ALL);
-                    world.spawnParticles(ParticleTypes.POOF, pos.getX() + 0.5, pos.getY() + 0.8, pos.getZ() + 0.5,
+                    world.levelEvent(2001, pos, net.minecraft.world.level.block.Block.getId(Blocks.BARREL.defaultBlockState())); // break particles
+                    world.playSound(null, pos, SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.9f, 1.0f);
+                    world.setBlock(pos, Blocks.AIR.defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
+                    world.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5, pos.getY() + 0.8, pos.getZ() + 0.5,
                             10, 0.2, 0.1, 0.2, 0.02);
                     toRemove.add(pos);
                 }
@@ -63,8 +62,8 @@ public final class BarrelCleanupManager {
     }
 
     private static boolean isEmpty(BarrelBlockEntity barrel) {
-        for (int i = 0; i < barrel.size(); i++) {
-            if (!barrel.getStack(i).isEmpty()) return false;
+        for (int i = 0; i < barrel.getContainerSize(); i++) {
+            if (!barrel.getItem(i).isEmpty()) return false;
         }
         return true;
     }

@@ -2,14 +2,11 @@ package net.fugginbeenus.notchcurrency.shop;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -19,7 +16,7 @@ public final class NpcShopLogic {
 
     private NpcShopLogic() {}
 
-    public static boolean performPurchase(ServerPlayerEntity buyer,
+    public static boolean performPurchase(ServerPlayer buyer,
                                           int price,
                                           ItemStack item,
                                           int quantity) {
@@ -42,15 +39,15 @@ public final class NpcShopLogic {
         ItemStack toGive = item.copy();
         toGive.setCount(quantity);
 
-        if (!buyer.getInventory().insertStack(toGive)) {
+        if (!buyer.getInventory().add(toGive)) {
             // Inventory full → drop at feet
-            buyer.dropItem(toGive, false);
+            buyer.drop(toGive, false);
         }
 
         // 3) Feedback: ding + actionbar
-        buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
-        buyer.sendMessage(
-                Text.literal("§aYou bought §e" + quantity + "x §f" + item.getName().getString()
+        buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
+        buyer.displayClientMessage(
+                Component.literal("§aYou bought §e" + quantity + "x §f" + item.getHoverName().getString()
                         + " §afor §e" + totalCost + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
                 true
         );
@@ -58,76 +55,76 @@ public final class NpcShopLogic {
         return true;
     }
 
-    public static void openShopBrowser(ServerPlayerEntity player, UUID shopId) {
-        ShopState state = ShopState.get(player.getServerWorld());
+    public static void openShopBrowser(ServerPlayer player, UUID shopId) {
+        ShopState state = ShopState.get(player.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.sendMessage(Text.literal("§cShop not found!"), false);
+            player.displayClientMessage(Component.literal("§cShop not found!"), false);
             return;
         }
 
         // Listings sync live through the handler's data-carrier slots; the buf only carries identity.
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Text.literal(shop.getShopName()),
-                (syncId, playerInventory, p) -> new ShopBrowseScreenHandler(syncId, playerInventory, shopId,
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Component.literal(shop.getShopName()),
+                (containerId, playerInventory, p) -> new ShopBrowseScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
                 buf -> {
-                    buf.writeUuid(shopId);
-                    buf.writeString(shop.getShopName());
-                    buf.writeString(shop.getShopkeeperDialog());
+                    buf.writeUUID(shopId);
+                    buf.writeUtf(shop.getShopName());
+                    buf.writeUtf(shop.getShopkeeperDialog());
                     writeNpcId(buf, shop.getLinkedNpcId());
                 });
     }
 
-    private static void writeNpcId(PacketByteBuf buf, @Nullable UUID npcId) {
+    private static void writeNpcId(FriendlyByteBuf buf, @Nullable UUID npcId) {
         buf.writeBoolean(npcId != null);
-        if (npcId != null) buf.writeUuid(npcId);
+        if (npcId != null) buf.writeUUID(npcId);
     }
 
-    public static void openShopManager(ServerPlayerEntity owner, UUID shopId) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+    public static void openShopManager(ServerPlayer owner, UUID shopId) {
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            owner.sendMessage(Text.literal("§cShop not found!"), false);
+            owner.displayClientMessage(Component.literal("§cShop not found!"), false);
             return;
         }
 
-        if (!shop.getOwnerId().equals(owner.getUuid())) {
-            owner.sendMessage(Text.literal("§cYou don't own this shop!"), false);
+        if (!shop.getOwnerId().equals(owner.getUUID())) {
+            owner.displayClientMessage(Component.literal("§cYou don't own this shop!"), false);
             return;
         }
 
         // Listings/earnings sync live through the handler; the buf only carries identity.
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Text.literal("Manage: " + shop.getShopName()),
-                (syncId, playerInventory, p) -> new ShopManageScreenHandler(syncId, playerInventory, shopId,
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Component.literal("Manage: " + shop.getShopName()),
+                (containerId, playerInventory, p) -> new ShopManageScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
                 buf -> {
-                    buf.writeUuid(shopId);
-                    buf.writeString(shop.getShopName());
-                    buf.writeString(shop.getShopkeeperDialog());
+                    buf.writeUUID(shopId);
+                    buf.writeUtf(shop.getShopName());
+                    buf.writeUtf(shop.getShopkeeperDialog());
                     writeNpcId(buf, shop.getLinkedNpcId());
                 });
     }
 
-    public static void openShop(ServerPlayerEntity player, UUID shopId) {
-        ShopState state = ShopState.get(player.getServerWorld());
+    public static void openShop(ServerPlayer player, UUID shopId) {
+        ShopState state = ShopState.get(player.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.sendMessage(Text.literal("§cShop not found!"), false);
+            player.displayClientMessage(Component.literal("§cShop not found!"), false);
             return;
         }
 
-        if (shop.getOwnerId().equals(player.getUuid())) {
+        if (shop.getOwnerId().equals(player.getUUID())) {
             openShopManager(player, shopId);
         } else {
             openShopBrowser(player, shopId);
         }
     }
 
-    public static boolean openShopFromNpc(ServerPlayerEntity player, UUID npcId) {
-        ShopState state = ShopState.get(player.getServerWorld());
+    public static boolean openShopFromNpc(ServerPlayer player, UUID npcId) {
+        ShopState state = ShopState.get(player.serverLevel());
         PlayerShop shop = state.getShopByNpc(npcId);
 
         if (shop == null) {

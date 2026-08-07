@@ -3,8 +3,7 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueNode;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree;
-import net.minecraft.client.MinecraftClient;
-
+import net.minecraft.client.Minecraft;
 import java.util.UUID;
 
 public class PreviewDialogueScreen extends NpcDialogueScreen {
@@ -54,7 +53,7 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
     }
 
     private static String substituteLocal(String text, String npcName) {
-        MinecraftClient c = MinecraftClient.getInstance();
+        Minecraft c = Minecraft.getInstance();
         String playerName = c.player != null ? c.player.getName().getString() : "player";
         return text.replace("%player%", playerName)
                 .replace("%npc%", npcName)
@@ -68,15 +67,15 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
     protected void onChoice(int i) {
         DialogueNode n = tree.get(nodeId);
         if (n == null || i >= n.choices().size()) {
-            close();
+            onClose();
             return;
         }
         DialogueChoice c = n.choices().get(i);
         String next = c.next();
         if (next.isEmpty() || tree.get(next) == null) {
-            close();
+            onClose();
         } else {
-            MinecraftClient.getInstance().setScreen(
+            Minecraft.getInstance().setScreen(
                     new PreviewDialogueScreen(studio, npcId, npcName, tree, next));
         }
     }
@@ -87,8 +86,8 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         // Back into the live studio instance (unsaved edits intact).
-        MinecraftClient.getInstance().setScreen(studio);
+        Minecraft.getInstance().setScreen(studio);
     }
 }

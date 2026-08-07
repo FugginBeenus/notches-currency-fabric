@@ -5,101 +5,99 @@ import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
-//? if <1.21 {
-import net.minecraft.client.item.TooltipContext;
-//?}
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public class NotchNpcItem extends Item {
 
-    public NotchNpcItem(Settings settings) {
-        super(settings.maxCount(16));
+    public NotchNpcItem(Properties settings) {
+        super(settings.stacksTo(16));
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        World world = context.getWorld();
-        if (world.isClient()) {
-            return ActionResult.SUCCESS;
+    public InteractionResult useOn(UseOnContext context) {
+        Level world = context.getLevel();
+        if (world.isClientSide()) {
+            return InteractionResult.SUCCESS;
         }
-        ServerWorld sw = (ServerWorld) world;
-        BlockPos pos = context.getBlockPos().offset(context.getSide());
-        PlayerEntity player = context.getPlayer();
+        ServerLevel sw = (ServerLevel) world;
+        BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
+        Player player = context.getPlayer();
 
         NotchNpcEntity npc = new NotchNpcEntity(ModEntities.NOTCH_NPC, sw);
-        float yaw = player != null ? player.getYaw() + 180f : 0f;
-        npc.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0f);
-        npc.setHeadYaw(yaw);
-        npc.setBodyYaw(yaw);
+        float yaw = player != null ? player.getYRot() + 180f : 0f;
+        npc.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0f);
+        npc.setYHeadRot(yaw);
+        npc.setYBodyRot(yaw);
 
-        ItemStack stack = context.getStack();
+        ItemStack stack = context.getItemInHand();
         if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
             // Restore a packed NPC (from "Pick up").
             npc.readFromItem(StackData.getCompound(stack, NotchNpcManager.ITEM_TAG));
         } else if (player != null) {
             // Fresh blank NPC: the placer owns it.
-            npc.setOwner(player.getUuid(), player.getName().getString());
-            npc.setCustomName(Text.literal("NPC"));
+            npc.setOwner(player.getUUID(), player.getName().getString());
+            npc.setCustomName(Component.literal("NPC"));
             npc.setCustomNameVisible(true);
         }
 
         // Home (the wander leash point) is wherever the NPC is placed.
         npc.setHome(pos);
 
-        sw.spawnEntity(npc);
+        sw.addFreshEntity(npc);
 
         // Re-establish the shop link if this NPC carries the SHOP role.
-        if (npc.getRole() == NpcRole.SHOP && player instanceof ServerPlayerEntity sp) {
+        if (npc.getRole() == NpcRole.SHOP && player instanceof ServerPlayer sp) {
             NotchNpcManager.ensureShopForNpc(sw, npc, sp);
         }
 
-        if (player != null && !player.getAbilities().creativeMode) {
-            stack.decrement(1);
+        if (player != null && !player.getAbilities().instabuild) {
+            stack.shrink(1);
         }
-        if (player instanceof ServerPlayerEntity sp) {
-            sp.sendMessage(Text.literal("NPC placed. ").formatted(Formatting.GREEN)
-                    .append(Text.literal("Sneak + right-click").formatted(Formatting.YELLOW))
-                    .append(Text.literal(" it to configure.").formatted(Formatting.GREEN)), false);
+        if (player instanceof ServerPlayer sp) {
+            sp.displayClientMessage(Component.literal("NPC placed. ").withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal("Sneak + right-click").withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" it to configure.").withStyle(ChatFormatting.GREEN)), false);
         }
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 
     @Override
     //? if >=1.21 {
-    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, net.minecraft.world.item.TooltipFlag type) {
     *///?} else {
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
     //?}
         if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
-            NbtCompound tag = StackData.getCompound(stack, NotchNpcManager.ITEM_TAG);
+            CompoundTag tag = StackData.getCompound(stack, NotchNpcManager.ITEM_TAG);
             String name = tag.contains("Name") ? tag.getString("Name") : "NPC";
             String role = tag.contains("Role") ? tag.getString("Role") : "NONE";
-            tooltip.add(Text.literal("Packed NPC: " + name).formatted(Formatting.AQUA));
-            tooltip.add(Text.literal("Role: " + role).formatted(Formatting.GRAY));
-            tooltip.add(Text.literal("Place to set it down.").formatted(Formatting.DARK_GRAY));
+            tooltip.add(Component.literal("Packed NPC: " + name).withStyle(ChatFormatting.AQUA));
+            tooltip.add(Component.literal("Role: " + role).withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Place to set it down.").withStyle(ChatFormatting.DARK_GRAY));
         } else {
-            tooltip.add(Text.literal("Places a blank NPC you own.").formatted(Formatting.GRAY));
-            tooltip.add(Text.literal("Sneak + right-click it to configure").formatted(Formatting.YELLOW));
-            tooltip.add(Text.literal("appearance, role, name and more.").formatted(Formatting.YELLOW));
+            tooltip.add(Component.literal("Places a blank NPC you own.").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Sneak + right-click it to configure").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Component.literal("appearance, role, name and more.").withStyle(ChatFormatting.YELLOW));
         }
         //? if >=1.21 {
-        /*super.appendTooltip(stack, context, tooltip, type);
+        /*super.appendHoverText(stack, context, tooltip, type);
         *///?} else {
-        super.appendTooltip(stack, world, tooltip, context);
+        super.appendHoverText(stack, world, tooltip, context);
         //?}
     }
 }

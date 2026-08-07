@@ -1,22 +1,22 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public enum BountyRarity {
-    COMMON(Formatting.WHITE, 60),
-    UNCOMMON(Formatting.GREEN, 25),
-    RARE(Formatting.AQUA, 12),
-    EPIC(Formatting.LIGHT_PURPLE, 3);
+    COMMON(ChatFormatting.WHITE, 60),
+    UNCOMMON(ChatFormatting.GREEN, 25),
+    RARE(ChatFormatting.AQUA, 12),
+    EPIC(ChatFormatting.LIGHT_PURPLE, 3);
 
-    private final Formatting color;
+    private final ChatFormatting color;
     private final int weight;
 
-    BountyRarity(Formatting color, int weight) {
+    BountyRarity(ChatFormatting color, int weight) {
         this.color = color;
         this.weight = weight;
     }
 
-    public Formatting color() {
+    public ChatFormatting color() {
         return color;
     }
 

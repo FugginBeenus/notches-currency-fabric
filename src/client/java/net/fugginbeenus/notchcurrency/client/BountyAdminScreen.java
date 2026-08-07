@@ -6,14 +6,14 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
+public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreenHandler> {
 
     private static final int W = 200, H = 246;
     private static final int FIELD_X = 120, FIELD_W = 68, FIELD_H = 14;
@@ -22,16 +22,16 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
     private static final int SV_X = 12, SV_Y = 120, SV_W = 176, SV_H = 16;
     private static final int RG_X = 12, RG_Y = 140, RG_W = 176, RG_H = 14;
 
-    private TextFieldWidget activeField, limitField, durField;
+    private EditBox activeField, limitField, durField;
     private boolean enabledToggle = false;
     private boolean prefilled = false;
 
-    public BountyAdminScreen(BountyAdminScreenHandler handler, PlayerInventory inv, Text title) {
+    public BountyAdminScreen(BountyAdminScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
@@ -40,58 +40,58 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
         activeField = digitField(ACTIVE_Y);
         limitField = digitField(LIMIT_Y);
         durField = digitField(DUR_Y);
-        addDrawableChild(activeField);
-        addDrawableChild(limitField);
-        addDrawableChild(durField);
+        addRenderableWidget(activeField);
+        addRenderableWidget(limitField);
+        addRenderableWidget(durField);
     }
 
-    private TextFieldWidget digitField(int fy) {
-        TextFieldWidget f = new TextFieldWidget(this.textRenderer, this.x + FIELD_X + 2, this.y + fy + 3,
-                FIELD_W - 4, FIELD_H - 5, Text.empty());
+    private EditBox digitField(int fy) {
+        EditBox f = new EditBox(this.font, this.leftPos + FIELD_X + 2, this.topPos + fy + 3,
+                FIELD_W - 4, FIELD_H - 5, Component.empty());
         f.setMaxLength(6);
-        f.setDrawsBackground(false);
-        f.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        f.setBordered(false);
+        f.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         return f;
     }
 
     private void prefillIfReady() {
         if (prefilled) return;
-        if (handler.prop(BountyAdminScreenHandler.A_DURATION) <= 0) return;
-        activeField.setText(String.valueOf(handler.prop(BountyAdminScreenHandler.A_ACTIVE)));
-        limitField.setText(String.valueOf(handler.prop(BountyAdminScreenHandler.A_LIMIT)));
-        durField.setText(String.valueOf(handler.prop(BountyAdminScreenHandler.A_DURATION)));
-        enabledToggle = handler.prop(BountyAdminScreenHandler.A_ENABLED) == 1;
+        if (menu.prop(BountyAdminScreenHandler.A_DURATION) <= 0) return;
+        activeField.setValue(String.valueOf(menu.prop(BountyAdminScreenHandler.A_ACTIVE)));
+        limitField.setValue(String.valueOf(menu.prop(BountyAdminScreenHandler.A_LIMIT)));
+        durField.setValue(String.valueOf(menu.prop(BountyAdminScreenHandler.A_DURATION)));
+        enabledToggle = menu.prop(BountyAdminScreenHandler.A_ENABLED) == 1;
         prefilled = true;
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
         prefillIfReady();
-        final int x = this.x, y = this.y;
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.textRenderer, "Bounty Setup", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Bounty Setup", x + W / 2, y + 8);
 
-        ctx.drawText(this.textRenderer, "Decrees (empty = all categories):", x + 10, y + 22, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Decrees (empty = all categories):", x + 10, y + 22, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < BountyAdminScreenHandler.DECREE_SLOTS; i++) {
             NotchWidgets.slot(ctx, x + BountyAdminScreenHandler.DECREE_X - 1 + i * 18, y + BountyAdminScreenHandler.DECREE_Y - 1);
         }
 
-        ctx.drawText(this.textRenderer, "Enabled:", x + 12, y + TG_Y + 3, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Enabled:", x + 12, y + TG_Y + 3, NotchTheme.TEXT_DARK, false);
         boolean tgHov = over(mouseX, mouseY, x + TG_X, y + TG_Y, TG_W, TG_H);
         if (enabledToggle) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, x + TG_X, y + TG_Y, TG_W, TG_H, "ON", tgHov);
+            NotchWidgets.primaryButton(ctx, this.font, x + TG_X, y + TG_Y, TG_W, TG_H, "ON", tgHov);
         } else {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + TG_X, y + TG_Y, TG_W, TG_H, "OFF", tgHov);
+            NotchWidgets.neutralButton(ctx, this.font, x + TG_X, y + TG_Y, TG_W, TG_H, "OFF", tgHov);
         }
 
         field(ctx, x, y, "Live bounties:", ACTIVE_Y);
         field(ctx, x, y, "Take limit:", LIMIT_Y);
         field(ctx, x, y, "Duration (min):", DUR_Y);
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, x + SV_X, y + SV_Y, SV_W, SV_H, "Save & Apply",
+        NotchWidgets.primaryButton(ctx, this.font, x + SV_X, y + SV_Y, SV_W, SV_H, "Save & Apply",
                 over(mouseX, mouseY, x + SV_X, y + SV_Y, SV_W, SV_H));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, x + RG_X, y + RG_Y, RG_W, RG_H, "Regenerate Now",
+        NotchWidgets.neutralButton(ctx, this.font, x + RG_X, y + RG_Y, RG_W, RG_H, "Regenerate Now",
                 over(mouseX, mouseY, x + RG_X, y + RG_Y, RG_W, RG_H));
 
         NotchWidgets.divider(ctx, x + 8, y + 160, W - 16);
@@ -107,8 +107,8 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
         }
     }
 
-    private void field(DrawContext ctx, int x, int y, String label, int fy) {
-        ctx.drawText(this.textRenderer, label, x + 12, y + fy + 3, NotchTheme.TEXT_DARK, false);
+    private void field(GuiGraphics ctx, int x, int y, String label, int fy) {
+        ctx.drawString(this.font, label, x + 12, y + fy + 3, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + FIELD_X, y + fy, FIELD_W, FIELD_H, NotchTheme.DEEP);
     }
 
@@ -117,19 +117,19 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
     }
 
     @Override
-    protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
         // No default labels.
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && this.client != null && this.client.interactionManager != null) {
+        if (button == 0 && this.minecraft != null && this.minecraft.gameMode != null) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, this.x + TG_X, this.y + TG_Y, TG_W, TG_H)) { NotchWidgets.tick(); enabledToggle = !enabledToggle; return true; }
-            if (over(mx, my, this.x + SV_X, this.y + SV_Y, SV_W, SV_H)) { NotchWidgets.click(); save(); return true; }
-            if (over(mx, my, this.x + RG_X, this.y + RG_Y, RG_W, RG_H)) {
+            if (over(mx, my, this.leftPos + TG_X, this.topPos + TG_Y, TG_W, TG_H)) { NotchWidgets.tick(); enabledToggle = !enabledToggle; return true; }
+            if (over(mx, my, this.leftPos + SV_X, this.topPos + SV_Y, SV_W, SV_H)) { NotchWidgets.click(); save(); return true; }
+            if (over(mx, my, this.leftPos + RG_X, this.topPos + RG_Y, RG_W, RG_H)) {
                 NotchWidgets.click();
-                this.client.interactionManager.clickButton(this.handler.syncId, 0);
+                this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0);
                 return true;
             }
         }
@@ -137,11 +137,11 @@ public class BountyAdminScreen extends HandledScreen<BountyAdminScreenHandler> {
     }
 
     private void save() {
-        PacketByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeBoolean(enabledToggle);
-        buf.writeVarInt((int) parse(activeField.getText(), 5));
-        buf.writeVarInt((int) parse(limitField.getText(), 3));
-        buf.writeVarInt((int) parse(durField.getText(), 30));
+        buf.writeVarInt((int) parse(activeField.getValue(), 5));
+        buf.writeVarInt((int) parse(limitField.getValue(), 3));
+        buf.writeVarInt((int) parse(durField.getValue(), 30));
         NetClient.sendToServer(NotchPackets.BOUNTY_ADMIN_SAVE, buf);
     }
 

@@ -6,12 +6,12 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -30,7 +30,7 @@ public final class NpcPresetManager {
     // Action ids for the NPC_PRESET packet.
     public static final int ACTION_OPEN = 0, ACTION_SAVE = 1, ACTION_LOAD = 2, ACTION_DELETE = 3;
 
-    public static void action(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String name) {
+    public static void action(ServerPlayer sp, NotchNpcEntity npc, int action, String name) {
         if (!NotchNpcManager.guard(sp, npc)) return;
         switch (action) {
             case ACTION_SAVE -> save(sp, npc, name);
@@ -41,19 +41,19 @@ public final class NpcPresetManager {
         sendList(sp, npc);
     }
 
-    private static void save(ServerPlayerEntity sp, NotchNpcEntity npc, String rawName) {
+    private static void save(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         String name = sanitize(rawName);
         if (name.isEmpty()) {
-            sp.sendMessage(Text.literal("Give the preset a name first.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Give the preset a name first.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        NbtCompound tag = npc.writeToItem();
+        CompoundTag tag = npc.writeToItem();
         stripWorldSpecific(tag);
         try {
             File file = dir().resolve(name + ".nbt").toFile();
             if (!file.isFile() && list().size() >= MAX_PRESETS) {
-                sp.sendMessage(Text.literal("Preset limit reached (" + MAX_PRESETS + ") - delete one first.")
-                        .formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("Preset limit reached (" + MAX_PRESETS + ") - delete one first.")
+                        .withStyle(ChatFormatting.RED), false);
                 return;
             }
             //? if >=1.21 {
@@ -61,41 +61,41 @@ public final class NpcPresetManager {
             *///?} else {
             NbtIo.writeCompressed(tag, file);
             //?}
-            sp.sendMessage(Text.literal("Preset '" + name + "' saved.").formatted(Formatting.GREEN), false);
+            sp.displayClientMessage(Component.literal("Preset '" + name + "' saved.").withStyle(ChatFormatting.GREEN), false);
         } catch (IOException e) {
-            sp.sendMessage(Text.literal("Couldn't save the preset: " + e.getMessage()).formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't save the preset: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
         }
     }
 
-    private static void load(ServerPlayerEntity sp, NotchNpcEntity npc, String rawName) {
+    private static void load(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         applyPreset(npc, rawName, sp);
     }
 
     public static boolean applyPreset(NotchNpcEntity npc, String rawName,
-                                      @Nullable ServerPlayerEntity actor) {
+                                      @Nullable ServerPlayer actor) {
         String name = sanitize(rawName);
-        NbtCompound tag;
+        CompoundTag tag;
         try {
             File file = dir().resolve(name + ".nbt").toFile();
             if (!file.isFile()) {
-                msg(actor, "No preset named '" + name + "'.", Formatting.RED);
+                msg(actor, "No preset named '" + name + "'.", ChatFormatting.RED);
                 return false;
             }
             //? if >=1.21 {
-            /*tag = NbtIo.readCompressed(file.toPath(), net.minecraft.nbt.NbtSizeTracker.ofUnlimitedBytes());
+            /*tag = NbtIo.readCompressed(file.toPath(), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
             *///?} else {
             tag = NbtIo.readCompressed(file);
             //?}
         } catch (IOException e) {
-            msg(actor, "Couldn't read the preset: " + e.getMessage(), Formatting.RED);
+            msg(actor, "Couldn't read the preset: " + e.getMessage(), ChatFormatting.RED);
             return false;
         }
         applyTag(npc, tag, actor);
-        msg(actor, "Preset '" + name + "' applied.", Formatting.GREEN);
+        msg(actor, "Preset '" + name + "' applied.", ChatFormatting.GREEN);
         return true;
     }
 
-    public static void applyTag(NotchNpcEntity npc, NbtCompound tag, @Nullable ServerPlayerEntity actor) {
+    public static void applyTag(NotchNpcEntity npc, CompoundTag tag, @Nullable ServerPlayer actor) {
         stripWorldSpecific(tag); // belt & braces for hand-edited files and pasted codes
 
         NpcRole role = NpcRole.NONE;
@@ -105,7 +105,7 @@ public final class NpcPresetManager {
         }
         // Unwind a linked shop before the config is overwritten so its stock isn't orphaned.
         if (npc.getRole() == NpcRole.SHOP && actor != null) {
-            NotchNpcManager.removeLinkedShop(actor, npc.getUuid());
+            NotchNpcManager.removeLinkedShop(actor, npc.getUUID());
         }
         // The target NPC keeps its own identity: owner, home and route survive the load.
         UUID owner = npc.getOwner();
@@ -120,36 +120,36 @@ public final class NpcPresetManager {
         }
         npc.setRole(role);
         if (role == NpcRole.SHOP) {
-            NotchNpcManager.ensureShopForNpc(actor.getServerWorld(), npc, actor);
+            NotchNpcManager.ensureShopForNpc(actor.serverLevel(), npc, actor);
         }
     }
 
-    private static void msg(@Nullable ServerPlayerEntity actor, String text, Formatting color) {
+    private static void msg(@Nullable ServerPlayer actor, String text, ChatFormatting color) {
         if (actor != null) {
-            actor.sendMessage(Text.literal(text).formatted(color), false);
+            actor.displayClientMessage(Component.literal(text).withStyle(color), false);
         }
     }
 
-    private static void delete(ServerPlayerEntity sp, String rawName) {
+    private static void delete(ServerPlayer sp, String rawName) {
         String name = sanitize(rawName);
         try {
             if (Files.deleteIfExists(dir().resolve(name + ".nbt"))) {
-                sp.sendMessage(Text.literal("Preset '" + name + "' deleted.").formatted(Formatting.GREEN), false);
+                sp.displayClientMessage(Component.literal("Preset '" + name + "' deleted.").withStyle(ChatFormatting.GREEN), false);
             } else {
-                sp.sendMessage(Text.literal("No preset named '" + name + "'.").formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("No preset named '" + name + "'.").withStyle(ChatFormatting.RED), false);
             }
         } catch (IOException e) {
-            sp.sendMessage(Text.literal("Couldn't delete the preset: " + e.getMessage()).formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't delete the preset: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
         }
     }
 
-    public static void sendList(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public static void sendList(ServerPlayer sp, NotchNpcEntity npc) {
         List<String> names = list();
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeUuid(npc.getUuid());
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeUUID(npc.getUUID());
         buf.writeVarInt(names.size());
         for (String n : names) {
-            buf.writeString(n);
+            buf.writeUtf(n);
         }
         Net.sendToClient(sp, NotchPackets.NPC_PRESET_LIST, buf);
     }
@@ -173,7 +173,7 @@ public final class NpcPresetManager {
         return dir;
     }
 
-    public static void stripWorldSpecific(NbtCompound tag) {
+    public static void stripWorldSpecific(CompoundTag tag) {
         tag.remove("Owner");
         tag.remove("OwnerName");
         tag.remove("OwnerType");

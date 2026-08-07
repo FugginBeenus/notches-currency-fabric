@@ -1,14 +1,13 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.TypeFilter;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.Heightmap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +43,12 @@ public final class DailyCrateManager {
     public static void setPerDay(int n) { BALLOONS_PER_WAVE = Math.max(0, n); }
 
     private static void tick(MinecraftServer server) {
-        ServerWorld world = server.getOverworld();
+        ServerLevel world = server.overworld();
         if (world == null) return;
 
         BalloonConfigState cfg = BalloonConfigState.get(world);
 
-        long totalTime = world.getTime(); // Total world time (doesn't reset)
+        long totalTime = world.getGameTime(); // Total world time (doesn't reset)
         long week = totalTime / TICKS_PER_WEEK;
         long timeInWeek = totalTime % TICKS_PER_WEEK;
 
@@ -66,26 +65,26 @@ public final class DailyCrateManager {
             spawnBalloons(world, cfg);
 
             if (cfg.announce) {
-                server.getPlayerManager().broadcast(
-                        Text.literal("🎈 A new wave of balloon crates has appeared!"), false);
+                server.getPlayerList().broadcastSystemMessage(
+                        Component.literal("🎈 A new wave of balloon crates has appeared!"), false);
             }
         }
     }
 
-    private static int clearExistingBalloons(ServerWorld world, BalloonConfigState cfg) {
+    private static int clearExistingBalloons(ServerLevel world, BalloonConfigState cfg) {
         int cleared = 0;
 
         // Create a large search box around the spawn area
         // Search wider than spawn area in case balloons drifted
         int searchRadius = cfg.radius + 100;
-        Box searchBox = new Box(
+        AABB searchBox = new AABB(
                 cfg.center.getX() - searchRadius, 0, cfg.center.getZ() - searchRadius,
                 cfg.center.getX() + searchRadius, 320, cfg.center.getZ() + searchRadius
         );
 
         // Find and remove all balloon entities
-        List<BalloonEntity> balloons = world.getEntitiesByType(
-                TypeFilter.instanceOf(BalloonEntity.class),
+        List<BalloonEntity> balloons = world.getEntities(
+                EntityTypeTest.forClass(BalloonEntity.class),
                 searchBox,
                 entity -> true
         );
@@ -122,7 +121,7 @@ public final class DailyCrateManager {
         b.announce = ANNOUNCE;
     }
 
-    private static void spawnBalloons(ServerWorld world, BalloonConfigState cfg) {
+    private static void spawnBalloons(ServerLevel world, BalloonConfigState cfg) {
         LOGGER.info("Spawning {} balloons for week {}", cfg.perDay, lastSpawnWeek);
 
         for (int i = 0; i < cfg.perDay; i++) {
@@ -133,39 +132,39 @@ public final class DailyCrateManager {
             int z = cfg.center.getZ() + dz;
 
             int yChosen = cfg.minY + world.random.nextInt(Math.max(1, (cfg.maxY - cfg.minY + 1)));
-            int groundY = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
+            int groundY = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
             int y = Math.max(yChosen, groundY + 10);
 
             var balloon = new BalloonEntity(world, x + 0.5, y + 0.5, z + 0.5);
-            world.spawnEntity(balloon);
+            world.addFreshEntity(balloon);
         }
     }
 
     // ----- Admin helpers (write to persistent state) -----
-    public static void setArea(ServerWorld world, BlockPos center, int radius) {
+    public static void setArea(ServerLevel world, BlockPos center, int radius) {
         var cfg = BalloonConfigState.get(world);
         cfg.center = center;
         cfg.radius = Math.max(1, radius);
-        cfg.markDirty();
+        cfg.setDirty();
     }
-    public static void setYRange(ServerWorld world, int min, int max) {
+    public static void setYRange(ServerLevel world, int min, int max) {
         var cfg = BalloonConfigState.get(world);
         cfg.minY = Math.max(5, Math.min(min, max));
         cfg.maxY = Math.max(cfg.minY + 5, Math.max(min, max));
-        cfg.markDirty();
+        cfg.setDirty();
     }
-    public static void setCount(ServerWorld world, int perWave) {
+    public static void setCount(ServerLevel world, int perWave) {
         var cfg = BalloonConfigState.get(world);
         cfg.perDay = Math.max(0, perWave);
-        cfg.markDirty();
+        cfg.setDirty();
     }
-    public static void setAnnouncements(ServerWorld world, boolean enabled) {
+    public static void setAnnouncements(ServerLevel world, boolean enabled) {
         var cfg = BalloonConfigState.get(world);
         cfg.announce = enabled;
-        cfg.markDirty();
+        cfg.setDirty();
     }
 
-    public static void forceSpawn(ServerWorld world) {
+    public static void forceSpawn(ServerLevel world) {
         BalloonConfigState cfg = BalloonConfigState.get(world);
         int cleared = clearExistingBalloons(world, cfg);
         if (cleared > 0) {

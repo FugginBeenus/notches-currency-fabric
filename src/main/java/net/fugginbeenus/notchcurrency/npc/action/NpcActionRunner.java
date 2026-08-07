@@ -7,15 +7,15 @@ import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.npc.NpcText;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
 import net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -34,19 +34,19 @@ public final class NpcActionRunner {
     private static final org.slf4j.Logger LOGGER =
             org.slf4j.LoggerFactory.getLogger("NotchCurrency-NpcActions");
 
-    public static Outcome run(@Nullable ServerPlayerEntity sp, NotchNpcEntity npc, List<DialogueAction> actions) {
+    public static Outcome run(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions) {
         if (actions == null || actions.isEmpty()) return Outcome.COMPLETED;
         try {
             return runAll(sp, npc, actions);
         } catch (Exception e) {
             // These run from damage and death handlers as well as dialogue. A bad stored action must
             // never take the entity down with it.
-            LOGGER.error("NPC action list failed on {}", npc.getUuid(), e);
+            LOGGER.error("NPC action list failed on {}", npc.getUUID(), e);
             return Outcome.COMPLETED;
         }
     }
 
-    private static Outcome runAll(@Nullable ServerPlayerEntity sp, NotchNpcEntity npc, List<DialogueAction> actions) {
+    private static Outcome runAll(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions) {
         boolean openedScreen = false;
         for (DialogueAction a : actions) {
             switch (a.type()) {
@@ -87,9 +87,9 @@ public final class NpcActionRunner {
                 case CHARGE_COINS -> {
                     if (sp == null || a.amount() <= 0) break;
                     if (!CurrencyApi.withdraw(sp, a.amount(), TransactionReason.SINK, "NPC dialogue fee")) {
-                        sp.sendMessage(Text.literal("You can't afford that (" + a.amount() + " "
+                        sp.displayClientMessage(Component.literal("You can't afford that (" + a.amount() + " "
                                         + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ").")
-                                .formatted(Formatting.RED), false);
+                                .withStyle(ChatFormatting.RED), false);
                         return Outcome.ABORTED;
                     }
                 }
@@ -109,25 +109,25 @@ public final class NpcActionRunner {
 
     private static void sayNearby(NotchNpcEntity npc, String line) {
         if (line == null || line.isBlank()) return;
-        if (!(npc.getWorld() instanceof net.minecraft.server.world.ServerWorld world)) return;
+        if (!(npc.level() instanceof net.minecraft.server.level.ServerLevel world)) return;
         double r2 = EARSHOT * EARSHOT;
         npc.playVoice(); // once for the room, not once per person in it
-        for (ServerPlayerEntity near : world.getPlayers()) {
-            if (near.squaredDistanceTo(npc) <= r2) {
+        for (ServerPlayer near : world.players()) {
+            if (near.distanceToSqr(npc) <= r2) {
                 NpcText.sendLine(near, npc, line);
             }
         }
     }
 
-    private static void giveItem(ServerPlayerEntity sp, DialogueAction a) {
-        Identifier id = Identifier.tryParse(a.value());
+    private static void giveItem(ServerPlayer sp, DialogueAction a) {
+        ResourceLocation id = ResourceLocation.tryParse(a.value());
         if (id == null) return;
-        Item item = Registries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.get(id);
         if (item == Items.AIR || a.amount() <= 0) return;
         int remaining = (int) Math.min(a.amount(), 64L * 9L);
         while (remaining > 0) {
-            int give = Math.min(remaining, item.getMaxCount());
-            sp.getInventory().offerOrDrop(new ItemStack(item, give));
+            int give = Math.min(remaining, item.getMaxStackSize());
+            sp.getInventory().placeItemBackInInventory(new ItemStack(item, give));
             remaining -= give;
         }
     }
@@ -136,14 +136,14 @@ public final class NpcActionRunner {
         if (npc.getOwnerType() == NotchNpcEntity.OwnerType.SERVER) return true;
         UUID owner = npc.getOwner();
         if (owner == null) return false;
-        ServerPlayerEntity online = server.getPlayerManager().getPlayer(owner);
-        if (online != null) return online.hasPermissionLevel(2);
-        var profile = server.getUserCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
-                : server.getUserCache().getByUuid(owner);
-        return profile.isPresent() && server.getPlayerManager().isOperator(profile.get());
+        ServerPlayer online = server.getPlayerList().getPlayer(owner);
+        if (online != null) return online.hasPermissions(2);
+        var profile = server.getProfileCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
+                : server.getProfileCache().get(owner);
+        return profile.isPresent() && server.getPlayerList().isOp(profile.get());
     }
 
-    private static void runCommand(@Nullable ServerPlayerEntity sp, NotchNpcEntity npc,
+    private static void runCommand(@Nullable ServerPlayer sp, NotchNpcEntity npc,
                                    String command, boolean asPlayer) {
         if (command == null || command.isBlank()) return;
         MinecraftServer server = sp != null ? sp.getServer() : npc.getServer();
@@ -152,7 +152,7 @@ public final class NpcActionRunner {
         String cmd = NpcText.substitute(command, sp, NpcText.npcName(npc));
         if (cmd.startsWith("/")) cmd = cmd.substring(1);
         // "As player" needs a player; without one the console source is the only sensible actor.
-        var source = (asPlayer && sp != null) ? sp.getCommandSource() : server.getCommandSource();
-        server.getCommandManager().executeWithPrefix(source, cmd);
+        var source = (asPlayer && sp != null) ? sp.createCommandSourceStack() : server.createCommandSourceStack();
+        server.getCommands().performPrefixedCommand(source, cmd);
     }
 }

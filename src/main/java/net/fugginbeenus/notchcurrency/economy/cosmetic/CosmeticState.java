@@ -1,30 +1,28 @@
 package net.fugginbeenus.notchcurrency.economy.cosmetic;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class CosmeticState extends PersistentState {
+public class CosmeticState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_cosmetics";
 
     private final Map<UUID, Set<String>> owned = new HashMap<>();
 
     public static CosmeticState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, CosmeticState::new, CosmeticState::fromNbt, DATA_KEY);
     }
 
@@ -35,19 +33,19 @@ public class CosmeticState extends PersistentState {
 
     public void markOwned(UUID player, String offerId) {
         owned.computeIfAbsent(player, k -> new HashSet<>()).add(offerId);
-        markDirty();
+        setDirty();
     }
 
     // ---- NBT ----
 
-    private static CosmeticState fromNbt(NbtCompound nbt) {
+    private static CosmeticState fromNbt(CompoundTag nbt) {
         CosmeticState state = new CosmeticState();
-        NbtList players = nbt.getList("Players", NbtElement.COMPOUND_TYPE);
+        ListTag players = nbt.getList("Players", Tag.TAG_COMPOUND);
         for (int i = 0; i < players.size(); i++) {
-            NbtCompound entry = players.getCompound(i);
-            UUID id = entry.getUuid("Player");
+            CompoundTag entry = players.getCompound(i);
+            UUID id = entry.getUUID("Player");
             Set<String> set = new HashSet<>();
-            NbtList ids = entry.getList("Owned", NbtElement.STRING_TYPE);
+            ListTag ids = entry.getList("Owned", Tag.TAG_STRING);
             for (int j = 0; j < ids.size(); j++) {
                 set.add(ids.getString(j));
             }
@@ -58,17 +56,17 @@ public class CosmeticState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList players = new NbtList();
+        ListTag players = new ListTag();
         for (Map.Entry<UUID, Set<String>> e : owned.entrySet()) {
-            NbtCompound entry = new NbtCompound();
-            entry.putUuid("Player", e.getKey());
-            NbtList ids = new NbtList();
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Player", e.getKey());
+            ListTag ids = new ListTag();
             for (String s : e.getValue()) {
-                ids.add(net.minecraft.nbt.NbtString.of(s));
+                ids.add(net.minecraft.nbt.StringTag.valueOf(s));
             }
             entry.put("Owned", ids);
             players.add(entry);

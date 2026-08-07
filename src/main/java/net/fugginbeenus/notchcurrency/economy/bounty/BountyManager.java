@@ -5,17 +5,17 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,9 +42,9 @@ public final class BountyManager {
 
     public static void init() {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (entity.getWorld().isClient()) return;
-            if (source.getAttacker() instanceof ServerPlayerEntity player && player != entity) {
-                onKill(player, Registries.ENTITY_TYPE.getId(entity.getType()));
+            if (entity.level().isClientSide()) return;
+            if (source.getEntity() instanceof ServerPlayer player && player != entity) {
+                onKill(player, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(BountyManager::sweepTick);
@@ -71,9 +71,9 @@ public final class BountyManager {
         if (++tickAccum < REFRESH_CHECK_TICKS) return;
         tickAccum = 0;
 
-        ServerWorld overworld = server.getOverworld();
+        ServerLevel overworld = server.overworld();
         if (overworld == null) return;
-        long now = overworld.getTime();
+        long now = overworld.getGameTime();
         BountyState state = BountyState.get(server);
 
         // Rotate offers: drop expired generated ones, top up to activeCount.
@@ -95,17 +95,17 @@ public final class BountyManager {
         }
 
         // Drop expired taken bounties and tell online players.
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-            int dropped = state.cleanupExpired(p.getUuid(), now);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            int dropped = state.cleanupExpired(p.getUUID(), now);
             if (dropped > 0) {
-                p.sendMessage(Text.literal(dropped + " of your bounties expired.").formatted(Formatting.GRAY), false);
+                p.displayClientMessage(Component.literal(dropped + " of your bounties expired.").withStyle(ChatFormatting.GRAY), false);
             }
         }
     }
 
     // ---- taking ----
 
-    public static void take(ServerPlayerEntity player, UUID offerId) {
+    public static void take(ServerPlayer player, UUID offerId) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
@@ -113,55 +113,55 @@ public final class BountyManager {
 
         Bounty offer = state.getOffer(offerId);
         if (offer == null || offer.isExpired(now)) {
-            player.sendMessage(Text.literal("That bounty is no longer available.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("That bounty is no longer available.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        if (state.hasTaken(player.getUuid(), offerId)) {
-            player.sendMessage(Text.literal("You've already taken that bounty.").formatted(Formatting.RED), false);
+        if (state.hasTaken(player.getUUID(), offerId)) {
+            player.displayClientMessage(Component.literal("You've already taken that bounty.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        if (state.takeCount(player.getUuid()) >= takeLimit) {
-            player.sendMessage(Text.literal("You can only carry " + takeLimit + " bounties at once - finish or wait one out.")
-                    .formatted(Formatting.RED), false);
+        if (state.takeCount(player.getUUID()) >= takeLimit) {
+            player.displayClientMessage(Component.literal("You can only carry " + takeLimit + " bounties at once - finish or wait one out.")
+                    .withStyle(ChatFormatting.RED), false);
             return;
         }
 
         long deadline = durationTicks <= 0 ? 0 : now + durationTicks;
-        state.take(player.getUuid(), new TakenBounty(offer, deadline, 0));
+        state.take(player.getUUID(), new TakenBounty(offer, deadline, 0));
         long mins = durationTicks / 20L / 60L;
-        player.sendMessage(Text.literal("Took bounty: ").formatted(Formatting.GREEN)
-                .append(Text.literal(offer.describe()).formatted(offer.getRarity().color()))
-                .append(Text.literal(" - finish within " + mins + "m.").formatted(Formatting.GREEN)), false);
+        player.displayClientMessage(Component.literal("Took bounty: ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(offer.describe()).withStyle(offer.getRarity().color()))
+                .append(Component.literal(" - finish within " + mins + "m.").withStyle(ChatFormatting.GREEN)), false);
         syncTracker(player);
     }
 
     // ---- kill tracking (only toward taken bounties) ----
 
-    private static void onKill(ServerPlayerEntity player, Identifier typeId) {
+    private static void onKill(ServerPlayer player, ResourceLocation typeId) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
 
-        for (TakenBounty tb : state.getTakenAll(player.getUuid())) {
+        for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
             Bounty b = tb.bounty();
             if (b.getType() != BountyType.KILL || !b.getTarget().equals(typeId)) continue;
             if (tb.isExpired(now) || tb.progress() >= b.getRequired()) continue;
 
             int next = tb.addProgress(1);
-            state.markDirty();
+            state.setDirty();
             syncTracker(player);
             if (next >= b.getRequired()) {
-                player.sendMessage(Text.literal("✔ Bounty complete: ").formatted(Formatting.GREEN)
-                        .append(Text.literal(b.describe()).formatted(b.getRarity().color()))
-                        .append(Text.literal(" - collect it at the board!").formatted(Formatting.GREEN)), false);
+                player.displayClientMessage(Component.literal("✔ Bounty complete: ").withStyle(ChatFormatting.GREEN)
+                        .append(Component.literal(b.describe()).withStyle(b.getRarity().color()))
+                        .append(Component.literal(" - collect it at the board!").withStyle(ChatFormatting.GREEN)), false);
             }
         }
     }
 
     // ---- collecting ----
 
-    public static void claim(ServerPlayerEntity player, @Nullable UUID only) {
+    public static void claim(ServerPlayer player, @Nullable UUID only) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
@@ -169,7 +169,7 @@ public final class BountyManager {
 
         long totalCoins = 0L;
         int count = 0;
-        for (TakenBounty tb : state.getTakenAll(player.getUuid())) {
+        for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
             Bounty b = tb.bounty();
             if (b.getType() != BountyType.KILL) continue;
             if (only != null && !b.getId().equals(only)) continue;
@@ -178,60 +178,60 @@ public final class BountyManager {
             giveReward(player, b);
             totalCoins += b.getRewardCoins();
             count++;
-            state.removeTaken(player.getUuid(), b.getId());
-            state.markOfferCompleted(player.getUuid(), b.getId()); // hide it from their board until it rotates
+            state.removeTaken(player.getUUID(), b.getId());
+            state.markOfferCompleted(player.getUUID(), b.getId()); // hide it from their board until it rotates
         }
 
         if (count > 0) {
-            player.sendMessage(Text.literal("Collected " + count + " bount" + (count == 1 ? "y" : "ies") + "!")
-                    .formatted(Formatting.GREEN)
-                    .append(totalCoins > 0 ? Text.literal(" (+").formatted(Formatting.GREEN)
-                            .append(NotchCurrency.coins(totalCoins)).append(Text.literal(")").formatted(Formatting.GREEN))
-                            : Text.empty()), false);
+            player.displayClientMessage(Component.literal("Collected " + count + " bount" + (count == 1 ? "y" : "ies") + "!")
+                    .withStyle(ChatFormatting.GREEN)
+                    .append(totalCoins > 0 ? Component.literal(" (+").withStyle(ChatFormatting.GREEN)
+                            .append(NotchCurrency.coins(totalCoins)).append(Component.literal(")").withStyle(ChatFormatting.GREEN))
+                            : Component.empty()), false);
             syncTracker(player);
         } else {
-            player.sendMessage(Text.literal("Nothing ready to collect.").formatted(Formatting.GRAY), false);
+            player.displayClientMessage(Component.literal("Nothing ready to collect.").withStyle(ChatFormatting.GRAY), false);
         }
     }
 
-    public static void turnIn(ServerPlayerEntity player, UUID offerId) {
+    public static void turnIn(ServerPlayer player, UUID offerId) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
 
-        TakenBounty tb = state.getTaken(player.getUuid(), offerId);
+        TakenBounty tb = state.getTaken(player.getUUID(), offerId);
         if (tb == null || tb.isExpired(now) || tb.bounty().getType() != BountyType.FETCH) {
-            player.sendMessage(Text.literal("That delivery isn't in your taken bounties.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("That delivery isn't in your taken bounties.").withStyle(ChatFormatting.RED), false);
             return;
         }
         Bounty b = tb.bounty();
-        Item item = Registries.ITEM.get(b.getTarget());
+        Item item = BuiltInRegistries.ITEM.get(b.getTarget());
         int have = countItem(player, item);
         if (have < b.getRequired()) {
-            player.sendMessage(Text.literal("You need " + b.getRequired() + " ").formatted(Formatting.RED)
-                    .append(b.targetName().copy().formatted(Formatting.WHITE))
-                    .append(Text.literal(" - you have " + have + ".").formatted(Formatting.RED)), false);
+            player.displayClientMessage(Component.literal("You need " + b.getRequired() + " ").withStyle(ChatFormatting.RED)
+                    .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" - you have " + have + ".").withStyle(ChatFormatting.RED)), false);
             return;
         }
 
         removeItem(player, item, b.getRequired());
         giveReward(player, b);
-        state.removeTaken(player.getUuid(), offerId);
-        state.markOfferCompleted(player.getUuid(), offerId); // hide it from their board until it rotates
-        player.sendMessage(Text.literal("Delivered " + b.getRequired() + " ").formatted(Formatting.GREEN)
-                .append(b.targetName().copy().formatted(Formatting.WHITE))
-                .append(Text.literal(" - reward: " + b.rewardSummary() + "!").formatted(Formatting.GREEN)), false);
+        state.removeTaken(player.getUUID(), offerId);
+        state.markOfferCompleted(player.getUUID(), offerId); // hide it from their board until it rotates
+        player.displayClientMessage(Component.literal("Delivered " + b.getRequired() + " ").withStyle(ChatFormatting.GREEN)
+                .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" - reward: " + b.rewardSummary() + "!").withStyle(ChatFormatting.GREEN)), false);
         syncTracker(player);
     }
 
-    public static void syncTracker(ServerPlayerEntity player) {
+    public static void syncTracker(ServerPlayer player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
 
-        var taken = state.getTakenAll(player.getUuid());
+        var taken = state.getTakenAll(player.getUUID());
         var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
         int count = 0;
         for (TakenBounty tb : taken) {
@@ -241,34 +241,34 @@ public final class BountyManager {
         for (TakenBounty tb : taken) {
             if (tb.isExpired(now)) continue;
             Bounty b = tb.bounty();
-            buf.writeString(b.describe());
+            buf.writeUtf(b.describe());
             buf.writeBoolean(b.getType() == BountyType.KILL);
-            buf.writeString(b.getType() == BountyType.FETCH ? b.getTarget().toString() : "");
+            buf.writeUtf(b.getType() == BountyType.FETCH ? b.getTarget().toString() : "");
             buf.writeVarInt(tb.progress());
             buf.writeVarInt(b.getRequired());
             buf.writeLong(tb.expiresGameTime());
-            buf.writeString(b.getRarity().name());
+            buf.writeUtf(b.getRarity().name());
         }
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player,
                 net.fugginbeenus.notchcurrency.net.NotchPackets.BOUNTY_TRACKER, buf);
     }
 
-    private static void giveReward(ServerPlayerEntity player, Bounty b) {
+    private static void giveReward(ServerPlayer player, Bounty b) {
         if (b.getRewardCoins() > 0) {
             CurrencyApi.deposit(player, b.getRewardCoins(), TransactionReason.FAUCET, "bounty: " + b.describe());
         }
         if (!b.getRewardItem().isEmpty()) {
-            player.getInventory().offerOrDrop(b.getRewardItem().copy());
+            player.getInventory().placeItemBackInInventory(b.getRewardItem().copy());
         }
     }
 
     // ---- opening the board ----
 
-    public static void openScreen(ServerPlayerEntity sp) {
+    public static void openScreen(ServerPlayer sp) {
         if (sp.getServer() != null) ensurePopulated(sp.getServer());
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new BountyBoardScreenHandler(syncId, inv),
-                Text.literal("Bounty Board")));
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new BountyBoardScreenHandler(containerId, inv),
+                Component.literal("Bounty Board")));
     }
 
     public static void ensurePopulated(MinecraftServer server) {
@@ -288,10 +288,10 @@ public final class BountyManager {
         }
     }
 
-    public static void openAdminScreen(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new BountyAdminScreenHandler(syncId, inv),
-                Text.literal("Bounty Setup")));
+    public static void openAdminScreen(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new BountyAdminScreenHandler(containerId, inv),
+                Component.literal("Bounty Setup")));
     }
 
     public static int getActiveCount() {
@@ -318,32 +318,32 @@ public final class BountyManager {
     // ---- helpers ----
 
     static long worldTime(MinecraftServer server) {
-        ServerWorld ow = server.getOverworld();
-        return ow == null ? 0L : ow.getTime();
+        ServerLevel ow = server.overworld();
+        return ow == null ? 0L : ow.getGameTime();
     }
 
     static boolean isEnabled() {
         return enabled;
     }
 
-    private static int countItem(ServerPlayerEntity player, Item item) {
+    private static int countItem(ServerPlayer player, Item item) {
         int n = 0;
-        PlayerInventory inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.isOf(item)) n += s.getCount();
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(item)) n += s.getCount();
         }
         return n;
     }
 
-    private static void removeItem(ServerPlayerEntity player, Item item, int amount) {
-        PlayerInventory inv = player.getInventory();
+    private static void removeItem(ServerPlayer player, Item item, int amount) {
+        Inventory inv = player.getInventory();
         int remaining = amount;
-        for (int i = 0; i < inv.size() && remaining > 0; i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.isOf(item)) {
+        for (int i = 0; i < inv.getContainerSize() && remaining > 0; i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(item)) {
                 int take = Math.min(remaining, s.getCount());
-                s.decrement(take);
+                s.shrink(take);
                 remaining -= take;
             }
         }

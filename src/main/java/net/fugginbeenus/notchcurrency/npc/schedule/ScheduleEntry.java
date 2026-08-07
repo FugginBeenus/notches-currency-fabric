@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.npc.schedule;
 
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public record ScheduleEntry(
         time = Math.floorMod(time, DAY_LENGTH);
         if (stance == null) stance = NpcStance.STAND;
         radius = Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, radius));
-        facing = net.minecraft.util.math.MathHelper.wrapDegrees(facing);
+        facing = net.minecraft.util.Mth.wrapDegrees(facing);
         closedLine = closedLine == null ? "" : closedLine;
         label = label == null ? "" : label;
         onBegin = onBegin == null ? List.of()
@@ -116,8 +116,8 @@ public record ScheduleEntry(
         return withAnchor(null, facing);
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putInt("Time", time);
         nbt.putString("Stance", stance.name());
         if (anchor != null) {
@@ -131,19 +131,19 @@ public record ScheduleEntry(
         if (!closedLine.isEmpty()) nbt.putString("ClosedLine", closedLine);
         if (!label.isEmpty()) nbt.putString("Label", label);
         if (!onBegin.isEmpty()) {
-            NbtList list = new NbtList();
+            ListTag list = new ListTag();
             for (DialogueAction a : onBegin) list.add(a.toNbt());
             nbt.put("OnBegin", list);
         }
         return nbt;
     }
 
-    public static ScheduleEntry fromNbt(NbtCompound nbt) {
+    public static ScheduleEntry fromNbt(CompoundTag nbt) {
         BlockPos anchor = nbt.contains("X")
                 ? new BlockPos(nbt.getInt("X"), nbt.getInt("Y"), nbt.getInt("Z"))
                 : null;
         List<DialogueAction> actions = new ArrayList<>();
-        NbtList list = nbt.getList("OnBegin", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("OnBegin", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size() && i < MAX_ACTIONS; i++) {
             actions.add(DialogueAction.fromNbt(list.getCompound(i)));
         }

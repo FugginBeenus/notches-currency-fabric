@@ -2,11 +2,10 @@ package net.fugginbeenus.notchcurrency.compat;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.server.level.ServerPlayer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -18,47 +17,47 @@ public final class Net {
 
     @FunctionalInterface
     public interface ServerReceiver {
-        void receive(MinecraftServer server, ServerPlayerEntity player, PacketByteBuf buf);
+        void receive(MinecraftServer server, ServerPlayer player, FriendlyByteBuf buf);
     }
 
     //? if >=1.21 {
-    /*public record RawPayload(net.minecraft.network.packet.CustomPayload.Id<RawPayload> channel, byte[] data)
-            implements net.minecraft.network.packet.CustomPayload {
+    /*public record RawPayload(net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> channel, byte[] data)
+            implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
         @Override
-        public net.minecraft.network.packet.CustomPayload.Id<? extends net.minecraft.network.packet.CustomPayload> getId() {
+        public net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<? extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> type() {
             return channel;
         }
     }
 
-    private static final Map<Identifier, net.minecraft.network.packet.CustomPayload.Id<RawPayload>> CHANNELS =
+    private static final Map<ResourceLocation, net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload>> CHANNELS =
             new HashMap<>();
 
-    static net.minecraft.network.packet.CustomPayload.Id<RawPayload> channel(Identifier id) {
-        net.minecraft.network.packet.CustomPayload.Id<RawPayload> found = CHANNELS.get(id);
+    static net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> channel(ResourceLocation id) {
+        net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> found = CHANNELS.get(id);
         if (found == null) {
             throw new IllegalStateException("Notch Currency: packet channel used before it was declared: " + id);
         }
         return found;
     }
 
-    static PacketByteBuf toBuf(RawPayload payload) {
-        return new PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(payload.data()));
+    static FriendlyByteBuf toBuf(RawPayload payload) {
+        return new FriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(payload.data()));
     }
 
-    public static final net.minecraft.network.codec.PacketCodec<PacketByteBuf, PacketByteBuf> RAW_BUF_CODEC =
-            net.minecraft.network.codec.PacketCodec.of(
+    public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, FriendlyByteBuf> RAW_BUF_CODEC =
+            net.minecraft.network.codec.StreamCodec.ofMember(
                     (value, buf) -> buf.writeBytes(value.slice()),
-                    buf -> new PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(toBytes(buf))));
+                    buf -> new FriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(toBytes(buf))));
 
-    static byte[] toBytes(PacketByteBuf buf) {
+    static byte[] toBytes(FriendlyByteBuf buf) {
         byte[] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
         return bytes;
     }
 
-    private static net.minecraft.network.codec.PacketCodec<PacketByteBuf, RawPayload> codecFor(
-            net.minecraft.network.packet.CustomPayload.Id<RawPayload> id) {
-        return net.minecraft.network.codec.PacketCodec.of(
+    private static net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, RawPayload> codecFor(
+            net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> id) {
+        return net.minecraft.network.codec.StreamCodec.ofMember(
                 (payload, buf) -> buf.writeBytes(payload.data()),
                 buf -> new RawPayload(id, toBytes(buf)));
     }
@@ -68,12 +67,12 @@ public final class Net {
         //? if >=1.21 {
         /*if (!CHANNELS.isEmpty()) return;
         for (Field field : NotchPackets.class.getFields()) {
-            if (field.getType() != Identifier.class || !Modifier.isStatic(field.getModifiers())) continue;
+            if (field.getType() != ResourceLocation.class || !Modifier.isStatic(field.getModifiers())) continue;
             try {
-                Identifier id = (Identifier) field.get(null);
-                net.minecraft.network.packet.CustomPayload.Id<RawPayload> payloadId =
-                        new net.minecraft.network.packet.CustomPayload.Id<>(id);
-                net.minecraft.network.codec.PacketCodec<PacketByteBuf, RawPayload> codec = codecFor(payloadId);
+                ResourceLocation id = (ResourceLocation) field.get(null);
+                net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> payloadId =
+                        new net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<>(id);
+                net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, RawPayload> codec = codecFor(payloadId);
                 net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(payloadId, codec);
                 net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(payloadId, codec);
                 CHANNELS.put(id, payloadId);
@@ -84,7 +83,7 @@ public final class Net {
         *///?}
     }
 
-    public static void registerServerReceiver(Identifier id, ServerReceiver receiver) {
+    public static void registerServerReceiver(ResourceLocation id, ServerReceiver receiver) {
         //? if >=1.21 {
         /*ServerPlayNetworking.registerGlobalReceiver(channel(id), (payload, context) ->
                 receiver.receive(context.server(), context.player(), toBuf(payload)));
@@ -94,7 +93,7 @@ public final class Net {
         //?}
     }
 
-    public static void sendToClient(ServerPlayerEntity player, Identifier id, PacketByteBuf buf) {
+    public static void sendToClient(ServerPlayer player, ResourceLocation id, FriendlyByteBuf buf) {
         //? if >=1.21 {
         /*ServerPlayNetworking.send(player, new RawPayload(channel(id), toBytes(buf)));
         *///?} else {

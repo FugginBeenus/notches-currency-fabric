@@ -1,26 +1,26 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.gambling.SlotSymbol;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
-public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
+public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreenHandler> {
 
     private static final int W = 200, H = 196;
     private static final int REEL_Y = 28, REEL_H = 40, REEL_W = 34;
@@ -35,7 +35,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
     private static final long REEL_STAGGER_MS = 240L;
     private static final long MAX_WAIT_MS = 5000L;
 
-    private TextFieldWidget betField;
+    private EditBox betField;
 
     private boolean spinning;
     private long spinStartMs;
@@ -49,33 +49,33 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
     private String errorMsg;
     private long errorUntilMs;
 
-    public SlotMachineScreen(SlotMachineScreenHandler handler, PlayerInventory inv, Text title) {
+    public SlotMachineScreen(SlotMachineScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
     protected void init() {
         super.init();
-        betField = new TextFieldWidget(this.textRenderer, this.x + FIELD_X + 2, this.y + FIELD_Y + 3,
-                FIELD_W - 4, FIELD_H - 5, Text.literal("Bet"));
+        betField = new EditBox(this.font, this.leftPos + FIELD_X + 2, this.topPos + FIELD_Y + 3,
+                FIELD_W - 4, FIELD_H - 5, Component.literal("Bet"));
         betField.setMaxLength(12);
-        betField.setDrawsBackground(false);
-        betField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        int min = handler.prop(SlotMachineScreenHandler.P_MIN);
-        betField.setText(Integer.toString(Math.max(1, min)));
-        addDrawableChild(betField);
+        betField.setBordered(false);
+        betField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        int min = menu.prop(SlotMachineScreenHandler.P_MIN);
+        betField.setValue(Integer.toString(Math.max(1, min)));
+        addRenderableWidget(betField);
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         final long now = System.currentTimeMillis();
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Slot Machine", x + W / 2, y + 6);
+        NotchWidgets.title(ctx, this.font, "Slot Machine", x + W / 2, y + 6);
 
         int[] display = computeReels();
         boolean jackpotShown = !spinning && hasShown && shownWin > 0
@@ -94,43 +94,43 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
         // Status line: error > result.
         if (errorMsg != null && now < errorUntilMs) {
-            NotchWidgets.centerText(ctx, this.textRenderer, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, false);
+            NotchWidgets.centerText(ctx, this.font, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, false);
         } else if (!spinning && hasShown) {
             if (shownWin > 0) {
                 String msg = jackpotShown ? "JACKPOT!  +" + shownWin + " " + NotchWidgets.coinName() : "You won " + shownWin + " " + NotchWidgets.coinName() + "!";
-                NotchWidgets.centerText(ctx, this.textRenderer, msg, x + W / 2, y + STATUS_Y,
+                NotchWidgets.centerText(ctx, this.font, msg, x + W / 2, y + STATUS_Y,
                         jackpotShown ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_GREEN, true);
             } else {
-                NotchWidgets.centerText(ctx, this.textRenderer, "No win - spin again!",
+                NotchWidgets.centerText(ctx, this.font, "No win - spin again!",
                         x + W / 2, y + STATUS_Y, NotchTheme.TEXT_MUTED, false);
             }
         }
 
-        long bal = spinning ? frozenBalance : (handler.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL);
-        NotchWidgets.centerText(ctx, this.textRenderer, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
+        long bal = spinning ? frozenBalance : (menu.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL);
+        NotchWidgets.centerText(ctx, this.font, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
 
         NotchWidgets.divider(ctx, x + 8, y + 102, W - 16);
 
-        ctx.drawText(this.textRenderer, "Bet:", x + 16, y + FIELD_Y + 3, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Bet:", x + 16, y + FIELD_Y + 3, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W, FIELD_H, NotchTheme.DEEP);
 
         boolean spinHover = !spinning && over(mouseX, mouseY, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H);
         if (spinning) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "Spinning...", false);
+            NotchWidgets.neutralButton(ctx, this.font, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "Spinning...", false);
         } else {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "SPIN", spinHover);
+            NotchWidgets.primaryButton(ctx, this.font, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "SPIN", spinHover);
         }
 
         // Paytable: 3-of-a-kind payouts.
         NotchWidgets.divider(ctx, x + 8, y + 148, W - 16);
-        NotchWidgets.centerText(ctx, this.textRenderer, "3-in-a-row pays:", x + W / 2, y + 152, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.font, "3-in-a-row pays:", x + W / 2, y + 152, NotchTheme.TEXT_MUTED, false);
         SlotSymbol[] syms = SlotSymbol.values();
         for (int i = 0; i < syms.length; i++) {
             int cx = x + 24 + i * 38;
-            ctx.drawItem(new ItemStack(syms[i].displayItem()), cx - 8, y + 162);
-            int m10 = handler.prop(SlotMachineScreenHandler.P_MULT_BASE + i);
+            ctx.renderItem(new ItemStack(syms[i].displayItem()), cx - 8, y + 162);
+            int m10 = menu.prop(SlotMachineScreenHandler.P_MULT_BASE + i);
             String mult = "x" + (m10 / 10) + "." + (m10 % 10);
-            NotchWidgets.centerText(ctx, this.textRenderer, mult, cx, y + 180, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.centerText(ctx, this.font, mult, cx, y + 180, NotchTheme.TEXT_DARK, false);
         }
     }
 
@@ -138,11 +138,11 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
     private int[] computeReels() {
         int count = SlotSymbol.values().length;
-        int curSpinId = handler.prop(SlotMachineScreenHandler.P_SPINID);
+        int curSpinId = menu.prop(SlotMachineScreenHandler.P_SPINID);
         int[] finalReels = {
-                handler.prop(SlotMachineScreenHandler.P_REEL0),
-                handler.prop(SlotMachineScreenHandler.P_REEL1),
-                handler.prop(SlotMachineScreenHandler.P_REEL2)
+                menu.prop(SlotMachineScreenHandler.P_REEL0),
+                menu.prop(SlotMachineScreenHandler.P_REEL1),
+                menu.prop(SlotMachineScreenHandler.P_REEL2)
         };
         if (!spinning) return finalReels;
 
@@ -167,7 +167,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         }
         if (stopped > announcedStops) {
             for (int i = announcedStops; i < stopped; i++) {
-                playSnd(SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), 0.9f + i * 0.25f);
+                playSnd(SoundEvents.NOTE_BLOCK_HAT.value(), 0.9f + i * 0.25f);
             }
             announcedStops = stopped;
         }
@@ -175,35 +175,35 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
             resultPlayed = true;
             spinning = false;
             hasShown = true;
-            shownWin = handler.prop(SlotMachineScreenHandler.P_LASTWIN) & 0xFFFFFFFFL;
+            shownWin = menu.prop(SlotMachineScreenHandler.P_LASTWIN) & 0xFFFFFFFFL;
             boolean jackpot = finalReels[0] == finalReels[1] && finalReels[1] == finalReels[2]
                     && finalReels[0] == SlotSymbol.STAR.ordinal();
             if (jackpot) {
                 playSnd(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f);
             } else if (shownWin > 0) {
-                playSnd(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.2f);
+                playSnd(SoundEvents.PLAYER_LEVELUP, 1.2f);
             } else {
-                playSnd(SoundEvents.ENTITY_VILLAGER_NO, 0.9f);
+                playSnd(SoundEvents.VILLAGER_NO, 0.9f);
             }
         }
         return out;
     }
 
-    private void drawSymbol(DrawContext ctx, int symbolIndex, int cx, int cy) {
+    private void drawSymbol(GuiGraphics ctx, int symbolIndex, int cx, int cy) {
         SlotSymbol[] syms = SlotSymbol.values();
         if (symbolIndex < 0 || symbolIndex >= syms.length) symbolIndex = 0;
         ItemStack stack = new ItemStack(syms[symbolIndex].displayItem());
-        MatrixStack m = ctx.getMatrices();
-        m.push();
+        PoseStack m = ctx.pose();
+        m.pushPose();
         m.translate(cx - 16, cy - 16, 0);
         m.scale(2f, 2f, 1f);
-        ctx.drawItem(stack, 0, 0);
-        m.pop();
+        ctx.renderItem(stack, 0, 0);
+        m.popPose();
     }
 
     // ---- cabinet decoration ----
 
-    private void drawFrame(DrawContext ctx, int x, int y) {
+    private void drawFrame(GuiGraphics ctx, int x, int y) {
         int x1 = x + FRAME_X1, y1 = y + FRAME_Y1, x2 = x + FRAME_X2, y2 = y + FRAME_Y2;
         ctx.fill(x1 - 1, y1 - 1, x2 + 1, y2 + 1, NotchTheme.OUTLINE);
         ctx.fill(x1, y1, x2, y2, NotchTheme.ACCENT_GOLD);
@@ -211,7 +211,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         ctx.fill(x1 + 3, y1 + 3, x2 - 3, y2 - 3, NotchTheme.DEEP);
     }
 
-    private void drawMarquee(DrawContext ctx, int x, int y, long now) {
+    private void drawMarquee(GuiGraphics ctx, int x, int y, long now) {
         int bulbs = 11;
         int runner = (int) ((now / 110) % bulbs);
         for (int i = 0; i < bulbs; i++) {
@@ -223,14 +223,14 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         }
     }
 
-    private void drawPaylineMarkers(DrawContext ctx, int x, int y, long now) {
+    private void drawPaylineMarkers(GuiGraphics ctx, int x, int y, long now) {
         boolean pulse = (now / 400) % 2 == 0;
         int col = pulse ? NotchTheme.ACCENT_GOLD : NotchTheme.GOLD_HI;
         triRight(ctx, x + FRAME_X1 - 8, y + PAYLINE_CY, 5, col);
         triLeft(ctx, x + FRAME_X2 + 4, y + PAYLINE_CY, 5, col);
     }
 
-    private void drawWinGlow(DrawContext ctx, int x, int y, long now, boolean jackpot) {
+    private void drawWinGlow(GuiGraphics ctx, int x, int y, long now, boolean jackpot) {
         double s = 0.5 + 0.5 * Math.sin(now / 150.0);
         int a = 0x40 + (int) (0x80 * s);
         int base = jackpot ? 0xFFF3B0 : 0xE0A526;
@@ -242,14 +242,14 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         ctx.fill(x2 - 2, y1, x2, y2, col);
     }
 
-    private void triRight(DrawContext ctx, int x, int cy, int size, int color) {
+    private void triRight(GuiGraphics ctx, int x, int cy, int size, int color) {
         for (int i = 0; i < size; i++) {
             int h = size - 1 - i;
             ctx.fill(x + i, cy - h, x + i + 1, cy + h + 1, color);
         }
     }
 
-    private void triLeft(DrawContext ctx, int x, int cy, int size, int color) {
+    private void triLeft(GuiGraphics ctx, int x, int cy, int size, int color) {
         for (int i = 0; i < size; i++) {
             int h = i;
             ctx.fill(x + i, cy - h, x + i + 1, cy + h + 1, color);
@@ -268,49 +268,49 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
     }
 
     private void playSnd(SoundEvent e, float pitch) {
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(e, pitch));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(e, pitch));
     }
 
     @Override
-    protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
         // no default labels
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && !spinning
-                && over((int) mouseX, (int) mouseY, this.x + SPIN_X, this.y + SPIN_Y, SPIN_W, SPIN_H)) {
+                && over((int) mouseX, (int) mouseY, this.leftPos + SPIN_X, this.topPos + SPIN_Y, SPIN_W, SPIN_H)) {
             NotchWidgets.click();
-            if (handler.prop(SlotMachineScreenHandler.P_ENABLED) == 0) {
+            if (menu.prop(SlotMachineScreenHandler.P_ENABLED) == 0) {
                 setError("Gambling is disabled.");
-                playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
+                playSnd(SoundEvents.NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
             long bet = betValue();
-            long bal = handler.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL;
-            int min = handler.prop(SlotMachineScreenHandler.P_MIN);
-            int max = handler.prop(SlotMachineScreenHandler.P_MAX);
+            long bal = menu.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL;
+            int min = menu.prop(SlotMachineScreenHandler.P_MIN);
+            int max = menu.prop(SlotMachineScreenHandler.P_MAX);
             if (bet < min || bet > max) {
                 setError("Bet must be " + min + "-" + max + " " + NotchWidgets.coinName() + ".");
-                playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
+                playSnd(SoundEvents.NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
             if (bet > bal) {
                 setError("Not enough " + NotchWidgets.coinName() + " for that bet.");
-                playSnd(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f);
+                playSnd(SoundEvents.NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
             // Valid bet: start the spin.
             spinning = true;
             spinStartMs = System.currentTimeMillis();
-            lastSpinIdSeen = handler.prop(SlotMachineScreenHandler.P_SPINID);
+            lastSpinIdSeen = menu.prop(SlotMachineScreenHandler.P_SPINID);
             announcedStops = 0;
             resultPlayed = false;
             hasShown = false;
             frozenBalance = bal;
             errorMsg = null;
-            playSnd(SoundEvents.BLOCK_LEVER_CLICK, 0.8f);
-            PacketByteBuf buf = PacketByteBufs.create();
+            playSnd(SoundEvents.LEVER_CLICK, 0.8f);
+            FriendlyByteBuf buf = PacketByteBufs.create();
             buf.writeVarLong(bet);
             NetClient.sendToServer(NotchPackets.SLOTS_SPIN, buf);
             return true;
@@ -320,7 +320,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
     private long betValue() {
         try {
-            return Long.parseLong(betField.getText().trim());
+            return Long.parseLong(betField.getValue().trim());
         } catch (NumberFormatException e) {
             return 0L;
         }

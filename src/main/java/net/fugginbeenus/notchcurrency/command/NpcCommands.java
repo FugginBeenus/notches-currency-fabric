@@ -8,16 +8,16 @@ import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopState;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleState;
 import net.fugginbeenus.notchcurrency.npc.NpcPresetManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -28,62 +28,62 @@ public final class NpcCommands {
 
     private NpcCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("npc")
-                .requires(s -> s.hasPermissionLevel(2))
-                .then(CommandManager.literal("setrole")
-                        .then(CommandManager.literal("banker").executes(ctx -> setRole(ctx.getSource(), NpcRole.BANKER, null)))
-                        .then(CommandManager.literal("auctioneer").executes(ctx -> setRole(ctx.getSource(), NpcRole.AUCTIONEER, null)))
-                        .then(CommandManager.literal("mailbox").executes(ctx -> setRole(ctx.getSource(), NpcRole.MAILBOX, null)))
-                        .then(CommandManager.literal("raffle").executes(ctx -> setRole(ctx.getSource(), NpcRole.RAFFLE, null)))
-                        .then(CommandManager.literal("bounty").executes(ctx -> setRole(ctx.getSource(), NpcRole.BOUNTY, null)))
-                        .then(CommandManager.literal("dealer").executes(ctx -> setRole(ctx.getSource(), NpcRole.DEALER, null)))
-                        .then(CommandManager.literal("cosmetics").executes(ctx -> setRole(ctx.getSource(), NpcRole.COSMETICS, null)))
-                        .then(CommandManager.literal("adminshop")
-                                .then(CommandManager.argument("shop", StringArgumentType.greedyString())
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("npc")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.literal("setrole")
+                        .then(Commands.literal("banker").executes(ctx -> setRole(ctx.getSource(), NpcRole.BANKER, null)))
+                        .then(Commands.literal("auctioneer").executes(ctx -> setRole(ctx.getSource(), NpcRole.AUCTIONEER, null)))
+                        .then(Commands.literal("mailbox").executes(ctx -> setRole(ctx.getSource(), NpcRole.MAILBOX, null)))
+                        .then(Commands.literal("raffle").executes(ctx -> setRole(ctx.getSource(), NpcRole.RAFFLE, null)))
+                        .then(Commands.literal("bounty").executes(ctx -> setRole(ctx.getSource(), NpcRole.BOUNTY, null)))
+                        .then(Commands.literal("dealer").executes(ctx -> setRole(ctx.getSource(), NpcRole.DEALER, null)))
+                        .then(Commands.literal("cosmetics").executes(ctx -> setRole(ctx.getSource(), NpcRole.COSMETICS, null)))
+                        .then(Commands.literal("adminshop")
+                                .then(Commands.argument("shop", StringArgumentType.greedyString())
                                         .executes(ctx -> {
                                             AdminShop shop = AdminShopState.get(ctx.getSource().getServer())
                                                     .getByName(StringArgumentType.getString(ctx, "shop"));
-                                            if (shop == null) { ctx.getSource().sendError(Text.literal("No such admin shop.")); return 0; }
+                                            if (shop == null) { ctx.getSource().sendFailure(Component.literal("No such admin shop.")); return 0; }
                                             return setRole(ctx.getSource(), NpcRole.ADMIN_SHOP, shop.getId());
                                         }))))
-                .then(CommandManager.literal("clearrole")
+                .then(Commands.literal("clearrole")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             Entity target = p == null ? null : lookedAt(p);
-                            if (target == null) { ctx.getSource().sendError(Text.literal("Look at an NPC.")); return 0; }
-                            boolean had = NotchNpcApi.clearRole(ctx.getSource().getServer(), target.getUuid());
-                            ctx.getSource().sendFeedback(() -> Text.literal(had ? "Role cleared." : "That NPC had no role.")
-                                    .formatted(Formatting.YELLOW), false);
+                            if (target == null) { ctx.getSource().sendFailure(Component.literal("Look at an NPC.")); return 0; }
+                            boolean had = NotchNpcApi.clearRole(ctx.getSource().getServer(), target.getUUID());
+                            ctx.getSource().sendSuccess(() -> Component.literal(had ? "Role cleared." : "That NPC had no role.")
+                                    .withStyle(ChatFormatting.YELLOW), false);
                             return had ? 1 : 0;
                         }))
-                .then(CommandManager.literal("info")
+                .then(Commands.literal("info")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             Entity target = p == null ? null : lookedAt(p);
-                            if (target == null) { ctx.getSource().sendError(Text.literal("Look at an NPC.")); return 0; }
-                            NpcRoleState.Assignment a = NotchNpcApi.getRole(ctx.getSource().getServer(), target.getUuid());
-                            ctx.getSource().sendFeedback(() -> Text.literal(a == null
+                            if (target == null) { ctx.getSource().sendFailure(Component.literal("Look at an NPC.")); return 0; }
+                            NpcRoleState.Assignment a = NotchNpcApi.getRole(ctx.getSource().getServer(), target.getUUID());
+                            ctx.getSource().sendSuccess(() -> Component.literal(a == null
                                     ? "That NPC has no economy role."
-                                    : "Role: " + a.role() + (a.shopId() != null ? " (linked shop)" : "")).formatted(Formatting.AQUA), false);
+                                    : "Role: " + a.role() + (a.shopId() != null ? " (linked shop)" : "")).withStyle(ChatFormatting.AQUA), false);
                             return 1;
                         }))
-                .then(CommandManager.literal("debug")
+                .then(Commands.literal("debug")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             Entity target = p == null ? null : lookedAt(p);
                             if (!(target instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) {
-                                ctx.getSource().sendError(Text.literal("Look at a Notch NPC."));
+                                ctx.getSource().sendFailure(Component.literal("Look at a Notch NPC."));
                                 return 0;
                             }
                             for (String line : npc.debugSummary(p)) {
-                                ctx.getSource().sendFeedback(() -> Text.literal(line).formatted(Formatting.AQUA), false);
+                                ctx.getSource().sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.AQUA), false);
                             }
                             return 1;
                         }))
-                .then(CommandManager.literal("spawn")
+                .then(Commands.literal("spawn")
                         .executes(ctx -> spawn(ctx.getSource(), null))
-                        .then(CommandManager.argument("preset", StringArgumentType.word())
+                        .then(Commands.argument("preset", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
                                     for (String name : NpcPresetManager.list()) {
                                         builder.suggest(name);
@@ -91,58 +91,58 @@ public final class NpcCommands {
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "preset")))))
-                .then(CommandManager.literal("presets")
+                .then(Commands.literal("presets")
                         .executes(ctx -> {
                             java.util.List<String> names = NpcPresetManager.list();
-                            ctx.getSource().sendFeedback(() -> Text.literal(names.isEmpty()
+                            ctx.getSource().sendSuccess(() -> Component.literal(names.isEmpty()
                                     ? "No presets saved yet (save one from an NPC's Manage tab)."
                                     : "Presets (" + names.size() + "): " + String.join(", ", names))
-                                    .formatted(Formatting.AQUA), false);
+                                    .withStyle(ChatFormatting.AQUA), false);
                             return names.size();
                         }))
         );
     }
 
-    private static int spawn(ServerCommandSource src, @Nullable String preset) {
-        ServerPlayerEntity p = src.getPlayer();
+    private static int spawn(CommandSourceStack src, @Nullable String preset) {
+        ServerPlayer p = src.getPlayer();
         if (p == null) {
-            src.sendError(Text.literal("Run as a player."));
+            src.sendFailure(Component.literal("Run as a player."));
             return 0;
         }
-        float yaw = p.getYaw() + 180f; // face the admin
+        float yaw = p.getYRot() + 180f; // face the admin
         var npc = preset == null
-                ? NotchNpcApi.spawnNpc(p.getServerWorld(), p.getPos(), yaw, p)
-                : NotchNpcApi.spawnNpcFromPreset(p.getServerWorld(), p.getPos(), yaw, preset, p);
+                ? NotchNpcApi.spawnNpc(p.serverLevel(), p.position(), yaw, p)
+                : NotchNpcApi.spawnNpcFromPreset(p.serverLevel(), p.position(), yaw, preset, p);
         if (npc == null) {
-            src.sendError(Text.literal("No preset named '" + preset + "'. Try /npc presets."));
+            src.sendFailure(Component.literal("No preset named '" + preset + "'. Try /npc presets."));
             return 0;
         }
-        src.sendFeedback(() -> Text.literal(preset == null
+        src.sendSuccess(() -> Component.literal(preset == null
                 ? "NPC spawned. Sneak + right-click it to configure."
-                : "NPC spawned from preset '" + preset + "'.").formatted(Formatting.GREEN), true);
+                : "NPC spawned from preset '" + preset + "'.").withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
-    private static int setRole(ServerCommandSource src, NpcRole role, @Nullable UUID shopId) {
-        ServerPlayerEntity p = src.getPlayer();
-        if (p == null) { src.sendError(Text.literal("Run as a player.")); return 0; }
+    private static int setRole(CommandSourceStack src, NpcRole role, @Nullable UUID shopId) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) { src.sendFailure(Component.literal("Run as a player.")); return 0; }
         Entity target = lookedAt(p);
-        if (target == null) { src.sendError(Text.literal("Look at an NPC within reach.")); return 0; }
-        if (target instanceof ServerPlayerEntity) { src.sendError(Text.literal("You can't assign a role to a player.")); return 0; }
+        if (target == null) { src.sendFailure(Component.literal("Look at an NPC within reach.")); return 0; }
+        if (target instanceof ServerPlayer) { src.sendFailure(Component.literal("You can't assign a role to a player.")); return 0; }
 
-        NotchNpcApi.assignRole(src.getServer(), target.getUuid(), role, shopId);
-        src.sendFeedback(() -> Text.literal("Bound this NPC as " + role + ".").formatted(Formatting.GREEN), true);
+        NotchNpcApi.assignRole(src.getServer(), target.getUUID(), role, shopId);
+        src.sendSuccess(() -> Component.literal("Bound this NPC as " + role + ".").withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
     @Nullable
-    private static Entity lookedAt(ServerPlayerEntity p) {
-        Vec3d start = p.getEyePos();
-        Vec3d dir = p.getRotationVec(1.0f);
-        Vec3d end = start.add(dir.multiply(REACH));
-        Box box = p.getBoundingBox().stretch(dir.multiply(REACH)).expand(1.0);
-        EntityHitResult hit = ProjectileUtil.raycast(p, start, end, box,
-                e -> !e.isSpectator() && e.canHit(), REACH * REACH);
+    private static Entity lookedAt(ServerPlayer p) {
+        Vec3 start = p.getEyePosition();
+        Vec3 dir = p.getViewVector(1.0f);
+        Vec3 end = start.add(dir.scale(REACH));
+        AABB box = p.getBoundingBox().expandTowards(dir.scale(REACH)).inflate(1.0);
+        EntityHitResult hit = ProjectileUtil.getEntityHitResult(p, start, end, box,
+                e -> !e.isSpectator() && e.isPickable(), REACH * REACH);
         return hit != null ? hit.getEntity() : null;
     }
 }

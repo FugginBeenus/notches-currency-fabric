@@ -1,12 +1,12 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 public class DialogueTree {
 
@@ -79,18 +79,18 @@ public class DialogueTree {
         return true;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Start", startId);
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (DialogueNode n : nodes.values()) list.add(n.toNbt());
         nbt.put("Nodes", list);
         return nbt;
     }
 
-    public static DialogueTree fromNbt(NbtCompound nbt) {
+    public static DialogueTree fromNbt(CompoundTag nbt) {
         DialogueTree tree = new DialogueTree();
-        NbtList list = nbt.getList("Nodes", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Nodes", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             DialogueNode n = DialogueNode.fromNbt(list.getCompound(i));
             tree.nodes.put(n.id(), n);

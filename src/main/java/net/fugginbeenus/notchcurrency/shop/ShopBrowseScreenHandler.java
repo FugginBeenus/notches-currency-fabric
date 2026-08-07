@@ -2,24 +2,24 @@ package net.fugginbeenus.notchcurrency.shop;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
 
-public class ShopBrowseScreenHandler extends ScreenHandler {
+public class ShopBrowseScreenHandler extends AbstractContainerMenu {
 
     // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
     public static final int VIS_ROWS = 6, PER_PAGE = VIS_ROWS;
@@ -32,33 +32,33 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
     private final String greeting;
     @Nullable private final UUID npcId; // linked NPC, for the client-side preview
     @Nullable private final PlayerShop shop; // server side only
-    private final SimpleInventory rowInv = new SimpleInventory(PER_PAGE);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(4);
+    private final SimpleContainer rowInv = new SimpleContainer(PER_PAGE);
+    private final ContainerData props = new SimpleContainerData(4);
     private int page = 0;
 
     private static final class ReadOnlySlot extends Slot {
-        ReadOnlySlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack s) { return false; }
-        @Override public boolean canTakeItems(PlayerEntity p) { return false; }
+        ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
+        @Override public boolean mayPlace(ItemStack s) { return false; }
+        @Override public boolean mayPickup(Player p) { return false; }
     }
 
-    static UUID readNpcId(PacketByteBuf buf) {
-        return buf.readBoolean() ? buf.readUuid() : null;
+    static UUID readNpcId(FriendlyByteBuf buf) {
+        return buf.readBoolean() ? buf.readUUID() : null;
     }
 
-    public ShopBrowseScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
-        this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256), readNpcId(buf), null);
+    public ShopBrowseScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
+        this(containerId, inv, buf.readUUID(), buf.readUtf(64), buf.readUtf(256), readNpcId(buf), null);
     }
 
-    public ShopBrowseScreenHandler(int syncId, PlayerInventory inv, UUID shopId, String shopName,
+    public ShopBrowseScreenHandler(int containerId, Inventory inv, UUID shopId, String shopName,
                                    String greeting, @Nullable UUID npcId, @Nullable PlayerShop shop) {
-        super(ModScreenHandlers.SHOP_BROWSE, syncId);
+        super(ModScreenHandlers.SHOP_BROWSE, containerId);
         this.shopId = shopId;
         this.shopName = shopName;
         this.greeting = greeting;
         this.npcId = npcId;
         this.shop = shop;
-        this.addProperties(props);
+        this.addDataSlots(props);
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
@@ -79,7 +79,7 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
     public String shopName() { return shopName; }
     public String greeting() { return greeting; }
     @Nullable public UUID npcId() { return npcId; }
-    public ItemStack rowStack(int i) { return rowInv.getStack(i); }
+    public ItemStack rowStack(int i) { return rowInv.getItem(i); }
     public int prop(int i) { return props.get(i); }
 
     private void refresh() {
@@ -98,17 +98,17 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
         int start = page * PER_PAGE;
         for (int i = 0; i < PER_PAGE; i++) {
             int idx = start + i;
-            rowInv.setStack(i, idx < listings.size() ? displayStack(listings.get(idx)) : ItemStack.EMPTY);
+            rowInv.setItem(i, idx < listings.size() ? displayStack(listings.get(idx)) : ItemStack.EMPTY);
         }
     }
 
     static ItemStack displayStack(ShopListing listing) {
         ItemStack carrier = listing.getItemForSale().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
-        NbtCompound t = StackData.editData(carrier);
-        t.putUuid("nc_lid", listing.getId());
+        CompoundTag t = StackData.editData(carrier);
+        t.putUUID("nc_lid", listing.getId());
         t.putInt("nc_price", listing.getCoinPrice());
-        t.putString("nc_bname", listing.acceptsBarter() ? listing.getItemPrice().getName().getString() : "");
+        t.putString("nc_bname", listing.acceptsBarter() ? listing.getItemPrice().getHoverName().getString() : "");
         t.putInt("nc_bcount", listing.acceptsBarter() ? listing.getItemPriceCount() : 0);
         t.putInt("nc_stock", listing.getStockQuantitySafe());
         if (listing.acceptsBarter()) {
@@ -121,29 +121,29 @@ public class ShopBrowseScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity)) return false;
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1; // clamped in refresh()
         else return false;
         refresh();
-        sendContentUpdates();
+        broadcastChanges();
         return true;
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

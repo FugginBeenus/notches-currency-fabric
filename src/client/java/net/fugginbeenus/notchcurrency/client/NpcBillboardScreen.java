@@ -4,12 +4,10 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 public class NpcBillboardScreen extends Screen {
@@ -21,8 +19,8 @@ public class NpcBillboardScreen extends Screen {
 
     private final UUID npcId;
     private final String[] lines = new String[NotchNpcEntity.MAX_BILLBOARD_LINES];
-    private final TextFieldWidget[] fields = new TextFieldWidget[NotchNpcEntity.MAX_BILLBOARD_LINES];
-    private TextFieldWidget titleField;
+    private final EditBox[] fields = new EditBox[NotchNpcEntity.MAX_BILLBOARD_LINES];
+    private EditBox titleField;
     private String title;
     // Carried through untouched so the title can be saved on the one packet that owns it, without
     // this screen needing to know or care what a voice is.
@@ -32,7 +30,7 @@ public class NpcBillboardScreen extends Screen {
     private int px, py;
 
     public NpcBillboardScreen(UUID npcId, String existing, String title, String voice, int voicePitch) {
-        super(Text.literal("Floating text"));
+        super(Component.literal("Floating text"));
         this.npcId = npcId;
         this.title = title == null ? "" : title;
         this.voice = voice == null ? "" : voice;
@@ -51,22 +49,22 @@ public class NpcBillboardScreen extends Screen {
         py = (this.height - H) / 2;
         for (int i = 0; i < fields.length; i++) {
             final int idx = i;
-            fields[i] = new TextFieldWidget(this.textRenderer, px + PAD + 4, rowY(i) + 4,
-                    W - PAD * 2 - 8, 10, Text.literal("Line " + (i + 1)));
+            fields[i] = new EditBox(this.font, px + PAD + 4, rowY(i) + 4,
+                    W - PAD * 2 - 8, 10, Component.literal("Line " + (i + 1)));
             fields[i].setMaxLength(NotchNpcEntity.MAX_BILLBOARD_LINE_LENGTH);
-            fields[i].setDrawsBackground(false);
-            fields[i].setText(lines[i]);
-            fields[i].setChangedListener(s -> lines[idx] = s);
-            addDrawableChild(fields[i]);
+            fields[i].setBordered(false);
+            fields[i].setValue(lines[i]);
+            fields[i].setResponder(s -> lines[idx] = s);
+            addRenderableWidget(fields[i]);
         }
 
-        titleField = new TextFieldWidget(this.textRenderer, px + PAD + 4, titleRow() + 4,
-                W - PAD * 2 - 8, 10, Text.literal("Title"));
+        titleField = new EditBox(this.font, px + PAD + 4, titleRow() + 4,
+                W - PAD * 2 - 8, 10, Component.literal("Title"));
         titleField.setMaxLength(NotchNpcEntity.MAX_SUBTITLE_LENGTH);
-        titleField.setDrawsBackground(false);
-        titleField.setText(title);
-        titleField.setChangedListener(s -> title = s);
-        addDrawableChild(titleField);
+        titleField.setBordered(false);
+        titleField.setValue(title);
+        titleField.setResponder(s -> title = s);
+        addRenderableWidget(titleField);
 
         setInitialFocus(fields[0]);
     }
@@ -74,17 +72,17 @@ public class NpcBillboardScreen extends Screen {
     private int titleRow() { return py + 178; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Floating Text", px + W / 2, py + 8);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Text that hovers above this NPC.",
+        NotchWidgets.title(ctx, this.font, "Floating Component", px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.font, "Component that hovers above this NPC.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Top line first. Leave a row empty to skip it.",
+        NotchWidgets.centerText(ctx, this.font, "Top line first. Leave a row empty to skip it.",
                 px + W / 2, py + 32, NotchTheme.TEXT_MUTED, false);
 
         for (int i = 0; i < fields.length; i++) {
@@ -92,28 +90,28 @@ public class NpcBillboardScreen extends Screen {
             // How the line will actually read, colours and all, off to the right of the row.
             String preview = NotchWidgets.colorize(lines[i]);
             if (!preview.isBlank()) {
-                ctx.drawText(this.textRenderer, this.textRenderer.trimToWidth(preview, W - PAD * 2 - 8),
+                ctx.drawString(this.font, this.font.plainSubstrByWidth(preview, W - PAD * 2 - 8),
                         px + PAD + 4, rowY(i) + 17, 0xFFFFFF, true);
             }
         }
 
         // Both kinds of floating text live here: the sign above the head, the title under the name.
         NotchWidgets.divider(ctx, px + PAD, py + 166, W - PAD * 2);
-        ctx.drawText(this.textRenderer, "Title, under the name", px + PAD, titleRow() - 10,
+        ctx.drawString(this.font, "Title, under the name", px + PAD, titleRow() - 10,
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + PAD, titleRow(), W - PAD * 2, 16, NotchTheme.DEEP);
         if (title.isEmpty()) {
-            ctx.drawText(this.textRenderer, "Blacksmith", px + PAD + 4, titleRow() + 4, 0xFF555555, false);
+            ctx.drawString(this.font, "Blacksmith", px + PAD + 4, titleRow() + 4, 0xFF555555, false);
         } else {
-            ctx.drawText(this.textRenderer, NotchWidgets.colorize(title), px + PAD + 4, titleRow() + 20,
+            ctx.drawString(this.font, NotchWidgets.colorize(title), px + PAD + 4, titleRow() + 20,
                     0xFFFFFF, true);
         }
 
-        NotchWidgets.centerText(ctx, this.textRenderer, "&-colours, %player%, %npc% and %balance% all work.",
+        NotchWidgets.centerText(ctx, this.font, "&-colours, %player%, %npc% and %balance% all work.",
                 px + W / 2, py + H - 46, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + PAD, py + H - 32, 150, 18, "Save & Back",
+        NotchWidgets.primaryButton(ctx, this.font, px + PAD, py + H - 32, 150, 18, "Save & Back",
                 over(mouseX, mouseY, px + PAD, py + H - 32, 150, 18));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + W - PAD - 110, py + H - 32, 110, 18, "Clear sign",
+        NotchWidgets.dangerButton(ctx, this.font, px + W - PAD - 110, py + H - 32, 110, 18, "Clear sign",
                 over(mouseX, mouseY, px + W - PAD - 110, py + H - 32, 110, 18));
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -154,7 +152,7 @@ public class NpcBillboardScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean isPauseScreen() { return false; }
 
     //? if >=1.21 {
     /*@Override
@@ -165,7 +163,7 @@ public class NpcBillboardScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

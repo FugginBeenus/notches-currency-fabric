@@ -3,23 +3,22 @@ package net.fugginbeenus.notchcurrency.trade;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class TradeOfferState extends PersistentState {
+public class TradeOfferState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_trade_offers";
 
@@ -27,8 +26,8 @@ public class TradeOfferState extends PersistentState {
     private final Map<UUID, List<ItemStack>> mailbox = new java.util.HashMap<>();
 
     public static TradeOfferState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, TradeOfferState::new, TradeOfferState::fromNbt, DATA_KEY);
     }
 
@@ -36,7 +35,7 @@ public class TradeOfferState extends PersistentState {
 
     public void add(TradeOffer offer) {
         offers.put(offer.id(), offer);
-        markDirty();
+        setDirty();
     }
 
     @Nullable
@@ -45,7 +44,7 @@ public class TradeOfferState extends PersistentState {
     }
 
     public void remove(UUID id) {
-        if (offers.remove(id) != null) markDirty();
+        if (offers.remove(id) != null) setDirty();
     }
 
     public List<TradeOffer> incomingFor(UUID playerUuid, String playerName) {
@@ -75,7 +74,7 @@ public class TradeOfferState extends PersistentState {
     public void addMail(UUID player, ItemStack stack) {
         if (stack.isEmpty()) return;
         mailbox.computeIfAbsent(player, k -> new ArrayList<>()).add(stack.copy());
-        markDirty();
+        setDirty();
     }
 
     public boolean hasMail(UUID player) {
@@ -85,31 +84,31 @@ public class TradeOfferState extends PersistentState {
 
     public List<ItemStack> claimMail(UUID player) {
         List<ItemStack> m = mailbox.remove(player);
-        if (m != null) markDirty();
+        if (m != null) setDirty();
         return m == null ? List.of() : m;
     }
 
     public void returnMail(UUID player, List<ItemStack> leftover) {
         if (leftover.isEmpty()) return;
         mailbox.computeIfAbsent(player, k -> new ArrayList<>()).addAll(leftover);
-        markDirty();
+        setDirty();
     }
 
     // ---- NBT ----
 
-    private static TradeOfferState fromNbt(NbtCompound nbt) {
+    private static TradeOfferState fromNbt(CompoundTag nbt) {
         TradeOfferState state = new TradeOfferState();
-        NbtList offerList = nbt.getList("Offers", NbtElement.COMPOUND_TYPE);
+        ListTag offerList = nbt.getList("Offers", Tag.TAG_COMPOUND);
         for (int i = 0; i < offerList.size(); i++) {
             TradeOffer o = TradeOffer.fromNbt(offerList.getCompound(i));
             state.offers.put(o.id(), o);
         }
-        NbtList mail = nbt.getList("Mailbox", NbtElement.COMPOUND_TYPE);
+        ListTag mail = nbt.getList("Mailbox", Tag.TAG_COMPOUND);
         for (int i = 0; i < mail.size(); i++) {
-            NbtCompound entry = mail.getCompound(i);
-            UUID id = entry.getUuid("Player");
+            CompoundTag entry = mail.getCompound(i);
+            UUID id = entry.getUUID("Player");
             List<ItemStack> items = new ArrayList<>();
-            NbtList stacks = entry.getList("Items", NbtElement.COMPOUND_TYPE);
+            ListTag stacks = entry.getList("Items", Tag.TAG_COMPOUND);
             for (int j = 0; j < stacks.size(); j++) {
                 items.add(StackData.readStack(stacks.getCompound(j)));
             }
@@ -120,20 +119,20 @@ public class TradeOfferState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList offerList = new NbtList();
+        ListTag offerList = new ListTag();
         for (TradeOffer o : offers.values()) offerList.add(o.toNbt());
         nbt.put("Offers", offerList);
 
-        NbtList mail = new NbtList();
+        ListTag mail = new ListTag();
         for (Map.Entry<UUID, List<ItemStack>> e : mailbox.entrySet()) {
             if (e.getValue().isEmpty()) continue;
-            NbtCompound entry = new NbtCompound();
-            entry.putUuid("Player", e.getKey());
-            NbtList stacks = new NbtList();
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Player", e.getKey());
+            ListTag stacks = new ListTag();
             for (ItemStack st : e.getValue()) stacks.add(StackData.writeStack(st));
             entry.put("Items", stacks);
             mail.add(entry);

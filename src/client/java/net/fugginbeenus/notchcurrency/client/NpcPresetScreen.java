@@ -6,12 +6,11 @@ import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.NpcPresetManager;
 import net.fugginbeenus.notchcurrency.npc.NpcShareCodec;
 import net.fugginbeenus.notchcurrency.npc.NpcShareManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,10 +32,10 @@ public class NpcPresetScreen extends Screen {
     private List<String> presets;
     private int selected = -1;
     private int scroll = 0;
-    private TextFieldWidget nameField;
+    private EditBox nameField;
 
     public NpcPresetScreen(UUID npcId, List<String> presets) {
-        super(Text.literal("NPC Presets"));
+        super(Component.literal("NPC Presets"));
         this.npcId = npcId;
         this.presets = presets;
     }
@@ -59,17 +58,17 @@ public class NpcPresetScreen extends Screen {
 
     @Override
     protected void init() {
-        String old = nameField == null ? "" : nameField.getText();
-        nameField = new TextFieldWidget(this.textRenderer, px() + 66, py() + 173, 142, 9, Text.literal("Preset name"));
+        String old = nameField == null ? "" : nameField.getValue();
+        nameField = new EditBox(this.font, px() + 66, py() + 173, 142, 9, Component.literal("Preset name"));
         nameField.setMaxLength(32);
-        nameField.setDrawsBackground(false);
-        nameField.setPlaceholder(Text.literal("preset name").formatted(Formatting.DARK_GRAY));
-        nameField.setText(old);
-        addDrawableChild(nameField);
+        nameField.setBordered(false);
+        nameField.setHint(Component.literal("preset name").withStyle(ChatFormatting.DARK_GRAY));
+        nameField.setValue(old);
+        addRenderableWidget(nameField);
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
@@ -77,11 +76,11 @@ public class NpcPresetScreen extends Screen {
         //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "NPC Presets", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "NPC Presets", px + W / 2, py + 8);
 
         NotchWidgets.inset(ctx, px + LIST_X, py + LIST_Y, LIST_W, LIST_H, NotchTheme.DEEP);
         if (presets.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No presets saved yet.",
+            NotchWidgets.centerText(ctx, this.font, "No presets saved yet.",
                     px + W / 2, py + LIST_Y + LIST_H / 2 - 4, NotchTheme.TEXT_MUTED, false);
         }
         for (int v = 0; v < VISIBLE_ROWS; v++) {
@@ -89,40 +88,40 @@ public class NpcPresetScreen extends Screen {
             if (i >= presets.size()) break;
             boolean hover = over(mouseX, mouseY, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1);
             if (i == selected) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1, presets.get(i), hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1, presets.get(i), hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1, presets.get(i), hover);
+                NotchWidgets.neutralButton(ctx, this.font, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 1, presets.get(i), hover);
             }
         }
         if (presets.size() > VISIBLE_ROWS) {
-            NotchWidgets.centerText(ctx, this.textRenderer, (scroll + 1) + "-" + Math.min(scroll + VISIBLE_ROWS, presets.size())
+            NotchWidgets.centerText(ctx, this.font, (scroll + 1) + "-" + Math.min(scroll + VISIBLE_ROWS, presets.size())
                     + " of " + presets.size() + " (scroll)", px + W / 2, py + LIST_Y + LIST_H + 3, NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 16, py + 146, 170, 15, "Load onto this NPC",
+        NotchWidgets.primaryButton(ctx, this.font, px + 16, py + 146, 170, 15, "Load onto this NPC",
                 over(mouseX, mouseY, px + 16, py + 146, 170, 15));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 192, py + 146, 92, 15, "Delete",
+        NotchWidgets.dangerButton(ctx, this.font, px + 192, py + 146, 92, 15, "Delete",
                 over(mouseX, mouseY, px + 192, py + 146, 92, 15));
 
         NotchWidgets.divider(ctx, px + 8, py + 165, W - 16);
-        ctx.drawText(this.textRenderer, "Save as:", px + 16, py + 173, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Save as:", px + 16, py + 173, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 62, py + 170, 150, 14, NotchTheme.DEEP);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 218, py + 170, 66, 14, "Save",
+        NotchWidgets.primaryButton(ctx, this.font, px + 218, py + 170, 66, 14, "Save",
                 over(mouseX, mouseY, px + 218, py + 170, 66, 14));
 
         NotchWidgets.divider(ctx, px + 8, py + 189, W - 16);
-        ctx.drawText(this.textRenderer, "Share across worlds (file uses the name above)",
+        ctx.drawString(this.font, "Share across worlds (file uses the name above)",
                 px + 16, py + 194, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H, "Copy code",
+        NotchWidgets.primaryButton(ctx, this.font, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H, "Copy code",
                 over(mouseX, mouseY, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H, "Paste code",
+        NotchWidgets.primaryButton(ctx, this.font, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H, "Paste code",
                 over(mouseX, mouseY, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H, "To file",
+        NotchWidgets.neutralButton(ctx, this.font, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H, "To file",
                 over(mouseX, mouseY, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H, "From file",
+        NotchWidgets.neutralButton(ctx, this.font, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H, "From file",
                 over(mouseX, mouseY, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H));
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + BACK_Y, 160, 16, "Back to Editor",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + BACK_Y, 160, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 70, py + BACK_Y, 160, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -155,7 +154,7 @@ public class NpcPresetScreen extends Screen {
                 return true;
             }
             if (over(mx, my, px + 218, py + 170, 66, 14)) {
-                String name = nameField.getText().trim();
+                String name = nameField.getValue().trim();
                 if (!name.isEmpty()) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendNpcPreset(npcId, NpcPresetManager.ACTION_SAVE, name);
@@ -170,18 +169,18 @@ public class NpcPresetScreen extends Screen {
             }
             if (over(mx, my, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H)) {
                 NotchWidgets.click();
-                String code = this.client == null ? "" : this.client.keyboard.getClipboard();
+                String code = this.minecraft == null ? "" : this.minecraft.keyboardHandler.getClipboard();
                 // Checked here too so an unrelated clipboard says so instantly instead of after a
                 // round trip. The server still validates: this is convenience, not the gate.
                 if (!NpcShareCodec.looksLikeCode(code)) {
-                    say("There's no NPC share code on your clipboard.", Formatting.RED);
+                    say("There's no NPC share code on your clipboard.", ChatFormatting.RED);
                     return true;
                 }
                 // Writing an over-long string to the buffer throws, and the packet itself would be
                 // refused by the connection. Say so instead, and point at the route that has room.
                 if (code.strip().length() > NpcShareCodec.MAX_WIRE_CHARS) {
                     say("That code is too big to paste. Save it as a .npc file and use 'From file'.",
-                            Formatting.RED);
+                            ChatFormatting.RED);
                     return true;
                 }
                 NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_PASTE, code);
@@ -189,9 +188,9 @@ public class NpcPresetScreen extends Screen {
                 return true;
             }
             if (over(mx, my, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H)) {
-                String name = nameField.getText().trim();
+                String name = nameField.getValue().trim();
                 if (name.isEmpty()) {
-                    say("Type a name in the box above first.", Formatting.RED);
+                    say("Type a name in the box above first.", ChatFormatting.RED);
                     return true;
                 }
                 NotchWidgets.click();
@@ -199,9 +198,9 @@ public class NpcPresetScreen extends Screen {
                 return true;
             }
             if (over(mx, my, px + FROMFILE_X, py + SHARE_Y, FROMFILE_W, SHARE_H)) {
-                String name = nameField.getText().trim();
+                String name = nameField.getValue().trim();
                 if (name.isEmpty()) {
-                    say("Type the file's name in the box above first.", Formatting.RED);
+                    say("Type the file's name in the box above first.", ChatFormatting.RED);
                     return true;
                 }
                 NotchWidgets.click();
@@ -240,14 +239,14 @@ public class NpcPresetScreen extends Screen {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    private void say(String text, Formatting color) {
-        if (this.client != null && this.client.player != null) {
-            this.client.player.sendMessage(Text.literal(text).formatted(color), false);
+    private void say(String text, ChatFormatting color) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(Component.literal(text).withStyle(color), false);
         }
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -260,7 +259,7 @@ public class NpcPresetScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

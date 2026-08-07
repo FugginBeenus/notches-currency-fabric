@@ -6,10 +6,10 @@ import net.fugginbeenus.notchcurrency.core.BalanceState;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,14 +68,14 @@ public final class WealthTax {
             totalTaxed += tax;
             affected++;
 
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(e.getKey());
+            ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
             if (p != null) {
                 NotchPackets.sendBalance(p, BalanceStore.get(p));
                 if (announce) {
-                    p.sendMessage(Text.literal("Wealth tax: ")
-                            .formatted(Formatting.GRAY)
+                    p.displayClientMessage(Component.literal("Wealth tax: ")
+                            .withStyle(ChatFormatting.GRAY)
                             .append(NotchCurrency.coins(tax))
-                            .append(Text.literal(" was deducted from your balance.").formatted(Formatting.GRAY)), false);
+                            .append(Component.literal(" was deducted from your balance.").withStyle(ChatFormatting.GRAY)), false);
                 }
             }
         }

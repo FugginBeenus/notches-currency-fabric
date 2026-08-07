@@ -3,18 +3,16 @@ package net.fugginbeenus.notchcurrency.crate;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.registry.ModBlocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.Random;
 
 public final class GoldenCacheManager {
 
-    public static final Identifier LOOT = NotchCurrency.id("golden_cache");
+    public static final ResourceLocation LOOT = NotchCurrency.id("golden_cache");
 
     public static boolean ANNOUNCE = true;
     private static final Random RNG = new Random();
@@ -32,7 +30,7 @@ public final class GoldenCacheManager {
         // scheduled-spawn loop can be wired up later without touching the initializer.
     }
 
-    public static BlockPos spawnNear(ServerWorld world, BlockPos center, int radius) {
+    public static BlockPos spawnNear(ServerLevel world, BlockPos center, int radius) {
         if (radius < 1) radius = 1;
 
         int dx = RNG.nextInt(radius * 2 + 1) - radius;
@@ -41,7 +39,7 @@ public final class GoldenCacheManager {
         int x = center.getX() + dx;
         int z = center.getZ() + dz;
 
-        int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
+        int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
         BlockPos pos = new BlockPos(x, y, z);
 
         return placeCacheBlock(world, pos) ? pos : null;
@@ -67,16 +65,16 @@ public final class GoldenCacheManager {
         c.currencyPerStackMax = CURRENCY_PER_STACK_MAX;
     }
 
-    public static BlockPos spawnAt(ServerWorld world, int x, int y, int z) {
+    public static BlockPos spawnAt(ServerLevel world, int x, int y, int z) {
         int safeY = Math.max(
                 y,
-                world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z)
+                world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z)
         );
         BlockPos pos = new BlockPos(x, safeY, z);
         return placeCacheBlock(world, pos) ? pos : null;
     }
 
-    private static boolean placeCacheBlock(ServerWorld world, BlockPos pos) {
+    private static boolean placeCacheBlock(ServerLevel world, BlockPos pos) {
         BlockPos place = pos;
 
         // Try to find a clear space (air or non-solid) up to 4 blocks upward
@@ -84,10 +82,10 @@ public final class GoldenCacheManager {
             var stateAt = world.getBlockState(place);
             boolean clear = stateAt.isAir() || stateAt.getCollisionShape(world, place).isEmpty();
             if (clear) break;
-            place = place.up();
+            place = place.above();
         }
 
-        return world.setBlockState(place, ModBlocks.GOLDEN_CACHE.getDefaultState());
+        return world.setBlockAndUpdate(place, ModBlocks.GOLDEN_CACHE.defaultBlockState());
     }
 
     public static void setAnnouncements(boolean enabled) {

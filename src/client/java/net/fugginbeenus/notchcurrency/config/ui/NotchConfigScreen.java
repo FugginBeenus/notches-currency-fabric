@@ -16,11 +16,10 @@ import net.fugginbeenus.notchcurrency.economy.ShopRent;
 import net.fugginbeenus.notchcurrency.economy.WealthTax;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,8 +40,8 @@ public final class NotchConfigScreen extends Screen {
     private boolean draggingBar;
     private SliderEntry draggingSlider;
 
-    private TextFieldWidget search;
-    private TextFieldWidget editField;
+    private EditBox search;
+    private EditBox editField;
     private ConfigEntry editing;
     private int editingY;
 
@@ -55,7 +54,7 @@ public final class NotchConfigScreen extends Screen {
     }
 
     private NotchConfigScreen(Screen parent) {
-        super(Text.literal("Notch Currency"));
+        super(Component.literal("Notch Currency"));
         this.parent = parent;
         this.cfg = NotchConfigIO.get();
         this.entries = ConfigEntries.build(cfg);
@@ -70,12 +69,12 @@ public final class NotchConfigScreen extends Screen {
         listTop = py + 42;
         listBottom = py + ph - 28;
 
-        String keep = search == null ? "" : search.getText();
-        search = new TextFieldWidget(this.textRenderer, px + 13, py + 21, pw - 26, 14, Text.literal("search"));
+        String keep = search == null ? "" : search.getValue();
+        search = new EditBox(this.font, px + 13, py + 21, pw - 26, 14, Component.literal("search"));
         search.setMaxLength(64);
-        search.setText(keep);
-        search.setChangedListener(s -> scroll = 0);
-        addSelectableChild(search);
+        search.setValue(keep);
+        search.setResponder(s -> scroll = 0);
+        addWidget(search);
         closeEdit(false);
     }
 
@@ -83,7 +82,7 @@ public final class NotchConfigScreen extends Screen {
 
     private void buildRows() {
         rows.clear();
-        String query = search.getText().trim().toLowerCase();
+        String query = search.getValue().trim().toLowerCase();
         boolean searching = !query.isEmpty();
         int y = 0;
         String open = null;
@@ -108,7 +107,7 @@ public final class NotchConfigScreen extends Screen {
     /* render */
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderBackground(ctx, mouseX, mouseY, delta);
         *///?} else {
@@ -122,7 +121,7 @@ public final class NotchConfigScreen extends Screen {
         scroll = Math.max(0, Math.min(scroll, maxScroll()));
 
         NotchWidgets.panel(ctx, px, py, pw, ph);
-        NotchWidgets.title(ctx, this.textRenderer, "Notch Currency", px + pw / 2, py + 7);
+        NotchWidgets.title(ctx, this.font, "Notch Currency", px + pw / 2, py + 7);
         NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.PANEL_MID);
 
         ConfigEntry hoveredEntry = null;
@@ -137,8 +136,8 @@ public final class NotchConfigScreen extends Screen {
             if (row.header() != null) {
                 boolean folded = COLLAPSED.contains(row.header());
                 NotchWidgets.triangle(ctx, px + 19, ry + 7, folded, NotchTheme.TEXT_MUTED);
-                ctx.drawText(this.textRenderer, row.header(), px + 28, ry + 5, NotchTheme.TEXT_DARK, false);
-                int tw = this.textRenderer.getWidth(row.header());
+                ctx.drawString(this.font, row.header(), px + 28, ry + 5, NotchTheme.TEXT_DARK, false);
+                int tw = this.font.width(row.header());
                 NotchWidgets.divider(ctx, px + 34 + tw, ry + 8, pw - 56 - tw);
             } else {
                 ConfigEntry e = row.entry();
@@ -149,12 +148,12 @@ public final class NotchConfigScreen extends Screen {
                     ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x18000000);
                     hoveredEntry = e;
                 }
-                ctx.drawText(this.textRenderer,
-                        this.textRenderer.trimToWidth(e.label, labelW()), px + 16, ry + 4,
+                ctx.drawString(this.font,
+                        this.font.plainSubstrByWidth(e.label, labelW()), px + 16, ry + 4,
                         NotchTheme.TEXT_DARK, false);
                 if (!e.isDefault()) {
                     boolean rh = rowHover && mouseX >= resetX() && mouseX < resetX() + 13;
-                    NotchWidgets.neutralButton(ctx, this.textRenderer, resetX(), ry + 2, 13, 13, "", rh);
+                    NotchWidgets.neutralButton(ctx, this.font, resetX(), ry + 2, 13, 13, "", rh);
                     leftTriangle(ctx, resetX() + 6, ry + 8, rh ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED);
                     if (rh) hoveredReset = true;
                 }
@@ -175,35 +174,35 @@ public final class NotchConfigScreen extends Screen {
 
         // Footer.
         NotchWidgets.divider(ctx, px + 10, listBottom + 3, pw - 20);
-        ctx.drawText(this.textRenderer, "config/notchcurrency.json", px + 12, py + ph - 18, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, cancelX(), footerY(), 64, 16, "Cancel",
+        ctx.drawString(this.font, "config/notchcurrency.json", px + 12, py + ph - 18, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.neutralButton(ctx, this.font, cancelX(), footerY(), 64, 16, "Cancel",
                 hit(mouseX, mouseY, cancelX(), footerY(), 64, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, saveX(), footerY(), 104, 16, "Save & Apply",
+        NotchWidgets.primaryButton(ctx, this.font, saveX(), footerY(), 104, 16, "Save & Apply",
                 hit(mouseX, mouseY, saveX(), footerY(), 104, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
-        if (search.getText().isEmpty() && !search.isFocused()) {
-            ctx.drawText(this.textRenderer, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
+        if (search.getValue().isEmpty() && !search.isFocused()) {
+            ctx.drawString(this.font, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
         }
         if (editField != null) editField.render(ctx, mouseX, mouseY, delta);
 
         // Tooltip last, above everything.
         if (hoveredEntry != null && editing == null) {
             if (hoveredReset) {
-                ctx.drawTooltip(this.textRenderer, Text.literal("Reset to default"), mouseX, mouseY);
+                ctx.renderTooltip(this.font, Component.literal("Reset to default"), mouseX, mouseY);
             } else if (hoveredEntry.tooltip.length > 0 || hoveredEntry instanceof NumberEntry) {
-                List<Text> lines = new ArrayList<>();
-                for (String s : hoveredEntry.tooltip) lines.add(Text.literal(s));
+                List<Component> lines = new ArrayList<>();
+                for (String s : hoveredEntry.tooltip) lines.add(Component.literal(s));
                 if (hoveredEntry instanceof NumberEntry n) {
-                    lines.add(Text.literal("Range: " + n.min + " – " + n.max)
-                            .styled(st -> st.withColor(0xFF808080)));
+                    lines.add(Component.literal("Range: " + n.min + " – " + n.max)
+                            .withStyle(st -> st.withColor(0xFF808080)));
                 }
-                ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+                ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
             }
         }
     }
 
-    private void drawControl(DrawContext ctx, ConfigEntry e, int ry, int mouseX, int mouseY, boolean rowHover) {
+    private void drawControl(GuiGraphics ctx, ConfigEntry e, int ry, int mouseX, int mouseY, boolean rowHover) {
         int right = px + pw - 20;
         if (e == editing) return; // the edit field renders on top instead
 
@@ -212,14 +211,14 @@ public final class NotchConfigScreen extends Screen {
             boolean hov = rowHover && mouseX >= bx;
             if (b.value) {
                 ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF6FB25D : NotchTheme.ACCENT_GREEN);
-                ctx.drawText(this.textRenderer, "ON", bx + 12, ry + 5, NotchTheme.TEXT_LIGHT, true);
+                ctx.drawString(this.font, "ON", bx + 12, ry + 5, NotchTheme.TEXT_LIGHT, true);
             } else {
                 ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF8A8A8A : NotchTheme.PANEL_MID);
-                ctx.drawText(this.textRenderer, "OFF", bx + 10, ry + 5, NotchTheme.TEXT_DARK, false);
+                ctx.drawString(this.font, "OFF", bx + 10, ry + 5, NotchTheme.TEXT_DARK, false);
             }
         } else if (e instanceof SliderEntry s) {
             String val = s.value + s.suffix;
-            ctx.drawText(this.textRenderer, val, right - this.textRenderer.getWidth(val), ry + 5,
+            ctx.drawString(this.font, val, right - this.font.width(val), ry + 5,
                     NotchTheme.TEXT_DARK, false);
             int tx = sliderX(), tw = sliderW();
             NotchWidgets.inset(ctx, tx, ry + 6, tw, 6, NotchTheme.PANEL_MID);
@@ -228,22 +227,22 @@ public final class NotchConfigScreen extends Screen {
                     draggingSlider == s ? NotchTheme.ACCENT_GREEN : NotchTheme.EDGE);
         } else if (e instanceof SelectEntry sel) {
             int bx = right - 110;
-            NotchWidgets.neutralButton(ctx, this.textRenderer, bx, ry + 2, 110, 14, sel.value(),
+            NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, 110, 14, sel.value(),
                     rowHover && mouseX >= bx);
         } else {
             String val = e instanceof NumberEntry n ? Long.toString(n.value)
                     : ((StringEntry) e).value.isEmpty() ? "(blank)" : ((StringEntry) e).value;
-            val = this.textRenderer.trimToWidth(val, 110);
-            int vw = this.textRenderer.getWidth(val);
+            val = this.font.plainSubstrByWidth(val, 110);
+            int vw = this.font.width(val);
             boolean hov = rowHover && mouseX >= right - 116;
-            ctx.drawText(this.textRenderer, val, right - vw, ry + 4,
+            ctx.drawString(this.font, val, right - vw, ry + 4,
                     e instanceof StringEntry && ((StringEntry) e).value.isEmpty()
                             ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK, false);
             if (hov) ctx.fill(right - vw, ry + 13, right, ry + 14, NotchTheme.TEXT_MUTED);
         }
     }
 
-    private static void leftTriangle(DrawContext ctx, int cx, int cy, int color) {
+    private static void leftTriangle(GuiGraphics ctx, int cx, int cy, int color) {
         for (int c = 0; c < 4; c++) {
             int half = 3 - c;
             ctx.fill(cx - 3 + c, cy - half, cx - 2 + c, cy + half + 1, color);
@@ -276,7 +275,7 @@ public final class NotchConfigScreen extends Screen {
         }
         if (hit((int) mouseX, (int) mouseY, cancelX(), footerY(), 64, 16)) {
             NotchWidgets.click();
-            this.close();
+            this.onClose();
             return true;
         }
 
@@ -293,7 +292,7 @@ public final class NotchConfigScreen extends Screen {
                 int ry = listTop + row.y() - (int) scroll;
                 if (row.header() != null) {
                     if (mouseY >= ry && mouseY < ry + HEADER_H && mouseX >= px + 8 && mouseX < px + pw - 18
-                            && search.getText().trim().isEmpty()) {
+                            && search.getValue().trim().isEmpty()) {
                         if (!COLLAPSED.remove(row.header())) COLLAPSED.add(row.header());
                         NotchWidgets.tick();
                         return true;
@@ -340,14 +339,14 @@ public final class NotchConfigScreen extends Screen {
         editing = e;
         editingY = ry;
         int w = 116;
-        editField = new TextFieldWidget(this.textRenderer, px + pw - 20 - w, ry + 2, w, 13, Text.literal("value"));
+        editField = new EditBox(this.font, px + pw - 20 - w, ry + 2, w, 13, Component.literal("value"));
         if (e instanceof NumberEntry n) {
             editField.setMaxLength(14);
-            editField.setTextPredicate(s -> s.matches("-?[0-9]*"));
-            editField.setText(Long.toString(n.value));
+            editField.setFilter(s -> s.matches("-?[0-9]*"));
+            editField.setValue(Long.toString(n.value));
         } else {
             editField.setMaxLength(((StringEntry) e).maxLength);
-            editField.setText(((StringEntry) e).value);
+            editField.setValue(((StringEntry) e).value);
         }
         editField.setFocused(true);
         setFocused(editField);
@@ -359,10 +358,10 @@ public final class NotchConfigScreen extends Screen {
         if (commit) {
             if (editing instanceof NumberEntry n) {
                 try {
-                    n.set(Long.parseLong(editField.getText().trim()));
+                    n.set(Long.parseLong(editField.getValue().trim()));
                 } catch (NumberFormatException ignored) { /* keep the old value */ }
             } else if (editing instanceof StringEntry s) {
-                s.value = editField.getText().trim();
+                s.value = editField.getValue().trim();
             }
         }
         editing = null;
@@ -468,12 +467,12 @@ public final class NotchConfigScreen extends Screen {
         net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
         // Rebuild the custom-currency pack so a name change takes effect right away.
         net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
-        this.close();
+        this.onClose();
     }
 
     @Override
-    public void close() {
-        if (this.client != null) this.client.setScreen(parent);
+    public void onClose() {
+        if (this.minecraft != null) this.minecraft.setScreen(parent);
     }
 
     //? if >=1.21 {
@@ -485,7 +484,7 @@ public final class NotchConfigScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

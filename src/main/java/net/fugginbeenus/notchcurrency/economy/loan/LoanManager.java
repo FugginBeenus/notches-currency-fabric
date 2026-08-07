@@ -6,13 +6,12 @@ import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,65 +57,65 @@ public final class LoanManager {
     public static int getInterestPercent() { return interestPercent; }
     public static int getTermDays() { return termDays; }
 
-    public static void openScreen(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new LoanScreenHandler(syncId, inv),
-                Text.literal("Loans")));
+    public static void openScreen(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new LoanScreenHandler(containerId, inv),
+                Component.literal("Loans")));
     }
 
     // ---- borrow / repay ----
 
-    public static void borrow(ServerPlayerEntity player, long amount) {
+    public static void borrow(ServerPlayer player, long amount) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         if (!enabled) {
-            player.sendMessage(Text.literal("Loans aren't available right now.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("Loans aren't available right now.").withStyle(ChatFormatting.RED), false);
             return;
         }
         if (amount <= 0) return;
 
         LoanState state = LoanState.get(server);
-        long debt = state.getDebt(player.getUuid());
+        long debt = state.getDebt(player.getUUID());
         if (debt + amount > maxDebt) {
-            player.sendMessage(Text.literal("That exceeds your borrowing limit of ").formatted(Formatting.RED)
+            player.displayClientMessage(Component.literal("That exceeds your borrowing limit of ").withStyle(ChatFormatting.RED)
                     .append(NotchCurrency.coins(maxDebt))
-                    .append(Text.literal(" (you owe ").formatted(Formatting.RED))
+                    .append(Component.literal(" (you owe ").withStyle(ChatFormatting.RED))
                     .append(NotchCurrency.coins(debt))
-                    .append(Text.literal(").").formatted(Formatting.RED)), false);
+                    .append(Component.literal(").").withStyle(ChatFormatting.RED)), false);
             return;
         }
 
         CurrencyApi.deposit(player, amount, TransactionReason.FAUCET, "loan borrow");
-        state.borrow(player.getUuid(), amount, worldTime(server) + termTicks);
-        player.sendMessage(Text.literal("Borrowed ").formatted(Formatting.GREEN)
+        state.borrow(player.getUUID(), amount, worldTime(server) + termTicks);
+        player.displayClientMessage(Component.literal("Borrowed ").withStyle(ChatFormatting.GREEN)
                 .append(NotchCurrency.coins(amount))
-                .append(Text.literal(". You owe ").formatted(Formatting.GREEN))
+                .append(Component.literal(". You owe ").withStyle(ChatFormatting.GREEN))
                 .append(NotchCurrency.coins(debt + amount))
-                .append(Text.literal(", due in " + termDays + " days.").formatted(Formatting.GRAY)), false);
+                .append(Component.literal(", due in " + termDays + " days.").withStyle(ChatFormatting.GRAY)), false);
     }
 
-    public static void repay(ServerPlayerEntity player, long amount) {
+    public static void repay(ServerPlayer player, long amount) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         LoanState state = LoanState.get(server);
-        long debt = state.getDebt(player.getUuid());
+        long debt = state.getDebt(player.getUUID());
         if (debt <= 0) {
-            player.sendMessage(Text.literal("You have no loan to repay.").formatted(Formatting.GRAY), false);
+            player.displayClientMessage(Component.literal("You have no loan to repay.").withStyle(ChatFormatting.GRAY), false);
             return;
         }
         long want = amount <= 0 ? debt : amount;
         long pay = Math.min(Math.min(want, debt), CurrencyApi.getBalance(player));
         if (pay <= 0) {
-            player.sendMessage(Text.literal("You don't have " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to repay with.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("You don't have " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to repay with.").withStyle(ChatFormatting.RED), false);
             return;
         }
         CurrencyApi.withdraw(player, pay, TransactionReason.SINK, "loan repay");
-        state.setDebt(player.getUuid(), debt - pay);
+        state.setDebt(player.getUUID(), debt - pay);
         long left = debt - pay;
-        player.sendMessage(Text.literal("Repaid ").formatted(Formatting.GREEN)
+        player.displayClientMessage(Component.literal("Repaid ").withStyle(ChatFormatting.GREEN)
                 .append(NotchCurrency.coins(pay))
-                .append(Text.literal(left > 0 ? ". Remaining debt: " : ". Loan paid off!").formatted(Formatting.GREEN))
-                .append(left > 0 ? NotchCurrency.coins(left) : Text.empty()), false);
+                .append(Component.literal(left > 0 ? ". Remaining debt: " : ". Loan paid off!").withStyle(ChatFormatting.GREEN))
+                .append(left > 0 ? NotchCurrency.coins(left) : Component.empty()), false);
     }
 
     // ---- interest / auto-collection / overdue cycle ----
@@ -138,12 +137,12 @@ public final class LoanManager {
                 long bal = BalanceStore.get(server, id);
                 long collect = Math.min(bal, loan.debt);
                 if (collect > 0) {
-                    ServerPlayerEntity online = server.getPlayerManager().getPlayer(id);
+                    ServerPlayer online = server.getPlayerList().getPlayer(id);
                     if (online != null) {
                         CurrencyApi.withdraw(online, collect, TransactionReason.SINK, "loan auto-repay");
-                        online.sendMessage(Text.literal("Loan auto-repaid ").formatted(Formatting.GRAY)
+                        online.displayClientMessage(Component.literal("Loan auto-repaid ").withStyle(ChatFormatting.GRAY)
                                 .append(NotchCurrency.coins(collect))
-                                .append(Text.literal(" from your balance.").formatted(Formatting.GRAY)), false);
+                                .append(Component.literal(" from your balance.").withStyle(ChatFormatting.GRAY)), false);
                     } else {
                         BalanceStore.add(server, id, -collect, TransactionReason.SINK, "loan auto-repay");
                     }
@@ -156,17 +155,17 @@ public final class LoanManager {
             }
 
             boolean overdue = now >= loan.dueTime;
-            ServerPlayerEntity online = server.getPlayerManager().getPlayer(id);
+            ServerPlayer online = server.getPlayerList().getPlayer(id);
             if (overdue) {
                 if (!loan.lateFeeApplied && lateFeePercent > 0) {
                     loan.debt += loan.debt * lateFeePercent / 100;
                     loan.lateFeeApplied = true;
-                    if (online != null) online.sendMessage(Text.literal("⚠ Your loan is OVERDUE - a "
-                            + lateFeePercent + "% late fee was added.").formatted(Formatting.RED), false);
+                    if (online != null) online.displayClientMessage(Component.literal("⚠ Your loan is OVERDUE - a "
+                            + lateFeePercent + "% late fee was added.").withStyle(ChatFormatting.RED), false);
                 }
                 loan.debt += loan.debt * overdueInterestPercent / 100;
-                if (online != null) online.sendMessage(Text.literal("Overdue loan penalty interest applied - you owe ")
-                        .formatted(Formatting.RED).append(NotchCurrency.coins(loan.debt)).append(Text.literal(".").formatted(Formatting.RED)), false);
+                if (online != null) online.displayClientMessage(Component.literal("Overdue loan penalty interest applied - you owe ")
+                        .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(loan.debt)).append(Component.literal(".").withStyle(ChatFormatting.RED)), false);
             } else {
                 loan.debt += loan.debt * interestPercent / 100;
             }
@@ -177,8 +176,8 @@ public final class LoanManager {
     // ---- helpers ----
 
     public static long worldTime(MinecraftServer server) {
-        ServerWorld ow = server.getOverworld();
-        return ow == null ? 0L : ow.getTime();
+        ServerLevel ow = server.overworld();
+        return ow == null ? 0L : ow.getGameTime();
     }
 
     public static int daysLeft(MinecraftServer server, UUID player) {

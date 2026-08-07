@@ -3,11 +3,10 @@ package net.fugginbeenus.notchcurrency.economy.gambling;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
 import java.util.Random;
 
 public final class SlotMachineManager {
@@ -54,32 +53,32 @@ public final class SlotMachineManager {
         return (int) Math.round(s.mult3() * norm * 10.0);
     }
 
-    public static void openScreen(ServerPlayerEntity sp) {
+    public static void openScreen(ServerPlayer sp) {
         if (!GamblingManager.isEnabled()) {
-            sp.sendMessage(Text.literal("Gambling is disabled on this server.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new SlotMachineScreenHandler(syncId, inv),
-                Text.literal("Slot Machine")));
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new SlotMachineScreenHandler(containerId, inv),
+                Component.literal("Slot Machine")));
     }
 
     public record SpinResult(int r0, int r1, int r2, long payout, boolean ok) {
         static SpinResult fail() { return new SpinResult(0, 0, 0, 0, false); }
     }
 
-    public static SpinResult spin(ServerPlayerEntity sp, long bet) {
+    public static SpinResult spin(ServerPlayer sp, long bet) {
         if (!GamblingManager.isEnabled()) {
-            sp.sendMessage(Text.literal("Gambling is disabled on this server.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
             return SpinResult.fail();
         }
         if (!GamblingManager.betInRange(bet)) {
-            sp.sendMessage(Text.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Bet must be between " + GamblingManager.getMinBet()
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED), false);
             return SpinResult.fail();
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Slots bet")) {
-            sp.sendMessage(Text.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED), false);
             return SpinResult.fail();
         }
 

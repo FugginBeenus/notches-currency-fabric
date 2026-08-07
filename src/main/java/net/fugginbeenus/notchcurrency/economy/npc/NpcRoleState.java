@@ -1,21 +1,19 @@
 package net.fugginbeenus.notchcurrency.economy.npc;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class NpcRoleState extends PersistentState {
+public class NpcRoleState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_npc_roles";
 
@@ -24,19 +22,19 @@ public class NpcRoleState extends PersistentState {
     private final Map<UUID, Assignment> roles = new HashMap<>();
 
     public static NpcRoleState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, NpcRoleState::new, NpcRoleState::fromNbt, DATA_KEY);
     }
 
     public void assign(UUID npcId, NpcRole role, @Nullable UUID shopId) {
         roles.put(npcId, new Assignment(role, shopId));
-        markDirty();
+        setDirty();
     }
 
     public boolean clear(UUID npcId) {
         boolean removed = roles.remove(npcId) != null;
-        if (removed) markDirty();
+        if (removed) setDirty();
         return removed;
     }
 
@@ -49,31 +47,31 @@ public class NpcRoleState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (Map.Entry<UUID, Assignment> e : roles.entrySet()) {
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Npc", e.getKey());
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Npc", e.getKey());
             o.putString("Role", e.getValue().role().name());
-            if (e.getValue().shopId() != null) o.putUuid("Shop", e.getValue().shopId());
+            if (e.getValue().shopId() != null) o.putUUID("Shop", e.getValue().shopId());
             list.add(o);
         }
         nbt.put("Roles", list);
         return nbt;
     }
 
-    public static NpcRoleState fromNbt(NbtCompound nbt) {
+    public static NpcRoleState fromNbt(CompoundTag nbt) {
         NpcRoleState state = new NpcRoleState();
-        NbtList list = nbt.getList("Roles", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Roles", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound o = list.getCompound(i);
+            CompoundTag o = list.getCompound(i);
             try {
-                UUID npc = o.getUuid("Npc");
+                UUID npc = o.getUUID("Npc");
                 NpcRole role = NpcRole.valueOf(o.getString("Role"));
-                UUID shop = o.containsUuid("Shop") ? o.getUuid("Shop") : null;
+                UUID shop = o.hasUUID("Shop") ? o.getUUID("Shop") : null;
                 state.roles.put(npc, new Assignment(role, shop));
             } catch (IllegalArgumentException ignored) {
                 // skip unknown role names

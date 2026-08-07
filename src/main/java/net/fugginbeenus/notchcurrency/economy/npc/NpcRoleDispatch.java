@@ -12,13 +12,13 @@ import net.fugginbeenus.notchcurrency.shop.NpcShopLogic;
 import net.fugginbeenus.notchcurrency.shop.PlayerShop;
 import net.fugginbeenus.notchcurrency.shop.ShopState;
 import net.fugginbeenus.notchcurrency.ui.ATMTestScreenHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -27,7 +27,7 @@ public final class NpcRoleDispatch {
 
     private NpcRoleDispatch() {}
 
-    public static void open(ServerPlayerEntity sp, NpcRole role, @Nullable UUID target, @Nullable Entity npc) {
+    public static void open(ServerPlayer sp, NpcRole role, @Nullable UUID target, @Nullable Entity npc) {
         if (role == null) role = NpcRole.NONE;
         // Opening hours are checked here rather than at the right-click, because this is the one door
         // every route goes through: the direct interaction, a dialogue choice that opens a screen, and
@@ -42,7 +42,7 @@ public final class NpcRoleDispatch {
             case ADMIN_SHOP -> {
                 AdminShop shop = target != null ? AdminShopState.get(server).get(target) : null;
                 if (shop == null) {
-                    sp.sendMessage(Text.literal("This shop NPC isn't linked to a valid shop.").formatted(Formatting.RED), false);
+                    sp.displayClientMessage(Component.literal("This shop NPC isn't linked to a valid shop.").withStyle(ChatFormatting.RED), false);
                 } else {
                     AdminShopMenu.sendListing(sp, shop);
                 }
@@ -50,7 +50,7 @@ public final class NpcRoleDispatch {
             case BANKER -> openAtm(sp);
             case AUCTIONEER -> openAuction(sp);
             case MAILBOX -> {
-                ServerWorld w = sp.getServerWorld();
+                ServerLevel w = sp.serverLevel();
                 AuctionState.get(w).claimAll(w, sp);
             }
             case RAFFLE -> RaffleManager.openScreen(sp);
@@ -60,7 +60,7 @@ public final class NpcRoleDispatch {
             case GREETER -> greet(sp, npc);
             case ENCHANTER -> net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.openScreen(sp);
             case COSMETICS -> net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.openScreen(sp,
-                    npc != null ? npc.getUuid() : null);
+                    npc != null ? npc.getUUID() : null);
             case RECRUITER -> {
                 if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n) {
                     net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.open(sp, n);
@@ -90,7 +90,7 @@ public final class NpcRoleDispatch {
         };
     }
 
-    private static void customInteract(ServerPlayerEntity sp, @Nullable Entity npc) {
+    private static void customInteract(ServerPlayer sp, @Nullable Entity npc) {
         if (npc instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n) {
             var handler = net.fugginbeenus.notchcurrency.api.NotchNpcApi.customRole(n.getCustomRoleId());
             if (handler != null) {
@@ -98,38 +98,38 @@ public final class NpcRoleDispatch {
                 return;
             }
         }
-        sp.sendMessage(Text.literal("This NPC's job isn't installed on this server.").formatted(Formatting.GRAY), false);
+        sp.displayClientMessage(Component.literal("This NPC's job isn't installed on this server.").withStyle(ChatFormatting.GRAY), false);
     }
 
-    private static void openPlayerShop(ServerPlayerEntity sp, @Nullable Entity npc) {
+    private static void openPlayerShop(ServerPlayer sp, @Nullable Entity npc) {
         if (npc == null) return;
-        PlayerShop shop = ShopState.get(sp.getServerWorld()).getShopByNpc(npc.getUuid());
+        PlayerShop shop = ShopState.get(sp.serverLevel()).getShopByNpc(npc.getUUID());
         if (shop == null) {
-            sp.sendMessage(Text.literal("This shop hasn't been set up yet.").formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal("This shop hasn't been set up yet.").withStyle(ChatFormatting.YELLOW), false);
             return;
         }
-        if (shop.getOwnerId().equals(sp.getUuid())) {
+        if (shop.getOwnerId().equals(sp.getUUID())) {
             NpcShopLogic.openShopManager(sp, shop.getShopId());
         } else {
             NpcShopLogic.openShopBrowser(sp, shop.getShopId());
         }
     }
 
-    private static void greet(ServerPlayerEntity sp, @Nullable Entity npc) {
+    private static void greet(ServerPlayer sp, @Nullable Entity npc) {
         String name = (npc != null && npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
-        sp.sendMessage(Text.literal("<" + name + "> Hello there!").formatted(Formatting.WHITE), false);
+        sp.displayClientMessage(Component.literal("<" + name + "> Hello there!").withStyle(ChatFormatting.WHITE), false);
     }
 
-    private static void openAtm(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new ATMTestScreenHandler(syncId, inv),
-                Text.translatable("screen.notchcurrency.atm")));
+    private static void openAtm(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new ATMTestScreenHandler(containerId, inv),
+                Component.translatable("screen.notchcurrency.atm")));
     }
 
-    private static void openAuction(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new AuctionHouseScreenHandler(syncId, inv),
-                Text.literal("Auction House")));
+    private static void openAuction(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new AuctionHouseScreenHandler(containerId, inv),
+                Component.literal("Auction House")));
     }
 }

@@ -10,171 +10,170 @@ import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyRarity;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyState;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyType;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public final class BountyCommands {
 
     private BountyCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("bounty")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("bounty")
                 .executes(ctx -> open(ctx.getSource()))
-                .then(CommandManager.literal("list").executes(ctx -> open(ctx.getSource())))
-                .then(CommandManager.literal("take")
-                        .then(CommandManager.argument("id", StringArgumentType.word())
+                .then(Commands.literal("list").executes(ctx -> open(ctx.getSource())))
+                .then(Commands.literal("take")
+                        .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
-                                    if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                                    ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                                     UUID id = parseUuid(StringArgumentType.getString(ctx, "id"));
-                                    if (id == null) { ctx.getSource().sendError(Text.literal("Invalid bounty.")); return 0; }
+                                    if (id == null) { ctx.getSource().sendFailure(Component.literal("Invalid bounty.")); return 0; }
                                     BountyManager.take(p, id);
                                     return 1;
                                 })))
-                .then(CommandManager.literal("claim")
+                .then(Commands.literal("claim")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             BountyManager.claim(p, null);
                             return 1;
                         })
-                        .then(CommandManager.argument("id", StringArgumentType.word())
+                        .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
-                                    if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                                    ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                                     UUID id = parseUuid(StringArgumentType.getString(ctx, "id"));
                                     BountyManager.claim(p, id);
                                     return 1;
                                 })))
-                .then(CommandManager.literal("turnin")
-                        .then(CommandManager.argument("id", StringArgumentType.word())
+                .then(Commands.literal("turnin")
+                        .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
-                                    if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                                    ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                                     UUID id = parseUuid(StringArgumentType.getString(ctx, "id"));
-                                    if (id == null) { ctx.getSource().sendError(Text.literal("Invalid bounty.")); return 0; }
+                                    if (id == null) { ctx.getSource().sendFailure(Component.literal("Invalid bounty.")); return 0; }
                                     BountyManager.turnIn(p, id);
                                     return 1;
                                 })))
 
                 // ---- admin ----
-                .then(CommandManager.literal("admin")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("admin")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             BountyManager.openAdminScreen(p);
                             return 1;
                         })
-                        .then(CommandManager.literal("create")
-                                .then(CommandManager.literal("kill")
-                                        .then(CommandManager.argument("entity", IdentifierArgumentType.identifier())
-                                                .then(CommandManager.argument("count", IntegerArgumentType.integer(1))
-                                                        .then(CommandManager.argument("reward", LongArgumentType.longArg(0))
+                        .then(Commands.literal("create")
+                                .then(Commands.literal("kill")
+                                        .then(Commands.argument("entity", ResourceLocationArgument.id())
+                                                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                        .then(Commands.argument("reward", LongArgumentType.longArg(0))
                                                                 .executes(ctx -> create(ctx.getSource(), BountyType.KILL,
-                                                                        IdentifierArgumentType.getIdentifier(ctx, "entity"),
+                                                                        ResourceLocationArgument.getId(ctx, "entity"),
                                                                         IntegerArgumentType.getInteger(ctx, "count"),
                                                                         LongArgumentType.getLong(ctx, "reward"), true, ""))
-                                                                .then(CommandManager.argument("repeatable", BoolArgumentType.bool())
+                                                                .then(Commands.argument("repeatable", BoolArgumentType.bool())
                                                                         .executes(ctx -> create(ctx.getSource(), BountyType.KILL,
-                                                                                IdentifierArgumentType.getIdentifier(ctx, "entity"),
+                                                                                ResourceLocationArgument.getId(ctx, "entity"),
                                                                                 IntegerArgumentType.getInteger(ctx, "count"),
                                                                                 LongArgumentType.getLong(ctx, "reward"),
                                                                                 BoolArgumentType.getBool(ctx, "repeatable"), ""))
-                                                                        .then(CommandManager.argument("desc", StringArgumentType.greedyString())
+                                                                        .then(Commands.argument("desc", StringArgumentType.greedyString())
                                                                                 .executes(ctx -> create(ctx.getSource(), BountyType.KILL,
-                                                                                        IdentifierArgumentType.getIdentifier(ctx, "entity"),
+                                                                                        ResourceLocationArgument.getId(ctx, "entity"),
                                                                                         IntegerArgumentType.getInteger(ctx, "count"),
                                                                                         LongArgumentType.getLong(ctx, "reward"),
                                                                                         BoolArgumentType.getBool(ctx, "repeatable"),
                                                                                         StringArgumentType.getString(ctx, "desc")))))))))
-                                .then(CommandManager.literal("fetch")
-                                        .then(CommandManager.argument("item", IdentifierArgumentType.identifier())
-                                                .then(CommandManager.argument("count", IntegerArgumentType.integer(1))
-                                                        .then(CommandManager.argument("reward", LongArgumentType.longArg(0))
+                                .then(Commands.literal("fetch")
+                                        .then(Commands.argument("item", ResourceLocationArgument.id())
+                                                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                        .then(Commands.argument("reward", LongArgumentType.longArg(0))
                                                                 .executes(ctx -> create(ctx.getSource(), BountyType.FETCH,
-                                                                        IdentifierArgumentType.getIdentifier(ctx, "item"),
+                                                                        ResourceLocationArgument.getId(ctx, "item"),
                                                                         IntegerArgumentType.getInteger(ctx, "count"),
                                                                         LongArgumentType.getLong(ctx, "reward"), true, ""))
-                                                                .then(CommandManager.argument("repeatable", BoolArgumentType.bool())
+                                                                .then(Commands.argument("repeatable", BoolArgumentType.bool())
                                                                         .executes(ctx -> create(ctx.getSource(), BountyType.FETCH,
-                                                                                IdentifierArgumentType.getIdentifier(ctx, "item"),
+                                                                                ResourceLocationArgument.getId(ctx, "item"),
                                                                                 IntegerArgumentType.getInteger(ctx, "count"),
                                                                                 LongArgumentType.getLong(ctx, "reward"),
                                                                                 BoolArgumentType.getBool(ctx, "repeatable"), ""))
-                                                                        .then(CommandManager.argument("desc", StringArgumentType.greedyString())
+                                                                        .then(Commands.argument("desc", StringArgumentType.greedyString())
                                                                                 .executes(ctx -> create(ctx.getSource(), BountyType.FETCH,
-                                                                                        IdentifierArgumentType.getIdentifier(ctx, "item"),
+                                                                                        ResourceLocationArgument.getId(ctx, "item"),
                                                                                         IntegerArgumentType.getInteger(ctx, "count"),
                                                                                         LongArgumentType.getLong(ctx, "reward"),
                                                                                         BoolArgumentType.getBool(ctx, "repeatable"),
                                                                                         StringArgumentType.getString(ctx, "desc"))))))))))
-                        .then(CommandManager.literal("remove")
-                                .then(CommandManager.argument("id", StringArgumentType.word())
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
                                             UUID id = parseUuid(StringArgumentType.getString(ctx, "id"));
                                             boolean removed = id != null && BountyState.get(ctx.getSource().getServer()).removeOffer(id);
-                                            ctx.getSource().sendFeedback(() -> Text.literal(removed ? "Bounty removed." : "No such bounty.")
-                                                    .formatted(Formatting.YELLOW), true);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(removed ? "Bounty removed." : "No such bounty.")
+                                                    .withStyle(ChatFormatting.YELLOW), true);
                                             return removed ? 1 : 0;
                                         })))
-                        .then(CommandManager.literal("list")
+                        .then(Commands.literal("list")
                                 .executes(ctx -> adminList(ctx.getSource()))))
         );
     }
 
-    private static int open(ServerCommandSource src) {
-        ServerPlayerEntity p = src.getPlayer();
-        if (p == null) { src.sendError(Text.literal("Run as a player.")); return 0; }
+    private static int open(CommandSourceStack src) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) { src.sendFailure(Component.literal("Run as a player.")); return 0; }
         BountyManager.openScreen(p);
         return 1;
     }
 
-    private static int create(ServerCommandSource src, BountyType type, Identifier target,
+    private static int create(CommandSourceStack src, BountyType type, ResourceLocation target,
                               int count, long reward, boolean repeatable, String desc) {
-        boolean valid = type == BountyType.KILL ? Registries.ENTITY_TYPE.containsId(target)
-                : Registries.ITEM.containsId(target);
+        boolean valid = type == BountyType.KILL ? BuiltInRegistries.ENTITY_TYPE.containsKey(target)
+                : BuiltInRegistries.ITEM.containsKey(target);
         if (!valid) {
-            src.sendError(Text.literal("Unknown " + (type == BountyType.KILL ? "entity" : "item") + ": " + target));
+            src.sendFailure(Component.literal("Unknown " + (type == BountyType.KILL ? "entity" : "item") + ": " + target));
             return 0;
         }
         // Manual admin bounties are permanent (no expiry), coins-only, common rarity.
         Bounty b = new Bounty(UUID.randomUUID(), type, target, count, reward, ItemStack.EMPTY,
                 BountyRarity.COMMON, repeatable, 0L, desc);
         BountyState.get(src.getServer()).addOffer(b);
-        src.sendFeedback(() -> Text.literal("Posted bounty: ").formatted(Formatting.GREEN)
-                .append(Text.literal(b.describe()).formatted(Formatting.WHITE))
-                .append(Text.literal(" (" + reward + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + (repeatable ? ", repeatable" : "") + ").").formatted(Formatting.GRAY)), true);
+        src.sendSuccess(() -> Component.literal("Posted bounty: ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" (" + reward + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + (repeatable ? ", repeatable" : "") + ").").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 
-    private static int adminList(ServerCommandSource src) {
+    private static int adminList(CommandSourceStack src) {
         BountyState state = BountyState.get(src.getServer());
         if (state.allOffers().isEmpty()) {
-            src.sendFeedback(() -> Text.literal("No bounties posted.").formatted(Formatting.GRAY), false);
+            src.sendSuccess(() -> Component.literal("No bounties posted.").withStyle(ChatFormatting.GRAY), false);
             return 0;
         }
-        src.sendFeedback(() -> Text.literal("Bounties:").formatted(Formatting.GOLD), false);
+        src.sendSuccess(() -> Component.literal("Bounties:").withStyle(ChatFormatting.GOLD), false);
         for (Bounty b : state.allOffers()) {
-            MutableText line = Text.literal(" • ").formatted(Formatting.DARK_GRAY)
-                    .append(Text.literal(b.describe()).formatted(Formatting.WHITE))
-                    .append(Text.literal(" (" + b.rewardSummary() + ") ").formatted(Formatting.GRAY))
-                    .append(Text.literal("[X]").formatted(Formatting.RED).styled(s -> s
+            MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+                    .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" (" + b.rewardSummary() + ") ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("[X]").withStyle(ChatFormatting.RED).withStyle(s -> s
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bounty admin remove " + b.getId()))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Remove this bounty")))));
-            src.sendFeedback(() -> line, false);
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Remove this bounty")))));
+            src.sendSuccess(() -> line, false);
         }
         return 1;
     }

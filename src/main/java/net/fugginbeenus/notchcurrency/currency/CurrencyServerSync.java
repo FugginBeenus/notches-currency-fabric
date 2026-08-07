@@ -5,8 +5,8 @@ import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +22,16 @@ public final class CurrencyServerSync {
 
     private CurrencyServerSync() {}
 
-    public static void send(ServerPlayerEntity sp) {
-        if (sp.getServer() != null && sp.getServer().isHost(sp.getGameProfile())) return;
+    public static void send(ServerPlayer sp) {
+        if (sp.getServer() != null && sp.getServer().isSingleplayerOwner(sp.getGameProfile())) return;
 
         Path dir = FabricLoader.getInstance().getConfigDir().resolve("notchcurrency").resolve("currency");
         String itemName = NotchConfigIO.get().currency.itemName.trim();
         byte[] coin = readTexture(dir.resolve("coin.png"));
         byte[] tails = readTexture(dir.resolve("coin_tails.png"));
 
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeString(itemName, 64);
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeUtf(itemName, 64);
         buf.writeBoolean(coin != null);
         if (coin != null) buf.writeByteArray(coin);
         buf.writeBoolean(tails != null);

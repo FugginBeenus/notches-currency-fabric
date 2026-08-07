@@ -4,23 +4,23 @@ import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public class ShopListingEditScreenHandler extends ScreenHandler {
+public class ShopListingEditScreenHandler extends AbstractContainerMenu {
 
     public static final int SALE_X = 12, SALE_Y = 24;
     public static final int BARTER_X = 12, BARTER_Y = 72;
@@ -37,9 +37,9 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     public static final int ACTION_SAVE = 0, ACTION_DEPOSIT = 1, ACTION_RETURN_STOCK = 2,
             ACTION_DELETE = 3, ACTION_BACK = 4, ACTION_CLEAR_BARTER = 5;
 
-    private final PlayerInventory playerInv;
-    private final SimpleInventory samples = new SimpleInventory(SLOT_COUNT);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final Inventory playerInv;
+    private final SimpleContainer samples = new SimpleContainer(SLOT_COUNT);
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
     // Initial display seed (from the opening buf on the client).
     private final String currentSaleDesc;
@@ -48,21 +48,21 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     @Nullable private final PlayerShop shop; // server side only
     @Nullable private UUID listingId;        // null until first save on a new listing
 
-    public ShopListingEditScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
-        this(syncId, inv, buf.readBoolean(), buf.readString(64), buf.readString(64),
+    public ShopListingEditScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
+        this(containerId, inv, buf.readBoolean(), buf.readUtf(64), buf.readUtf(64),
                 buf.readVarInt(), buf.readVarInt(), null, null);
     }
 
-    public ShopListingEditScreenHandler(int syncId, PlayerInventory inv, boolean hasListing,
+    public ShopListingEditScreenHandler(int containerId, Inventory inv, boolean hasListing,
                                         String saleDesc, String barterDesc, int price, int stock,
                                         @Nullable PlayerShop shop, @Nullable UUID listingId) {
-        super(ModScreenHandlers.SHOP_LISTING_EDIT, syncId);
+        super(ModScreenHandlers.SHOP_LISTING_EDIT, containerId);
         this.playerInv = inv;
         this.shop = shop;
         this.listingId = hasListing ? listingId : null;
         this.currentSaleDesc = saleDesc;
         this.currentBarterDesc = barterDesc;
-        this.addProperties(props);
+        this.addDataSlots(props);
         props.set(P_HAS_LISTING, hasListing ? 1 : 0);
         props.set(P_PRICE, price);
         props.set(P_STOCK, stock);
@@ -80,24 +80,24 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
         }
     }
 
-    public static void open(ServerPlayerEntity sp, PlayerShop shop, @Nullable UUID listingId) {
+    public static void open(ServerPlayer sp, PlayerShop shop, @Nullable UUID listingId) {
         ShopListing listing = listingId == null ? null : shop.getListing(listingId);
         boolean has = listing != null;
         String saleDesc = has ? listing.getItemForSale().getCount() + "×"
-                + listing.getItemForSale().getName().getString() : "";
+                + listing.getItemForSale().getHoverName().getString() : "";
         String barterDesc = has && listing.acceptsBarter() ? listing.getItemPriceCount() + "×"
-                + listing.getItemPrice().getName().getString() : "";
+                + listing.getItemPrice().getHoverName().getString() : "";
         int price = has ? listing.getCoinPrice() : 0;
         int stock = has ? listing.getStockQuantitySafe() : 0;
         UUID id = has ? listing.getId() : null;
 
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal(has ? "Edit Listing" : "New Listing"),
-                (syncId, inv, p) -> new ShopListingEditScreenHandler(syncId, inv, has, saleDesc, barterDesc,
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal(has ? "Edit Listing" : "New Listing"),
+                (containerId, inv, p) -> new ShopListingEditScreenHandler(containerId, inv, has, saleDesc, barterDesc,
                         price, stock, shop, id),
                 buf -> {
                     buf.writeBoolean(has);
-                    buf.writeString(saleDesc);
-                    buf.writeString(barterDesc);
+                    buf.writeUtf(saleDesc);
+                    buf.writeUtf(barterDesc);
                     buf.writeVarInt(price);
                     buf.writeVarInt(stock);
                 });
@@ -108,9 +108,9 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
     public int priceProp() { return props.get(P_PRICE); }
     public String currentSaleDesc() { return currentSaleDesc; }
     public String currentBarterDesc() { return currentBarterDesc; }
-    public ItemStack saleSample() { return samples.getStack(SLOT_SALE); }
-    public ItemStack barterSample() { return samples.getStack(SLOT_BARTER); }
-    public ItemStack stockSample() { return samples.getStack(SLOT_STOCK); }
+    public ItemStack saleSample() { return samples.getItem(SLOT_SALE); }
+    public ItemStack barterSample() { return samples.getItem(SLOT_BARTER); }
+    public ItemStack stockSample() { return samples.getItem(SLOT_STOCK); }
 
     @Nullable
     private ShopListing listing() {
@@ -119,10 +119,10 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
 
     // ---- actions (server side, from the SHOP_EDIT_ACTION packet) ----
 
-    public void handleAction(ServerPlayerEntity sp, int action, int price) {
+    public void handleAction(ServerPlayer sp, int action, int price) {
         if (shop == null) return;
-        if (!shop.getOwnerId().equals(sp.getUuid())) return;
-        ShopState state = ShopState.get(sp.getServerWorld());
+        if (!shop.getOwnerId().equals(sp.getUUID())) return;
+        ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
             case ACTION_SAVE -> save(sp, price, state);
             case ACTION_DEPOSIT -> deposit(sp, state);
@@ -132,8 +132,8 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
                     listingId = null;
                     props.set(P_HAS_LISTING, 0);
                     props.set(P_STOCK, 0);
-                    sp.sendMessage(Text.literal("Listing removed - its stock is back in your inventory.")
-                            .formatted(Formatting.GREEN), false);
+                    sp.displayClientMessage(Component.literal("Listing removed - its stock is back in your inventory.")
+                            .withStyle(ChatFormatting.GREEN), false);
                     NpcShopLogic.openShopManager(sp, shop.getShopId());
                 }
             }
@@ -143,32 +143,32 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
                 if (l != null) {
                     l.setBarterPrice(ItemStack.EMPTY, 0);
                     state.markDirtyAndSave();
-                    sp.sendMessage(Text.literal("Barter price removed.").formatted(Formatting.GREEN), false);
+                    sp.displayClientMessage(Component.literal("Barter price removed.").withStyle(ChatFormatting.GREEN), false);
                 }
             }
         }
-        sendContentUpdates();
+        broadcastChanges();
     }
 
-    private void save(ServerPlayerEntity sp, int price, ShopState state) {
+    private void save(ServerPlayer sp, int price, ShopState state) {
         price = Math.max(0, Math.min(PlayerShopManager.MAX_PRICE, price));
-        ItemStack sale = samples.getStack(0);
-        ItemStack barter = samples.getStack(1);
+        ItemStack sale = samples.getItem(0);
+        ItemStack barter = samples.getItem(1);
         ShopListing l = listing();
 
         if (l == null) {
             // Creating: need a sale sample and at least one pricing mode.
             if (sale.isEmpty()) {
-                sp.sendMessage(Text.literal("Put a sample of the item you're selling in the top slot.")
-                        .formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("Put a sample of the item you're selling in the top slot.")
+                        .withStyle(ChatFormatting.RED), false);
                 return;
             }
             if (price <= 0 && barter.isEmpty()) {
-                sp.sendMessage(Text.literal("Set a coin price and/or a barter item.").formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("Set a coin price and/or a barter item.").withStyle(ChatFormatting.RED), false);
                 return;
             }
             if (shop.getListings().size() >= PlayerShop.MAX_LISTINGS) {
-                sp.sendMessage(Text.literal("This shop is full.").formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("This shop is full.").withStyle(ChatFormatting.RED), false);
                 return;
             }
             ShopListing created = new ShopListing(sale.copy(), 0, price);
@@ -177,7 +177,7 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             listingId = created.getId();
             props.set(P_HAS_LISTING, 1);
             state.markDirtyAndSave();
-            sp.sendMessage(Text.literal("Listing created - drop stock into the bin.").formatted(Formatting.GREEN), false);
+            sp.displayClientMessage(Component.literal("Listing created - drop stock into the bin.").withStyle(ChatFormatting.GREEN), false);
             return;
         }
 
@@ -188,124 +188,124 @@ public class ShopListingEditScreenHandler extends ScreenHandler {
             if (old > 0) {
                 give(sp, l.getItemForSale(), old);
                 l.setStock(0);
-                sp.sendMessage(Text.literal("Returned " + old + " old stock (the item changed).")
-                        .formatted(Formatting.YELLOW), false);
+                sp.displayClientMessage(Component.literal("Returned " + old + " old stock (the item changed).")
+                        .withStyle(ChatFormatting.YELLOW), false);
             }
         }
         if (!sale.isEmpty()) l.setItemForSale(sale.copy());
         if (!barter.isEmpty()) l.setBarterPrice(barter.copy(), barter.getCount());
         if (price <= 0 && !l.acceptsBarter() && barter.isEmpty()) {
-            sp.sendMessage(Text.literal("A listing needs a coin price and/or a barter item.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("A listing needs a coin price and/or a barter item.").withStyle(ChatFormatting.RED), false);
             return;
         }
         l.setCoinPrice(price);
         props.set(P_PRICE, price);
         state.markDirtyAndSave();
-        sp.sendMessage(Text.literal("Listing saved.").formatted(Formatting.GREEN), false);
+        sp.displayClientMessage(Component.literal("Listing saved.").withStyle(ChatFormatting.GREEN), false);
     }
 
-    private void deposit(ServerPlayerEntity sp, ShopState state) {
+    private void deposit(ServerPlayer sp, ShopState state) {
         ShopListing l = listing();
         if (l == null) {
-            sp.sendMessage(Text.literal("Save the listing first, then deposit stock.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Save the listing first, then deposit stock.").withStyle(ChatFormatting.RED), false);
             return;
         }
         int moved = 0;
-        for (int i = 0; i < sp.getInventory().size(); i++) {
-            ItemStack st = sp.getInventory().getStack(i);
+        for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
+            ItemStack st = sp.getInventory().getItem(i);
             if (!st.isEmpty() && StackData.canCombine(st, l.getItemForSale())) {
                 moved += st.getCount();
-                sp.getInventory().setStack(i, ItemStack.EMPTY);
+                sp.getInventory().setItem(i, ItemStack.EMPTY);
             }
         }
         if (moved == 0) {
-            sp.sendMessage(Text.literal("You aren't carrying any matching items.").formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal("You aren't carrying any matching items.").withStyle(ChatFormatting.YELLOW), false);
             return;
         }
         l.addStock(moved);
         state.markDirtyAndSave();
-        sp.sendMessage(Text.literal("Deposited " + moved + " into stock.").formatted(Formatting.GREEN), false);
+        sp.displayClientMessage(Component.literal("Deposited " + moved + " into stock.").withStyle(ChatFormatting.GREEN), false);
     }
 
-    private void returnStock(ServerPlayerEntity sp, ShopState state) {
+    private void returnStock(ServerPlayer sp, ShopState state) {
         ShopListing l = listing();
         if (l == null) return;
         int stock = l.getStockQuantitySafe();
         if (stock <= 0) {
-            sp.sendMessage(Text.literal("There's no stock to take back.").formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal("There's no stock to take back.").withStyle(ChatFormatting.YELLOW), false);
             return;
         }
         l.setStock(0);
         give(sp, l.getItemForSale(), stock);
         state.markDirtyAndSave();
-        sp.sendMessage(Text.literal("Returned " + stock + " stock to your inventory.").formatted(Formatting.GREEN), false);
+        sp.displayClientMessage(Component.literal("Returned " + stock + " stock to your inventory.").withStyle(ChatFormatting.GREEN), false);
     }
 
-    private static void give(ServerPlayerEntity sp, ItemStack template, int count) {
+    private static void give(ServerPlayer sp, ItemStack template, int count) {
         while (count > 0) {
             ItemStack chunk = template.copy();
-            chunk.setCount(Math.min(count, template.getMaxCount()));
+            chunk.setCount(Math.min(count, template.getMaxStackSize()));
             count -= chunk.getCount();
-            sp.getInventory().offerOrDrop(chunk);
+            sp.getInventory().placeItemBackInInventory(chunk);
         }
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         ShopListing l = listing();
         // Pull any matching stack sitting in the stock bin into the listing's stock, then clear it.
-        if (l != null && playerInv.player instanceof ServerPlayerEntity sp && !sp.getWorld().isClient) {
-            ItemStack intake = samples.getStack(SLOT_STOCK);
+        if (l != null && playerInv.player instanceof ServerPlayer sp && !sp.level().isClientSide) {
+            ItemStack intake = samples.getItem(SLOT_STOCK);
             if (!intake.isEmpty() && StackData.canCombine(intake, l.getItemForSale())) {
                 int moved = intake.getCount();
                 l.addStock(moved);
-                samples.setStack(SLOT_STOCK, ItemStack.EMPTY);
-                ShopState.get(sp.getServerWorld()).markDirtyAndSave();
-                sp.sendMessage(Text.literal("Added " + moved + " to stock.").formatted(Formatting.GREEN), true);
+                samples.setItem(SLOT_STOCK, ItemStack.EMPTY);
+                ShopState.get(sp.serverLevel()).markDirtyAndSave();
+                sp.displayClientMessage(Component.literal("Added " + moved + " to stock.").withStyle(ChatFormatting.GREEN), true);
             }
         }
         if (l != null) {
             props.set(P_STOCK, l.getStockQuantitySafe());
         }
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public void onClosed(PlayerEntity player) {
-        super.onClosed(player);
+    public void removed(Player player) {
+        super.removed(player);
         // Samples always go back. They were never part of the listing.
-        if (!player.getWorld().isClient) {
-            for (int i = 0; i < samples.size(); i++) {
-                ItemStack st = samples.removeStack(i);
-                if (!st.isEmpty() && !player.getInventory().insertStack(st)) {
-                    player.dropItem(st, false);
+        if (!player.level().isClientSide) {
+            for (int i = 0; i < samples.getContainerSize(); i++) {
+                ItemStack st = samples.removeItemNoUpdate(i);
+                if (!st.isEmpty() && !player.getInventory().add(st)) {
+                    player.drop(st, false);
                 }
             }
         }
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasStack()) {
-            ItemStack stack = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
             result = stack.copy();
             if (index < SLOT_COUNT) {
                 // A sample/intake slot → back to the player inventory.
-                if (!this.insertItem(stack, SLOT_COUNT, this.slots.size(), true)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, SLOT_COUNT, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
                 // Player inventory → the stock bin (shift-click deposits stock).
-                if (!this.insertItem(stack, SLOT_STOCK, SLOT_STOCK + 1, false)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, SLOT_STOCK, SLOT_STOCK + 1, false)) return ItemStack.EMPTY;
             }
-            if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-            else slot.markDirty();
+            if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+            else slot.setChanged();
         }
         return result;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

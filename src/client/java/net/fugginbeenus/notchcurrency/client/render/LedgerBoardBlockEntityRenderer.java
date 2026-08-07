@@ -4,18 +4,17 @@ import net.fugginbeenus.notchcurrency.block.LedgerBoardBlock;
 import net.fugginbeenus.notchcurrency.compat.Render;
 import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
-import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.RotationAxis;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,63 +28,63 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     private static final int LEFT_X = -55;        // left margin: rank + name start here (text px)
     private static final int RIGHT_X = 55;        // right margin: balance right-aligns here (text px)
 
-    private final TextRenderer text;
+    private final Font text;
 
-    public LedgerBoardBlockEntityRenderer(BlockEntityRendererFactory.Context ctx) {
-        this.text = ctx.getTextRenderer();
+    public LedgerBoardBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
+        this.text = ctx.getFont();
     }
 
     /** Create's AngleHelper.horizontalAngle: facing yaw, negated on the X axis. */
     private static float horizontalAngle(Direction f) {
-        float a = f.asRotation();
+        float a = f.toYRot();
         return f.getAxis() == Direction.Axis.X ? -a : a;
     }
 
     @Override
-    public void render(LedgerBoardBlockEntity be, float tickDelta, MatrixStack matrices,
-                       VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        var state = be.getCachedState();
+    public void render(LedgerBoardBlockEntity be, float tickDelta, PoseStack matrices,
+                       MultiBufferSource vertexConsumers, int light, int overlay) {
+        var state = be.getBlockState();
         if (!(state.getBlock() instanceof LedgerBoardBlock)
-                || state.get(LedgerBoardBlock.HALF) != DoubleBlockHalf.LOWER) {
+                || state.getValue(LedgerBoardBlock.HALF) != DoubleBlockHalf.LOWER) {
             return;
         }
-        Direction facing = state.get(LedgerBoardBlock.FACING);
+        Direction facing = state.getValue(LedgerBoardBlock.FACING);
 
         List<EconomyLeaderboard.Entry> rows = be.rows();
 
-        matrices.push();
+        matrices.pushPose();
         // centre → rotateY(facing) → unCentre  (Create's FlapDisplayRenderer frame)
         matrices.translate(0.5, 0.5, 0.5);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(horizontalAngle(facing)));
+        matrices.mulPose(Axis.YP.rotationDegrees(horizontalAngle(facing)));
         matrices.translate(-0.5, -0.5, -0.5);
         // step to the screen top-centre, on the front plane
         matrices.translate(0.5, PLATE_TOP, FRONT_Z);
         matrices.scale(SCALE, -SCALE, SCALE);
         matrices.translate(0.0, 0.0, 0.5); // a texel off the surface, avoids z-fighting
 
-        int lb = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-        var matrix = matrices.peek().getPositionMatrix();
+        int lb = LightTexture.FULL_BRIGHT;
+        var matrix = matrices.last().pose();
 
         // Header, centred.
-        Text header = Text.literal("TOP BALANCES").formatted(Formatting.GOLD);
-        Render.drawText(text, header, -text.getWidth(header) / 2f, 0, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+        Component header = Component.literal("TOP BALANCES").withStyle(ChatFormatting.GOLD);
+        Render.drawText(text, header, -text.width(header) / 2f, 0, 0xFFFFFFFF, matrix, vertexConsumers, lb);
 
         if (rows.isEmpty()) {
-            Text none = Text.literal("No balances yet").formatted(Formatting.GRAY);
-            Render.drawText(text, none, -text.getWidth(none) / 2f, LINE_H, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            Component none = Component.literal("No balances yet").withStyle(ChatFormatting.GRAY);
+            Render.drawText(text, none, -text.width(none) / 2f, LINE_H, 0xFFFFFFFF, matrix, vertexConsumers, lb);
         }
         // Rows: rank + name left-aligned, balance right-aligned (Create-style columns).
         for (int i = 0; i < rows.size(); i++) {
             EconomyLeaderboard.Entry e = rows.get(i);
             int y = (i + 1) * LINE_H;
-            Formatting rank = i == 0 ? Formatting.GOLD : i == 1 ? Formatting.WHITE : i == 2 ? Formatting.YELLOW : Formatting.GRAY;
-            Text name = Text.literal((i + 1) + " ").formatted(rank)
-                    .copy().append(Text.literal(e.name()).formatted(Formatting.AQUA));
-            Text bal = Text.literal(compact(e.balance())).formatted(Formatting.YELLOW);
+            ChatFormatting rank = i == 0 ? ChatFormatting.GOLD : i == 1 ? ChatFormatting.WHITE : i == 2 ? ChatFormatting.YELLOW : ChatFormatting.GRAY;
+            Component name = Component.literal((i + 1) + " ").withStyle(rank)
+                    .copy().append(Component.literal(e.name()).withStyle(ChatFormatting.AQUA));
+            Component bal = Component.literal(compact(e.balance())).withStyle(ChatFormatting.YELLOW);
             Render.drawText(text, name, LEFT_X, y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
-            Render.drawText(text, bal, RIGHT_X - text.getWidth(bal), y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            Render.drawText(text, bal, RIGHT_X - text.width(bal), y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
         }
-        matrices.pop();
+        matrices.popPose();
     }
 
     private static String compact(long n) {
@@ -101,7 +100,7 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     }
 
     @Override
-    public boolean rendersOutsideBoundingBox(LedgerBoardBlockEntity be) {
+    public boolean shouldRenderOffScreen(LedgerBoardBlockEntity be) {
         return true;
     }
 }

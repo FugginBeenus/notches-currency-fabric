@@ -4,97 +4,97 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleState;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class RaffleCommands {
 
     private RaffleCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("raffle")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("raffle")
                 .executes(ctx -> info(ctx.getSource()))
-                .then(CommandManager.literal("info")
+                .then(Commands.literal("info")
                         .executes(ctx -> info(ctx.getSource())))
-                .then(CommandManager.literal("buy")
-                        .then(CommandManager.argument("qty", IntegerArgumentType.integer(1, 256))
+                .then(Commands.literal("buy")
+                        .then(Commands.argument("qty", IntegerArgumentType.integer(1, 256))
                                 .executes(ctx -> buy(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "qty")))))
-                .then(CommandManager.literal("redeem")
+                .then(Commands.literal("redeem")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             RaffleManager.redeemTicket(p);
                             return 1;
                         }))
-                .then(CommandManager.literal("claim")
+                .then(Commands.literal("claim")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             RaffleManager.claim(p);
                             return 1;
                         }))
-                .then(CommandManager.literal("draw")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("draw")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
                             boolean drawn = RaffleManager.draw(ctx.getSource().getServer(), true);
-                            ctx.getSource().sendFeedback(() -> Text.literal(drawn
-                                    ? "Raffle drawn." : "No tickets - nothing to draw.").formatted(Formatting.YELLOW), true);
+                            ctx.getSource().sendSuccess(() -> Component.literal(drawn
+                                    ? "Raffle drawn." : "No tickets - nothing to draw.").withStyle(ChatFormatting.YELLOW), true);
                             return drawn ? 1 : 0;
                         }))
-                .then(CommandManager.literal("admin")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("admin")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             net.fugginbeenus.notchcurrency.economy.raffle.RaffleAdminScreenHandler.open(p);
                             return 1;
                         }))
-                .then(CommandManager.literal("setprize")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("setprize")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player (uses your held item).")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player (uses your held item).")); return 0; }
                             RaffleManager.setPrize(p);
                             return 1;
                         }))
-                .then(CommandManager.literal("clearprize")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("clearprize")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
-                            if (p == null) { ctx.getSource().sendError(Text.literal("Run as a player.")); return 0; }
+                            ServerPlayer p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
                             RaffleManager.clearPrize(p);
                             return 1;
                         }))
-                .then(CommandManager.literal("reset")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("reset")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             if (p != null) {
                                 RaffleManager.resetAndReturn(p); // wipe + return escrowed prize to the admin
                             } else {
                                 RaffleState.get(ctx.getSource().getServer()).resetRound();
                                 RaffleManager.refreshAllOnline(ctx.getSource().getServer());
                             }
-                            ctx.getSource().sendFeedback(() -> Text.literal("Raffle round wiped (entries & pot cleared, prize returned).")
-                                    .formatted(Formatting.YELLOW), true);
+                            ctx.getSource().sendSuccess(() -> Component.literal("Raffle round wiped (entries & pot cleared, prize returned).")
+                                    .withStyle(ChatFormatting.YELLOW), true);
                             return 1;
                         }))
         );
     }
 
-    private static int buy(ServerCommandSource src, int qty) {
-        ServerPlayerEntity p = src.getPlayer();
-        if (p == null) { src.sendError(Text.literal("Run as a player.")); return 0; }
+    private static int buy(CommandSourceStack src, int qty) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) { src.sendFailure(Component.literal("Run as a player.")); return 0; }
         RaffleManager.buyTicket(p, qty);
         return 1;
     }
 
-    private static int info(ServerCommandSource src) {
-        ServerPlayerEntity p = src.getPlayer();
-        if (p == null) { src.sendError(Text.literal("Run as a player.")); return 0; }
+    private static int info(CommandSourceStack src) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) { src.sendFailure(Component.literal("Run as a player.")); return 0; }
         RaffleManager.openScreen(p);
         return 1;
     }

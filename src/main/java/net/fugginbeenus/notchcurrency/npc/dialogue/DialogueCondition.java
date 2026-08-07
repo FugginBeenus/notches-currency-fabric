@@ -3,12 +3,12 @@ package net.fugginbeenus.notchcurrency.npc.dialogue;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class DialogueCondition {
 
@@ -41,46 +41,46 @@ public class DialogueCondition {
     public void setValue(String v) { this.value = v == null ? "" : v; }
     public void setAmount(long a) { this.amount = a; }
 
-    public boolean test(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public boolean test(ServerPlayer sp, NotchNpcEntity npc) {
         return switch (type) {
             case NONE -> true;
             case HAS_COINS -> CurrencyApi.getBalance(sp) >= amount;
             case HAS_ITEM -> countItem(sp) >= amount;
             case IS_OWNER -> npc.isOwnedBy(sp);
-            case IS_OP -> sp.hasPermissionLevel(2);
+            case IS_OP -> sp.hasPermissions(2);
             case IS_FACTION -> matchesFaction(sp, npc);
         };
     }
 
-    private boolean matchesFaction(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    private boolean matchesFaction(ServerPlayer sp, NotchNpcEntity npc) {
         String wanted = value == null || value.isBlank() ? npc.getFactionId() : value.trim();
         if (wanted.isEmpty()) return false; // no faction to be in
         String theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
-                .get(sp.getServerWorld()).factionIdOf(sp.getUuid());
+                .get(sp.serverLevel()).factionIdOf(sp.getUUID());
         return wanted.equals(theirs);
     }
 
-    private long countItem(ServerPlayerEntity sp) {
-        Item item = Registries.ITEM.get(Identifier.tryParse(value) == null
-                ? Reg.id("minecraft", "air") : Identifier.tryParse(value));
-        if (item == net.minecraft.item.Items.AIR) return 0;
+    private long countItem(ServerPlayer sp) {
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(value) == null
+                ? Reg.id("minecraft", "air") : ResourceLocation.tryParse(value));
+        if (item == net.minecraft.world.item.Items.AIR) return 0;
         long count = 0;
-        for (int i = 0; i < sp.getInventory().size(); i++) {
-            ItemStack st = sp.getInventory().getStack(i);
-            if (st.isOf(item)) count += st.getCount();
+        for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
+            ItemStack st = sp.getInventory().getItem(i);
+            if (st.is(item)) count += st.getCount();
         }
         return count;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Type", type.name());
         nbt.putString("Value", value);
         nbt.putLong("Amount", amount);
         return nbt;
     }
 
-    public static DialogueCondition fromNbt(NbtCompound nbt) {
+    public static DialogueCondition fromNbt(CompoundTag nbt) {
         DialogueCondition c = new DialogueCondition();
         try {
             c.type = Type.valueOf(nbt.getString("Type"));

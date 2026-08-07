@@ -6,20 +6,19 @@ import net.fugginbeenus.notchcurrency.block.CoinFace;
 import net.fugginbeenus.notchcurrency.block.CoinFlipBlock;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,7 +38,7 @@ public final class CoinFlipManager {
 
     private static final List<Pending> queue = new ArrayList<>();
 
-    private record Pending(ServerWorld world, BlockPos pos, UUID player,
+    private record Pending(ServerLevel world, BlockPos pos, UUID player,
                            long bet, boolean won, boolean landedHeads, long revealAt) {}
 
     private CoinFlipManager() {}
@@ -57,54 +56,54 @@ public final class CoinFlipManager {
 
     // ---- entry points ----
 
-    public static void openScreen(ServerPlayerEntity sp, BlockPos pos) {
+    public static void openScreen(ServerPlayer sp, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
-            sp.sendMessage(Text.literal("Gambling is disabled on this server.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        pendingBlock.put(sp.getUuid(), pos.toImmutable());
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new CoinFlipScreenHandler(syncId, inv),
-                Text.literal("Coin Flip")));
+        pendingBlock.put(sp.getUUID(), pos.immutable());
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new CoinFlipScreenHandler(containerId, inv),
+                Component.literal("Coin Flip")));
     }
 
-    public static void notifyBusy(ServerPlayerEntity sp) {
-        sp.sendMessage(Text.literal("The coin is still in the air - wait for it to land.").formatted(Formatting.YELLOW), false);
+    public static void notifyBusy(ServerPlayer sp) {
+        sp.displayClientMessage(Component.literal("The coin is still in the air - wait for it to land.").withStyle(ChatFormatting.YELLOW), false);
     }
 
-    public static void flipFromScreen(ServerPlayerEntity sp, boolean guessHeads, long bet) {
-        BlockPos pos = pendingBlock.get(sp.getUuid());
+    public static void flipFromScreen(ServerPlayer sp, boolean guessHeads, long bet) {
+        BlockPos pos = pendingBlock.get(sp.getUUID());
         resolve(sp, guessHeads, bet, pos);
     }
 
-    public static void flipCommand(ServerPlayerEntity sp, boolean guessHeads, long bet) {
+    public static void flipCommand(ServerPlayer sp, boolean guessHeads, long bet) {
         resolve(sp, guessHeads, bet, null);
     }
 
     // ---- core ----
 
-    private static void resolve(ServerPlayerEntity sp, boolean guessHeads, long bet, BlockPos pos) {
+    private static void resolve(ServerPlayer sp, boolean guessHeads, long bet, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
-            sp.sendMessage(Text.literal("Gambling is disabled on this server.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
             return;
         }
         if (!GamblingManager.betInRange(bet)) {
-            sp.sendMessage(Text.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Bet must be between " + GamblingManager.getMinBet()
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED), false);
             return;
         }
-        ServerWorld world = sp.getServerWorld();
+        ServerLevel world = sp.serverLevel();
         if (pos != null) {
             BlockState st = world.getBlockState(pos);
             if (!(st.getBlock() instanceof CoinFlipBlock)) {
                 pos = null; // block gone: fall back to an instant, block-less flip
-            } else if (st.get(CoinFlipBlock.FLIPPING)) {
+            } else if (st.getValue(CoinFlipBlock.FLIPPING)) {
                 notifyBusy(sp);
                 return;
             }
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Coin flip bet")) {
-            sp.sendMessage(Text.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED), false);
             return;
         }
 
@@ -114,16 +113,16 @@ public final class CoinFlipManager {
         if (pos != null && revealTicks > 0) {
             // Start the spin, close the screen so the player watches the block, reveal on delay.
             BlockState st = world.getBlockState(pos);
-            world.setBlockState(pos, st.with(CoinFlipBlock.FLIPPING, true), Block.NOTIFY_LISTENERS);
+            world.setBlock(pos, st.setValue(CoinFlipBlock.FLIPPING, true), Block.UPDATE_CLIENTS);
             if (world.getBlockEntity(pos) instanceof net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity be) {
-                be.startFlip(world.getTime(), revealTicks); // drives the pop + spin animation
+                be.startFlip(world.getGameTime(), revealTicks); // drives the pop + spin animation
             }
-            world.playSound(null, pos, SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.BLOCKS, 0.8f, 1.4f);
-            sp.closeHandledScreen();
-            queue.add(new Pending(world, pos.toImmutable(), sp.getUuid(), bet, won, landedHeads,
-                    world.getTime() + revealTicks));
+            world.playSound(null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.BLOCKS, 0.8f, 1.4f);
+            sp.closeContainer();
+            queue.add(new Pending(world, pos.immutable(), sp.getUUID(), bet, won, landedHeads,
+                    world.getGameTime() + revealTicks));
         } else {
-            applyReveal(world, pos, sp.getUuid(), bet, won, landedHeads);
+            applyReveal(world, pos, sp.getUUID(), bet, won, landedHeads);
         }
     }
 
@@ -132,31 +131,31 @@ public final class CoinFlipManager {
         Iterator<Pending> it = queue.iterator();
         while (it.hasNext()) {
             Pending p = it.next();
-            if (p.world().getTime() >= p.revealAt()) {
+            if (p.world().getGameTime() >= p.revealAt()) {
                 applyReveal(p.world(), p.pos(), p.player(), p.bet(), p.won(), p.landedHeads());
                 it.remove();
             }
         }
     }
 
-    private static void applyReveal(ServerWorld world, BlockPos pos, UUID player,
+    private static void applyReveal(ServerLevel world, BlockPos pos, UUID player,
                                     long bet, boolean won, boolean landedHeads) {
         if (pos != null) {
             BlockState st = world.getBlockState(pos);
             if (st.getBlock() instanceof CoinFlipBlock) {
-                world.setBlockState(pos, st
-                        .with(CoinFlipBlock.FLIPPING, false)
-                        .with(CoinFlipBlock.FACE, landedHeads ? CoinFace.HEADS : CoinFace.TAILS),
-                        Block.NOTIFY_LISTENERS);
+                world.setBlock(pos, st
+                        .setValue(CoinFlipBlock.FLIPPING, false)
+                        .setValue(CoinFlipBlock.FACE, landedHeads ? CoinFace.HEADS : CoinFace.TAILS),
+                        Block.UPDATE_CLIENTS);
             }
-            Vec3d c = Vec3d.ofCenter(pos).add(0, 0.6, 0);
+            Vec3 c = Vec3.atCenterOf(pos).add(0, 0.6, 0);
             if (won) {
-                world.playSound(null, pos, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.BLOCKS, 0.8f, 1.2f);
-                world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, c.x, c.y, c.z, 16, 0.3, 0.3, 0.3, 0.0);
-                world.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, 10, 0.25, 0.25, 0.25, 0.02);
+                world.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.8f, 1.2f);
+                world.sendParticles(ParticleTypes.HAPPY_VILLAGER, c.x, c.y, c.z, 16, 0.3, 0.3, 0.3, 0.0);
+                world.sendParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, 10, 0.25, 0.25, 0.25, 0.02);
             } else {
-                world.playSound(null, pos, SoundEvents.ENTITY_VILLAGER_NO, SoundCategory.BLOCKS, 0.9f, 0.9f);
-                world.spawnParticles(ParticleTypes.SMOKE, c.x, c.y, c.z, 10, 0.2, 0.2, 0.2, 0.01);
+                world.playSound(null, pos, SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 0.9f, 0.9f);
+                world.sendParticles(ParticleTypes.SMOKE, c.x, c.y, c.z, 10, 0.2, 0.2, 0.2, 0.01);
             }
         }
 
@@ -165,15 +164,15 @@ public final class CoinFlipManager {
             CurrencyApi.deposit(world.getServer(), player, payout, TransactionReason.FAUCET, "Coin flip win");
         }
 
-        ServerPlayerEntity sp = world.getServer().getPlayerManager().getPlayer(player);
+        ServerPlayer sp = world.getServer().getPlayerList().getPlayer(player);
         if (sp != null) {
             String side = landedHeads ? "HEADS" : "TAILS";
             if (won) {
-                sp.sendMessage(Text.literal("The coin landed " + side + " - you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
-                        .formatted(Formatting.GREEN), false);
+                sp.displayClientMessage(Component.literal("The coin landed " + side + " - you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
+                        .withStyle(ChatFormatting.GREEN), false);
             } else {
-                sp.sendMessage(Text.literal("The coin landed " + side + " - you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                        .formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("The coin landed " + side + " - you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                        .withStyle(ChatFormatting.RED), false);
             }
         }
     }

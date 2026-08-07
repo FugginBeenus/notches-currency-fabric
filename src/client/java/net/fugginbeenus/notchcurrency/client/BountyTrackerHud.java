@@ -4,14 +4,13 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyRarity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,14 +36,14 @@ public final class BountyTrackerHud implements HudRenderCallback {
 
     @Override
     //? if >=1.21 {
-    /*public void onHudRender(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter) {
+    /*public void onHudRender(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} else {
-    public void onHudRender(DrawContext ctx, float tickDelta) {
+    public void onHudRender(GuiGraphics ctx, float tickDelta) {
     //?}
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (!visible || client.player == null || client.world == null || client.options.hudHidden) return;
+        Minecraft client = Minecraft.getInstance();
+        if (!visible || client.player == null || client.level == null || client.options.hideGui) return;
 
-        long now = client.world.getTime();
+        long now = client.level.getGameTime();
         List<Entry> live = new ArrayList<>();
         for (Entry e : entries) {
             if (e.expiry() <= 0 || e.expiry() > now) live.add(e);
@@ -60,24 +59,24 @@ public final class BountyTrackerHud implements HudRenderCallback {
         String corner = cfg.bountyTrackerCorner == null ? "TOP_RIGHT" : cfg.bountyTrackerCorner.toUpperCase();
         int totalH = live.size() * (PILL_H + PILL_GAP) - PILL_GAP;
         int scaledW = Math.round(PILL_W * s), scaledH = Math.round(totalH * s);
-        int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
+        int sw = ctx.guiWidth(), sh = ctx.guiHeight();
         int x = corner.contains("CENTER") ? (sw - scaledW) / 2 + cfg.bountyTrackerX
                 : corner.contains("LEFT") ? cfg.bountyTrackerX
                 : sw - scaledW - cfg.bountyTrackerX;
         int y = corner.contains("BOTTOM") ? sh - scaledH - cfg.bountyTrackerY : cfg.bountyTrackerY;
 
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(x, y, 0);
-        ctx.getMatrices().scale(s, s, 1);
+        ctx.pose().pushPose();
+        ctx.pose().translate(x, y, 0);
+        ctx.pose().scale(s, s, 1);
 
-        var tr = client.textRenderer;
+        var tr = client.font;
         int py = 0;
         for (Entry e : live) {
             fillRound(ctx, 0, py, PILL_W, PILL_H, 1, bg);
 
             // Icon: the delivery item, or a sword for kill bounties.
             ItemStack icon = e.kill() ? SWORD : stackOf(e.targetItemId());
-            ctx.drawItem(icon, 4, py + 5);
+            ctx.renderItem(icon, 4, py + 5);
 
             // Task + count.
             int accent = BountyRarity.fromString(e.rarity()).accentArgb();
@@ -85,10 +84,10 @@ public final class BountyTrackerHud implements HudRenderCallback {
             int req = Math.max(1, e.req());
             boolean done = have >= req;
             String count = Math.min(have, req) + "/" + req;
-            int cw = tr.getWidth(count);
-            String desc = tr.trimToWidth(e.desc(), PILL_W - 26 - cw - 10);
-            ctx.drawText(tr, desc, 25, py + 5, 0xFFFFFFFF, true);
-            ctx.drawText(tr, count, PILL_W - 6 - cw, py + 5, done ? 0xFF7FDF7F : 0xFFDDDDDD, true);
+            int cw = tr.width(count);
+            String desc = tr.plainSubstrByWidth(e.desc(), PILL_W - 26 - cw - 10);
+            ctx.drawString(tr, desc, 25, py + 5, 0xFFFFFFFF, true);
+            ctx.drawString(tr, count, PILL_W - 6 - cw, py + 5, done ? 0xFF7FDF7F : 0xFFDDDDDD, true);
 
             // Progress bar + countdown.
             int barW = PILL_W - 31 - 30;
@@ -98,18 +97,18 @@ public final class BountyTrackerHud implements HudRenderCallback {
             if (e.expiry() > 0) {
                 long mins = Math.max(0, (e.expiry() - now) / 20L / 60L);
                 String time = done ? "ready!" : mins + "m";
-                int tw = tr.getWidth(time);
-                ctx.drawText(tr, time, PILL_W - 6 - tw, py + 14, done ? 0xFF7FDF7F : 0xFFB8C4CE, true);
+                int tw = tr.width(time);
+                ctx.drawString(tr, time, PILL_W - 6 - tw, py + 14, done ? 0xFF7FDF7F : 0xFFB8C4CE, true);
             }
             py += PILL_H + PILL_GAP;
         }
 
-        ctx.getMatrices().pop();
+        ctx.pose().popPose();
     }
 
     /* Location Tooltip's pill helpers */
 
-    private static void fillRound(DrawContext ctx, int x, int y, int w, int h, int r, int argb) {
+    private static void fillRound(GuiGraphics ctx, int x, int y, int w, int h, int r, int argb) {
         r = (r <= 1) ? 1 : Math.min(r, Math.min(w, h) / 2);
         if (r == 1) {
             if (w <= 2 || h <= 2) {
@@ -136,19 +135,19 @@ public final class BountyTrackerHud implements HudRenderCallback {
     }
 
     private static ItemStack stackOf(String itemId) {
-        Identifier id = Identifier.tryParse(itemId);
-        Item item = id == null ? Items.PAPER : Registries.ITEM.get(id);
+        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Item item = id == null ? Items.PAPER : BuiltInRegistries.ITEM.get(id);
         return new ItemStack(item == Items.AIR ? Items.PAPER : item);
     }
 
-    private static int countInInventory(MinecraftClient client, String itemId) {
-        Identifier id = Identifier.tryParse(itemId);
+    private static int countInInventory(Minecraft client, String itemId) {
+        ResourceLocation id = ResourceLocation.tryParse(itemId);
         if (id == null) return 0;
-        Item item = Registries.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.get(id);
         int n = 0;
-        for (int i = 0; i < client.player.getInventory().size(); i++) {
-            ItemStack st = client.player.getInventory().getStack(i);
-            if (st.isOf(item)) n += st.getCount();
+        for (int i = 0; i < client.player.getInventory().getContainerSize(); i++) {
+            ItemStack st = client.player.getInventory().getItem(i);
+            if (st.is(item)) n += st.getCount();
         }
         return n;
     }

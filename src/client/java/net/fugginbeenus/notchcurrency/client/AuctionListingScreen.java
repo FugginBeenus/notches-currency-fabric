@@ -6,15 +6,15 @@ import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHandler> {
+public class AuctionListingScreen extends AbstractContainerScreen<AuctionListingScreenHandler> {
 
     private static final int W = 176, H = 224;
 
@@ -30,75 +30,75 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
     private static final int LIST_X = 8, LIST_Y = 116, LIST_W = 160, LIST_H = 18;
 
     private int durationIndex = 0;
-    private TextFieldWidget priceField;
+    private EditBox priceField;
 
-    public AuctionListingScreen(AuctionListingScreenHandler handler, PlayerInventory inv, Text title) {
+    public AuctionListingScreen(AuctionListingScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
     protected void init() {
         super.init();
-        priceField = new TextFieldWidget(this.textRenderer, this.x + PRICE_X + 2, this.y + PRICE_Y + 4,
-                PRICE_W - 4, PRICE_H - 6, Text.literal("Price"));
+        priceField = new EditBox(this.font, this.leftPos + PRICE_X + 2, this.topPos + PRICE_Y + 4,
+                PRICE_W - 4, PRICE_H - 6, Component.literal("Price"));
         priceField.setMaxLength(12);
-        priceField.setDrawsBackground(false);
-        priceField.setPlaceholder(Text.literal("Type a price…").formatted(Formatting.DARK_GRAY));
-        priceField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        addDrawableChild(priceField);
+        priceField.setBordered(false);
+        priceField.setHint(Component.literal("Type a price…").withStyle(ChatFormatting.DARK_GRAY));
+        priceField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        addRenderableWidget(priceField);
         setInitialFocus(priceField);
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.textRenderer, "List an Item", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8);
 
         // Input slot + label.
-        ctx.drawText(this.textRenderer, "Item to sell:", x + 16, y + AuctionListingScreenHandler.INPUT_Y + 4,
+        ctx.drawString(this.font, "Item to sell:", x + 16, y + AuctionListingScreenHandler.INPUT_Y + 4,
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INPUT_X - 1, y + AuctionListingScreenHandler.INPUT_Y - 1);
 
         // Price box (TextFieldWidget renders its text on top).
-        ctx.drawText(this.textRenderer, "Price (" + NotchWidgets.coinName() + "):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Price (" + NotchWidgets.coinName() + "):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + PRICE_X, y + PRICE_Y, PRICE_W, PRICE_H, NotchTheme.DEEP);
 
         // Auction-duration segmented selector (selected = green, others = grey).
-        ctx.drawText(this.textRenderer, "Auction Duration", x + 8, y + 76, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Auction Duration", x + 8, y + 76, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < DURATIONS.length; i++) {
             boolean hov = over(mouseX, mouseY, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H);
             if (i == durationIndex) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H, SEG_LABELS[i], hov);
+                NotchWidgets.primaryButton(ctx, this.font, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H, SEG_LABELS[i], hov);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H, SEG_LABELS[i], hov);
+                NotchWidgets.neutralButton(ctx, this.font, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H, SEG_LABELS[i], hov);
             }
         }
         String hint = currentDays() == 0 ? "Instant sale at your price."
                 : "Highest bid after " + currentDays() + " day" + (currentDays() == 1 ? "" : "s") + " wins.";
-        ctx.drawText(this.textRenderer, hint, x + 8, y + 104, NotchTheme.TEXT_MUTED, false);
+        ctx.drawString(this.font, hint, x + 8, y + 104, NotchTheme.TEXT_MUTED, false);
 
         // Fee note: the listing fee scales with price, so recompute it from the typed value.
         long typedPrice = 0;
         try {
-            String pt = priceField.getText();
+            String pt = priceField.getValue();
             if (!pt.isEmpty()) typedPrice = Long.parseLong(pt);
         } catch (NumberFormatException ignored) {
         }
-        long fee = handler.feeFor(typedPrice);
-        if (fee > 0 || handler.feePercent() > 0 || handler.feeFlat() > 0) {
+        long fee = menu.feeFor(typedPrice);
+        if (fee > 0 || menu.feePercent() > 0 || menu.feeFlat() > 0) {
             String note = "Fee: " + fee + " " + NotchWidgets.coinName()
-                    + (handler.feePercent() > 0 ? " (" + handler.feePercent() + "% + " + handler.feeFlat() + ")" : "");
-            ctx.drawText(this.textRenderer, note, x + LIST_X + 4, y + LIST_Y - 10, NotchTheme.TEXT_MUTED, false);
+                    + (menu.feePercent() > 0 ? " (" + menu.feePercent() + "% + " + menu.feeFlat() + ")" : "");
+            ctx.drawString(this.font, note, x + LIST_X + 4, y + LIST_Y - 10, NotchTheme.TEXT_MUTED, false);
         }
 
         // List It button.
-        NotchWidgets.primaryButton(ctx, this.textRenderer, x + LIST_X, y + LIST_Y, LIST_W, LIST_H, "List It!",
+        NotchWidgets.primaryButton(ctx, this.font, x + LIST_X, y + LIST_Y, LIST_W, LIST_H, "List It!",
                 over(mouseX, mouseY, x + LIST_X, y + LIST_Y, LIST_W, LIST_H));
 
         NotchWidgets.divider(ctx, x + 8, y + 136, W - 16);
@@ -120,7 +120,7 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
     }
 
     @Override
-    protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
         // No default labels.
     }
 
@@ -132,13 +132,13 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             for (int i = 0; i < DURATIONS.length; i++) {
-                if (over((int) mouseX, (int) mouseY, this.x + SEG_X[i], this.y + SEG_Y, SEG_W[i], SEG_H)) {
+                if (over((int) mouseX, (int) mouseY, this.leftPos + SEG_X[i], this.topPos + SEG_Y, SEG_W[i], SEG_H)) {
                     if (durationIndex != i) NotchWidgets.tick();
                     durationIndex = i;
                     return true;
                 }
             }
-            if (over((int) mouseX, (int) mouseY, this.x + LIST_X, this.y + LIST_Y, LIST_W, LIST_H)) {
+            if (over((int) mouseX, (int) mouseY, this.leftPos + LIST_X, this.topPos + LIST_Y, LIST_W, LIST_H)) {
                 NotchWidgets.click();
                 submit();
                 return true;
@@ -150,21 +150,21 @@ public class AuctionListingScreen extends HandledScreen<AuctionListingScreenHand
     private void submit() {
         long price;
         try {
-            price = Long.parseLong(priceField.getText().trim());
+            price = Long.parseLong(priceField.getValue().trim());
         } catch (NumberFormatException e) {
             price = 0L;
         }
         if (price <= 0) {
-            if (this.client != null && this.client.player != null) {
-                this.client.player.sendMessage(Text.literal("Enter a price above 0.").formatted(Formatting.RED), false);
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED), false);
             }
             return;
         }
-        PacketByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeVarLong(price);
         buf.writeVarInt(currentDays());
         NetClient.sendToServer(NotchPackets.AUCTION_LIST, buf);
-        priceField.setText("");
+        priceField.setValue("");
     }
 
     @Override

@@ -5,26 +5,25 @@ import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import java.util.Map;
 
-public class EnchanterScreenHandler extends ScreenHandler {
+public class EnchanterScreenHandler extends AbstractContainerMenu {
 
     public static final int INPUT_X = 12, INPUT_Y = 22;
     public static final int INV_X = 47, INV_Y = 156, HOTBAR_Y = 214;
@@ -37,14 +36,14 @@ public class EnchanterScreenHandler extends ScreenHandler {
     // Packet action ids.
     public static final int ACTION_REPAIR = 0, ACTION_UPGRADE = 1, ACTION_EXTRACT = 2, ACTION_UNCRAFT = 3;
 
-    private final SimpleInventory input = new SimpleInventory(1);
-    private final PlayerInventory playerInv;
-    private final PropertyDelegate props = new ArrayPropertyDelegate(11);
+    private final SimpleContainer input = new SimpleContainer(1);
+    private final Inventory playerInv;
+    private final ContainerData props = new SimpleContainerData(11);
 
-    public EnchanterScreenHandler(int syncId, PlayerInventory inv) {
-        super(ModScreenHandlers.ENCHANTER, syncId);
+    public EnchanterScreenHandler(int containerId, Inventory inv) {
+        super(ModScreenHandlers.ENCHANTER, containerId);
         this.playerInv = inv;
-        addProperties(props);
+        addDataSlots(props);
         props.set(P_MULTIPLIER, EnchanterManager.costMultiplierPercent);
         props.set(P_EXTRACT_COST, EnchanterManager.extractCost);
         props.set(P_TREASURE, EnchanterManager.allowTreasure ? 1 : 0);
@@ -68,14 +67,14 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
     }
 
-    public static void open(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new EnchanterScreenHandler(syncId, inv),
-                Text.literal("Enchanter")));
+    public static void open(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new EnchanterScreenHandler(containerId, inv),
+                Component.literal("Enchanter")));
     }
 
     public ItemStack inputStack() {
-        return this.slots.get(0).getStack();
+        return this.slots.get(0).getItem();
     }
 
     public int repairCostProp() { return props.get(P_REPAIR_COST); }
@@ -91,19 +90,19 @@ public class EnchanterScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         // Keep the repair price live as the slot contents change.
-        props.set(P_REPAIR_COST, (int) EnchanterManager.repairCost(input.getStack(0), EnchanterManager.repairFullCost));
-        super.sendContentUpdates();
+        props.set(P_REPAIR_COST, (int) EnchanterManager.repairCost(input.getItem(0), EnchanterManager.repairFullCost));
+        super.broadcastChanges();
     }
 
     // ---- actions (server side, from the ENCHANTER_ACTION packet) ----
 
-    public void handleAction(ServerPlayerEntity sp, int action, String enchId) {
+    public void handleAction(ServerPlayer sp, int action, String enchId) {
         if (!EnchanterManager.enabled) return;
-        ItemStack stack = input.getStack(0);
+        ItemStack stack = input.getItem(0);
         if (stack.isEmpty()) {
-            sp.sendMessage(Text.literal("Put an item in the slot first.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Put an item in the slot first.").withStyle(ChatFormatting.RED), false);
             return;
         }
         switch (action) {
@@ -114,43 +113,43 @@ public class EnchanterScreenHandler extends ScreenHandler {
         }
     }
 
-    private void uncraft(ServerPlayerEntity sp, ItemStack stack) {
-        EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.getWorld());
+    private void uncraft(ServerPlayer sp, ItemStack stack) {
+        EnchanterManager.UncraftPlan plan = EnchanterManager.uncraftPlan(stack, sp.level());
         if (plan == null) {
             String why = stack.isDamaged() ? "Repair it first - worn gear can't be salvaged for full parts."
                     : "That item has no crafting recipe to reverse.";
-            sp.sendMessage(Text.literal(why).formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal(why).withStyle(ChatFormatting.YELLOW), false);
             return;
         }
         long cost = EnchanterManager.uncraftCost;
         if (!charge(sp, cost, "enchanter uncraft")) return;
-        stack.decrement(plan.consumed());
-        input.markDirty();
+        stack.shrink(plan.consumed());
+        input.setChanged();
         for (ItemStack ret : plan.returns()) {
-            sp.getInventory().offerOrDrop(ret.copy());
+            sp.getInventory().placeItemBackInInventory(ret.copy());
         }
-        sendContentUpdates();
-        sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.7f, 0.8f);
-        sp.sendMessage(Text.literal("Uncrafted into its parts for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN), false);
+        broadcastChanges();
+        sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 0.8f);
+        sp.displayClientMessage(Component.literal("Uncrafted into its parts for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN), false);
     }
 
-    private void repair(ServerPlayerEntity sp, ItemStack stack) {
+    private void repair(ServerPlayer sp, ItemStack stack) {
         long cost = EnchanterManager.repairCost(stack, EnchanterManager.repairFullCost);
         if (cost <= 0) {
-            sp.sendMessage(Text.literal("That item doesn't need repairs.").formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal("That item doesn't need repairs.").withStyle(ChatFormatting.YELLOW), false);
             return;
         }
         if (!charge(sp, cost, "enchanter repair")) return;
-        stack.setDamage(0);
-        input.markDirty();
-        sendContentUpdates();
-        sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_ANVIL_USE, SoundCategory.BLOCKS, 0.6f, 1.2f);
-        sp.sendMessage(Text.literal("Repaired ").formatted(Formatting.GREEN)
-                .append(stack.getName().copy().formatted(Formatting.YELLOW))
-                .append(Text.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
+        stack.setDamageValue(0);
+        input.setChanged();
+        broadcastChanges();
+        sp.level().playSound(null, sp.blockPosition(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.2f);
+        sp.displayClientMessage(Component.literal("Repaired ").withStyle(ChatFormatting.GREEN)
+                .append(stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)), false);
     }
 
-    private void upgrade(ServerPlayerEntity sp, ItemStack stack, String enchId) {
+    private void upgrade(ServerPlayer sp, ItemStack stack, String enchId) {
         Enchantment ench = enchantFromId(enchId);
         if (ench == null) return;
         // Re-derive the offer server-side: the client can only pick from what's legitimately offered.
@@ -162,7 +161,7 @@ public class EnchanterScreenHandler extends ScreenHandler {
             }
         }
         if (level < 0) {
-            sp.sendMessage(Text.literal("That enchantment can't go on this item.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("That enchantment can't go on this item.").withStyle(ChatFormatting.RED), false);
             return;
         }
         long cost = EnchanterManager.upgradeCost(ench, level, EnchanterManager.pricing());
@@ -170,47 +169,47 @@ public class EnchanterScreenHandler extends ScreenHandler {
         Map<Enchantment, Integer> map = Ench.get(stack);
         map.put(ench, level);
         Ench.set(map, stack);
-        input.markDirty();
-        sendContentUpdates();
-        sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.8f, 1.0f);
-        sp.sendMessage(Text.literal("Applied ").formatted(Formatting.GREEN)
-                .append(Ench.name(ench, level).copy().formatted(Formatting.LIGHT_PURPLE))
-                .append(Text.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").formatted(Formatting.GREEN)), false);
+        input.setChanged();
+        broadcastChanges();
+        sp.level().playSound(null, sp.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.8f, 1.0f);
+        sp.displayClientMessage(Component.literal("Applied ").withStyle(ChatFormatting.GREEN)
+                .append(Ench.name(ench, level).copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)), false);
     }
 
-    private void extract(ServerPlayerEntity sp, ItemStack stack, String enchId) {
+    private void extract(ServerPlayer sp, ItemStack stack, String enchId) {
         Enchantment ench = enchantFromId(enchId);
         if (ench == null) return;
         Map<Enchantment, Integer> map = Ench.get(stack);
         Integer level = map.get(ench);
         if (level == null) {
-            sp.sendMessage(Text.literal("That enchantment isn't on this item.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("That enchantment isn't on this item.").withStyle(ChatFormatting.RED), false);
             return;
         }
         long cost = EnchanterManager.extractPrice(ench, level, EnchanterManager.pricing());
         if (!charge(sp, cost, "enchanter extract")) return;
         map.remove(ench);
         Ench.set(map, stack);
-        input.markDirty();
+        input.setChanged();
         ItemStack book = Ench.enchantedBook(ench, level);
-        sp.getInventory().offerOrDrop(book);
-        sendContentUpdates();
-        sp.getWorld().playSound(null, sp.getBlockPos(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.7f, 1.1f);
-        sp.sendMessage(Text.literal("Extracted ").formatted(Formatting.GREEN)
-                .append(Ench.name(ench, level).copy().formatted(Formatting.LIGHT_PURPLE))
-                .append(Text.literal(" onto a book.").formatted(Formatting.GREEN)), false);
+        sp.getInventory().placeItemBackInInventory(book);
+        broadcastChanges();
+        sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 1.1f);
+        sp.displayClientMessage(Component.literal("Extracted ").withStyle(ChatFormatting.GREEN)
+                .append(Ench.name(ench, level).copy().withStyle(ChatFormatting.LIGHT_PURPLE))
+                .append(Component.literal(" onto a book.").withStyle(ChatFormatting.GREEN)), false);
     }
 
     @org.jetbrains.annotations.Nullable
     private Enchantment enchantFromId(String enchId) {
-        Identifier id = Identifier.tryParse(enchId);
+        ResourceLocation id = ResourceLocation.tryParse(enchId);
         return id == null ? null : Ench.byId(id);
     }
 
-    private boolean charge(ServerPlayerEntity sp, long cost, String detail) {
+    private boolean charge(ServerPlayer sp, long cost, String detail) {
         if (cost <= 0) return true;
         if (BalanceStore.get(sp) < cost) {
-            sp.sendMessage(Text.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, detail);
@@ -219,37 +218,37 @@ public class EnchanterScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void onClosed(PlayerEntity player) {
-        super.onClosed(player);
+    public void removed(Player player) {
+        super.removed(player);
         // Return whatever is still in the slot so items are never lost.
-        if (!player.getWorld().isClient && !input.getStack(0).isEmpty()) {
-            ItemStack leftover = input.removeStack(0);
-            if (!player.getInventory().insertStack(leftover)) {
-                player.dropItem(leftover, false);
+        if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
+            ItemStack leftover = input.removeItemNoUpdate(0);
+            if (!player.getInventory().add(leftover)) {
+                player.drop(leftover, false);
             }
         }
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasStack()) {
-            ItemStack stack = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
             result = stack.copy();
             if (index == 0) {
-                if (!this.insertItem(stack, 1, this.slots.size(), true)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, 1, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                if (!this.insertItem(stack, 0, 1, false)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
             }
-            if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-            else slot.markDirty();
+            if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+            else slot.setChanged();
         }
         return result;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

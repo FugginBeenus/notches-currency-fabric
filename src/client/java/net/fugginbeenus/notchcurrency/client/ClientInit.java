@@ -1,10 +1,12 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
@@ -18,10 +20,7 @@ import net.fugginbeenus.notchcurrency.registry.ModEntities;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.fugginbeenus.notchcurrency.trade.TradeScreen;
 import net.fugginbeenus.notchcurrency.ui.ATMScreen;
-
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.gui.screens.MenuScreens;
 
 public final class ClientInit implements ClientModInitializer {
     @Override
@@ -31,7 +30,7 @@ public final class ClientInit implements ClientModInitializer {
 
         // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
-                () -> net.minecraft.client.MinecraftClient.getInstance().isOnThread());
+                () -> net.minecraft.client.Minecraft.getInstance().isSameThread());
 
         // The balance HUD ducks out of the way of wide chat lines (only matters on 1.21, where
         // HUD callbacks draw over chat).
@@ -66,7 +65,7 @@ public final class ClientInit implements ClientModInitializer {
 
         // Cutout layer so the coin crest / standing coin's transparent corners aren't black.
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlocks(
-                net.minecraft.client.render.RenderLayer.getCutout(),
+                net.minecraft.client.renderer.RenderType.cutout(),
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
 
@@ -75,25 +74,25 @@ public final class ClientInit implements ClientModInitializer {
         AuctionTooltips.init();
 
         // Screens
-        HandledScreens.register(ModScreenHandlers.ATM, ATMScreen::new);
-        HandledScreens.register(ModScreenHandlers.TRADE, TradeScreen::new);
-        HandledScreens.register(ModScreenHandlers.RAFFLE, RaffleScreen::new);
-        HandledScreens.register(ModScreenHandlers.RAFFLE_ADMIN, RaffleAdminScreen::new);
-        HandledScreens.register(ModScreenHandlers.AUCTION_LISTING, AuctionListingScreen::new);
-        HandledScreens.register(ModScreenHandlers.BOUNTY_BOARD, BountyBoardScreen::new);
-        HandledScreens.register(ModScreenHandlers.BOUNTY_ADMIN, BountyAdminScreen::new);
-        HandledScreens.register(ModScreenHandlers.LOAN, LoanScreen::new);
-        HandledScreens.register(ModScreenHandlers.SLOT_MACHINE, SlotMachineScreen::new);
-        HandledScreens.register(ModScreenHandlers.ENCHANTER, EnchanterScreen::new);
-        HandledScreens.register(ModScreenHandlers.COSMETIC_SHOP, CosmeticShopScreen::new);
-        HandledScreens.register(ModScreenHandlers.TRADE_OFFER_CREATE, TradeOfferCreateScreen::new);
-        HandledScreens.register(ModScreenHandlers.TRADE_OFFERS, TradeOffersScreen::new);
-        HandledScreens.register(ModScreenHandlers.RECEIPTS, ReceiptsScreen::new);
-        HandledScreens.register(ModScreenHandlers.SHOP_BROWSE, ShopBrowseScreen::new);
-        HandledScreens.register(ModScreenHandlers.SHOP_MANAGE, ShopManageScreen::new);
-        HandledScreens.register(ModScreenHandlers.SHOP_LISTING_EDIT, ShopListingEditScreen::new);
-        HandledScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
-        HandledScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
+        MenuScreens.register(ModScreenHandlers.ATM, ATMScreen::new);
+        MenuScreens.register(ModScreenHandlers.TRADE, TradeScreen::new);
+        MenuScreens.register(ModScreenHandlers.RAFFLE, RaffleScreen::new);
+        MenuScreens.register(ModScreenHandlers.RAFFLE_ADMIN, RaffleAdminScreen::new);
+        MenuScreens.register(ModScreenHandlers.AUCTION_LISTING, AuctionListingScreen::new);
+        MenuScreens.register(ModScreenHandlers.BOUNTY_BOARD, BountyBoardScreen::new);
+        MenuScreens.register(ModScreenHandlers.BOUNTY_ADMIN, BountyAdminScreen::new);
+        MenuScreens.register(ModScreenHandlers.LOAN, LoanScreen::new);
+        MenuScreens.register(ModScreenHandlers.SLOT_MACHINE, SlotMachineScreen::new);
+        MenuScreens.register(ModScreenHandlers.ENCHANTER, EnchanterScreen::new);
+        MenuScreens.register(ModScreenHandlers.COSMETIC_SHOP, CosmeticShopScreen::new);
+        MenuScreens.register(ModScreenHandlers.TRADE_OFFER_CREATE, TradeOfferCreateScreen::new);
+        MenuScreens.register(ModScreenHandlers.TRADE_OFFERS, TradeOffersScreen::new);
+        MenuScreens.register(ModScreenHandlers.RECEIPTS, ReceiptsScreen::new);
+        MenuScreens.register(ModScreenHandlers.SHOP_BROWSE, ShopBrowseScreen::new);
+        MenuScreens.register(ModScreenHandlers.SHOP_MANAGE, ShopManageScreen::new);
+        MenuScreens.register(ModScreenHandlers.SHOP_LISTING_EDIT, ShopListingEditScreen::new);
+        MenuScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
+        MenuScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
 
         HudRenderCallback.EVENT.register(new NotchHud());
         HudRenderCallback.EVENT.register(new RouteHud());
@@ -103,11 +102,11 @@ public final class ClientInit implements ClientModInitializer {
 
         // Toggle the bounty tracker HUD (default B).
         var trackerKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
-                new net.minecraft.client.option.KeyBinding("key.notchcurrency.bounty_tracker",
-                        net.minecraft.client.util.InputUtil.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
+                new net.minecraft.client.KeyMapping("key.notchcurrency.bounty_tracker",
+                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
                         "key.categories.notchcurrency"));
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (trackerKey.wasPressed()) {
+            while (trackerKey.consumeClick()) {
                 BountyTrackerHud.toggle();
             }
         });
@@ -126,41 +125,41 @@ public final class ClientInit implements ClientModInitializer {
 
         // Trade cancel / complete messages
         NetClient.registerClientReceiver(NotchPackets.TRADE_CANCEL, (client, buf) -> {
-            String reason = buf.readString(64);
+            String reason = buf.readUtf(64);
             client.execute(() -> {
                 if (client.player != null) {
-                    client.player.sendMessage(
-                            Text.literal("Trade cancelled: " + reason).formatted(Formatting.RED), false);
+                    client.player.displayClientMessage(
+                            Component.literal("Trade cancelled: " + reason).withStyle(ChatFormatting.RED), false);
                 }
-                if (client.currentScreen instanceof TradeScreen) client.setScreen(null);
+                if (client.screen instanceof TradeScreen) client.setScreen(null);
             });
         });
         NetClient.registerClientReceiver(NotchPackets.TRADE_COMPLETE, (client, buf) -> {
             client.execute(() -> {
                 if (client.player != null) {
-                    client.player.sendMessage(
-                            Text.literal("Trade complete!").formatted(Formatting.GREEN), false);
+                    client.player.displayClientMessage(
+                            Component.literal("Trade complete!").withStyle(ChatFormatting.GREEN), false);
                 }
-                if (client.currentScreen instanceof TradeScreen) client.setScreen(null);
+                if (client.screen instanceof TradeScreen) client.setScreen(null);
             });
         });
 
         // On world join (SP/MP), request our balance
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             // StackData needs a registry lookup to decode carried stacks on 1.21+.
-            if (client.world != null) {
-                net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClient(client.world.getRegistryManager());
+            if (client.level != null) {
+                net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClient(client.level.registryAccess());
             }
             NotchPacketsClient.requestBalance();
             CurrencyPackGenerator.remindIfDisabled(client);
         });
 
         // Screen handlers
-        HandledScreens.register(
+        MenuScreens.register(
                 ModScreenHandlers.AUCTION_HOUSE,
                 AuctionHouseScreen::new
         );
-        HandledScreens.register(
+        MenuScreens.register(
                 ModScreenHandlers.USER_AUCTIONS,
                 UserListingsScreen::new
         );

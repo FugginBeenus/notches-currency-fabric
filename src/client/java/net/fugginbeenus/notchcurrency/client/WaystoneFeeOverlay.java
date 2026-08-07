@@ -4,14 +4,14 @@ import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -37,25 +37,25 @@ public final class WaystoneFeeOverlay {
         });
     }
 
-    private static void drawFeeTooltip(Screen screen, DrawContext ctx, int mouseX, int mouseY, float delta) {
+    private static void drawFeeTooltip(Screen screen, GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         if (!WaystoneFees.enabled()) return;
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.world == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
 
         Object waystone = hoveredWaystone(screen, mouseX, mouseY);
         if (waystone == null) return;
 
-        RegistryKey<World> destination = dimensionOf(waystone);
+        ResourceKey<Level> destination = dimensionOf(waystone);
         if (destination == null) return;
 
-        boolean crossDimension = !mc.world.getRegistryKey().equals(destination);
+        boolean crossDimension = !mc.level.dimension().equals(destination);
         int fee = crossDimension ? WaystoneFees.dimensionalFee() : WaystoneFees.fee();
         if (fee <= 0) return;
 
-        drawFeeBadge(screen, ctx, mc.textRenderer, mouseX, mouseY, fee, crossDimension);
+        drawFeeBadge(screen, ctx, mc.font, mouseX, mouseY, fee, crossDimension);
     }
 
-    private static void drawFeeBadge(Screen screen, DrawContext ctx, TextRenderer tr,
+    private static void drawFeeBadge(Screen screen, GuiGraphics ctx, Font tr,
                                      int mouseX, int mouseY, int fee, boolean crossDimension) {
         String label = crossDimension ? "Teleport Fee (other dimension)" : "Teleport Fee";
         String amount = String.valueOf(fee);
@@ -64,29 +64,29 @@ public final class WaystoneFeeOverlay {
         int gap = 3;
         int pad = 5;
         int line = 10;
-        int content = Math.max(tr.getWidth(label), coin + gap + tr.getWidth(amount));
+        int content = Math.max(tr.width(label), coin + gap + tr.width(amount));
         int boxW = content + pad * 2;
         int boxH = line + gap + coin + pad * 2;
 
         int x = Math.max(2, Math.min(mouseX + 12, screen.width - boxW - 2));
         int y = Math.max(2, Math.min(mouseY - 12, screen.height - boxH - 2));
 
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(0f, 0f, 400f); // above the menu, like a vanilla tooltip
+        ctx.pose().pushPose();
+        ctx.pose().translate(0f, 0f, 400f); // above the menu, like a vanilla tooltip
         ctx.fill(x - 1, y - 1, x + boxW + 1, y + boxH + 1, 0xFF000000);
         ctx.fill(x, y, x + boxW, y + boxH, 0xF01B1B22);
-        ctx.drawText(tr, label, x + pad, y + pad, 0xFFB8B8B8, true);
+        ctx.drawString(tr, label, x + pad, y + pad, 0xFFB8B8B8, true);
         int rowY = y + pad + line + gap;
-        ctx.drawItem(COIN, x + pad, rowY);
-        ctx.drawText(tr, amount, x + pad + coin + gap, rowY + (coin - 8) / 2, NotchTheme.TEXT_GOLD, true);
-        ctx.getMatrices().pop();
+        ctx.renderItem(COIN, x + pad, rowY);
+        ctx.drawString(tr, amount, x + pad + coin + gap, rowY + (coin - 8) / 2, NotchTheme.TEXT_GOLD, true);
+        ctx.pose().popPose();
     }
 
     @Nullable
     private static Object hoveredWaystone(Screen screen, int mouseX, int mouseY) {
         //? if >=1.21 {
         /*// 1.21: destinations are rows in a scrolling list; each entry's own isMouseOver is scroll-correct.
-        for (net.minecraft.client.gui.Element element : screen.children()) {
+        for (net.minecraft.client.gui.components.events.GuiEventListener element : screen.children()) {
             if (element instanceof net.blay09.mods.waystones.client.gui.widget.AbstractWaystoneList<?> list
                     && list.isMouseOver(mouseX, mouseY)) {
                 for (net.blay09.mods.waystones.client.gui.widget.AbstractWaystoneList.Entry<?> entry : list.children()) {
@@ -100,7 +100,7 @@ public final class WaystoneFeeOverlay {
         return null;
         *///?} else {
         // 1.20.1: destinations are top-level buttons on the screen.
-        for (ClickableWidget widget : Screens.getButtons(screen)) {
+        for (AbstractWidget widget : Screens.getButtons(screen)) {
             if (widget instanceof net.blay09.mods.waystones.client.gui.widget.WaystoneButton button
                     && button.visible && button.isMouseOver(mouseX, mouseY)) {
                 return readWaystone(button);
@@ -146,7 +146,7 @@ public final class WaystoneFeeOverlay {
     }
 
     @Nullable
-    private static RegistryKey<World> dimensionOf(Object waystone) {
+    private static ResourceKey<Level> dimensionOf(Object waystone) {
         //? if >=1.21 {
         /*if (waystone instanceof net.blay09.mods.waystones.api.Waystone ws) return ws.getDimension();
         *///?} else {

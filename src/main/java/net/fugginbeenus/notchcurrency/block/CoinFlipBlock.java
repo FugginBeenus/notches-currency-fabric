@@ -2,79 +2,79 @@ package net.fugginbeenus.notchcurrency.block;
 
 import net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipManager;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockEntityProvider;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class CoinFlipBlock extends Block implements BlockEntityProvider {
+public class CoinFlipBlock extends Block implements EntityBlock {
 
-    public static final BooleanProperty FLIPPING = BooleanProperty.of("flipping");
-    public static final EnumProperty<CoinFace> FACE = EnumProperty.of("face", CoinFace.class);
+    public static final BooleanProperty FLIPPING = BooleanProperty.create("flipping");
+    public static final EnumProperty<CoinFace> FACE = EnumProperty.create("face", CoinFace.class);
 
-    public CoinFlipBlock(Settings settings) {
+    public CoinFlipBlock(Properties settings) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState()
-                .with(FLIPPING, false)
-                .with(FACE, CoinFace.HEADS));
+        registerDefaultState(getStateDefinition().any()
+                .setValue(FLIPPING, false)
+                .setValue(FACE, CoinFace.HEADS));
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CoinFlipBlockEntity(pos, state);
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FLIPPING, FACE);
     }
 
-    private static final VoxelShape SHAPE = VoxelShapes.union(
-            Block.createCuboidShape(-3, 0, -3, 2, 12, 2),
-            Block.createCuboidShape(14, 0, -3, 19, 12, 2),
-            Block.createCuboidShape(-3, 0, 14, 2, 12, 19),
-            Block.createCuboidShape(14, 0, 14, 19, 12, 19),
-            Block.createCuboidShape(-2, 9, -2, 18, 15, 18),
-            Block.createCuboidShape(3, 15, 3, 13, 24, 13));
+    private static final VoxelShape SHAPE = Shapes.or(
+            Block.box(-3, 0, -3, 2, 12, 2),
+            Block.box(14, 0, -3, 19, 12, 2),
+            Block.box(-3, 0, 14, 2, 12, 19),
+            Block.box(14, 0, 14, 19, 12, 19),
+            Block.box(-2, 9, -2, 18, 15, 18),
+            Block.box(3, 15, 3, 13, 24, 13));
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         return SHAPE;
     }
 
     @Override
     //? if >=1.21 {
-    /*protected ActionResult onUse(BlockState state, World world, BlockPos pos,
-                                 PlayerEntity player, BlockHitResult hit) {
+    /*protected InteractionResult onUse(BlockState state, Level world, BlockPos pos,
+                                 Player player, BlockHitResult hit) {
     *///?} else {
-    public ActionResult onUse(BlockState state, World world, BlockPos pos,
-                              PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level world, BlockPos pos,
+                              Player player, InteractionHand hand, BlockHitResult hit) {
     //?}
-        if (world.isClient) {
-            return ActionResult.SUCCESS;
+        if (world.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
-        if (player instanceof ServerPlayerEntity sp && world instanceof ServerWorld) {
-            if (state.get(FLIPPING)) {
+        if (player instanceof ServerPlayer sp && world instanceof ServerLevel) {
+            if (state.getValue(FLIPPING)) {
                 CoinFlipManager.notifyBusy(sp);
             } else {
                 CoinFlipManager.openScreen(sp, pos);
             }
         }
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 }

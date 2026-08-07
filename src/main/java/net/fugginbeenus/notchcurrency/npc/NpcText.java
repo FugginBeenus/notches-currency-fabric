@@ -1,8 +1,10 @@
 package net.fugginbeenus.notchcurrency.npc;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 public final class NpcText {
@@ -14,20 +16,20 @@ public final class NpcText {
                 ? npc.getCustomName().getString() : "NPC";
     }
 
-    public static void say(ServerPlayerEntity sp, NotchNpcEntity npc, String line) {
+    public static void say(ServerPlayer sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
         npc.playVoice(); // every line it speaks gets its voice, not just the first hello
         sendLine(sp, npc, line);
     }
 
-    public static void sendLine(ServerPlayerEntity sp, NotchNpcEntity npc, String line) {
+    public static void sendLine(ServerPlayer sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
         String name = npcName(npc);
-        sp.sendMessage(net.minecraft.text.Text.literal("<" + name + "> " + substitute(line, sp, name))
-                .formatted(net.minecraft.util.Formatting.WHITE), false);
+        sp.displayClientMessage(net.minecraft.network.chat.Component.literal("<" + name + "> " + substitute(line, sp, name))
+                .withStyle(net.minecraft.ChatFormatting.WHITE), false);
     }
 
-    public static String substitute(String text, @Nullable ServerPlayerEntity sp, String npcName) {
+    public static String substitute(String text, @Nullable ServerPlayer sp, String npcName) {
         if (text == null) return "";
         String out = text
                 .replace("%player%", sp == null ? "someone" : sp.getName().getString())

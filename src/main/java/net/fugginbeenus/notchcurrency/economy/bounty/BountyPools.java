@@ -1,25 +1,24 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import net.minecraft.resources.ResourceLocation;
 
 public final class BountyPools {
 
-    public record ObjectiveEntry(BountyType type, Identifier target, int min, int max,
+    public record ObjectiveEntry(BountyType type, ResourceLocation target, int min, int max,
                                  BountyRarity rarity, int weight, String category) {}
 
-    public record RewardEntry(boolean item, Identifier itemId, int min, int max,
+    public record RewardEntry(boolean item, ResourceLocation itemId, int min, int max,
                               BountyRarity rarity, int weight) {}
 
     private static final List<ObjectiveEntry> OBJECTIVES = new ArrayList<>();
     private static final List<RewardEntry> REWARDS = new ArrayList<>();
-    private static final Map<Identifier, String> DECREES = new HashMap<>(); // decree item -> category
+    private static final Map<ResourceLocation, String> DECREES = new HashMap<>(); // decree item -> category
 
     private BountyPools() {}
 
@@ -29,11 +28,11 @@ public final class BountyPools {
         DECREES.clear();
     }
 
-    public static void addDecree(Identifier item, String category) {
+    public static void addDecree(ResourceLocation item, String category) {
         DECREES.put(item, category);
     }
 
-    public static String decreeCategory(Identifier item) {
+    public static String decreeCategory(ResourceLocation item) {
         return DECREES.get(item);
     }
 

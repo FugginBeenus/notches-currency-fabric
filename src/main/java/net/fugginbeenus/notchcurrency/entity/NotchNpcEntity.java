@@ -2,22 +2,22 @@ package net.fugginbeenus.notchcurrency.entity;
 
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.npc.NotchNpcManager;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 //? if >=1.21 {
@@ -39,7 +39,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
-public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
+public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public enum OwnerType { PLAYER, SERVER }
 
@@ -59,28 +59,28 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public static final String SKIN_VARIANT = "variant";
 
     // Synced appearance (so the client renderer reflects edits live).
-    private static final TrackedData<String> MODEL =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<String> SKIN_TYPE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<String> SKIN_VALUE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<Boolean> SLIM =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Float> SCALE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> SCALE_Y =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> SCALE_Z =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> NAME_OFFSET =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<String> BILLBOARD =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<String> SUBTITLE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<Integer> NPC_POSE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<String> MODEL =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> SKIN_TYPE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> SKIN_VALUE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> SLIM =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> SCALE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> SCALE_Y =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> SCALE_Z =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> NAME_OFFSET =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<String> BILLBOARD =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> SUBTITLE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> NPC_POSE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
     public static final int POSE_STANDING = 0;
     public static final int POSE_SITTING = 1;
@@ -91,14 +91,14 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public static final int POSE_WAVING = 6;   // arm raised in greeting
     public static final int POSE_CUSTOM = 7;   // per-part rotations from the pose editor
 
-    private static final TrackedData<NbtCompound> CUSTOM_POSE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.NBT_COMPOUND);
+    private static final EntityDataAccessor<CompoundTag> CUSTOM_POSE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.COMPOUND_TAG);
 
-    private static final TrackedData<Integer> POSE_ANIM =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Integer> POSE_ANIM =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
-    private static final TrackedData<Integer> ATTACK_PULSE =
-            DataTracker.registerData(NotchNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Integer> ATTACK_PULSE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
     public float clientSwingStartAge = -1000f;
     private int lastSeenAttackPulse = -1;
@@ -122,10 +122,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private int wanderRadius = 8;
     private float patrolSpeed = 0.9f; // stroll 0.6 / walk 0.9 / jog 1.2
     private int patrolWaitTicks = 0;  // pause at each waypoint (game ticks, 0 = none)
-    @Nullable private net.minecraft.util.math.BlockPos homePos = null;
-    private final java.util.List<net.minecraft.util.math.BlockPos> waypoints = new java.util.ArrayList<>();
-    private final java.util.List<net.minecraft.entity.ai.goal.Goal> behaviorGoals = new java.util.ArrayList<>();
-    private final java.util.List<net.minecraft.entity.ai.goal.Goal> behaviorTargetGoals = new java.util.ArrayList<>();
+    @Nullable private net.minecraft.core.BlockPos homePos = null;
+    private final java.util.List<net.minecraft.core.BlockPos> waypoints = new java.util.ArrayList<>();
+    private final java.util.List<net.minecraft.world.entity.ai.goal.Goal> behaviorGoals = new java.util.ArrayList<>();
+    private final java.util.List<net.minecraft.world.entity.ai.goal.Goal> behaviorTargetGoals = new java.util.ArrayList<>();
 
     // Branching dialogue. Empty = interaction goes straight to the role.
     private net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree dialogue =
@@ -160,10 +160,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // behind. Kept out of NBT on purpose: they are derived, and they rebuild themselves on load.
     @Nullable private Behavior scheduleBehavior = null;
     private int poseBeforeSchedule = -1;
-    @Nullable private net.minecraft.util.math.BlockPos scheduleHome = null;
+    @Nullable private net.minecraft.core.BlockPos scheduleHome = null;
     private int scheduleRadius = 8;
     private int regen = 0; // half-hearts healed every 5 seconds
-    @Nullable private net.minecraft.entity.ai.goal.Goal doorGoal = null;
+    @Nullable private net.minecraft.world.entity.ai.goal.Goal doorGoal = null;
 
     // While a player is interacting, the NPC holds still and faces them (see TalkGoal). Refreshed on
     // each interaction; expires so it resumes wandering once the player leaves or a few seconds pass.
@@ -184,7 +184,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     private boolean watchPlayers = true; // the look-at-passers-by goal
     // No initializer: initGoals() runs from the super constructor and sets this before
     // field initializers would run (an "= null" here would wipe the reference).
-    @Nullable private LookAtEntityGoal lookGoal;
+    @Nullable private LookAtPlayerGoal lookGoal;
 
     // Display rule: when the NPC exists to be seen. Hidden = invisible + non-interactive.
     public static final int VIS_ALWAYS = 0, VIS_DAY = 1, VIS_NIGHT = 2;
@@ -194,83 +194,83 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // Handler id for the CUSTOM role (registered by other mods via NotchNpcApi).
     private String customRoleId = "";
 
-    public NotchNpcEntity(EntityType<? extends NotchNpcEntity> type, World world) {
+    public NotchNpcEntity(EntityType<? extends NotchNpcEntity> type, Level world) {
         super(type, world);
-        this.setPersistent();
+        this.setPersistenceRequired();
     }
 
     @Override
     //? if >=1.21 {
-    /*protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(MODEL, MODEL_HUMANOID);
-        builder.add(SKIN_TYPE, SKIN_PRESET);
-        builder.add(SKIN_VALUE, "1");
-        builder.add(SLIM, false);
-        builder.add(SCALE, 1.0f);
-        builder.add(SCALE_Y, 1.0f);
-        builder.add(SCALE_Z, 1.0f);
-        builder.add(NAME_OFFSET, 0.0f);
-        builder.add(BILLBOARD, "");
-        builder.add(SUBTITLE, "");
-        builder.add(NPC_POSE, POSE_STANDING);
-        builder.add(CUSTOM_POSE, new NbtCompound());
-        builder.add(POSE_ANIM, ANIM_BREATHE); // alive-by-default
-        builder.add(ATTACK_PULSE, 0);
+    /*protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(MODEL, MODEL_HUMANOID);
+        builder.define(SKIN_TYPE, SKIN_PRESET);
+        builder.define(SKIN_VALUE, "1");
+        builder.define(SLIM, false);
+        builder.define(SCALE, 1.0f);
+        builder.define(SCALE_Y, 1.0f);
+        builder.define(SCALE_Z, 1.0f);
+        builder.define(NAME_OFFSET, 0.0f);
+        builder.define(BILLBOARD, "");
+        builder.define(SUBTITLE, "");
+        builder.define(NPC_POSE, POSE_STANDING);
+        builder.define(CUSTOM_POSE, new CompoundTag());
+        builder.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        builder.define(ATTACK_PULSE, 0);
     }
     *///?} else {
-    protected void initDataTracker() {
-        super.initDataTracker();
-        this.dataTracker.startTracking(MODEL, MODEL_HUMANOID);
-        this.dataTracker.startTracking(SKIN_TYPE, SKIN_PRESET);
-        this.dataTracker.startTracking(SKIN_VALUE, "1");
-        this.dataTracker.startTracking(SLIM, false);
-        this.dataTracker.startTracking(SCALE, 1.0f);
-        this.dataTracker.startTracking(SCALE_Y, 1.0f);
-        this.dataTracker.startTracking(SCALE_Z, 1.0f);
-        this.dataTracker.startTracking(NAME_OFFSET, 0.0f);
-        this.dataTracker.startTracking(BILLBOARD, "");
-        this.dataTracker.startTracking(SUBTITLE, "");
-        this.dataTracker.startTracking(NPC_POSE, POSE_STANDING);
-        this.dataTracker.startTracking(CUSTOM_POSE, new NbtCompound());
-        this.dataTracker.startTracking(POSE_ANIM, ANIM_BREATHE); // alive-by-default
-        this.dataTracker.startTracking(ATTACK_PULSE, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(MODEL, MODEL_HUMANOID);
+        this.entityData.define(SKIN_TYPE, SKIN_PRESET);
+        this.entityData.define(SKIN_VALUE, "1");
+        this.entityData.define(SLIM, false);
+        this.entityData.define(SCALE, 1.0f);
+        this.entityData.define(SCALE_Y, 1.0f);
+        this.entityData.define(SCALE_Z, 1.0f);
+        this.entityData.define(NAME_OFFSET, 0.0f);
+        this.entityData.define(BILLBOARD, "");
+        this.entityData.define(SUBTITLE, "");
+        this.entityData.define(NPC_POSE, POSE_STANDING);
+        this.entityData.define(CUSTOM_POSE, new CompoundTag());
+        this.entityData.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        this.entityData.define(ATTACK_PULSE, 0);
     }
     //?}
 
     @Override
-    public boolean tryAttack(net.minecraft.entity.Entity target) {
-        boolean hit = super.tryAttack(target);
-        if (hit && !this.getWorld().isClient) {
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit && !this.level().isClientSide) {
             // Pulse the swing to clients (wraps safely: the client only watches for CHANGE).
-            this.dataTracker.set(ATTACK_PULSE, this.dataTracker.get(ATTACK_PULSE) + 1);
+            this.entityData.set(ATTACK_PULSE, this.entityData.get(ATTACK_PULSE) + 1);
         }
         return hit;
     }
 
-    public int getPoseAnim() { return this.dataTracker.get(POSE_ANIM); }
+    public int getPoseAnim() { return this.entityData.get(POSE_ANIM); }
     public void setPoseAnim(int anim) {
-        this.dataTracker.set(POSE_ANIM, Math.max(0, Math.min(ANIM_COUNT - 1, anim)));
+        this.entityData.set(POSE_ANIM, Math.max(0, Math.min(ANIM_COUNT - 1, anim)));
     }
 
     @Override
-    public void onTrackedDataSet(TrackedData<?> data) {
-        super.onTrackedDataSet(data);
+    public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
+        super.onSyncedDataUpdated(data);
         if (CUSTOM_POSE.equals(data)) {
-            customPoseCache = unpackCustomPose(this.dataTracker.get(CUSTOM_POSE));
+            customPoseCache = unpackCustomPose(this.entityData.get(CUSTOM_POSE));
         }
         if (ATTACK_PULSE.equals(data)) {
-            int pulse = this.dataTracker.get(ATTACK_PULSE);
+            int pulse = this.entityData.get(ATTACK_PULSE);
             // First sync just sets the baseline; a CHANGE afterwards means a fresh melee hit.
             if (lastSeenAttackPulse >= 0 && pulse != lastSeenAttackPulse) {
-                clientSwingStartAge = this.age;
+                clientSwingStartAge = this.tickCount;
             }
             lastSeenAttackPulse = pulse;
         }
     }
 
     @Nullable
-    private static float[] unpackCustomPose(NbtCompound nbt) {
+    private static float[] unpackCustomPose(CompoundTag nbt) {
         if (nbt == null || nbt.isEmpty()) return null;
         float[] out = new float[18];
         for (int part = 0; part < 6; part++) {
@@ -290,13 +290,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     public void setCustomPosePart(int part, int x, int y, int z) {
-        NbtCompound pose = this.dataTracker.get(CUSTOM_POSE).copy();
+        CompoundTag pose = this.entityData.get(CUSTOM_POSE).copy();
         if (part < 0) {
-            pose = new NbtCompound();
+            pose = new CompoundTag();
         } else if (part < 6) {
             pose.putIntArray(Integer.toString(part), new int[]{clampDeg(x), clampDeg(y), clampDeg(z)});
         }
-        this.dataTracker.set(CUSTOM_POSE, pose);
+        this.entityData.set(CUSTOM_POSE, pose);
         customPoseCache = unpackCustomPose(pose); // keep the server-side copy fresh too
     }
 
@@ -304,26 +304,26 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return Math.max(-180, Math.min(180, deg));
     }
 
-    public int getNpcPose() { return this.dataTracker.get(NPC_POSE); }
+    public int getNpcPose() { return this.entityData.get(NPC_POSE); }
 
     public void setNpcPose(int pose) {
         int clamped = Math.max(POSE_STANDING, Math.min(POSE_CUSTOM, pose));
-        this.dataTracker.set(NPC_POSE, clamped);
+        this.entityData.set(NPC_POSE, clamped);
         this.setPose(entityPoseFor(clamped));
     }
 
-    private static net.minecraft.entity.EntityPose entityPoseFor(int npcPose) {
+    private static net.minecraft.world.entity.Pose entityPoseFor(int npcPose) {
         return switch (npcPose) {
-            case POSE_SNEAKING -> net.minecraft.entity.EntityPose.CROUCHING;
-            case POSE_SLEEPING -> net.minecraft.entity.EntityPose.SLEEPING;
-            case POSE_PRONE -> net.minecraft.entity.EntityPose.SWIMMING;
-            default -> net.minecraft.entity.EntityPose.STANDING; // sitting/chilling are model-level
+            case POSE_SNEAKING -> net.minecraft.world.entity.Pose.CROUCHING;
+            case POSE_SLEEPING -> net.minecraft.world.entity.Pose.SLEEPING;
+            case POSE_PRONE -> net.minecraft.world.entity.Pose.SWIMMING;
+            default -> net.minecraft.world.entity.Pose.STANDING; // sitting/chilling are model-level
         };
     }
 
     //? if <1.21 {
     @Override
-    public float getNameLabelHeight() {
+    public float getNameTagOffsetY() {
         float base = switch (getNpcPose()) {
             case POSE_SLEEPING, POSE_PRONE -> 0.5f;
             case POSE_SNEAKING -> 1.7f;
@@ -334,37 +334,37 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
     //?}
 
-    public String getModelId() { return this.dataTracker.get(MODEL); }
-    public void setModelId(String id) { this.dataTracker.set(MODEL, (id == null || id.isEmpty()) ? MODEL_HUMANOID : id); }
+    public String getModelId() { return this.entityData.get(MODEL); }
+    public void setModelId(String id) { this.entityData.set(MODEL, (id == null || id.isEmpty()) ? MODEL_HUMANOID : id); }
 
-    public String getSkinType() { return this.dataTracker.get(SKIN_TYPE); }
-    public void setSkinType(String t) { this.dataTracker.set(SKIN_TYPE, (t == null || t.isEmpty()) ? SKIN_PRESET : t); }
+    public String getSkinType() { return this.entityData.get(SKIN_TYPE); }
+    public void setSkinType(String t) { this.entityData.set(SKIN_TYPE, (t == null || t.isEmpty()) ? SKIN_PRESET : t); }
 
-    public String getSkinValue() { return this.dataTracker.get(SKIN_VALUE); }
-    public void setSkinValue(String v) { this.dataTracker.set(SKIN_VALUE, v == null ? "" : v); }
+    public String getSkinValue() { return this.entityData.get(SKIN_VALUE); }
+    public void setSkinValue(String v) { this.entityData.set(SKIN_VALUE, v == null ? "" : v); }
 
-    public boolean isSlim() { return this.dataTracker.get(SLIM); }
-    public void setSlim(boolean slim) { this.dataTracker.set(SLIM, slim); }
+    public boolean isSlim() { return this.entityData.get(SLIM); }
+    public void setSlim(boolean slim) { this.entityData.set(SLIM, slim); }
 
     private static float clampNpcScale(float s) { return Math.max(0.3f, Math.min(3.0f, s)); }
 
-    public float getScale() { return this.dataTracker.get(SCALE); }
-    public void setScale(float scale) { this.dataTracker.set(SCALE, clampNpcScale(scale)); }
+    public float getScale() { return this.entityData.get(SCALE); }
+    public void setScale(float scale) { this.entityData.set(SCALE, clampNpcScale(scale)); }
 
-    public float getScaleY() { return this.dataTracker.get(SCALE_Y); }
-    public void setScaleY(float scale) { this.dataTracker.set(SCALE_Y, clampNpcScale(scale)); }
+    public float getScaleY() { return this.entityData.get(SCALE_Y); }
+    public void setScaleY(float scale) { this.entityData.set(SCALE_Y, clampNpcScale(scale)); }
 
-    public float getScaleZ() { return this.dataTracker.get(SCALE_Z); }
-    public void setScaleZ(float scale) { this.dataTracker.set(SCALE_Z, clampNpcScale(scale)); }
+    public float getScaleZ() { return this.entityData.get(SCALE_Z); }
+    public void setScaleZ(float scale) { this.entityData.set(SCALE_Z, clampNpcScale(scale)); }
 
     public static final int MAX_SUBTITLE_LENGTH = 32;
 
-    public String getSubtitle() { return this.dataTracker.get(SUBTITLE); }
+    public String getSubtitle() { return this.entityData.get(SUBTITLE); }
 
     public void setSubtitle(String text) {
         String out = text == null ? "" : text.replace('\n', ' ').trim();
         if (out.length() > MAX_SUBTITLE_LENGTH) out = out.substring(0, MAX_SUBTITLE_LENGTH);
-        this.dataTracker.set(SUBTITLE, out);
+        this.entityData.set(SUBTITLE, out);
     }
 
     public String getVoice() { return voiceSound; }
@@ -373,30 +373,30 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.voiceSound = soundId == null ? "" : soundId;
     }
 
-    public int getVoicePitch() { return voicePitch; }
+    public int getVoicePitchPercent() { return voicePitch; }
 
-    public void setVoicePitch(int percent) {
+    public void setVoicePitchPercent(int percent) {
         this.voicePitch = Math.max(50, Math.min(200, percent));
     }
 
     public void playVoice() {
         if (voiceSound.isEmpty() || this.isSilent()) return;
-        net.minecraft.util.Identifier id = net.minecraft.util.Identifier.tryParse(voiceSound);
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(voiceSound);
         if (id == null) return;
-        net.minecraft.sound.SoundEvent sound = net.minecraft.registry.Registries.SOUND_EVENT.get(id);
+        net.minecraft.sounds.SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(id);
         if (sound == null) return;
-        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), sound,
-                net.minecraft.sound.SoundCategory.NEUTRAL, 1.0f, voicePitch / 100.0f);
+        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), sound,
+                net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, voicePitch / 100.0f);
     }
 
     public static final int MAX_BILLBOARD_LINES = 4;
     public static final int MAX_BILLBOARD_LINE_LENGTH = 48;
 
-    public String getBillboard() { return this.dataTracker.get(BILLBOARD); }
+    public String getBillboard() { return this.entityData.get(BILLBOARD); }
 
     public void setBillboard(String text) {
         if (text == null || text.isBlank()) {
-            this.dataTracker.set(BILLBOARD, "");
+            this.entityData.set(BILLBOARD, "");
             return;
         }
         StringBuilder out = new StringBuilder();
@@ -409,12 +409,12 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             out.append(trimmed);
             lines++;
         }
-        this.dataTracker.set(BILLBOARD, out.toString());
+        this.entityData.set(BILLBOARD, out.toString());
     }
 
-    public float getNameOffset() { return this.dataTracker.get(NAME_OFFSET); }
+    public float getNameOffset() { return this.entityData.get(NAME_OFFSET); }
     public void setNameOffset(float offset) {
-        this.dataTracker.set(NAME_OFFSET, Math.max(-2.0f, Math.min(3.0f, offset)));
+        this.entityData.set(NAME_OFFSET, Math.max(-2.0f, Math.min(3.0f, offset)));
     }
 
     public void setAppearance(String model, String skinType, String skinValue, boolean slim,
@@ -445,16 +445,16 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         applyBehaviorGoals();
     }
 
-    public void setHome(net.minecraft.util.math.BlockPos pos) {
-        this.homePos = pos == null ? null : pos.toImmutable();
+    public void setHome(net.minecraft.core.BlockPos pos) {
+        this.homePos = pos == null ? null : pos.immutable();
         applyBehaviorGoals();
     }
 
-    public java.util.List<net.minecraft.util.math.BlockPos> getWaypoints() { return waypoints; }
+    public java.util.List<net.minecraft.core.BlockPos> getWaypoints() { return waypoints; }
 
-    public boolean addWaypoint(net.minecraft.util.math.BlockPos pos) {
+    public boolean addWaypoint(net.minecraft.core.BlockPos pos) {
         if (waypoints.size() >= 16) return false;
-        waypoints.add(pos.toImmutable());
+        waypoints.add(pos.immutable());
         return true;
     }
 
@@ -500,19 +500,19 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     public boolean isRoleOpenNow() {
         if (!schedule.isActive() || !schedule.enforceHours()) return true;
-        var entry = schedule.activeAt(this.getWorld().getTimeOfDay());
+        var entry = schedule.activeAt(this.level().getDayTime());
         return entry == null || entry.roleOpen();
     }
 
     public String closedLineNow() {
-        var entry = schedule.isActive() ? schedule.activeAt(this.getWorld().getTimeOfDay()) : null;
+        var entry = schedule.isActive() ? schedule.activeAt(this.level().getDayTime()) : null;
         if (entry != null && !entry.closedLine().isBlank()) return entry.closedLine();
         return "Sorry, we're closed right now.";
     }
 
     public void fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger trigger,
-                     @Nullable ServerPlayerEntity player) {
-        if (this.getWorld().isClient || !actions.has(trigger)) return;
+                     @Nullable ServerPlayer player) {
+        if (this.level().isClientSide || !actions.has(trigger)) return;
         int cooldown = trigger.cooldownTicks();
         if (cooldown > 0) {
             if (lastFiredAge == null) {
@@ -521,8 +521,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
                 java.util.Arrays.fill(lastFiredAge, -100000);
             }
             int slot = trigger.ordinal();
-            if (this.age - lastFiredAge[slot] < cooldown) return;
-            lastFiredAge[slot] = this.age;
+            if (this.tickCount - lastFiredAge[slot] < cooldown) return;
+            lastFiredAge[slot] = this.tickCount;
         }
         net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger));
     }
@@ -543,16 +543,16 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     private void applyDoorCapability() {
-        if (this.getNavigation() instanceof net.minecraft.entity.ai.pathing.MobNavigation nav) {
-            nav.setCanPathThroughDoors(opensDoors);
-            nav.setCanEnterOpenDoors(true);
-            if (nav.getNodeMaker() != null) nav.getNodeMaker().setCanOpenDoors(opensDoors);
+        if (this.getNavigation() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation nav) {
+            nav.setCanOpenDoors(opensDoors);
+            nav.setCanPassDoors(true);
+            if (nav.getNodeEvaluator() != null) nav.getNodeEvaluator().setCanOpenDoors(opensDoors);
         }
         if (opensDoors && doorGoal == null) {
-            doorGoal = new net.minecraft.entity.ai.goal.LongDoorInteractGoal(this, true);
-            this.goalSelector.add(1, doorGoal);
+            doorGoal = new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true);
+            this.goalSelector.addGoal(1, doorGoal);
         } else if (!opensDoors && doorGoal != null) {
-            this.goalSelector.remove(doorGoal);
+            this.goalSelector.removeGoal(doorGoal);
             doorGoal = null;
         }
     }
@@ -591,32 +591,32 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     @Nullable
-    public PlayerEntity resolveFollowTarget() {
+    public Player resolveFollowTarget() {
         if (!followPlayerName.isEmpty() && this.getServer() != null) {
-            return this.getServer().getPlayerManager().getPlayer(followPlayerName);
+            return this.getServer().getPlayerList().getPlayerByName(followPlayerName);
         }
-        return owner != null ? this.getWorld().getPlayerByUuid(owner) : null;
+        return owner != null ? this.level().getPlayerByUUID(owner) : null;
     }
 
     // False for everyone until a faction is set, which is what keeps factions inert by default.
-    public boolean isAlly(@Nullable net.minecraft.entity.Entity other) {
+    public boolean isAlly(@Nullable net.minecraft.world.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         if (other instanceof NotchNpcEntity npc) return factionId.equals(npc.getFactionId());
-        if (other instanceof ServerPlayerEntity sp) {
+        if (other instanceof ServerPlayer sp) {
             return factionId.equals(net.fugginbeenus.notchcurrency.npc.faction.FactionState
-                    .get(sp.getServerWorld()).factionIdOf(sp.getUuid()));
+                    .get(sp.serverLevel()).factionIdOf(sp.getUUID()));
         }
         return false;
     }
 
-    public boolean isRivalFaction(@Nullable net.minecraft.entity.Entity other) {
+    public boolean isRivalFaction(@Nullable net.minecraft.world.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         String theirs = null;
         if (other instanceof NotchNpcEntity npc) {
             theirs = npc.getFactionId();
-        } else if (other instanceof ServerPlayerEntity sp) {
+        } else if (other instanceof ServerPlayer sp) {
             theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
-                    .get(sp.getServerWorld()).factionIdOf(sp.getUuid());
+                    .get(sp.serverLevel()).factionIdOf(sp.getUUID());
         }
         return theirs != null && !theirs.isEmpty() && !theirs.equals(factionId);
     }
@@ -669,8 +669,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void setWatchPlayers(boolean watch) {
         this.watchPlayers = watch;
         if (lookGoal != null) {
-            this.goalSelector.remove(lookGoal);
-            if (watch) this.goalSelector.add(6, lookGoal);
+            this.goalSelector.removeGoal(lookGoal);
+            if (watch) this.goalSelector.addGoal(6, lookGoal);
         }
     }
 
@@ -684,8 +684,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void setCustomRoleId(String id) { this.customRoleId = id == null ? "" : id; }
 
     public boolean isRuleHidden() {
-        if (visibility == VIS_DAY) return !this.getWorld().isDay();
-        if (visibility == VIS_NIGHT) return this.getWorld().isDay();
+        if (visibility == VIS_DAY) return !this.level().isDay();
+        if (visibility == VIS_NIGHT) return this.level().isDay();
         return false;
     }
 
@@ -695,8 +695,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return leashable && super.canBeLeashed();
     }
     *///?} else {
-    public boolean canBeLeashedBy(PlayerEntity player) {
-        return leashable && super.canBeLeashedBy(player);
+    public boolean canBeLeashed(Player player) {
+        return leashable && super.canBeLeashed(player);
     }
     //?}
 
@@ -706,79 +706,79 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     public void setBaseStats(int maxHealth, int speedPct) {
         int hp = Math.max(2, Math.min(100, maxHealth));
         double speed = Math.max(0.1, Math.min(0.6, speedPct / 100.0));
-        var health = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        var health = this.getAttribute(Attributes.MAX_HEALTH);
         if (health != null) health.setBaseValue(hp);
-        var move = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        var move = this.getAttribute(Attributes.MOVEMENT_SPEED);
         if (move != null) move.setBaseValue(speed);
         this.setHealth(hp);
     }
 
-    public java.util.List<String> debugSummary(ServerPlayerEntity viewer) {
+    public java.util.List<String> debugSummary(ServerPlayer viewer) {
         java.util.List<String> out = new java.util.ArrayList<>();
         out.add("behavior=" + behavior + " radius=" + wanderRadius
                 + " home=" + (homePos == null ? "none" : homePos.toShortString()));
-        PlayerEntity resolvedOwner = owner == null ? null : this.getWorld().getPlayerByUuid(owner);
+        Player resolvedOwner = owner == null ? null : this.level().getPlayerByUUID(owner);
         out.add("owner=" + (owner == null ? "none" : ownerName)
                 + " resolved=" + (resolvedOwner != null)
-                + " distToYou=" + String.format("%.1f", Math.sqrt(this.squaredDistanceTo(viewer))));
+                + " distToYou=" + String.format("%.1f", Math.sqrt(this.distanceToSqr(viewer))));
         out.add("movementGoals=" + behaviorGoals.size()
-                + " navIdle=" + this.getNavigation().isIdle()
-                + " despawnCounter=" + this.getDespawnCounter());
-        out.add("onGround=" + this.isOnGround() + " noGravity=" + this.hasNoGravity()
-                + " aiDisabled=" + this.isAiDisabled()
-                + " speedAttr=" + this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                + " followRange=" + this.getAttributeValue(EntityAttributes.GENERIC_FOLLOW_RANGE));
+                + " navIdle=" + this.getNavigation().isDone()
+                + " despawnCounter=" + this.getNoActionTime());
+        out.add("onGround=" + this.onGround() + " noGravity=" + this.isNoGravity()
+                + " aiDisabled=" + this.isNoAi()
+                + " speedAttr=" + this.getAttributeValue(Attributes.MOVEMENT_SPEED)
+                + " followRange=" + this.getAttributeValue(Attributes.FOLLOW_RANGE));
         return out;
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return PathAwareEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 20.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
-                .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0)
+    public static AttributeSupplier.Builder createAttributes() {
+        return PathfinderMob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.3)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 // Follow range doubles as the pathfinding distance limit; the default 16 made a
                 // following NPC freeze whenever its owner got 16-30 blocks away (teleport kicks
                 // in at 30).
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0)
+                .add(Attributes.FOLLOW_RANGE, 48.0)
                 // Needed by MeleeAttackGoal (GUARD mode). Weapon bonuses stack on top.
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4.0);
+                .add(Attributes.ATTACK_DAMAGE, 4.0);
     }
 
     @Override
-    protected void initGoals() {
+    protected void registerGoals() {
         // Base goals every NPC has; movement goals are swapped in by applyBehaviorGoals().
-        this.goalSelector.add(0, new net.minecraft.entity.ai.goal.SwimGoal(this));
+        this.goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
         // Top priority: while a player is interacting, hold still and face them (see startTalking).
-        this.goalSelector.add(0, new TalkGoal());
-        this.lookGoal = new LookAtEntityGoal(this, PlayerEntity.class, 8.0f);
-        this.goalSelector.add(6, lookGoal);
+        this.goalSelector.addGoal(0, new TalkGoal());
+        this.lookGoal = new LookAtPlayerGoal(this, Player.class, 8.0f);
+        this.goalSelector.addGoal(6, lookGoal);
     }
 
-    public void startTalking(PlayerEntity player) {
-        this.talkingTo = player.getUuid();
+    public void startTalking(Player player) {
+        this.talkingTo = player.getUUID();
         this.talkingTicks = 160; // ~8s; TalkGoal counts this down and releases when it (or the player) runs out
     }
 
-    private class TalkGoal extends net.minecraft.entity.ai.goal.Goal {
+    private class TalkGoal extends net.minecraft.world.entity.ai.goal.Goal {
         TalkGoal() {
-            this.setControls(java.util.EnumSet.of(Control.MOVE, Control.LOOK));
+            this.setFlags(java.util.EnumSet.of(Flag.MOVE, Flag.LOOK));
         }
 
         @Nullable
-        private PlayerEntity partner() {
+        private Player partner() {
             if (talkingTo == null || talkingTicks <= 0) return null;
-            PlayerEntity p = getWorld().getPlayerByUuid(talkingTo);
-            if (p == null || p.isRemoved() || squaredDistanceTo(p) > 100.0) return null; // ~10 blocks
+            Player p = level().getPlayerByUUID(talkingTo);
+            if (p == null || p.isRemoved() || distanceToSqr(p) > 100.0) return null; // ~10 blocks
             return p;
         }
 
         @Override
-        public boolean canStart() {
+        public boolean canUse() {
             return partner() != null;
         }
 
         @Override
-        public boolean shouldContinue() {
+        public boolean canContinueToUse() {
             return partner() != null;
         }
 
@@ -791,9 +791,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         public void tick() {
             talkingTicks--;
             getNavigation().stop();
-            PlayerEntity p = partner();
+            Player p = partner();
             if (p != null) {
-                getLookControl().lookAt(p, 30.0f, 30.0f);
+                getLookControl().setLookAt(p, 30.0f, 30.0f);
             }
         }
 
@@ -805,21 +805,21 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     private void applyBehaviorGoals() {
-        for (net.minecraft.entity.ai.goal.Goal g : behaviorGoals) {
-            this.goalSelector.remove(g);
+        for (net.minecraft.world.entity.ai.goal.Goal g : behaviorGoals) {
+            this.goalSelector.removeGoal(g);
         }
         behaviorGoals.clear();
-        for (net.minecraft.entity.ai.goal.Goal g : behaviorTargetGoals) {
-            this.targetSelector.remove(g);
+        for (net.minecraft.world.entity.ai.goal.Goal g : behaviorTargetGoals) {
+            this.targetSelector.removeGoal(g);
         }
         behaviorTargetGoals.clear();
         this.setTarget(null); // drop any combat target when leaving GUARD
 
         if (avoidMonsters) {
             // Runs alongside any behavior: back away from hostiles that get close.
-            net.minecraft.entity.ai.goal.Goal flee = new net.minecraft.entity.ai.goal.FleeEntityGoal<>(
-                    this, net.minecraft.entity.mob.HostileEntity.class, 8.0f, 1.0, 1.25);
-            this.goalSelector.add(1, flee);
+            net.minecraft.world.entity.ai.goal.Goal flee = new net.minecraft.world.entity.ai.goal.AvoidEntityGoal<>(
+                    this, net.minecraft.world.entity.monster.Monster.class, 8.0f, 1.0, 1.25);
+            this.goalSelector.addGoal(1, flee);
             behaviorGoals.add(flee);
         }
 
@@ -827,34 +827,34 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             case WANDER -> {
                 // Short-range strolls every ~2s: livelier than the vanilla far-wander cadence and a
                 // better fit for the home leash. canDespawn=false skips the despawn-counter gate.
-                net.minecraft.entity.ai.goal.Goal wander =
-                        new net.minecraft.entity.ai.goal.WanderAroundGoal(this, 0.8, 40, false);
-                this.goalSelector.add(2, wander);
+                net.minecraft.world.entity.ai.goal.Goal wander =
+                        new net.minecraft.world.entity.ai.goal.RandomStrollGoal(this, 0.8, 40, false);
+                this.goalSelector.addGoal(2, wander);
                 behaviorGoals.add(wander);
                 applyHomeLeash();
             }
             case FOLLOW_OWNER -> {
-                net.minecraft.entity.ai.goal.Goal follow = new NpcFollowOwnerGoal(this, 1.15);
-                this.goalSelector.add(2, follow);
+                net.minecraft.world.entity.ai.goal.Goal follow = new NpcFollowOwnerGoal(this, 1.15);
+                this.goalSelector.addGoal(2, follow);
                 behaviorGoals.add(follow);
-                this.clearPositionTarget(); // no leash
+                this.clearRestriction(); // no leash
             }
             case PATROL -> {
-                net.minecraft.entity.ai.goal.Goal patrol = new NpcPatrolGoal(this);
-                this.goalSelector.add(2, patrol);
+                net.minecraft.world.entity.ai.goal.Goal patrol = new NpcPatrolGoal(this);
+                this.goalSelector.addGoal(2, patrol);
                 behaviorGoals.add(patrol);
-                this.clearPositionTarget(); // waypoints may be far from home
+                this.clearRestriction(); // waypoints may be far from home
             }
             case GUARD -> {
                 // Stroll the post while idle and stay leashed to home; the fighting itself is set up
                 // below, since Guard is only one of the reasons an NPC might swing at something.
-                net.minecraft.entity.ai.goal.Goal stroll =
-                        new net.minecraft.entity.ai.goal.WanderAroundGoal(this, 0.6, 80, false);
-                this.goalSelector.add(5, stroll);
+                net.minecraft.world.entity.ai.goal.Goal stroll =
+                        new net.minecraft.world.entity.ai.goal.RandomStrollGoal(this, 0.6, 80, false);
+                this.goalSelector.addGoal(5, stroll);
                 behaviorGoals.add(stroll);
                 applyHomeLeash();
             }
-            case STATIONARY -> this.clearPositionTarget();
+            case STATIONARY -> this.clearRestriction();
         }
 
         // One melee goal, however many reasons there are to fight: a second would fight itself for
@@ -862,46 +862,46 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         boolean fights = behavior == Behavior.GUARD || hostileToPlayers || fightsBack
                 || attackMonsters || protectOwner || fightRivalFactions;
         if (fights) {
-            net.minecraft.entity.ai.goal.Goal melee =
-                    new net.minecraft.entity.ai.goal.MeleeAttackGoal(this, 1.1, true);
-            this.goalSelector.add(2, melee);
+            net.minecraft.world.entity.ai.goal.Goal melee =
+                    new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(this, 1.1, true);
+            this.goalSelector.addGoal(2, melee);
             behaviorGoals.add(melee);
         }
         if (behavior == Behavior.GUARD || attackMonsters) {
             // Hostile mobs, but never creepers (iron-golem rule: don't walk a blast into the shop).
-            net.minecraft.entity.ai.goal.Goal targets = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
-                    this, net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
-                    e -> !(e instanceof net.minecraft.entity.mob.CreeperEntity));
-            this.targetSelector.add(1, targets);
+            net.minecraft.world.entity.ai.goal.Goal targets = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
+                    this, net.minecraft.world.entity.monster.Monster.class, 10, true, false,
+                    e -> !(e instanceof net.minecraft.world.entity.monster.Creeper));
+            this.targetSelector.addGoal(1, targets);
             behaviorTargetGoals.add(targets);
         }
         if (protectOwner) {
-            net.minecraft.entity.ai.goal.Goal protect = new NpcProtectOwnerGoal(this);
-            this.targetSelector.add(1, protect);
+            net.minecraft.world.entity.ai.goal.Goal protect = new NpcProtectOwnerGoal(this);
+            this.targetSelector.addGoal(1, protect);
             behaviorTargetGoals.add(protect);
         }
         if (hostileToPlayers) {
             // Hunt ANY player in range, including the owner (hostile means hostile). Vanilla
             // targeting already skips creative/spectator players. Its own faction is still spared:
             // a guard that turns on its own people is nobody's idea of a guard.
-            net.minecraft.entity.ai.goal.Goal huntPlayers = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
-                    this, net.minecraft.entity.player.PlayerEntity.class, 10, true, false,
+            net.minecraft.world.entity.ai.goal.Goal huntPlayers = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
+                    this, net.minecraft.world.entity.player.Player.class, 10, true, false,
                     e -> !isAlly(e));
-            this.targetSelector.add(2, huntPlayers);
+            this.targetSelector.addGoal(2, huntPlayers);
             behaviorTargetGoals.add(huntPlayers);
         }
         if (fightRivalFactions && !factionId.isEmpty()) {
             // Only people actually flying another faction's colours: bystanders with no faction are
             // left alone, so a faction war doesn't sweep up everyone who never joined.
-            net.minecraft.entity.ai.goal.Goal rivals = new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
-                    this, net.minecraft.entity.LivingEntity.class, 10, true, false,
+            net.minecraft.world.entity.ai.goal.Goal rivals = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
+                    this, net.minecraft.world.entity.LivingEntity.class, 10, true, false,
                     this::isRivalFaction);
-            this.targetSelector.add(2, rivals);
+            this.targetSelector.addGoal(2, rivals);
             behaviorTargetGoals.add(rivals);
         }
         if (fightsBack) {
-            net.minecraft.entity.ai.goal.Goal revenge = new net.minecraft.entity.ai.goal.RevengeGoal(this);
-            this.targetSelector.add(1, revenge);
+            net.minecraft.world.entity.ai.goal.Goal revenge = new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(this);
+            this.targetSelector.addGoal(1, revenge);
             behaviorTargetGoals.add(revenge);
         }
         applyDoorCapability(); // re-assert door pathing/goal after the goal list is rebuilt
@@ -913,7 +913,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     @Nullable
-    private net.minecraft.util.math.BlockPos leashHome() {
+    private net.minecraft.core.BlockPos leashHome() {
         return scheduleBehavior != null ? scheduleHome : homePos;
     }
 
@@ -922,45 +922,45 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     }
 
     private void applyHomeLeash() {
-        net.minecraft.util.math.BlockPos home = leashHome();
+        net.minecraft.core.BlockPos home = leashHome();
         if (home != null) {
-            this.setPositionTarget(home, Math.max(2, leashRadius()));
+            this.restrictTo(home, Math.max(2, leashRadius()));
         }
     }
 
     @Override
-    public void tickMovement() {
-        super.tickMovement();
-        if (!this.getWorld().isClient) {
+    public void aiStep() {
+        super.aiStep();
+        if (!this.level().isClientSide) {
             if (movementBehavior() == Behavior.STATIONARY) {
                 // Reading the leash point rather than the configured home is what gives a scheduled
                 // NPC its commute: the same walk-back that returns a guard to its post after a fight
                 // is what carries a shopkeeper to the counter at opening time, and to bed at night.
-                net.minecraft.util.math.BlockPos post = leashHome();
+                net.minecraft.core.BlockPos post = leashHome();
                 if (this.getTarget() != null && this.getTarget().isAlive()) {
                     // In combat (hostile/fights-back): let the attack goal chase.
-                } else if (post != null && this.squaredDistanceTo(
+                } else if (post != null && this.distanceToSqr(
                         post.getX() + 0.5, post.getY(), post.getZ() + 0.5) > 2.25) {
                     // Combat over (or shoved): walk back to the post before locking down again.
-                    this.getNavigation().startMovingTo(
+                    this.getNavigation().moveTo(
                             post.getX() + 0.5, post.getY(), post.getZ() + 0.5, 1.0);
                 } else {
                     this.getNavigation().stop();
-                    this.setVelocity(0, this.getVelocity().y, 0);
+                    this.setDeltaMovement(0, this.getDeltaMovement().y, 0);
                     holdScheduleFacing();
                 }
             }
             // Re-assert the configured pose in case vanilla logic reset it.
-            net.minecraft.entity.EntityPose want = entityPoseFor(getNpcPose());
+            net.minecraft.world.entity.Pose want = entityPoseFor(getNpcPose());
             if (this.getPose() != want) {
                 this.setPose(want);
             }
             // Health regeneration (half-hearts per 5 seconds).
-            if (regen > 0 && this.age % 100 == 0 && this.getHealth() < this.getMaxHealth()) {
+            if (regen > 0 && this.tickCount % 100 == 0 && this.getHealth() < this.getMaxHealth()) {
                 this.heal(regen * 0.5f);
             }
             // Keep the vanilla invisible flag in step with the toggle + day/night rule.
-            if (this.age % 20 == 0) {
+            if (this.tickCount % 20 == 0) {
                 boolean hidden = manualInvisible || isRuleHidden();
                 if (this.isInvisible() != hidden) this.setInvisible(hidden);
             }
@@ -973,16 +973,16 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
     private void tickSchedule() {
         boolean runnable = schedule.isActive()
-                && net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.getWorld());
+                && net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.level());
         if (!runnable) {
             // Switched off, emptied, or carried somewhere with no day: hand the NPC back to whatever
             // the Moves tab says instead of leaving it frozen in the last stance it was given.
             if (scheduleBehavior != null) releaseSchedule();
             return;
         }
-        if (this.age % 20 != 0) return;
+        if (this.tickCount % 20 != 0) return;
 
-        int idx = schedule.indexAt(this.getWorld().getTimeOfDay());
+        int idx = schedule.indexAt(this.level().getDayTime());
         if (idx == scheduleActive) return;
 
         // A first application after loading is not a transition. Firing entry actions here would mean
@@ -1034,17 +1034,17 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
         if (!wantsBed) {
             if (this.isSleeping()) {
-                this.wakeUp();
+                this.stopSleeping();
                 restoreLookGoal();
             }
             return;
         }
 
-        net.minecraft.util.math.BlockPos bed = bedHead(entry.anchor());
+        net.minecraft.core.BlockPos bed = bedHead(entry.anchor());
         if (this.isSleeping()) {
             // Somebody mined the bed out from under it: stand up rather than float there.
-            if (!(this.getWorld().getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock)) {
-                this.wakeUp();
+            if (!(this.level().getBlockState(bed).getBlock() instanceof net.minecraft.world.level.block.BedBlock)) {
+                this.stopSleeping();
                 restoreLookGoal();
                 return;
             }
@@ -1053,22 +1053,22 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
 
         // Still walking over. Climb in once close enough to reach it.
-        if (!(this.getWorld().getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock)) return;
+        if (!(this.level().getBlockState(bed).getBlock() instanceof net.minecraft.world.level.block.BedBlock)) return;
         double dx = bed.getX() + 0.5 - this.getX();
         double dz = bed.getZ() + 0.5 - this.getZ();
         if (dx * dx + dz * dz > 4.0 || Math.abs(bed.getY() - this.getY()) > 2.0) return;
 
-        this.sleep(bed);
+        this.startSleeping(bed);
         this.getNavigation().stop();
-        if (lookGoal != null) this.goalSelector.remove(lookGoal);
+        if (lookGoal != null) this.goalSelector.removeGoal(lookGoal);
     }
 
     // Head half of the bed, or the body lies a block down it and hangs off the end.
-    private net.minecraft.util.math.BlockPos bedHead(net.minecraft.util.math.BlockPos pos) {
-        net.minecraft.block.BlockState state = this.getWorld().getBlockState(pos);
-        if (state.getBlock() instanceof net.minecraft.block.BedBlock
-                && state.get(net.minecraft.block.BedBlock.PART) == net.minecraft.block.enums.BedPart.FOOT) {
-            return pos.offset(state.get(net.minecraft.block.BedBlock.FACING));
+    private net.minecraft.core.BlockPos bedHead(net.minecraft.core.BlockPos pos) {
+        net.minecraft.world.level.block.state.BlockState state = this.level().getBlockState(pos);
+        if (state.getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                && state.getValue(net.minecraft.world.level.block.BedBlock.PART) == net.minecraft.world.level.block.state.properties.BedPart.FOOT) {
+            return pos.relative(state.getValue(net.minecraft.world.level.block.BedBlock.FACING));
         }
         return pos;
     }
@@ -1076,8 +1076,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     // Remove before adding, or a nap leaves a second copy of the goal running.
     private void restoreLookGoal() {
         if (lookGoal == null) return;
-        this.goalSelector.remove(lookGoal);
-        if (watchPlayers) this.goalSelector.add(6, lookGoal);
+        this.goalSelector.removeGoal(lookGoal);
+        if (watchPlayers) this.goalSelector.addGoal(6, lookGoal);
     }
 
     // Runs before the goals, so talking, watching and combat all still win. This is the resting angle.
@@ -1086,9 +1086,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         var entry = currentScheduleEntry();
         if (entry == null || entry.stance() != net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.STAND) return;
         float want = entry.facing();
-        this.setYaw(want);
-        this.setBodyYaw(want);
-        this.setHeadYaw(want);
+        this.setYRot(want);
+        this.setYBodyRot(want);
+        this.setYHeadRot(want);
     }
 
     private void releaseSchedule() {
@@ -1112,13 +1112,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
     @Nullable
     public net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry currentScheduleEntry() {
         if (!schedule.isActive()) return null;
-        if (!net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.getWorld())) return null;
-        return schedule.activeAt(this.getWorld().getTimeOfDay());
+        if (!net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.level())) return null;
+        return schedule.activeAt(this.level().getDayTime());
     }
 
     private void tickProximity() {
         if (!actions.has(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY)) return;
-        if (this.age % PROXIMITY_SCAN_TICKS != 0) return;
+        if (this.tickCount % PROXIMITY_SCAN_TICKS != 0) return;
         if (manualInvisible || isRuleHidden()) return; // a hidden NPC shouldn't greet anyone
 
         if (proximityInside == null) {
@@ -1129,17 +1129,17 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         double enterSq = radius * radius;
         double leaveSq = (radius + 2.0) * (radius + 2.0);
 
-        for (net.minecraft.entity.player.PlayerEntity generic : this.getWorld().getPlayers()) {
-            if (!(generic instanceof ServerPlayerEntity player)) continue;
+        for (net.minecraft.world.entity.player.Player generic : this.level().players()) {
+            if (!(generic instanceof ServerPlayer player)) continue;
             if (player.isSpectator() || !player.isAlive()) continue;
-            java.util.UUID id = player.getUuid();
-            double distanceSq = player.squaredDistanceTo(this);
+            java.util.UUID id = player.getUUID();
+            double distanceSq = player.distanceToSqr(this);
             if (!proximityInside.contains(id)) {
                 if (distanceSq > enterSq) continue;
                 proximityInside.add(id);
                 Integer last = proximityFired.get(id);
-                if (last == null || this.age - last >= PROXIMITY_RECHARGE_TICKS) {
-                    proximityFired.put(id, this.age);
+                if (last == null || this.tickCount - last >= PROXIMITY_RECHARGE_TICKS) {
+                    proximityFired.put(id, this.tickCount);
                     fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY, player);
                 }
             } else if (distanceSq > leaveSq) {
@@ -1149,14 +1149,14 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
 
         // Anyone who logged out or changed world counts as gone, and spent cooldowns are dropped so
         // neither collection grows with everyone who ever walked past.
-        proximityInside.removeIf(id -> this.getWorld().getPlayerByUuid(id) == null);
+        proximityInside.removeIf(id -> this.level().getPlayerByUUID(id) == null);
         proximityFired.entrySet().removeIf(e ->
-                !proximityInside.contains(e.getKey()) && this.age - e.getValue() > PROXIMITY_RECHARGE_TICKS);
+                !proximityInside.contains(e.getKey()) && this.tickCount - e.getValue() > PROXIMITY_RECHARGE_TICKS);
     }
 
     @Override
-    protected void pushAway(net.minecraft.entity.Entity entity) {
-        if (pushable) super.pushAway(entity); // hold ground unless the Pushable ability is on
+    protected void doPush(net.minecraft.world.entity.Entity entity) {
+        if (pushable) super.doPush(entity); // hold ground unless the Pushable ability is on
     }
 
     @Override
@@ -1164,7 +1164,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         // Never despawn. These are placed, persistent NPCs. Also keep the despawn counter at zero:
         // vanilla increments it every AI tick and only resets it here, and WanderAroundGoal refuses
         // to start once it passes 100 (which froze wandering ~5s after placement).
-        this.despawnCounter = 0;
+        this.noActionTime = 0;
     }
 
     // ---- config accessors ----
@@ -1187,109 +1187,109 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         this.ownerType = uuid == null ? OwnerType.SERVER : OwnerType.PLAYER;
     }
 
-    public boolean isOwnedBy(PlayerEntity player) {
-        return owner != null && owner.equals(player.getUuid());
+    public boolean isOwnedBy(Player player) {
+        return owner != null && owner.equals(player.getUUID());
     }
 
-    public boolean canEdit(ServerPlayerEntity player) {
-        return isOwnedBy(player) || player.hasPermissionLevel(2);
+    public boolean canEdit(ServerPlayer player) {
+        return isOwnedBy(player) || player.hasPermissions(2);
     }
 
     // ---- interaction ----
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        if (hand != Hand.MAIN_HAND) {
-            return super.interactMob(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) {
+            return super.mobInteract(player, hand);
         }
-        if (this.getWorld().isClient) {
-            return ActionResult.SUCCESS;
+        if (this.level().isClientSide) {
+            return InteractionResult.SUCCESS;
         }
-        if (player instanceof ServerPlayerEntity sp) {
+        if (player instanceof ServerPlayer sp) {
             // Off duty per the day/night rule: only the owner/op can still reach it (to edit).
             if (isRuleHidden() && !canEdit(sp)) {
-                return ActionResult.PASS;
+                return InteractionResult.PASS;
             }
             startTalking(player); // pause + face the player while they're dealing with us
             playVoice();           // a grunt as it turns to you, the way a villager answers
             // Before dialogue or the role screen takes over, so a greeting is read first.
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
-            if (sp.isSneaking() && canEdit(sp)) {
+            if (sp.isShiftKeyDown() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
             } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
                 // No dialogue: go straight to the role.
                 NotchNpcManager.dispatchRole(sp, this);
             }
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     // ---- damage protection (owned NPCs are protected, like the old shopkeeper) ----
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
-        if (this.getWorld().isClient()) return false;
+    public boolean hurt(DamageSource source, float amount) {
+        if (this.level().isClientSide()) return false;
         // Fires on being HIT, not on damage getting through. Protection is on by default, so an
         // "if it takes damage" reading would never run for an ordinary shopkeeper, and a shopkeeper
         // snapping at someone who punched it is the whole point.
-        if (!this.isDead() && amount > 0) {
+        if (!this.isDeadOrDying() && amount > 0) {
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_HURT,
-                    source.getAttacker() instanceof ServerPlayerEntity p ? p : null);
+                    source.getEntity() instanceof ServerPlayer p ? p : null);
         }
         if (protectedNpc && (owner != null || ownerType == OwnerType.SERVER)) {
             // Only the void or /kill can remove a protected NPC.
-            if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-                return super.damage(source, amount);
+            if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                return super.hurt(source, amount);
             }
             // The hit is cancelled, but Fights Back still needs to know who swung: record the
             // attacker so the RevengeGoal can retaliate even while the NPC itself is unhurtable.
-            if (fightsBack && source.getAttacker() instanceof net.minecraft.entity.LivingEntity attacker) {
-                this.setAttacker(attacker);
+            if (fightsBack && source.getEntity() instanceof net.minecraft.world.entity.LivingEntity attacker) {
+                this.setLastHurtByMob(attacker);
             }
             return false;
         }
-        return super.damage(source, amount);
+        return super.hurt(source, amount);
     }
 
     @Override
-    public void onDeath(DamageSource source) {
+    public void die(DamageSource source) {
         // Before super, while the NPC is still in the world and its actions can still reference it.
         // The killer may be nobody at all: lava and fall damage count.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_DEATH,
-                source.getAttacker() instanceof ServerPlayerEntity p ? p : null);
-        super.onDeath(source);
+                source.getEntity() instanceof ServerPlayer p ? p : null);
+        super.die(source);
     }
 
     @Override
-    public boolean onKilledOther(net.minecraft.server.world.ServerWorld world,
-                                 net.minecraft.entity.LivingEntity other) {
-        boolean result = super.onKilledOther(world, other);
+    public boolean killedEntity(net.minecraft.server.level.ServerLevel world,
+                                 net.minecraft.world.entity.LivingEntity other) {
+        boolean result = super.killedEntity(world, other);
         // A player only comes along when the NPC killed a player, otherwise there's no one to talk to.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_KILL,
-                other instanceof ServerPlayerEntity p ? p : null);
+                other instanceof ServerPlayer p ? p : null);
         return result;
     }
 
     // ---- NBT ----
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
+    public void addAdditionalSaveData(CompoundTag nbt) {
+        super.addAdditionalSaveData(nbt);
         writeConfig(nbt);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
+    public void readAdditionalSaveData(CompoundTag nbt) {
+        super.readAdditionalSaveData(nbt);
         readConfig(nbt);
     }
 
     // Excludes the custom name; the caller handles that.
-    public void writeConfig(NbtCompound nbt) {
+    public void writeConfig(CompoundTag nbt) {
         nbt.putString("Role", role.name());
-        if (roleTarget != null) nbt.putUuid("RoleTarget", roleTarget);
+        if (roleTarget != null) nbt.putUUID("RoleTarget", roleTarget);
         nbt.putString("OwnerType", ownerType.name());
-        if (owner != null) nbt.putUuid("Owner", owner);
+        if (owner != null) nbt.putUUID("Owner", owner);
         nbt.putString("OwnerName", ownerName);
         nbt.putString("Model", getModelId());
         nbt.putString("SkinType", getSkinType());
@@ -1301,7 +1301,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putFloat("NameOffset", getNameOffset());
         nbt.putString("Billboard", getBillboard());
         nbt.putInt("NpcPose", getNpcPose());
-        nbt.put("CustomPose", this.dataTracker.get(CUSTOM_POSE).copy());
+        nbt.put("CustomPose", this.entityData.get(CUSTOM_POSE).copy());
         nbt.putInt("PoseAnim", getPoseAnim());
         nbt.putString("Behavior", behavior.name());
         nbt.putInt("WanderRadius", wanderRadius);
@@ -1310,9 +1310,9 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (homePos != null) {
             nbt.putIntArray("Home", new int[]{homePos.getX(), homePos.getY(), homePos.getZ()});
         }
-        net.minecraft.nbt.NbtList wps = new net.minecraft.nbt.NbtList();
-        for (net.minecraft.util.math.BlockPos wp : waypoints) {
-            wps.add(new net.minecraft.nbt.NbtIntArray(new int[]{wp.getX(), wp.getY(), wp.getZ()}));
+        net.minecraft.nbt.ListTag wps = new net.minecraft.nbt.ListTag();
+        for (net.minecraft.core.BlockPos wp : waypoints) {
+            wps.add(new net.minecraft.nbt.IntArrayTag(new int[]{wp.getX(), wp.getY(), wp.getZ()}));
         }
         nbt.put("Waypoints", wps);
         nbt.put("Dialogue", dialogue.toNbt());
@@ -1327,8 +1327,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         // Stats: the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
-        nbt.putBoolean("StatGlowing", this.isGlowing());
-        nbt.putBoolean("StatNoGravity", this.hasNoGravity());
+        nbt.putBoolean("StatGlowing", this.isCurrentlyGlowing());
+        nbt.putBoolean("StatNoGravity", this.isNoGravity());
         nbt.putBoolean("StatNameVisible", this.isCustomNameVisible());
         nbt.putBoolean("StatDoors", opensDoors);
         nbt.putBoolean("StatLeashable", leashable);
@@ -1348,30 +1348,30 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         nbt.putInt("ActionSweep", actionSweepVersion);
         nbt.putBoolean("FightRivalFactions", fightRivalFactions);
         // Attribute bases: recorded so they survive the pick-up item (entity NBT has them anyway).
-        nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)));
-        nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100));
+        nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(Attributes.MAX_HEALTH)));
+        nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100));
         // Equipment: re-recorded so it survives the pick-up item too.
-        NbtCompound equip = new NbtCompound();
-        for (net.minecraft.entity.EquipmentSlot slot : net.minecraft.entity.EquipmentSlot.values()) {
-            net.minecraft.item.ItemStack st = this.getEquippedStack(slot);
+        CompoundTag equip = new CompoundTag();
+        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
+            net.minecraft.world.item.ItemStack st = this.getItemBySlot(slot);
             if (!st.isEmpty()) equip.put(slot.getName(), net.fugginbeenus.notchcurrency.compat.StackData.writeStack(st));
         }
         nbt.put("Equip", equip);
     }
 
-    public void readConfig(NbtCompound nbt) {
+    public void readConfig(CompoundTag nbt) {
         try {
             role = NpcRole.valueOf(nbt.getString("Role"));
         } catch (IllegalArgumentException e) {
             role = NpcRole.NONE;
         }
-        roleTarget = nbt.containsUuid("RoleTarget") ? nbt.getUuid("RoleTarget") : null;
+        roleTarget = nbt.hasUUID("RoleTarget") ? nbt.getUUID("RoleTarget") : null;
         try {
             ownerType = OwnerType.valueOf(nbt.getString("OwnerType"));
         } catch (IllegalArgumentException e) {
             ownerType = OwnerType.PLAYER;
         }
-        owner = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
+        owner = nbt.hasUUID("Owner") ? nbt.getUUID("Owner") : null;
         ownerName = nbt.getString("OwnerName");
         if (nbt.contains("Model")) setModelId(nbt.getString("Model"));
         if (nbt.contains("SkinType")) setSkinType(nbt.getString("SkinType"));
@@ -1386,8 +1386,8 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
         if (nbt.contains("CustomPose")) {
-            NbtCompound pose = nbt.getCompound("CustomPose");
-            this.dataTracker.set(CUSTOM_POSE, pose);
+            CompoundTag pose = nbt.getCompound("CustomPose");
+            this.entityData.set(CUSTOM_POSE, pose);
             customPoseCache = unpackCustomPose(pose);
         }
         if (nbt.contains("Behavior")) {
@@ -1401,13 +1401,13 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         if (nbt.contains("PatrolSpeed")) setPatrolSpeed(nbt.getFloat("PatrolSpeed"));
         if (nbt.contains("PatrolWait")) setPatrolWaitTicks(nbt.getInt("PatrolWait"));
         int[] home = nbt.getIntArray("Home");
-        if (home.length == 3) homePos = new net.minecraft.util.math.BlockPos(home[0], home[1], home[2]);
+        if (home.length == 3) homePos = new net.minecraft.core.BlockPos(home[0], home[1], home[2]);
         if (nbt.contains("Waypoints")) {
             waypoints.clear();
-            net.minecraft.nbt.NbtList wps = nbt.getList("Waypoints", net.minecraft.nbt.NbtElement.INT_ARRAY_TYPE);
+            net.minecraft.nbt.ListTag wps = nbt.getList("Waypoints", net.minecraft.nbt.Tag.TAG_INT_ARRAY);
             for (int i = 0; i < wps.size(); i++) {
                 int[] wp = wps.getIntArray(i);
-                if (wp.length == 3) waypoints.add(new net.minecraft.util.math.BlockPos(wp[0], wp[1], wp[2]));
+                if (wp.length == 3) waypoints.add(new net.minecraft.core.BlockPos(wp[0], wp[1], wp[2]));
             }
         }
         if (nbt.contains("Dialogue")) {
@@ -1419,7 +1419,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         poseBeforeSchedule = nbt.contains("PoseBeforeSchedule") ? nbt.getInt("PoseBeforeSchedule") : -1;
         setSubtitle(nbt.getString("Subtitle"));
         setVoice(nbt.getString("Voice"));
-        setVoicePitch(nbt.contains("VoicePitch") ? nbt.getInt("VoicePitch") : 100);
+        setVoicePitchPercent(nbt.contains("VoicePitch") ? nbt.getInt("VoicePitch") : 100);
         setSchedule(nbt.contains("Schedule")
                 ? net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt.getCompound("Schedule"))
                 : new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule());
@@ -1432,7 +1432,7 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         }
         if (nbt.contains("Protected")) protectedNpc = nbt.getBoolean("Protected");
         if (nbt.contains("StatSilent")) this.setSilent(nbt.getBoolean("StatSilent"));
-        if (nbt.contains("StatGlowing")) this.setGlowing(nbt.getBoolean("StatGlowing"));
+        if (nbt.contains("StatGlowing")) this.setGlowingTag(nbt.getBoolean("StatGlowing"));
         if (nbt.contains("StatNoGravity")) this.setNoGravity(nbt.getBoolean("StatNoGravity"));
         if (nbt.contains("StatNameVisible")) this.setCustomNameVisible(nbt.getBoolean("StatNameVisible"));
         if (nbt.contains("StatDoors")) setOpensDoors(nbt.getBoolean("StatDoors"));
@@ -1460,25 +1460,25 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
             int speedPct = nbt.contains("StatSpeedPct") ? nbt.getInt("StatSpeedPct") : 30;
             // Skip when they already match (world reload path: vanilla restored the attributes
             // before us, and re-applying would heal a damaged NPC to full).
-            if (hp != (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH))
-                    || speedPct != (int) Math.round(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 100)) {
+            if (hp != (int) Math.round(this.getAttributeValue(Attributes.MAX_HEALTH))
+                    || speedPct != (int) Math.round(this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100)) {
                 setBaseStats(hp, speedPct);
             }
         }
         if (nbt.contains("Equip")) {
-            NbtCompound equip = nbt.getCompound("Equip");
-            for (net.minecraft.entity.EquipmentSlot slot : net.minecraft.entity.EquipmentSlot.values()) {
+            CompoundTag equip = nbt.getCompound("Equip");
+            for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
                 if (equip.contains(slot.getName())) {
-                    this.equipStack(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slot.getName())));
-                    this.setEquipmentDropChance(slot, 1.0f); // owner's items always drop if it dies
+                    this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slot.getName())));
+                    this.setDropChance(slot, 1.0f); // owner's items always drop if it dies
                 }
             }
         }
         applyBehaviorGoals();
     }
 
-    public NbtCompound writeToItem() {
-        NbtCompound tag = new NbtCompound();
+    public CompoundTag writeToItem() {
+        CompoundTag tag = new CompoundTag();
         writeConfig(tag);
         if (this.hasCustomName() && this.getCustomName() != null) {
             tag.putString("Name", this.getCustomName().getString());
@@ -1486,10 +1486,10 @@ public class NotchNpcEntity extends PathAwareEntity implements GeoEntity {
         return tag;
     }
 
-    public void readFromItem(NbtCompound tag) {
+    public void readFromItem(CompoundTag tag) {
         readConfig(tag);
         if (tag.contains("Name")) {
-            this.setCustomName(Text.literal(tag.getString("Name")));
+            this.setCustomName(Component.literal(tag.getString("Name")));
             this.setCustomNameVisible(true);
         }
     }

@@ -1,154 +1,154 @@
 package net.fugginbeenus.notchcurrency.block;
 
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BountyBoardBlock extends Block {
 
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
-    public static final EnumProperty<DoubleBlockHalf> HALF = Properties.DOUBLE_BLOCK_HALF;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
-    private static final VoxelShape LOWER_NS = VoxelShapes.union(
-            Block.createCuboidShape(2, 0, 6.5, 4, 16, 9.5),
-            Block.createCuboidShape(12, 0, 6.5, 14, 16, 9.5),
-            Block.createCuboidShape(1, 6, 6.75, 15, 16, 9.25));
-    private static final VoxelShape LOWER_EW = VoxelShapes.union(
-            Block.createCuboidShape(6.5, 0, 2, 9.5, 16, 4),
-            Block.createCuboidShape(6.5, 0, 12, 9.5, 16, 14),
-            Block.createCuboidShape(6.75, 6, 1, 9.25, 16, 15));
-    private static final VoxelShape UPPER_NS = Block.createCuboidShape(0.5, 0, 6.25, 15.5, 16, 9.75);
-    private static final VoxelShape UPPER_EW = Block.createCuboidShape(6.25, 0, 0.5, 9.75, 16, 15.5);
+    private static final VoxelShape LOWER_NS = Shapes.or(
+            Block.box(2, 0, 6.5, 4, 16, 9.5),
+            Block.box(12, 0, 6.5, 14, 16, 9.5),
+            Block.box(1, 6, 6.75, 15, 16, 9.25));
+    private static final VoxelShape LOWER_EW = Shapes.or(
+            Block.box(6.5, 0, 2, 9.5, 16, 4),
+            Block.box(6.5, 0, 12, 9.5, 16, 14),
+            Block.box(6.75, 6, 1, 9.25, 16, 15));
+    private static final VoxelShape UPPER_NS = Block.box(0.5, 0, 6.25, 15.5, 16, 9.75);
+    private static final VoxelShape UPPER_EW = Block.box(6.25, 0, 0.5, 9.75, 16, 15.5);
 
-    public BountyBoardBlock(Settings settings) {
+    public BountyBoardBlock(Properties settings) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState()
-                .with(FACING, Direction.NORTH).with(HALF, DoubleBlockHalf.LOWER));
+        registerDefaultState(getStateDefinition().any()
+                .setValue(FACING, Direction.NORTH).setValue(HALF, DoubleBlockHalf.LOWER));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, HALF);
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        boolean ns = state.get(FACING).getAxis() == Direction.Axis.Z;
-        return state.get(HALF) == DoubleBlockHalf.LOWER ? (ns ? LOWER_NS : LOWER_EW)
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
+        boolean ns = state.getValue(FACING).getAxis() == Direction.Axis.Z;
+        return state.getValue(HALF) == DoubleBlockHalf.LOWER ? (ns ? LOWER_NS : LOWER_EW)
                 : (ns ? UPPER_NS : UPPER_EW);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        BlockPos pos = ctx.getBlockPos();
-        World world = ctx.getWorld();
-        if (pos.getY() < world.getTopY() - 1 && world.getBlockState(pos.up()).canReplace(ctx)) {
-            return getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        BlockPos pos = ctx.getClickedPos();
+        Level world = ctx.getLevel();
+        if (pos.getY() < world.getMaxBuildHeight() - 1 && world.getBlockState(pos.above()).canBeReplaced(ctx)) {
+            return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
         }
         return null; // no room for the upper half
     }
 
     @Override
-    public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        world.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL);
-        super.onPlaced(world, pos, state, placer, itemStack);
-        if (!world.isClient && world instanceof ServerWorld sw) {
+    public void setPlacedBy(Level world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        world.setBlock(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+        super.setPlacedBy(world, pos, state, placer, itemStack);
+        if (!world.isClientSide && world instanceof ServerLevel sw) {
             BountyManager.ensurePopulated(sw.getServer()); // start generating right away
         }
     }
 
     @Override
-    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState,
-                                                WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        DoubleBlockHalf half = state.get(HALF);
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
+                                                LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
+        DoubleBlockHalf half = state.getValue(HALF);
         if (direction.getAxis() == Direction.Axis.Y
                 && (half == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
-            return neighborState.isOf(this) && neighborState.get(HALF) != half
-                    ? state : Blocks.AIR.getDefaultState();
+            return neighborState.is(this) && neighborState.getValue(HALF) != half
+                    ? state : Blocks.AIR.defaultBlockState();
         }
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
+        return super.updateShape(state, direction, neighborState, world, pos, neighborPos);
     }
 
     @Override
-    public boolean canPlaceAt(BlockState state, net.minecraft.world.WorldView world, BlockPos pos) {
-        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
-            BlockState below = world.getBlockState(pos.down());
-            return below.isOf(this) && below.get(HALF) == DoubleBlockHalf.LOWER;
+    public boolean canSurvive(BlockState state, net.minecraft.world.level.LevelReader world, BlockPos pos) {
+        if (state.getValue(HALF) == DoubleBlockHalf.UPPER) {
+            BlockState below = world.getBlockState(pos.below());
+            return below.is(this) && below.getValue(HALF) == DoubleBlockHalf.LOWER;
         }
-        return super.canPlaceAt(state, world, pos);
+        return super.canSurvive(state, world, pos);
     }
 
     @Override
     //? if >=1.21 {
-    /*public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    /*public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
     *///?} else {
-    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    public void playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
     //?}
-        if (!world.isClient && player.isCreative() && state.get(HALF) == DoubleBlockHalf.UPPER) {
-            BlockPos below = pos.down();
+        if (!world.isClientSide && player.isCreative() && state.getValue(HALF) == DoubleBlockHalf.UPPER) {
+            BlockPos below = pos.below();
             BlockState belowState = world.getBlockState(below);
-            if (belowState.isOf(this) && belowState.get(HALF) == DoubleBlockHalf.LOWER) {
-                world.setBlockState(below, Blocks.AIR.getDefaultState(),
-                        Block.NOTIFY_ALL | Block.SKIP_DROPS);
-                world.syncWorldEvent(player, 2001, below, Block.getRawIdFromState(belowState));
+            if (belowState.is(this) && belowState.getValue(HALF) == DoubleBlockHalf.LOWER) {
+                world.setBlock(below, Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS);
+                world.levelEvent(player, 2001, below, Block.getId(belowState));
             }
         }
         //? if >=1.21 {
-        /*return super.onBreak(world, pos, state, player);
+        /*return super.playerWillDestroy(world, pos, state, player);
         *///?} else {
-        super.onBreak(world, pos, state, player);
+        super.playerWillDestroy(world, pos, state, player);
         //?}
     }
 
     @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
     //? if >=1.21 {
-    /*protected ActionResult onUse(BlockState state, World world, BlockPos pos,
-                                 PlayerEntity player, BlockHitResult hit) {
+    /*protected InteractionResult onUse(BlockState state, Level world, BlockPos pos,
+                                 Player player, BlockHitResult hit) {
     *///?} else {
-    public ActionResult onUse(BlockState state, World world, BlockPos pos,
-                              PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level world, BlockPos pos,
+                              Player player, InteractionHand hand, BlockHitResult hit) {
     //?}
-        if (world.isClient) {
-            return ActionResult.SUCCESS;
+        if (world.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
-        if (player instanceof ServerPlayerEntity sp) {
+        if (player instanceof ServerPlayer sp) {
             BountyManager.openScreen(sp);
         }
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 }

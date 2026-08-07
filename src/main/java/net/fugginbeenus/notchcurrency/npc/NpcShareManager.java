@@ -5,12 +5,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,7 +21,7 @@ public final class NpcShareManager {
 
     public static final int ACTION_COPY = 0, ACTION_PASTE = 1, ACTION_SAVE_FILE = 2, ACTION_LOAD_FILE = 3;
 
-    public static void action(ServerPlayerEntity sp, NotchNpcEntity npc, int action, String payload) {
+    public static void action(ServerPlayer sp, NotchNpcEntity npc, int action, String payload) {
         if (!NotchNpcManager.guard(sp, npc)) return;
         switch (action) {
             case ACTION_COPY -> copy(sp, npc);
@@ -32,81 +31,81 @@ public final class NpcShareManager {
         }
     }
 
-    private static void copy(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    private static void copy(ServerPlayer sp, NotchNpcEntity npc) {
         String code = exportCode(npc);
         if (code == null) {
-            sp.sendMessage(Text.literal("Couldn't package that NPC.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED), false);
             return;
         }
         // A code longer than a packet allows could be sent out (server to client is far roomier) but
         // never pasted back, so handing one over would just be a trap. The file route has no such
         // limit and produces the same text.
         if (code.length() > NpcShareCodec.MAX_WIRE_CHARS) {
-            sp.sendMessage(Text.literal("This NPC is too detailed to copy as a code. Use 'To file' instead.")
-                    .formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("This NPC is too detailed to copy as a code. Use 'To file' instead.")
+                    .withStyle(ChatFormatting.RED), false);
             return;
         }
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeString(code, NpcShareCodec.MAX_WIRE_CHARS);
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeUtf(code, NpcShareCodec.MAX_WIRE_CHARS);
         Net.sendToClient(sp, NotchPackets.NPC_SHARE_CODE, buf);
     }
 
-    private static void paste(ServerPlayerEntity sp, NotchNpcEntity npc, String code) {
-        NbtCompound tag;
+    private static void paste(ServerPlayer sp, NotchNpcEntity npc, String code) {
+        CompoundTag tag;
         try {
             tag = NpcShareCodec.decode(code);
         } catch (NpcShareCodec.BadCode e) {
-            sp.sendMessage(Text.literal(e.getMessage()).formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal(e.getMessage()).withStyle(ChatFormatting.RED), false);
             return;
         }
         NpcPresetManager.applyTag(npc, tag, sp);
-        sp.sendMessage(Text.literal("NPC imported.").formatted(Formatting.GREEN), false);
+        sp.displayClientMessage(Component.literal("NPC imported.").withStyle(ChatFormatting.GREEN), false);
     }
 
-    private static void saveFile(ServerPlayerEntity sp, NotchNpcEntity npc, String rawName) {
+    private static void saveFile(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         String name = sanitize(rawName);
         if (name.isEmpty()) {
-            sp.sendMessage(Text.literal("Give the file a name first.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Give the file a name first.").withStyle(ChatFormatting.RED), false);
             return;
         }
         String code = exportCode(npc);
         if (code == null) {
-            sp.sendMessage(Text.literal("Couldn't package that NPC.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED), false);
             return;
         }
         try {
             Path file = dir().resolve(name + ".npc");
             Files.writeString(file, code + System.lineSeparator(), StandardCharsets.UTF_8);
-            sp.sendMessage(Text.literal("Exported to npc_share/" + name + ".npc").formatted(Formatting.GREEN), false);
+            sp.displayClientMessage(Component.literal("Exported to npc_share/" + name + ".npc").withStyle(ChatFormatting.GREEN), false);
         } catch (IOException e) {
-            sp.sendMessage(Text.literal("Couldn't write the file: " + e.getMessage()).formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't write the file: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
         }
     }
 
-    private static void loadFile(ServerPlayerEntity sp, NotchNpcEntity npc, String rawName) {
+    private static void loadFile(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         String name = sanitize(rawName);
         String code;
         try {
             Path file = dir().resolve(name + ".npc");
             if (!Files.isRegularFile(file)) {
-                sp.sendMessage(Text.literal("No file named '" + name + ".npc' in npc_share.")
-                        .formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("No file named '" + name + ".npc' in npc_share.")
+                        .withStyle(ChatFormatting.RED), false);
                 return;
             }
             if (Files.size(file) > NpcShareCodec.MAX_CODE_CHARS) {
-                sp.sendMessage(Text.literal("That file is too big to be an NPC.").formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("That file is too big to be an NPC.").withStyle(ChatFormatting.RED), false);
                 return;
             }
             code = Files.readString(file, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            sp.sendMessage(Text.literal("Couldn't read the file: " + e.getMessage()).formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Couldn't read the file: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
             return;
         }
         paste(sp, npc, code);
     }
 
     private static String exportCode(NotchNpcEntity npc) {
-        NbtCompound tag = npc.writeToItem();
+        CompoundTag tag = npc.writeToItem();
         NpcPresetManager.stripWorldSpecific(tag);
         try {
             return NpcShareCodec.encode(tag);

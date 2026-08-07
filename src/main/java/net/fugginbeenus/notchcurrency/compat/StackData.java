@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.compat;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 
 public final class StackData {
 
@@ -13,26 +13,26 @@ public final class StackData {
     // ---- read helpers (internal) ----
 
     @Nullable
-    private static NbtCompound read(ItemStack stack) {
+    private static CompoundTag read(ItemStack stack) {
         //? if >=1.21 {
-        /*net.minecraft.component.type.NbtComponent held =
-                stack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
-        return held == null ? null : held.copyNbt();
+        /*net.minecraft.world.item.component.CustomData held =
+                stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        return held == null ? null : held.copyTag();
         *///?} else {
-        return stack.getNbt();
+        return stack.getTag();
         //?}
     }
 
-    private static void mutate(ItemStack stack, java.util.function.Consumer<NbtCompound> action) {
+    private static void mutate(ItemStack stack, java.util.function.Consumer<CompoundTag> action) {
         //? if >=1.21 {
-        /*NbtCompound data = stack.getOrDefault(
-                net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
-                net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+        /*CompoundTag data = stack.getOrDefault(
+                net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         action.accept(data);
-        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
-                net.minecraft.component.type.NbtComponent.of(data));
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(data));
         *///?} else {
-        action.accept(stack.getOrCreateNbt());
+        action.accept(stack.getOrCreateTag());
         //?}
     }
 
@@ -40,20 +40,20 @@ public final class StackData {
 
     public static boolean hasData(ItemStack stack) {
         //? if >=1.21 {
-        /*return stack.contains(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+        /*return stack.contains(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
         *///?} else {
-        return stack.hasNbt();
+        return stack.hasTag();
         //?}
     }
 
     public static boolean has(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt != null && nbt.contains(key);
     }
 
     public static boolean hasUuid(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
-        return nbt != null && nbt.containsUuid(key);
+        CompoundTag nbt = read(stack);
+        return nbt != null && nbt.hasUUID(key);
     }
 
     public static void remove(ItemStack stack, String key) {
@@ -64,39 +64,39 @@ public final class StackData {
     // ---- typed getters (vanilla defaults for a missing key) ----
 
     public static int getInt(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt == null ? 0 : nbt.getInt(key);
     }
 
     public static long getLong(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt == null ? 0L : nbt.getLong(key);
     }
 
     public static double getDouble(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt == null ? 0.0 : nbt.getDouble(key);
     }
 
     public static boolean getBoolean(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt != null && nbt.getBoolean(key);
     }
 
     public static String getString(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
+        CompoundTag nbt = read(stack);
         return nbt == null ? "" : nbt.getString(key);
     }
 
     @Nullable
     public static UUID getUuid(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
-        return (nbt != null && nbt.containsUuid(key)) ? nbt.getUuid(key) : null;
+        CompoundTag nbt = read(stack);
+        return (nbt != null && nbt.hasUUID(key)) ? nbt.getUUID(key) : null;
     }
 
-    public static NbtCompound getCompound(ItemStack stack, String key) {
-        NbtCompound nbt = read(stack);
-        return nbt == null ? new NbtCompound() : nbt.getCompound(key).copy();
+    public static CompoundTag getCompound(ItemStack stack, String key) {
+        CompoundTag nbt = read(stack);
+        return nbt == null ? new CompoundTag() : nbt.getCompound(key).copy();
     }
 
     // ---- typed setters (full read-modify-write; safe on copy-on-write component storage) ----
@@ -122,10 +122,10 @@ public final class StackData {
     }
 
     public static void putUuid(ItemStack stack, String key, UUID value) {
-        mutate(stack, data -> data.putUuid(key, value));
+        mutate(stack, data -> data.putUUID(key, value));
     }
 
-    public static void putCompound(ItemStack stack, String key, NbtCompound value) {
+    public static void putCompound(ItemStack stack, String key, CompoundTag value) {
         mutate(stack, data -> data.put(key, value));
     }
 
@@ -133,66 +133,66 @@ public final class StackData {
         //? if >=1.21 {
         /*return ItemStack.areItemsAndComponentsEqual(a, b);
         *///?} else {
-        return ItemStack.canCombine(a, b);
+        return ItemStack.isSameItemSameTags(a, b);
         //?}
     }
 
     // ---- bulk read (for carrier stacks whose readers do many typed lookups) ----
 
-    public static NbtCompound getData(ItemStack stack) {
-        NbtCompound nbt = read(stack);
-        return nbt == null ? new NbtCompound() : nbt.copy();
+    public static CompoundTag getData(ItemStack stack) {
+        CompoundTag nbt = read(stack);
+        return nbt == null ? new CompoundTag() : nbt.copy();
     }
 
     // ---- batch edit (for carrier stacks that set several keys at once) ----
 
-    public static NbtCompound editData(ItemStack stack) {
+    public static CompoundTag editData(ItemStack stack) {
         //? if >=1.21 {
         /*return stack.getOrDefault(
-                net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
-                net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+                net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         *///?} else {
-        return stack.getOrCreateNbt();
+        return stack.getOrCreateTag();
         //?}
     }
 
-    public static void commitData(ItemStack stack, NbtCompound data) {
+    public static void commitData(ItemStack stack, CompoundTag data) {
         //? if >=1.21 {
-        /*stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA,
-                net.minecraft.component.type.NbtComponent.of(data));
+        /*stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(data));
         *///?} else {
-        stack.setNbt(data);
+        stack.setTag(data);
         //?}
     }
 
     public static void clearData(ItemStack stack) {
         //? if >=1.21 {
-        /*stack.remove(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
+        /*stack.remove(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
         *///?} else {
-        stack.setNbt(null);
+        stack.setTag(null);
         //?}
     }
 
     // ---- whole-stack persistence (for world-save data classes) ----
 
-    public static NbtCompound writeStack(ItemStack stack) {
+    public static CompoundTag writeStack(ItemStack stack) {
         //? if >=1.21 {
-        /*return (NbtCompound) ItemStack.OPTIONAL_CODEC
-                .encodeStart(RegistryAccess.get().getOps(net.minecraft.nbt.NbtOps.INSTANCE), stack)
+        /*return (CompoundTag) ItemStack.OPTIONAL_CODEC
+                .encodeStart(RegistryAccess.get().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), stack)
                 .getOrThrow();
         *///?} else {
-        return stack.writeNbt(new NbtCompound());
+        return stack.save(new CompoundTag());
         //?}
     }
 
-    public static ItemStack readStack(NbtCompound nbt) {
+    public static ItemStack readStack(CompoundTag nbt) {
         //? if >=1.21 {
         /*return ItemStack.OPTIONAL_CODEC
-                .parse(RegistryAccess.get().getOps(net.minecraft.nbt.NbtOps.INSTANCE), nbt)
+                .parse(RegistryAccess.get().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), nbt)
                 .result()
                 .orElse(ItemStack.EMPTY);
         *///?} else {
-        return ItemStack.fromNbt(nbt);
+        return ItemStack.of(nbt);
         //?}
     }
 }

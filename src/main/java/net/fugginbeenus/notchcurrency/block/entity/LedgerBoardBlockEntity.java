@@ -2,18 +2,17 @@ package net.fugginbeenus.notchcurrency.block.entity;
 
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.fugginbeenus.notchcurrency.registry.ModBlockEntities;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,15 +32,15 @@ public class LedgerBoardBlockEntity extends BlockEntity {
         return rows;
     }
 
-    public static void serverTick(World world, BlockPos pos, BlockState state, LedgerBoardBlockEntity be) {
+    public static void serverTick(Level world, BlockPos pos, BlockState state, LedgerBoardBlockEntity be) {
         if (--be.cooldown > 0 || world.getServer() == null) return;
         be.cooldown = REFRESH_TICKS;
         List<EconomyLeaderboard.Entry> fresh = EconomyLeaderboard.topEntries(world.getServer(), ROWS);
         if (!fresh.equals(be.rows)) {
             be.rows = fresh;
-            be.markDirty();
-            if (world instanceof ServerWorld sw) {
-                sw.getChunkManager().markForUpdate(pos); // push the block-entity update to trackers
+            be.setChanged();
+            if (world instanceof ServerLevel sw) {
+                sw.getChunkSource().blockChanged(pos); // push the block-entity update to trackers
             }
         }
     }
@@ -50,15 +49,15 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     @Override
     //? if >=1.21 {
-    /*protected void writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
-        super.writeNbt(nbt, registries);
+    /*protected void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        super.save(nbt, registries);
     *///?} else {
-    public void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
+    public void saveAdditional(CompoundTag nbt) {
+        super.saveAdditional(nbt);
     //?}
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (EconomyLeaderboard.Entry e : rows) {
-            NbtCompound row = new NbtCompound();
+            CompoundTag row = new CompoundTag();
             row.putString("n", e.name());
             row.putLong("b", e.balance());
             list.add(row);
@@ -68,33 +67,33 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     @Override
     //? if >=1.21 {
-    /*public void readNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
-        super.readNbt(nbt, registries);
+    /*public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        super.load(nbt, registries);
     *///?} else {
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
+    public void load(CompoundTag nbt) {
+        super.load(nbt);
     //?}
         List<EconomyLeaderboard.Entry> parsed = new ArrayList<>();
-        NbtList list = nbt.getList("Rows", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Rows", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound row = list.getCompound(i);
+            CompoundTag row = list.getCompound(i);
             parsed.add(new EconomyLeaderboard.Entry(row.getString("n"), row.getLong("b")));
         }
         rows = parsed;
     }
 
     @Override
-    public Packet<ClientPlayPacketListener> toUpdatePacket() {
-        return BlockEntityUpdateS2CPacket.create(this);
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound toInitialChunkDataNbt(net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
-        return createNbt(registries);
+    /*public CompoundTag toInitialChunkDataNbt(net.minecraft.core.HolderLookup.Provider registries) {
+        return save(registries);
     *///?} else {
-    public NbtCompound toInitialChunkDataNbt() {
-        return createNbt();
+    public CompoundTag getUpdateTag() {
+        return saveWithoutMetadata();
     //?}
     }
 }

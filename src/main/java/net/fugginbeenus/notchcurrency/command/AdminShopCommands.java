@@ -10,126 +10,125 @@ import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopEntry;
 import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopManager;
 import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopMenu;
 import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public final class AdminShopCommands {
 
     private AdminShopCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("adminshop")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("adminshop")
                 // ---- admin setup ----
-                .then(CommandManager.literal("create")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                .then(Commands.literal("create")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {
                                     AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
                                     String name = StringArgumentType.getString(ctx, "name");
                                     if (state.getByName(name) != null) {
-                                        ctx.getSource().sendError(Text.literal("A shop named '" + name + "' already exists."));
+                                        ctx.getSource().sendFailure(Component.literal("A shop named '" + name + "' already exists."));
                                         return 0;
                                     }
                                     AdminShop shop = state.create(name);
-                                    ctx.getSource().sendFeedback(() -> Text.literal("Created admin shop '" + shop.getName() + "'.")
-                                            .formatted(Formatting.GREEN), true);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("Created admin shop '" + shop.getName() + "'.")
+                                            .withStyle(ChatFormatting.GREEN), true);
                                     return 1;
                                 })))
-                .then(CommandManager.literal("delete")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                .then(Commands.literal("delete")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {
                                     AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
                                     AdminShop shop = state.getByName(StringArgumentType.getString(ctx, "name"));
-                                    if (shop == null) { ctx.getSource().sendError(Text.literal("No such shop.")); return 0; }
+                                    if (shop == null) { ctx.getSource().sendFailure(Component.literal("No such shop.")); return 0; }
                                     state.remove(shop.getId());
-                                    ctx.getSource().sendFeedback(() -> Text.literal("Deleted shop.").formatted(Formatting.YELLOW), true);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("Deleted shop.").withStyle(ChatFormatting.YELLOW), true);
                                     return 1;
                                 })))
-                .then(CommandManager.literal("list")
-                        .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("list")
+                        .requires(s -> s.hasPermission(2))
                         .executes(ctx -> {
                             AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
                             if (state.all().isEmpty()) {
-                                ctx.getSource().sendFeedback(() -> Text.literal("No admin shops.").formatted(Formatting.GRAY), false);
+                                ctx.getSource().sendSuccess(() -> Component.literal("No admin shops.").withStyle(ChatFormatting.GRAY), false);
                                 return 0;
                             }
-                            ctx.getSource().sendFeedback(() -> Text.literal("Admin shops:").formatted(Formatting.GOLD), false);
+                            ctx.getSource().sendSuccess(() -> Component.literal("Admin shops:").withStyle(ChatFormatting.GOLD), false);
                             for (AdminShop s : state.all()) {
-                                ctx.getSource().sendFeedback(() -> Text.literal(" • " + s.getName() + " (" + s.getEntries().size() + " items)")
-                                        .formatted(Formatting.WHITE), false);
+                                ctx.getSource().sendSuccess(() -> Component.literal(" • " + s.getName() + " (" + s.getEntries().size() + " items)")
+                                        .withStyle(ChatFormatting.WHITE), false);
                             }
                             return 1;
                         }))
-                .then(CommandManager.literal("additem")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.argument("shop", StringArgumentType.string())
-                                .then(CommandManager.argument("buyPrice", LongArgumentType.longArg(0))
-                                        .then(CommandManager.argument("sellPrice", LongArgumentType.longArg(0))
+                .then(Commands.literal("additem")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .then(Commands.argument("buyPrice", LongArgumentType.longArg(0))
+                                        .then(Commands.argument("sellPrice", LongArgumentType.longArg(0))
                                                 .executes(ctx -> addItem(ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "shop"),
                                                         LongArgumentType.getLong(ctx, "buyPrice"),
                                                         LongArgumentType.getLong(ctx, "sellPrice"), false))
-                                                .then(CommandManager.argument("dynamic", BoolArgumentType.bool())
+                                                .then(Commands.argument("dynamic", BoolArgumentType.bool())
                                                         .executes(ctx -> addItem(ctx.getSource(),
                                                                 StringArgumentType.getString(ctx, "shop"),
                                                                 LongArgumentType.getLong(ctx, "buyPrice"),
                                                                 LongArgumentType.getLong(ctx, "sellPrice"),
                                                                 BoolArgumentType.getBool(ctx, "dynamic"))))))))
-                .then(CommandManager.literal("info")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                .then(Commands.literal("info")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> info(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
-                .then(CommandManager.literal("removeitem")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.argument("shopId", StringArgumentType.word())
-                                .then(CommandManager.argument("entryId", StringArgumentType.word())
+                .then(Commands.literal("removeitem")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("shopId", StringArgumentType.word())
+                                .then(Commands.argument("entryId", StringArgumentType.word())
                                         .executes(ctx -> {
                                             AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
                                             AdminShop shop = byId(state, ctx, "shopId");
-                                            if (shop == null) { ctx.getSource().sendError(Text.literal("Shop not found.")); return 0; }
+                                            if (shop == null) { ctx.getSource().sendFailure(Component.literal("Shop not found.")); return 0; }
                                             UUID entryId = parseUuid(StringArgumentType.getString(ctx, "entryId"));
                                             if (entryId != null && shop.removeEntry(entryId)) {
-                                                AdminShopState.get(ctx.getSource().getServer()).markDirty();
-                                                ctx.getSource().sendFeedback(() -> Text.literal("Item removed.").formatted(Formatting.YELLOW), false);
+                                                AdminShopState.get(ctx.getSource().getServer()).setDirty();
+                                                ctx.getSource().sendSuccess(() -> Component.literal("Item removed.").withStyle(ChatFormatting.YELLOW), false);
                                                 return 1;
                                             }
-                                            ctx.getSource().sendError(Text.literal("Item not found."));
+                                            ctx.getSource().sendFailure(Component.literal("Item not found."));
                                             return 0;
                                         }))))
 
                 // ---- player-facing ----
-                .then(CommandManager.literal("open")
-                        .then(CommandManager.argument("name", StringArgumentType.greedyString())
+                .then(Commands.literal("open")
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
+                                    ServerPlayer p = ctx.getSource().getPlayer();
                                     AdminShop shop = AdminShopState.get(ctx.getSource().getServer())
                                             .getByName(StringArgumentType.getString(ctx, "name"));
-                                    if (p == null || shop == null) { ctx.getSource().sendError(Text.literal("No such shop.")); return 0; }
+                                    if (p == null || shop == null) { ctx.getSource().sendFailure(Component.literal("No such shop.")); return 0; }
                                     AdminShopMenu.sendListing(p, shop);
                                     return 1;
                                 })))
-                .then(CommandManager.literal("buy")
-                        .then(CommandManager.argument("shopId", StringArgumentType.word())
-                                .then(CommandManager.argument("entryId", StringArgumentType.word())
-                                        .then(CommandManager.argument("qty", IntegerArgumentType.integer(1, 256))
+                .then(Commands.literal("buy")
+                        .then(Commands.argument("shopId", StringArgumentType.word())
+                                .then(Commands.argument("entryId", StringArgumentType.word())
+                                        .then(Commands.argument("qty", IntegerArgumentType.integer(1, 256))
                                                 .executes(ctx -> trade(ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "shopId"),
                                                         StringArgumentType.getString(ctx, "entryId"),
                                                         IntegerArgumentType.getInteger(ctx, "qty"), true))))))
-                .then(CommandManager.literal("sell")
-                        .then(CommandManager.argument("shopId", StringArgumentType.word())
-                                .then(CommandManager.argument("entryId", StringArgumentType.word())
-                                        .then(CommandManager.argument("qty", IntegerArgumentType.integer(1, 256))
+                .then(Commands.literal("sell")
+                        .then(Commands.argument("shopId", StringArgumentType.word())
+                                .then(Commands.argument("entryId", StringArgumentType.word())
+                                        .then(Commands.argument("qty", IntegerArgumentType.integer(1, 256))
                                                 .executes(ctx -> trade(ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "shopId"),
                                                         StringArgumentType.getString(ctx, "entryId"),
@@ -137,58 +136,58 @@ public final class AdminShopCommands {
         );
     }
 
-    private static int addItem(ServerCommandSource src, String shopName, long buy, long sell, boolean dynamic) {
-        ServerPlayerEntity p = src.getPlayer();
-        if (p == null) { src.sendError(Text.literal("Run as a player (uses your held item).")); return 0; }
+    private static int addItem(CommandSourceStack src, String shopName, long buy, long sell, boolean dynamic) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) { src.sendFailure(Component.literal("Run as a player (uses your held item).")); return 0; }
         AdminShop shop = AdminShopState.get(src.getServer()).getByName(shopName);
-        if (shop == null) { src.sendError(Text.literal("No such shop: " + shopName)); return 0; }
-        ItemStack held = p.getMainHandStack();
-        if (held.isEmpty()) { src.sendError(Text.literal("Hold the item you want to list.")); return 0; }
-        if (buy <= 0 && sell <= 0) { src.sendError(Text.literal("Set a buy and/or sell price above 0.")); return 0; }
+        if (shop == null) { src.sendFailure(Component.literal("No such shop: " + shopName)); return 0; }
+        ItemStack held = p.getMainHandItem();
+        if (held.isEmpty()) { src.sendFailure(Component.literal("Hold the item you want to list.")); return 0; }
+        if (buy <= 0 && sell <= 0) { src.sendFailure(Component.literal("Set a buy and/or sell price above 0.")); return 0; }
 
         AdminShopEntry entry = new AdminShopEntry(held.copy(), buy, sell, dynamic);
         shop.addEntry(entry);
-        AdminShopState.get(src.getServer()).markDirty();
-        src.sendFeedback(() -> Text.literal("Added ")
-                .append(held.getName())
-                .append(Text.literal(" (buy " + buy + ", sell " + sell + (dynamic ? ", dynamic" : "") + ").")
-                        .formatted(Formatting.GREEN)), true);
+        AdminShopState.get(src.getServer()).setDirty();
+        src.sendSuccess(() -> Component.literal("Added ")
+                .append(held.getHoverName())
+                .append(Component.literal(" (buy " + buy + ", sell " + sell + (dynamic ? ", dynamic" : "") + ").")
+                        .withStyle(ChatFormatting.GREEN)), true);
         return 1;
     }
 
-    private static int info(ServerCommandSource src, String name) {
+    private static int info(CommandSourceStack src, String name) {
         AdminShop shop = AdminShopState.get(src.getServer()).getByName(name);
-        if (shop == null) { src.sendError(Text.literal("No such shop.")); return 0; }
-        src.sendFeedback(() -> Text.literal("═ " + shop.getName() + " ═").formatted(Formatting.GOLD), false);
+        if (shop == null) { src.sendFailure(Component.literal("No such shop.")); return 0; }
+        src.sendSuccess(() -> Component.literal("═ " + shop.getName() + " ═").withStyle(ChatFormatting.GOLD), false);
         for (AdminShopEntry e : shop.getEntries()) {
-            MutableText line = Text.literal(" • ").formatted(Formatting.DARK_GRAY)
-                    .append(e.getItem().getName().copy().formatted(Formatting.WHITE))
-                    .append(Text.literal("  buy " + e.getBaseBuyPrice() + " / sell " + e.getBaseSellPrice()
-                            + (e.isDynamic() ? " (dyn)" : "")).formatted(Formatting.GRAY))
-                    .append(Text.literal("  "))
-                    .append(Text.literal("[X]").formatted(Formatting.RED).styled(s -> s
+            MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+                    .append(e.getItem().getHoverName().copy().withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal("  buy " + e.getBaseBuyPrice() + " / sell " + e.getBaseSellPrice()
+                            + (e.isDynamic() ? " (dyn)" : "")).withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("  "))
+                    .append(Component.literal("[X]").withStyle(ChatFormatting.RED).withStyle(s -> s
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                                     "/adminshop removeitem " + shop.getId() + " " + e.getId()))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Remove this item")))));
-            src.sendFeedback(() -> line, false);
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Remove this item")))));
+            src.sendSuccess(() -> line, false);
         }
         return 1;
     }
 
-    private static int trade(ServerCommandSource src, String shopIdStr, String entryIdStr, int qty, boolean buying) {
-        ServerPlayerEntity p = src.getPlayer();
+    private static int trade(CommandSourceStack src, String shopIdStr, String entryIdStr, int qty, boolean buying) {
+        ServerPlayer p = src.getPlayer();
         if (p == null) return 0;
         AdminShopState state = AdminShopState.get(src.getServer());
         UUID shopId = parseUuid(shopIdStr);
         UUID entryId = parseUuid(entryIdStr);
         AdminShop shop = shopId == null ? null : state.get(shopId);
         AdminShopEntry entry = shop == null || entryId == null ? null : shop.getEntry(entryId);
-        if (shop == null || entry == null) { src.sendError(Text.literal("That item is no longer available.")); return 0; }
+        if (shop == null || entry == null) { src.sendFailure(Component.literal("That item is no longer available.")); return 0; }
 
         AdminShopManager.Result r = buying
                 ? AdminShopManager.buy(p, shop, entry, qty)
                 : AdminShopManager.sell(p, shop, entry, qty);
-        state.markDirty();
+        state.setDirty();
 
         if (r != AdminShopManager.Result.SUCCESS) {
             String msg = switch (r) {
@@ -199,13 +198,13 @@ public final class AdminShopCommands {
                 case INVALID_QUANTITY -> "Invalid quantity.";
                 default -> "Trade failed.";
             };
-            p.sendMessage(Text.literal(msg).formatted(Formatting.RED), false);
+            p.displayClientMessage(Component.literal(msg).withStyle(ChatFormatting.RED), false);
             return 0;
         }
         return 1;
     }
 
-    private static AdminShop byId(AdminShopState state, com.mojang.brigadier.context.CommandContext<ServerCommandSource> ctx, String arg) {
+    private static AdminShop byId(AdminShopState state, com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, String arg) {
         UUID id = parseUuid(StringArgumentType.getString(ctx, arg));
         return id == null ? null : state.get(id);
     }

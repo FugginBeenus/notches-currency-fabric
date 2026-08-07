@@ -3,26 +3,25 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.world.World;
-
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BountyAdminScreenHandler extends ScreenHandler {
+public class BountyAdminScreenHandler extends AbstractContainerMenu {
 
     public static final int DECREE_SLOTS = 4;
     public static final int DECREE_X = 9, DECREE_Y = 33;
@@ -34,28 +33,28 @@ public class BountyAdminScreenHandler extends ScreenHandler {
     public static final int A_DURATION = 3;
     private static final int PROP_COUNT = 4;
 
-    private final PlayerInventory playerInv;
-    private final World world;
-    private final SimpleInventory decreeInv = new SimpleInventory(DECREE_SLOTS);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final Inventory playerInv;
+    private final Level world;
+    private final SimpleContainer decreeInv = new SimpleContainer(DECREE_SLOTS);
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
     private static final class DecreeSlot extends Slot {
-        DecreeSlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack s) {
-            return BountyPools.decreeCategory(Registries.ITEM.getId(s.getItem())) != null;
+        DecreeSlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
+        @Override public boolean mayPlace(ItemStack s) {
+            return BountyPools.decreeCategory(BuiltInRegistries.ITEM.getKey(s.getItem())) != null;
         }
     }
 
-    public BountyAdminScreenHandler(int syncId, PlayerInventory inv) {
-        super(ModScreenHandlers.BOUNTY_ADMIN, syncId);
+    public BountyAdminScreenHandler(int containerId, Inventory inv) {
+        super(ModScreenHandlers.BOUNTY_ADMIN, containerId);
         this.playerInv = inv;
-        this.world = inv.player.getWorld();
-        this.addProperties(props);
+        this.world = inv.player.level();
+        this.addDataSlots(props);
 
         // Prefill decree slots from the saved board decrees.
-        if (inv.player instanceof ServerPlayerEntity sp && sp.getServer() != null) {
+        if (inv.player instanceof ServerPlayer sp && sp.getServer() != null) {
             List<ItemStack> saved = BountyState.get(sp.getServer()).getDecrees();
-            for (int i = 0; i < DECREE_SLOTS && i < saved.size(); i++) decreeInv.setStack(i, saved.get(i));
+            for (int i = 0; i < DECREE_SLOTS && i < saved.size(); i++) decreeInv.setItem(i, saved.get(i));
         }
         for (int i = 0; i < DECREE_SLOTS; i++) {
             addSlot(new DecreeSlot(decreeInv, i, DECREE_X + i * 18, DECREE_Y));
@@ -71,10 +70,10 @@ public class BountyAdminScreenHandler extends ScreenHandler {
         refresh();
     }
 
-    public static void open(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new BountyAdminScreenHandler(syncId, inv),
-                Text.literal("Bounty Setup")));
+    public static void open(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new BountyAdminScreenHandler(containerId, inv),
+                Component.literal("Bounty Setup")));
     }
 
     public int prop(int i) {
@@ -82,7 +81,7 @@ public class BountyAdminScreenHandler extends ScreenHandler {
     }
 
     private void refresh() {
-        if (!(world instanceof ServerWorld)) return;
+        if (!(world instanceof ServerLevel)) return;
         NotchConfig.Bounty b = NotchConfigIO.get().bounty;
         props.set(A_ENABLED, b.enabled ? 1 : 0);
         props.set(A_ACTIVE, b.activeCount);
@@ -90,63 +89,63 @@ public class BountyAdminScreenHandler extends ScreenHandler {
         props.set(A_DURATION, b.durationMinutes);
     }
 
-    public void persistDecrees(ServerPlayerEntity sp) {
+    public void persistDecrees(ServerPlayer sp) {
         List<ItemStack> items = new ArrayList<>();
         for (int i = 0; i < DECREE_SLOTS; i++) {
-            ItemStack s = decreeInv.getStack(i);
+            ItemStack s = decreeInv.getItem(i);
             if (!s.isEmpty()) items.add(s.copy());
         }
         BountyState.get(sp.getServer()).setDecrees(items);
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity sp) || !sp.hasPermissionLevel(2)) return false;
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer sp) || !sp.hasPermissions(2)) return false;
         if (id == 0) { // regenerate now
             persistDecrees(sp);
             BountyManager.regenerate(sp.getServer());
-            sp.sendMessage(Text.literal("Bounties regenerated."), false);
+            sp.displayClientMessage(Component.literal("Bounties regenerated."), false);
             return true;
         }
         return false;
     }
 
     @Override
-    public void onClosed(PlayerEntity player) {
-        super.onClosed(player);
-        if (player instanceof ServerPlayerEntity sp && sp.getServer() != null) {
+    public void removed(Player player) {
+        super.removed(player);
+        if (player instanceof ServerPlayer sp && sp.getServer() != null) {
             persistDecrees(sp);
         }
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         // Only move between the decree slots and the player inventory.
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasStack()) {
-            ItemStack stack = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
             result = stack.copy();
             int invStart = DECREE_SLOTS;
             if (index < DECREE_SLOTS) {
-                if (!this.insertItem(stack, invStart, this.slots.size(), true)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, invStart, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                if (!this.insertItem(stack, 0, DECREE_SLOTS, false)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, 0, DECREE_SLOTS, false)) return ItemStack.EMPTY;
             }
-            if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-            else slot.markDirty();
+            if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+            else slot.setChanged();
         }
         return result;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
-        return player.hasPermissionLevel(2);
+    public boolean stillValid(Player player) {
+        return player.hasPermissions(2);
     }
 }

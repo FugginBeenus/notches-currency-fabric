@@ -1,63 +1,63 @@
 package net.fugginbeenus.notchcurrency.atm;
 
 import net.fugginbeenus.notchcurrency.ui.ATMTestScreenHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.HorizontalFacingBlock;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class ATMBlock extends HorizontalFacingBlock {
+public class ATMBlock extends HorizontalDirectionalBlock {
 
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     // Shape for the ATM (from your other class)
-    private static final VoxelShape SHAPE = Block.createCuboidShape(
+    private static final VoxelShape SHAPE = Block.box(
             1.0, 0.0, 2.0,   // minX, minY, minZ
             15.0, 16.0, 14.0 // maxX, maxY, maxZ
     );
 
-    public ATMBlock(Settings settings) {
+    public ATMBlock(Properties settings) {
         super(settings);
-        this.setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.NORTH));
+        this.registerDefaultState(getStateDefinition().any().setValue(FACING, Direction.NORTH));
     }
 
     // --- Blockstate / facing ---
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         // Face the player when placed
-        return this.getDefaultState()
-                .with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        return this.defaultBlockState()
+                .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state,
-                                      BlockView world,
+    public VoxelShape getShape(BlockState state,
+                                      BlockGetter world,
                                       BlockPos pos,
-                                      ShapeContext context) {
+                                      CollisionContext context) {
         return SHAPE;
     }
 
@@ -65,48 +65,48 @@ public class ATMBlock extends HorizontalFacingBlock {
 
     //? if >=1.21 {
     /*@Override
-    protected com.mojang.serialization.MapCodec<? extends net.minecraft.block.HorizontalFacingBlock> getCodec() {
+    protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.block.HorizontalDirectionalBlock> getCodec() {
         return createCodec(ATMBlock::new);
     }
     *///?}
 
     @Override
     //? if >=1.21 {
-    /*protected ActionResult onUse(BlockState state,
-                                 World world,
+    /*protected InteractionResult onUse(BlockState state,
+                                 Level world,
                                  BlockPos pos,
-                                 PlayerEntity player,
+                                 Player player,
                                  BlockHitResult hit) {
     *///?} else {
-    public ActionResult onUse(BlockState state,
-                              World world,
+    public InteractionResult use(BlockState state,
+                              Level world,
                               BlockPos pos,
-                              PlayerEntity player,
-                              Hand hand,
+                              Player player,
+                              InteractionHand hand,
                               BlockHitResult hit) {
     //?}
 
         // Server: sync balance to HUD immediately
-        if (player instanceof ServerPlayerEntity spe) {
+        if (player instanceof ServerPlayer spe) {
             long bal = net.fugginbeenus.notchcurrency.core.BalanceStore.get(spe);
             net.fugginbeenus.notchcurrency.net.NotchPackets.sendBalance(spe, bal);
         }
 
-        if (world.isClient) {
+        if (world.isClientSide) {
             // client side: hand animation & let server handle screen opening
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        NamedScreenHandlerFactory factory = new SimpleNamedScreenHandlerFactory(
-                (syncId, playerInv, p) -> createHandler(syncId, playerInv),
-                Text.translatable("screen.notchcurrency.deposit")
+        MenuProvider factory = new SimpleMenuProvider(
+                (containerId, playerInv, p) -> createHandler(containerId, playerInv),
+                Component.translatable("screen.notchcurrency.deposit")
         );
 
-        player.openHandledScreen(factory);
-        return ActionResult.CONSUME; // server handled it
+        player.openMenu(factory);
+        return InteractionResult.CONSUME; // server handled it
     }
 
-    private static ATMTestScreenHandler createHandler(int syncId, PlayerInventory playerInv) {
-        return new ATMTestScreenHandler(syncId, playerInv);
+    private static ATMTestScreenHandler createHandler(int containerId, Inventory playerInv) {
+        return new ATMTestScreenHandler(containerId, playerInv);
     }
 }

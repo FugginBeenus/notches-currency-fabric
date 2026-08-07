@@ -3,74 +3,74 @@ package net.fugginbeenus.notchcurrency.registry;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.ItemStack;
 
 public class ModCreativeTab {
 
     // Custom Notch Currency creative tab
-    public static final RegistryKey<ItemGroup> NOTCH_CURRENCY_TAB_KEY = RegistryKey.of(
-            RegistryKeys.ITEM_GROUP,
+    public static final ResourceKey<CreativeModeTab> NOTCH_CURRENCY_TAB_KEY = ResourceKey.create(
+            Registries.CREATIVE_MODE_TAB,
             NotchCurrency.id("notch_currency_tab")
     );
 
-    public static final ItemGroup NOTCH_CURRENCY_TAB = FabricItemGroup.builder()
+    public static final CreativeModeTab NOTCH_CURRENCY_TAB = FabricItemGroup.builder()
             .icon(() -> new ItemStack(ModItems.NOTCH_COIN))
-            .displayName(Text.translatable("itemGroup.notchcurrency.notch_currency_tab"))
-            .entries((context, entries) -> {
+            .title(Component.translatable("itemGroup.notchcurrency.notch_currency_tab"))
+            .displayItems((context, entries) -> {
                 // Currency
-                entries.add(ModItems.NOTCH_COIN);
+                entries.accept(ModItems.NOTCH_COIN);
 
                 // Blocks
-                entries.add(ModBlocks.ATM_ITEM);
-                entries.add(ModBlocks.GOLDEN_CACHE_ITEM);
-                entries.add(ModBlocks.LEDGER_BOARD_ITEM);
-                entries.add(ModBlocks.BOUNTY_BOARD_ITEM);
-                entries.add(ModBlocks.crateItem("common_crate"));
-                entries.add(ModBlocks.crateItem("rare_crate"));
-                entries.add(ModBlocks.crateItem("epic_crate"));
-                entries.add(ModItems.CRATE_KEY);
-                entries.add(ModBlocks.SLOT_MACHINE_ITEM);
-                entries.add(ModBlocks.COIN_FLIP_ITEM);
+                entries.accept(ModBlocks.ATM_ITEM);
+                entries.accept(ModBlocks.GOLDEN_CACHE_ITEM);
+                entries.accept(ModBlocks.LEDGER_BOARD_ITEM);
+                entries.accept(ModBlocks.BOUNTY_BOARD_ITEM);
+                entries.accept(ModBlocks.crateItem("common_crate"));
+                entries.accept(ModBlocks.crateItem("rare_crate"));
+                entries.accept(ModBlocks.crateItem("epic_crate"));
+                entries.accept(ModItems.CRATE_KEY);
+                entries.accept(ModBlocks.SLOT_MACHINE_ITEM);
+                entries.accept(ModBlocks.COIN_FLIP_ITEM);
 
                 // Shop items
-                entries.add(ModItems.NOTCH_NPC_ITEM);
+                entries.accept(ModItems.NOTCH_NPC_ITEM);
 
                 // Misc
-                entries.add(ModItems.BALLOON);
+                entries.accept(ModItems.BALLOON);
             })
             .build();
 
     public static void register() {
         // Register our custom creative tab
-        Registry.register(Registries.ITEM_GROUP, NOTCH_CURRENCY_TAB_KEY, NOTCH_CURRENCY_TAB);
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, NOTCH_CURRENCY_TAB_KEY, NOTCH_CURRENCY_TAB);
 
         // Also add items to relevant vanilla tabs for discoverability
 
         // Add ATM and Golden Cache to Functional Blocks tab
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
-            entries.add(ModBlocks.ATM_ITEM);
-            entries.add(ModBlocks.GOLDEN_CACHE_ITEM);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(entries -> {
+            entries.accept(ModBlocks.ATM_ITEM);
+            entries.accept(ModBlocks.GOLDEN_CACHE_ITEM);
         });
 
         // Add Notch Coin to Ingredients tab
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> {
-            entries.add(ModItems.NOTCH_COIN);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(entries -> {
+            entries.accept(ModItems.NOTCH_COIN);
         });
 
         // Add spawn egg to Spawn Eggs tab
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> {
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
         });
 
         // Add Merchant License and Balloon to Tools tab
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> {
-            entries.add(ModItems.BALLOON);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(entries -> {
+            entries.accept(ModItems.BALLOON);
         });
     }
 }

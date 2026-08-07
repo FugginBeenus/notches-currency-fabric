@@ -1,9 +1,8 @@
 package net.fugginbeenus.notchcurrency.entity;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
-
 import java.util.EnumSet;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
 
 public class NpcFollowOwnerGoal extends Goal {
 
@@ -13,45 +12,45 @@ public class NpcFollowOwnerGoal extends Goal {
 
     private final NotchNpcEntity npc;
     private final double speed;
-    private PlayerEntity owner;
+    private Player owner;
     private int updateCountdown;
 
     public NpcFollowOwnerGoal(NotchNpcEntity npc, double speed) {
         this.npc = npc;
         this.speed = speed;
-        this.setControls(EnumSet.of(Control.MOVE));
+        this.setFlags(EnumSet.of(Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         // Follows the owner by default, or a specific player when one is named in the editor.
-        PlayerEntity p = npc.resolveFollowTarget();
+        Player p = npc.resolveFollowTarget();
         if (p == null || p.isSpectator() || !p.isAlive()) return false;
-        if (npc.squaredDistanceTo(p) < START_DIST_SQ) return false;
+        if (npc.distanceToSqr(p) < START_DIST_SQ) return false;
         this.owner = p;
         return true;
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         // Wolf-style: also stop when the current path ends. canStart() re-fires right away while the
         // owner is still far, so the stop/restart loop keeps the follow going even between re-paths.
         return owner != null && owner.isAlive() && !owner.isSpectator()
-                && !npc.getNavigation().isIdle()
-                && npc.squaredDistanceTo(owner) > STOP_DIST_SQ;
+                && !npc.getNavigation().isDone()
+                && npc.distanceToSqr(owner) > STOP_DIST_SQ;
     }
 
     @Override
     public void start() {
         this.updateCountdown = 0;
-        npc.getNavigation().startMovingTo(owner, speed);
+        npc.getNavigation().moveTo(owner, speed);
     }
 
     @Override
     public void tick() {
-        npc.getLookControl().lookAt(owner, 10.0f, npc.getMaxLookPitchChange());
-        if (npc.squaredDistanceTo(owner) > TELEPORT_DIST_SQ) {
-            npc.refreshPositionAndAngles(owner.getX(), owner.getY(), owner.getZ(), npc.getYaw(), npc.getPitch());
+        npc.getLookControl().setLookAt(owner, 10.0f, npc.getMaxHeadXRot());
+        if (npc.distanceToSqr(owner) > TELEPORT_DIST_SQ) {
+            npc.moveTo(owner.getX(), owner.getY(), owner.getZ(), npc.getYRot(), npc.getXRot());
             npc.getNavigation().stop();
             return;
         }
@@ -59,8 +58,8 @@ public class NpcFollowOwnerGoal extends Goal {
         // every OTHER game tick, so an `age % N` check can permanently miss depending on entity-id
         // parity, which froze following after the first path. getTickCount() adjusts for that.
         if (--this.updateCountdown <= 0) {
-            this.updateCountdown = this.getTickCount(10);
-            npc.getNavigation().startMovingTo(owner, speed);
+            this.updateCountdown = this.adjustedTickDelay(10);
+            npc.getNavigation().moveTo(owner, speed);
         }
     }
 

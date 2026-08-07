@@ -4,15 +4,14 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.client.ui.NpcPreviewWidget;
 import net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 import java.util.List;
 
-public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
+public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandler> {
 
     private static final int W = 248, H = 240;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
@@ -29,19 +28,19 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
 
-    public NpcEquipScreen(NpcEquipScreenHandler handler, PlayerInventory inv, Text title) {
+    public NpcEquipScreen(NpcEquipScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Equipment", x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, "Equipment", x + W / 2, y + 7);
 
         // Recessed containers: gear on the left, the live NPC on the right.
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
@@ -50,12 +49,12 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         // Armor column.
         for (int i = 0; i < 4; i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.ARMOR_X - 1, y + NpcEquipScreenHandler.ARMOR_Y - 1 + i * 18);
-            ctx.drawText(this.textRenderer, SLOT_LABELS[i], x + NpcEquipScreenHandler.ARMOR_X + 22,
+            ctx.drawString(this.font, SLOT_LABELS[i], x + NpcEquipScreenHandler.ARMOR_X + 22,
                     y + NpcEquipScreenHandler.ARMOR_Y + 4 + i * 18, NotchTheme.TEXT_DARK, false);
         }
 
         // Trinket grid beside the armor (only present with the Trinkets mod).
-        for (int i = 0; i < handler.trinketCount(); i++) {
+        for (int i = 0; i < menu.trinketCount(); i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.TRINKET_X - 1 + (i % 2) * 18,
                     y + NpcEquipScreenHandler.TRINKET_Y - 1 + (i / 2) * 18);
         }
@@ -63,14 +62,14 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
         // Hands, under a divider.
         NotchWidgets.divider(ctx, x + 12, y + NpcEquipScreenHandler.MAIN_Y - 8, 140);
         NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.HAND_X - 1, y + NpcEquipScreenHandler.MAIN_Y - 1);
-        ctx.drawText(this.textRenderer, SLOT_LABELS[4], x + NpcEquipScreenHandler.HAND_X + 22,
+        ctx.drawString(this.font, SLOT_LABELS[4], x + NpcEquipScreenHandler.HAND_X + 22,
                 y + NpcEquipScreenHandler.MAIN_Y + 4, NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.OFF_X - 1, y + NpcEquipScreenHandler.OFF_Y - 1);
-        ctx.drawText(this.textRenderer, SLOT_LABELS[5], x + NpcEquipScreenHandler.OFF_X + 22,
+        ctx.drawString(this.font, SLOT_LABELS[5], x + NpcEquipScreenHandler.OFF_X + 22,
                 y + NpcEquipScreenHandler.OFF_Y + 4, NotchTheme.TEXT_DARK, false);
 
         // Live preview: the real NPC, so gear shows the instant it's equipped.
-        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
+        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
 
         // Divider + player inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
@@ -87,27 +86,27 @@ public class NpcEquipScreen extends HandledScreen<NpcEquipScreenHandler> {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         super.render(ctx, mouseX, mouseY, delta);
-        this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+        this.renderTooltip(ctx, mouseX, mouseY);
 
         // Empty gear and trinket slots explain what they take.
-        if (this.focusedSlot != null && !this.focusedSlot.hasStack()) {
-            int id = this.handler.slots.indexOf(this.focusedSlot);
-            List<Text> lines = null;
+        if (this.hoveredSlot != null && !this.hoveredSlot.hasItem()) {
+            int id = this.menu.slots.indexOf(this.hoveredSlot);
+            List<Component> lines = null;
             if (id >= 0 && id < 6) {
                 lines = List.of(
-                        Text.literal(SLOT_LABELS[id]).formatted(Formatting.WHITE),
-                        Text.literal(SLOT_HINTS[id]).formatted(Formatting.GRAY));
+                        Component.literal(SLOT_LABELS[id]).withStyle(ChatFormatting.WHITE),
+                        Component.literal(SLOT_HINTS[id]).withStyle(ChatFormatting.GRAY));
             } else if (id >= 42) {
                 lines = List.of(
-                        Text.literal("Trinket: " + handler.trinketLabel(id - 42)).formatted(Formatting.WHITE),
-                        Text.literal("Accessory slot from the Trinkets mod.").formatted(Formatting.GRAY));
+                        Component.literal("Trinket: " + menu.trinketLabel(id - 42)).withStyle(ChatFormatting.WHITE),
+                        Component.literal("Accessory slot from the Trinkets mod.").withStyle(ChatFormatting.GRAY));
             }
-            if (lines != null) ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+            if (lines != null) ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
         }
     }
 

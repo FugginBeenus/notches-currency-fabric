@@ -1,11 +1,10 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,35 +43,35 @@ public class DialogueChoice {
         return this;
     }
 
-    public boolean isAvailable(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public boolean isAvailable(ServerPlayer sp, NotchNpcEntity npc) {
         for (DialogueCondition c : conditions) {
             if (!c.test(sp, npc)) return false;
         }
         return true;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Label", label);
         nbt.putString("Next", next);
         nbt.putBoolean("Hide", hideWhenLocked);
-        NbtList acts = new NbtList();
+        ListTag acts = new ListTag();
         for (DialogueAction a : actions) acts.add(a.toNbt());
         nbt.put("Actions", acts);
-        NbtList conds = new NbtList();
+        ListTag conds = new ListTag();
         for (DialogueCondition c : conditions) conds.add(c.toNbt());
         nbt.put("Conditions", conds);
         return nbt;
     }
 
-    public static DialogueChoice fromNbt(NbtCompound nbt) {
+    public static DialogueChoice fromNbt(CompoundTag nbt) {
         DialogueChoice c = new DialogueChoice();
         c.label = nbt.getString("Label");
         c.next = nbt.getString("Next");
         c.hideWhenLocked = nbt.getBoolean("Hide");
-        NbtList acts = nbt.getList("Actions", NbtElement.COMPOUND_TYPE);
+        ListTag acts = nbt.getList("Actions", Tag.TAG_COMPOUND);
         for (int i = 0; i < acts.size(); i++) c.actions.add(DialogueAction.fromNbt(acts.getCompound(i)));
-        NbtList conds = nbt.getList("Conditions", NbtElement.COMPOUND_TYPE);
+        ListTag conds = nbt.getList("Conditions", Tag.TAG_COMPOUND);
         for (int i = 0; i < conds.size(); i++) c.conditions.add(DialogueCondition.fromNbt(conds.getCompound(i)));
         return c;
     }

@@ -2,17 +2,17 @@ package net.fugginbeenus.notchcurrency.economy.gambling;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
-public class CoinFlipScreenHandler extends ScreenHandler {
+public class CoinFlipScreenHandler extends AbstractContainerMenu {
 
     public static final int P_ENABLED = 0;
     public static final int P_MIN     = 1;
@@ -21,23 +21,23 @@ public class CoinFlipScreenHandler extends ScreenHandler {
     public static final int P_PAYOUT  = 4; // payout percent on a win
     private static final int PROP_COUNT = 5;
 
-    private final PlayerInventory playerInv;
-    private final World world;
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final Inventory playerInv;
+    private final Level world;
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
-    public CoinFlipScreenHandler(int syncId, PlayerInventory inv) {
-        super(ModScreenHandlers.COIN_FLIP, syncId);
+    public CoinFlipScreenHandler(int containerId, Inventory inv) {
+        super(ModScreenHandlers.COIN_FLIP, containerId);
         this.playerInv = inv;
-        this.world = inv.player.getWorld();
-        this.addProperties(props);
+        this.world = inv.player.level();
+        this.addDataSlots(props);
         refresh();
     }
 
     public int prop(int i) { return props.get(i); }
 
     private void refresh() {
-        if (!(world instanceof ServerWorld)) return;
-        if (!(playerInv.player instanceof ServerPlayerEntity sp)) return;
+        if (!(world instanceof ServerLevel)) return;
+        if (!(playerInv.player instanceof ServerPlayer sp)) return;
         props.set(P_ENABLED, GamblingManager.isEnabled() ? 1 : 0);
         props.set(P_MIN, (int) Math.min(Integer.MAX_VALUE, GamblingManager.getMinBet()));
         props.set(P_MAX, (int) Math.min(Integer.MAX_VALUE, GamblingManager.getMaxBet()));
@@ -46,18 +46,18 @@ public class CoinFlipScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

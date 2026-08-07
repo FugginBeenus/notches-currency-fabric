@@ -1,20 +1,20 @@
 package net.fugginbeenus.notchcurrency.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.fugginbeenus.notchcurrency.block.CoinFace;
 import net.fugginbeenus.notchcurrency.block.CoinFlipBlock;
 import net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity;
 import net.fugginbeenus.notchcurrency.compat.Render;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlipBlockEntity> {
 
@@ -24,42 +24,42 @@ public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlip
 
     private final ItemRenderer itemRenderer;
 
-    public CoinFlipBlockEntityRenderer(BlockEntityRendererFactory.Context ctx) {
+    public CoinFlipBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
         this.itemRenderer = ctx.getItemRenderer();
     }
 
     @Override
-    public void render(CoinFlipBlockEntity be, float tickDelta, MatrixStack matrices,
-                       VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        World world = be.getWorld();
+    public void render(CoinFlipBlockEntity be, float tickDelta, PoseStack matrices,
+                       MultiBufferSource vertexConsumers, int light, int overlay) {
+        Level world = be.getLevel();
         if (world == null) return;
-        var state = be.getCachedState();
+        var state = be.getBlockState();
         if (!(state.getBlock() instanceof CoinFlipBlock)) return;
 
-        boolean flipping = state.get(CoinFlipBlock.FLIPPING);
-        boolean tails = state.get(CoinFlipBlock.FACE) == CoinFace.TAILS;
+        boolean flipping = state.getValue(CoinFlipBlock.FLIPPING);
+        boolean tails = state.getValue(CoinFlipBlock.FACE) == CoinFace.TAILS;
         ItemStack coin = new ItemStack(tails ? ModItems.COIN_TAILS : ModItems.NOTCH_COIN);
 
         float spin = 0f;
         float arc = 0f;
         if (flipping && be.flipStartTick() >= 0) {
-            float elapsed = (world.getTime() - be.flipStartTick()) + tickDelta;
-            float t = MathHelper.clamp(elapsed / Math.max(1f, be.revealTicks()), 0f, 1f);
+            float elapsed = (world.getGameTime() - be.flipStartTick()) + tickDelta;
+            float t = Mth.clamp(elapsed / Math.max(1f, be.revealTicks()), 0f, 1f);
             arc = 4f * PEAK * t * (1f - t);   // parabola arc up + back down
             spin = elapsed * 52f;              // fast tumble on top of the flat rest
         }
 
-        matrices.push();
+        matrices.pushPose();
         matrices.translate(0.5, TABLE_Y + arc, 0.5);
         // Flat on the felt (90° from the item's upright card) + the flip spin, both around X so it
         // tumbles toward the front rather than spinning edge-on.
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f + spin));
+        matrices.mulPose(Axis.XP.rotationDegrees(90f + spin));
         matrices.scale(SIZE, SIZE, SIZE);
 
         // Full-bright: the coin floats above the block, so the block's baked light renders it black.
         Render.renderFixedItem(itemRenderer, coin,
-                LightmapTextureManager.MAX_LIGHT_COORDINATE, overlay,
+                LightTexture.FULL_BRIGHT, overlay,
                 matrices, vertexConsumers, world, 0);
-        matrices.pop();
+        matrices.popPose();
     }
 }

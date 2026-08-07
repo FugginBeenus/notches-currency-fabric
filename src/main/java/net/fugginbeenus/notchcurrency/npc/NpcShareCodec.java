@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.npc;
 
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +25,7 @@ public final class NpcShareCodec {
         }
     }
 
-    public static String encode(NbtCompound tag) throws IOException {
+    public static String encode(CompoundTag tag) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         NbtIo.writeCompressed(tag, out);
         return PREFIX + Base64.getEncoder().encodeToString(out.toByteArray());
@@ -35,7 +35,7 @@ public final class NpcShareCodec {
         return text != null && text.strip().startsWith(PREFIX);
     }
 
-    public static NbtCompound decode(@Nullable String rawText) throws BadCode {
+    public static CompoundTag decode(@Nullable String rawText) throws BadCode {
         if (rawText == null || rawText.isBlank()) {
             throw new BadCode("There's no share code on your clipboard.");
         }
@@ -64,7 +64,7 @@ public final class NpcShareCodec {
 
         try (ByteArrayInputStream in = new ByteArrayInputStream(compressed)) {
             //? if >=1.21 {
-            /*return NbtIo.readCompressed(in, net.minecraft.nbt.NbtSizeTracker.of(MAX_DECOMPRESSED_BYTES));
+            /*return NbtIo.readCompressed(in, net.minecraft.nbt.NbtAccounter.create(MAX_DECOMPRESSED_BYTES));
             *///?} else {
             return NbtIo.readCompressed(in);
             //?}

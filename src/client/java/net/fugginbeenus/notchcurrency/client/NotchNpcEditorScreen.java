@@ -8,18 +8,15 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import java.util.UUID;
 
 public class NotchNpcEditorScreen extends Screen {
@@ -35,7 +32,7 @@ public class NotchNpcEditorScreen extends Screen {
     };
 
     private final UUID npcId;
-    @org.jetbrains.annotations.Nullable private java.util.List<Text> tooltip = null;
+    @org.jetbrains.annotations.Nullable private java.util.List<Component> tooltip = null;
     private final String ownerName;
     private final boolean canEdit;
     private final boolean applyInstalled = FabricLoader.getInstance().isModLoaded("apply");
@@ -63,14 +60,14 @@ public class NotchNpcEditorScreen extends Screen {
     private int tab = 0; // 0 Look, 1 Behavior, 2 Role, 3 Talk, 4 Manage
 
     private int px, py;
-    private TextFieldWidget nameField;
+    private EditBox nameField;
     private String currentSubtitle = "";
     private String currentVoice = "";
     private int currentVoicePitch = 100;
-    private TextFieldWidget playerField;
-    private TextFieldWidget urlField;
-    private TextFieldWidget followField;
-    private TextFieldWidget farewellField;
+    private EditBox playerField;
+    private EditBox urlField;
+    private EditBox followField;
+    private EditBox farewellField;
     private String currentFarewell;
     private String currentBillboard;
     private NotchNpcEntity preview;
@@ -78,7 +75,7 @@ public class NotchNpcEditorScreen extends Screen {
     public static int reopenAtTab = 0;
 
     public NotchNpcEditorScreen(net.fugginbeenus.notchcurrency.client.npc.NpcEditorState state) {
-        super(Text.literal("NPC Editor"));
+        super(Component.literal("NPC Editor"));
         this.tab = Math.max(0, Math.min(5, reopenAtTab));
         reopenAtTab = 0;
         this.npcId = state.npcId();
@@ -130,40 +127,40 @@ public class NotchNpcEditorScreen extends Screen {
     protected void init() {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
-        nameField = new TextFieldWidget(this.textRenderer, px + 152, py + 49, 136, 9, Text.literal("Name"));
+        nameField = new EditBox(this.font, px + 152, py + 49, 136, 9, Component.literal("Name"));
         nameField.setMaxLength(48);
-        nameField.setDrawsBackground(false);
-        nameField.setText(currentName);
-        addDrawableChild(nameField);
+        nameField.setBordered(false);
+        nameField.setValue(currentName);
+        addRenderableWidget(nameField);
 
 
-        farewellField = new TextFieldWidget(this.textRenderer, px + 78, py + 175, 158, 9, Text.literal("Goodbye"));
+        farewellField = new EditBox(this.font, px + 78, py + 175, 158, 9, Component.literal("Goodbye"));
         farewellField.setMaxLength(150);
-        farewellField.setDrawsBackground(false);
-        farewellField.setPlaceholder(Text.literal("(optional)").formatted(Formatting.DARK_GRAY));
-        farewellField.setText(currentFarewell);
-        addDrawableChild(farewellField);
+        farewellField.setBordered(false);
+        farewellField.setHint(Component.literal("(optional)").withStyle(ChatFormatting.DARK_GRAY));
+        farewellField.setValue(currentFarewell);
+        addRenderableWidget(farewellField);
 
-        playerField = new TextFieldWidget(this.textRenderer, px + 152, py + 159, 134, 9, Text.literal("Player"));
+        playerField = new EditBox(this.font, px + 152, py + 159, 134, 9, Component.literal("Player"));
         playerField.setMaxLength(16);
-        playerField.setDrawsBackground(false);
-        playerField.setPlaceholder(Text.literal("player name").formatted(Formatting.DARK_GRAY));
-        if (NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) playerField.setText(currentSkinValue);
-        addDrawableChild(playerField);
+        playerField.setBordered(false);
+        playerField.setHint(Component.literal("player name").withStyle(ChatFormatting.DARK_GRAY));
+        if (NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) playerField.setValue(currentSkinValue);
+        addRenderableWidget(playerField);
 
-        urlField = new TextFieldWidget(this.textRenderer, px + 152, py + 177, 134, 9, Text.literal("URL"));
+        urlField = new EditBox(this.font, px + 152, py + 177, 134, 9, Component.literal("URL"));
         urlField.setMaxLength(256);
-        urlField.setDrawsBackground(false);
-        urlField.setPlaceholder(Text.literal("skin URL").formatted(Formatting.DARK_GRAY));
-        if (NotchNpcEntity.SKIN_URL.equals(currentSkinType)) urlField.setText(currentSkinValue);
-        addDrawableChild(urlField);
+        urlField.setBordered(false);
+        urlField.setHint(Component.literal("skin URL").withStyle(ChatFormatting.DARK_GRAY));
+        if (NotchNpcEntity.SKIN_URL.equals(currentSkinType)) urlField.setValue(currentSkinValue);
+        addRenderableWidget(urlField);
 
-        followField = new TextFieldWidget(this.textRenderer, px + BEH_X + 52, py + 143, 104, 9, Text.literal("Follow"));
+        followField = new EditBox(this.font, px + BEH_X + 52, py + 143, 104, 9, Component.literal("Follow"));
         followField.setMaxLength(16);
-        followField.setDrawsBackground(false);
-        followField.setPlaceholder(Text.literal("owner").formatted(Formatting.DARK_GRAY));
-        followField.setText(followName);
-        addDrawableChild(followField);
+        followField.setBordered(false);
+        followField.setHint(Component.literal("owner").withStyle(ChatFormatting.DARK_GRAY));
+        followField.setValue(followName);
+        addRenderableWidget(followField);
 
         updateWidgetVisibility();
     }
@@ -171,7 +168,7 @@ public class NotchNpcEditorScreen extends Screen {
     private void updateWidgetVisibility() {
         nameField.visible = (tab == 0);
         farewellField.visible = (tab == 3);
-        nameField.setFocusUnlocked(tab == 0);
+        nameField.setCanLoseFocus(tab == 0);
         boolean hum = (tab == 0 && isHumanoid());
         playerField.visible = hum;
         urlField.visible = hum;
@@ -179,7 +176,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
@@ -187,7 +184,7 @@ public class NotchNpcEditorScreen extends Screen {
         //?}
         tooltip = null;
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "NPC Editor", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "NPC Editor", px + W / 2, py + 8);
         drawTabs(ctx, mouseX, mouseY);
         switch (tab) {
             case 0 -> drawAppearance(ctx, mouseX, mouseY);
@@ -199,7 +196,7 @@ public class NotchNpcEditorScreen extends Screen {
         }
         super.render(ctx, mouseX, mouseY, delta);
         if (tooltip != null) {
-            ctx.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
+            ctx.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }
     }
 
@@ -208,13 +205,13 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int TAB_Y = 22, TAB_H = 16, TAB_W = 44;
     private int tabX(int i) { return px + 9 + i * 47; }
 
-    private void drawTabs(DrawContext ctx, int mx, int my) {
+    private void drawTabs(GuiGraphics ctx, int mx, int my) {
         String[] names = {"Look", "Moves", "Role", "Talk", "Pose", "Manage"};
         for (int i = 0; i < 6; i++) {
             int tx = tabX(i);
             boolean hover = over(mx, my, tx, py + TAB_Y, TAB_W, TAB_H);
-            if (i == tab) NotchWidgets.primaryButton(ctx, this.textRenderer, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
-            else NotchWidgets.neutralButton(ctx, this.textRenderer, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
+            if (i == tab) NotchWidgets.primaryButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
+            else NotchWidgets.neutralButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
         }
         NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
     }
@@ -225,37 +222,37 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int RX = 116;
     private boolean isApplyModel() { return NotchNpcEntity.MODEL_APPLY.equals(currentModel); }
 
-    private void drawAppearance(DrawContext ctx, int mx, int my) {
+    private void drawAppearance(GuiGraphics ctx, int mx, int my) {
         // Live preview of the actual NPC.
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findPreview();
         if (npc != null) {
-            float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw;
+            float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
             boolean wasInvisible = npc.isInvisible();
-            npc.setYaw(180);
-            npc.bodyYaw = 180;
+            npc.setYRot(180);
+            npc.yBodyRot = 180;
             npc.setInvisible(false); // always show the NPC in its own editor preview
             float lookX = (px + PREV_X + PREV_W / 2f) - mx;
             float lookY = (py + PREV_Y + 40f) - my;
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 18, previewSize(),
                     lookX, lookY, npc);
-            npc.setYaw(oldYaw);
-            npc.bodyYaw = oldBody;
+            npc.setYRot(oldYaw);
+            npc.yBodyRot = oldBody;
             npc.setInvisible(wasInvisible);
         } else {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Preview", px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H / 2, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.font, "Preview", px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H / 2, NotchTheme.TEXT_MUTED, false);
         }
 
         // Name
-        ctx.drawText(this.textRenderer, "Name:", px + RX, py + 50, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Name:", px + RX, py + 50, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 150, py + 46, 140, 14, NotchTheme.DEEP);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 64, 140, 14, "Save Name",
+        NotchWidgets.primaryButton(ctx, this.font, px + 150, py + 64, 140, 14, "Save Name",
                 over(mx, my, px + 150, py + 64, 140, 14));
         if (over(mx, my, px + 150, py + 46, 140, 14)) {
             tooltip = java.util.List.of(
-                    Text.literal("Name").formatted(Formatting.WHITE),
-                    Text.literal("Colour it with & codes: &6Carol").formatted(Formatting.GRAY),
-                    Text.literal("Same codes as dialogue and signs.").formatted(Formatting.DARK_GRAY));
+                    Component.literal("Name").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Colour it with & codes: &6Carol").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Same codes as dialogue and signs.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
 
@@ -265,9 +262,9 @@ public class NotchNpcEditorScreen extends Screen {
         drawSignButton(ctx, mx, my);
 
         // Model: current name + Change button (opens the vanilla/modded model picker)
-        ctx.drawText(this.textRenderer, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 224, py + 100, 66, 14, "Change...", over(mx, my, px + 224, py + 100, 66, 14));
+        ctx.drawString(this.font, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 224, py + 100, 66, 14, "Change...", over(mx, my, px + 224, py + 100, 66, 14));
 
         // Skin controls per model
         if (isApplyModel()) {
@@ -276,16 +273,16 @@ public class NotchNpcEditorScreen extends Screen {
                 var v = variants.get(i);
                 int vx = varX(i), vy = varY(i);
                 boolean hover = over(mx, my, vx, vy, VAR_W, VAR_H);
-                if (v.id().equals(currentSkinValue)) NotchWidgets.primaryButton(ctx, this.textRenderer, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
-                else NotchWidgets.neutralButton(ctx, this.textRenderer, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
+                if (v.id().equals(currentSkinValue)) NotchWidgets.primaryButton(ctx, this.font, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
+                else NotchWidgets.neutralButton(ctx, this.font, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
             }
         } else if (isHumanoid()) {
             boolean preset = NotchNpcEntity.SKIN_PRESET.equals(currentSkinType);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 122, 20, 16, "<", over(mx, my, px + 118, py + 122, 20, 16));
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 268, py + 122, 20, 16, ">", over(mx, my, px + 268, py + 122, 20, 16));
-            NotchWidgets.centerText(ctx, this.textRenderer, "Preset " + presetIndex(), px + 203, py + 126,
+            NotchWidgets.neutralButton(ctx, this.font, px + 118, py + 122, 20, 16, "<", over(mx, my, px + 118, py + 122, 20, 16));
+            NotchWidgets.neutralButton(ctx, this.font, px + 268, py + 122, 20, 16, ">", over(mx, my, px + 268, py + 122, 20, 16));
+            NotchWidgets.centerText(ctx, this.font, "Preset " + presetIndex(), px + 203, py + 126,
                     preset ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 118, py + 140, 174, 14,
+            NotchWidgets.neutralButton(ctx, this.font, px + 118, py + 140, 174, 14,
                     currentSlim ? "Arms: Slim" : "Arms: Wide", over(mx, my, px + 118, py + 140, 174, 14));
             // Player-name skin (checkbox enables)
             drawCheck(ctx, px + 118, py + 157, NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType));
@@ -294,7 +291,7 @@ public class NotchNpcEditorScreen extends Screen {
             drawCheck(ctx, px + 118, py + 175, NotchNpcEntity.SKIN_URL.equals(currentSkinType));
             NotchWidgets.inset(ctx, px + 150, py + 174, 138, 13, NotchTheme.DEEP);
         } else {
-            NotchWidgets.centerText(ctx, this.textRenderer, "This mob uses its own look.", px + 203, py + 134, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.font, "This mob uses its own look.", px + 203, py + 134, NotchTheme.TEXT_MUTED, false);
         }
 
     }
@@ -309,22 +306,22 @@ public class NotchNpcEditorScreen extends Screen {
     // the tab is the preview panel, and a full-width button would cut across it.
     private int signRow() { return py + 196; }
     private int signWidth() { return W - RX - 10; }
-    private void drawSignButton(DrawContext ctx, int mx, int my) {
+    private void drawSignButton(GuiGraphics ctx, int mx, int my) {
         int y = signRow();
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + RX, y, signWidth(), 15,
+        NotchWidgets.neutralButton(ctx, this.font, px + RX, y, signWidth(), 15,
                 currentBillboard.isBlank() && currentSubtitle.isBlank()
                         ? "Add floating text..." : "Edit floating text...",
                 over(mx, my, px + RX, y, signWidth(), 15));
     }
 
-    private void drawNameOffsetRow(DrawContext ctx, int mx, int my) {
+    private void drawNameOffsetRow(GuiGraphics ctx, int mx, int my) {
         int y = py + NAME_Y_ROW;
-        ctx.drawText(this.textRenderer, "Name Y:", px + RX, y + 3, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + NAME_Y_MINUS_X, y, STEP_W, STEP_H, "-",
+        ctx.drawString(this.font, "Name Y:", px + RX, y + 3, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + NAME_Y_MINUS_X, y, STEP_W, STEP_H, "-",
                 over(mx, my, px + NAME_Y_MINUS_X, y, STEP_W, STEP_H));
-        NotchWidgets.centerText(ctx, this.textRenderer, String.format("%+.1f", currentNameOffset),
+        NotchWidgets.centerText(ctx, this.font, String.format("%+.1f", currentNameOffset),
                 px + 245, y + 3, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + NAME_Y_PLUS_X, y, STEP_W, STEP_H, "+",
+        NotchWidgets.neutralButton(ctx, this.font, px + NAME_Y_PLUS_X, y, STEP_W, STEP_H, "+",
                 over(mx, my, px + NAME_Y_PLUS_X, y, STEP_W, STEP_H));
     }
 
@@ -336,7 +333,7 @@ public class NotchNpcEditorScreen extends Screen {
         // clips, and leave a margin (esp. at the top for the nameplate).
         float h = 1.9f, w = 0.6f; // humanoid default
         if (currentModel != null && currentModel.startsWith("entity:")) {
-            EntityType<?> t = Registries.ENTITY_TYPE.get(Reg.parse(currentModel.substring("entity:".length())));
+            EntityType<?> t = BuiltInRegistries.ENTITY_TYPE.get(Reg.parse(currentModel.substring("entity:".length())));
             if (t != null) {
                 //? if >=1.21 {
                 /*h = Math.max(0.5f, t.getDimensions().height());
@@ -357,8 +354,8 @@ public class NotchNpcEditorScreen extends Screen {
         if (NotchNpcEntity.MODEL_HUMANOID.equals(model)) return "Humanoid";
         if (NotchNpcEntity.MODEL_APPLY.equals(model)) return "APP.ly";
         if (model != null && model.startsWith("entity:")) {
-            EntityType<?> t = Registries.ENTITY_TYPE.get(Reg.parse(model.substring("entity:".length())));
-            return t != null ? t.getName().getString() : model.substring("entity:".length());
+            EntityType<?> t = BuiltInRegistries.ENTITY_TYPE.get(Reg.parse(model.substring("entity:".length())));
+            return t != null ? t.getDescription().getString() : model.substring("entity:".length());
         }
         return model == null ? "Humanoid" : model;
     }
@@ -387,10 +384,10 @@ public class NotchNpcEditorScreen extends Screen {
     private int movesRow3() { return py + 224; }
     private int movesRow4() { return py + 241; }
 
-    private void drawToggle(DrawContext ctx, int mx, int my, int x, int y, String label, boolean on) {
+    private void drawToggle(GuiGraphics ctx, int mx, int my, int x, int y, String label, boolean on) {
         boolean hover = over(mx, my, x, y, TOGGLE_W, TOGGLE_H);
-        if (on) NotchWidgets.primaryButton(ctx, this.textRenderer, x, y, TOGGLE_W, TOGGLE_H, label, hover);
-        else NotchWidgets.neutralButton(ctx, this.textRenderer, x, y, TOGGLE_W, TOGGLE_H, label, hover);
+        if (on) NotchWidgets.primaryButton(ctx, this.font, x, y, TOGGLE_W, TOGGLE_H, label, hover);
+        else NotchWidgets.neutralButton(ctx, this.font, x, y, TOGGLE_W, TOGGLE_H, label, hover);
     }
     private int behY(int i) { return py + 48 + i * 17; }
 
@@ -398,62 +395,62 @@ public class NotchNpcEditorScreen extends Screen {
         return currentBehavior == NotchNpcEntity.Behavior.WANDER || currentBehavior == NotchNpcEntity.Behavior.GUARD;
     }
 
-    private void drawBehavior(DrawContext ctx, int mx, int my) {
+    private void drawBehavior(GuiGraphics ctx, int mx, int my) {
         String[] labels = {"Stationary", "Wander around home", "Follow owner", "Patrol waypoints", "Guard this area"};
         NotchNpcEntity.Behavior[] modes = NotchNpcEntity.Behavior.values();
         for (int i = 0; i < modes.length; i++) {
             boolean hover = over(mx, my, px + BEH_X, behY(i), BEH_W, BEH_H);
             if (modes[i] == currentBehavior) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
+                NotchWidgets.neutralButton(ctx, this.font, px + BEH_X, behY(i), BEH_W, BEH_H, labels[i], hover);
             }
         }
 
         // Sixth in the list rather than a chip among the toggles: choosing a schedule is choosing
         // how the NPC moves, which is what every other button in this column is for.
         boolean schedHover = over(mx, my, px + BEH_X, behY(5), BEH_W, BEH_H);
-        NotchWidgets.goldButton(ctx, this.textRenderer, px + BEH_X, behY(5), BEH_W, BEH_H,
+        NotchWidgets.goldButton(ctx, this.font, px + BEH_X, behY(5), BEH_W, BEH_H,
                 "Daily Schedule", schedHover);
         if (schedHover) {
             tooltip = java.util.List.of(
-                    Text.literal("Daily Schedule").formatted(Formatting.GOLD),
-                    Text.literal("Sleep, open the shop, wander, walk a round,").formatted(Formatting.GRAY),
-                    Text.literal("all on a clock. Overrides the choice above").formatted(Formatting.GRAY),
-                    Text.literal("while it is running.").formatted(Formatting.GRAY));
+                    Component.literal("Daily Schedule").withStyle(ChatFormatting.GOLD),
+                    Component.literal("Sleep, open the shop, wander, walk a round,").withStyle(ChatFormatting.GRAY),
+                    Component.literal("all on a clock. Overrides the choice above").withStyle(ChatFormatting.GRAY),
+                    Component.literal("while it is running.").withStyle(ChatFormatting.GRAY));
         }
 
         int cy = py + 152;
         if (usesRadius()) {
-            ctx.drawText(this.textRenderer, "Radius:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 50, cy, 20, 16, "-",
+            ctx.drawString(this.font, "Radius:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + BEH_X + 50, cy, 20, 16, "-",
                     over(mx, my, px + BEH_X + 50, cy, 20, 16));
-            NotchWidgets.centerText(ctx, this.textRenderer, currentRadius + " blocks", px + BEH_X + 105, cy + 4, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 140, cy, 20, 16, "+",
+            NotchWidgets.centerText(ctx, this.font, currentRadius + " blocks", px + BEH_X + 105, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + BEH_X + 140, cy, 20, 16, "+",
                     over(mx, my, px + BEH_X + 140, cy, 20, 16));
         } else if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER) {
-            ctx.drawText(this.textRenderer, "Follow:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Follow:", px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + BEH_X + 48, cy, 112, 14, NotchTheme.DEEP);
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 166, cy, 34, 14, "Set",
+            NotchWidgets.primaryButton(ctx, this.font, px + BEH_X + 166, cy, 34, 14, "Set",
                     over(mx, my, px + BEH_X + 166, cy, 34, 14));
         } else if (currentBehavior == NotchNpcEntity.Behavior.PATROL) {
-            ctx.drawText(this.textRenderer, "Points: " + waypointCount, px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 56, cy, 84, 16, "Route tool",
+            ctx.drawString(this.font, "Points: " + waypointCount, px + BEH_X, cy + 4, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.primaryButton(ctx, this.font, px + BEH_X + 56, cy, 84, 16, "Route tool",
                     over(mx, my, px + BEH_X + 56, cy, 84, 16));
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + BEH_X + 146, cy, 54, 16, "Clear",
+            NotchWidgets.dangerButton(ctx, this.font, px + BEH_X + 146, cy, 54, 16, "Clear",
                     over(mx, my, px + BEH_X + 146, cy, 54, 16));
 
             // Speed + waypoint dwell time cycle buttons, then Done.
             int cy2 = cy + 18;
             String[] speeds = {"Stroll", "Walk", "Jog"};
             String[] waits = {"Wait: none", "Wait 2s", "Wait 5s", "Wait 10s", "Wait 20s"};
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X, cy2, 62, 16,
+            NotchWidgets.neutralButton(ctx, this.font, px + BEH_X, cy2, 62, 16,
                     speeds[Math.max(0, Math.min(speeds.length - 1, patrolSpeedIdx))],
                     over(mx, my, px + BEH_X, cy2, 62, 16));
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + BEH_X + 66, cy2, 76, 16,
+            NotchWidgets.neutralButton(ctx, this.font, px + BEH_X + 66, cy2, 76, 16,
                     waits[Math.max(0, Math.min(waits.length - 1, patrolWaitIdx))],
                     over(mx, my, px + BEH_X + 66, cy2, 76, 16));
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + BEH_X + 146, cy2, 54, 16, "Done",
+            NotchWidgets.primaryButton(ctx, this.font, px + BEH_X + 146, cy2, 54, 16, "Done",
                     over(mx, my, px + BEH_X + 146, cy2, 54, 16));
         }
 
@@ -474,7 +471,7 @@ public class NotchNpcEditorScreen extends Screen {
             case PATROL -> "Grab the route tool, right-click the ground; Done takes it back.";
             case GUARD -> "Holds a post and fights what comes near (ignores creepers).";
         };
-        NotchWidgets.centerText(ctx, this.textRenderer, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.font, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
     }
 
     private static final String[][] VOICES = {
@@ -504,33 +501,33 @@ public class NotchNpcEditorScreen extends Screen {
         NotchPacketsClient.sendNpcFlavor(npcId, currentSubtitle, currentVoice, currentVoicePitch);
     }
 
-    private void drawVoiceRow(DrawContext ctx, int mx, int my) {
+    private void drawVoiceRow(GuiGraphics ctx, int mx, int my) {
         NotchWidgets.divider(ctx, px + 8, py + 214, W - 16);
-        ctx.drawText(this.textRenderer, "Voice:", px + 22, py + 226, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Voice:", px + 22, py + 226, NotchTheme.TEXT_DARK, false);
         boolean voiceHover = over(mx, my, px + 75, py + 222, 90, 14);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 75, py + 222, 90, 14,
+        NotchWidgets.neutralButton(ctx, this.font, px + 75, py + 222, 90, 14,
                 VOICES[voiceIndex()][1], voiceHover);
         if (voiceHover) {
             tooltip = java.util.List.of(
-                    Text.literal("Voice").formatted(Formatting.WHITE),
-                    Text.literal("A short sound when it is spoken to,").formatted(Formatting.GRAY),
-                    Text.literal("and on every line it says.").formatted(Formatting.GRAY),
-                    Text.literal("Click to cycle. Silent NPCs stay silent.").formatted(Formatting.DARK_GRAY));
+                    Component.literal("Voice").withStyle(ChatFormatting.WHITE),
+                    Component.literal("A short sound when it is spoken to,").withStyle(ChatFormatting.GRAY),
+                    Component.literal("and on every line it says.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Click to cycle. Silent NPCs stay silent.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        ctx.drawText(this.textRenderer, "Pitch:", px + 172, py + 226, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Pitch:", px + 172, py + 226, NotchTheme.TEXT_DARK, false);
         boolean downHover = over(mx, my, px + 208, py + 222, 16, 14);
         boolean upHover = over(mx, my, px + 254, py + 222, 16, 14);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 208, py + 222, 16, 14, "-", downHover);
-        NotchWidgets.centerText(ctx, this.textRenderer, currentVoicePitch + "%", px + 239, py + 226,
+        NotchWidgets.neutralButton(ctx, this.font, px + 208, py + 222, 16, 14, "-", downHover);
+        NotchWidgets.centerText(ctx, this.font, currentVoicePitch + "%", px + 239, py + 226,
                 NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 254, py + 222, 16, 14, "+", upHover);
+        NotchWidgets.neutralButton(ctx, this.font, px + 254, py + 222, 16, 14, "+", upHover);
         if (downHover || upHover) {
             tooltip = java.util.List.of(
-                    Text.literal("Pitch").formatted(Formatting.WHITE),
-                    Text.literal("Low for big and slow, high for small").formatted(Formatting.GRAY),
-                    Text.literal("and quick. This is what makes a cast").formatted(Formatting.GRAY),
-                    Text.literal("out of one sound.").formatted(Formatting.DARK_GRAY));
+                    Component.literal("Pitch").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Low for big and slow, high for small").withStyle(ChatFormatting.GRAY),
+                    Component.literal("and quick. This is what makes a cast").withStyle(ChatFormatting.GRAY),
+                    Component.literal("out of one sound.").withStyle(ChatFormatting.DARK_GRAY));
         }
     }
 
@@ -603,7 +600,7 @@ public class NotchNpcEditorScreen extends Screen {
         } else if (currentBehavior == NotchNpcEntity.Behavior.PATROL) {
             if (over(mx, my, px + BEH_X + 56, cy, 84, 16)) {
                 NotchPacketsClient.sendNpcPatrol(npcId, 0, 0); // hands over the bound route tool
-                this.close(); // straight to walking the route
+                this.onClose(); // straight to walking the route
                 return true;
             }
             if (over(mx, my, px + BEH_X + 146, cy, 54, 16)) {
@@ -631,7 +628,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private void sendBehavior() {
-        if (followField != null) followName = followField.getText().trim();
+        if (followField != null) followName = followField.getValue().trim();
         NotchPacketsClient.sendNpcSetBehavior(npcId, currentBehavior.ordinal(), currentRadius, followName, movesBits);
     }
 
@@ -641,99 +638,99 @@ public class NotchNpcEditorScreen extends Screen {
     private int roleX(int i) { return (i % 2 == 0) ? px + 40 : px + 164; }
     private int roleY(int i) { return py + 52 + (i / 2) * 18; }
 
-    private void drawRole(DrawContext ctx, int mx, int my) {
+    private void drawRole(GuiGraphics ctx, int mx, int my) {
         for (int i = 0; i < SELECTABLE.length; i++) {
             int rx = roleX(i), ry = roleY(i);
             boolean hover = over(mx, my, rx, ry, ROLE_W, ROLE_H);
             String label = roleLabel(SELECTABLE[i]);
-            if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
-            else NotchWidgets.neutralButton(ctx, this.textRenderer, rx, ry, ROLE_W, ROLE_H, label, hover);
+            if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
+            else NotchWidgets.neutralButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
         }
         // Allegiance sits with the role: it's who the NPC answers to, not how it looks or moves.
         NotchWidgets.divider(ctx, px + 8, py + 158, W - 16);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 40, py + 164, 220, 16, "Faction...",
+        NotchWidgets.primaryButton(ctx, this.font, px + 40, py + 164, 220, 16, "Faction...",
                 over(mx, my, px + 40, py + 164, 220, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer, "Recruiters sign players up.",
+        NotchWidgets.centerText(ctx, this.font, "Recruiters sign players up.",
                 px + W / 2, py + 184, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Guards use it to tell friend from foe.",
+        NotchWidgets.centerText(ctx, this.font, "Guards use it to tell friend from foe.",
                 px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
 
         // Confirmation before leaving the SHOP role (it closes the shop + returns its stock).
         if (pendingRole != null) {
             int by = py + H - 54;
-            NotchWidgets.centerText(ctx, this.textRenderer, "Switch to " + roleLabel(pendingRole) + "?",
+            NotchWidgets.centerText(ctx, this.font, "Switch to " + roleLabel(pendingRole) + "?",
                     px + W / 2, by, NotchTheme.TEXT_RED, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "This closes the shop & returns its stock.",
+            NotchWidgets.centerText(ctx, this.font, "This closes the shop & returns its stock.",
                     px + W / 2, by + 10, NotchTheme.TEXT_RED, false);
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + 40, by + 24, 100, 16, "Confirm",
+            NotchWidgets.dangerButton(ctx, this.font, px + 40, by + 24, 100, 16, "Confirm",
                     over(mx, my, px + 40, by + 24, 100, 16));
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 160, by + 24, 100, 16, "Cancel",
+            NotchWidgets.neutralButton(ctx, this.font, px + 160, by + 24, 100, 16, "Cancel",
                     over(mx, my, px + 160, by + 24, 100, 16));
         }
     }
 
     // ---- talk (dialogue) tab ----
 
-    private void drawTalk(DrawContext ctx, int mx, int my) {
+    private void drawTalk(GuiGraphics ctx, int mx, int my) {
         // Header: what this NPC currently says.
         String header = dialogueNodes <= 0 ? "No dialogue yet."
                 : dialogueFlat ? "Quick lines: " + dialogueNodes
                 : "Dialogue: " + dialogueNodes + " page" + (dialogueNodes == 1 ? "" : "s") + " (branching)";
-        NotchWidgets.centerText(ctx, this.textRenderer, header, px + W / 2, py + 48, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.centerText(ctx, this.font, header, px + W / 2, py + 48, NotchTheme.TEXT_DARK, false);
         if (dialogueNodes <= 0) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Talking to it goes straight to its job.",
+            NotchWidgets.centerText(ctx, this.font, "Talking to it goes straight to its job.",
                     px + W / 2, py + 58, NotchTheme.TEXT_MUTED, false);
         }
 
         // Two ways to author: quick random lines, or the full branching studio.
         boolean branching = dialogueNodes > 0 && !dialogueFlat;
         if (branching) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 50, py + 70, 200, 18, "Quick Lines", false);
+            NotchWidgets.neutralButton(ctx, this.font, px + 50, py + 70, 200, 18, "Quick Lines", false);
         } else {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 70, 200, 18,
+            NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 70, 200, 18,
                     "Quick Lines (random chat)", over(mx, my, px + 50, py + 70, 200, 18));
         }
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 92, 200, 18,
+        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 92, 200, 18,
                 "Dialogue Studio (branching)", over(mx, my, px + 50, py + 92, 200, 18));
         if (branching) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Quick Lines is off while this NPC",
+            NotchWidgets.centerText(ctx, this.font, "Quick Lines is off while this NPC",
                     px + W / 2, py + 113, NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "has branching pages.",
+            NotchWidgets.centerText(ctx, this.font, "has branching pages.",
                     px + W / 2, py + 123, NotchTheme.TEXT_MUTED, false);
         } else {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Lines: one random chat line per talk.",
+            NotchWidgets.centerText(ctx, this.font, "Lines: one random chat line per talk.",
                     px + W / 2, py + 113, NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "Studio: full conversations.",
+            NotchWidgets.centerText(ctx, this.font, "Studio: full conversations.",
                     px + W / 2, py + 123, NotchTheme.TEXT_MUTED, false);
         }
 
         // Style: full conversation window, or a quick chat line + straight to the role.
         NotchWidgets.divider(ctx, px + 8, py + 134, W - 16);
-        ctx.drawText(this.textRenderer, "Style:", px + 50, py + 146, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Style:", px + 50, py + 146, NotchTheme.TEXT_DARK, false);
         boolean winHover = over(mx, my, px + 90, py + 142, 76, 14);
         boolean chatHover = over(mx, my, px + 170, py + 142, 76, 14);
         if (dialogueMode == 0) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 90, py + 142, 76, 14, "Window", winHover);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 170, py + 142, 76, 14, "Chat", chatHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + 90, py + 142, 76, 14, "Window", winHover);
+            NotchWidgets.neutralButton(ctx, this.font, px + 170, py + 142, 76, 14, "Chat", chatHover);
         } else {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 90, py + 142, 76, 14, "Window", winHover);
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 170, py + 142, 76, 14, "Chat", chatHover);
+            NotchWidgets.neutralButton(ctx, this.font, px + 90, py + 142, 76, 14, "Window", winHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + 170, py + 142, 76, 14, "Chat", chatHover);
         }
         String styleHint = dialogueMode == 0
                 ? "Window: opens the conversation window."
                 : "Chat: one random line, then opens its job.";
-        NotchWidgets.centerText(ctx, this.textRenderer, styleHint, px + W / 2, py + 160, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.centerText(ctx, this.font, styleHint, px + W / 2, py + 160, NotchTheme.TEXT_MUTED, false);
 
         // Optional goodbye line, said in chat when a screen this NPC opened closes.
         drawVoiceRow(ctx, mx, my);
-        ctx.drawText(this.textRenderer, "Goodbye:", px + 22, py + 175, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Goodbye:", px + 22, py + 175, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 75, py + 171, 164, 13, NotchTheme.PANEL_MID);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 244, py + 171, 34, 13, "Set",
+        NotchWidgets.neutralButton(ctx, this.font, px + 244, py + 171, 34, 13, "Set",
                 over(mx, my, px + 244, py + 171, 34, 13));
 
         if (dialogueNodes > 0) {
             NotchWidgets.divider(ctx, px + 8, py + 190, W - 16);
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + 80, py + 196, 140, 14, "Remove Dialogue",
+            NotchWidgets.dangerButton(ctx, this.font, px + 80, py + 196, 140, 14, "Remove Dialogue",
                     over(mx, my, px + 80, py + 196, 140, 14));
         }
     }
@@ -759,7 +756,7 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
         if (over(mx, my, px + 244, py + 171, 34, 13)) {
-            currentFarewell = farewellField.getText().trim();
+            currentFarewell = farewellField.getValue().trim();
             NotchPacketsClient.sendNpcSetFarewell(npcId, currentFarewell);
             return true;
         }
@@ -780,27 +777,27 @@ public class NotchNpcEditorScreen extends Screen {
     private int poseX(int i) { return (i % 2 == 0) ? px + 30 : px + 155; }
     private int poseY(int i) { return py + 50 + (i / 2) * 19; }
 
-    private void drawPose(DrawContext ctx, int mx, int my) {
+    private void drawPose(GuiGraphics ctx, int mx, int my) {
         for (int i = 0; i < POSE_NAMES.length; i++) {
             boolean hover = over(mx, my, poseX(i), poseY(i), 115, 16);
             if (i == poseId) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
+                NotchWidgets.primaryButton(ctx, this.font, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
+                NotchWidgets.neutralButton(ctx, this.font, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
             }
         }
         // Idle animation layered on the pose (statue = frozen, the old behavior).
-        ctx.drawText(this.textRenderer, "Idle:", px + 50, py + 132, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 80, py + 128, 170, 16,
+        ctx.drawString(this.font, "Idle:", px + 50, py + 132, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 128, 170, 16,
                 ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
                 over(mx, my, px + 80, py + 128, 170, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 148, 200, 18, "Open Pose Editor",
+        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 148, 200, 18, "Open Pose Editor",
                 over(mx, my, px + 50, py + 148, 200, 18));
         // Position, rotation and size all live behind this. It's a floating panel, so you watch the
         // NPC change out in the world instead of guessing from a tab with no preview.
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 50, py + 170, 200, 18, "Move, Rotate & Size",
+        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 170, 200, 18, "Move, Rotate & Size",
                 over(mx, my, px + 50, py + 170, 200, 18));
-        NotchWidgets.centerText(ctx, this.textRenderer, "Opens a movable panel; the world stays visible.",
+        NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
                 px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
     }
 
@@ -820,11 +817,11 @@ public class NotchNpcEditorScreen extends Screen {
         if (over(mx, my, px + 50, py + 148, 200, 18)) {
             poseId = 7; // custom: the editor's edits show immediately
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
-            MinecraftClient.getInstance().setScreen(new PoseEditorScreen(npcId));
+            Minecraft.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
         if (over(mx, my, px + 50, py + 170, 200, 18)) {
-            MinecraftClient.getInstance().setScreen(new NpcMoveScreen(npcId));
+            Minecraft.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
         }
         return false;
@@ -832,24 +829,24 @@ public class NotchNpcEditorScreen extends Screen {
 
     // ---- manage tab ----
 
-    private void drawManage(DrawContext ctx, int mx, int my) {
-        NotchWidgets.centerText(ctx, this.textRenderer, "Owner: " + (ownerName.isEmpty() ? "server" : ownerName),
+    private void drawManage(GuiGraphics ctx, int mx, int my) {
+        NotchWidgets.centerText(ctx, this.font, "Owner: " + (ownerName.isEmpty() ? "server" : ownerName),
                 px + W / 2, py + 50, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 64, 160, 16, "Pick Up", over(mx, my, px + 70, py + 64, 160, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer, "Returns the NPC as an item to place elsewhere.",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 64, 160, 16, "Pick Up", over(mx, my, px + 70, py + 64, 160, 16));
+        NotchWidgets.centerText(ctx, this.font, "Returns the NPC as an item to place elsewhere.",
                 px + W / 2, py + 84, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 70, py + 96, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 96, 160, 16));
+        NotchWidgets.dangerButton(ctx, this.font, px + 70, py + 96, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 96, 160, 16));
 
         NotchWidgets.divider(ctx, px + 8, py + 120, W - 16);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 126, 160, 16, "Edit Stats & Abilities",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 126, 160, 16, "Edit Stats & Abilities",
                 over(mx, my, px + 70, py + 126, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 146, 160, 16, "Open Equipment",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 146, 160, 16, "Open Equipment",
                 over(mx, my, px + 70, py + 146, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 166, 160, 16, "Reactions",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 166, 160, 16, "Reactions",
                 over(mx, my, px + 70, py + 166, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 186, 160, 16, "Presets",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 186, 160, 16, "Presets",
                 over(mx, my, px + 70, py + 186, 160, 16));
-        NotchWidgets.centerText(ctx, this.textRenderer, "Reactions: what it does when things happen to it.",
+        NotchWidgets.centerText(ctx, this.font, "Reactions: what it does when things happen to it.",
                 px + W / 2, py + 206, NotchTheme.TEXT_MUTED, false);
     }
 
@@ -913,11 +910,11 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 3 && clickTalk(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 4 && clickPose(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 5) {
-                if (over(mx, my, px + 70, py + 64, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcPickup(npcId); this.close(); return true; }
-                if (over(mx, my, px + 70, py + 96, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcDelete(npcId); this.close(); return true; }
+                if (over(mx, my, px + 70, py + 64, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcPickup(npcId); this.onClose(); return true; }
+                if (over(mx, my, px + 70, py + 96, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcDelete(npcId); this.onClose(); return true; }
                 if (over(mx, my, px + 70, py + 126, 160, 16)) {
                     NotchWidgets.click();
-                    MinecraftClient.getInstance().setScreen(
+                    Minecraft.getInstance().setScreen(
                             new NpcStatsScreen(npcId, statsBits, maxHealth, speedPct, regen));
                     return true;
                 }
@@ -946,13 +943,13 @@ public class NotchNpcEditorScreen extends Screen {
 
     private boolean clickAppearance(int mx, int my) {
         if (over(mx, my, px + 150, py + 64, 140, 14)) {
-            currentName = nameField.getText();
+            currentName = nameField.getValue();
             NotchPacketsClient.sendNpcSetName(npcId, currentName);
             return true;
         }
         // Model: open the picker
         if (over(mx, my, px + 224, py + 100, 66, 14)) {
-            MinecraftClient.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
+            Minecraft.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
             return true;
         }
         // Skins per model
@@ -974,7 +971,7 @@ public class NotchNpcEditorScreen extends Screen {
         }
         if (over(mx, my, px + RX, signRow(), signWidth(), 15)) {
             NotchWidgets.click();
-            MinecraftClient.getInstance().setScreen(
+            Minecraft.getInstance().setScreen(
                     new NpcBillboardScreen(npcId, currentBillboard, currentSubtitle, currentVoice, currentVoicePitch));
             return true;
         }
@@ -1019,7 +1016,7 @@ public class NotchNpcEditorScreen extends Screen {
             currentSkinValue = "1";
         } else {
             currentSkinType = NotchNpcEntity.SKIN_PLAYER;
-            currentSkinValue = playerField.getText().trim();
+            currentSkinValue = playerField.getValue().trim();
         }
         sendAppearance();
     }
@@ -1030,12 +1027,12 @@ public class NotchNpcEditorScreen extends Screen {
             currentSkinValue = "1";
         } else {
             currentSkinType = NotchNpcEntity.SKIN_URL;
-            currentSkinValue = urlField.getText().trim();
+            currentSkinValue = urlField.getValue().trim();
         }
         sendAppearance();
     }
 
-    private void drawCheck(DrawContext ctx, int x, int y, boolean checked) {
+    private void drawCheck(GuiGraphics ctx, int x, int y, boolean checked) {
         NotchWidgets.inset(ctx, x, y, 12, 12, checked ? NotchTheme.ACCENT_GREEN : NotchTheme.DEEP);
     }
 
@@ -1044,12 +1041,12 @@ public class NotchNpcEditorScreen extends Screen {
         // Enter re-applies the focused skin field (when its checkbox is on).
         if (keyCode == 257 || keyCode == 335) {
             if (playerField != null && playerField.isFocused() && NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
-                currentSkinValue = playerField.getText().trim();
+                currentSkinValue = playerField.getValue().trim();
                 sendAppearance();
                 return true;
             }
             if (urlField != null && urlField.isFocused() && NotchNpcEntity.SKIN_URL.equals(currentSkinType)) {
-                currentSkinValue = urlField.getText().trim();
+                currentSkinValue = urlField.getValue().trim();
                 sendAppearance();
                 return true;
             }
@@ -1069,11 +1066,11 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private NotchNpcEntity findPreview() {
-        MinecraftClient c = MinecraftClient.getInstance();
-        if (c.world == null) return null;
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
         if (preview != null && !preview.isRemoved()) return preview;
-        for (Entity e : c.world.getEntities()) {
-            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) { preview = n; return n; }
+        for (Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof NotchNpcEntity n && n.getUUID().equals(npcId)) { preview = n; return n; }
         }
         return null;
     }
@@ -1102,7 +1099,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -1115,7 +1112,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

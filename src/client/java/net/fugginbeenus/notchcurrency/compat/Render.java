@@ -1,13 +1,13 @@
 package net.fugginbeenus.notchcurrency.compat;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.world.World;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
 
 public final class Render {
@@ -15,42 +15,42 @@ public final class Render {
     private Render() {}
 
     public static void renderFixedItem(ItemRenderer itemRenderer, ItemStack stack, int light, int overlay,
-                                       MatrixStack matrices, VertexConsumerProvider vcp, World world, int seed) {
-        itemRenderer.renderItem(stack, ModelTransformationMode.FIXED, light, overlay, matrices, vcp, world, seed);
+                                       PoseStack matrices, MultiBufferSource vcp, Level world, int seed) {
+        itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, matrices, vcp, world, seed);
     }
 
-    public static void drawText(TextRenderer text, Text str, float x, float y, int color,
-                                Matrix4f matrix, VertexConsumerProvider vcp, int light) {
-        text.draw(str, x, y, color, false, matrix, vcp, TextRenderer.TextLayerType.NORMAL, 0, light);
+    public static void drawText(Font text, Component str, float x, float y, int color,
+                                Matrix4f matrix, MultiBufferSource vcp, int light) {
+        text.drawInBatch(str, x, y, color, false, matrix, vcp, Font.DisplayMode.NORMAL, 0, light);
     }
 
-    public static void drawEntityAt(net.minecraft.client.gui.DrawContext ctx, int x, int y, int size,
-                                    float mouseX, float mouseY, net.minecraft.entity.LivingEntity entity) {
+    public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
+                                    float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21 {
         /*float yawAngle = (float) Math.atan(mouseX / 40.0F);
         float pitchAngle = (float) Math.atan(mouseY / 40.0F);
         org.joml.Quaternionf flip = new org.joml.Quaternionf().rotateZ((float) Math.PI);
         org.joml.Quaternionf pitchRot = new org.joml.Quaternionf().rotateX(pitchAngle * 20.0F * ((float) Math.PI / 180.0F));
         flip.mul(pitchRot);
-        float bodyYaw = entity.bodyYaw;
-        float yaw = entity.getYaw();
-        float pitch = entity.getPitch();
-        float prevHeadYaw = entity.prevHeadYaw;
-        float headYaw = entity.headYaw;
-        entity.bodyYaw = 180.0F + yawAngle * 20.0F;
-        entity.setYaw(180.0F + yawAngle * 40.0F);
+        float yBodyRot = entity.yBodyRot;
+        float yaw = entity.getYRot();
+        float pitch = entity.getXRot();
+        float prevHeadYaw = entity.yHeadRotO;
+        float yHeadRot = entity.yHeadRot;
+        entity.yBodyRot = 180.0F + yawAngle * 20.0F;
+        entity.setYRot(180.0F + yawAngle * 40.0F);
         entity.setPitch(-pitchAngle * 20.0F);
-        entity.headYaw = entity.getYaw();
-        entity.prevHeadYaw = entity.getYaw();
-        net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(
+        entity.yHeadRot = entity.getYRot();
+        entity.yHeadRotO = entity.getYRot();
+        net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventory(
                 ctx, x, y, size, new org.joml.Vector3f(), flip, pitchRot, entity);
-        entity.bodyYaw = bodyYaw;
-        entity.setYaw(yaw);
+        entity.yBodyRot = yBodyRot;
+        entity.setYRot(yaw);
         entity.setPitch(pitch);
-        entity.prevHeadYaw = prevHeadYaw;
-        entity.headYaw = headYaw;
+        entity.yHeadRotO = prevHeadYaw;
+        entity.yHeadRot = yHeadRot;
         *///?} else {
-        net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(ctx, x, y, size, mouseX, mouseY, entity);
+        net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(ctx, x, y, size, mouseX, mouseY, entity);
         //?}
     }
 }

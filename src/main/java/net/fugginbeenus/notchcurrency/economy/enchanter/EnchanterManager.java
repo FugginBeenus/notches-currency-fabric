@@ -4,12 +4,11 @@ import net.fugginbeenus.notchcurrency.compat.Ench;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +55,10 @@ public final class EnchanterManager {
         return Math.max(1, p.extractBase() + upgradeCost(ench, level, p) * p.extractValuePct() / 100);
     }
 
-    public static void openScreen(ServerPlayerEntity sp) {
+    public static void openScreen(ServerPlayer sp) {
         if (!enabled) {
-            sp.sendMessage(Text.literal("The enchanter isn't offering services right now.")
-                    .formatted(Formatting.YELLOW), false);
+            sp.displayClientMessage(Component.literal("The enchanter isn't offering services right now.")
+                    .withStyle(ChatFormatting.YELLOW), false);
             return;
         }
         EnchanterScreenHandler.open(sp);
@@ -67,7 +66,7 @@ public final class EnchanterManager {
 
     public static long repairCost(ItemStack stack, int fullCost) {
         if (stack.isEmpty() || !stack.isDamaged() || fullCost <= 0) return 0;
-        return Math.max(1, Math.round(fullCost * (double) stack.getDamage() / stack.getMaxDamage()));
+        return Math.max(1, Math.round(fullCost * (double) stack.getDamageValue() / stack.getMaxDamage()));
     }
 
     public static long upgradeCost(Enchantment ench, int level, Pricing p) {
@@ -87,29 +86,29 @@ public final class EnchanterManager {
     public record UncraftPlan(int consumed, List<ItemStack> returns) {}
 
     @org.jetbrains.annotations.Nullable
-    public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.World world) {
+    public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.level.Level world) {
         if (stack.isEmpty() || stack.isDamaged()) return null;
         //? if >=1.21 {
-        /*for (net.minecraft.recipe.RecipeEntry<net.minecraft.recipe.CraftingRecipe> recipeEntry
-                : world.getRecipeManager().listAllOfType(net.minecraft.recipe.RecipeType.CRAFTING)) {
-            net.minecraft.recipe.CraftingRecipe recipe = recipeEntry.value();
-            ItemStack out = recipe.getResult(world.getRegistryManager());
+        /*for (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe> recipeEntry
+                : world.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING)) {
+            net.minecraft.world.item.crafting.CraftingRecipe recipe = recipeEntry.value();
+            ItemStack out = recipe.getResultItem(world.registryAccess());
         *///?} else {
-        for (net.minecraft.recipe.CraftingRecipe recipe
-                : world.getRecipeManager().listAllOfType(net.minecraft.recipe.RecipeType.CRAFTING)) {
-            ItemStack out = recipe.getOutput(world.getRegistryManager());
+        for (net.minecraft.world.item.crafting.CraftingRecipe recipe
+                : world.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING)) {
+            ItemStack out = recipe.getResultItem(world.registryAccess());
         //?}
-            if (out.isEmpty() || !out.isOf(stack.getItem())) continue;
+            if (out.isEmpty() || !out.is(stack.getItem())) continue;
             if (stack.getCount() < out.getCount()) continue;
             List<ItemStack> returns = new ArrayList<>();
-            for (net.minecraft.recipe.Ingredient ing : recipe.getIngredients()) {
+            for (net.minecraft.world.item.crafting.Ingredient ing : recipe.getIngredients()) {
                 if (ing.isEmpty()) continue;
-                ItemStack[] options = ing.getMatchingStacks();
+                ItemStack[] options = ing.getItems();
                 if (options.length == 0 || options[0].isEmpty()) continue;
                 boolean merged = false;
                 for (ItemStack have : returns) {
                     if (StackData.canCombine(have, options[0])) {
-                        have.increment(1);
+                        have.grow(1);
                         merged = true;
                         break;
                     }

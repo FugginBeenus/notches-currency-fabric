@@ -1,14 +1,14 @@
 package net.fugginbeenus.notchcurrency.auction;
 
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-public class UserListingsScreenHandler extends ScreenHandler {
+public class UserListingsScreenHandler extends AbstractContainerMenu {
 
     public static final int COLUMNS = 4;
     public static final int ROWS    = 2;
@@ -21,10 +21,10 @@ public class UserListingsScreenHandler extends ScreenHandler {
     private static final int SLOT_OFFSET_X = 4;    // extra nudge right
     private static final int SLOT_OFFSET_Y = 16;   // extra nudge down
 
-    private final SimpleInventory inv = new SimpleInventory(SIZE);
+    private final SimpleContainer inv = new SimpleContainer(SIZE);
 
-    public UserListingsScreenHandler(int syncId, PlayerInventory playerInv) {
-        super(ModScreenHandlers.USER_AUCTIONS, syncId);
+    public UserListingsScreenHandler(int containerId, Inventory playerInv) {
+        super(ModScreenHandlers.USER_AUCTIONS, containerId);
 
         int index = 0;
         for (int row = 0; row < ROWS; row++) {
@@ -37,12 +37,12 @@ public class UserListingsScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true; // virtual popup, no proximity checks
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         // For now: no shift-click moving in/out, just visual.
         return ItemStack.EMPTY;
     }

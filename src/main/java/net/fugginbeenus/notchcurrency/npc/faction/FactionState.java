@@ -1,23 +1,22 @@
 package net.fugginbeenus.notchcurrency.npc.faction;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FactionState extends PersistentState {
+public class FactionState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_factions";
 
@@ -26,14 +25,14 @@ public class FactionState extends PersistentState {
     private final Map<String, Faction> factions = new LinkedHashMap<>();
     private final Map<UUID, String> membership = new LinkedHashMap<>();
 
-    public static FactionState get(ServerWorld world) {
+    public static FactionState get(ServerLevel world) {
         return get(world.getServer());
     }
 
     public static FactionState get(MinecraftServer server) {
-        ServerWorld overworld = server.getWorld(World.OVERWORLD);
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) throw new IllegalStateException("Overworld not loaded");
-        PersistentStateManager manager = overworld.getPersistentStateManager();
+        DimensionDataStorage manager = overworld.getDataStorage();
         return StateData.getOrCreate(manager, FactionState::new, FactionState::fromNbt, DATA_KEY);
     }
 
@@ -63,18 +62,18 @@ public class FactionState extends PersistentState {
             return false;
         }
         factions.put(faction.id(), faction);
-        markDirty();
+        setDirty();
         return true;
     }
 
     public boolean remove(String id) {
         if (factions.remove(id) == null) return false;
         membership.entrySet().removeIf(e -> e.getValue().equals(id));
-        markDirty();
+        setDirty();
         return true;
     }
 
-    public void touch() { markDirty(); }
+    public void touch() { setDirty(); }
 
     // ---- membership ----
 
@@ -87,11 +86,11 @@ public class FactionState extends PersistentState {
     public void join(UUID player, String factionId) {
         if (!factions.containsKey(factionId)) return;
         membership.put(player, factionId);
-        markDirty();
+        setDirty();
     }
 
     public void leave(UUID player) {
-        if (membership.remove(player) != null) markDirty();
+        if (membership.remove(player) != null) setDirty();
     }
 
     public List<UUID> membersOf(String factionId) {
@@ -114,18 +113,18 @@ public class FactionState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (Faction f : factions.values()) list.add(f.toNbt());
         nbt.put("Factions", list);
 
-        NbtList members = new NbtList();
+        ListTag members = new ListTag();
         for (var e : membership.entrySet()) {
-            NbtCompound m = new NbtCompound();
-            m.putUuid("Player", e.getKey());
+            CompoundTag m = new CompoundTag();
+            m.putUUID("Player", e.getKey());
             m.putString("Faction", e.getValue());
             members.add(m);
         }
@@ -133,20 +132,20 @@ public class FactionState extends PersistentState {
         return nbt;
     }
 
-    public static FactionState fromNbt(NbtCompound nbt) {
+    public static FactionState fromNbt(CompoundTag nbt) {
         FactionState state = new FactionState();
-        NbtList list = nbt.getList("Factions", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Factions", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             Faction f = Faction.fromNbt(list.getCompound(i));
             if (f != null) state.factions.put(f.id(), f);
         }
-        NbtList members = nbt.getList("Members", NbtElement.COMPOUND_TYPE);
+        ListTag members = nbt.getList("Members", Tag.TAG_COMPOUND);
         for (int i = 0; i < members.size(); i++) {
-            NbtCompound m = members.getCompound(i);
+            CompoundTag m = members.getCompound(i);
             String factionId = m.getString("Faction");
             // Drop members of factions that no longer exist rather than carrying a dead pointer.
-            if (m.containsUuid("Player") && state.factions.containsKey(factionId)) {
-                state.membership.put(m.getUuid("Player"), factionId);
+            if (m.hasUUID("Player") && state.factions.containsKey(factionId)) {
+                state.membership.put(m.getUUID("Player"), factionId);
             }
         }
         return state;

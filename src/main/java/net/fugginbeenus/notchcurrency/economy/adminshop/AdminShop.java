@@ -1,14 +1,14 @@
 package net.fugginbeenus.notchcurrency.economy.adminshop;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 public class AdminShop {
 
@@ -52,19 +52,19 @@ public class AdminShop {
 
     // ---- NBT ----
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putUuid("Id", id);
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
+        nbt.putUUID("Id", id);
         nbt.putString("Name", name);
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (AdminShopEntry e : entries) list.add(e.toNbt());
         nbt.put("Entries", list);
         return nbt;
     }
 
-    public static AdminShop fromNbt(NbtCompound nbt) {
-        AdminShop shop = new AdminShop(nbt.getUuid("Id"), nbt.getString("Name"));
-        NbtList list = nbt.getList("Entries", NbtElement.COMPOUND_TYPE);
+    public static AdminShop fromNbt(CompoundTag nbt) {
+        AdminShop shop = new AdminShop(nbt.getUUID("Id"), nbt.getString("Name"));
+        ListTag list = nbt.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             shop.entries.add(AdminShopEntry.fromNbt(list.getCompound(i)));
         }

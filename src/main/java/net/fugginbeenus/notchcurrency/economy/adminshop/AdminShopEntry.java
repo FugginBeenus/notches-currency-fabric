@@ -1,9 +1,8 @@
 package net.fugginbeenus.notchcurrency.economy.adminshop;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public class AdminShopEntry {
@@ -78,9 +77,9 @@ public class AdminShopEntry {
 
     // ---- NBT ----
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putUuid("Id", id);
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
+        nbt.putUUID("Id", id);
         nbt.put("Item", StackData.writeStack(item));
         nbt.putLong("Buy", baseBuyPrice);
         nbt.putLong("Sell", baseSellPrice);
@@ -89,8 +88,8 @@ public class AdminShopEntry {
         return nbt;
     }
 
-    public static AdminShopEntry fromNbt(NbtCompound nbt) {
-        AdminShopEntry e = new AdminShopEntry(nbt.getUuid("Id"));
+    public static AdminShopEntry fromNbt(CompoundTag nbt) {
+        AdminShopEntry e = new AdminShopEntry(nbt.getUUID("Id"));
         e.item = StackData.readStack(nbt.getCompound("Item"));
         e.baseBuyPrice = nbt.getLong("Buy");
         e.baseSellPrice = nbt.getLong("Sell");

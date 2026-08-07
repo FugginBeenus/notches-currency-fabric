@@ -1,9 +1,24 @@
 package net.fugginbeenus.notchcurrency.auction;
 
-import net.minecraft.item.*;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+//? if >=1.21 {
+/*import net.minecraft.world.item.AnimalArmorItem;
+*///?}
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.item.HorseArmorItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.item.WritableBookItem;
+import net.minecraft.world.item.WrittenBookItem;
 import java.util.Locale;
 
 public final class AuctionCategories {
@@ -16,7 +31,7 @@ public final class AuctionCategories {
         }
 
         Item item = stack.getItem();
-        Identifier id = Registries.ITEM.getId(item);
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
         String path = id.getPath().toLowerCase(Locale.ROOT);
         String namespace = id.getNamespace().toLowerCase(Locale.ROOT);
 
@@ -35,7 +50,7 @@ public final class AuctionCategories {
 
         // ===== GEAR =====
         if (item instanceof ArmorItem ||
-                item instanceof ToolItem ||
+                item instanceof TieredItem ||
                 item instanceof SwordItem ||
                 item instanceof BowItem ||
                 item instanceof CrossbowItem ||

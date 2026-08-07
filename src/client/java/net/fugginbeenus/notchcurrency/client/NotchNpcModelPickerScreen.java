@@ -5,21 +5,18 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.registry.Registries;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -53,12 +50,12 @@ public class NotchNpcModelPickerScreen extends Screen {
     private List<Entry> filtered = new ArrayList<>();
 
     private int px, py, gridX, gridY;
-    private TextFieldWidget search;
+    private EditBox search;
     private int scrollRow = 0;
     private boolean draggingScroll = false;
 
     public NotchNpcModelPickerScreen(NotchNpcEditorScreen editor) {
-        super(Text.literal("Choose Model"));
+        super(Component.literal("Choose Model"));
         this.editor = editor;
     }
 
@@ -72,10 +69,10 @@ public class NotchNpcModelPickerScreen extends Screen {
         if (all.isEmpty()) buildEntries();
         filtered = new ArrayList<>(all);
 
-        search = new TextFieldWidget(this.textRenderer, px + 60, py + 29, W - 100, 12, Text.literal("Search"));
-        search.setDrawsBackground(false);
-        search.setChangedListener(this::refilter);
-        addDrawableChild(search);
+        search = new EditBox(this.font, px + 60, py + 29, W - 100, 12, Component.literal("Search"));
+        search.setBordered(false);
+        search.setResponder(this::refilter);
+        addRenderableWidget(search);
         setInitialFocus(search);
     }
 
@@ -86,17 +83,17 @@ public class NotchNpcModelPickerScreen extends Screen {
             all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
         }
         List<Entry> mobs = new ArrayList<>();
-        for (EntityType<?> type : Registries.ENTITY_TYPE) {
-            Identifier id = Registries.ENTITY_TYPE.getId(type);
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+            ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
             if (id == null || !isLivingLike(type, id)) continue;
-            mobs.add(new Entry("entity:" + id, type.getName().getString(), type, null, null));
+            mobs.add(new Entry("entity:" + id, type.getDescription().getString(), type, null, null));
         }
         mobs.sort((a, b) -> a.label().compareToIgnoreCase(b.label()));
         all.addAll(mobs);
     }
 
-    private static boolean isLivingLike(EntityType<?> type, Identifier id) {
-        if (type.getSpawnGroup() != SpawnGroup.MISC) return true;
+    private static boolean isLivingLike(EntityType<?> type, ResourceLocation id) {
+        if (type.getCategory() != MobCategory.MISC) return true;
         if (type == EntityType.ARMOR_STAND) return true;
         return !"minecraft".equals(id.getNamespace());
     }
@@ -104,7 +101,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     @Nullable
     private LivingEntity preview(Entry e) {
         if (e.preview != null) return e.preview;
-        ClientWorld world = MinecraftClient.getInstance().world;
+        ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return null;
         try {
             if (e.type != null) {
@@ -121,7 +118,7 @@ public class NotchNpcModelPickerScreen extends Screen {
         return e.preview;
     }
 
-    private NotchNpcEntity makeNpc(ClientWorld world, String model, String skinValue) {
+    private NotchNpcEntity makeNpc(ClientLevel world, String model, String skinValue) {
         NotchNpcEntity npc = new NotchNpcEntity(ModEntities.NOTCH_NPC, world);
         npc.setModelId(model);
         npc.setSkinType(NotchNpcEntity.MODEL_APPLY.equals(model) ? NotchNpcEntity.SKIN_VARIANT : NotchNpcEntity.SKIN_PRESET);
@@ -131,10 +128,10 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private static void faceForward(LivingEntity le) {
-        le.setYaw(180);
-        le.prevYaw = 180;
-        le.bodyYaw = le.prevBodyYaw = 180;
-        le.headYaw = le.prevHeadYaw = 180;
+        le.setYRot(180);
+        le.yRotO = 180;
+        le.yBodyRot = le.yBodyRotO = 180;
+        le.yHeadRot = le.yHeadRotO = 180;
     }
 
     private void refilter(String q) {
@@ -149,16 +146,16 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Choose Model", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Choose Model", px + W / 2, py + 8);
 
-        ctx.drawText(this.textRenderer, "Search:", px + 12, py + 30, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Search:", px + 12, py + 30, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 56, py + 26, W - 92, 14, NotchTheme.DEEP);
 
         int totalRows = (filtered.size() + COLS - 1) / COLS;
@@ -186,13 +183,13 @@ public class NotchNpcModelPickerScreen extends Screen {
             NotchWidgets.button(ctx, sbX, thumbY, sbW, thumbH, over(mouseX, mouseY, sbX, gridY, sbW, gridH), false);
         }
 
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + W / 2 - 40, py + H - 22, 80, 16, "Back",
+        NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 40, py + H - 22, 80, 16, "Back",
                 over(mouseX, mouseY, px + W / 2 - 40, py + H - 22, 80, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
 
-    private void drawTile(DrawContext ctx, Entry e, int tx, int ty, boolean hover) {
+    private void drawTile(GuiGraphics ctx, Entry e, int tx, int ty, boolean hover) {
         NotchWidgets.inset(ctx, tx + 2, ty + 2, TILE_W - 4, TILE_H - 4, hover ? NotchTheme.SLOT_FILL : NotchTheme.DEEP);
         int cx = tx + TILE_W / 2;
         LivingEntity model = preview(e);
@@ -200,18 +197,18 @@ public class NotchNpcModelPickerScreen extends Screen {
             if (model == null) throw new IllegalStateException("no preview");
             // Fit each preview inside its tile using BOTH dimensions (so wide/tall mobs don't bleed
             // into neighbouring tiles), leaving room for the label under it.
-            float h = Math.max(0.5f, model.getHeight());
-            float w = Math.max(0.5f, model.getWidth());
+            float h = Math.max(0.5f, model.getBbHeight());
+            float w = Math.max(0.5f, model.getBbWidth());
             int size = (int) Math.max(3, Math.min((TILE_H - 20) / h, (TILE_W - 10) / w));
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, model);
         } catch (Exception ignored) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.font, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);
         }
-        NotchWidgets.centerText(ctx, this.textRenderer, fit(e.label()), cx, ty + TILE_H - 12, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.centerText(ctx, this.font, fit(e.label()), cx, ty + TILE_H - 12, NotchTheme.TEXT_DARK, false);
     }
 
     private String fit(String s) {
-        return this.textRenderer.getWidth(s) <= TILE_W - 6 ? s : this.textRenderer.trimToWidth(s, TILE_W - 10) + "..";
+        return this.font.width(s) <= TILE_W - 6 ? s : this.font.plainSubstrByWidth(s, TILE_W - 10) + "..";
     }
 
     @Override
@@ -220,7 +217,7 @@ public class NotchNpcModelPickerScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, px + W / 2 - 40, py + H - 22, 80, 16)) {
                 NotchWidgets.click();
-                MinecraftClient.getInstance().setScreen(editor);
+                Minecraft.getInstance().setScreen(editor);
                 return true;
             }
             // Scrollbar drag.
@@ -237,7 +234,7 @@ public class NotchNpcModelPickerScreen extends Screen {
                 if (idx >= 0 && idx < filtered.size()) {
                     NotchWidgets.click();
                     editor.applyModel(filtered.get(idx).id());
-                    MinecraftClient.getInstance().setScreen(editor);
+                    Minecraft.getInstance().setScreen(editor);
                     return true;
                 }
             }
@@ -285,7 +282,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -298,7 +295,7 @@ public class NotchNpcModelPickerScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

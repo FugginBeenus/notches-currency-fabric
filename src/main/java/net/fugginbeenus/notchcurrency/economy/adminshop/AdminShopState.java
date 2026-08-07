@@ -1,16 +1,14 @@
 package net.fugginbeenus.notchcurrency.economy.adminshop;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -18,28 +16,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class AdminShopState extends PersistentState {
+public class AdminShopState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_adminshops";
 
     private final Map<UUID, AdminShop> shops = new LinkedHashMap<>();
 
     public static AdminShopState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, AdminShopState::new, AdminShopState::fromNbt, DATA_KEY);
     }
 
     public AdminShop create(String name) {
         AdminShop shop = new AdminShop(name);
         shops.put(shop.getId(), shop);
-        markDirty();
+        setDirty();
         return shop;
     }
 
     public boolean remove(UUID shopId) {
         boolean removed = shops.remove(shopId) != null;
-        if (removed) markDirty();
+        if (removed) setDirty();
         return removed;
     }
 
@@ -69,27 +67,27 @@ public class AdminShopState extends PersistentState {
         if (++decayCounter < DECAY_INTERVAL) return;
         decayCounter = 0;
         for (AdminShop s : shops.values()) s.decayAll();
-        markDirty();
+        setDirty();
     }
 
     // ---- NBT ----
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (AdminShop s : shops.values()) list.add(s.toNbt());
         nbt.put("Shops", list);
         return nbt;
     }
 
-    public static AdminShopState fromNbt(NbtCompound nbt) {
+    public static AdminShopState fromNbt(CompoundTag nbt) {
         AdminShopState state = new AdminShopState();
-        if (nbt.contains("Shops", NbtElement.LIST_TYPE)) {
-            NbtList list = nbt.getList("Shops", NbtElement.COMPOUND_TYPE);
+        if (nbt.contains("Shops", Tag.TAG_LIST)) {
+            ListTag list = nbt.getList("Shops", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 AdminShop s = AdminShop.fromNbt(list.getCompound(i));
                 state.shops.put(s.getId(), s);

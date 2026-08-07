@@ -9,37 +9,34 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-//? if <1.21 {
-import net.minecraft.client.item.TooltipContext;
-//?}
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 
-public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler> {
+public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScreenHandler> {
 
-    private static final Identifier TEX =
+    private static final ResourceLocation TEX =
             NotchCurrency.id("textures/gui/auction/main_browser.png");
 
     // popup texture (small user listings window drawn on top)
-    private static final Identifier USER_POPUP_TEX =
+    private static final ResourceLocation USER_POPUP_TEX =
             NotchCurrency.id("textures/gui/auction/userauctions.png");
 
     // Texture size
@@ -166,7 +163,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             "Other"
     };
 
-    private void debugOutline(DrawContext ctx, int x, int y, int w, int h, int color) {
+    private void debugOutline(GuiGraphics ctx, int x, int y, int w, int h, int color) {
         ctx.fill(x, y, x + w, y + 1, color);
         ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color);
@@ -174,15 +171,15 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     }
 
     // Buttons
-    private ButtonWidget prevButton;
-    private ButtonWidget nextButton;
-    private ButtonWidget myListingsButton;
-    private ButtonWidget filterStarButton;
-    private ButtonWidget sortTypeButton;
-    private ButtonWidget helpButton;
-    private ButtonWidget reloadButton;
-    private ButtonWidget listItemButton;
-    private ButtonWidget raffleButton;
+    private Button prevButton;
+    private Button nextButton;
+    private Button myListingsButton;
+    private Button filterStarButton;
+    private Button sortTypeButton;
+    private Button helpButton;
+    private Button reloadButton;
+    private Button listItemButton;
+    private Button raffleButton;
 
     // popup state (overlay only)
     private boolean showUserPopup = false;
@@ -197,14 +194,14 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     private String bidInput = "";
 
     public AuctionHouseScreen(AuctionHouseScreenHandler handler,
-                              PlayerInventory inv,
-                              Text title) {
+                              Inventory inv,
+                              Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = TEX_W;
-        this.backgroundHeight = TEX_H;
+        this.imageWidth = TEX_W;
+        this.imageHeight = TEX_H;
 
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
@@ -213,129 +210,129 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
         int xNudge = 40;
         int yNudge = 10;
-        this.x = (this.width - this.backgroundWidth) / 2 + xNudge;
-        this.y = (this.height - this.backgroundHeight) / 2 + yNudge;
+        this.leftPos = (this.width - this.imageWidth) / 2 + xNudge;
+        this.topPos = (this.height - this.imageHeight) / 2 + yNudge;
 
-        this.clearChildren();
+        this.clearWidgets();
         showUserPopup = false;
 
         // "My Listings" opens overlay
-        myListingsButton = ButtonWidget.builder(Text.empty(), b -> {
+        myListingsButton = Button.builder(Component.empty(), b -> {
                     showUserPopup = true;
                 })
-                .dimensions(this.x + MY_X, this.y + MY_Y, MY_W, MY_H)
+                .bounds(this.leftPos + MY_X, this.topPos + MY_Y, MY_W, MY_H)
                 .build();
         myListingsButton.setAlpha(0.0f);
-        addDrawableChild(myListingsButton);
+        addRenderableWidget(myListingsButton);
 
         // Top-right buttons
-        helpButton = ButtonWidget.builder(Text.empty(), b -> {
-            if (this.client != null && this.client.player != null) {
+        helpButton = Button.builder(Component.empty(), b -> {
+            if (this.minecraft != null && this.minecraft.player != null) {
                 // Create clickable link message
-                Text linkText = Text.literal("Click here for the Notch Currency Guide")
-                        .styled(style -> style
-                                .withColor(Formatting.GOLD)
-                                .withUnderline(true)
-                                .withClickEvent(new net.minecraft.text.ClickEvent(
-                                        net.minecraft.text.ClickEvent.Action.OPEN_URL,
+                Component linkText = Component.literal("Click here for the Notch Currency Guide")
+                        .withStyle(style -> style
+                                .withColor(ChatFormatting.GOLD)
+                                .withUnderlined(true)
+                                .withClickEvent(new net.minecraft.network.chat.ClickEvent(
+                                        net.minecraft.network.chat.ClickEvent.Action.OPEN_URL,
                                         "https://github.com/FugginBeenus/NotchCurrency/wiki"
                                 ))
-                                .withHoverEvent(new net.minecraft.text.HoverEvent(
-                                        net.minecraft.text.HoverEvent.Action.SHOW_TEXT,
-                                        Text.literal("Open the Notch Currency wiki")
+                                .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
+                                        net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                                        Component.literal("Open the Notch Currency wiki")
                                 ))
                         );
 
-                Text message = Text.literal("Need help? ").formatted(Formatting.YELLOW).append(linkText);
-                this.client.player.sendMessage(message, false);
+                Component message = Component.literal("Need help? ").withStyle(ChatFormatting.YELLOW).append(linkText);
+                this.minecraft.player.displayClientMessage(message, false);
             }
-        }).dimensions(this.x + HELP_X, this.y + HELP_Y, HELP_W, HELP_H).build();
+        }).bounds(this.leftPos + HELP_X, this.topPos + HELP_Y, HELP_W, HELP_H).build();
         helpButton.setAlpha(0.0f);
-        addDrawableChild(helpButton);
+        addRenderableWidget(helpButton);
 
-        reloadButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 4); // reload
+        reloadButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 4); // reload
                     }
                 })
-                .dimensions(this.x + RELOAD_X, this.y + RELOAD_Y, RELOAD_W, RELOAD_H)
+                .bounds(this.leftPos + RELOAD_X, this.topPos + RELOAD_Y, RELOAD_W, RELOAD_H)
                 .build();
         reloadButton.setAlpha(0.0f);
-        addDrawableChild(reloadButton);
+        addRenderableWidget(reloadButton);
 
         // Pagination arrows
-        prevButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 0); // prev
+        prevButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0); // prev
                     }
                 })
-                .dimensions(this.x + PREV_X, this.y + PREV_Y, PREV_W, PREV_H)
+                .bounds(this.leftPos + PREV_X, this.topPos + PREV_Y, PREV_W, PREV_H)
                 .build();
         prevButton.setAlpha(0.0f);
-        addDrawableChild(prevButton);
+        addRenderableWidget(prevButton);
 
-        nextButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 1); // next
+        nextButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 1); // next
                     }
                 })
-                .dimensions(this.x + NEXT_X, this.y + NEXT_Y, NEXT_W, NEXT_H)
+                .bounds(this.leftPos + NEXT_X, this.topPos + NEXT_Y, NEXT_W, NEXT_H)
                 .build();
         nextButton.setAlpha(0.0f);
-        addDrawableChild(nextButton);
+        addRenderableWidget(nextButton);
 
         // Star (filters)
-        filterStarButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 2); // filter
+        filterStarButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 2); // filter
                     }
                 })
-                .dimensions(this.x + STAR_X, this.y + STAR_Y, STAR_W, STAR_H)
+                .bounds(this.leftPos + STAR_X, this.topPos + STAR_Y, STAR_W, STAR_H)
                 .build();
         filterStarButton.setAlpha(0.0f);
-        addDrawableChild(filterStarButton);
+        addRenderableWidget(filterStarButton);
 
         // Clock (sort)
-        sortTypeButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 3); // sort
+        sortTypeButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 3); // sort
                     }
                 })
-                .dimensions(this.x + CLOCK_X, this.y + CLOCK_Y, CLOCK_W, CLOCK_H)
+                .bounds(this.leftPos + CLOCK_X, this.topPos + CLOCK_Y, CLOCK_W, CLOCK_H)
                 .build();
         sortTypeButton.setAlpha(0.0f);
-        addDrawableChild(sortTypeButton);
+        addRenderableWidget(sortTypeButton);
 
         // List-an-item: open the listing screen (server replaces this screen with it).
-        listItemButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 6); // list item
+        listItemButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 6); // list item
                     }
                 })
-                .dimensions(this.x + LIST_X, this.y + LIST_Y, LIST_W, LIST_H)
-                .tooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                        Text.literal("List an item for auction")))
+                .bounds(this.leftPos + LIST_X, this.topPos + LIST_Y, LIST_W, LIST_H)
+                .tooltip(net.minecraft.client.gui.components.Tooltip.create(
+                        Component.literal("List an item for auction")))
                 .build();
         listItemButton.setAlpha(0.0f);
-        addDrawableChild(listItemButton);
+        addRenderableWidget(listItemButton);
 
         // Raffle: the server opens the raffle screen, which replaces this one.
-        raffleButton = ButtonWidget.builder(Text.empty(), b -> {
-                    if (this.client != null && this.client.interactionManager != null) {
-                        this.client.interactionManager.clickButton(this.handler.syncId, 5); // raffle
+        raffleButton = Button.builder(Component.empty(), b -> {
+                    if (this.minecraft != null && this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 5); // raffle
                     }
                 })
-                .dimensions(this.x + RAFFLE_X, this.y + RAFFLE_Y, RAFFLE_W, RAFFLE_H)
-                .tooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                        Text.literal("Open the raffle")))
+                .bounds(this.leftPos + RAFFLE_X, this.topPos + RAFFLE_Y, RAFFLE_W, RAFFLE_H)
+                .tooltip(net.minecraft.client.gui.components.Tooltip.create(
+                        Component.literal("Open the raffle")))
                 .build();
         raffleButton.setAlpha(0.0f);
-        addDrawableChild(raffleButton);
+        addRenderableWidget(raffleButton);
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
 
         // Window (measured 178x210 from the original texture).
         NotchWidgets.panel(ctx, x, y, 178, 210);
@@ -392,8 +389,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
     /** Which popup listing slot (0..POPUP_SIZE-1) is under the cursor, or -1. */
     private int hoveredPopupSlot(double mouseX, double mouseY) {
-        int slotsX = this.x + POPUP_LOCAL_X + POPUP_SLOT_LOCAL_X;
-        int slotsY = this.y + POPUP_LOCAL_Y + POPUP_SLOT_LOCAL_Y;
+        int slotsX = this.leftPos + POPUP_LOCAL_X + POPUP_SLOT_LOCAL_X;
+        int slotsY = this.topPos + POPUP_LOCAL_Y + POPUP_SLOT_LOCAL_Y;
         for (int row = 0; row < AuctionHouseScreenHandler.POPUP_ROWS; row++) {
             for (int col = 0; col < AuctionHouseScreenHandler.POPUP_COLUMNS; col++) {
                 int sx = slotsX + col * POPUP_SLOT_SPACING;
@@ -407,22 +404,22 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         return -1;
     }
 
-    private void greenBar(DrawContext ctx, int bx, int by, int w, int h, boolean hov) {
+    private void greenBar(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov) {
         NotchWidgets.colorButton(ctx, bx, by, w, h, NotchTheme.ACCENT_GREEN, 0xFF8FD07A, 0xFF3C6E2F, hov);
         String s = "MY LISTINGS";
         // white text + black drop-shadow for readability
-        ctx.drawText(this.textRenderer, s, bx + (w - this.textRenderer.getWidth(s)) / 2,
+        ctx.drawString(this.font, s, bx + (w - this.font.width(s)) / 2,
                 by + (h - 8) / 2, 0xFFFFFFFF, true);
     }
 
-    private void helpButton(DrawContext ctx, int bx, int by, int w, int h, boolean hov) {
+    private void helpButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov) {
         NotchWidgets.button(ctx, bx, by, w, h, hov, false);
         String s = "?";
-        ctx.drawText(this.textRenderer, s, bx + (w - this.textRenderer.getWidth(s)) / 2,
+        ctx.drawString(this.font, s, bx + (w - this.font.width(s)) / 2,
                 by + (h - 8) / 2, NotchTheme.TEXT_DARK, false);
     }
 
-    private void wideArrow(DrawContext ctx, int bx, int by, int w, int h, boolean hov, boolean left) {
+    private void wideArrow(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov, boolean left) {
         // Round only the outer corners so prev | page-box | next read as one bar.
         NotchWidgets.buttonSel(ctx, bx, by, w, h, hov, left, !left, left, !left);
         int cx = bx + w / 2, cy = by + h / 2;
@@ -433,7 +430,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
     }
 
-    private void redX(DrawContext ctx, int bx, int by, int w, int h) {
+    private void redX(GuiGraphics ctx, int bx, int by, int w, int h) {
         ctx.fill(bx, by, bx + w, by + h, NotchTheme.OUTLINE);
         ctx.fill(bx + 1, by + 1, bx + w - 1, by + h - 1, 0xFFB23030);
         ctx.fill(bx + 1, by + 1, bx + w - 1, by + 2, 0xFFD86060);
@@ -447,12 +444,12 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
     }
 
-    private void iconButton(DrawContext ctx, int bx, int by, int w, int h, boolean hov, String[] icon) {
+    private void iconButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov, String[] icon) {
         NotchWidgets.button(ctx, bx, by, w, h, hov, false);
         drawIcon(ctx, bx, by, w, h, icon, NotchTheme.TEXT_DARK);
     }
 
-    private void drawIcon(DrawContext ctx, int bx, int by, int bw, int bh, String[] rows, int color) {
+    private void drawIcon(GuiGraphics ctx, int bx, int by, int bw, int bh, String[] rows, int color) {
         int iw = rows[0].length(), ih = rows.length;
         int ox = bx + (bw - iw) / 2;
         int oy = by + (bh - ih) / 2;
@@ -512,41 +509,41 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     };
 
     @Override
-    protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
-        int page = handler.getPage() + 1;
-        int total = Math.max(1, handler.getTotalPages());
+    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
+        int page = menu.getPage() + 1;
+        int total = Math.max(1, menu.getTotalPages());
         String txt = page + "/" + total;
 
         // drawForeground coordinates are relative to the GUI, not screen
-        ctx.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal(txt),
+        ctx.drawCenteredString(
+                this.font,
+                Component.literal(txt),
                 PAGE_TEXT_X,
                 PAGE_TEXT_Y,
                 0xFFFFFF
         );
     }
 
-    private void drawListTooltip(DrawContext ctx,
+    private void drawListTooltip(GuiGraphics ctx,
                                  int mouseX, int mouseY,
-                                 Text title,
+                                 Component title,
                                  String[] options,
                                  String activeLabel) {
         // Push Z-level to render above inventory items
-        var matrices = ctx.getMatrices();
-        matrices.push();
+        var matrices = ctx.pose();
+        matrices.pushPose();
         matrices.translate(0.0F, 0.0F, 400.0F);
 
-        int maxWidth = this.textRenderer.getWidth(title);
+        int maxWidth = this.font.width(title);
 
         for (String opt : options) {
-            int w = this.textRenderer.getWidth("• " + opt);
+            int w = this.font.width("• " + opt);
             if (w > maxWidth) {
                 maxWidth = w;
             }
         }
 
-        int lineHeight = this.textRenderer.fontHeight + 2;
+        int lineHeight = this.font.lineHeight + 2;
         int lines = 1 + options.length; // title + options
         int boxWidth = maxWidth + 8;
         int boxHeight = lines * lineHeight + 8;
@@ -566,7 +563,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         int textX = x + 4;
         int textY = y + 4;
 
-        ctx.drawTextWithShadow(this.textRenderer, title, textX, textY, 0xFFFFFF);
+        ctx.drawString(this.font, title, textX, textY, 0xFFFFFF);
         textY += lineHeight;
 
         ctx.fill(x + 2, textY - 2, x + boxWidth - 2, textY - 1, 0xFF404040);
@@ -575,9 +572,9 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             boolean isActive = opt.equals(activeLabel);
             int color = isActive ? 0xFFFFD37F : 0xFFE0E0E0;
 
-            ctx.drawTextWithShadow(
-                    this.textRenderer,
-                    Text.literal("• " + opt),
+            ctx.drawString(
+                    this.font,
+                    Component.literal("• " + opt),
                     textX,
                     textY,
                     color
@@ -585,16 +582,16 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             textY += lineHeight;
         }
 
-        matrices.pop();
+        matrices.popPose();
     }
 
     @Override
-    protected void drawMouseoverTooltip(DrawContext ctx, int mouseX, int mouseY) {
+    protected void renderTooltip(GuiGraphics ctx, int mouseX, int mouseY) {
         // Popup: show a cancel hint over the player's own listings; block other tooltips beneath.
         if (showUserPopup) {
             if (hoveredPopupSlot(mouseX, mouseY) >= 0) return; // tooltip drawn in render(), above the popup
-            int px = this.x + POPUP_LOCAL_X;
-            int py = this.y + POPUP_LOCAL_Y;
+            int px = this.leftPos + POPUP_LOCAL_X;
+            int py = this.topPos + POPUP_LOCAL_Y;
             if (mouseX >= px && mouseX < px + POPUP_W &&
                     mouseY >= py && mouseY < py + POPUP_H) {
                 return;
@@ -602,62 +599,62 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
 
         // Sort button tooltip
-        int sortX = this.x + CLOCK_X;
-        int sortY = this.y + CLOCK_Y;
+        int sortX = this.leftPos + CLOCK_X;
+        int sortY = this.topPos + CLOCK_Y;
         if (mouseX >= sortX && mouseX < sortX + CLOCK_W &&
                 mouseY >= sortY && mouseY < sortY + CLOCK_H) {
             drawListTooltip(
                     ctx,
                     mouseX,
                     mouseY,
-                    Text.literal("Sort by"),
+                    Component.literal("Sort by"),
                     SORT_OPTIONS,
-                    handler.getSortLabel()
+                    menu.getSortLabel()
             );
             return;
         }
 
         // Filter button tooltip
-        int filterX = this.x + STAR_X;
-        int filterY = this.y + STAR_Y;
+        int filterX = this.leftPos + STAR_X;
+        int filterY = this.topPos + STAR_Y;
         if (mouseX >= filterX && mouseX < filterX + STAR_W &&
                 mouseY >= filterY && mouseY < filterY + STAR_H) {
             drawListTooltip(
                     ctx,
                     mouseX,
                     mouseY,
-                    Text.literal("Show items"),
+                    Component.literal("Show items"),
                     FILTER_OPTIONS,
-                    handler.getFilterLabel()
+                    menu.getFilterLabel()
             );
             return;
         }
 
         // Custom tooltip for AH listing slots (top grid)
-        if (this.focusedSlot != null
-                && this.focusedSlot.hasStack()
-                && this.focusedSlot.getIndex() < AuctionHouseScreenHandler.LISTING_SIZE) {
+        if (this.hoveredSlot != null
+                && this.hoveredSlot.hasItem()
+                && this.hoveredSlot.getContainerSlot() < AuctionHouseScreenHandler.LISTING_SIZE) {
 
-            ItemStack stack = this.focusedSlot.getStack();
-            NbtCompound tag = StackData.getData(stack);
+            ItemStack stack = this.hoveredSlot.getItem();
+            CompoundTag tag = StackData.getData(stack);
 
-            if (tag.contains("nc_price", NbtElement.LONG_TYPE)
-                    && tag.contains("nc_seller", NbtElement.STRING_TYPE)) {
+            if (tag.contains("nc_price", Tag.TAG_LONG)
+                    && tag.contains("nc_seller", Tag.TAG_STRING)) {
 
                 long startPrice = tag.getLong("nc_price");
                 String seller = tag.getString("nc_seller");
 
-                long created = tag.contains("nc_created", NbtElement.LONG_TYPE)
+                long created = tag.contains("nc_created", Tag.TAG_LONG)
                         ? tag.getLong("nc_created")
                         : 0L;
-                long expires = tag.contains("nc_expires", NbtElement.LONG_TYPE)
+                long expires = tag.contains("nc_expires", Tag.TAG_LONG)
                         ? tag.getLong("nc_expires")
                         : 0L;
 
-                long highestBid = tag.contains("nc_highest_bid", NbtElement.LONG_TYPE)
+                long highestBid = tag.contains("nc_highest_bid", Tag.TAG_LONG)
                         ? tag.getLong("nc_highest_bid")
                         : 0L;
-                String highestBidder = tag.contains("nc_highest_bidder", NbtElement.STRING_TYPE)
+                String highestBidder = tag.contains("nc_highest_bidder", Tag.TAG_STRING)
                         ? tag.getString("nc_highest_bidder")
                         : null;
 
@@ -665,18 +662,18 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 boolean timedAuction = expires > 0L;
 
                 // Compute status + time left for timed auctions only
-                Text statusLine = null;
-                Text timeLine = null;
+                Component statusLine = null;
+                Component timeLine = null;
                 long now = 0L;
 
-                if (timedAuction && this.client != null && this.client.world != null) {
-                    now = this.client.world.getTime();  // match server's tick clock
+                if (timedAuction && this.minecraft != null && this.minecraft.level != null) {
+                    now = this.minecraft.level.getGameTime();  // match server's tick clock
                     long remaining = expires - now;
                     if (remaining <= 0L) {
-                        statusLine = Text.literal("Status: Expired").formatted(Formatting.RED);
-                        timeLine = Text.literal("Time left: 0m").formatted(Formatting.DARK_GRAY);
+                        statusLine = Component.literal("Status: Expired").withStyle(ChatFormatting.RED);
+                        timeLine = Component.literal("Time left: 0m").withStyle(ChatFormatting.DARK_GRAY);
                     } else {
-                        statusLine = Text.literal("Status: Active").formatted(Formatting.GREEN);
+                        statusLine = Component.literal("Status: Active").withStyle(ChatFormatting.GREEN);
 
                         long seconds = remaining / 20L;
                         long days = seconds / 86400L;
@@ -690,34 +687,34 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                         if (hours > 0 || days > 0) sb.append(hours).append("h ");
                         sb.append(minutes).append("m");
 
-                        timeLine = Text.literal("Time left: " + sb).formatted(Formatting.DARK_GRAY);
+                        timeLine = Component.literal("Time left: " + sb).withStyle(ChatFormatting.DARK_GRAY);
                     }
                 }
 
                 // Rarity coloring (boost Notch coin to "Legendary")
-                Formatting rarityColor;
+                ChatFormatting rarityColor;
                 String rarityName;
 
-                if (stack.isOf(ModItems.NOTCH_COIN)) {
-                    rarityColor = Formatting.GOLD;
+                if (stack.is(ModItems.NOTCH_COIN)) {
+                    rarityColor = ChatFormatting.GOLD;
                     rarityName = "Legendary";
                 } else {
                     switch (stack.getRarity()) {
                         case UNCOMMON:
-                            rarityColor = Formatting.GREEN;
+                            rarityColor = ChatFormatting.GREEN;
                             rarityName = "Uncommon";
                             break;
                         case RARE:
-                            rarityColor = Formatting.BLUE;
+                            rarityColor = ChatFormatting.BLUE;
                             rarityName = "Rare";
                             break;
                         case EPIC:
-                            rarityColor = Formatting.LIGHT_PURPLE;
+                            rarityColor = ChatFormatting.LIGHT_PURPLE;
                             rarityName = "Epic";
                             break;
                         case COMMON:
                         default:
-                            rarityColor = Formatting.GRAY;
+                            rarityColor = ChatFormatting.GRAY;
                             rarityName = "Common";
                             break;
                     }
@@ -726,7 +723,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                 // Price to display: for auctions, show current bid or start; for buy-now, fixed price
                 long displayPrice = (timedAuction && highestBid > 0L) ? highestBid : startPrice;
 
-                List<Text> lines = new ArrayList<>();
+                List<Component> lines = new ArrayList<>();
 
                 // Check if shift is held for detailed item view
                 boolean shiftHeld = Screen.hasShiftDown();
@@ -735,28 +732,28 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     // === SHIFT HELD: Show item details with compact auction banner ===
 
                     // Compact auction banner at top
-                    MutableText bannerLine = Text.literal("⚡ ").formatted(Formatting.YELLOW)
-                            .append(Text.literal(String.valueOf(displayPrice) + " ").formatted(Formatting.GOLD))
-                            .append(Text.literal("\uE000"))
-                            .append(Text.literal(" from ").formatted(Formatting.GRAY))
-                            .append(Text.literal(seller).formatted(Formatting.WHITE))
-                            .append(Text.literal(" - ").formatted(Formatting.GRAY));
+                    MutableComponent bannerLine = Component.literal("⚡ ").withStyle(ChatFormatting.YELLOW)
+                            .append(Component.literal(String.valueOf(displayPrice) + " ").withStyle(ChatFormatting.GOLD))
+                            .append(Component.literal("\uE000"))
+                            .append(Component.literal(" from ").withStyle(ChatFormatting.GRAY))
+                            .append(Component.literal(seller).withStyle(ChatFormatting.WHITE))
+                            .append(Component.literal(" - ").withStyle(ChatFormatting.GRAY));
 
                     if (timedAuction) {
-                        bannerLine.append(Text.literal("Bid").formatted(Formatting.YELLOW));
+                        bannerLine.append(Component.literal("Bid").withStyle(ChatFormatting.YELLOW));
                     } else {
-                        bannerLine.append(Text.literal("Buy").formatted(Formatting.GREEN));
+                        bannerLine.append(Component.literal("Buy").withStyle(ChatFormatting.GREEN));
                     }
                     lines.add(bannerLine);
 
                     // Separator
-                    lines.add(Text.literal("─────────────").formatted(Formatting.DARK_GRAY));
+                    lines.add(Component.literal("─────────────").withStyle(ChatFormatting.DARK_GRAY));
 
                     // Get vanilla item tooltip lines
                     // Create a clean copy WITHOUT auction NBT so AuctionTooltips callback won't modify it
                     ItemStack cleanStack = stack.copy();
                     if (StackData.hasData(cleanStack)) {
-                        NbtCompound cleanTag = StackData.editData(cleanStack);
+                        CompoundTag cleanTag = StackData.editData(cleanStack);
                         // Remove ALL auction-specific tags
                         cleanTag.remove("nc_price");
                         cleanTag.remove("nc_seller");
@@ -769,7 +766,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                         //? if <1.21 {
                         // Also remove the display lore that was added server-side
                         if (cleanTag.contains("display", 10)) {
-                            NbtCompound display = cleanTag.getCompound("display");
+                            CompoundTag display = cleanTag.getCompound("display");
                             display.remove("Lore");
                             if (display.isEmpty()) {
                                 cleanTag.remove("display");
@@ -786,69 +783,69 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     }
                     //? if >=1.21 {
                     /*// The server-side lore rides the LORE component on 1.21.
-                    cleanStack.remove(net.minecraft.component.DataComponentTypes.LORE);
+                    cleanStack.remove(net.minecraft.core.component.DataComponents.LORE);
                     *///?}
 
                     //? if >=1.21 {
-                    /*List<Text> vanillaLines = cleanStack.getTooltip(
-                            net.minecraft.item.Item.TooltipContext.DEFAULT,
+                    /*List<Component> vanillaLines = cleanStack.getTooltip(
+                            net.minecraft.world.item.Item.TooltipContext.EMPTY,
                             this.client != null ? this.client.player : null,
                             this.client != null && this.client.options.advancedItemTooltips
-                                    ? net.minecraft.item.tooltip.TooltipType.ADVANCED
-                                    : net.minecraft.item.tooltip.TooltipType.BASIC
+                                    ? net.minecraft.world.item.TooltipFlag.ADVANCED
+                                    : net.minecraft.world.item.TooltipFlag.NORMAL
                     );
                     *///?} else {
-                    List<Text> vanillaLines = cleanStack.getTooltip(
-                            this.client != null ? this.client.player : null,
-                            this.client != null && this.client.options.advancedItemTooltips
-                                    ? TooltipContext.Default.ADVANCED
-                                    : TooltipContext.Default.BASIC
+                    List<Component> vanillaLines = cleanStack.getTooltipLines(
+                            this.minecraft != null ? this.minecraft.player : null,
+                            this.minecraft != null && this.minecraft.options.advancedItemTooltips
+                                    ? TooltipFlag.Default.ADVANCED
+                                    : TooltipFlag.Default.NORMAL
                     );
                     //?}
 
                     // Add vanilla lines (includes item name, enchantments, etc.)
-                    for (Text line : vanillaLines) {
+                    for (Component line : vanillaLines) {
                         lines.add(line);
                     }
 
                     // Hint to release shift
-                    lines.add(Text.literal(""));
-                    lines.add(Text.literal("[Release Shift] Auction info").formatted(Formatting.DARK_GRAY));
+                    lines.add(Component.literal(""));
+                    lines.add(Component.literal("[Release Shift] Auction info").withStyle(ChatFormatting.DARK_GRAY));
 
                 } else {
                     // === DEFAULT: Show compact auction tooltip ===
 
                     // Line 1: rarity colored name
-                    Text nameLine = stack.getName().copy().formatted(rarityColor);
+                    Component nameLine = stack.getHoverName().copy().withStyle(rarityColor);
                     lines.add(nameLine);
 
                     // Price line
-                    MutableText priceLine = Text.empty()
-                            .append(Text.literal("Price: ").formatted(Formatting.GOLD))
-                            .append(Text.literal(String.valueOf(displayPrice) + " ").formatted(Formatting.YELLOW))
-                            .append(Text.literal("\uE000"));
+                    MutableComponent priceLine = Component.empty()
+                            .append(Component.literal("Price: ").withStyle(ChatFormatting.GOLD))
+                            .append(Component.literal(String.valueOf(displayPrice) + " ").withStyle(ChatFormatting.YELLOW))
+                            .append(Component.literal("\uE000"));
                     lines.add(priceLine);
 
                     // For timed auction, also show highest bid explicitly if any
                     if (timedAuction && highestBid > 0L) {
-                        MutableText bidLine = Text.empty()
-                                .append(Text.literal("Highest bid: ").formatted(Formatting.AQUA))
-                                .append(Text.literal(String.valueOf(highestBid)).formatted(Formatting.AQUA));
+                        MutableComponent bidLine = Component.empty()
+                                .append(Component.literal("Highest bid: ").withStyle(ChatFormatting.AQUA))
+                                .append(Component.literal(String.valueOf(highestBid)).withStyle(ChatFormatting.AQUA));
                         if (highestBidder != null && !highestBidder.isEmpty()) {
-                            bidLine.append(Text.literal(" by " + highestBidder).formatted(Formatting.GRAY));
+                            bidLine.append(Component.literal(" by " + highestBidder).withStyle(ChatFormatting.GRAY));
                         }
                         lines.add(bidLine);
                     }
 
                     // Seller
                     lines.add(
-                            Text.literal("Seller: " + seller)
-                                    .formatted(Formatting.GRAY)
+                            Component.literal("Seller: " + seller)
+                                    .withStyle(ChatFormatting.GRAY)
                     );
 
                     // Rarity
                     lines.add(
-                            Text.literal("Rarity: " + rarityName).formatted(rarityColor)
+                            Component.literal("Rarity: " + rarityName).withStyle(rarityColor)
                     );
 
                     // Status + time for timed auctions
@@ -862,44 +859,44 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     // Hints
                     if (timedAuction) {
                         lines.add(
-                                Text.literal("Left-click: open bid in chat")
-                                        .formatted(Formatting.YELLOW)
+                                Component.literal("Left-click: open bid in chat")
+                                        .withStyle(ChatFormatting.YELLOW)
                         );
                         lines.add(
-                                Text.literal("Or use /ah bid <id> <amount>")
-                                        .formatted(Formatting.DARK_GRAY)
+                                Component.literal("Or use /ah bid <id> <amount>")
+                                        .withStyle(ChatFormatting.DARK_GRAY)
                         );
                     } else {
                         lines.add(
-                                Text.literal("Click to buy")
-                                        .formatted(Formatting.YELLOW)
+                                Component.literal("Click to buy")
+                                        .withStyle(ChatFormatting.YELLOW)
                         );
                     }
 
                     // Hint to hold shift for item details
-                    lines.add(Text.literal("[Shift] Item details").formatted(Formatting.DARK_GRAY));
+                    lines.add(Component.literal("[Shift] Item details").withStyle(ChatFormatting.DARK_GRAY));
                 }
 
                 // Draw tooltip
-                ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+                ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
 
                 return;
             }
         }
 
         // Fallback: normal behaviour
-        super.drawMouseoverTooltip(ctx, mouseX, mouseY);
+        super.renderTooltip(ctx, mouseX, mouseY);
     }
 
 
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         super.render(ctx, mouseX, mouseY, delta);
-        this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+        this.renderTooltip(ctx, mouseX, mouseY);
 
         if (showUserPopup) {
             drawUserPopup(ctx);
@@ -929,42 +926,42 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     }
 
     /** Bid prompt drawn above everything (Z 500); manual text input keeps the listing id hidden. */
-    private void drawBidPopup(DrawContext ctx, int mouseX, int mouseY) {
-        var matrices = ctx.getMatrices();
-        matrices.push();
+    private void drawBidPopup(GuiGraphics ctx, int mouseX, int mouseY) {
+        var matrices = ctx.pose();
+        matrices.pushPose();
         matrices.translate(0.0F, 0.0F, 500.0F);
 
         ctx.fill(0, 0, this.width, this.height, 0x88000000);
 
-        int px = this.x + BID_X, py = this.y + BID_Y;
+        int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
         NotchWidgets.panel(ctx, px, py, BID_W, BID_H);
 
-        NotchWidgets.title(ctx, this.textRenderer, "Place a Bid", px + BID_W / 2, py + 6);
-        NotchWidgets.centerText(ctx, this.textRenderer, bidItemName, px + BID_W / 2, py + 18, NotchTheme.TEXT_LIGHT, true);
+        NotchWidgets.title(ctx, this.font, "Place a Bid", px + BID_W / 2, py + 6);
+        NotchWidgets.centerText(ctx, this.font, bidItemName, px + BID_W / 2, py + 18, NotchTheme.TEXT_LIGHT, true);
 
         long cur = bidHighest > 0 ? bidHighest : bidStartPrice;
         long min = cur + 1;
-        ctx.drawText(this.textRenderer, (bidHighest > 0 ? "Current bid: " : "Start price: ") + cur,
+        ctx.drawString(this.font, (bidHighest > 0 ? "Current bid: " : "Start price: ") + cur,
                 px + 10, py + 32, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, "Min next bid: " + min, px + 10, py + 42, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Min next bid: " + min, px + 10, py + 42, NotchTheme.TEXT_DARK, false);
 
         // Input box + manual text/cursor.
         NotchWidgets.inset(ctx, px + 10, py + 52, BID_W - 20, 14, NotchTheme.DEEP);
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
         if (bidInput.isEmpty()) {
-            ctx.drawText(this.textRenderer, Text.literal("amount").formatted(Formatting.DARK_GRAY),
+            ctx.drawString(this.font, Component.literal("amount").withStyle(ChatFormatting.DARK_GRAY),
                     px + 14, py + 55, 0xFF555555, false);
-            if (blink) ctx.drawText(this.textRenderer, "_", px + 14, py + 55, 0xFFFFFFFF, false);
+            if (blink) ctx.drawString(this.font, "_", px + 14, py + 55, 0xFFFFFFFF, false);
         } else {
-            ctx.drawText(this.textRenderer, bidInput + (blink ? "_" : ""), px + 14, py + 55, 0xFFFFFFFF, false);
+            ctx.drawString(this.font, bidInput + (blink ? "_" : ""), px + 14, py + 55, 0xFFFFFFFF, false);
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 68, 58, 14, "Bid",
+        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 68, 58, 14, "Bid",
                 over(mouseX, mouseY, px + 10, py + 68, 58, 14));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + 72, py + 68, 58, 14, "Cancel",
+        NotchWidgets.dangerButton(ctx, this.font, px + 72, py + 68, 58, 14, "Cancel",
                 over(mouseX, mouseY, px + 72, py + 68, 58, 14));
 
-        matrices.pop();
+        matrices.popPose();
     }
 
     private void submitBid() {
@@ -976,14 +973,14 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
         long min = (bidHighest > 0 ? bidHighest : bidStartPrice) + 1;
         if (amount < min) {
-            if (this.client != null && this.client.player != null) {
-                this.client.player.sendMessage(Text.literal("Bid must be at least " + min + ".").formatted(Formatting.RED), false);
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(Component.literal("Bid must be at least " + min + ".").withStyle(ChatFormatting.RED), false);
             }
             return;
         }
         if (bidListingId != null) {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeUuid(bidListingId);
+            FriendlyByteBuf buf = PacketByteBufs.create();
+            buf.writeUUID(bidListingId);
             buf.writeVarLong(amount);
             NetClient.sendToServer(NotchPackets.BID_REQUEST, buf);
         }
@@ -1014,48 +1011,48 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
     }
 
     /** Cancel hint for a hovered popup listing, drawn above the popup (Z 600). */
-    private void drawPopupCancelTooltip(DrawContext ctx, int mouseX, int mouseY) {
+    private void drawPopupCancelTooltip(GuiGraphics ctx, int mouseX, int mouseY) {
         int slot = hoveredPopupSlot(mouseX, mouseY);
         if (slot < 0) return;
-        ItemStack stack = handler.getUserPopupInventory().getStack(slot);
+        ItemStack stack = menu.getUserPopupInventory().getItem(slot);
         if (stack.isEmpty()) return;
 
-        List<Text> lines = new ArrayList<>();
-        lines.add(stack.getName().copy().formatted(Formatting.WHITE));
-        NbtCompound tag = StackData.getData(stack);
-        if (tag.contains("nc_price", NbtElement.LONG_TYPE)) {
-            lines.add(Text.literal("Price: " + tag.getLong("nc_price") + " " + NotchWidgets.coinName()).formatted(Formatting.GOLD));
+        List<Component> lines = new ArrayList<>();
+        lines.add(stack.getHoverName().copy().withStyle(ChatFormatting.WHITE));
+        CompoundTag tag = StackData.getData(stack);
+        if (tag.contains("nc_price", Tag.TAG_LONG)) {
+            lines.add(Component.literal("Price: " + tag.getLong("nc_price") + " " + NotchWidgets.coinName()).withStyle(ChatFormatting.GOLD));
         }
-        lines.add(Text.literal("Click to cancel & reclaim").formatted(Formatting.RED));
+        lines.add(Component.literal("Click to cancel & reclaim").withStyle(ChatFormatting.RED));
 
-        var matrices = ctx.getMatrices();
-        matrices.push();
+        var matrices = ctx.pose();
+        matrices.pushPose();
         matrices.translate(0.0F, 0.0F, 600.0F);
-        ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
-        matrices.pop();
+        ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+        matrices.popPose();
     }
 
-    private void drawUserPopup(DrawContext ctx) {
-        var matrices = ctx.getMatrices();
-        matrices.push();
+    private void drawUserPopup(GuiGraphics ctx) {
+        var matrices = ctx.pose();
+        matrices.pushPose();
         matrices.translate(0.0F, 0.0F, 500.0F);
 
-        int dimX1 = this.x + DIM_MARGIN_LEFT;
-        int dimY1 = this.y + DIM_MARGIN_TOP;
-        int dimX2 = this.x + this.backgroundWidth - DIM_MARGIN_RIGHT;
-        int dimY2 = this.y + this.backgroundHeight - DIM_MARGIN_BOTTOM;
+        int dimX1 = this.leftPos + DIM_MARGIN_LEFT;
+        int dimY1 = this.topPos + DIM_MARGIN_TOP;
+        int dimX2 = this.leftPos + this.imageWidth - DIM_MARGIN_RIGHT;
+        int dimY2 = this.topPos + this.imageHeight - DIM_MARGIN_BOTTOM;
         ctx.fill(dimX1, dimY1, dimX2, dimY2, POPUP_DIM_COLOR);
 
-        int px = this.x + POPUP_LOCAL_X;
-        int py = this.y + POPUP_LOCAL_Y;
+        int px = this.leftPos + POPUP_LOCAL_X;
+        int py = this.topPos + POPUP_LOCAL_Y;
 
         // Popup window (code-drawn; original was 107x70).
         NotchWidgets.panel(ctx, px, py, 107, 70);
 
-        if (this.client != null && this.client.player != null) {
-            String name = this.client.player.getName().getString();
-            ctx.drawText(
-                    this.textRenderer,
+        if (this.minecraft != null && this.minecraft.player != null) {
+            String name = this.minecraft.player.getName().getString();
+            ctx.drawString(
+                    this.font,
                     name,
                     px + POPUP_NAME_X,
                     py + POPUP_NAME_Y,
@@ -1067,7 +1064,7 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         // Red close button.
         redX(ctx, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H);
 
-        SimpleInventory inv = handler.getUserPopupInventory();
+        SimpleContainer inv = menu.getUserPopupInventory();
         int index = 0;
         for (int row = 0; row < AuctionHouseScreenHandler.POPUP_ROWS; row++) {
             for (int col = 0; col < AuctionHouseScreenHandler.POPUP_COLUMNS; col++) {
@@ -1076,10 +1073,10 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
                 NotchWidgets.slot(ctx, sx, sy);
 
-                ItemStack stack = inv.getStack(index++);
+                ItemStack stack = inv.getItem(index++);
                 if (!stack.isEmpty()) {
-                    ctx.drawItem(stack, sx + 1, sy + 1);
-                    ctx.drawItemInSlot(this.textRenderer, stack, sx + 1, sy + 1);
+                    ctx.renderItem(stack, sx + 1, sy + 1);
+                    ctx.renderItemDecorations(this.font, stack, sx + 1, sy + 1);
                 }
 
                 if (DEBUG_POPUP_SLOTS) {
@@ -1097,14 +1094,14 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
                     0xFFFF0000);
         }
 
-        matrices.pop();
+        matrices.popPose();
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Bid prompt swallows all clicks while open.
         if (showBidPopup) {
-            int px = this.x + BID_X, py = this.y + BID_Y;
+            int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
             if (over((int) mouseX, (int) mouseY, px + 10, py + 68, 58, 14)) { submitBid(); return true; }
             if (over((int) mouseX, (int) mouseY, px + 72, py + 68, 58, 14)) { showBidPopup = false; return true; }
             return true;
@@ -1112,8 +1109,8 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
 
         // Popup handling (unchanged)
         if (showUserPopup) {
-            int px = this.x + POPUP_LOCAL_X;
-            int py = this.y + POPUP_LOCAL_Y;
+            int px = this.leftPos + POPUP_LOCAL_X;
+            int py = this.topPos + POPUP_LOCAL_Y;
 
             // red close button
             int cx1 = px + POPUP_CLOSE_X;
@@ -1129,11 +1126,11 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
             // Click one of your own listings to cancel it (item is returned to you).
             int slot = hoveredPopupSlot(mouseX, mouseY);
             if (slot >= 0) {
-                ItemStack stack = handler.getUserPopupInventory().getStack(slot);
-                NbtCompound tag = StackData.getData(stack);
-                if (!stack.isEmpty() && tag.containsUuid("nc_listing_id")) {
-                    PacketByteBuf buf = PacketByteBufs.create();
-                    buf.writeUuid(tag.getUuid("nc_listing_id"));
+                ItemStack stack = menu.getUserPopupInventory().getItem(slot);
+                CompoundTag tag = StackData.getData(stack);
+                if (!stack.isEmpty() && tag.hasUUID("nc_listing_id")) {
+                    FriendlyByteBuf buf = PacketByteBufs.create();
+                    buf.writeUUID(tag.getUUID("nc_listing_id"));
                     NetClient.sendToServer(NotchPackets.AUCTION_CANCEL, buf);
                 }
                 return true;
@@ -1147,28 +1144,28 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         }
 
         // --- New: client-side warning when trying to buy your own UNTIMED listing ---
-        if (button == 0 && !showUserPopup && this.client != null && this.client.player != null) {
-            Slot clickedSlot = this.focusedSlot;
+        if (button == 0 && !showUserPopup && this.minecraft != null && this.minecraft.player != null) {
+            Slot clickedSlot = this.hoveredSlot;
             if (clickedSlot != null
-                    && clickedSlot.hasStack()
-                    && clickedSlot.getIndex() < AuctionHouseScreenHandler.LISTING_SIZE
-                    && this.isPointWithinBounds(clickedSlot.x, clickedSlot.y, 16, 16, mouseX, mouseY)) {
+                    && clickedSlot.hasItem()
+                    && clickedSlot.getContainerSlot() < AuctionHouseScreenHandler.LISTING_SIZE
+                    && this.isHovering(clickedSlot.x, clickedSlot.y, 16, 16, mouseX, mouseY)) {
 
-                ItemStack stack = clickedSlot.getStack();
-                NbtCompound tag = StackData.getData(stack);
+                ItemStack stack = clickedSlot.getItem();
+                CompoundTag tag = StackData.getData(stack);
 
-                if (tag.contains("nc_seller", NbtElement.STRING_TYPE)
-                        && tag.contains("nc_expires", NbtElement.LONG_TYPE)) {
+                if (tag.contains("nc_seller", Tag.TAG_STRING)
+                        && tag.contains("nc_expires", Tag.TAG_LONG)) {
 
                     long expires = tag.getLong("nc_expires");
                     String seller = tag.getString("nc_seller");
-                    String selfName = this.client.player.getName().getString();
+                    String selfName = this.minecraft.player.getName().getString();
 
                     // Only block BUY-NOW listings (expires <= 0), not timed auctions
                     if (expires <= 0L && seller.equals(selfName)) {
-                        this.client.player.sendMessage(
-                                Text.literal("You can't buy your own listing.")
-                                        .formatted(Formatting.RED),
+                        this.minecraft.player.displayClientMessage(
+                                Component.literal("You can't buy your own listing.")
+                                        .withStyle(ChatFormatting.RED),
                                 false
                         );
                         // Swallow the click; do not send it to the server
@@ -1182,27 +1179,27 @@ public class AuctionHouseScreen extends HandledScreen<AuctionHouseScreenHandler>
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 
         // Left click on a TIMED auction => open bid command in chat (existing behaviour)
-        if (button == 0 && !showUserPopup && this.client != null) {
+        if (button == 0 && !showUserPopup && this.minecraft != null) {
             // Use focusedSlot instead of getSlotAt (getSlotAt is private in 1.20.1)
-            Slot clicked = this.focusedSlot;
+            Slot clicked = this.hoveredSlot;
             if (clicked != null
-                    && clicked.hasStack()
-                    && clicked.getIndex() < AuctionHouseScreenHandler.LISTING_SIZE
-                    && this.isPointWithinBounds(clicked.x, clicked.y, 16, 16, mouseX, mouseY)) {
+                    && clicked.hasItem()
+                    && clicked.getContainerSlot() < AuctionHouseScreenHandler.LISTING_SIZE
+                    && this.isHovering(clicked.x, clicked.y, 16, 16, mouseX, mouseY)) {
 
-                ItemStack stack = clicked.getStack();
-                NbtCompound tag = StackData.getData(stack);
-                if (tag.contains("nc_expires", NbtElement.LONG_TYPE)
-                        && tag.containsUuid("nc_listing_id")) {
+                ItemStack stack = clicked.getItem();
+                CompoundTag tag = StackData.getData(stack);
+                if (tag.contains("nc_expires", Tag.TAG_LONG)
+                        && tag.hasUUID("nc_listing_id")) {
 
                     long expires = tag.getLong("nc_expires");
 
                     // Timed auction (expires > 0): open the in-GUI bid prompt (no id in chat).
                     if (expires > 0L) {
-                        bidListingId = tag.getUuid("nc_listing_id");
-                        bidItemName = stack.getName().getString();
+                        bidListingId = tag.getUUID("nc_listing_id");
+                        bidItemName = stack.getHoverName().getString();
                         bidStartPrice = tag.getLong("nc_price");
-                        bidHighest = tag.contains("nc_highest_bid", NbtElement.LONG_TYPE)
+                        bidHighest = tag.contains("nc_highest_bid", Tag.TAG_LONG)
                                 ? tag.getLong("nc_highest_bid") : 0L;
                         bidInput = "";
                         showBidPopup = true;

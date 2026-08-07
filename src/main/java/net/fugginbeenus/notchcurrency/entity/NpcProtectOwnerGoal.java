@@ -1,14 +1,14 @@
 package net.fugginbeenus.notchcurrency.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.ai.goal.TrackTargetGoal;
-import net.minecraft.entity.player.PlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.target.TargetGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.player.Player;
 
-public class NpcProtectOwnerGoal extends TrackTargetGoal {
+public class NpcProtectOwnerGoal extends TargetGoal {
 
     private final NotchNpcEntity npc;
     @Nullable private LivingEntity candidate;
@@ -17,32 +17,32 @@ public class NpcProtectOwnerGoal extends TrackTargetGoal {
     public NpcProtectOwnerGoal(NotchNpcEntity npc) {
         super(npc, false);
         this.npc = npc;
-        this.setControls(EnumSet.of(Control.TARGET));
+        this.setFlags(EnumSet.of(Flag.TARGET));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         if (!npc.protectsOwner()) return false;
-        PlayerEntity owner = npc.resolveFollowTarget();
+        Player owner = npc.resolveFollowTarget();
         if (owner == null) return false;
 
         // Someone hitting the owner is the urgent case, so it wins.
-        LivingEntity pick = owner.getAttacker();
+        LivingEntity pick = owner.getLastHurtByMob();
         if (!worthAttacking(pick, owner)) {
-            LivingEntity target = owner.getAttacking();
-            int swing = owner.getLastAttackTime();
+            LivingEntity target = owner.getLastHurtMob();
+            int swing = owner.getLastHurtMobTimestamp();
             pick = (swing != handledSwing && worthAttacking(target, owner)) ? target : null;
             if (pick != null) handledSwing = swing;
         }
         if (pick == null) return false;
 
         this.candidate = pick;
-        return canTrack(pick, TargetPredicate.DEFAULT);
+        return canAttack(pick, TargetingConditions.DEFAULT);
     }
 
-    private boolean worthAttacking(@Nullable LivingEntity e, PlayerEntity owner) {
+    private boolean worthAttacking(@Nullable LivingEntity e, Player owner) {
         if (e == null || !e.isAlive() || e == npc || e == owner) return false;
-        if (e instanceof PlayerEntity p && (p.isCreative() || p.isSpectator())) return false;
+        if (e instanceof Player p && (p.isCreative() || p.isSpectator())) return false;
         return !npc.isAlly(e);
     }
 

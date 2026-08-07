@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.shop;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -227,30 +227,30 @@ public class PlayerShop {
 
     // --- NBT Serialization ---
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
 
-        nbt.putUuid("ShopId", shopId);
-        nbt.putUuid("OwnerId", ownerId);
+        nbt.putUUID("ShopId", shopId);
+        nbt.putUUID("OwnerId", ownerId);
         nbt.putString("OwnerName", ownerName);
         nbt.putString("ShopName", shopName);
 
         if (linkedNpcId != null) {
-            nbt.putUuid("LinkedNpcId", linkedNpcId);
+            nbt.putUUID("LinkedNpcId", linkedNpcId);
         }
 
         if (shopkeeperDialog != null && !shopkeeperDialog.isEmpty()) {
             nbt.putString("ShopkeeperDialog", shopkeeperDialog);
         }
 
-        NbtList listingsNbt = new NbtList();
+        ListTag listingsNbt = new ListTag();
         for (ShopListing listing : listings) {
             listingsNbt.add(listing.toNbt());
         }
         nbt.put("Listings", listingsNbt);
 
         // Save pending barter items
-        NbtList barterNbt = new NbtList();
+        ListTag barterNbt = new ListTag();
         for (ItemStack item : pendingBarterItems) {
             barterNbt.add(StackData.writeStack(item));
         }
@@ -267,32 +267,32 @@ public class PlayerShop {
         return nbt;
     }
 
-    public static PlayerShop fromNbt(NbtCompound nbt) {
-        UUID shopId = nbt.getUuid("ShopId");
-        UUID ownerId = nbt.getUuid("OwnerId");
+    public static PlayerShop fromNbt(CompoundTag nbt) {
+        UUID shopId = nbt.getUUID("ShopId");
+        UUID ownerId = nbt.getUUID("OwnerId");
 
         PlayerShop shop = new PlayerShop(shopId, ownerId);
         shop.ownerName = nbt.getString("OwnerName");
         shop.shopName = nbt.getString("ShopName");
 
         if (nbt.contains("LinkedNpcId")) {
-            shop.linkedNpcId = nbt.getUuid("LinkedNpcId");
+            shop.linkedNpcId = nbt.getUUID("LinkedNpcId");
         }
 
         if (nbt.contains("ShopkeeperDialog")) {
             shop.shopkeeperDialog = nbt.getString("ShopkeeperDialog");
         }
 
-        if (nbt.contains("Listings", NbtElement.LIST_TYPE)) {
-            NbtList listingsNbt = nbt.getList("Listings", NbtElement.COMPOUND_TYPE);
+        if (nbt.contains("Listings", Tag.TAG_LIST)) {
+            ListTag listingsNbt = nbt.getList("Listings", Tag.TAG_COMPOUND);
             for (int i = 0; i < listingsNbt.size(); i++) {
                 shop.listings.add(ShopListing.fromNbt(listingsNbt.getCompound(i)));
             }
         }
 
         // Load pending barter items
-        if (nbt.contains("PendingBarterItems", NbtElement.LIST_TYPE)) {
-            NbtList barterNbt = nbt.getList("PendingBarterItems", NbtElement.COMPOUND_TYPE);
+        if (nbt.contains("PendingBarterItems", Tag.TAG_LIST)) {
+            ListTag barterNbt = nbt.getList("PendingBarterItems", Tag.TAG_COMPOUND);
             for (int i = 0; i < barterNbt.size(); i++) {
                 ItemStack item = StackData.readStack(barterNbt.getCompound(i));
                 if (!item.isEmpty()) {

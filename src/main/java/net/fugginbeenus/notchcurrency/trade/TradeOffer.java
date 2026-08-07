@@ -1,11 +1,10 @@
 package net.fugginbeenus.notchcurrency.trade;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +53,7 @@ public class TradeOffer {
     public String summary() {
         StringBuilder sb = new StringBuilder();
         if (!offeredItems.isEmpty()) {
-            sb.append(firstOffered().getName().getString());
+            sb.append(firstOffered().getHoverName().getString());
             if (offeredItems.size() > 1) sb.append(" + ").append(offeredItems.size() - 1).append(" more");
         }
         if (offeredCoins > 0) {
@@ -68,10 +67,10 @@ public class TradeOffer {
         return isOpen() || targetName.equalsIgnoreCase(playerName);
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound t = new NbtCompound();
-        t.putUuid("Id", id);
-        t.putUuid("Creator", creatorUuid);
+    public CompoundTag toNbt() {
+        CompoundTag t = new CompoundTag();
+        t.putUUID("Id", id);
+        t.putUUID("Creator", creatorUuid);
         t.putString("CreatorName", creatorName);
         t.putString("Target", targetName);
         t.put("OfferedList", writeStacks(offeredItems));
@@ -82,17 +81,17 @@ public class TradeOffer {
         return t;
     }
 
-    private static NbtList writeStacks(List<ItemStack> stacks) {
-        NbtList list = new NbtList();
+    private static ListTag writeStacks(List<ItemStack> stacks) {
+        ListTag list = new ListTag();
         for (ItemStack st : stacks) {
             if (!st.isEmpty()) list.add(StackData.writeStack(st));
         }
         return list;
     }
 
-    private static List<ItemStack> readStacks(NbtCompound t, String key) {
+    private static List<ItemStack> readStacks(CompoundTag t, String key) {
         List<ItemStack> out = new ArrayList<>();
-        NbtList list = t.getList(key, NbtElement.COMPOUND_TYPE);
+        ListTag list = t.getList(key, Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             ItemStack st = StackData.readStack(list.getCompound(i));
             if (!st.isEmpty()) out.add(st);
@@ -100,7 +99,7 @@ public class TradeOffer {
         return out;
     }
 
-    public static TradeOffer fromNbt(NbtCompound t) {
+    public static TradeOffer fromNbt(CompoundTag t) {
         List<ItemStack> items = readStacks(t, "OfferedList");
         if (items.isEmpty() && t.contains("Offered")) {
             // Pre-grid offers stored a single stack.
@@ -113,8 +112,8 @@ public class TradeOffer {
             if (!st.isEmpty()) wants.add(st);
         }
         return new TradeOffer(
-                t.getUuid("Id"),
-                t.getUuid("Creator"),
+                t.getUUID("Id"),
+                t.getUUID("Creator"),
                 t.getString("CreatorName"),
                 t.getString("Target"),
                 items,

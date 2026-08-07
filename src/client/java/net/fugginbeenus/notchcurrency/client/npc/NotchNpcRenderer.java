@@ -1,19 +1,19 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
+import net.minecraft.network.chat.Component;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +24,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     private final boolean applyLoaded;
     private final Map<String, Entity> proxies = new HashMap<>();
 
-    public NotchNpcRenderer(EntityRendererFactory.Context ctx) {
+    public NotchNpcRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.biped = new NotchNpcBipedRenderer(ctx);
         this.geo = new NotchNpcGeoRenderer(ctx);
@@ -32,8 +32,8 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
 
     @Override
-    public void render(NotchNpcEntity entity, float yaw, float tickDelta, MatrixStack matrices,
-                       VertexConsumerProvider vertexConsumers, int light) {
+    public void render(NotchNpcEntity entity, float yaw, float tickDelta, PoseStack matrices,
+                       MultiBufferSource vertexConsumers, int light) {
         String model = entity.getModelId();
         if (entity.isInvisible()) {
             // Invisible (stats toggle or day/night rule): draw nothing, label included. The biped
@@ -52,66 +52,66 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
 
     private boolean renderDisguise(NotchNpcEntity npc, String typeId, float yaw, float tickDelta,
-                                   MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+                                   PoseStack matrices, MultiBufferSource vcp, int light) {
         Entity proxy = getProxy(typeId);
         if (!(proxy instanceof LivingEntity le)) return false;
 
-        le.setYaw(npc.getYaw());
-        le.setBodyYaw(npc.bodyYaw);
-        le.setHeadYaw(npc.headYaw);
-        le.prevBodyYaw = npc.prevBodyYaw;
-        le.prevHeadYaw = npc.prevHeadYaw;
-        le.setPitch(npc.getPitch());
-        le.age = npc.age;
+        le.setYRot(npc.getYRot());
+        le.setYBodyRot(npc.yBodyRot);
+        le.setYHeadRot(npc.yHeadRot);
+        le.yBodyRotO = npc.yBodyRotO;
+        le.yHeadRotO = npc.yHeadRotO;
+        le.setXRot(npc.getXRot());
+        le.tickCount = npc.tickCount;
         copyAnimationState(npc, le);
 
         float sx = npc.getScale(), sy = npc.getScaleY(), sz = npc.getScaleZ();
         boolean scaled = sx != 1.0f || sy != 1.0f || sz != 1.0f;
         if (scaled) {
-            matrices.push();
+            matrices.pushPose();
             matrices.scale(sx, sy, sz);
         }
         try {
             @SuppressWarnings("unchecked")
-            EntityRenderer<Entity> r = (EntityRenderer<Entity>) this.dispatcher.getRenderer(le);
+            EntityRenderer<Entity> r = (EntityRenderer<Entity>) this.entityRenderDispatcher.getRenderer(le);
             if (r == null) {
-                if (scaled) matrices.pop();
+                if (scaled) matrices.popPose();
                 return false;
             }
             r.render(le, yaw, tickDelta, matrices, vcp, light);
         } catch (Exception e) {
-            if (scaled) matrices.pop();
+            if (scaled) matrices.popPose();
             return false;
         }
-        if (scaled) matrices.pop();
+        if (scaled) matrices.popPose();
         // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height),
         // subject to the same range cap the biped path uses so crowds don't pay for unreadable text.
         boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
-                || this.dispatcher.getSquaredDistanceToCamera(npc) < 32.0 * 32.0;
+                || this.entityRenderDispatcher.distanceToSqr(npc) < 32.0 * 32.0;
         if (npc.hasCustomName() && npc.isCustomNameVisible() && labelInRange) {
-            matrices.push();
+            matrices.pushPose();
             matrices.translate(0.0, npc.getNameOffset(), 0.0);
             //? if >=1.21 {
-            /*this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light, tickDelta);
+            /*this.renderNameTag(npc, npc.getDisplayName(), matrices, vcp, light, tickDelta);
             *///?} else {
-            this.renderLabelIfPresent(npc, npc.getDisplayName(), matrices, vcp, light);
+            this.renderNameTag(npc, npc.getDisplayName(), matrices, vcp, light);
             //?}
-            matrices.pop();
+            matrices.popPose();
         }
         // The disguise's own renderer knows nothing about our sign, so draw it here too.
         String[] sign = NpcBillboard.lines(npc);
         double signY = npc.getNameOffset() + NpcBillboard.BASE_GAP;
         for (String line : sign) {
             if (!line.isBlank()) {
-                matrices.push();
+                matrices.pushPose();
                 matrices.translate(0.0, signY, 0.0);
                 //? if >=1.21 {
-                /*this.renderLabelIfPresent(npc, net.minecraft.text.Text.literal(line), matrices, vcp,
+                /*this.renderNameTag(npc, net.minecraft.network.chat.Component.literal(line), matrices, vcp,
                         light, tickDelta);
                 *///?} else {
-                this.renderLabelIfPresent(npc, net.minecraft.text.Text.literal(line), matrices, vcp, light);
+                this.renderNameTag(npc, net.minecraft.network.chat.Component.literal(line), matrices, vcp, light);
                 //?}
-                matrices.pop();
+                matrices.popPose();
             }
             signY += NpcBillboard.LINE_HEIGHT;
         }
@@ -119,25 +119,25 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
 
     private static void copyAnimationState(NotchNpcEntity npc, LivingEntity le) {
-        le.limbAnimator.setSpeed(npc.limbAnimator.getSpeed());
-        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.limbAnimator)
-                .notchcurrency$setPos(npc.limbAnimator.getPos());
+        le.walkAnimation.setSpeed(npc.walkAnimation.speed());
+        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.walkAnimation)
+                .notchcurrency$setPos(npc.walkAnimation.position());
         // Both ends of the interpolation, or the limbs stutter between frames.
-        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.limbAnimator)
-                .notchcurrency$setPrevSpeed(npc.limbAnimator.getSpeed(0.0f));
+        ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.walkAnimation)
+                .notchcurrency$setPrevSpeed(npc.walkAnimation.speed(0.0f));
 
-        le.handSwinging = npc.handSwinging;
-        le.handSwingTicks = npc.handSwingTicks;
-        le.handSwingProgress = npc.handSwingProgress;
-        le.lastHandSwingProgress = npc.lastHandSwingProgress;
+        le.swinging = npc.swinging;
+        le.swingTime = npc.swingTime;
+        le.attackAnim = npc.attackAnim;
+        le.oAttackAnim = npc.oAttackAnim;
     }
 
     private Entity getProxy(String typeId) {
         if (proxies.containsKey(typeId)) return proxies.get(typeId);
         Entity proxy = null;
         try {
-            EntityType<?> type = Registries.ENTITY_TYPE.get(Reg.parse(typeId));
-            var world = MinecraftClient.getInstance().world;
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(Reg.parse(typeId));
+            var world = Minecraft.getInstance().level;
             if (type != null && world != null) proxy = type.create(world);
         } catch (Exception ignored) {}
         proxies.put(typeId, proxy); // caches null too, so we don't retry a bad type every frame
@@ -145,7 +145,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
 
     @Override
-    public Identifier getTexture(NotchNpcEntity entity) {
-        return biped.getTexture(entity);
+    public ResourceLocation getTextureLocation(NotchNpcEntity entity) {
+        return biped.getTextureLocation(entity);
     }
 }

@@ -3,16 +3,15 @@ package net.fugginbeenus.notchcurrency.economy.raffle;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -22,7 +21,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-public class RaffleState extends PersistentState {
+public class RaffleState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_raffle";
 
@@ -52,8 +51,8 @@ public class RaffleState extends PersistentState {
     private final Set<UUID> redeemedThisRound = new HashSet<>(); // one old-ticket redemption per player per round
 
     public static RaffleState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, RaffleState::new, RaffleState::fromNbt, DATA_KEY);
     }
 
@@ -67,7 +66,7 @@ public class RaffleState extends PersistentState {
         tickets.merge(buyer, count, Integer::sum);
         names.put(buyer, name);
         pot += potShare;
-        markDirty();
+        setDirty();
     }
 
     public long getPot() {
@@ -80,7 +79,7 @@ public class RaffleState extends PersistentState {
 
     public void setCoinsPool(long c) {
         coinsPool = Math.max(0L, c);
-        markDirty();
+        setDirty();
     }
 
     public ItemStack getPrizeItem() {
@@ -89,7 +88,7 @@ public class RaffleState extends PersistentState {
 
     public void setPrizeItem(ItemStack stack) {
         prizeItem = stack == null ? ItemStack.EMPTY : stack.copy();
-        markDirty();
+        setDirty();
     }
 
     public int getTickets(UUID player) {
@@ -112,7 +111,7 @@ public class RaffleState extends PersistentState {
 
     public void markRedeemed(UUID player) {
         redeemedThisRound.add(player);
-        markDirty();
+        setDirty();
     }
 
     @Nullable
@@ -140,7 +139,7 @@ public class RaffleState extends PersistentState {
         tickets.clear();
         names.clear();
         redeemedThisRound.clear();
-        markDirty();
+        setDirty();
         return drawn;
     }
 
@@ -152,7 +151,7 @@ public class RaffleState extends PersistentState {
         tickets.clear();
         names.clear();
         redeemedThisRound.clear();
-        markDirty();
+        setDirty();
     }
 
     public void clearEntries() {
@@ -161,7 +160,7 @@ public class RaffleState extends PersistentState {
         tickets.clear();
         names.clear();
         redeemedThisRound.clear();
-        markDirty();
+        setDirty();
     }
 
     // ---- unclaimed wins ----
@@ -182,7 +181,7 @@ public class RaffleState extends PersistentState {
     public List<Result> claimWins(UUID player) {
         List<Result> won = getUnclaimedWins(player);
         for (Result r : won) unclaimed.remove(r.round);
-        if (!won.isEmpty()) markDirty();
+        if (!won.isEmpty()) setDirty();
         return won;
     }
 
@@ -190,30 +189,30 @@ public class RaffleState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
         nbt.putLong("Round", currentRound);
         nbt.putLong("Pot", pot);
         nbt.putLong("CoinsPool", coinsPool);
         if (!prizeItem.isEmpty()) nbt.put("PrizeItem", StackData.writeStack(prizeItem));
 
-        NbtList ticketList = new NbtList();
+        ListTag ticketList = new ListTag();
         for (Map.Entry<UUID, Integer> e : tickets.entrySet()) {
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Player", e.getKey());
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Player", e.getKey());
             o.putInt("Count", e.getValue());
             o.putString("Name", names.getOrDefault(e.getKey(), "Someone"));
             ticketList.add(o);
         }
         nbt.put("Tickets", ticketList);
 
-        NbtList winList = new NbtList();
+        ListTag winList = new ListTag();
         for (Result r : unclaimed.values()) {
-            NbtCompound o = new NbtCompound();
+            CompoundTag o = new CompoundTag();
             o.putLong("Round", r.round);
-            o.putUuid("Winner", r.winner);
+            o.putUUID("Winner", r.winner);
             o.putString("Name", r.winnerName);
             o.putLong("Prize", r.prize);
             if (!r.prizeItem.isEmpty()) o.put("PrizeItem", StackData.writeStack(r.prizeItem));
@@ -221,30 +220,30 @@ public class RaffleState extends PersistentState {
         }
         nbt.put("Unclaimed", winList);
 
-        NbtList redeemed = new NbtList();
+        ListTag redeemed = new ListTag();
         for (UUID u : redeemedThisRound) {
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Id", u);
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Id", u);
             redeemed.add(o);
         }
         nbt.put("Redeemed", redeemed);
         return nbt;
     }
 
-    public static RaffleState fromNbt(NbtCompound nbt) {
+    public static RaffleState fromNbt(CompoundTag nbt) {
         RaffleState state = new RaffleState();
         state.currentRound = Math.max(1L, nbt.getLong("Round"));
         state.pot = nbt.getLong("Pot");
         state.coinsPool = nbt.getLong("CoinsPool");
-        if (nbt.contains("PrizeItem", NbtElement.COMPOUND_TYPE)) {
+        if (nbt.contains("PrizeItem", Tag.TAG_COMPOUND)) {
             state.prizeItem = StackData.readStack(nbt.getCompound("PrizeItem"));
         }
 
-        NbtList ticketList = nbt.getList("Tickets", NbtElement.COMPOUND_TYPE);
+        ListTag ticketList = nbt.getList("Tickets", Tag.TAG_COMPOUND);
         for (int i = 0; i < ticketList.size(); i++) {
-            NbtCompound o = ticketList.getCompound(i);
+            CompoundTag o = ticketList.getCompound(i);
             try {
-                UUID id = o.getUuid("Player");
+                UUID id = o.getUUID("Player");
                 state.tickets.put(id, o.getInt("Count"));
                 state.names.put(id, o.getString("Name"));
             } catch (IllegalArgumentException ignored) {
@@ -252,24 +251,24 @@ public class RaffleState extends PersistentState {
             }
         }
 
-        NbtList winList = nbt.getList("Unclaimed", NbtElement.COMPOUND_TYPE);
+        ListTag winList = nbt.getList("Unclaimed", Tag.TAG_COMPOUND);
         for (int i = 0; i < winList.size(); i++) {
-            NbtCompound o = winList.getCompound(i);
+            CompoundTag o = winList.getCompound(i);
             try {
                 long round = o.getLong("Round");
-                ItemStack prize = o.contains("PrizeItem", NbtElement.COMPOUND_TYPE)
+                ItemStack prize = o.contains("PrizeItem", Tag.TAG_COMPOUND)
                         ? StackData.readStack(o.getCompound("PrizeItem")) : ItemStack.EMPTY;
-                state.unclaimed.put(round, new Result(round, o.getUuid("Winner"),
+                state.unclaimed.put(round, new Result(round, o.getUUID("Winner"),
                         o.getString("Name"), o.getLong("Prize"), prize));
             } catch (IllegalArgumentException ignored) {
                 // skip malformed entry
             }
         }
 
-        NbtList redeemed = nbt.getList("Redeemed", NbtElement.COMPOUND_TYPE);
+        ListTag redeemed = nbt.getList("Redeemed", Tag.TAG_COMPOUND);
         for (int i = 0; i < redeemed.size(); i++) {
             try {
-                state.redeemedThisRound.add(redeemed.getCompound(i).getUuid("Id"));
+                state.redeemedThisRound.add(redeemed.getCompound(i).getUUID("Id"));
             } catch (IllegalArgumentException ignored) {
                 // skip malformed entry
             }

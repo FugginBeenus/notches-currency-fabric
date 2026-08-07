@@ -9,14 +9,13 @@ import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.fugginbeenus.notchcurrency.economy.EconomyLedger;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.server.level.ServerPlayer;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,14 +28,14 @@ public final class EcoCommands {
 
     private EcoCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // ===== /baltop (everyone) =====
         dispatcher.register(
-                CommandManager.literal("baltop")
+                Commands.literal("baltop")
                         .executes(ctx -> {
-                            ServerCommandSource src = ctx.getSource();
-                            for (Text line : EconomyLeaderboard.topLines(src.getServer(), TOP_LIMIT)) {
-                                src.sendFeedback(() -> line, false);
+                            CommandSourceStack src = ctx.getSource();
+                            for (Component line : EconomyLeaderboard.topLines(src.getServer(), TOP_LIMIT)) {
+                                src.sendSuccess(() -> line, false);
                             }
                             return 1;
                         })
@@ -44,9 +43,9 @@ public final class EcoCommands {
 
         // ===== /receipts (everyone). Your recent transaction history =====
         dispatcher.register(
-                CommandManager.literal("receipts")
+                Commands.literal("receipts")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             if (p != null) net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler.open(p);
                             return 1;
                         })
@@ -54,35 +53,35 @@ public final class EcoCommands {
 
         // ===== /eco (admin) =====
         dispatcher.register(
-                CommandManager.literal("eco")
-                        .requires(s -> s.hasPermissionLevel(2))
-                        .then(CommandManager.literal("give")
-                                .then(CommandManager.argument("target", EntityArgumentType.player())
-                                        .then(CommandManager.argument("amount", LongArgumentType.longArg(1))
+                Commands.literal("eco")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("target", EntityArgument.player())
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(1))
                                                 .executes(ctx -> adjust(ctx.getSource(),
-                                                        EntityArgumentType.getPlayer(ctx, "target"),
+                                                        EntityArgument.getPlayer(ctx, "target"),
                                                         LongArgumentType.getLong(ctx, "amount"), Mode.GIVE)))))
-                        .then(CommandManager.literal("take")
-                                .then(CommandManager.argument("target", EntityArgumentType.player())
-                                        .then(CommandManager.argument("amount", LongArgumentType.longArg(1))
+                        .then(Commands.literal("take")
+                                .then(Commands.argument("target", EntityArgument.player())
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(1))
                                                 .executes(ctx -> adjust(ctx.getSource(),
-                                                        EntityArgumentType.getPlayer(ctx, "target"),
+                                                        EntityArgument.getPlayer(ctx, "target"),
                                                         LongArgumentType.getLong(ctx, "amount"), Mode.TAKE)))))
-                        .then(CommandManager.literal("set")
-                                .then(CommandManager.argument("target", EntityArgumentType.player())
-                                        .then(CommandManager.argument("amount", LongArgumentType.longArg(0))
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("target", EntityArgument.player())
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(0))
                                                 .executes(ctx -> adjust(ctx.getSource(),
-                                                        EntityArgumentType.getPlayer(ctx, "target"),
+                                                        EntityArgument.getPlayer(ctx, "target"),
                                                         LongArgumentType.getLong(ctx, "amount"), Mode.SET)))))
-                        .then(CommandManager.literal("stats")
+                        .then(Commands.literal("stats")
                                 .executes(ctx -> stats(ctx.getSource())))
         );
     }
 
     private enum Mode { GIVE, TAKE, SET }
 
-    private static int adjust(ServerCommandSource src, ServerPlayerEntity target, long amount, Mode mode) {
-        String admin = src.getName();
+    private static int adjust(CommandSourceStack src, ServerPlayer target, long amount, Mode mode) {
+        String admin = src.getTextName();
         long newBal;
         String verb;
         switch (mode) {
@@ -93,17 +92,17 @@ public final class EcoCommands {
         NotchPackets.sendBalance(target, newBal);
 
         final long fNew = newBal;
-        src.sendFeedback(() -> Text.literal(verb + " ")
-                .append(Text.literal(amount + " ").formatted(Formatting.GOLD))
+        src.sendSuccess(() -> Component.literal(verb + " ")
+                .append(Component.literal(amount + " ").withStyle(ChatFormatting.GOLD))
                 .append(coinIcon())
-                .append(Text.literal(" " + (mode == Mode.SET ? "for " : (mode == Mode.GIVE ? "to " : "from ")))
-                        .formatted(Formatting.GREEN))
-                .append(Text.literal(target.getName().getString()).formatted(Formatting.AQUA))
-                .append(Text.literal(" (now " + fNew + ")").formatted(Formatting.GRAY)), true);
+                .append(Component.literal(" " + (mode == Mode.SET ? "for " : (mode == Mode.GIVE ? "to " : "from ")))
+                        .withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(target.getName().getString()).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" (now " + fNew + ")").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 
-    private static int stats(ServerCommandSource src) {
+    private static int stats(CommandSourceStack src) {
         MinecraftServer server = src.getServer();
         BalanceState state = BalanceState.get(server);
         long supply = state.totalSupply();
@@ -112,20 +111,20 @@ public final class EcoCommands {
         long destroyed = EconomyLedger.getSessionDestroyed();
         long net = created - destroyed;
 
-        src.sendFeedback(() -> Text.literal("─── Economy Stats ───").formatted(Formatting.GOLD), false);
-        src.sendFeedback(() -> Text.literal("Money supply: ").formatted(Formatting.GRAY)
-                .append(Text.literal(supply + " ").formatted(Formatting.GOLD)).append(coinIcon()), false);
-        src.sendFeedback(() -> Text.literal("Accounts: ").formatted(Formatting.GRAY)
-                .append(Text.literal(String.valueOf(accounts)).formatted(Formatting.WHITE)), false);
-        src.sendFeedback(() -> Text.literal("Since restart - created: ").formatted(Formatting.GRAY)
-                .append(Text.literal(String.valueOf(created)).formatted(Formatting.GREEN))
-                .append(Text.literal(", destroyed: ").formatted(Formatting.GRAY))
-                .append(Text.literal(String.valueOf(destroyed)).formatted(Formatting.RED))
-                .append(Text.literal(", net: ").formatted(Formatting.GRAY))
-                .append(Text.literal(String.valueOf(net)).formatted(net >= 0 ? Formatting.GREEN : Formatting.RED)), false);
+        src.sendSuccess(() -> Component.literal("─── Economy Stats ───").withStyle(ChatFormatting.GOLD), false);
+        src.sendSuccess(() -> Component.literal("Money supply: ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(supply + " ").withStyle(ChatFormatting.GOLD)).append(coinIcon()), false);
+        src.sendSuccess(() -> Component.literal("Accounts: ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(String.valueOf(accounts)).withStyle(ChatFormatting.WHITE)), false);
+        src.sendSuccess(() -> Component.literal("Since restart - created: ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(String.valueOf(created)).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(", destroyed: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(destroyed)).withStyle(ChatFormatting.RED))
+                .append(Component.literal(", net: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(net)).withStyle(net >= 0 ? ChatFormatting.GREEN : ChatFormatting.RED)), false);
         if (net > 0) {
-            src.sendFeedback(() -> Text.literal("⚠ Faucets are outpacing sinks - inflation risk.")
-                    .formatted(Formatting.YELLOW), false);
+            src.sendSuccess(() -> Component.literal("⚠ Faucets are outpacing sinks - inflation risk.")
+                    .withStyle(ChatFormatting.YELLOW), false);
         }
         return 1;
     }

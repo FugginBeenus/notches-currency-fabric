@@ -6,18 +6,17 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.client.ui.NpcPreviewWidget;
 import net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler> {
+public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScreenHandler> {
 
     private static final int W = 248, H = 240;
     private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 148, ROW_H = 20, ROW_STEP = 21;
@@ -30,34 +29,34 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
     private boolean draggingScroll;
 
-    public CosmeticShopScreen(CosmeticShopScreenHandler handler, PlayerInventory inv, Text title) {
+    public CosmeticShopScreen(CosmeticShopScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     private record Cell(ItemStack icon, String id, String name, long price, boolean owned) {}
 
     private Cell cell(int i) {
-        ItemStack s = handler.rowStack(i);
+        ItemStack s = menu.rowStack(i);
         if (s.isEmpty()) return null;
-        NbtCompound t = StackData.getData(s);
+        CompoundTag t = StackData.getData(s);
         if (!t.contains("nc_cid")) return null;
         return new Cell(s, t.getString("nc_cid"), t.getString("nc_name"),
                 t.getLong("nc_price"), t.getBoolean("nc_owned"));
     }
 
-    private int rowY(int i) { return this.y + LIST_Y + i * ROW_STEP; }
-    private int pages() { return Math.max(1, handler.prop(CosmeticShopScreenHandler.P_TOTAL_PAGES)); }
-    private int page() { return handler.prop(CosmeticShopScreenHandler.P_PAGE); }
+    private int rowY(int i) { return this.topPos + LIST_Y + i * ROW_STEP; }
+    private int pages() { return Math.max(1, menu.prop(CosmeticShopScreenHandler.P_TOTAL_PAGES)); }
+    private int page() { return menu.prop(CosmeticShopScreenHandler.P_PAGE); }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Cosmetics", x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7);
 
         // Recessed container boxes: the cosmetics list, and the portrait.
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
@@ -73,16 +72,16 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
             NotchWidgets.button(ctx, x + LIST_X, ry, ROW_W, ROW_H, hover, false);
 
             if (c.owned()) {
-                ctx.drawText(this.textRenderer, Text.literal("Owned").formatted(Formatting.DARK_GREEN),
+                ctx.drawString(this.font, Component.literal("Owned").withStyle(ChatFormatting.DARK_GREEN),
                         x + LIST_X + 6, ry + 6, NotchTheme.TEXT_DARK, false);
             } else {
                 // Coin cost with the vanilla stack-count renderer, like emeralds in villager trades.
-                ctx.drawItem(COIN, x + LIST_X + 4, ry + 2);
-                ctx.drawItemInSlot(this.textRenderer, COIN, x + LIST_X + 4, ry + 2,
+                ctx.renderItem(COIN, x + LIST_X + 4, ry + 2);
+                ctx.renderItemDecorations(this.font, COIN, x + LIST_X + 4, ry + 2,
                         NotchWidgets.compactCount(c.price()));
             }
             arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
-            ctx.drawItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
+            ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
         // Scrollbar.
@@ -92,7 +91,7 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
         }
 
         // Framed NPC portrait.
-        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
+        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
 
         // Divider + player inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
@@ -106,7 +105,7 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
         }
     }
 
-    private static void arrow(DrawContext ctx, int x, int y, int color) {
+    private static void arrow(GuiGraphics ctx, int x, int y, int color) {
         ctx.fill(x, y + 3, x + 10, y + 5, color);
         for (int i = 0; i < 4; i++) {
             ctx.fill(x + 10 + i, y + i, x + 11 + i, y + 8 - i, color);
@@ -116,25 +115,25 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     private int thumbH() { return Math.max(18, SB_H / pages()); }
     private int thumbY() {
         int tp = pages();
-        if (tp <= 1) return this.y + SB_Y;
-        return this.y + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
+        if (tp <= 1) return this.topPos + SB_Y;
+        return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
         super.render(ctx, mouseX, mouseY, delta);
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
-            if (c != null && over(mouseX, mouseY, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
-                List<Text> lines = new ArrayList<>();
-                lines.add(Text.literal(c.name()));
+            if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
+                List<Component> lines = new ArrayList<>();
+                lines.add(Component.literal(c.name()));
                 lines.add(NotchWidgets.priceText(c.price(), "", 0));
-                lines.add(c.owned() ? Text.literal("Owned").formatted(Formatting.GREEN)
-                        : Text.literal("Click to buy").formatted(Formatting.DARK_GRAY));
-                ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+                lines.add(c.owned() ? Component.literal("Owned").withStyle(ChatFormatting.GREEN)
+                        : Component.literal("Click to buy").withStyle(ChatFormatting.DARK_GRAY));
+                ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
                 return;
             }
         }
@@ -146,13 +145,13 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
                 Cell c = cell(i);
-                if (c != null && !c.owned() && over(mx, my, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
+                if (c != null && !c.owned() && over(mx, my, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendCosmeticBuy(c.id());
                     return true;
                 }
             }
-            if (pages() > 1 && over(mx, my, x + SB_X, y + SB_Y, SB_W, SB_H)) {
+            if (pages() > 1 && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
                 if (my < thumbY()) { NotchWidgets.tick(); clickButton(0); return true; }
                 if (my >= thumbY() + thumbH()) { NotchWidgets.tick(); clickButton(1); return true; }
                 draggingScroll = true;
@@ -165,7 +164,7 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
         if (draggingScroll && pages() > 1) {
-            int rel = (int) mouseY - (this.y + SB_Y) - thumbH() / 2;
+            int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH() / 2;
             int track = SB_H - thumbH();
             int target = track <= 0 ? 0 : Math.round(rel / (float) track * (pages() - 1));
             target = Math.max(0, Math.min(pages() - 1, target));
@@ -200,8 +199,8 @@ public class CosmeticShopScreen extends HandledScreen<CosmeticShopScreenHandler>
     }
 
     private void clickButton(int id) {
-        if (this.client != null && this.client.interactionManager != null) {
-            this.client.interactionManager.clickButton(this.handler.syncId, id);
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, id);
         }
     }
 

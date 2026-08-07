@@ -2,18 +2,18 @@ package net.fugginbeenus.notchcurrency.npc;
 
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-public class NpcEquipScreenHandler extends ScreenHandler {
+public class NpcEquipScreenHandler extends AbstractContainerMenu {
 
     // Slot coordinates (client draws insets at these -1). Gear lives in the left container box;
     // the right box is the live preview; the player inventory sits below the divider. Trinket slots
@@ -24,7 +24,7 @@ public class NpcEquipScreenHandler extends ScreenHandler {
     public static final int TRINKET_X = 116, TRINKET_Y = 28;         // 2 cols × up to 4 rows
     public static final int MAX_TRINKETS = 8;
 
-    private final Inventory equip;
+    private final Container equip;
     @Nullable private final NotchNpcEntity npc;
     @Nullable private final java.util.UUID npcId;
     private final int trinketCount;
@@ -32,11 +32,11 @@ public class NpcEquipScreenHandler extends ScreenHandler {
 
     private static EquipmentSlot preferredSlot(ItemStack stack) {
         //? if >=1.21 {
-        /*net.minecraft.item.Equipment eq = net.minecraft.item.Equipment.fromStack(stack);
-        if (eq != null) return eq.getSlotType();
-        return stack.isOf(net.minecraft.item.Items.SHIELD) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
+        /*net.minecraft.world.item.Equipable eq = net.minecraft.world.item.Equipable.get(stack);
+        if (eq != null) return eq.getEquipmentSlot();
+        return stack.is(net.minecraft.world.item.Items.SHIELD) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
         *///?} else {
-        return LivingEntity.getPreferredEquipmentSlot(stack);
+        return LivingEntity.getEquipmentSlotForItem(stack);
         //?}
     }
 
@@ -48,18 +48,18 @@ public class NpcEquipScreenHandler extends ScreenHandler {
         //?}
     }
 
-    public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, net.minecraft.network.PacketByteBuf buf) {
-        this(syncId, playerInv, new SimpleInventory(NpcEquipmentInventory.ORDER.length), null,
-                buf.readBoolean() ? buf.readUuid() : null);
+    public NpcEquipScreenHandler(int containerId, Inventory playerInv, net.minecraft.network.FriendlyByteBuf buf) {
+        this(containerId, playerInv, new SimpleContainer(NpcEquipmentInventory.ORDER.length), null,
+                buf.readBoolean() ? buf.readUUID() : null);
     }
 
-    public NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, Inventory equip, @Nullable NotchNpcEntity npc) {
-        this(syncId, playerInv, equip, npc, npc != null ? npc.getUuid() : null);
+    public NpcEquipScreenHandler(int containerId, Inventory playerInv, Container equip, @Nullable NotchNpcEntity npc) {
+        this(containerId, playerInv, equip, npc, npc != null ? npc.getUUID() : null);
     }
 
-    private NpcEquipScreenHandler(int syncId, PlayerInventory playerInv, Inventory equip,
+    private NpcEquipScreenHandler(int containerId, Inventory playerInv, Container equip,
                                   @Nullable NotchNpcEntity npc, @Nullable java.util.UUID npcId) {
-        super(ModScreenHandlers.NPC_EQUIP, syncId);
+        super(ModScreenHandlers.NPC_EQUIP, containerId);
         this.equip = equip;
         this.npc = npc;
         this.npcId = npcId;
@@ -96,8 +96,8 @@ public class NpcEquipScreenHandler extends ScreenHandler {
                 labels[i] = spec.slot();
                 int sx = TRINKET_X + (i % 2) * 18;
                 int sy = TRINKET_Y + (i / 2) * 18;
-                Inventory backing = npc != null ? NpcTrinkets.inventoryFor(npc, spec.group(), spec.slot()) : null;
-                this.addSlot(new Slot(backing != null ? backing : new SimpleInventory(spec.index() + 1),
+                Container backing = npc != null ? NpcTrinkets.inventoryFor(npc, spec.group(), spec.slot()) : null;
+                this.addSlot(new Slot(backing != null ? backing : new SimpleContainer(spec.index() + 1),
                         spec.index(), sx, sy));
                 count++;
             }
@@ -120,28 +120,28 @@ public class NpcEquipScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         Slot slot = this.slots.get(index);
-        if (!slot.hasStack()) return ItemStack.EMPTY;
-        ItemStack stack = slot.getStack();
+        if (!slot.hasItem()) return ItemStack.EMPTY;
+        ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
         if (index < 6 || index >= 42) {
             // NPC gear or trinket slot -> player inventory.
-            if (!this.insertItem(stack, 6, 42, true)) return ItemStack.EMPTY;
+            if (!this.moveItemStackTo(stack, 6, 42, true)) return ItemStack.EMPTY;
         } else {
             // Player inventory -> the item's preferred slot (armor to its piece, else the hands).
             EquipmentSlot preferred = preferredSlot(stack);
             int target = indexOf(preferred);
-            boolean moved = target >= 0 && this.insertItem(stack, target, target + 1, false);
+            boolean moved = target >= 0 && this.moveItemStackTo(stack, target, target + 1, false);
             if (!moved && !isArmor(preferred)) {
-                moved = this.insertItem(stack, 4, 6, false); // either hand
+                moved = this.moveItemStackTo(stack, 4, 6, false); // either hand
             }
             if (!moved) return ItemStack.EMPTY;
         }
 
-        if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-        else slot.markDirty();
+        if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+        else slot.setChanged();
         return original;
     }
 
@@ -153,26 +153,26 @@ public class NpcEquipScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
-        return npc == null || (npc.isAlive() && player.squaredDistanceTo(npc) <= 64.0);
+    public boolean stillValid(Player player) {
+        return npc == null || (npc.isAlive() && player.distanceToSqr(npc) <= 64.0);
     }
 
     private static class EquipSlot extends Slot {
         private final EquipmentSlot type;
 
-        EquipSlot(Inventory inv, int index, int x, int y, EquipmentSlot type) {
+        EquipSlot(Container inv, int index, int x, int y, EquipmentSlot type) {
             super(inv, index, x, y);
             this.type = type;
         }
 
         @Override
-        public boolean canInsert(ItemStack stack) {
+        public boolean mayPlace(ItemStack stack) {
             if (!isArmor(type)) return true;
             return preferredSlot(stack) == type;
         }
 
         @Override
-        public int getMaxItemCount() {
+        public int getMaxStackSize() {
             return isArmor(type) ? 1 : 64;
         }
     }

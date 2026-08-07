@@ -45,7 +45,7 @@ public final class NpcActionSweep {
 
         if (removed > 0) {
             LOGGER.info("Removed {} admin-only action(s) from NPC {} - its owner ({}) isn't an operator",
-                    removed, npc.getUuid(), npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName());
+                    removed, npc.getUUID(), npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName());
         }
     }
 

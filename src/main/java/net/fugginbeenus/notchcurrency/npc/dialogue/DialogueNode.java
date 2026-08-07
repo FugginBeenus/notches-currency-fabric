@@ -1,11 +1,10 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 public class DialogueNode {
 
@@ -29,20 +28,20 @@ public class DialogueNode {
         return this;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Id", id);
-        nbt.putString("Text", text);
-        NbtList list = new NbtList();
+        nbt.putString("Component", text);
+        ListTag list = new ListTag();
         for (DialogueChoice c : choices) list.add(c.toNbt());
         nbt.put("Choices", list);
         return nbt;
     }
 
-    public static DialogueNode fromNbt(NbtCompound nbt) {
+    public static DialogueNode fromNbt(CompoundTag nbt) {
         DialogueNode n = new DialogueNode(nbt.getString("Id"));
-        n.text = nbt.getString("Text");
-        NbtList list = nbt.getList("Choices", NbtElement.COMPOUND_TYPE);
+        n.text = nbt.getString("Component");
+        ListTag list = nbt.getList("Choices", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) n.choices.add(DialogueChoice.fromNbt(list.getCompound(i)));
         return n;
     }

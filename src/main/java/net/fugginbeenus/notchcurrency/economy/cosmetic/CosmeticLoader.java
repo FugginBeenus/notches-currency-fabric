@@ -4,9 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +19,18 @@ public class CosmeticLoader implements SimpleSynchronousResourceReloadListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-Cosmetics");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return NotchCurrency.id("cosmetics");
     }
 
     @Override
-    public void reload(ResourceManager manager) {
+    public void onResourceManagerReload(ResourceManager manager) {
         CosmeticRegistry.clear();
-        for (Map.Entry<Identifier, Resource> e : manager
-                .findResources("cosmetics", id -> id.getPath().endsWith(".json")).entrySet()) {
+        for (Map.Entry<ResourceLocation, Resource> e : manager
+                .listResources("cosmetics", id -> id.getPath().endsWith(".json")).entrySet()) {
             String path = e.getKey().getPath();               // "cosmetics/halo.json"
             String offerId = path.substring("cosmetics/".length(), path.length() - ".json".length());
-            try (InputStream is = e.getValue().getInputStream();
+            try (InputStream is = e.getValue().open();
                  InputStreamReader reader = new InputStreamReader(is)) {
                 JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
                 CosmeticRegistry.put(CosmeticOffer.fromJson(offerId, o));

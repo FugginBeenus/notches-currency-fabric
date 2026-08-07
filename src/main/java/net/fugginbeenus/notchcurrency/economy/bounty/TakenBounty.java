@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 
 public class TakenBounty {
 
@@ -31,15 +31,15 @@ public class TakenBounty {
         return expiresGameTime > 0 && now >= expiresGameTime;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound o = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag o = new CompoundTag();
         o.put("Bounty", bounty.toNbt());
         o.putLong("Expires", expiresGameTime);
         o.putInt("Progress", progress);
         return o;
     }
 
-    public static TakenBounty fromNbt(NbtCompound o) {
+    public static TakenBounty fromNbt(CompoundTag o) {
         return new TakenBounty(Bounty.fromNbt(o.getCompound("Bounty")), o.getLong("Expires"), o.getInt("Progress"));
     }
 }

@@ -2,16 +2,16 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.auction.UserListingsScreenHandler;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 
-public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler> {
+public class UserListingsScreen extends AbstractContainerScreen<UserListingsScreenHandler> {
 
-    private static final Identifier TEX =
+    private static final ResourceLocation TEX =
             NotchCurrency.id("textures/gui/auction/userauctions.png");
 
     // --- popup window size within the texture ---
@@ -45,20 +45,20 @@ public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler>
 
     private static final boolean DEBUG_OUTLINES = false; // set true while lining up hitboxes
 
-    private ButtonWidget closeButton;
-    private ButtonWidget minusButton; // not wired yet, but reserved
+    private Button closeButton;
+    private Button minusButton; // not wired yet, but reserved
 
     public UserListingsScreen(UserListingsScreenHandler handler,
-                              PlayerInventory playerInventory,
-                              Text title) {
+                              Inventory playerInventory,
+                              Component title) {
         super(handler, playerInventory, title);
 
-        this.backgroundWidth  = POPUP_W;
-        this.backgroundHeight = POPUP_H;
+        this.imageWidth  = POPUP_W;
+        this.imageHeight = POPUP_H;
 
         // Hide default titles; we draw our own player name
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     @Override
@@ -66,59 +66,59 @@ public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler>
         super.init();
 
         // Center popup in the middle of the screen
-        this.x = (this.width  - this.backgroundWidth)  / 2;
-        this.y = (this.height - this.backgroundHeight) / 2;
+        this.leftPos = (this.width  - this.imageWidth)  / 2;
+        this.topPos = (this.height - this.imageHeight) / 2;
 
         // If you want a slight nudge relative to the AH screen, adjust here:
         int xNudge = 0;  // e.g. +10 to move right a bit
         int yNudge = -10; // move slightly up if you like
-        this.x += xNudge;
-        this.y += yNudge;
+        this.leftPos += xNudge;
+        this.topPos += yNudge;
 
-        this.clearChildren();
+        this.clearWidgets();
 
         // Close (X) button
-        closeButton = ButtonWidget.builder(Text.empty(), b -> {
+        closeButton = Button.builder(Component.empty(), b -> {
                     // simply close the popup
-                    if (this.client != null) {
-                        this.client.player.closeHandledScreen();
+                    if (this.minecraft != null) {
+                        this.minecraft.player.closeContainer();
                     }
                 })
-                .dimensions(this.x + CLOSE_X, this.y + CLOSE_Y, CLOSE_W, CLOSE_H)
+                .bounds(this.leftPos + CLOSE_X, this.topPos + CLOSE_Y, CLOSE_W, CLOSE_H)
                 .build();
         closeButton.setAlpha(0.0f); // invisible; texture provides the visuals
-        addDrawableChild(closeButton);
+        addRenderableWidget(closeButton);
 
         // Optional minus button (currently does nothing but you can hook it later)
-        minusButton = ButtonWidget.builder(Text.empty(), b -> {
+        minusButton = Button.builder(Component.empty(), b -> {
                     // TODO: collapse / minimize if you want that behavior
                 })
-                .dimensions(this.x + MINUS_X, this.y + MINUS_Y, MINUS_W, MINUS_H)
+                .bounds(this.leftPos + MINUS_X, this.topPos + MINUS_Y, MINUS_W, MINUS_H)
                 .build();
         minusButton.setAlpha(0.0f);
-        addDrawableChild(minusButton);
+        addRenderableWidget(minusButton);
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
         // Draw just the popup window from the texture (top-left 176×96)
-        ctx.drawTexture(TEX,
-                this.x, this.y,       // screen position
+        ctx.blit(TEX,
+                this.leftPos, this.topPos,       // screen position
                 0, 0,                 // U,V in the texture
-                this.backgroundWidth, // width to draw
-                this.backgroundHeight // height to draw
+                this.imageWidth, // width to draw
+                this.imageHeight // height to draw
         );
     }
 
     @Override
-    protected void drawForeground(DrawContext ctx, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
         // Draw player name in the header area
-        String name = this.client != null && this.client.player != null
-                ? this.client.player.getName().getString()
+        String name = this.minecraft != null && this.minecraft.player != null
+                ? this.minecraft.player.getName().getString()
                 : "";
 
-        ctx.drawText(
-                this.textRenderer,
+        ctx.drawString(
+                this.font,
                 name,
                 NAME_X,   // GUI-local coords (relative to popup)
                 NAME_Y,
@@ -130,10 +130,10 @@ public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler>
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Don’t dim the whole screen; we want to see the world / AH behind
         super.render(ctx, mouseX, mouseY, delta);
-        this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+        this.renderTooltip(ctx, mouseX, mouseY);
 
         if (DEBUG_OUTLINES) {
             outline(ctx, closeButton, 0xFFFF0000); // red
@@ -141,7 +141,7 @@ public class UserListingsScreen extends HandledScreen<UserListingsScreenHandler>
         }
     }
 
-    private void outline(DrawContext ctx, ButtonWidget btn, int color) {
+    private void outline(GuiGraphics ctx, Button btn, int color) {
         int x1 = btn.getX();
         int y1 = btn.getY();
         int x2 = x1 + btn.getWidth();

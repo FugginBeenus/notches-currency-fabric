@@ -3,24 +3,23 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.World;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BountyBoardScreenHandler extends ScreenHandler {
+public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
     public static final int OFFER_SLOTS = 5;
     public static final int TAKEN_SLOTS = 5;
@@ -32,34 +31,34 @@ public class BountyBoardScreenHandler extends ScreenHandler {
 
     private int page = 0;
 
-    private final PlayerInventory playerInv;
-    private final World world;
-    private final SimpleInventory boardInv = new SimpleInventory(OFFER_SLOTS + TAKEN_SLOTS);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final Inventory playerInv;
+    private final Level world;
+    private final SimpleContainer boardInv = new SimpleContainer(OFFER_SLOTS + TAKEN_SLOTS);
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
     private static final class ReadOnlySlot extends Slot {
-        ReadOnlySlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack s) { return false; }
-        @Override public boolean canTakeItems(PlayerEntity p) { return false; }
+        ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
+        @Override public boolean mayPlace(ItemStack s) { return false; }
+        @Override public boolean mayPickup(Player p) { return false; }
     }
 
-    public BountyBoardScreenHandler(int syncId, PlayerInventory inv) {
-        super(ModScreenHandlers.BOUNTY_BOARD, syncId);
+    public BountyBoardScreenHandler(int containerId, Inventory inv) {
+        super(ModScreenHandlers.BOUNTY_BOARD, containerId);
         this.playerInv = inv;
-        this.world = inv.player.getWorld();
-        this.addProperties(props);
-        for (int i = 0; i < boardInv.size(); i++) {
+        this.world = inv.player.level();
+        this.addDataSlots(props);
+        for (int i = 0; i < boardInv.getContainerSize(); i++) {
             this.addSlot(new ReadOnlySlot(boardInv, i, -10000, -10000));
         }
         refresh();
     }
 
     public ItemStack offerStack(int i) {
-        return boardInv.getStack(i);
+        return boardInv.getItem(i);
     }
 
     public ItemStack takenStack(int i) {
-        return boardInv.getStack(OFFER_SLOTS + i);
+        return boardInv.getItem(OFFER_SLOTS + i);
     }
 
     public int prop(int i) {
@@ -67,8 +66,8 @@ public class BountyBoardScreenHandler extends ScreenHandler {
     }
 
     private void refresh() {
-        if (!(world instanceof ServerWorld)) return;
-        if (!(playerInv.player instanceof ServerPlayerEntity sp) || sp.getServer() == null) return;
+        if (!(world instanceof ServerLevel)) return;
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
         BountyState state = BountyState.get(sp.getServer());
         long now = BountyManager.worldTime(sp.getServer());
 
@@ -77,8 +76,8 @@ public class BountyBoardScreenHandler extends ScreenHandler {
         // Offers the player hasn't taken yet, paginated.
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
-            if (b.isExpired(now) || state.hasTaken(sp.getUuid(), b.getId())
-                    || state.hasCompletedOffer(sp.getUuid(), b.getId())) continue;
+            if (b.isExpired(now) || state.hasTaken(sp.getUUID(), b.getId())
+                    || state.hasCompletedOffer(sp.getUUID(), b.getId())) continue;
             avail.add(b);
         }
         int totalPages = Math.max(1, (avail.size() + OFFER_SLOTS - 1) / OFFER_SLOTS);
@@ -90,25 +89,25 @@ public class BountyBoardScreenHandler extends ScreenHandler {
         int start = page * OFFER_SLOTS;
         for (int i = 0; i < OFFER_SLOTS; i++) {
             int idx = start + i;
-            boardInv.setStack(i, idx < avail.size()
+            boardInv.setItem(i, idx < avail.size()
                     ? display(avail.get(idx), false, 0, avail.get(idx).getExpiresGameTime())
                     : ItemStack.EMPTY);
         }
 
         // The player's taken bounties.
-        List<TakenBounty> mine = state.getTakenAll(sp.getUuid());
+        List<TakenBounty> mine = state.getTakenAll(sp.getUUID());
         int t = 0;
         for (TakenBounty tb : mine) {
             if (t >= TAKEN_SLOTS) break;
-            boardInv.setStack(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime()));
+            boardInv.setItem(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime()));
         }
-        while (t < TAKEN_SLOTS) boardInv.setStack(OFFER_SLOTS + t++, ItemStack.EMPTY);
+        while (t < TAKEN_SLOTS) boardInv.setItem(OFFER_SLOTS + t++, ItemStack.EMPTY);
     }
 
     private static ItemStack display(Bounty b, boolean mine, int progress, long expiry) {
         ItemStack carrier = !b.getRewardItem().isEmpty() ? b.getRewardItem().copy() : new ItemStack(ModItems.NOTCH_COIN);
-        NbtCompound t = StackData.editData(carrier);
-        t.putUuid("bid", b.getId());
+        CompoundTag t = StackData.editData(carrier);
+        t.putUUID("bid", b.getId());
         t.putString("desc", b.describe());
         t.putString("rew", b.rewardSummary());
         t.putLong("rewc", b.getRewardCoins());
@@ -127,29 +126,29 @@ public class BountyBoardScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity)) return false;
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1; // clamped in refresh()
         else return false;
         refresh();
-        sendContentUpdates();
+        broadcastChanges();
         return true;
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

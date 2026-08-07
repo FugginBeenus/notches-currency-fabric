@@ -2,26 +2,25 @@ package net.fugginbeenus.notchcurrency.shop;
 
 import net.fugginbeenus.notchcurrency.economy.ShopRent;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
 
-public class ShopManageScreenHandler extends ScreenHandler {
+public class ShopManageScreenHandler extends AbstractContainerMenu {
 
     public static final int ROWS = 6;
 
@@ -38,30 +37,30 @@ public class ShopManageScreenHandler extends ScreenHandler {
     private final String greeting;
     @Nullable private final UUID npcId; // linked NPC, for the client-side preview
     @Nullable private final PlayerShop shop; // server side only
-    private final SimpleInventory rowInv = new SimpleInventory(ROWS);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final SimpleContainer rowInv = new SimpleContainer(ROWS);
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
     private int page = 0;
 
     private static final class ReadOnlySlot extends Slot {
-        ReadOnlySlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack s) { return false; }
-        @Override public boolean canTakeItems(PlayerEntity p) { return false; }
+        ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
+        @Override public boolean mayPlace(ItemStack s) { return false; }
+        @Override public boolean mayPickup(Player p) { return false; }
     }
 
-    public ShopManageScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
-        this(syncId, inv, buf.readUuid(), buf.readString(64), buf.readString(256),
+    public ShopManageScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
+        this(containerId, inv, buf.readUUID(), buf.readUtf(64), buf.readUtf(256),
                 ShopBrowseScreenHandler.readNpcId(buf), null);
     }
 
-    public ShopManageScreenHandler(int syncId, PlayerInventory inv, UUID shopId, String shopName,
+    public ShopManageScreenHandler(int containerId, Inventory inv, UUID shopId, String shopName,
                                    String greeting, @Nullable UUID npcId, @Nullable PlayerShop shop) {
-        super(ModScreenHandlers.SHOP_MANAGE, syncId);
+        super(ModScreenHandlers.SHOP_MANAGE, containerId);
         this.shopId = shopId;
         this.shopName = shopName;
         this.greeting = greeting;
         this.npcId = npcId;
         this.shop = shop;
-        this.addProperties(props);
+        this.addDataSlots(props);
         for (int i = 0; i < ROWS; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
@@ -72,7 +71,7 @@ public class ShopManageScreenHandler extends ScreenHandler {
     public String shopName() { return shopName; }
     public String greeting() { return greeting; }
     @Nullable public UUID npcId() { return npcId; }
-    public ItemStack rowStack(int i) { return rowInv.getStack(i); }
+    public ItemStack rowStack(int i) { return rowInv.getItem(i); }
     public int prop(int i) { return props.get(i); }
 
     public long pendingBalance() {
@@ -101,42 +100,42 @@ public class ShopManageScreenHandler extends ScreenHandler {
         int start = page * ROWS;
         for (int i = 0; i < ROWS; i++) {
             int idx = start + i;
-            rowInv.setStack(i, idx < listings.size()
+            rowInv.setItem(i, idx < listings.size()
                     ? ShopBrowseScreenHandler.displayStack(listings.get(idx)) : ItemStack.EMPTY);
         }
     }
 
     // ---- actions (server side, from the SHOP_MANAGE_ACTION packet) ----
 
-    public void handleAction(ServerPlayerEntity sp, int action, String text, @Nullable UUID listingId) {
+    public void handleAction(ServerPlayer sp, int action, String text, @Nullable UUID listingId) {
         if (shop == null) return;
-        if (!shop.getOwnerId().equals(sp.getUuid())) {
-            sp.sendMessage(Text.literal("Only the shop owner can manage this shop.").formatted(Formatting.RED), false);
+        if (!shop.getOwnerId().equals(sp.getUUID())) {
+            sp.displayClientMessage(Component.literal("Only the shop owner can manage this shop.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        ShopState state = ShopState.get(sp.getServerWorld());
+        ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
             case ACTION_RENAME -> {
                 String name = clean(text, 32);
                 if (name.isEmpty()) {
-                    sp.sendMessage(Text.literal("Give the shop a name first.").formatted(Formatting.RED), false);
+                    sp.displayClientMessage(Component.literal("Give the shop a name first.").withStyle(ChatFormatting.RED), false);
                     return;
                 }
                 shop.setShopName(name);
                 state.markDirtyAndSave();
-                sp.sendMessage(Text.literal("Shop renamed to '" + name + "'.").formatted(Formatting.GREEN), false);
+                sp.displayClientMessage(Component.literal("Shop renamed to '" + name + "'.").withStyle(ChatFormatting.GREEN), false);
             }
             case ACTION_GREETING -> {
                 shop.setShopkeeperDialog(clean(text, 128));
                 state.markDirtyAndSave();
-                sp.sendMessage(Text.literal("Greeting updated.").formatted(Formatting.GREEN), false);
+                sp.displayClientMessage(Component.literal("Greeting updated.").withStyle(ChatFormatting.GREEN), false);
             }
             case ACTION_TOGGLE_OPEN -> {
                 shop.setOpen(!shop.isOpen());
                 state.markDirtyAndSave();
-                sp.sendMessage(Text.literal(shop.isOpen() ? "Shop is now open for business."
+                sp.displayClientMessage(Component.literal(shop.isOpen() ? "Shop is now open for business."
                         : "Shop closed - nobody can buy until you reopen it.")
-                        .formatted(shop.isOpen() ? Formatting.GREEN : Formatting.YELLOW), false);
+                        .withStyle(shop.isOpen() ? ChatFormatting.GREEN : ChatFormatting.YELLOW), false);
             }
             case ACTION_EDIT_LISTING -> {
                 if (listingId != null && shop.getListing(listingId) != null) {
@@ -145,15 +144,15 @@ public class ShopManageScreenHandler extends ScreenHandler {
             }
             case ACTION_NEW_LISTING -> {
                 if (shop.getListings().size() >= PlayerShop.MAX_LISTINGS) {
-                    sp.sendMessage(Text.literal("This shop is full (" + PlayerShop.MAX_LISTINGS + " listings).")
-                            .formatted(Formatting.RED), false);
+                    sp.displayClientMessage(Component.literal("This shop is full (" + PlayerShop.MAX_LISTINGS + " listings).")
+                            .withStyle(ChatFormatting.RED), false);
                     return;
                 }
                 ShopListingEditScreenHandler.open(sp, shop, null);
             }
         }
         refresh();
-        sendContentUpdates();
+        broadcastChanges();
     }
 
     private static String clean(String s, int max) {
@@ -162,29 +161,29 @@ public class ShopManageScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity)) return false;
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1; // clamped in refresh()
         else return false;
         refresh();
-        sendContentUpdates();
+        broadcastChanges();
         return true;
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

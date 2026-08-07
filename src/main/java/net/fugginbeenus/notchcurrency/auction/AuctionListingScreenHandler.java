@@ -4,35 +4,35 @@ import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-public class AuctionListingScreenHandler extends ScreenHandler {
+public class AuctionListingScreenHandler extends AbstractContainerMenu {
 
     public static final int INPUT_X = 80, INPUT_Y = 24;
     public static final int INV_X = 8, INV_Y = 140, HOTBAR_Y = 198;
 
-    private final SimpleInventory input = new SimpleInventory(1);
-    private final PlayerInventory playerInv;
+    private final SimpleContainer input = new SimpleContainer(1);
+    private final Inventory playerInv;
     // Listing fee is price-scaled, so the client is sent the knobs and computes the live fee itself.
     public static final int P_FEE_FLAT = 0, P_FEE_PERCENT = 1, P_FEE_MAX = 2;
-    private final PropertyDelegate props = new ArrayPropertyDelegate(3);
+    private final ContainerData props = new SimpleContainerData(3);
 
-    public AuctionListingScreenHandler(int syncId, PlayerInventory inv) {
-        super(ModScreenHandlers.AUCTION_LISTING, syncId);
+    public AuctionListingScreenHandler(int containerId, Inventory inv) {
+        super(ModScreenHandlers.AUCTION_LISTING, containerId);
         this.playerInv = inv;
-        addProperties(props);
+        addDataSlots(props);
         props.set(P_FEE_FLAT, AuctionConfig.LISTING_FEE_FLAT);
         props.set(P_FEE_PERCENT, AuctionConfig.LISTING_FEE_PERCENT);
         props.set(P_FEE_MAX, AuctionConfig.LISTING_FEE_MAX);
@@ -49,10 +49,10 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         }
     }
 
-    public static void open(ServerPlayerEntity sp) {
-        sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inv, p) -> new AuctionListingScreenHandler(syncId, inv),
-                Text.literal("List an Item")));
+    public static void open(ServerPlayer sp) {
+        sp.openMenu(new SimpleMenuProvider(
+                (containerId, inv, p) -> new AuctionListingScreenHandler(containerId, inv),
+                Component.literal("List an Item")));
     }
 
     public int feeFlat() { return props.get(P_FEE_FLAT); }
@@ -66,22 +66,22 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         return Math.max(0, fee);
     }
 
-    public boolean listFromInput(ServerPlayerEntity sp, long price, int days) {
-        ItemStack item = input.getStack(0);
+    public boolean listFromInput(ServerPlayer sp, long price, int days) {
+        ItemStack item = input.getItem(0);
         if (item.isEmpty()) {
-            sp.sendMessage(Text.literal("Put the item you want to list in the slot.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Put the item you want to list in the slot.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         if (price <= 0) {
-            sp.sendMessage(Text.literal("Enter a price above 0.").formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED), false);
             return false;
         }
-        if (!(sp.getWorld() instanceof ServerWorld world)) return false;
+        if (!(sp.level() instanceof ServerLevel world)) return false;
 
         long fee = AuctionConfig.listingFee(price);
         if (fee > 0) {
             if (BalanceStore.get(sp) < fee) {
-                sp.sendMessage(Text.literal("You need " + fee + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for the listing fee.").formatted(Formatting.RED), false);
+                sp.displayClientMessage(Component.literal("You need " + fee + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for the listing fee.").withStyle(ChatFormatting.RED), false);
                 return false;
             }
             BalanceStore.subtract(sp, fee, TransactionReason.SINK, "auction listing fee");
@@ -89,7 +89,7 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         }
 
         ItemStack listed = item.copy();
-        input.setStack(0, ItemStack.EMPTY);
+        input.setItem(0, ItemStack.EMPTY);
 
         long durationTicks = 0L;
         int clampedDays = 0;
@@ -101,48 +101,48 @@ public class AuctionListingScreenHandler extends ScreenHandler {
         AuctionState state = AuctionState.get(world);
         state.addListing(world, sp, listed, price, AuctionCategories.classify(listed), durationTicks);
 
-        sp.sendMessage(Text.literal("Listed ").formatted(Formatting.GREEN)
-                .append(listed.getName().copy().formatted(Formatting.YELLOW))
-                .append(Text.literal(" for " + price + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()
-                        + (clampedDays > 0 ? " (" + clampedDays + "-day auction)." : " (buy now).")).formatted(Formatting.GREEN)), false);
-        sendContentUpdates();
+        sp.displayClientMessage(Component.literal("Listed ").withStyle(ChatFormatting.GREEN)
+                .append(listed.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" for " + price + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()
+                        + (clampedDays > 0 ? " (" + clampedDays + "-day auction)." : " (buy now).")).withStyle(ChatFormatting.GREEN)), false);
+        broadcastChanges();
         return true;
     }
 
     @Override
-    public void onClosed(PlayerEntity player) {
-        super.onClosed(player);
+    public void removed(Player player) {
+        super.removed(player);
         // Return whatever is still in the input slot so items are never lost.
-        if (!player.getWorld().isClient && !input.getStack(0).isEmpty()) {
-            ItemStack leftover = input.removeStack(0);
-            if (!player.getInventory().insertStack(leftover)) {
-                player.dropItem(leftover, false);
+        if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
+            ItemStack leftover = input.removeItemNoUpdate(0);
+            if (!player.getInventory().add(leftover)) {
+                player.drop(leftover, false);
             }
         }
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasStack()) {
-            ItemStack stack = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
             result = stack.copy();
             if (index == 0) {
                 // input slot → inventory
-                if (!this.insertItem(stack, 1, this.slots.size(), true)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, 1, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
                 // inventory → input slot (one item type at a time)
-                if (!this.insertItem(stack, 0, 1, false)) return ItemStack.EMPTY;
+                if (!this.moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
             }
-            if (stack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-            else slot.markDirty();
+            if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+            else slot.setChanged();
         }
         return result;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

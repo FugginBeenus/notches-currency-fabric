@@ -1,37 +1,36 @@
 package net.fugginbeenus.notchcurrency.client.ui;
 
+import net.minecraft.network.chat.Component;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.entity.Entity;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.Entity;
 import java.util.UUID;
 
 public final class NpcPreviewWidget {
 
     private NotchNpcEntity cached;
 
-    public void draw(DrawContext ctx, int x, int y, int w, int h, UUID npcId) {
+    public void draw(GuiGraphics ctx, int x, int y, int w, int h, UUID npcId) {
         draw(ctx, x, y, w, h, npcId, false);
     }
 
-    public void drawBust(DrawContext ctx, int x, int y, int w, int h, UUID npcId) {
+    public void drawBust(GuiGraphics ctx, int x, int y, int w, int h, UUID npcId) {
         draw(ctx, x, y, w, h, npcId, true);
     }
 
-    private void draw(DrawContext ctx, int x, int y, int w, int h, UUID npcId, boolean bust) {
+    private void draw(GuiGraphics ctx, int x, int y, int w, int h, UUID npcId, boolean bust) {
         NotchWidgets.inset(ctx, x, y, w, h, NotchTheme.DEEP);
         if (npcId == null) return;
         NotchNpcEntity npc = find(npcId);
         if (npc == null) {
-            NotchWidgets.centerText(ctx, MinecraftClient.getInstance().textRenderer, "…",
+            NotchWidgets.centerText(ctx, Minecraft.getInstance().font, "…",
                     x + w / 2, y + h / 2 - 4, NotchTheme.TEXT_MUTED, false);
             return;
         }
 
-        float mh = Math.max(0.6f, npc.getHeight());
-        float mw = Math.max(0.6f, npc.getWidth());
+        float mh = Math.max(0.6f, npc.getBbHeight());
+        float mw = Math.max(0.6f, npc.getBbWidth());
         int cx = x + w / 2;
         int size;
         int feetY;
@@ -47,14 +46,14 @@ public final class NpcPreviewWidget {
         }
 
         // Face the viewer; unhide for the preview; restore afterwards.
-        float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw, oldHead = npc.headYaw;
+        float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot, oldHead = npc.yHeadRot;
         boolean wasInvisible = npc.isInvisible();
-        npc.setYaw(180f);
-        npc.bodyYaw = 180f;
-        npc.headYaw = 180f;
+        npc.setYRot(180f);
+        npc.yBodyRot = 180f;
+        npc.yHeadRot = 180f;
         npc.setInvisible(false);
         // Hide the nametag while rendering the portrait.
-        net.minecraft.text.Text oldName = npc.getCustomName();
+        net.minecraft.network.chat.Component oldName = npc.getCustomName();
         boolean oldNameVisible = npc.isCustomNameVisible();
         npc.setCustomName(null);
         npc.setCustomNameVisible(false);
@@ -63,20 +62,20 @@ public final class NpcPreviewWidget {
         net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, feetY, size, 0f, 0f, npc);
         ctx.disableScissor();
 
-        npc.setYaw(oldYaw);
-        npc.bodyYaw = oldBody;
-        npc.headYaw = oldHead;
+        npc.setYRot(oldYaw);
+        npc.yBodyRot = oldBody;
+        npc.yHeadRot = oldHead;
         npc.setInvisible(wasInvisible);
         npc.setCustomName(oldName);
         npc.setCustomNameVisible(oldNameVisible);
     }
 
     private NotchNpcEntity find(UUID npcId) {
-        if (cached != null && !cached.isRemoved() && cached.getUuid().equals(npcId)) return cached;
-        MinecraftClient c = MinecraftClient.getInstance();
-        if (c.world == null) return null;
-        for (Entity e : c.world.getEntities()) {
-            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) {
+        if (cached != null && !cached.isRemoved() && cached.getUUID().equals(npcId)) return cached;
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
+        for (Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof NotchNpcEntity n && n.getUUID().equals(npcId)) {
                 cached = n;
                 return n;
             }

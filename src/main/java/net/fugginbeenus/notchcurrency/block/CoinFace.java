@@ -1,8 +1,8 @@
 package net.fugginbeenus.notchcurrency.block;
 
-import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.StringRepresentable;
 
-public enum CoinFace implements StringIdentifiable {
+public enum CoinFace implements StringRepresentable {
     HEADS("heads"),
     TAILS("tails");
 
@@ -11,5 +11,5 @@ public enum CoinFace implements StringIdentifiable {
     CoinFace(String name) { this.name = name; }
 
     @Override
-    public String asString() { return name; }
+    public String getSerializedName() { return name; }
 }

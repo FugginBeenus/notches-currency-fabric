@@ -1,21 +1,19 @@
 package net.fugginbeenus.notchcurrency.economy.loan;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class LoanState extends PersistentState {
+public class LoanState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_loans";
 
@@ -34,8 +32,8 @@ public class LoanState extends PersistentState {
     private final Map<UUID, Loan> loans = new HashMap<>();
 
     public static LoanState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, LoanState::new, LoanState::fromNbt, DATA_KEY);
     }
 
@@ -56,7 +54,7 @@ public class LoanState extends PersistentState {
         } else {
             l.debt += amount;
         }
-        markDirty();
+        setDirty();
     }
 
     public void setDebt(UUID player, long debt) {
@@ -64,11 +62,11 @@ public class LoanState extends PersistentState {
         if (l == null) return;
         if (debt <= 0) loans.remove(player);
         else l.debt = debt;
-        markDirty();
+        setDirty();
     }
 
     public void markDirtyPublic() {
-        markDirty();
+        setDirty();
     }
 
     public Map<UUID, Loan> snapshot() {
@@ -77,14 +75,14 @@ public class LoanState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (Map.Entry<UUID, Loan> e : loans.entrySet()) {
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Player", e.getKey());
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Player", e.getKey());
             o.putLong("Debt", e.getValue().debt);
             o.putLong("Due", e.getValue().dueTime);
             o.putBoolean("Late", e.getValue().lateFeeApplied);
@@ -94,14 +92,14 @@ public class LoanState extends PersistentState {
         return nbt;
     }
 
-    public static LoanState fromNbt(NbtCompound nbt) {
+    public static LoanState fromNbt(CompoundTag nbt) {
         LoanState state = new LoanState();
-        NbtList list = nbt.getList("Loans", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Loans", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound o = list.getCompound(i);
+            CompoundTag o = list.getCompound(i);
             try {
                 long debt = o.getLong("Debt");
-                if (debt > 0) state.loans.put(o.getUuid("Player"),
+                if (debt > 0) state.loans.put(o.getUUID("Player"),
                         new Loan(debt, o.getLong("Due"), o.getBoolean("Late")));
             } catch (IllegalArgumentException ignored) {
                 // skip

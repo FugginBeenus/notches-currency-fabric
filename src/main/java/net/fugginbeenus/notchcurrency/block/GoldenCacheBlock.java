@@ -2,53 +2,51 @@ package net.fugginbeenus.notchcurrency.block;
 
 import net.fugginbeenus.notchcurrency.crate.GoldenCacheManager;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
-
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 public class GoldenCacheBlock extends Block {
 
-    public GoldenCacheBlock(Settings settings) {
+    public GoldenCacheBlock(Properties settings) {
         super(settings);
     }
 
     @Override
     //? if >=1.21 {
-    /*public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    /*public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
     *///?} else {
-    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+    public void playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
     //?}
-        if (!world.isClient) {
-            ServerWorld sw = (ServerWorld) world;
+        if (!world.isClientSide) {
+            ServerLevel sw = (ServerLevel) world;
 
             // --- 1) Magical sounds ---
             sw.playSound(
                     null, pos,
-                    SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE,
-                    SoundCategory.BLOCKS,
+                    SoundEvents.AMETHYST_BLOCK_RESONATE,
+                    SoundSource.BLOCKS,
                     1.0f, 1.4f
             );
             sw.playSound(
                     null, pos,
-                    SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE,
-                    SoundCategory.BLOCKS,
+                    SoundEvents.ENCHANTMENT_TABLE_USE,
+                    SoundSource.BLOCKS,
                     0.8f, 1.6f
             );
 
@@ -63,27 +61,27 @@ public class GoldenCacheBlock extends Block {
                 double vz = (sw.random.nextDouble() - 0.5) * 0.1;
 
                 // bright spark
-                sw.spawnParticles(ParticleTypes.END_ROD, ox, oy, oz, 1, vx, vy, vz, 0.0);
+                sw.sendParticles(ParticleTypes.END_ROD, ox, oy, oz, 1, vx, vy, vz, 0.0);
 
                 // sprinkle a few enchant particles
                 if (i % 3 == 0) {
-                    sw.spawnParticles(ParticleTypes.ENCHANT, ox, oy, oz, 2, 0.0, 0.05, 0.0, 0.0);
+                    sw.sendParticles(ParticleTypes.ENCHANT, ox, oy, oz, 2, 0.0, 0.05, 0.0, 0.0);
                 }
             }
 
             // --- 3) Loot from loot table (with fallback) ---
             //? if >=1.21 {
-            /*LootTable table = sw.getServer().getReloadableRegistries().getLootTable(
-                    net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.LOOT_TABLE, GoldenCacheManager.LOOT));
+            /*LootTable table = sw.getServer().reloadableRegistries().getLootTable(
+                    net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, GoldenCacheManager.LOOT));
             *///?} else {
-            LootTable table = sw.getServer().getLootManager().getLootTable(GoldenCacheManager.LOOT);
+            LootTable table = sw.getServer().getLootData().getLootTable(GoldenCacheManager.LOOT);
             //?}
-            LootContextParameterSet ctx = new LootContextParameterSet.Builder(sw)
-                    .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-                    .add(LootContextParameters.THIS_ENTITY, player)
-                    .build(LootContextTypes.CHEST);
+            LootParams ctx = new LootParams.Builder(sw)
+                    .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                    .withParameter(LootContextParams.THIS_ENTITY, player)
+                    .create(LootContextParamSets.CHEST);
 
-            List<ItemStack> loot = table.generateLoot(ctx);
+            List<ItemStack> loot = table.getRandomItems(ctx);
 
             // Fallback: just in case datapack is missing or empty
             if (loot.isEmpty()) {
@@ -103,22 +101,22 @@ public class GoldenCacheBlock extends Block {
                 double vy = 0.3 + sw.random.nextDouble() * 0.15;
                 double vz = (sw.random.nextDouble() - 0.5) * 0.2;
 
-                item.setVelocity(vx, vy, vz);
-                item.setPickupDelay(20);
-                sw.spawnEntity(item);
+                item.setDeltaMovement(vx, vy, vz);
+                item.setPickUpDelay(20);
+                sw.addFreshEntity(item);
             }
         }
 
         // Let vanilla handle actually removing the block, etc.
         //? if >=1.21 {
-        /*return super.onBreak(world, pos, state, player);
+        /*return super.playerWillDestroy(world, pos, state, player);
         *///?} else {
-        super.onBreak(world, pos, state, player);
+        super.playerWillDestroy(world, pos, state, player);
         //?}
     }
 
     @Override
-    public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
+    public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
         // 10% chance each tick to spawn a "firefly"
         if (random.nextFloat() < 0.10f) {
             // Spawn point around the top of the block
@@ -136,7 +134,7 @@ public class GoldenCacheBlock extends Block {
 
             // Main "firefly" glow
             world.addParticle(
-                    net.minecraft.particle.ParticleTypes.END_ROD,
+                    net.minecraft.core.particles.ParticleTypes.END_ROD,
                     x, y, z,
                     vx, vy, vz
             );
@@ -148,7 +146,7 @@ public class GoldenCacheBlock extends Block {
                 double z2 = z + (random.nextDouble() - 0.5) * 0.2;
 
                 world.addParticle(
-                        net.minecraft.particle.ParticleTypes.GLOW,
+                        net.minecraft.core.particles.ParticleTypes.GLOW,
                         x2, y2, z2,
                         0.0, 0.005, 0.0
                 );

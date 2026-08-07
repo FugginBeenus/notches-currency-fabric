@@ -2,7 +2,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.client.NotchHud;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public final class NpcBillboard {
 
@@ -26,7 +26,7 @@ public final class NpcBillboard {
 
     private static String substitute(String line, NotchNpcEntity npc) {
         if (line == null || line.isBlank()) return "";
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         String viewer = mc.player == null ? "someone" : mc.player.getName().getString();
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";

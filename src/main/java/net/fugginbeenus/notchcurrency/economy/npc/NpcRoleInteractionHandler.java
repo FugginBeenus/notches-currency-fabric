@@ -1,14 +1,14 @@
 package net.fugginbeenus.notchcurrency.economy.npc;
 
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.Nullable;
 
 public final class NpcRoleInteractionHandler {
@@ -19,16 +19,16 @@ public final class NpcRoleInteractionHandler {
         UseEntityCallback.EVENT.register(NpcRoleInteractionHandler::onUse);
     }
 
-    private static ActionResult onUse(PlayerEntity player, World world, Hand hand,
+    private static InteractionResult onUse(Player player, Level world, InteractionHand hand,
                                       Entity entity, @Nullable EntityHitResult hit) {
-        if (world.isClient() || hand != Hand.MAIN_HAND) return ActionResult.PASS;
-        if (!(player instanceof ServerPlayerEntity sp)) return ActionResult.PASS;
+        if (world.isClientSide() || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+        if (!(player instanceof ServerPlayer sp)) return InteractionResult.PASS;
 
         MinecraftServer server = sp.getServer();
-        NpcRoleState.Assignment a = NpcRoleState.get(server).get(entity.getUuid());
-        if (a == null) return ActionResult.PASS;   // not a role NPC: let others handle it
+        NpcRoleState.Assignment a = NpcRoleState.get(server).get(entity.getUUID());
+        if (a == null) return InteractionResult.PASS;   // not a role NPC: let others handle it
 
         NpcRoleDispatch.open(sp, a.role(), a.shopId(), entity);
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

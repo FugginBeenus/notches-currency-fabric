@@ -2,32 +2,31 @@ package net.fugginbeenus.notchcurrency.auction;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class AuctionHouseScreenHandler extends ScreenHandler {
+public class AuctionHouseScreenHandler extends AbstractContainerMenu {
 
     // layout: 9 columns × 4 rows of listing slots
     public static final int LISTING_COLUMNS = 9;
@@ -52,30 +51,30 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
     // --- READ-ONLY SLOT FOR AH GRID ---
     private static class ReadOnlySlot extends Slot {
-        public ReadOnlySlot(Inventory inv, int index, int x, int y) {
+        public ReadOnlySlot(Container inv, int index, int x, int y) {
             super(inv, index, x, y);
         }
 
         @Override
-        public boolean canInsert(ItemStack stack) {
+        public boolean mayPlace(ItemStack stack) {
             return false;
         }
 
         @Override
-        public boolean canTakeItems(PlayerEntity player) {
+        public boolean mayPickup(Player player) {
             return false;
         }
     }
 
     // Inventories
-    private final SimpleInventory listingsInv   = new SimpleInventory(LISTING_SIZE);
-    private final SimpleInventory userPopupInv  = new SimpleInventory(POPUP_SIZE);
+    private final SimpleContainer listingsInv   = new SimpleContainer(LISTING_SIZE);
+    private final SimpleContainer userPopupInv  = new SimpleContainer(POPUP_SIZE);
 
     // For click-to-buy: which listing UUID is in each AH slot?
     private final UUID[] listingIds = new UUID[LISTING_SIZE];
 
-    private final PlayerInventory playerInv;
-    private final World world;
+    private final Inventory playerInv;
+    private final Level world;
 
     // --- UI / paging / filter state used by AuctionHouseScreen ---
     private int page       = 0;
@@ -112,14 +111,14 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     private static final int PROP_FILTER      = 2;
     private static final int PROP_SORT        = 3;
 
-    private final PropertyDelegate properties = new ArrayPropertyDelegate(4);
+    private final ContainerData properties = new SimpleContainerData(4);
 
-    public AuctionHouseScreenHandler(int syncId, PlayerInventory playerInv) {
-        super(ModScreenHandlers.AUCTION_HOUSE, syncId);
+    public AuctionHouseScreenHandler(int containerId, Inventory playerInv) {
+        super(ModScreenHandlers.AUCTION_HOUSE, containerId);
         this.playerInv = playerInv;
-        this.world     = playerInv.player.getWorld();
+        this.world     = playerInv.player.level();
 
-        this.addProperties(properties);
+        this.addDataSlots(properties);
 
         // --- Listing slots (top grid) – READ ONLY ---
         int index = 0;
@@ -159,7 +158,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     // Sync small bits of state to the client
     private void syncProperties() {
         // Only meaningful on the server side; client will receive these via packets.
-        if (world != null && !world.isClient) {
+        if (world != null && !world.isClientSide) {
             properties.set(PROP_PAGE, page);
             properties.set(PROP_TOTAL_PAGES, totalPages);
             properties.set(PROP_FILTER, filter.ordinal());
@@ -207,14 +206,14 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     // ======== PUBLIC API FOR THE SCREEN ========
 
     public int getPage() {
-        if (world != null && world.isClient) {
+        if (world != null && world.isClientSide) {
             return properties.get(PROP_PAGE);
         }
         return page;
     }
 
     public int getTotalPages() {
-        if (world != null && world.isClient) {
+        if (world != null && world.isClientSide) {
             return Math.max(1, properties.get(PROP_TOTAL_PAGES));
         }
         return Math.max(1, totalPages);
@@ -225,7 +224,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     }
 
     public void nextPage() {
-        if (world != null && world.isClient) return;
+        if (world != null && world.isClientSide) return;
         if (page < getTotalPages() - 1) {
             page++;
             reloadPageContents();
@@ -233,27 +232,27 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     }
 
     public void prevPage() {
-        if (world != null && world.isClient) return;
+        if (world != null && world.isClientSide) return;
         if (page > 0) {
             page--;
             reloadPageContents();
         }
     }
 
-    public SimpleInventory getListingsInventory() {
+    public SimpleContainer getListingsInventory() {
         return listingsInv;
     }
 
     public void reload() {
         // Only the server actually rebuilds from AuctionState.
-        if (!(world instanceof ServerWorld)) {
+        if (!(world instanceof ServerLevel)) {
             return;
         }
         rebuildFromAuctionState();
     }
 
     public void toggleMyListings() {
-        if (world != null && world.isClient) return;
+        if (world != null && world.isClientSide) return;
         showMyListings = !showMyListings;
         reload();
     }
@@ -263,7 +262,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     }
 
     public void cycleFilter() {
-        if (world != null && world.isClient) return;
+        if (world != null && world.isClientSide) return;
 
         switch (filter) {
             case ALL       -> filter = FilterMode.BLOCKS;
@@ -281,7 +280,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
     public String getFilterLabel() {
         FilterMode effective = filter;
-        if (world != null && world.isClient) {
+        if (world != null && world.isClientSide) {
             int ord = properties.get(PROP_FILTER);
             if (ord >= 0 && ord < FilterMode.values().length) {
                 effective = FilterMode.values()[ord];
@@ -302,7 +301,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     }
 
     public void cycleSortMode() {
-        if (world != null && world.isClient) return;
+        if (world != null && world.isClientSide) return;
         switch (sortMode) {
             case NEWEST      -> sortMode = SortMode.ENDING_SOON;
             case ENDING_SOON -> sortMode = SortMode.PRICE_DESC;
@@ -315,7 +314,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
     public String getSortLabel() {
         SortMode effective = sortMode;
-        if (world != null && world.isClient) {
+        if (world != null && world.isClientSide) {
             int ord = properties.get(PROP_SORT);
             if (ord >= 0 && ord < SortMode.values().length) {
                 effective = SortMode.values()[ord];
@@ -330,7 +329,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         };
     }
 
-    public SimpleInventory getUserPopupInventory() {
+    public SimpleContainer getUserPopupInventory() {
         return userPopupInv;
     }
 
@@ -342,17 +341,17 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     // ======== INTERNAL RELOAD LOGIC ========
 
     private void clearInventoriesClientSide() {
-        for (int i = 0; i < listingsInv.size(); i++) {
-            listingsInv.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < listingsInv.getContainerSize(); i++) {
+            listingsInv.setItem(i, ItemStack.EMPTY);
             listingIds[i] = null;
         }
-        for (int i = 0; i < userPopupInv.size(); i++) {
-            userPopupInv.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < userPopupInv.getContainerSize(); i++) {
+            userPopupInv.setItem(i, ItemStack.EMPTY);
         }
     }
 
     private void rebuildFromAuctionState() {
-        if (!(world instanceof ServerWorld serverWorld)) {
+        if (!(world instanceof ServerLevel serverWorld)) {
             clearInventoriesClientSide();
             return;
         }
@@ -374,7 +373,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         // If showMyListings is meant to change the main grid, filter by seller here
         List<AuctionListing> mainList = allListings;
         if (showMyListings) {
-            UUID me = playerInv.player.getUuid();
+            UUID me = playerInv.player.getUUID();
             mainList = new ArrayList<>();
             for (AuctionListing l : allListings) {
                 if (l.sellerUuid.equals(me)) {
@@ -389,7 +388,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             case PRICE_DESC  -> Comparator.comparingLong((AuctionListing l) -> l.price).reversed();
             case NEWEST      -> Comparator.comparingLong((AuctionListing l) -> l.createdGameTime).reversed();
             case ENDING_SOON -> Comparator.comparingLong(l -> l.expiresGameTime);
-            case NAME        -> Comparator.comparing(l -> l.stack.getName().getString());
+            case NAME        -> Comparator.comparing(l -> l.stack.getHoverName().getString());
         };
         mainList.sort(cmp);
 
@@ -404,8 +403,8 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         if (page < 0) page = 0;
 
         // Fill listing grid for current page + UUID mapping
-        for (int i = 0; i < listingsInv.size(); i++) {
-            listingsInv.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < listingsInv.getContainerSize(); i++) {
+            listingsInv.setItem(i, ItemStack.EMPTY);
             listingIds[i] = null;
         }
 
@@ -413,13 +412,13 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             int start = page * LISTING_SIZE;
             for (int i = 0; i < LISTING_SIZE && (start + i) < mainList.size(); i++) {
                 AuctionListing listing = mainList.get(start + i);
-                listingsInv.setStack(i, makeDisplayStack(listing)); // decorated tooltip stack
+                listingsInv.setItem(i, makeDisplayStack(listing)); // decorated tooltip stack
                 listingIds[i] = listing.id;
             }
         }
 
         // Fill popup with *this player's* listings (first POPUP_SIZE entries)
-        UUID me = playerInv.player.getUuid();
+        UUID me = playerInv.player.getUUID();
         List<AuctionListing> mine = new ArrayList<>();
         for (AuctionListing l : allListings) {
             if (l.sellerUuid.equals(me)) {
@@ -428,12 +427,12 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         }
         mine.sort(cmp);
 
-        for (int i = 0; i < userPopupInv.size(); i++) {
-            userPopupInv.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < userPopupInv.getContainerSize(); i++) {
+            userPopupInv.setItem(i, ItemStack.EMPTY);
         }
-        int max = Math.min(userPopupInv.size(), mine.size());
+        int max = Math.min(userPopupInv.getContainerSize(), mine.size());
         for (int i = 0; i < max; i++) {
-            userPopupInv.setStack(i, mine.get(i).stack.copy());
+            userPopupInv.setItem(i, mine.get(i).stack.copy());
         }
 
         // push page / total / filter / sort to client
@@ -450,12 +449,12 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
         base.setCount(listing.stack.getCount());
 
         // Core NBT used by the client-side tooltip
-        NbtCompound tag = StackData.editData(base);
+        CompoundTag tag = StackData.editData(base);
         tag.putLong("nc_price", listing.price);
         tag.putString("nc_seller", listing.sellerName);
         tag.putLong("nc_created", listing.createdGameTime);
         tag.putLong("nc_expires", listing.expiresGameTime);
-        tag.putUuid("nc_listing_id", listing.id);
+        tag.putUUID("nc_listing_id", listing.id);
 
         if (listing.highestBid > 0) {
             tag.putLong("nc_highest_bid", listing.highestBid);
@@ -471,37 +470,37 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
         // Lore for vanilla hover. The lines are the same on both versions; only how they attach
         // differs: the display NBT tag on 1.20.1, the LORE component on 1.21.
-        java.util.List<Text> loreLines = new java.util.ArrayList<>();
-        loreLines.add(Text.literal("Price: " + listing.price + " ").formatted(Formatting.GOLD));
+        java.util.List<Component> loreLines = new java.util.ArrayList<>();
+        loreLines.add(Component.literal("Price: " + listing.price + " ").withStyle(ChatFormatting.GOLD));
         if (listing.highestBid > 0) {
-            loreLines.add(Text.literal("Highest bid: " + listing.highestBid + " ").formatted(Formatting.YELLOW));
+            loreLines.add(Component.literal("Highest bid: " + listing.highestBid + " ").withStyle(ChatFormatting.YELLOW));
         }
-        loreLines.add(Text.literal("Seller: " + listing.sellerName).formatted(Formatting.GRAY));
-        loreLines.add(Text.literal("Click to buy / bid").formatted(Formatting.YELLOW));
+        loreLines.add(Component.literal("Seller: " + listing.sellerName).withStyle(ChatFormatting.GRAY));
+        loreLines.add(Component.literal("Click to buy / bid").withStyle(ChatFormatting.YELLOW));
 
         //? if >=1.21 {
-        /*base.set(net.minecraft.component.DataComponentTypes.LORE,
-                new net.minecraft.component.type.LoreComponent(loreLines));
+        /*base.set(net.minecraft.core.component.DataComponents.LORE,
+                new net.minecraft.world.item.component.ItemLore(loreLines));
         *///?} else {
-        NbtCompound display = base.getOrCreateSubNbt("display");
-        NbtList lore = new NbtList();
-        for (Text line : loreLines) lore.add(NbtString.of(Text.Serializer.toJson(line)));
+        CompoundTag display = base.getOrCreateTagElement("display");
+        ListTag lore = new ListTag();
+        for (Component line : loreLines) lore.add(StringTag.valueOf(Component.Serializer.toJson(line)));
         display.put("Lore", lore);
         //?}
         return base;
     }
 
-    // ======== ScreenHandler boilerplate + click-to-buy ========
+    // ======== AbstractContainerMenu boilerplate + click-to-buy ========
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         // It’s a virtual UI, no proximity checks needed
         return true;
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity)) {
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer)) {
             return false;
         }
 
@@ -511,8 +510,8 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             case 2 -> cycleFilter();
             case 3 -> cycleSortMode();
             case 4 -> reload();
-            case 5 -> net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.openScreen((ServerPlayerEntity) player);
-            case 6 -> AuctionListingScreenHandler.open((ServerPlayerEntity) player);
+            case 5 -> net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.openScreen((ServerPlayer) player);
+            case 6 -> AuctionListingScreenHandler.open((ServerPlayer) player);
             default -> {
                 return false;
             }
@@ -521,7 +520,7 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         // Prevent any quick-move into / out of the listing grid
         if (index < LISTING_SIZE) {
             return ItemStack.EMPTY;
@@ -529,8 +528,8 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
 
         ItemStack newStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasStack()) {
-            ItemStack stackInSlot = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack stackInSlot = slot.getItem();
             newStack = stackInSlot.copy();
 
             int ahEnd      = LISTING_SIZE;         // 0..(LISTING_SIZE-1) = AH listings
@@ -540,35 +539,35 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             // Only move between player inventory and hotbar, not into AH slots
             if (index < invEnd) {
                 // from main inv → hotbar
-                if (!this.insertItem(stackInSlot, ahEnd + 27, hotbarEnd, false)) {
+                if (!this.moveItemStackTo(stackInSlot, ahEnd + 27, hotbarEnd, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
                 // from hotbar → main inv
-                if (!this.insertItem(stackInSlot, ahEnd, invEnd, false)) {
+                if (!this.moveItemStackTo(stackInSlot, ahEnd, invEnd, false)) {
                     return ItemStack.EMPTY;
                 }
             }
 
             if (stackInSlot.isEmpty()) {
-                slot.setStack(ItemStack.EMPTY);
+                slot.setByPlayer(ItemStack.EMPTY);
             } else {
-                slot.markDirty();
+                slot.setChanged();
             }
         }
         return newStack;
     }
 
     @Override
-    public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+    public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
         // Click on a listing slot (top grid)
         if (slotIndex >= 0 && slotIndex < LISTING_SIZE) {
-            if (!(player instanceof ServerPlayerEntity serverPlayer)) {
-                super.onSlotClick(slotIndex, button, actionType, player);
+            if (!(player instanceof ServerPlayer serverPlayer)) {
+                super.clicked(slotIndex, button, actionType, player);
                 return;
             }
-            if (!(world instanceof ServerWorld serverWorld)) {
-                super.onSlotClick(slotIndex, button, actionType, player);
+            if (!(world instanceof ServerLevel serverWorld)) {
+                super.clicked(slotIndex, button, actionType, player);
                 return;
             }
 
@@ -588,6 +587,6 @@ public class AuctionHouseScreenHandler extends ScreenHandler {
             return; // don't allow normal item click behavior on AH slots
         }
 
-        super.onSlotClick(slotIndex, button, actionType, player);
+        super.clicked(slotIndex, button, actionType, player);
     }
 }

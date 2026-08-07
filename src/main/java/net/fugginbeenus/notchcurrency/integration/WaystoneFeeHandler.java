@@ -10,9 +10,9 @@ import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class WaystoneFeeHandler {
 
@@ -39,7 +39,7 @@ public final class WaystoneFeeHandler {
                 (handler, sender, server) -> sendFees(handler.getPlayer()));
     }
 
-    private static void sendFees(ServerPlayerEntity sp) {
+    private static void sendFees(ServerPlayer sp) {
         var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
         buf.writeBoolean(enabled);
         buf.writeVarInt(fee);
@@ -49,23 +49,23 @@ public final class WaystoneFeeHandler {
 
     private static void onPre(WaystoneTeleportEvent.Pre event) {
         if (!enabled) return;
-        if (!(event.getContext().getEntity() instanceof ServerPlayerEntity sp)) return;
+        if (!(event.getContext().getEntity() instanceof ServerPlayer sp)) return;
 
         long cost = event.getContext().isDimensionalTeleport() ? dimensionalFee : fee;
         if (cost <= 0) return;
 
         if (BalanceStore.get(sp) < cost) {
             event.setCanceled(true);
-            sp.sendMessage(Text.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to use this waystone.")
-                    .formatted(Formatting.RED), false);
+            sp.displayClientMessage(Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to use this waystone.")
+                    .withStyle(ChatFormatting.RED), false);
             return;
         }
 
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, "waystone fee");
         NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         if (announce) {
-            sp.sendMessage(Text.literal("Paid " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in waystone fees.")
-                    .formatted(Formatting.GRAY), false);
+            sp.displayClientMessage(Component.literal("Paid " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in waystone fees.")
+                    .withStyle(ChatFormatting.GRAY), false);
         }
     }
 }

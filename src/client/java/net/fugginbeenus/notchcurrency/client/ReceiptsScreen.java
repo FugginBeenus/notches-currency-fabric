@@ -4,28 +4,28 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.ReceiptState;
 import net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
+public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandler> {
 
     private static final int W = 256, H = 222;
     private static final int ROW_X = 8, ROW_W = 240, ROW_H = 18, ROWS_Y = 28, PER_PAGE = 9;
 
     private int page = 0;
 
-    public ReceiptsScreen(ReceiptsScreenHandler handler, PlayerInventory inv, Text title) {
+    public ReceiptsScreen(ReceiptsScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     private int totalPages() {
-        return Math.max(1, (handler.rows.size() + PER_PAGE - 1) / PER_PAGE);
+        return Math.max(1, (menu.rows.size() + PER_PAGE - 1) / PER_PAGE);
     }
 
     private static String ago(long time) {
@@ -45,25 +45,25 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
     }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Receipts", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Receipts", x + W / 2, y + 8);
 
         if (page >= totalPages()) page = totalPages() - 1;
 
         int pageCount = totalPages();
         if (pageCount > 1) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 190, y + 16, 13, 12, "<",
+            NotchWidgets.neutralButton(ctx, this.font, x + 190, y + 16, 13, 12, "<",
                     over(mouseX, mouseY, x + 190, y + 16, 13, 12));
-            NotchWidgets.centerText(ctx, this.textRenderer, (page + 1) + "/" + pageCount,
+            NotchWidgets.centerText(ctx, this.font, (page + 1) + "/" + pageCount,
                     x + 214, y + 18, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 227, y + 16, 13, 12, ">",
+            NotchWidgets.neutralButton(ctx, this.font, x + 227, y + 16, 13, 12, ">",
                     over(mouseX, mouseY, x + 227, y + 16, 13, 12));
         }
 
-        if (handler.rows.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No transactions yet.",
+        if (menu.rows.isEmpty()) {
+            NotchWidgets.centerText(ctx, this.font, "No transactions yet.",
                     x + W / 2, y + H / 2, NotchTheme.TEXT_MUTED, false);
             return;
         }
@@ -71,27 +71,27 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
         int start = page * PER_PAGE;
         for (int i = 0; i < PER_PAGE; i++) {
             int idx = start + i;
-            if (idx >= handler.rows.size()) break;
-            ReceiptState.Receipt r = handler.rows.get(idx);
+            if (idx >= menu.rows.size()) break;
+            ReceiptState.Receipt r = menu.rows.get(idx);
             int ry = y + ROWS_Y + i * ROW_H;
             NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H - 1, NotchTheme.DEEP);
 
             String amount = (r.delta() > 0 ? "+" : "") + r.delta() + "c";
             int color = r.delta() > 0 ? NotchTheme.TEXT_GREEN : NotchTheme.TEXT_RED;
-            ctx.drawText(this.textRenderer, amount, x + ROW_X + 6, ry + 5, color, false);
+            ctx.drawString(this.font, amount, x + ROW_X + 6, ry + 5, color, false);
 
             String lbl = label(r);
             if (lbl.length() > 26) lbl = lbl.substring(0, 25) + "…";
-            ctx.drawText(this.textRenderer, lbl, x + ROW_X + 74, ry + 5, NotchTheme.TEXT_LIGHT, false);
+            ctx.drawString(this.font, lbl, x + ROW_X + 74, ry + 5, NotchTheme.TEXT_LIGHT, false);
 
             String t = ago(r.time());
-            ctx.drawText(this.textRenderer, t, x + ROW_X + ROW_W - 6 - this.textRenderer.getWidth(t), ry + 5,
+            ctx.drawString(this.font, t, x + ROW_X + ROW_W - 6 - this.font.width(t), ry + 5,
                     NotchTheme.TEXT_MUTED, false);
         }
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
@@ -102,8 +102,8 @@ public class ReceiptsScreen extends HandledScreen<ReceiptsScreenHandler> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && totalPages() > 1) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, x + 190, y + 16, 13, 12)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
-            if (over(mx, my, x + 227, y + 16, 13, 12)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
+            if (over(mx, my, leftPos + 190, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
+            if (over(mx, my, leftPos + 227, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }

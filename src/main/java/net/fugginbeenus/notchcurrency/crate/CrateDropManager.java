@@ -1,18 +1,17 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Containers;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import java.util.*;
 
 public final class CrateDropManager {
@@ -31,7 +30,7 @@ public final class CrateDropManager {
                 return;
             }
 
-            for (ServerWorld world : server.getWorlds()) {
+            for (ServerLevel world : server.getAllLevels()) {
                 // Copy keys to avoid CME
                 List<UUID> ids = new ArrayList<>(TRACKED.keySet());
                 for (UUID id : ids) {
@@ -42,21 +41,21 @@ public final class CrateDropManager {
                     }
 
                     // Landed or placed block?
-                    if (falling.isOnGround() || falling.verticalCollision || !falling.isAlive()) {
+                    if (falling.onGround() || falling.verticalCollision || !falling.isAlive()) {
                         List<ItemStack> loot = TRACKED.remove(id);
-                        BlockPos pos = falling.getBlockPos();
+                        BlockPos pos = falling.blockPosition();
 
                         // Visual "block break" effect (barrel)
-                        world.syncWorldEvent(2001, pos, Block.getRawIdFromState(Blocks.BARREL.getDefaultState()));
-                        world.playSound(null, pos, SoundEvents.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 0.9f, 1.0f);
+                        world.levelEvent(2001, pos, Block.getId(Blocks.BARREL.defaultBlockState()));
+                        world.playSound(null, pos, SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.9f, 1.0f);
 
                         // Ensure no barrel block stays behind
-                        if (world.getBlockState(pos).isOf(Blocks.BARREL)) {
-                            world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
+                        if (world.getBlockState(pos).is(Blocks.BARREL)) {
+                            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                         }
 
                         // Little poof
-                        world.spawnParticles(
+                        world.sendParticles(
                                 ParticleTypes.POOF,
                                 pos.getX() + 0.5, pos.getY() + 0.8, pos.getZ() + 0.5,
                                 10, 0.2, 0.1, 0.2, 0.02
@@ -76,24 +75,24 @@ public final class CrateDropManager {
     }
 
     public static void track(FallingBlockEntity falling, List<ItemStack> loot) {
-        if (falling == null || falling.getUuid() == null) return;
+        if (falling == null || falling.getUUID() == null) return;
 
         // Copy stacks so nobody mutates later
         List<ItemStack> copy = new ArrayList<>();
         if (loot != null) for (ItemStack s : loot) if (s != null && !s.isEmpty()) copy.add(s.copy());
 
-        TRACKED.put(falling.getUuid(), copy);
+        TRACKED.put(falling.getUUID(), copy);
         // Don’t drop the barrel block item itself
         falling.dropItem = false;
     }
 
-    private static void spill(ServerWorld world, BlockPos pos, List<ItemStack> loot) {
+    private static void spill(ServerLevel world, BlockPos pos, List<ItemStack> loot) {
         double x = pos.getX() + 0.5;
         double y = pos.getY() + 0.5;
         double z = pos.getZ() + 0.5;
 
         for (ItemStack s : loot) {
-            if (!s.isEmpty()) ItemScatterer.spawn(world, x, y, z, s);
+            if (!s.isEmpty()) Containers.dropItemStack(world, x, y, z, s);
         }
     }
 }

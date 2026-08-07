@@ -1,23 +1,21 @@
 package net.fugginbeenus.notchcurrency.shop;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ShopState extends PersistentState {
+public class ShopState extends SavedData {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-ShopState");
     private static final String DATA_KEY = "notchcurrency_shops";
@@ -37,17 +35,17 @@ public class ShopState extends PersistentState {
 
     // --- Static Accessors ---
 
-    public static ShopState get(ServerWorld world) {
+    public static ShopState get(ServerLevel world) {
         return get(world.getServer());
     }
 
     public static ShopState get(MinecraftServer server) {
-        ServerWorld overworld = server.getWorld(World.OVERWORLD);
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) {
             throw new IllegalStateException("Overworld not loaded");
         }
 
-        PersistentStateManager manager = overworld.getPersistentStateManager();
+        DimensionDataStorage manager = overworld.getDataStorage();
         return StateData.getOrCreate(manager, ShopState::new, ShopState::fromNbt, DATA_KEY);
     }
 
@@ -66,7 +64,7 @@ public class ShopState extends PersistentState {
         ownerShops.computeIfAbsent(ownerId, k -> new HashSet<>()).add(shop.getShopId());
 
         LOGGER.info("Created shop '{}' for player {} (ID: {})", shopName, ownerName, shop.getShopId());
-        markDirty();
+        setDirty();
         return shop;
     }
 
@@ -90,7 +88,7 @@ public class ShopState extends PersistentState {
         }
 
         LOGGER.info("Deleted shop '{}' (ID: {})", shop.getShopName(), shopId);
-        markDirty();
+        setDirty();
         return true;
     }
 
@@ -103,7 +101,7 @@ public class ShopState extends PersistentState {
         }
 
         LOGGER.info("Added shop '{}' for player {} (ID: {})", shop.getShopName(), shop.getOwnerName(), shop.getShopId());
-        markDirty();
+        setDirty();
     }
 
     public void removeShop(UUID shopId) {
@@ -123,7 +121,7 @@ public class ShopState extends PersistentState {
         }
 
         LOGGER.info("Removed shop '{}' (ID: {})", shop.getShopName(), shopId);
-        markDirty();
+        setDirty();
     }
 
     public void updateShopOwnership(UUID shopId, UUID newOwnerId, String newOwnerName) {
@@ -148,7 +146,7 @@ public class ShopState extends PersistentState {
         ownerShops.computeIfAbsent(newOwnerId, k -> new HashSet<>()).add(shopId);
 
         LOGGER.info("Transferred shop '{}' from {} to {}", shop.getShopName(), oldOwnerId, newOwnerId);
-        markDirty();
+        setDirty();
     }
 
     @Nullable
@@ -208,7 +206,7 @@ public class ShopState extends PersistentState {
         npcToShop.put(npcId, shopId);
 
         LOGGER.info("Linked NPC {} to shop '{}'", npcId, shop.getShopName());
-        markDirty();
+        setDirty();
     }
 
     public void unlinkNpc(UUID npcId) {
@@ -218,7 +216,7 @@ public class ShopState extends PersistentState {
             if (shop != null && npcId.equals(shop.getLinkedNpcId())) {
                 shop.setLinkedNpcId(null);
             }
-            markDirty();
+            setDirty();
         }
     }
 
@@ -226,11 +224,11 @@ public class ShopState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList shopList = new NbtList();
+        ListTag shopList = new ListTag();
         for (PlayerShop shop : shops.values()) {
             shopList.add(shop.toNbt());
         }
@@ -239,11 +237,11 @@ public class ShopState extends PersistentState {
         return nbt;
     }
 
-    public static ShopState fromNbt(NbtCompound nbt) {
+    public static ShopState fromNbt(CompoundTag nbt) {
         ShopState state = new ShopState();
 
-        if (nbt.contains("Shops", NbtElement.LIST_TYPE)) {
-            NbtList shopList = nbt.getList("Shops", NbtElement.COMPOUND_TYPE);
+        if (nbt.contains("Shops", Tag.TAG_LIST)) {
+            ListTag shopList = nbt.getList("Shops", Tag.TAG_COMPOUND);
             for (int i = 0; i < shopList.size(); i++) {
                 PlayerShop shop = PlayerShop.fromNbt(shopList.getCompound(i));
                 state.shops.put(shop.getShopId(), shop);
@@ -263,10 +261,10 @@ public class ShopState extends PersistentState {
     // --- Utility ---
 
     public void markDirtyAndSave() {
-        markDirty();
+        setDirty();
     }
 
-    public int cleanupOrphans(net.minecraft.server.world.ServerWorld world) {
+    public int cleanupOrphans(net.minecraft.server.level.ServerLevel world) {
         int cleaned = 0;
         List<UUID> orphanedNpcs = new java.util.ArrayList<>();
 
@@ -295,7 +293,7 @@ public class ShopState extends PersistentState {
         }
 
         if (cleaned > 0) {
-            markDirty();
+            setDirty();
             LOGGER.info("Cleaned up {} orphaned NPC links", cleaned);
         }
 

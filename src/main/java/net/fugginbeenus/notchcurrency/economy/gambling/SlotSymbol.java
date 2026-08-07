@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.gambling;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 public enum SlotSymbol {
     CHERRY (35, 3.0,   1.5,  Items.SWEET_BERRIES),

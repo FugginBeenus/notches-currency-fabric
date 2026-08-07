@@ -5,12 +5,11 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
 import net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -31,12 +30,12 @@ public class NpcScheduleActionsScreen extends Screen {
 
     private int selected = -1;
     private int px, py;
-    private TextFieldWidget valueField;
-    private TextFieldWidget amountField;
+    private EditBox valueField;
+    private EditBox amountField;
 
     public NpcScheduleActionsScreen(Screen parent, String entryLabel,
                                     List<DialogueAction> actions, Consumer<List<DialogueAction>> onSave) {
-        super(Text.literal("When it starts"));
+        super(Component.literal("When it starts"));
         this.parent = parent;
         this.entryLabel = entryLabel;
         this.onSave = onSave;
@@ -51,19 +50,19 @@ public class NpcScheduleActionsScreen extends Screen {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
 
-        valueField = new TextFieldWidget(this.textRenderer, px + 60, py + VALUE_Y + 3, W - 80, 10, Text.empty());
+        valueField = new EditBox(this.font, px + 60, py + VALUE_Y + 3, W - 80, 10, Component.empty());
         valueField.setMaxLength(200);
-        valueField.setDrawsBackground(false);
-        valueField.setChangedListener(s -> {
+        valueField.setBordered(false);
+        valueField.setResponder(s -> {
             DialogueAction a = current();
             if (a != null && NpcActionEditing.needsValue(a.type())) a.setValue(s);
         });
-        addDrawableChild(valueField);
+        addRenderableWidget(valueField);
 
-        amountField = new TextFieldWidget(this.textRenderer, px + 60, py + AMOUNT_Y + 3, 60, 10, Text.empty());
+        amountField = new EditBox(this.font, px + 60, py + AMOUNT_Y + 3, 60, 10, Component.empty());
         amountField.setMaxLength(9);
-        amountField.setDrawsBackground(false);
-        amountField.setChangedListener(s -> {
+        amountField.setBordered(false);
+        amountField.setResponder(s -> {
             DialogueAction a = current();
             if (a == null || !NpcActionEditing.needsAmount(a.type())) return;
             try {
@@ -72,7 +71,7 @@ public class NpcScheduleActionsScreen extends Screen {
                 // half-typed number: leave the last good value alone
             }
         });
-        addDrawableChild(amountField);
+        addRenderableWidget(amountField);
 
         syncFields();
     }
@@ -88,27 +87,27 @@ public class NpcScheduleActionsScreen extends Screen {
         boolean wantsAmount = a != null && NpcActionEditing.needsAmount(a.type());
         valueField.visible = wantsValue;
         amountField.visible = wantsAmount;
-        if (wantsValue && !valueField.getText().equals(a.value())) valueField.setText(a.value());
-        if (wantsAmount && !amountField.getText().equals(String.valueOf(a.amount()))) {
-            amountField.setText(String.valueOf(a.amount()));
+        if (wantsValue && !valueField.getValue().equals(a.value())) valueField.setValue(a.value());
+        if (wantsAmount && !amountField.getValue().equals(String.valueOf(a.amount()))) {
+            amountField.setValue(String.valueOf(a.amount()));
         }
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "At " + entryLabel, px + W / 2, py + 8);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Runs once, as this part of the day begins.",
+        NotchWidgets.title(ctx, this.font, "At " + entryLabel, px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.font, "Runs once, as this part of the day begins.",
                 px + W / 2, py + 24, NotchTheme.TEXT_MUTED, false);
 
         NotchWidgets.inset(ctx, px + LIST_X, py + LIST_Y, LIST_W, LIST_H, NotchTheme.DEEP);
         if (working.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Nothing yet. Add one below.",
+            NotchWidgets.centerText(ctx, this.font, "Nothing yet. Add one below.",
                     px + W / 2, py + LIST_Y + LIST_H / 2 - 4, NotchTheme.TEXT_MUTED, false);
         }
         for (int i = 0; i < working.size(); i++) {
@@ -116,37 +115,37 @@ public class NpcScheduleActionsScreen extends Screen {
             boolean hover = over(mouseX, mouseY, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2);
             String text = NpcActionEditing.describe(working.get(i));
             if (i == selected) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
+                NotchWidgets.neutralButton(ctx, this.font, px + LIST_X + 2, ry, LIST_W - 4, ROW_H - 2, text, hover);
             }
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, py + BTN_Y, 54, 14, "Add",
+        NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + BTN_Y, 54, 14, "Add",
                 over(mouseX, mouseY, px + LIST_X, py + BTN_Y, 54, 14));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 58, py + BTN_Y, 54, 14, "Remove",
+        NotchWidgets.dangerButton(ctx, this.font, px + LIST_X + 58, py + BTN_Y, 54, 14, "Remove",
                 over(mouseX, mouseY, px + LIST_X + 58, py + BTN_Y, 54, 14));
         DialogueAction sel = current();
         if (sel != null) {
-            NotchWidgets.goldButton(ctx, this.textRenderer, px + LIST_X + 116, py + BTN_Y, 100, 14,
+            NotchWidgets.goldButton(ctx, this.font, px + LIST_X + 116, py + BTN_Y, 100, 14,
                     NpcActionEditing.actionName(sel.type()),
                     over(mouseX, mouseY, px + LIST_X + 116, py + BTN_Y, 100, 14));
         }
 
         if (sel != null && NpcActionEditing.needsValue(sel.type())) {
-            ctx.drawText(this.textRenderer, "Text", px + 14, py + VALUE_Y + 3, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Component", px + 14, py + VALUE_Y + 3, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + 56, py + VALUE_Y, W - 72, 14, NotchTheme.DEEP);
-            if (valueField.getText().isEmpty()) {
-                ctx.drawText(this.textRenderer, NpcActionEditing.valueHint(sel.type()),
+            if (valueField.getValue().isEmpty()) {
+                ctx.drawString(this.font, NpcActionEditing.valueHint(sel.type()),
                         px + 60, py + VALUE_Y + 3, 0xFF555555, false);
             }
         }
         if (sel != null && NpcActionEditing.needsAmount(sel.type())) {
-            ctx.drawText(this.textRenderer, "Amount", px + 14, py + AMOUNT_Y + 3, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Amount", px + 14, py + AMOUNT_Y + 3, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + 56, py + AMOUNT_Y, 68, 14, NotchTheme.DEEP);
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + W / 2 - 70, py + SAVE_Y, 140, 16, "Save & Back",
+        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 - 70, py + SAVE_Y, 140, 16, "Save & Back",
                 over(mouseX, mouseY, px + W / 2 - 70, py + SAVE_Y, 140, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -208,17 +207,17 @@ public class NpcScheduleActionsScreen extends Screen {
             kept.add(a);
         }
         onSave.accept(kept);
-        if (this.client != null) this.client.setScreen(parent);
+        if (this.minecraft != null) this.minecraft.setScreen(parent);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         saveAndBack();
     }
 
     private void say(String text) {
-        if (this.client != null && this.client.player != null) {
-            this.client.player.sendMessage(Text.literal(text).formatted(Formatting.RED), false);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(Component.literal(text).withStyle(ChatFormatting.RED), false);
         }
     }
 
@@ -233,7 +232,7 @@ public class NpcScheduleActionsScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -246,7 +245,7 @@ public class NpcScheduleActionsScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

@@ -4,12 +4,11 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 public class NpcRecruiterScreen extends Screen {
@@ -19,9 +18,9 @@ public class NpcRecruiterScreen extends Screen {
     private static final int BTN_W = W - PAD * 2;
     private static final int ROW_H = 16;
 
-    private static final Formatting[] COLORS = {
-            Formatting.WHITE, Formatting.RED, Formatting.GOLD, Formatting.YELLOW, Formatting.GREEN,
-            Formatting.AQUA, Formatting.BLUE, Formatting.LIGHT_PURPLE, Formatting.DARK_PURPLE, Formatting.GRAY,
+    private static final ChatFormatting[] COLORS = {
+            ChatFormatting.WHITE, ChatFormatting.RED, ChatFormatting.GOLD, ChatFormatting.YELLOW, ChatFormatting.GREEN,
+            ChatFormatting.AQUA, ChatFormatting.BLUE, ChatFormatting.LIGHT_PURPLE, ChatFormatting.DARK_PURPLE, ChatFormatting.GRAY,
     };
 
     private enum Mode { VIEW, FOUND, SETTINGS }
@@ -41,12 +40,12 @@ public class NpcRecruiterScreen extends Screen {
     private final String motto;
 
     private int px, py;
-    private TextFieldWidget textField; // faction name when founding, motto when editing
+    private EditBox textField; // faction name when founding, motto when editing
 
-    public NpcRecruiterScreen(UUID npcId, String factionId, String factionName, Formatting factionColor,
+    public NpcRecruiterScreen(UUID npcId, String factionId, String factionName, ChatFormatting factionColor,
                               int memberCount, boolean alreadyIn, boolean canFound,
                               String motto, int fee, boolean openToJoin, boolean canManage) {
-        super(Text.literal("Recruiter"));
+        super(Component.literal("Recruiter"));
         this.npcId = npcId;
         this.factionId = factionId;
         this.factionName = factionName;
@@ -64,7 +63,7 @@ public class NpcRecruiterScreen extends Screen {
     }
 
     private boolean hasFaction() { return !factionId.isEmpty(); }
-    private Formatting color() { return COLORS[colorIdx]; }
+    private ChatFormatting color() { return COLORS[colorIdx]; }
 
     @Override
     protected void init() {
@@ -72,14 +71,14 @@ public class NpcRecruiterScreen extends Screen {
         py = (this.height - H) / 2;
         if (mode == Mode.FOUND || mode == Mode.SETTINGS) {
             boolean founding = mode == Mode.FOUND;
-            textField = new TextFieldWidget(this.textRenderer, px + PAD + 4, py + 55, BTN_W - 8, 10,
-                    Text.literal(founding ? "Name" : "Motto"));
+            textField = new EditBox(this.font, px + PAD + 4, py + 55, BTN_W - 8, 10,
+                    Component.literal(founding ? "Name" : "Motto"));
             textField.setMaxLength(founding ? 32 : 64);
-            textField.setDrawsBackground(false);
-            textField.setPlaceholder(Text.literal(founding ? "name your faction" : "a line about it")
-                    .formatted(Formatting.DARK_GRAY));
-            if (!founding) textField.setText(motto);
-            addDrawableChild(textField);
+            textField.setBordered(false);
+            textField.setHint(Component.literal(founding ? "name your faction" : "a line about it")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            if (!founding) textField.setValue(motto);
+            addRenderableWidget(textField);
             setInitialFocus(textField);
         }
     }
@@ -93,14 +92,14 @@ public class NpcRecruiterScreen extends Screen {
     private int rowConfirm() { return py + 148; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer,
+        NotchWidgets.title(ctx, this.font,
                 mode == Mode.FOUND ? "New Faction" : mode == Mode.SETTINGS ? "Faction Settings" : "Recruiter",
                 px + W / 2, py + 8);
 
@@ -109,88 +108,88 @@ public class NpcRecruiterScreen extends Screen {
             case FOUND, SETTINGS -> renderEditor(ctx, mouseX, mouseY);
         }
 
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + PAD, py + H - 26, BTN_W, ROW_H,
+        NotchWidgets.neutralButton(ctx, this.font, px + PAD, py + H - 26, BTN_W, ROW_H,
                 mode == Mode.SETTINGS ? "Back" : "Close",
                 over(mouseX, mouseY, px + PAD, py + H - 26, BTN_W, ROW_H));
         super.render(ctx, mouseX, mouseY, delta);
     }
 
-    private void renderView(DrawContext ctx, int mx, int my) {
+    private void renderView(GuiGraphics ctx, int mx, int my) {
         if (!hasFaction()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "This recruiter has no faction yet.",
+            NotchWidgets.centerText(ctx, this.font, "This recruiter has no faction yet.",
                     px + W / 2, py + 60, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "Come back once it's signed up.",
+            NotchWidgets.centerText(ctx, this.font, "Come back once it's signed up.",
                     px + W / 2, py + 74, NotchTheme.TEXT_MUTED, false);
             return;
         }
 
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal(factionName).formatted(color()), px + W / 2, py + 30, 0xFFFFFF);
+        ctx.drawCenteredString(this.font,
+                Component.literal(factionName).withStyle(color()), px + W / 2, py + 30, 0xFFFFFF);
         if (!motto.isBlank()) {
-            NotchWidgets.centerText(ctx, this.textRenderer,
-                    this.textRenderer.trimToWidth(motto, W - PAD * 2),
+            NotchWidgets.centerText(ctx, this.font,
+                    this.font.plainSubstrByWidth(motto, W - PAD * 2),
                     px + W / 2, py + 46, NotchTheme.TEXT_MUTED, false);
         }
-        NotchWidgets.centerText(ctx, this.textRenderer,
+        NotchWidgets.centerText(ctx, this.font,
                 memberCount == 1 ? "1 member" : memberCount + " members",
                 px + W / 2, py + 62, NotchTheme.TEXT_DARK, false);
 
         int y = py + 84;
         if (alreadyIn) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "You're one of them.",
+            NotchWidgets.centerText(ctx, this.font, "You're one of them.",
                     px + W / 2, y, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + PAD, y + 16, BTN_W, ROW_H, "Leave",
+            NotchWidgets.dangerButton(ctx, this.font, px + PAD, y + 16, BTN_W, ROW_H, "Leave",
                     over(mx, my, px + PAD, y + 16, BTN_W, ROW_H));
         } else if (!openToJoin) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Not taking new members.",
+            NotchWidgets.centerText(ctx, this.font, "Not taking new members.",
                     px + W / 2, y + 4, NotchTheme.TEXT_MUTED, false);
         } else {
             String label = fee > 0 ? "Join - " + fee + " " + NotchWidgets.coinName() : "Join";
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + PAD, y, BTN_W, 18, label,
+            NotchWidgets.primaryButton(ctx, this.font, px + PAD, y, BTN_W, 18, label,
                     over(mx, my, px + PAD, y, BTN_W, 18));
         }
 
         if (canManage) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + PAD, py + H - 48, BTN_W, ROW_H, "Settings",
+            NotchWidgets.neutralButton(ctx, this.font, px + PAD, py + H - 48, BTN_W, ROW_H, "Settings",
                     over(mx, my, px + PAD, py + H - 48, BTN_W, ROW_H));
         }
     }
 
-    private void renderEditor(DrawContext ctx, int mx, int my) {
+    private void renderEditor(GuiGraphics ctx, int mx, int my) {
         boolean founding = mode == Mode.FOUND;
-        ctx.drawText(this.textRenderer, founding ? "Name:" : "Motto:", px + PAD, rowLabel(),
+        ctx.drawString(this.font, founding ? "Name:" : "Motto:", px + PAD, rowLabel(),
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + PAD, py + 52, BTN_W, 15, NotchTheme.DEEP);
 
-        ctx.drawText(this.textRenderer, "Colour:", px + PAD, rowColor() + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 76, rowColor(), 100, 15,
+        ctx.drawString(this.font, "Colour:", px + PAD, rowColor() + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 76, rowColor(), 100, 15,
                 titleCase(color().getName()), over(mx, my, px + 76, rowColor(), 100, 15));
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Aa").formatted(color()),
+        ctx.drawCenteredString(this.font, Component.literal("Aa").withStyle(color()),
                 px + 200, rowColor() + 4, 0xFFFFFF);
 
-        ctx.drawText(this.textRenderer, "Join fee:", px + PAD, rowFee() + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 76, rowFee(), 18, 15, "-",
+        ctx.drawString(this.font, "Join fee:", px + PAD, rowFee() + 4, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 76, rowFee(), 18, 15, "-",
                 over(mx, my, px + 76, rowFee(), 18, 15));
-        NotchWidgets.centerText(ctx, this.textRenderer,
+        NotchWidgets.centerText(ctx, this.font,
                 fee == 0 ? "free" : fee + " " + NotchWidgets.coinName(),
                 px + 140, rowFee() + 4, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 186, rowFee(), 18, 15, "+",
+        NotchWidgets.neutralButton(ctx, this.font, px + 186, rowFee(), 18, 15, "+",
                 over(mx, my, px + 186, rowFee(), 18, 15));
 
-        ctx.drawText(this.textRenderer, "Joining:", px + PAD, rowOpen() + 4, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Joining:", px + PAD, rowOpen() + 4, NotchTheme.TEXT_DARK, false);
         String openLabel = openToJoin ? "Anyone may join" : "Closed";
         if (openToJoin) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 76, rowOpen(), 128, 15, openLabel,
+            NotchWidgets.primaryButton(ctx, this.font, px + 76, rowOpen(), 128, 15, openLabel,
                     over(mx, my, px + 76, rowOpen(), 128, 15));
         } else {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + 76, rowOpen(), 128, 15, openLabel,
+            NotchWidgets.neutralButton(ctx, this.font, px + 76, rowOpen(), 128, 15, openLabel,
                     over(mx, my, px + 76, rowOpen(), 128, 15));
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + PAD, rowConfirm(), BTN_W, 18,
+        NotchWidgets.primaryButton(ctx, this.font, px + PAD, rowConfirm(), BTN_W, 18,
                 founding ? "Found faction" : "Save",
                 over(mx, my, px + PAD, rowConfirm(), BTN_W, 18));
-        NotchWidgets.centerText(ctx, this.textRenderer,
+        NotchWidgets.centerText(ctx, this.font,
                 founding ? "You'll lead it, and this NPC will recruit for it."
                         : "Members keep their place; only the sign changes.",
                 px + W / 2, rowConfirm() + 22, NotchTheme.TEXT_MUTED, false);
@@ -240,7 +239,7 @@ public class NpcRecruiterScreen extends Screen {
                     return true;
                 }
                 if (over(mx, my, px + PAD, rowConfirm(), BTN_W, 18)) {
-                    String text = textField == null ? "" : textField.getText().trim();
+                    String text = textField == null ? "" : textField.getValue().trim();
                     if (mode == Mode.FOUND && text.isBlank()) return true; // the server would refuse anyway
                     NotchWidgets.click();
                     send(mode == Mode.FOUND ? RecruiterManager.ACTION_FOUND : RecruiterManager.ACTION_SETTINGS,
@@ -255,7 +254,7 @@ public class NpcRecruiterScreen extends Screen {
                     mode = Mode.VIEW;
                     rebuildPane();
                 } else {
-                    this.close();
+                    this.onClose();
                 }
                 return true;
             }
@@ -272,7 +271,7 @@ public class NpcRecruiterScreen extends Screen {
     }
 
     private void rebuildPane() {
-        this.clearChildren();
+        this.clearWidgets();
         this.init();
     }
 
@@ -293,7 +292,7 @@ public class NpcRecruiterScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean isPauseScreen() { return false; }
 
     //? if >=1.21 {
     /*@Override
@@ -304,7 +303,7 @@ public class NpcRecruiterScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

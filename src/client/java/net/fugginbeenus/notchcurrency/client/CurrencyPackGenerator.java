@@ -2,9 +2,9 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +40,15 @@ public final class CurrencyPackGenerator {
             15;
             //?}
 
-    private static java.util.Collection<String> enabledPacks(MinecraftClient client) {
+    private static java.util.Collection<String> enabledPacks(Minecraft client) {
         //? if >=1.21 {
         /*return client.getResourcePackManager().getEnabledIds();
         *///?} else {
-        return client.getResourcePackManager().getEnabledNames();
+        return client.getResourcePackRepository().getSelectedIds();
         //?}
     }
 
-    public static void remindIfDisabled(MinecraftClient client) {
+    public static void remindIfDisabled(Minecraft client) {
         if (remindedThisSession || !packExists() || client.player == null) return;
         boolean enabled = enabledPacks(client).contains(PACK_PROFILE_NAME);
         if (enabled) {
@@ -56,10 +56,10 @@ public final class CurrencyPackGenerator {
             return;
         }
         remindedThisSession = true;
-        client.player.sendMessage(Text.literal("[Notch Currency] Custom coin art is ready - enable ")
-                .formatted(Formatting.GOLD)
-                .append(Text.literal("\"NotchCurrencyCustom\"").formatted(Formatting.YELLOW))
-                .append(Text.literal(" in Options → Resource Packs to see it.").formatted(Formatting.GOLD)), false);
+        client.player.displayClientMessage(Component.literal("[Notch Currency] Custom coin art is ready - enable ")
+                .withStyle(ChatFormatting.GOLD)
+                .append(Component.literal("\"NotchCurrencyCustom\"").withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" in Options → Resource Packs to see it.").withStyle(ChatFormatting.GOLD)), false);
     }
 
     private static Path target() {
@@ -123,7 +123,7 @@ public final class CurrencyPackGenerator {
         }
     }
 
-    public static void applyServerData(MinecraftClient client, String itemName, byte[] coin, byte[] tails) {
+    public static void applyServerData(Minecraft client, String itemName, byte[] coin, byte[] tails) {
         try {
             Path pack = FabricLoader.getInstance().getGameDir().resolve("resourcepacks")
                     .resolve(SERVER_PACK_DIR_NAME);
@@ -143,9 +143,9 @@ public final class CurrencyPackGenerator {
             if (empty) {
                 boolean wasEnabled = enabledPacks(client).contains(SERVER_PACK_PROFILE_NAME);
                 if (wasEnabled) {
-                    client.getResourcePackManager().scanPacks();
-                    client.getResourcePackManager().disable(SERVER_PACK_PROFILE_NAME);
-                    client.options.refreshResourcePacks(client.getResourcePackManager());
+                    client.getResourcePackRepository().reload();
+                    client.getResourcePackRepository().removePack(SERVER_PACK_PROFILE_NAME);
+                    client.options.updateResourcePacks(client.getResourcePackRepository());
                 }
                 return;
             }
@@ -182,21 +182,21 @@ public final class CurrencyPackGenerator {
         }
     }
 
-    private static void enableServerPack(MinecraftClient client, boolean contentChanged) {
+    private static void enableServerPack(Minecraft client, boolean contentChanged) {
         try {
-            var mgr = client.getResourcePackManager();
-            mgr.scanPacks();
+            var mgr = client.getResourcePackRepository();
+            mgr.reload();
             if (!enabledPacks(client).contains(SERVER_PACK_PROFILE_NAME)) {
-                if (mgr.enable(SERVER_PACK_PROFILE_NAME)) {
-                    client.options.refreshResourcePacks(mgr);
-                    client.reloadResources();
+                if (mgr.addPack(SERVER_PACK_PROFILE_NAME)) {
+                    client.options.updateResourcePacks(mgr);
+                    client.reloadResourcePacks();
                 } else if (client.player != null) {
-                    client.player.sendMessage(Text.literal(
+                    client.player.displayClientMessage(Component.literal(
                             "[Notch Currency] This server has custom coin art - enable \"NotchCurrencyServer\" in Options → Resource Packs.")
-                            .formatted(Formatting.GOLD), false);
+                            .withStyle(ChatFormatting.GOLD), false);
                 }
             } else if (contentChanged) {
-                client.reloadResources();
+                client.reloadResourcePacks();
             }
         } catch (Exception e) {
             LOGGER.error("Couldn't auto-enable the server coin pack", e);

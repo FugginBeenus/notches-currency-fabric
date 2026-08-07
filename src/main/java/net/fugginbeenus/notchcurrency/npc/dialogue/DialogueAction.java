@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 
 public class DialogueAction {
 
@@ -41,15 +41,15 @@ public class DialogueAction {
     public void setValue(String v) { this.value = v == null ? "" : v; }
     public void setAmount(long a) { this.amount = a; }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Type", type.name());
         nbt.putString("Value", value);
         nbt.putLong("Amount", amount);
         return nbt;
     }
 
-    public static DialogueAction fromNbt(NbtCompound nbt) {
+    public static DialogueAction fromNbt(CompoundTag nbt) {
         DialogueAction a = new DialogueAction();
         try {
             a.type = Type.valueOf(nbt.getString("Type"));

@@ -1,15 +1,13 @@
 package net.fugginbeenus.notchcurrency.economy;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -18,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ReceiptState extends PersistentState {
+public class ReceiptState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_receipts";
     public static final int MAX_PER_PLAYER = 50;
@@ -28,8 +26,8 @@ public class ReceiptState extends PersistentState {
     private final Map<UUID, Deque<Receipt>> history = new HashMap<>();
 
     public static ReceiptState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, ReceiptState::new, ReceiptState::fromNbt, DATA_KEY);
     }
 
@@ -42,7 +40,7 @@ public class ReceiptState extends PersistentState {
                 (reason == null ? TransactionReason.UNSPECIFIED : reason).name(),
                 detail == null ? "" : detail));
         while (q.size() > MAX_PER_PLAYER) q.removeLast();
-        state.markDirty();
+        state.setDirty();
     }
 
     public List<Receipt> recent(UUID id) {
@@ -52,16 +50,16 @@ public class ReceiptState extends PersistentState {
 
     // ---- NBT ----
 
-    private static ReceiptState fromNbt(NbtCompound nbt) {
+    private static ReceiptState fromNbt(CompoundTag nbt) {
         ReceiptState state = new ReceiptState();
-        NbtList players = nbt.getList("Players", NbtElement.COMPOUND_TYPE);
+        ListTag players = nbt.getList("Players", Tag.TAG_COMPOUND);
         for (int i = 0; i < players.size(); i++) {
-            NbtCompound entry = players.getCompound(i);
-            UUID id = entry.getUuid("Player");
+            CompoundTag entry = players.getCompound(i);
+            UUID id = entry.getUUID("Player");
             Deque<Receipt> q = new ArrayDeque<>();
-            NbtList recs = entry.getList("Receipts", NbtElement.COMPOUND_TYPE);
+            ListTag recs = entry.getList("Receipts", Tag.TAG_COMPOUND);
             for (int j = 0; j < recs.size(); j++) {
-                NbtCompound r = recs.getCompound(j);
+                CompoundTag r = recs.getCompound(j);
                 q.addLast(new Receipt(r.getLong("t"), r.getLong("d"), r.getLong("b"),
                         r.getString("r"), r.getString("x")));
             }
@@ -72,18 +70,18 @@ public class ReceiptState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList players = new NbtList();
+        ListTag players = new ListTag();
         for (Map.Entry<UUID, Deque<Receipt>> e : history.entrySet()) {
             if (e.getValue().isEmpty()) continue;
-            NbtCompound entry = new NbtCompound();
-            entry.putUuid("Player", e.getKey());
-            NbtList recs = new NbtList();
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Player", e.getKey());
+            ListTag recs = new ListTag();
             for (Receipt rec : e.getValue()) {
-                NbtCompound r = new NbtCompound();
+                CompoundTag r = new CompoundTag();
                 r.putLong("t", rec.time());
                 r.putLong("d", rec.delta());
                 r.putLong("b", rec.balanceAfter());

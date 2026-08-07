@@ -6,14 +6,13 @@ import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.item.ItemStack;
 import java.util.*;
 
 public final class TradeManager {
@@ -37,7 +36,7 @@ public final class TradeManager {
             int money = buf.readVarInt();
             boolean ready = buf.readBoolean();
             srv.execute(() -> {
-                TradeSession sess = get(player.getUuid());
+                TradeSession sess = get(player.getUUID());
                 if (sess != null) {
                     sess.updateOffer(player, money, ready);
                     if (sess.aReady && sess.bReady) {
@@ -49,52 +48,52 @@ public final class TradeManager {
 
         // Client -> server: cancel (ESC/close)
         Net.registerServerReceiver(NotchPackets.TRADE_CANCEL, (srv, player, buf) -> {
-            String reason = buf.readString(64);
+            String reason = buf.readUtf(64);
             srv.execute(() -> {
-                TradeSession sess = get(player.getUuid());
+                TradeSession sess = get(player.getUUID());
                 if (sess != null) sess.cancel(reason);
             });
         });
     }
 
-    public static void invite(ServerPlayerEntity from, ServerPlayerEntity to) {
+    public static void invite(ServerPlayer from, ServerPlayer to) {
         if (from == to) {
-            from.sendMessage(Text.literal("You cannot trade yourself.").formatted(Formatting.RED), false);
+            from.displayClientMessage(Component.literal("You cannot trade yourself.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        if (get(from.getUuid()) != null || get(to.getUuid()) != null) {
-            from.sendMessage(Text.literal("Either you or the target is already trading.").formatted(Formatting.RED), false);
+        if (get(from.getUUID()) != null || get(to.getUUID()) != null) {
+            from.displayClientMessage(Component.literal("Either you or the target is already trading.").withStyle(ChatFormatting.RED), false);
             return;
         }
         TradeSession sess = new TradeSession(from, to);
-        sessions.put(from.getUuid(), sess);
-        sessions.put(to.getUuid(), sess);
+        sessions.put(from.getUUID(), sess);
+        sessions.put(to.getUUID(), sess);
 
-        Text accept = Text.literal("[ACCEPT]").setStyle(
-                Style.EMPTY.withColor(Formatting.GREEN)
+        Component accept = Component.literal("[ACCEPT]").setStyle(
+                Style.EMPTY.withColor(ChatFormatting.GREEN)
                         .withBold(true)
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/trade accept " + from.getName().getString()))
         );
-        Text decline = Text.literal("[DECLINE]").setStyle(
-                Style.EMPTY.withColor(Formatting.RED)
+        Component decline = Component.literal("[DECLINE]").setStyle(
+                Style.EMPTY.withColor(ChatFormatting.RED)
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/trade decline " + from.getName().getString()))
         );
-        to.sendMessage(Text.literal(from.getName().getString() + " wants to trade: ")
-                .append(accept).append(Text.literal(" ")).append(decline), false);
-        from.sendMessage(Text.literal("Trade invite sent to " + to.getName().getString()).formatted(Formatting.GRAY), false);
+        to.displayClientMessage(Component.literal(from.getName().getString() + " wants to trade: ")
+                .append(accept).append(Component.literal(" ")).append(decline), false);
+        from.displayClientMessage(Component.literal("Trade invite sent to " + to.getName().getString()).withStyle(ChatFormatting.GRAY), false);
     }
 
-    public static void accept(ServerPlayerEntity target, String inviterName) {
-        TradeSession sess = get(target.getUuid());
+    public static void accept(ServerPlayer target, String inviterName) {
+        TradeSession sess = get(target.getUUID());
         if (sess == null || !sess.involves(inviterName)) {
-            target.sendMessage(Text.literal("No pending trade with " + inviterName + ".").formatted(Formatting.RED), false);
+            target.displayClientMessage(Component.literal("No pending trade with " + inviterName + ".").withStyle(ChatFormatting.RED), false);
             return;
         }
         sess.openScreens();
     }
 
-    public static void decline(ServerPlayerEntity target, String inviterName) {
-        TradeSession sess = get(target.getUuid());
+    public static void decline(ServerPlayer target, String inviterName) {
+        TradeSession sess = get(target.getUUID());
         if (sess != null && sess.involves(inviterName)) {
             sess.cancel("Declined");
         }
@@ -120,14 +119,14 @@ public final class TradeManager {
 
     static TradeSession get(UUID any) { return sessions.get(any); }
     static void remove(TradeSession s) {
-        sessions.remove(s.a.getUuid());
-        sessions.remove(s.b.getUuid());
+        sessions.remove(s.a.getUUID());
+        sessions.remove(s.b.getUUID());
     }
 
     /* ---------------- Trade Session ---------------- */
 
     public static final class TradeSession {
-        final ServerPlayerEntity a, b;
+        final ServerPlayer a, b;
         int aMoney = 0, bMoney = 0;
         boolean aReady = false, bReady = false;
         int ticks = 0;
@@ -135,7 +134,7 @@ public final class TradeManager {
 
         TradeScreenHandler aHandler, bHandler;
 
-        TradeSession(ServerPlayerEntity a, ServerPlayerEntity b) {
+        TradeSession(ServerPlayer a, ServerPlayer b) {
             this.a = a;
             this.b = b;
         }
@@ -145,34 +144,34 @@ public final class TradeManager {
             return a.getName().getString().equals(name) || b.getName().getString().equals(name);
         }
 
-        boolean sameWorld() { return a.getWorld() == b.getWorld(); }
-        double distance() { return a.getPos().distanceTo(b.getPos()); }
+        boolean sameWorld() { return a.level() == b.level(); }
+        double distance() { return a.position().distanceTo(b.position()); }
 
         void openScreens() {
             // A’s view (self on left)
-            a.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, inv, p) -> {
-                TradeScreenHandler h = new TradeScreenHandler(syncId, inv, p, this, true);
+            a.openMenu(new SimpleMenuProvider((containerId, inv, p) -> {
+                TradeScreenHandler h = new TradeScreenHandler(containerId, inv, p, this, true);
                 this.aHandler = h;
                 return h;
-            }, Text.literal("Trade")));
+            }, Component.literal("Trade")));
 
             // B’s view (their self is left on their screen)
-            b.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, inv, p) -> {
-                TradeScreenHandler h = new TradeScreenHandler(syncId, inv, p, this, false);
+            b.openMenu(new SimpleMenuProvider((containerId, inv, p) -> {
+                TradeScreenHandler h = new TradeScreenHandler(containerId, inv, p, this, false);
                 this.bHandler = h;
                 return h;
-            }, Text.literal("Trade")));
+            }, Component.literal("Trade")));
 
-            if (aHandler != null) aHandler.syncState();
-            if (bHandler != null) bHandler.syncState();
+            if (aHandler != null) aHandler.sendAllDataToRemote();
+            if (bHandler != null) bHandler.sendAllDataToRemote();
         }
 
-        void updateOffer(ServerPlayerEntity who, int money, boolean ready) {
+        void updateOffer(ServerPlayer who, int money, boolean ready) {
             if (who == a) { aMoney = Math.max(0, money); aReady = ready; }
             else if (who == b) { bMoney = Math.max(0, money); bReady = ready; }
 
-            if (aHandler != null) aHandler.syncState();
-            if (bHandler != null) bHandler.syncState();
+            if (aHandler != null) aHandler.sendAllDataToRemote();
+            if (bHandler != null) bHandler.sendAllDataToRemote();
         }
 
         void cancel(String reason) {
@@ -202,8 +201,8 @@ public final class TradeManager {
             // Swap items
             var aItems = aHandler.takeItemsForCompletion();
             var bItems = bHandler.takeItemsForCompletion();
-            for (ItemStack s : aItems) if (!s.isEmpty()) b.getInventory().offerOrDrop(s.copy());
-            for (ItemStack s : bItems) if (!s.isEmpty()) a.getInventory().offerOrDrop(s.copy());
+            for (ItemStack s : aItems) if (!s.isEmpty()) b.getInventory().placeItemBackInInventory(s.copy());
+            for (ItemStack s : bItems) if (!s.isEmpty()) a.getInventory().placeItemBackInInventory(s.copy());
 
             // Money transfers
             BalanceStore.subtract(a, aMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
@@ -225,13 +224,13 @@ public final class TradeManager {
 
         /* ---------- helpers ---------- */
 
-        private void sendCancel(ServerPlayerEntity p, String reason) {
+        private void sendCancel(ServerPlayer p, String reason) {
             var buf = PacketByteBufs.create();
-            buf.writeString(reason);
+            buf.writeUtf(reason);
             Net.sendToClient(p, NotchPackets.TRADE_CANCEL, buf);
         }
 
-        private void sendDone(ServerPlayerEntity p) {
+        private void sendDone(ServerPlayer p) {
             Net.sendToClient(p, NotchPackets.TRADE_COMPLETE, PacketByteBufs.empty());
         }
     }

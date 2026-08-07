@@ -3,8 +3,7 @@ package net.fugginbeenus.notchcurrency.core;
 import net.fugginbeenus.notchcurrency.economy.EconomyLedger;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.server.level.ServerPlayer;
 import java.util.UUID;
 
 public final class BalanceStore {
@@ -30,8 +29,8 @@ public final class BalanceStore {
 
     /* --------- Reads --------- */
 
-    public static long get(ServerPlayerEntity sp) {
-        return state(sp.getServer()).get(sp.getUuid());
+    public static long get(ServerPlayer sp) {
+        return state(sp.getServer()).get(sp.getUUID());
     }
 
     public static long get(MinecraftServer server, UUID id) {
@@ -40,36 +39,36 @@ public final class BalanceStore {
 
     /* --------- Mutations by player --------- */
 
-    public static long set(ServerPlayerEntity sp, long value) {
+    public static long set(ServerPlayer sp, long value) {
         return set(sp, value, TransactionReason.UNSPECIFIED, null);
     }
 
-    public static long set(ServerPlayerEntity sp, long value, TransactionReason reason, String detail) {
-        return mutate(sp.getServer(), sp.getUuid(), st -> st.set(sp.getUuid(), value), reason, detail);
+    public static long set(ServerPlayer sp, long value, TransactionReason reason, String detail) {
+        return mutate(sp.getServer(), sp.getUUID(), st -> st.set(sp.getUUID(), value), reason, detail);
     }
 
-    public static long add(ServerPlayerEntity sp, long delta) {
+    public static long add(ServerPlayer sp, long delta) {
         return add(sp, delta, TransactionReason.UNSPECIFIED, null);
     }
 
-    public static long add(ServerPlayerEntity sp, long delta, TransactionReason reason) {
+    public static long add(ServerPlayer sp, long delta, TransactionReason reason) {
         return add(sp, delta, reason, null);
     }
 
-    public static long add(ServerPlayerEntity sp, long delta, TransactionReason reason, String detail) {
-        return mutate(sp.getServer(), sp.getUuid(), st -> st.add(sp.getUuid(), delta), reason, detail);
+    public static long add(ServerPlayer sp, long delta, TransactionReason reason, String detail) {
+        return mutate(sp.getServer(), sp.getUUID(), st -> st.add(sp.getUUID(), delta), reason, detail);
     }
 
-    public static long subtract(ServerPlayerEntity sp, long delta) {
+    public static long subtract(ServerPlayer sp, long delta) {
         return subtract(sp, delta, TransactionReason.UNSPECIFIED, null);
     }
 
-    public static long subtract(ServerPlayerEntity sp, long delta, TransactionReason reason) {
+    public static long subtract(ServerPlayer sp, long delta, TransactionReason reason) {
         return subtract(sp, delta, reason, null);
     }
 
-    public static long subtract(ServerPlayerEntity sp, long delta, TransactionReason reason, String detail) {
-        return mutate(sp.getServer(), sp.getUuid(), st -> st.subtract(sp.getUuid(), delta), reason, detail);
+    public static long subtract(ServerPlayer sp, long delta, TransactionReason reason, String detail) {
+        return mutate(sp.getServer(), sp.getUUID(), st -> st.subtract(sp.getUUID(), delta), reason, detail);
     }
 
     /* --------- Mutations by UUID (e.g. offline players) --------- */

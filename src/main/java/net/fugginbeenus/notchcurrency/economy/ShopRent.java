@@ -7,10 +7,10 @@ import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.shop.PlayerShop;
 import net.fugginbeenus.notchcurrency.shop.ShopState;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public final class ShopRent {
                 long fromPending = shop.payFromPending(rent);
                 long fromOwner = rent - fromPending;
                 if (fromOwner > 0) {
-                    ServerPlayerEntity online = server.getPlayerManager().getPlayer(owner);
+                    ServerPlayer online = server.getPlayerList().getPlayer(owner);
                     if (online != null) {
                         CurrencyApi.withdraw(online, fromOwner, TransactionReason.SINK, "shop rent: " + shop.getShopName());
                     } else {
@@ -82,11 +82,11 @@ public final class ShopRent {
                 }
                 shop.setRentPaused(false);
                 shop.setUnpaidRentCycles(0);
-                notify(server, owner, Text.literal("Rent of ").formatted(Formatting.GRAY)
+                notify(server, owner, Component.literal("Rent of ").withStyle(ChatFormatting.GRAY)
                         .append(NotchCurrency.coins(rent))
-                        .append(Text.literal(" was paid for ").formatted(Formatting.GRAY))
-                        .append(Text.literal(shop.getShopName()).formatted(Formatting.WHITE))
-                        .append(Text.literal(".").formatted(Formatting.GRAY)));
+                        .append(Component.literal(" was paid for ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                        .append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
             } else {
                 shop.setRentPaused(true);
                 int cycles = shop.getUnpaidRentCycles() + 1;
@@ -96,29 +96,29 @@ public final class ShopRent {
                     shop.setOpen(false);
                     shop.setRentPaused(false);
                     shop.setUnpaidRentCycles(0);
-                    notify(server, owner, Text.literal("Your shop ")
-                            .append(Text.literal(shop.getShopName()).formatted(Formatting.WHITE))
-                            .append(Text.literal(" was closed for unpaid rent. Reopen it with /shop toggle.").formatted(Formatting.RED)));
+                    notify(server, owner, Component.literal("Your shop ")
+                            .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                            .append(Component.literal(" was closed for unpaid rent. Reopen it with /shop toggle.").withStyle(ChatFormatting.RED)));
                 } else {
-                    notify(server, owner, Text.literal("⚠ ")
-                            .append(Text.literal(shop.getShopName()).formatted(Formatting.WHITE))
-                            .append(Text.literal(" is frozen - couldn't pay rent of ").formatted(Formatting.YELLOW))
+                    notify(server, owner, Component.literal("⚠ ")
+                            .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                            .append(Component.literal(" is frozen - couldn't pay rent of ").withStyle(ChatFormatting.YELLOW))
                             .append(NotchCurrency.coins(rent))
-                            .append(Text.literal(" (" + cycles + "/" + (graceCycles + 1) + ").").formatted(Formatting.YELLOW)));
+                            .append(Component.literal(" (" + cycles + "/" + (graceCycles + 1) + ").").withStyle(ChatFormatting.YELLOW)));
                 }
             }
             dirty = true;
         }
 
         if (dirty) {
-            state.markDirty();
+            state.setDirty();
             LOGGER.info("Charged shop rent.");
         }
     }
 
-    private static void notify(MinecraftServer server, UUID owner, Text message) {
+    private static void notify(MinecraftServer server, UUID owner, Component message) {
         if (!announce) return;
-        ServerPlayerEntity p = server.getPlayerManager().getPlayer(owner);
-        if (p != null) p.sendMessage(message, false);
+        ServerPlayer p = server.getPlayerList().getPlayer(owner);
+        if (p != null) p.displayClientMessage(message, false);
     }
 }

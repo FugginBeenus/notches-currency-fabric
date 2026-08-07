@@ -41,36 +41,36 @@ import net.fugginbeenus.notchcurrency.registry.ModEntities;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.fugginbeenus.notchcurrency.trade.TradeManager;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public class NotchCurrency implements ModInitializer {
 
     public static final String MOD_ID = "notchcurrency";
 
-    public static Identifier id(String path) {
+    public static ResourceLocation id(String path) {
         return net.fugginbeenus.notchcurrency.compat.Reg.id(path);
     }
 
-    public static Text coinIcon() {
-        MutableText t = Text.literal("\uE000");  // Character mapped in minecraft:default font
-        HoverEvent.ItemStackContent content =
-                new HoverEvent.ItemStackContent(new ItemStack(ModItems.NOTCH_COIN));
+    public static Component coinIcon() {
+        MutableComponent t = Component.literal("\uE000");  // Character mapped in minecraft:default font
+        HoverEvent.ItemStackInfo content =
+                new HoverEvent.ItemStackInfo(new ItemStack(ModItems.NOTCH_COIN));
 
         // Force white so the coin glyph renders at full brightness (untinted) no matter what colour
         // the surrounding price text is drawn in, otherwise dark price text darkens the coin.
-        return t.styled(style -> style
-                .withColor(net.minecraft.text.TextColor.fromRgb(0xFFFFFF))
+        return t.withStyle(style -> style
+                .withColor(net.minecraft.network.chat.TextColor.fromRgb(0xFFFFFF))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, content)));
     }
 
-    public static Text coins(long amount) {
-        return Text.literal(Long.toString(amount) + " ").append(coinIcon());
+    public static Component coins(long amount) {
+        return Component.literal(Long.toString(amount) + " ").append(coinIcon());
     }
 
     @Override
@@ -140,20 +140,20 @@ public class NotchCurrency implements ModInitializer {
 
         // Bounty pools & crate definitions load from datapacks (mod ships defaults).
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
-                .get(net.minecraft.resource.ResourceType.SERVER_DATA)
+                .get(net.minecraft.server.packs.PackType.SERVER_DATA)
                 .registerReloadListener(new net.fugginbeenus.notchcurrency.economy.bounty.BountyPoolLoader());
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
-                .get(net.minecraft.resource.ResourceType.SERVER_DATA)
+                .get(net.minecraft.server.packs.PackType.SERVER_DATA)
                 .registerReloadListener(new net.fugginbeenus.notchcurrency.economy.crate.CrateLoader());
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
-                .get(net.minecraft.resource.ResourceType.SERVER_DATA)
+                .get(net.minecraft.server.packs.PackType.SERVER_DATA)
                 .registerReloadListener(new net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticLoader());
 
         // Auction expiration / cleanup & payouts + login reminders.
         // Auctions are global (overworld-stored), so tick the single state once per
         // server tick rather than once per dimension.
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            ServerWorld overworld = server.getOverworld();
+            ServerLevel overworld = server.overworld();
             if (overworld == null) return;
             AuctionState state = AuctionState.get(overworld);
             state.tick(overworld);
@@ -189,10 +189,10 @@ public class NotchCurrency implements ModInitializer {
 
         // HUD balance sync on join + schedule auction mailbox reminder
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity sp = handler.player;
+            ServerPlayer sp = handler.player;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
 
-            ServerWorld world = sp.getServerWorld();
+            ServerLevel world = sp.serverLevel();
             AuctionState state = AuctionState.get(world);
             state.onPlayerJoin(sp);
 
@@ -211,7 +211,7 @@ public class NotchCurrency implements ModInitializer {
 
         // HUD balance sync on respawn
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
-            ServerPlayerEntity sp = newP;
+            ServerPlayer sp = newP;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         });
 
@@ -220,7 +220,7 @@ public class NotchCurrency implements ModInitializer {
 
         // StackData/Ench need a registry lookup to (de)serialize on 1.21+.
         ServerLifecycleEvents.SERVER_STARTED.register(
-                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.getRegistryManager()));
+                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.registryAccess()));
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
 
@@ -229,17 +229,17 @@ public class NotchCurrency implements ModInitializer {
         // player to sleep and the tool would never see the click at all. Intercepting here is the
         // only way the tool gets told about the one block it most needs to be pointed at.
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
-            if (world.isClient() || !(player instanceof net.minecraft.server.network.ServerPlayerEntity sp)) {
-                return net.minecraft.util.ActionResult.PASS;
+            if (world.isClientSide() || !(player instanceof net.minecraft.server.level.ServerPlayer sp)) {
+                return net.minecraft.world.InteractionResult.PASS;
             }
-            net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+            net.minecraft.world.item.ItemStack held = player.getItemInHand(hand);
             if (!(held.getItem() instanceof net.fugginbeenus.notchcurrency.item.RoutePlannerItem)
                     || !net.fugginbeenus.notchcurrency.compat.StackData.has(
                             held, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.ENTRY_KEY)) {
-                return net.minecraft.util.ActionResult.PASS;
+                return net.minecraft.world.InteractionResult.PASS;
             }
-            net.fugginbeenus.notchcurrency.item.RoutePlannerItem.markScheduleSpot(sp, held, hit.getBlockPos(), hit.getSide());
-            return net.minecraft.util.ActionResult.SUCCESS;
+            net.fugginbeenus.notchcurrency.item.RoutePlannerItem.markScheduleSpot(sp, held, hit.getBlockPos(), hit.getDirection());
+            return net.minecraft.world.InteractionResult.SUCCESS;
         });
 
         // Flush & close the economy audit log when the server stops.

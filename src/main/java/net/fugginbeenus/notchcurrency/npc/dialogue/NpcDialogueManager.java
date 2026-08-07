@@ -7,11 +7,10 @@ import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.npc.NpcText;
 import net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +21,7 @@ public final class NpcDialogueManager {
 
     private NpcDialogueManager() {}
 
-    public static boolean open(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public static boolean open(ServerPlayer sp, NotchNpcEntity npc) {
         DialogueTree tree = npc.getDialogue();
         if (tree.isEmpty()) return false;
 
@@ -31,11 +30,11 @@ public final class NpcDialogueManager {
             DialogueNode pick = pages.get(sp.getRandom().nextInt(pages.size()));
             String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                     ? npc.getCustomName().getString() : "NPC";
-            sp.sendMessage(Text.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
-                    .formatted(Formatting.WHITE), false);
+            sp.displayClientMessage(Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
+                    .withStyle(ChatFormatting.WHITE), false);
             if (hasRoleScreen(npc)) {
                 // Give the greeting a beat to be read before the GUI covers it.
-                pendingOpens.add(new PendingOpen(sp.getUuid(), npc.getUuid(), GREETING_DELAY_TICKS));
+                pendingOpens.add(new PendingOpen(sp.getUUID(), npc.getUUID(), GREETING_DELAY_TICKS));
             }
             return true;
         }
@@ -46,9 +45,9 @@ public final class NpcDialogueManager {
         return true;
     }
 
-    public static void choose(ServerPlayerEntity sp, UUID npcId, String nodeId, int choiceIndex) {
-        if (!(sp.getServerWorld().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
-        if (sp.squaredDistanceTo(npc) > MAX_TALK_DIST_SQ) return;
+    public static void choose(ServerPlayer sp, UUID npcId, String nodeId, int choiceIndex) {
+        if (!(sp.serverLevel().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
+        if (sp.distanceToSqr(npc) > MAX_TALK_DIST_SQ) return;
         DialogueNode node = npc.getDialogue().get(nodeId);
         if (node == null || choiceIndex < 0 || choiceIndex >= node.choices().size()) return;
         DialogueChoice choice = node.choices().get(choiceIndex);
@@ -71,7 +70,7 @@ public final class NpcDialogueManager {
 
     // ---- helpers ----
 
-    public static void sendNode(ServerPlayerEntity sp, NotchNpcEntity npc, DialogueNode node) {
+    public static void sendNode(ServerPlayer sp, NotchNpcEntity npc, DialogueNode node) {
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
 
@@ -86,15 +85,15 @@ public final class NpcDialogueManager {
 
         // Reaching the role screen is a REAL choice with an OPEN_ROLE action (seeded by default for
         // role NPCs, but the author can edit or remove it), not a synthetic appended here.
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeUuid(npc.getUuid());
-        buf.writeString(npcName);
-        buf.writeString(node.id());
-        buf.writeString(substitute(node.text(), sp, npcName));
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeUUID(npc.getUUID());
+        buf.writeUtf(npcName);
+        buf.writeUtf(node.id());
+        buf.writeUtf(substitute(node.text(), sp, npcName));
         buf.writeVarInt(visible.size());
         for (int[] v : visible) {
             buf.writeVarInt(v[0]);
-            buf.writeString(substitute(node.choices().get(v[0]).label(), sp, npcName));
+            buf.writeUtf(substitute(node.choices().get(v[0]).label(), sp, npcName));
             buf.writeBoolean(v[1] == 1);
         }
         Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
@@ -127,17 +126,17 @@ public final class NpcDialogueManager {
                 && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.GREETER;
     }
 
-    public static void openRole(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public static void openRole(ServerPlayer sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
         watchForFarewell(sp, npc);
     }
 
-    public static void watchForFarewell(ServerPlayerEntity sp, NotchNpcEntity npc) {
+    public static void watchForFarewell(ServerPlayer sp, NotchNpcEntity npc) {
         String farewell = npc.getFarewellText();
         if (farewell == null || farewell.isBlank()) return;
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
-        farewells.put(sp.getUuid(), new FarewellWatch(npcName, farewell));
+        farewells.put(sp.getUUID(), new FarewellWatch(npcName, farewell));
     }
 
     public static void tick(net.minecraft.server.MinecraftServer server) {
@@ -147,8 +146,8 @@ public final class NpcDialogueManager {
                 PendingOpen p = it.next();
                 if (--p.ticks > 0) continue;
                 it.remove();
-                ServerPlayerEntity sp = server.getPlayerManager().getPlayer(p.player);
-                if (sp != null && sp.getServerWorld().getEntity(p.npc) instanceof NotchNpcEntity npc) {
+                ServerPlayer sp = server.getPlayerList().getPlayer(p.player);
+                if (sp != null && sp.serverLevel().getEntity(p.npc) instanceof NotchNpcEntity npc) {
                     openRole(sp, npc);
                 }
             }
@@ -157,35 +156,35 @@ public final class NpcDialogueManager {
             var it = farewells.entrySet().iterator();
             while (it.hasNext()) {
                 var entry = it.next();
-                ServerPlayerEntity sp = server.getPlayerManager().getPlayer(entry.getKey());
+                ServerPlayer sp = server.getPlayerList().getPlayer(entry.getKey());
                 FarewellWatch w = entry.getValue();
                 if (sp == null || --w.ttl <= 0) {
                     it.remove();
                     continue;
                 }
-                boolean inScreen = sp.currentScreenHandler != sp.playerScreenHandler;
+                boolean inScreen = sp.containerMenu != sp.inventoryMenu;
                 if (inScreen) {
                     w.sawScreen = true;
                 } else if (w.sawScreen) {
-                    sp.sendMessage(Text.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
-                            .formatted(Formatting.WHITE), false);
+                    sp.displayClientMessage(Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
+                            .withStyle(ChatFormatting.WHITE), false);
                     it.remove();
                 }
             }
         }
     }
 
-    private static void sendClose(ServerPlayerEntity sp) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeUuid(UUID.randomUUID());
-        buf.writeString("");
-        buf.writeString(""); // empty node id = close
-        buf.writeString("");
+    private static void sendClose(ServerPlayer sp) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeUUID(UUID.randomUUID());
+        buf.writeUtf("");
+        buf.writeUtf(""); // empty node id = close
+        buf.writeUtf("");
         buf.writeVarInt(0);
         Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
     }
 
-    private static String substitute(String text, ServerPlayerEntity sp, String npcName) {
+    private static String substitute(String text, ServerPlayer sp, String npcName) {
         return NpcText.substitute(text, sp, npcName);
     }
 }

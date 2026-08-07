@@ -7,9 +7,9 @@ import com.google.gson.JsonParser;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +22,12 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-BountyPools");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return NotchCurrency.id("bounty_pools");
     }
 
     @Override
-    public void reload(ResourceManager manager) {
+    public void onResourceManagerReload(ResourceManager manager) {
         BountyPools.clear();
         loadObjectives(manager);
         loadRewards(manager);
@@ -37,8 +37,8 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
     }
 
     private void loadObjectives(ResourceManager manager) {
-        for (Map.Entry<Identifier, Resource> e : manager
-                .findResources("notch_bounties/objectives", id -> id.getPath().endsWith(".json")).entrySet()) {
+        for (Map.Entry<ResourceLocation, Resource> e : manager
+                .listResources("notch_bounties/objectives", id -> id.getPath().endsWith(".json")).entrySet()) {
             forEachEntry(e, o -> {
                 BountyType type = "fetch".equalsIgnoreCase(o.get("type").getAsString())
                         ? BountyType.FETCH : BountyType.KILL;
@@ -55,16 +55,16 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
     }
 
     private void loadDecrees(ResourceManager manager) {
-        for (Map.Entry<Identifier, Resource> e : manager
-                .findResources("notch_bounties/decrees", id -> id.getPath().endsWith(".json")).entrySet()) {
+        for (Map.Entry<ResourceLocation, Resource> e : manager
+                .listResources("notch_bounties/decrees", id -> id.getPath().endsWith(".json")).entrySet()) {
             forEachEntry(e, o -> BountyPools.addDecree(
                     Reg.parse(o.get("item").getAsString()), o.get("category").getAsString()));
         }
     }
 
     private void loadRewards(ResourceManager manager) {
-        for (Map.Entry<Identifier, Resource> e : manager
-                .findResources("notch_bounties/rewards", id -> id.getPath().endsWith(".json")).entrySet()) {
+        for (Map.Entry<ResourceLocation, Resource> e : manager
+                .listResources("notch_bounties/rewards", id -> id.getPath().endsWith(".json")).entrySet()) {
             forEachEntry(e, o -> {
                 boolean item = "item".equalsIgnoreCase(o.get("type").getAsString());
                 int min = o.get("min").getAsInt();
@@ -80,8 +80,8 @@ public class BountyPoolLoader implements SimpleSynchronousResourceReloadListener
 
     private interface EntryConsumer { void accept(JsonObject o); }
 
-    private void forEachEntry(Map.Entry<Identifier, Resource> e, EntryConsumer consumer) {
-        try (InputStream is = e.getValue().getInputStream();
+    private void forEachEntry(Map.Entry<ResourceLocation, Resource> e, EntryConsumer consumer) {
+        try (InputStream is = e.getValue().open();
              InputStreamReader reader = new InputStreamReader(is)) {
             JsonElement root = JsonParser.parseReader(reader);
             JsonArray arr = root.isJsonArray() ? root.getAsJsonArray()

@@ -3,9 +3,9 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.item.RoutePlannerItem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.ItemStack;
 
 public final class RouteHud implements HudRenderCallback {
 
@@ -13,16 +13,16 @@ public final class RouteHud implements HudRenderCallback {
 
     @Override
     //? if >=1.21 {
-    /*public void onHudRender(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter) {
+    /*public void onHudRender(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} else {
-    public void onHudRender(DrawContext ctx, float tickDelta) {
+    public void onHudRender(GuiGraphics ctx, float tickDelta) {
     //?}
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.options.hudHidden) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || client.options.hideGui) return;
 
-        ItemStack held = client.player.getMainHandStack();
+        ItemStack held = client.player.getMainHandItem();
         if (!(held.getItem() instanceof RoutePlannerItem)) {
-            held = client.player.getOffHandStack();
+            held = client.player.getOffhandItem();
             if (!(held.getItem() instanceof RoutePlannerItem)) return;
         }
 
@@ -38,14 +38,14 @@ public final class RouteHud implements HudRenderCallback {
                 "Right-click the air - confirm & finish",
         };
 
-        var tr = client.textRenderer;
-        int w = tr.getWidth(title);
-        w = Math.max(w, tr.getWidth(countLine));
-        for (String s : hints) w = Math.max(w, tr.getWidth(s));
+        var tr = client.font;
+        int w = tr.width(title);
+        w = Math.max(w, tr.width(countLine));
+        for (String s : hints) w = Math.max(w, tr.width(s));
         w += PAD * 2;
         int h = PAD * 2 + 10 + 12 + hints.length * 10;
 
-        int x = (ctx.getScaledWindowWidth() - w) / 2;
+        int x = (ctx.guiWidth() - w) / 2;
         int y = 6;
 
         ctx.fill(x, y, x + w, y + h, 0x90101010); // translucent: the world stays visible
@@ -53,12 +53,12 @@ public final class RouteHud implements HudRenderCallback {
         ctx.fill(x, y + h - 1, x + w, y + h, 0x60000000);
 
         int ty = y + PAD;
-        ctx.drawText(tr, title, x + PAD, ty, 0xFFFFD700, true);
+        ctx.drawString(tr, title, x + PAD, ty, 0xFFFFD700, true);
         ty += 12;
-        ctx.drawText(tr, countLine, x + PAD, ty, count < 2 ? 0xFFFFAA55 : 0xFF7FDF7F, true);
+        ctx.drawString(tr, countLine, x + PAD, ty, count < 2 ? 0xFFFFAA55 : 0xFF7FDF7F, true);
         ty += 12;
         for (String s : hints) {
-            ctx.drawText(tr, s, x + PAD, ty, 0xFFCCCCCC, true);
+            ctx.drawString(tr, s, x + PAD, ty, 0xFFCCCCCC, true);
             ty += 10;
         }
     }

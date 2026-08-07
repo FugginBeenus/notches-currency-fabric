@@ -4,13 +4,11 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import java.util.UUID;
 
 public class PoseEditorScreen extends Screen {
@@ -31,7 +29,7 @@ public class PoseEditorScreen extends Screen {
     private NotchNpcEntity preview;
 
     public PoseEditorScreen(UUID npcId) {
-        super(Text.literal("Pose Editor"));
+        super(Component.literal("Pose Editor"));
         this.npcId = npcId;
     }
 
@@ -55,7 +53,7 @@ public class PoseEditorScreen extends Screen {
     private int sliderY(int axis) { return py() + 96 + axis * 22; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
@@ -63,21 +61,21 @@ public class PoseEditorScreen extends Screen {
         //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Pose Editor", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Pose Editor", px + W / 2, py + 8);
 
         // Live preview of the actual NPC.
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findNpc();
         if (npc != null) {
-            float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw;
+            float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
             boolean wasInvisible = npc.isInvisible();
-            npc.setYaw(180);
-            npc.bodyYaw = 180;
+            npc.setYRot(180);
+            npc.yBodyRot = 180;
             npc.setInvisible(false); // always show the NPC in its own editor preview
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 16, 46,
                     (px + PREV_X + PREV_W / 2f) - mouseX, (py + PREV_Y + 40f) - mouseY, npc);
-            npc.setYaw(oldYaw);
-            npc.bodyYaw = oldBody;
+            npc.setYRot(oldYaw);
+            npc.yBodyRot = oldBody;
             npc.setInvisible(wasInvisible);
         }
 
@@ -85,9 +83,9 @@ public class PoseEditorScreen extends Screen {
         for (int i = 0; i < PART_NAMES.length; i++) {
             boolean hover = over(mouseX, mouseY, partX(i), partY(i), PART_W, PART_H);
             if (i == selectedPart) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, partX(i), partY(i), PART_W, PART_H, PART_NAMES[i], hover);
+                NotchWidgets.primaryButton(ctx, this.font, partX(i), partY(i), PART_W, PART_H, PART_NAMES[i], hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, partX(i), partY(i), PART_W, PART_H, PART_NAMES[i], hover);
+                NotchWidgets.neutralButton(ctx, this.font, partX(i), partY(i), PART_W, PART_H, PART_NAMES[i], hover);
             }
         }
 
@@ -95,21 +93,21 @@ public class PoseEditorScreen extends Screen {
         for (int axis = 0; axis < 3; axis++) {
             int sy = sliderY(axis);
             int deg = angles[selectedPart * 3 + axis];
-            ctx.drawText(this.textRenderer, AXIS_NAMES[axis], px + RX, sy + 2, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, AXIS_NAMES[axis], px + RX, sy + 2, NotchTheme.TEXT_DARK, false);
             boolean hover = draggingAxis == axis
                     || over(mouseX, mouseY, px + SLIDER_X, sy, SLIDER_W, SLIDER_H);
             NotchWidgets.slider(ctx, px + SLIDER_X, sy, SLIDER_W, SLIDER_H, (deg + 180) / 360f, hover);
-            ctx.drawText(this.textRenderer, deg + "°", px + SLIDER_X + SLIDER_W + 6, sy + 2, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, deg + "°", px + SLIDER_X + SLIDER_W + 6, sy + 2, NotchTheme.TEXT_DARK, false);
         }
 
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + RX, py + 166, 100, 15, "Reset Part",
+        NotchWidgets.neutralButton(ctx, this.font, px + RX, py + 166, 100, 15, "Reset Part",
                 over(mouseX, mouseY, px + RX, py + 166, 100, 15));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + RX + 108, py + 166, 100, 15, "Reset All",
+        NotchWidgets.dangerButton(ctx, this.font, px + RX + 108, py + 166, 100, 15, "Reset All",
                 over(mouseX, mouseY, px + RX + 108, py + 166, 100, 15));
 
-        NotchWidgets.centerText(ctx, this.textRenderer, "Changes apply to the NPC instantly.",
+        NotchWidgets.centerText(ctx, this.font, "Changes apply to the NPC instantly.",
                 px + RX + (W - RX) / 2 - 4, py + 187, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + RX, py + 198, 208, 16, "Back to Editor",
+        NotchWidgets.primaryButton(ctx, this.font, px + RX, py + 198, 208, 16, "Back to Editor",
                 over(mouseX, mouseY, px + RX, py + 198, 208, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -204,11 +202,11 @@ public class PoseEditorScreen extends Screen {
     }
 
     private NotchNpcEntity findNpc() {
-        MinecraftClient c = MinecraftClient.getInstance();
-        if (c.world == null) return null;
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
         if (preview != null && !preview.isRemoved()) return preview;
-        for (Entity e : c.world.getEntities()) {
-            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) {
+        for (Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof NotchNpcEntity n && n.getUUID().equals(npcId)) {
                 preview = n;
                 return n;
             }
@@ -221,7 +219,7 @@ public class PoseEditorScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -234,7 +232,7 @@ public class PoseEditorScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

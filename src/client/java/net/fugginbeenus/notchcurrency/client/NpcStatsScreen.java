@@ -3,10 +3,9 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 public class NpcStatsScreen extends Screen {
@@ -28,7 +27,7 @@ public class NpcStatsScreen extends Screen {
     private int draggingSlider = -1;
 
     public NpcStatsScreen(UUID npcId, int statsBits, int maxHealth, int speedPct, int regen) {
-        super(Text.literal("NPC Stats"));
+        super(Component.literal("NPC Stats"));
         this.npcId = npcId;
         this.statsBits = statsBits;
         this.maxHealth = Math.max(2, Math.min(100, maxHealth));
@@ -47,7 +46,7 @@ public class NpcStatsScreen extends Screen {
     private int visibility() { return (statsBits >> 8) & 3; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
@@ -55,15 +54,15 @@ public class NpcStatsScreen extends Screen {
         //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Stats & Abilities", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Stats & Abilities", px + W / 2, py + 8);
 
         for (int i = 0; i < 3; i++) {
             int sy = sliderY(i);
-            ctx.drawText(this.textRenderer, SLIDER_NAMES[i], px + 14, sy + 2, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, SLIDER_NAMES[i], px + 14, sy + 2, NotchTheme.TEXT_DARK, false);
             boolean hover = draggingSlider == i
                     || over(mouseX, mouseY, px + SLIDER_X, sy, SLIDER_W, SLIDER_H);
             NotchWidgets.slider(ctx, px + SLIDER_X, sy, SLIDER_W, SLIDER_H, sliderT(i), hover);
-            ctx.drawText(this.textRenderer, sliderReadout(i), px + SLIDER_X + SLIDER_W + 8, sy + 2,
+            ctx.drawString(this.font, sliderReadout(i), px + SLIDER_X + SLIDER_W + 8, sy + 2,
                     NotchTheme.TEXT_DARK, false);
         }
 
@@ -72,16 +71,16 @@ public class NpcStatsScreen extends Screen {
         for (int i = 0; i < TOGGLE_NAMES.length; i++) {
             boolean on = (statsBits & TOGGLE_BITS[i]) != 0;
             boolean hover = over(mouseX, mouseY, toggleX(i), toggleY(i), 132, 15);
-            if (on) NotchWidgets.primaryButton(ctx, this.textRenderer, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
-            else NotchWidgets.neutralButton(ctx, this.textRenderer, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
+            if (on) NotchWidgets.primaryButton(ctx, this.font, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
+            else NotchWidgets.neutralButton(ctx, this.font, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
         }
 
         // Day/night rule: while off-schedule the NPC is invisible and won't respond to clicks.
-        ctx.drawText(this.textRenderer, "Appears", px + 14, py + 226, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + SLIDER_X, py + 223, SLIDER_W, 15,
+        ctx.drawString(this.font, "Appears", px + 14, py + 226, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 223, SLIDER_W, 15,
                 VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 223, SLIDER_W, 15));
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 70, py + 244, 160, 16, "Back to Editor",
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 244, 160, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 70, py + 244, 160, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -175,7 +174,7 @@ public class NpcStatsScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -188,7 +187,7 @@ public class NpcStatsScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

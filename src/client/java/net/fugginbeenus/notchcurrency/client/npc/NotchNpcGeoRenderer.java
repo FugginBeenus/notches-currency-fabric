@@ -1,16 +1,16 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
 
-    public NotchNpcGeoRenderer(EntityRendererFactory.Context ctx) {
+    public NotchNpcGeoRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NotchNpcGeoModel());
         this.shadowRadius = 0.4f;
     }
@@ -21,8 +21,8 @@ public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
                           VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender,
                           float partialTick, int packedLight, int packedOverlay, int colour) {
     *///?} else {
-    public void preRender(MatrixStack poseStack, NotchNpcEntity animatable, BakedGeoModel model,
-                          VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender,
+    public void preRender(PoseStack poseStack, NotchNpcEntity animatable, BakedGeoModel model,
+                          MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender,
                           float partialTick, int packedLight, int packedOverlay,
                           float red, float green, float blue, float alpha) {
     //?}

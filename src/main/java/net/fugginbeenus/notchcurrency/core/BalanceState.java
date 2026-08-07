@@ -1,18 +1,16 @@
 package net.fugginbeenus.notchcurrency.core;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
-
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class BalanceState extends PersistentState {
+public class BalanceState extends SavedData {
 
     private static final String KEY_ROOT = "balances";
 
@@ -30,14 +28,14 @@ public class BalanceState extends PersistentState {
     public long set(UUID id, long value) {
         long v = Math.max(0L, value);
         balances.put(id, v);
-        this.markDirty();
+        this.setDirty();
         return v;
     }
 
     public long add(UUID id, long delta) {
         long next = Math.max(0L, get(id) + delta);
         balances.put(id, next);
-        this.markDirty();
+        this.setDirty();
         return next;
     }
 
@@ -65,11 +63,11 @@ public class BalanceState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtCompound map = new NbtCompound();
+        CompoundTag map = new CompoundTag();
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
             map.putLong(e.getKey().toString(), e.getValue());
         }
@@ -77,11 +75,11 @@ public class BalanceState extends PersistentState {
         return nbt;
     }
 
-    public static BalanceState readNbt(NbtCompound nbt) {
+    public static BalanceState load(CompoundTag nbt) {
         BalanceState state = new BalanceState();
         if (nbt.contains(KEY_ROOT)) {
-            NbtCompound map = nbt.getCompound(KEY_ROOT);
-            for (String key : map.getKeys()) {
+            CompoundTag map = nbt.getCompound(KEY_ROOT);
+            for (String key : map.getAllKeys()) {
                 try {
                     UUID id = UUID.fromString(key);
                     // getLong tolerates older int-typed entries, so this still reads legacy data.
@@ -97,9 +95,9 @@ public class BalanceState extends PersistentState {
     /* ---------- Loader ---------- */
 
     public static BalanceState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         // 1.20.1 signature: (reader, factory, name)
-        return StateData.getOrCreate(mgr, BalanceState::new, BalanceState::readNbt, "notchcurrency_balances");
+        return StateData.getOrCreate(mgr, BalanceState::new, BalanceState::load, "notchcurrency_balances");
     }
 }

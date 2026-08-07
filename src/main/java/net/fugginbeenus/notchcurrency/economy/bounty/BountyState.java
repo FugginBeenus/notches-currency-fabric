@@ -3,17 +3,16 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class BountyState extends PersistentState {
+public class BountyState extends SavedData {
 
     private static final String DATA_KEY = "notchcurrency_bounties";
 
@@ -34,8 +33,8 @@ public class BountyState extends PersistentState {
     private final List<ItemStack> decrees = new ArrayList<>(); // placed decree items (gate categories)
 
     public static BountyState get(MinecraftServer server) {
-        ServerWorld overworld = server.getOverworld();
-        PersistentStateManager mgr = overworld.getPersistentStateManager();
+        ServerLevel overworld = server.overworld();
+        DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, BountyState::new, BountyState::fromNbt, DATA_KEY);
     }
 
@@ -43,14 +42,14 @@ public class BountyState extends PersistentState {
 
     public void addOffer(Bounty b) {
         offers.put(b.getId(), b);
-        markDirty();
+        setDirty();
     }
 
     public boolean removeOffer(UUID id) {
         boolean removed = offers.remove(id) != null;
         if (removed) {
             for (Set<UUID> s : completed.values()) s.remove(id); // clear completion once the offer rotates out
-            markDirty();
+            setDirty();
         }
         return removed;
     }
@@ -63,7 +62,7 @@ public class BountyState extends PersistentState {
     public void markOfferCompleted(UUID player, UUID offerId) {
         if (offers.containsKey(offerId)) { // only worth tracking while the offer still exists
             completed.computeIfAbsent(player, k -> new HashSet<>()).add(offerId);
-            markDirty();
+            setDirty();
         }
     }
 
@@ -90,7 +89,7 @@ public class BountyState extends PersistentState {
 
     public void take(UUID player, TakenBounty tb) {
         taken.computeIfAbsent(player, k -> new LinkedHashMap<>()).put(tb.bounty().getId(), tb);
-        markDirty();
+        setDirty();
     }
 
     @Nullable
@@ -106,7 +105,7 @@ public class BountyState extends PersistentState {
 
     public void removeTaken(UUID player, UUID offerId) {
         Map<UUID, TakenBounty> m = taken.get(player);
-        if (m != null && m.remove(offerId) != null) markDirty();
+        if (m != null && m.remove(offerId) != null) setDirty();
     }
 
     public int cleanupExpired(UUID player, long now) {
@@ -115,7 +114,7 @@ public class BountyState extends PersistentState {
         int before = m.size();
         m.values().removeIf(tb -> tb.isExpired(now));
         int dropped = before - m.size();
-        if (dropped > 0) markDirty();
+        if (dropped > 0) setDirty();
         return dropped;
     }
 
@@ -128,7 +127,7 @@ public class BountyState extends PersistentState {
     public void setDecrees(List<ItemStack> items) {
         decrees.clear();
         for (ItemStack s : items) if (!s.isEmpty()) decrees.add(s.copy());
-        markDirty();
+        setDirty();
     }
 
     @Nullable
@@ -136,7 +135,7 @@ public class BountyState extends PersistentState {
         if (decrees.isEmpty()) return null;
         Set<String> cats = new HashSet<>();
         for (ItemStack d : decrees) {
-            String c = BountyPools.decreeCategory(Registries.ITEM.getId(d.getItem()));
+            String c = BountyPools.decreeCategory(BuiltInRegistries.ITEM.getKey(d.getItem()));
             if (c != null) cats.add(c);
         }
         return cats.isEmpty() ? null : cats;
@@ -146,35 +145,35 @@ public class BountyState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
-        NbtList offerList = new NbtList();
+        ListTag offerList = new ListTag();
         for (Bounty b : offers.values()) offerList.add(b.toNbt());
         nbt.put("Offers", offerList);
 
-        NbtList takenList = new NbtList();
+        ListTag takenList = new ListTag();
         for (Map.Entry<UUID, Map<UUID, TakenBounty>> e : taken.entrySet()) {
             if (e.getValue().isEmpty()) continue;
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Player", e.getKey());
-            NbtList entries = new NbtList();
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Player", e.getKey());
+            ListTag entries = new ListTag();
             for (TakenBounty tb : e.getValue().values()) entries.add(tb.toNbt());
             o.put("Taken", entries);
             takenList.add(o);
         }
         nbt.put("TakenByPlayer", takenList);
 
-        NbtList doneList = new NbtList();
+        ListTag doneList = new ListTag();
         for (Map.Entry<UUID, Set<UUID>> e : completed.entrySet()) {
             if (e.getValue().isEmpty()) continue;
-            NbtCompound o = new NbtCompound();
-            o.putUuid("Player", e.getKey());
-            NbtList ids = new NbtList();
+            CompoundTag o = new CompoundTag();
+            o.putUUID("Player", e.getKey());
+            ListTag ids = new ListTag();
             for (UUID id : e.getValue()) {
-                NbtCompound io = new NbtCompound();
-                io.putUuid("Id", id);
+                CompoundTag io = new CompoundTag();
+                io.putUUID("Id", id);
                 ids.add(io);
             }
             o.put("Ids", ids);
@@ -182,15 +181,15 @@ public class BountyState extends PersistentState {
         }
         nbt.put("Completed", doneList);
 
-        NbtList decreeList = new NbtList();
+        ListTag decreeList = new ListTag();
         for (ItemStack s : decrees) decreeList.add(StackData.writeStack(s));
         nbt.put("Decrees", decreeList);
         return nbt;
     }
 
-    public static BountyState fromNbt(NbtCompound nbt) {
+    public static BountyState fromNbt(CompoundTag nbt) {
         BountyState state = new BountyState();
-        NbtList offerList = nbt.getList("Offers", NbtElement.COMPOUND_TYPE);
+        ListTag offerList = nbt.getList("Offers", Tag.TAG_COMPOUND);
         for (int i = 0; i < offerList.size(); i++) {
             try {
                 Bounty b = Bounty.fromNbt(offerList.getCompound(i));
@@ -200,13 +199,13 @@ public class BountyState extends PersistentState {
             }
         }
 
-        NbtList takenList = nbt.getList("TakenByPlayer", NbtElement.COMPOUND_TYPE);
+        ListTag takenList = nbt.getList("TakenByPlayer", Tag.TAG_COMPOUND);
         for (int i = 0; i < takenList.size(); i++) {
-            NbtCompound o = takenList.getCompound(i);
+            CompoundTag o = takenList.getCompound(i);
             try {
-                UUID player = o.getUuid("Player");
+                UUID player = o.getUUID("Player");
                 Map<UUID, TakenBounty> m = new LinkedHashMap<>();
-                NbtList entries = o.getList("Taken", NbtElement.COMPOUND_TYPE);
+                ListTag entries = o.getList("Taken", Tag.TAG_COMPOUND);
                 for (int j = 0; j < entries.size(); j++) {
                     TakenBounty tb = TakenBounty.fromNbt(entries.getCompound(j));
                     m.put(tb.bounty().getId(), tb);
@@ -217,21 +216,21 @@ public class BountyState extends PersistentState {
             }
         }
 
-        NbtList doneList = nbt.getList("Completed", NbtElement.COMPOUND_TYPE);
+        ListTag doneList = nbt.getList("Completed", Tag.TAG_COMPOUND);
         for (int i = 0; i < doneList.size(); i++) {
-            NbtCompound o = doneList.getCompound(i);
+            CompoundTag o = doneList.getCompound(i);
             try {
-                UUID player = o.getUuid("Player");
+                UUID player = o.getUUID("Player");
                 Set<UUID> s = new HashSet<>();
-                NbtList ids = o.getList("Ids", NbtElement.COMPOUND_TYPE);
-                for (int j = 0; j < ids.size(); j++) s.add(ids.getCompound(j).getUuid("Id"));
+                ListTag ids = o.getList("Ids", Tag.TAG_COMPOUND);
+                for (int j = 0; j < ids.size(); j++) s.add(ids.getCompound(j).getUUID("Id"));
                 state.completed.put(player, s);
             } catch (IllegalArgumentException ignored) {
                 // skip
             }
         }
 
-        NbtList decreeList = nbt.getList("Decrees", NbtElement.COMPOUND_TYPE);
+        ListTag decreeList = nbt.getList("Decrees", Tag.TAG_COMPOUND);
         for (int i = 0; i < decreeList.size(); i++) {
             ItemStack s = StackData.readStack(decreeList.getCompound(i));
             if (!s.isEmpty()) state.decrees.add(s);

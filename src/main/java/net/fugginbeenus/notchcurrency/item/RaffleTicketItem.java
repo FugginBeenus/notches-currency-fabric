@@ -2,14 +2,12 @@ package net.fugginbeenus.notchcurrency.item;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-//? if <1.21 {
-import net.minecraft.client.item.TooltipContext;
-//?}
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -28,8 +26,8 @@ public class RaffleTicketItem extends Item {
     private static final String K_STATUS = "Status";
     private static final String K_PRIZE = "Prize";
 
-    public RaffleTicketItem(Settings settings) {
-        super(settings.maxCount(1)); // one item per purchase; never merge entry counts
+    public RaffleTicketItem(Properties settings) {
+        super(settings.stacksTo(1)); // one item per purchase; never merge entry counts
     }
 
     // ---- factory & accessors (server-side helpers) ----
@@ -45,7 +43,7 @@ public class RaffleTicketItem extends Item {
     }
 
     public static boolean isTicket(ItemStack stack) {
-        return stack.isOf(ModItems.RAFFLE_TICKET) && StackData.hasData(stack);
+        return stack.is(ModItems.RAFFLE_TICKET) && StackData.hasData(stack);
     }
 
     public static long round(ItemStack stack) {
@@ -77,25 +75,25 @@ public class RaffleTicketItem extends Item {
     // ---- display ----
 
     @Override
-    public Text getName(ItemStack stack) {
+    public Component getName(ItemStack stack) {
         return switch (status(stack)) {
-            case STATUS_WINNER -> Text.literal("Winning Raffle Ticket").formatted(Formatting.GOLD);
-            case STATUS_LOSER -> Text.literal("Expired Losing Ticket").formatted(Formatting.GRAY);
+            case STATUS_WINNER -> Component.literal("Winning Raffle Ticket").withStyle(ChatFormatting.GOLD);
+            case STATUS_LOSER -> Component.literal("Expired Losing Ticket").withStyle(ChatFormatting.GRAY);
             default -> super.getName(stack);
         };
     }
 
     @Override
     //? if >=1.21 {
-    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, net.minecraft.world.item.TooltipFlag type) {
     *///?} else {
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
     //?}
         if (!StackData.hasData(stack)) {
             //? if >=1.21 {
-            /*super.appendTooltip(stack, context, tooltip, type);
+            /*super.appendHoverText(stack, context, tooltip, type);
             *///?} else {
-            super.appendTooltip(stack, world, tooltip, context);
+            super.appendHoverText(stack, world, tooltip, context);
             //?}
             return;
         }
@@ -104,31 +102,31 @@ public class RaffleTicketItem extends Item {
         int e = StackData.getInt(stack, K_ENTRIES);
         String s = StackData.getString(stack, K_STATUS);
 
-        tooltip.add(Text.literal("Raffle #" + r).formatted(Formatting.AQUA));
-        tooltip.add(Text.literal(e + (e == 1 ? " entry" : " entries")).formatted(Formatting.WHITE));
+        tooltip.add(Component.literal("Raffle #" + r).withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.literal(e + (e == 1 ? " entry" : " entries")).withStyle(ChatFormatting.WHITE));
 
         switch (s) {
             case STATUS_WINNER -> {
-                tooltip.add(Text.empty());
-                tooltip.add(Text.literal("★ WINNING TICKET ★").formatted(Formatting.GOLD, Formatting.BOLD));
-                tooltip.add(Text.literal("Prize: " + StackData.getLong(stack, K_PRIZE) + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW));
-                tooltip.add(Text.literal("Claim at the raffle, or /raffle claim.").formatted(Formatting.GRAY));
+                tooltip.add(Component.empty());
+                tooltip.add(Component.literal("★ WINNING TICKET ★").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+                tooltip.add(Component.literal("Prize: " + StackData.getLong(stack, K_PRIZE) + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).withStyle(ChatFormatting.YELLOW));
+                tooltip.add(Component.literal("Claim at the raffle, or /raffle claim.").withStyle(ChatFormatting.GRAY));
             }
             case STATUS_LOSER -> {
-                tooltip.add(Text.empty());
-                tooltip.add(Text.literal("This raffle is over.").formatted(Formatting.DARK_GRAY));
-                tooltip.add(Text.literal("Turn in for a discount on new entries.").formatted(Formatting.GREEN));
+                tooltip.add(Component.empty());
+                tooltip.add(Component.literal("This raffle is over.").withStyle(ChatFormatting.DARK_GRAY));
+                tooltip.add(Component.literal("Turn in for a discount on new entries.").withStyle(ChatFormatting.GREEN));
             }
-            default -> tooltip.add(Text.literal("Active - winner not yet drawn.").formatted(Formatting.DARK_GREEN));
+            default -> tooltip.add(Component.literal("Active - winner not yet drawn.").withStyle(ChatFormatting.DARK_GREEN));
         }
 
         if (StackData.has(stack, K_OWNER_NAME)) {
-            tooltip.add(Text.literal("Holder: " + StackData.getString(stack, K_OWNER_NAME)).formatted(Formatting.DARK_GRAY));
+            tooltip.add(Component.literal("Holder: " + StackData.getString(stack, K_OWNER_NAME)).withStyle(ChatFormatting.DARK_GRAY));
         }
         //? if >=1.21 {
-        /*super.appendTooltip(stack, context, tooltip, type);
+        /*super.appendHoverText(stack, context, tooltip, type);
         *///?} else {
-        super.appendTooltip(stack, world, tooltip, context);
+        super.appendHoverText(stack, world, tooltip, context);
         //?}
     }
 }

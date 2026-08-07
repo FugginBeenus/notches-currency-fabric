@@ -6,19 +6,18 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.client.ui.NpcPreviewWidget;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
+public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHandler> {
 
     private static final int W = 248, H = 240;
     private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 148, ROW_H = 20, ROW_STEP = 21;
@@ -31,38 +30,38 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
     private boolean draggingScroll;
 
-    public ShopBrowseScreen(ShopBrowseScreenHandler handler, PlayerInventory inv, Text title) {
+    public ShopBrowseScreen(ShopBrowseScreenHandler handler, Inventory inv, Component title) {
         super(handler, inv, title);
-        this.backgroundWidth = W;
-        this.backgroundHeight = H;
-        this.titleX = -1000;
-        this.playerInventoryTitleX = -1000;
+        this.imageWidth = W;
+        this.imageHeight = H;
+        this.titleLabelX = -1000;
+        this.inventoryLabelX = -1000;
     }
 
     private record Cell(ItemStack icon, UUID listingId, int price, String barterName, int barterCount,
                         ItemStack barterStack, int stock) {}
 
     private Cell cell(int i) {
-        ItemStack s = handler.rowStack(i);
+        ItemStack s = menu.rowStack(i);
         if (s.isEmpty()) return null;
-        NbtCompound t = StackData.getData(s);
-        if (!t.containsUuid("nc_lid")) return null;
+        CompoundTag t = StackData.getData(s);
+        if (!t.hasUUID("nc_lid")) return null;
         ItemStack barter = t.contains("nc_bstack") ? StackData.readStack(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
-        return new Cell(s, t.getUuid("nc_lid"), t.getInt("nc_price"), t.getString("nc_bname"),
+        return new Cell(s, t.getUUID("nc_lid"), t.getInt("nc_price"), t.getString("nc_bname"),
                 t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }
 
-    private int rowY(int i) { return this.y + LIST_Y + i * ROW_STEP; }
-    private int pages() { return Math.max(1, handler.prop(ShopBrowseScreenHandler.P_TOTAL_PAGES)); }
-    private int page() { return handler.prop(ShopBrowseScreenHandler.P_PAGE); }
-    private boolean open() { return handler.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_OPEN; }
+    private int rowY(int i) { return this.topPos + LIST_Y + i * ROW_STEP; }
+    private int pages() { return Math.max(1, menu.prop(ShopBrowseScreenHandler.P_TOTAL_PAGES)); }
+    private int page() { return menu.prop(ShopBrowseScreenHandler.P_PAGE); }
+    private boolean open() { return menu.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_OPEN; }
 
     @Override
-    protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
-        final int x = this.x, y = this.y;
+    protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+        final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         // Owners can color the title with &-codes in the shop name ("&6Golden Goods").
-        NotchWidgets.title(ctx, this.textRenderer, NotchWidgets.colorize(handler.shopName()), x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7);
 
         boolean canBuy = open();
 
@@ -82,20 +81,20 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
             int ix = x + LIST_X + 4;
             if (c.price() > 0) {
                 // Coin cost with the vanilla stack-count renderer, like emeralds in villager trades.
-                ctx.drawItem(COIN, ix, ry + 2);
-                ctx.drawItemInSlot(this.textRenderer, COIN, ix, ry + 2, NotchWidgets.compactCount(c.price()));
+                ctx.renderItem(COIN, ix, ry + 2);
+                ctx.renderItemDecorations(this.font, COIN, ix, ry + 2, NotchWidgets.compactCount(c.price()));
                 ix += 28;
             }
             if (!c.barterStack().isEmpty()) {
-                ctx.drawItem(c.barterStack(), ix, ry + 2);
-                ctx.drawItemInSlot(this.textRenderer, c.barterStack(), ix, ry + 2);
+                ctx.renderItem(c.barterStack(), ix, ry + 2);
+                ctx.renderItemDecorations(this.font, c.barterStack(), ix, ry + 2);
             }
 
             // Arrow (crossed out in red when sold out), then the sale item with its stack count.
             arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
             if (c.stock() <= 0) cross(ctx, x + LIST_X + ROW_W - 38, ry + 5);
-            ctx.drawItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
-            ctx.drawItemInSlot(this.textRenderer, c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
+            ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
+            ctx.renderItemDecorations(this.font, c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
         // Scrollbar (page-based).
@@ -107,7 +106,7 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
         }
 
         // Framed NPC portrait: waist-up bust for the humanoid model.
-        preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, handler.npcId());
+        preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
 
         // Divider separating the shop from the player's inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
@@ -123,21 +122,21 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
         }
 
         if (!canBuy) {
-            String msg = handler.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_RENT_PAUSED
+            String msg = menu.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_RENT_PAUSED
                     ? "Sales paused (rent due)" : "Shop is closed";
             ctx.fill(x + 7, y + 21, x + 157, y + 149, 0xC0202020);
-            NotchWidgets.centerText(ctx, this.textRenderer, msg, x + 82, y + 80, NotchTheme.TEXT_RED, true);
+            NotchWidgets.centerText(ctx, this.font, msg, x + 82, y + 80, NotchTheme.TEXT_RED, true);
         }
     }
 
-    private static void arrow(DrawContext ctx, int x, int y, int color) {
+    private static void arrow(GuiGraphics ctx, int x, int y, int color) {
         ctx.fill(x, y + 3, x + 10, y + 5, color);
         for (int i = 0; i < 4; i++) {
             ctx.fill(x + 10 + i, y + i, x + 11 + i, y + 8 - i, color);
         }
     }
 
-    private static void cross(DrawContext ctx, int x, int y) {
+    private static void cross(GuiGraphics ctx, int x, int y) {
         for (int i = 0; i < 8; i++) {
             ctx.fill(x + i, y + i, x + i + 2, y + i + 2, NotchTheme.ACCENT_RED);
             ctx.fill(x + 7 - i, y + i, x + 9 - i, y + i + 2, NotchTheme.ACCENT_RED);
@@ -147,12 +146,12 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     private int thumbH() { return Math.max(18, SB_H / pages()); }
     private int thumbY() {
         int tp = pages();
-        if (tp <= 1) return this.y + SB_Y;
-        return this.y + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
+        if (tp <= 1) return this.topPos + SB_Y;
+        return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
@@ -160,23 +159,23 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
         // Trade-row tooltip.
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
-            if (c != null && over(mouseX, mouseY, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
-                List<Text> lines = new ArrayList<>();
-                lines.add(c.icon().getName());
+            if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
+                List<Component> lines = new ArrayList<>();
+                lines.add(c.icon().getHoverName());
                 lines.add(NotchWidgets.priceText(c.price(), c.barterName(), c.barterCount()));
-                lines.add(Text.literal(c.stock() > 0 ? "Stock: " + c.stock() : "Sold out")
-                        .formatted(c.stock() > 0 ? Formatting.GRAY : Formatting.RED));
+                lines.add(Component.literal(c.stock() > 0 ? "Stock: " + c.stock() : "Sold out")
+                        .withStyle(c.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
                 if (open() && c.stock() > 0) {
-                    lines.add(Text.literal("Click to buy · Shift = a stack").formatted(Formatting.DARK_GRAY));
+                    lines.add(Component.literal("Click to buy · Shift = a stack").withStyle(ChatFormatting.DARK_GRAY));
                 }
-                ctx.drawTooltip(this.textRenderer, lines, mouseX, mouseY);
+                ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
                 return;
             }
         }
         // Greeting tooltip on the portrait.
-        String greeting = handler.greeting();
-        if (!greeting.isEmpty() && over(mouseX, mouseY, x + PV_X, y + PV_Y, PV_W, PV_H)) {
-            ctx.drawTooltip(this.textRenderer, Text.literal(greeting), mouseX, mouseY);
+        String greeting = menu.greeting();
+        if (!greeting.isEmpty() && over(mouseX, mouseY, leftPos + PV_X, topPos + PV_Y, PV_W, PV_H)) {
+            ctx.renderTooltip(this.font, Component.literal(greeting), mouseX, mouseY);
         }
     }
 
@@ -190,20 +189,20 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
                     Cell c = cell(i);
                     // One buy = one of the stacks shown on the row, so stock has to cover a whole one.
                     int bundle = c == null ? 1 : Math.max(1, c.icon().getCount());
-                    if (c != null && c.stock() >= bundle && over(mx, my, x + LIST_X, rowY(i), ROW_W, ROW_H)) {
+                    if (c != null && c.stock() >= bundle && over(mx, my, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
                         // Shift still means "grab a lot", measured in bundles so it tops out around a
                         // stack of items the way it did when every listing sold singles.
                         int qty = hasShiftDown()
                                 ? Math.max(1, Math.min(c.stock() / bundle, Math.max(1, 64 / bundle)))
                                 : 1;
                         NotchWidgets.click();
-                        NotchPacketsClient.sendShopPurchase(handler.shopId(), c.listingId(), qty);
+                        NotchPacketsClient.sendShopPurchase(menu.shopId(), c.listingId(), qty);
                         return true;
                     }
                 }
             }
             // Scrollbar.
-            if (pages() > 1 && over(mx, my, x + SB_X, y + SB_Y, SB_W, SB_H)) {
+            if (pages() > 1 && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
                 if (my < thumbY()) { NotchWidgets.tick(); clickButton(0); return true; }
                 if (my >= thumbY() + thumbH()) { NotchWidgets.tick(); clickButton(1); return true; }
                 draggingScroll = true;
@@ -216,7 +215,7 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
         if (draggingScroll && pages() > 1) {
-            int rel = (int) mouseY - (this.y + SB_Y) - thumbH() / 2;
+            int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH() / 2;
             int track = SB_H - thumbH();
             int target = track <= 0 ? 0 : Math.round(rel / (float) track * (pages() - 1));
             target = Math.max(0, Math.min(pages() - 1, target));
@@ -251,8 +250,8 @@ public class ShopBrowseScreen extends HandledScreen<ShopBrowseScreenHandler> {
     }
 
     private void clickButton(int id) {
-        if (this.client != null && this.client.interactionManager != null) {
-            this.client.interactionManager.clickButton(this.handler.syncId, id);
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, id);
         }
     }
 

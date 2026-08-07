@@ -4,6 +4,9 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.trade.TradeScreenHandler;
 import net.fugginbeenus.notchcurrency.ui.ATMTestScreenHandler;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.inventory.MenuType;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.UserListingsScreenHandler;
@@ -11,77 +14,74 @@ import net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyBoardScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleAdminScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleScreenHandler;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.screen.ScreenHandlerType;
 
 public final class ModScreenHandlers {
 
-    public static ScreenHandlerType<ATMTestScreenHandler> ATM;
-    public static ScreenHandlerType<TradeScreenHandler> TRADE;
+    public static MenuType<ATMTestScreenHandler> ATM;
+    public static MenuType<TradeScreenHandler> TRADE;
 
     // main auction browser (the big "MY LISTINGS" screen)
-    public static ScreenHandlerType<AuctionHouseScreenHandler> AUCTION_HOUSE;
+    public static MenuType<AuctionHouseScreenHandler> AUCTION_HOUSE;
 
     // popup "user auctions / my listings" window
-    public static ScreenHandlerType<UserListingsScreenHandler> USER_AUCTIONS;
+    public static MenuType<UserListingsScreenHandler> USER_AUCTIONS;
 
     // Raffle info/action panel
-    public static ScreenHandlerType<RaffleScreenHandler> RAFFLE;
+    public static MenuType<RaffleScreenHandler> RAFFLE;
 
     // Raffle admin setup panel
-    public static ScreenHandlerType<RaffleAdminScreenHandler> RAFFLE_ADMIN;
+    public static MenuType<RaffleAdminScreenHandler> RAFFLE_ADMIN;
 
     // "List an item" creation screen
-    public static ScreenHandlerType<AuctionListingScreenHandler> AUCTION_LISTING;
+    public static MenuType<AuctionListingScreenHandler> AUCTION_LISTING;
 
     // Bounty board panel
-    public static ScreenHandlerType<BountyBoardScreenHandler> BOUNTY_BOARD;
+    public static MenuType<BountyBoardScreenHandler> BOUNTY_BOARD;
 
     // Bounty admin setup panel
-    public static ScreenHandlerType<BountyAdminScreenHandler> BOUNTY_ADMIN;
+    public static MenuType<BountyAdminScreenHandler> BOUNTY_ADMIN;
 
     // Loan application panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler> LOAN;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler> LOAN;
 
     // Slot machine panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler> SLOT_MACHINE;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler> SLOT_MACHINE;
 
     // Coin flip betting panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler> COIN_FLIP;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler> COIN_FLIP;
 
     // NPC equipment panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler> NPC_EQUIP;
+    public static MenuType<net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler> NPC_EQUIP;
 
     // Enchanter service panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler> ENCHANTER;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler> ENCHANTER;
 
     // Cosmetics shop panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler> COSMETIC_SHOP;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler> COSMETIC_SHOP;
 
     // Offline trade offers: create + board
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler> TRADE_OFFER_CREATE;
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler> TRADE_OFFERS;
+    public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler> TRADE_OFFER_CREATE;
+    public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler> TRADE_OFFERS;
 
     // Receipts (transaction history) panel
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler> RECEIPTS;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler> RECEIPTS;
 
     // Shop browser (buyer side, extended: shop identity in the opening buf)
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler> SHOP_BROWSE;
+    public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler> SHOP_BROWSE;
 
     // Shop manage hub (owner side)
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler> SHOP_MANAGE;
+    public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler> SHOP_MANAGE;
 
     // Shop listing editor (owner side)
-    public static ScreenHandlerType<net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler> SHOP_LISTING_EDIT;
+    public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler> SHOP_LISTING_EDIT;
 
     private ModScreenHandlers() {}
 
-    private static <T extends net.minecraft.screen.ScreenHandler> ScreenHandlerType<T> simple(
-            net.minecraft.util.Identifier id, ScreenHandlerType.Factory<T> factory) {
-        return Registry.register(Registries.SCREEN_HANDLER, id,
-                new ScreenHandlerType<>(factory,
-                        net.minecraft.resource.featuretoggle.FeatureFlags.VANILLA_FEATURES));
+    private static <T extends net.minecraft.world.inventory.AbstractContainerMenu> MenuType<T> simple(
+            net.minecraft.resources.ResourceLocation id, MenuType.MenuSupplier<T> factory) {
+        return Registry.register(BuiltInRegistries.MENU, id,
+                new MenuType<>(factory,
+                        net.minecraft.world.flag.FeatureFlags.VANILLA_SET));
     }
 
     public static void register() {
@@ -160,7 +160,7 @@ public final class ModScreenHandlers {
         // NPC equipment
         // NPC equipment (extended: the NPC uuid rides the opening buf for the live preview)
         NPC_EQUIP = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("npc_equip"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler::new,
@@ -178,7 +178,7 @@ public final class ModScreenHandlers {
 
         // Cosmetics shop (extended: linked NPC uuid in the opening buf for the preview)
         COSMETIC_SHOP = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("cosmetic_shop"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new,
@@ -200,7 +200,7 @@ public final class ModScreenHandlers {
 
         // Receipts (extended: history snapshot in the opening buf)
         RECEIPTS = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("receipts"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler::new,
@@ -212,7 +212,7 @@ public final class ModScreenHandlers {
 
         // Shop browser (buyer side)
         SHOP_BROWSE = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_browse"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler::new,
@@ -224,7 +224,7 @@ public final class ModScreenHandlers {
 
         // Shop manage hub (owner side)
         SHOP_MANAGE = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_manage"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler::new,
@@ -236,7 +236,7 @@ public final class ModScreenHandlers {
 
         // Shop listing editor (owner side)
         SHOP_LISTING_EDIT = Registry.register(
-                Registries.SCREEN_HANDLER,
+                BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_listing_edit"),
                 //? if >=1.21 {
                 /*new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler::new,

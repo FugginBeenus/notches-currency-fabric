@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public final class NpcActionEditing {
 
@@ -17,8 +17,8 @@ public final class NpcActionEditing {
     };
 
     public static boolean adminActionsAllowed() {
-        return MinecraftClient.getInstance().player != null
-                && MinecraftClient.getInstance().player.hasPermissionLevel(2);
+        return Minecraft.getInstance().player != null
+                && Minecraft.getInstance().player.hasPermissions(2);
     }
 
     public static boolean needsValue(DialogueAction.Type t) {

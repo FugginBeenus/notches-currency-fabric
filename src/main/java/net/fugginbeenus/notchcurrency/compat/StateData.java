@@ -1,23 +1,22 @@
 package net.fugginbeenus.notchcurrency.compat;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
 import java.util.function.Function;
 import java.util.function.Supplier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 
 public final class StateData {
 
     private StateData() {}
 
-    public static <T extends PersistentState> T getOrCreate(
-            PersistentStateManager manager, Supplier<T> constructor, Function<NbtCompound, T> reader, String key) {
+    public static <T extends SavedData> T getOrCreate(
+            DimensionDataStorage manager, Supplier<T> constructor, Function<CompoundTag, T> reader, String key) {
         //? if >=1.21 {
         /*return manager.getOrCreate(
-                new PersistentState.Type<>(constructor, (nbt, registries) -> reader.apply(nbt), null), key);
+                new SavedData.Type<>(constructor, (nbt, registries) -> reader.apply(nbt), null), key);
         *///?} else {
-        return manager.getOrCreate(reader, constructor, key);
+        return manager.computeIfAbsent(reader, constructor, key);
         //?}
     }
 }

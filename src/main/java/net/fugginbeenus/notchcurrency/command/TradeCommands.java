@@ -18,21 +18,10 @@ import net.fugginbeenus.notchcurrency.crate.GoldenCacheManager;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.trade.TradeManager;
-import net.minecraft.command.argument.BlockPosArgumentType;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -43,32 +32,32 @@ public final class TradeCommands {
 
     private TradeCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // ===== /trade =====
         dispatcher.register(
-                CommandManager.literal("trade")
-                        .then(CommandManager.argument("player", EntityArgumentType.player())
+                Commands.literal("trade")
+                        .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
-                                    ServerPlayerEntity from = ctx.getSource().getPlayer();
-                                    ServerPlayerEntity to = EntityArgumentType.getPlayer(ctx, "player");
+                                    ServerPlayer from = ctx.getSource().getPlayer();
+                                    ServerPlayer to = EntityArgument.getPlayer(ctx, "player");
                                     TradeManager.invite(from, to);
                                     return 1;
                                 })
                         )
-                        .then(CommandManager.literal("accept")
-                                .then(CommandManager.argument("inviter", StringArgumentType.word())
+                        .then(Commands.literal("accept")
+                                .then(Commands.argument("inviter", StringArgumentType.word())
                                         .executes(ctx -> {
-                                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                                            ServerPlayer p = ctx.getSource().getPlayer();
                                             String inviter = StringArgumentType.getString(ctx, "inviter");
                                             TradeManager.accept(p, inviter);
                                             return 1;
                                         })
                                 )
                         )
-                        .then(CommandManager.literal("decline")
-                                .then(CommandManager.argument("inviter", StringArgumentType.word())
+                        .then(Commands.literal("decline")
+                                .then(Commands.argument("inviter", StringArgumentType.word())
                                         .executes(ctx -> {
-                                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                                            ServerPlayer p = ctx.getSource().getPlayer();
                                             String inviter = StringArgumentType.getString(ctx, "inviter");
                                             TradeManager.decline(p, inviter);
                                             return 1;
@@ -76,17 +65,17 @@ public final class TradeCommands {
                                 )
                         )
                         // /trade offer: open the create-an-offline-offer screen
-                        .then(CommandManager.literal("offer")
+                        .then(Commands.literal("offer")
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
+                                    ServerPlayer p = ctx.getSource().getPlayer();
                                     if (p != null) net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler.open(p);
                                     return 1;
                                 })
                         )
                         // /trade offers: open the board of offers for you + your open offers
-                        .then(CommandManager.literal("offers")
+                        .then(Commands.literal("offers")
                                 .executes(ctx -> {
-                                    ServerPlayerEntity p = ctx.getSource().getPlayer();
+                                    ServerPlayer p = ctx.getSource().getPlayer();
                                     if (p != null) net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler.open(p);
                                     return 1;
                                 })

@@ -1,15 +1,15 @@
 package net.fugginbeenus.notchcurrency.mixin;
 
-import net.minecraft.entity.LimbAnimator;
+import net.minecraft.world.entity.WalkAnimationState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(LimbAnimator.class)
+@Mixin(WalkAnimationState.class)
 public interface LimbAnimatorAccessor {
 
-    @Accessor("pos")
+    @Accessor("position")
     void notchcurrency$setPos(float pos);
 
-    @Accessor("prevSpeed")
+    @Accessor("speedOld")
     void notchcurrency$setPrevSpeed(float prevSpeed);
 }

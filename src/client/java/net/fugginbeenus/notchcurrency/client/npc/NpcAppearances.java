@@ -1,8 +1,7 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.Map;
 
 public final class NpcAppearances {
 
-    public record Variant(String id, String displayName, Identifier texture) {}
+    public record Variant(String id, String displayName, ResourceLocation texture) {}
 
     private static final Map<String, Variant> BY_ID = new LinkedHashMap<>();
 
@@ -28,7 +27,7 @@ public final class NpcAppearances {
 
     private NpcAppearances() {}
 
-    public static Identifier texture(String id) {
+    public static ResourceLocation texture(String id) {
         Variant v = BY_ID.get(id);
         return v != null ? v.texture() : BY_ID.get("default").texture();
     }

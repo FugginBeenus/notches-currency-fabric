@@ -1,35 +1,33 @@
 package net.fugginbeenus.notchcurrency.item;
 
-//? if <1.21 {
-import net.minecraft.client.item.TooltipContext;
-//?}
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 public class CrateKeyItem extends Item {
 
-    public CrateKeyItem(Settings settings) {
+    public CrateKeyItem(Properties settings) {
         super(settings);
     }
 
     @Override
     //? if >=1.21 {
-    /*public void appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, net.minecraft.item.tooltip.TooltipType type) {
+    /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, net.minecraft.world.item.TooltipFlag type) {
     *///?} else {
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
     //?}
-        tooltip.add(Text.literal("Right-click a crate to open it.").formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Sneak-right-click a crate to see its odds.").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Component.literal("Right-click a crate to open it.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Sneak-right-click a crate to see its odds.").withStyle(ChatFormatting.DARK_GRAY));
         //? if >=1.21 {
-        /*super.appendTooltip(stack, context, tooltip, type);
+        /*super.appendHoverText(stack, context, tooltip, type);
         *///?} else {
-        super.appendTooltip(stack, world, tooltip, context);
+        super.appendHoverText(stack, world, tooltip, context);
         //?}
     }
 }

@@ -6,13 +6,12 @@ import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.minecraft.item.ItemStack;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,73 +21,73 @@ public final class TradeOfferManager {
 
     private TradeOfferManager() {}
 
-    public static void deliverMail(ServerPlayerEntity sp) {
+    public static void deliverMail(ServerPlayer sp) {
         TradeOfferState state = TradeOfferState.get(sp.getServer());
-        if (!state.hasMail(sp.getUuid())) return;
-        List<ItemStack> items = state.claimMail(sp.getUuid());
+        if (!state.hasMail(sp.getUUID())) return;
+        List<ItemStack> items = state.claimMail(sp.getUUID());
         java.util.List<ItemStack> leftover = new java.util.ArrayList<>();
         for (ItemStack st : items) {
-            if (!sp.getInventory().insertStack(st)) leftover.add(st);
+            if (!sp.getInventory().add(st)) leftover.add(st);
         }
         if (!leftover.isEmpty()) {
-            state.returnMail(sp.getUuid(), leftover); // no room; keep for next time
-            sp.sendMessage(Text.literal("You have trade items waiting - free up inventory space to receive them.")
-                    .formatted(Formatting.YELLOW), false);
+            state.returnMail(sp.getUUID(), leftover); // no room; keep for next time
+            sp.displayClientMessage(Component.literal("You have trade items waiting - free up inventory space to receive them.")
+                    .withStyle(ChatFormatting.YELLOW), false);
         }
         if (items.size() != leftover.size()) {
-            sp.sendMessage(Text.literal("Received items from a completed trade offer.").formatted(Formatting.GREEN), false);
+            sp.displayClientMessage(Component.literal("Received items from a completed trade offer.").withStyle(ChatFormatting.GREEN), false);
         }
     }
 
-    public static boolean createOffer(ServerPlayerEntity creator, List<ItemStack> offered, long offeredCoins,
+    public static boolean createOffer(ServerPlayer creator, List<ItemStack> offered, long offeredCoins,
                                       long price, List<ItemStack> requested, String targetName) {
         TradeOfferState state = TradeOfferState.get(creator.getServer());
-        if (state.countBy(creator.getUuid()) >= MAX_PER_PLAYER) {
-            creator.sendMessage(Text.literal("You already have " + MAX_PER_PLAYER + " open offers.").formatted(Formatting.RED), false);
+        if (state.countBy(creator.getUUID()) >= MAX_PER_PLAYER) {
+            creator.displayClientMessage(Component.literal("You already have " + MAX_PER_PLAYER + " open offers.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         if (offeredCoins > 0) {
             if (BalanceStore.get(creator) < offeredCoins) {
-                creator.sendMessage(Text.literal("You don't have " + offeredCoins + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to attach.").formatted(Formatting.RED), false);
+                creator.displayClientMessage(Component.literal("You don't have " + offeredCoins + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to attach.").withStyle(ChatFormatting.RED), false);
                 return false;
             }
             BalanceStore.subtract(creator, offeredCoins, TransactionReason.TRADE, "trade offer escrow");
             NotchPackets.sendBalance(creator, BalanceStore.get(creator));
         }
-        TradeOffer offer = new TradeOffer(UUID.randomUUID(), creator.getUuid(),
+        TradeOffer offer = new TradeOffer(UUID.randomUUID(), creator.getUUID(),
                 creator.getName().getString(), targetName, copyAll(offered), offeredCoins, price,
-                copyAll(requested), creator.getWorld().getTime());
+                copyAll(requested), creator.level().getGameTime());
         state.add(offer);
-        creator.sendMessage(Text.literal("Trade offer created" + (offer.isOpen() ? " (open to anyone)."
-                : " for " + targetName + ".")).formatted(Formatting.GREEN), false);
+        creator.displayClientMessage(Component.literal("Trade offer created" + (offer.isOpen() ? " (open to anyone)."
+                : " for " + targetName + ".")).withStyle(ChatFormatting.GREEN), false);
         return true;
     }
 
-    public static boolean accept(ServerPlayerEntity accepter, UUID offerId) {
+    public static boolean accept(ServerPlayer accepter, UUID offerId) {
         TradeOfferState state = TradeOfferState.get(accepter.getServer());
         TradeOffer offer = state.get(offerId);
         if (offer == null) {
-            accepter.sendMessage(Text.literal("That offer is no longer available.").formatted(Formatting.RED), false);
+            accepter.displayClientMessage(Component.literal("That offer is no longer available.").withStyle(ChatFormatting.RED), false);
             return false;
         }
-        if (offer.creatorUuid().equals(accepter.getUuid())) {
-            accepter.sendMessage(Text.literal("You can't accept your own offer.").formatted(Formatting.RED), false);
+        if (offer.creatorUuid().equals(accepter.getUUID())) {
+            accepter.displayClientMessage(Component.literal("You can't accept your own offer.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         if (!offer.acceptableBy(accepter.getName().getString())) {
-            accepter.sendMessage(Text.literal("This offer isn't directed at you.").formatted(Formatting.RED), false);
+            accepter.displayClientMessage(Component.literal("This offer isn't directed at you.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         // Verify the accepter can pay (coins + every requested stack, totals merged by item type).
         if (offer.priceCoins() > 0 && BalanceStore.get(accepter) < offer.priceCoins()) {
-            accepter.sendMessage(Text.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").formatted(Formatting.RED), false);
+            accepter.displayClientMessage(Component.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         List<ItemStack> wants = aggregate(offer.requestedItems());
         for (ItemStack want : wants) {
             if (countInInventory(accepter, want) < want.getCount()) {
-                accepter.sendMessage(Text.literal("You need " + want.getCount() + "x "
-                        + want.getName().getString() + " for this trade.").formatted(Formatting.RED), false);
+                accepter.displayClientMessage(Component.literal("You need " + want.getCount() + "x "
+                        + want.getHoverName().getString() + " for this trade.").withStyle(ChatFormatting.RED), false);
                 return false;
             }
         }
@@ -114,28 +113,28 @@ public final class TradeOfferManager {
             CurrencyApi.deposit(accepter, offer.offeredCoins(), TransactionReason.TRADE, "trade offer payout");
             NotchPackets.sendBalance(accepter, BalanceStore.get(accepter));
         }
-        accepter.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.8F, 1.2F);
-        accepter.sendMessage(Text.literal("Trade complete - received ")
-                .append(Text.literal(offer.summary()).formatted(Formatting.YELLOW))
-                .append(Text.literal(".").formatted(Formatting.GREEN)).formatted(Formatting.GREEN), false);
+        accepter.playSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.2F);
+        accepter.displayClientMessage(Component.literal("Trade complete - received ")
+                .append(Component.literal(offer.summary()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN), false);
 
         // Notify the creator if online.
-        ServerPlayerEntity creator = server.getPlayerManager().getPlayer(offer.creatorUuid());
+        ServerPlayer creator = server.getPlayerList().getPlayer(offer.creatorUuid());
         if (creator != null) {
-            creator.sendMessage(Text.literal(accepter.getName().getString() + " accepted your trade offer for ")
-                    .append(Text.literal(offer.summary()).formatted(Formatting.YELLOW))
-                    .append(Text.literal(".").formatted(Formatting.GREEN)).formatted(Formatting.GREEN), false);
+            creator.displayClientMessage(Component.literal(accepter.getName().getString() + " accepted your trade offer for ")
+                    .append(Component.literal(offer.summary()).withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN), false);
         }
 
         state.remove(offerId);
         return true;
     }
 
-    public static boolean cancel(ServerPlayerEntity creator, UUID offerId) {
+    public static boolean cancel(ServerPlayer creator, UUID offerId) {
         TradeOfferState state = TradeOfferState.get(creator.getServer());
         TradeOffer offer = state.get(offerId);
-        if (offer == null || !offer.creatorUuid().equals(creator.getUuid())) {
-            creator.sendMessage(Text.literal("That isn't one of your offers.").formatted(Formatting.RED), false);
+        if (offer == null || !offer.creatorUuid().equals(creator.getUUID())) {
+            creator.displayClientMessage(Component.literal("That isn't one of your offers.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         for (ItemStack st : offer.offeredItems()) {
@@ -146,7 +145,7 @@ public final class TradeOfferManager {
             NotchPackets.sendBalance(creator, BalanceStore.get(creator));
         }
         state.remove(offerId);
-        creator.sendMessage(Text.literal("Offer cancelled - your items were returned.").formatted(Formatting.GREEN), false);
+        creator.displayClientMessage(Component.literal("Offer cancelled - your items were returned.").withStyle(ChatFormatting.GREEN), false);
         return true;
     }
 
@@ -180,7 +179,7 @@ public final class TradeOfferManager {
     }
 
     private static void payCreatorCoins(MinecraftServer server, TradeOffer offer, long amount) {
-        ServerPlayerEntity creator = server.getPlayerManager().getPlayer(offer.creatorUuid());
+        ServerPlayer creator = server.getPlayerList().getPlayer(offer.creatorUuid());
         if (creator != null) {
             CurrencyApi.deposit(creator, amount, TransactionReason.TRADE, "trade offer sale");
         } else {
@@ -189,7 +188,7 @@ public final class TradeOfferManager {
     }
 
     private static void deliverToCreator(MinecraftServer server, TradeOffer offer, ItemStack stack) {
-        ServerPlayerEntity creator = server.getPlayerManager().getPlayer(offer.creatorUuid());
+        ServerPlayer creator = server.getPlayerList().getPlayer(offer.creatorUuid());
         if (creator != null) {
             giveOrDrop(creator, stack);
         } else {
@@ -197,31 +196,31 @@ public final class TradeOfferManager {
         }
     }
 
-    private static void giveOrDrop(ServerPlayerEntity player, ItemStack stack) {
+    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
         while (!stack.isEmpty()) {
-            ItemStack chunk = stack.split(Math.min(stack.getCount(), stack.getMaxCount()));
-            if (!player.getInventory().insertStack(chunk) && !chunk.isEmpty()) {
-                player.dropItem(chunk, false);
+            ItemStack chunk = stack.split(Math.min(stack.getCount(), stack.getMaxStackSize()));
+            if (!player.getInventory().add(chunk) && !chunk.isEmpty()) {
+                player.drop(chunk, false);
             }
         }
     }
 
-    private static int countInInventory(ServerPlayerEntity player, ItemStack match) {
+    private static int countInInventory(ServerPlayer player, ItemStack match) {
         int n = 0;
-        for (int i = 0; i < player.getInventory().size(); i++) {
-            ItemStack st = player.getInventory().getStack(i);
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack st = player.getInventory().getItem(i);
             if (!st.isEmpty() && StackData.canCombine(st, match)) n += st.getCount();
         }
         return n;
     }
 
-    private static void removeFromInventory(ServerPlayerEntity player, ItemStack match, int count) {
+    private static void removeFromInventory(ServerPlayer player, ItemStack match, int count) {
         int remaining = count;
-        for (int i = 0; i < player.getInventory().size() && remaining > 0; i++) {
-            ItemStack st = player.getInventory().getStack(i);
+        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
+            ItemStack st = player.getInventory().getItem(i);
             if (!st.isEmpty() && StackData.canCombine(st, match)) {
                 int take = Math.min(remaining, st.getCount());
-                st.decrement(take);
+                st.shrink(take);
                 remaining -= take;
             }
         }

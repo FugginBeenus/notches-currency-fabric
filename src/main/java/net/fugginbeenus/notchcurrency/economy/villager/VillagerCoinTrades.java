@@ -2,12 +2,12 @@ package net.fugginbeenus.notchcurrency.economy.villager;
 
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TradeOfferList;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
 
 public final class VillagerCoinTrades {
 
@@ -23,33 +23,33 @@ public final class VillagerCoinTrades {
         coinsPerEmerald = Math.max(1, cfg.villagerTrades.coinsPerEmerald);
     }
 
-    public static void convert(VillagerEntity villager) {
-        if (!enabled || chancePercent <= 0 || villager.getWorld().isClient()) return;
+    public static void convert(Villager villager) {
+        if (!enabled || chancePercent <= 0 || villager.level().isClientSide()) return;
 
-        TradeOfferList offers = villager.getOffers();
-        Random random = villager.getRandom();
+        MerchantOffers offers = villager.getOffers();
+        RandomSource random = villager.getRandom();
         for (int i = 0; i < offers.size(); i++) {
-            TradeOffer offer = offers.get(i);
-            ItemStack first = offer.getOriginalFirstBuyItem();
-            if (!first.isOf(Items.EMERALD)) continue;
+            MerchantOffer offer = offers.get(i);
+            ItemStack first = offer.getBaseCostA();
+            if (!first.is(Items.EMERALD)) continue;
 
             int emeralds = first.getCount();
             int cost = emeralds * coinsPerEmerald;
             ItemStack coins = new ItemStack(ModItems.NOTCH_COIN);
-            int max = coins.getMaxCount();
+            int max = coins.getMaxStackSize();
 
             // The price has to fit the two buy slots: one coin stack, or an overflow split into the
             // second slot when it's free. Anything pricier stays an emerald trade.
             //? if >=1.21 {
-            /*java.util.Optional<net.minecraft.village.TradedItem> second = offer.getSecondBuyItem();
-            java.util.Optional<net.minecraft.village.TradedItem> secondOut;
+            /*java.util.Optional<net.minecraft.world.item.trading.ItemCost> second = offer.getCostB();
+            java.util.Optional<net.minecraft.world.item.trading.ItemCost> secondOut;
             if (cost <= max) {
                 coins.setCount(cost);
                 secondOut = second;
             } else if (second.isEmpty() && cost <= max * 2) {
                 coins.setCount(max);
                 secondOut = java.util.Optional.of(
-                        new net.minecraft.village.TradedItem(ModItems.NOTCH_COIN, cost - max));
+                        new net.minecraft.world.item.trading.ItemCost(ModItems.NOTCH_COIN, cost - max));
             } else {
                 continue;
             }
@@ -58,12 +58,12 @@ public final class VillagerCoinTrades {
             if (random.nextInt(100) >= chance) continue;
 
             offers.set(i, new TradeOffer(
-                    new net.minecraft.village.TradedItem(ModItems.NOTCH_COIN, coins.getCount()),
-                    secondOut, offer.getSellItem(),
-                    offer.getUses(), offer.getMaxUses(), offer.getMerchantExperience(),
+                    new net.minecraft.world.item.trading.ItemCost(ModItems.NOTCH_COIN, coins.getCount()),
+                    secondOut, offer.getResult(),
+                    offer.getUses(), offer.getMaxUses(), offer.getXp(),
                     offer.getPriceMultiplier()));
             *///?} else {
-            ItemStack second = offer.getSecondBuyItem();
+            ItemStack second = offer.getCostB();
             ItemStack secondOut;
             if (cost <= max) {
                 coins.setCount(cost);
@@ -78,8 +78,8 @@ public final class VillagerCoinTrades {
             int chance = emeralds >= 8 ? Math.min(100, chancePercent * 2) : chancePercent;
             if (random.nextInt(100) >= chance) continue;
 
-            offers.set(i, new TradeOffer(coins, secondOut, offer.getSellItem(),
-                    offer.getUses(), offer.getMaxUses(), offer.getMerchantExperience(),
+            offers.set(i, new MerchantOffer(coins, secondOut, offer.getResult(),
+                    offer.getUses(), offer.getMaxUses(), offer.getXp(),
                     offer.getPriceMultiplier()));
             //?}
         }

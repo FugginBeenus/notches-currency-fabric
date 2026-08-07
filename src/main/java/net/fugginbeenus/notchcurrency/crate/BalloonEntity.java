@@ -2,26 +2,27 @@ package net.fugginbeenus.notchcurrency.crate;
 
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.registry.ModEntities;
-import net.minecraft.block.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraft.entity.ItemEntity;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class BalloonEntity extends Entity {
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
 
     // Loot table: data/notchcurrency/loot_tables/balloon_crate.json
-    public static final Identifier LOOT = NotchCurrency.id("balloon_crate");
+    public static final ResourceLocation LOOT = NotchCurrency.id("balloon_crate");
 
     // ---- Motion tuning ----
     private static final double BOB_AMPLITUDE = 0.30;
@@ -41,36 +42,36 @@ public class BalloonEntity extends Entity {
     private static final long DESPAWN_TICKS = 20L * 60L * 5L; // 5 minutes
 
     private int animTicks = 0;  // For bobbing animation only
-    private long spawnWorldTime = -1;  // World time when spawned (persists through chunk unloads)
+    private long spawnWorldTime = -1;  // Level time when spawned (persists through chunk unloads)
 
-    public BalloonEntity(EntityType<? extends BalloonEntity> type, World world) {
+    public BalloonEntity(EntityType<? extends BalloonEntity> type, Level world) {
         super(type, world);
-        this.noClip = false;
+        this.noPhysics = false;
         this.setNoGravity(true);
     }
 
-    public BalloonEntity(World world, double x, double y, double z) {
+    public BalloonEntity(Level world, double x, double y, double z) {
         this(ModEntities.BALLOON, world);
-        this.setPos(x, y, z);
-        this.setVelocity(Vec3d.ZERO);
+        this.setPosRaw(x, y, z);
+        this.setDeltaMovement(Vec3.ZERO);
     }
 
     // NBT
     //? if >=1.21 {
-    /*@Override protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {}
+    /*@Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {}
     *///?} else {
-    @Override protected void initDataTracker() {}
+    @Override protected void defineSynchedData() {}
     //?}
 
     @Override
-    protected void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
+    protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag nbt) {
         // If SpawnWorldTime is missing (old balloon), it will be 0, and we'll re-init in tick()
         this.spawnWorldTime = nbt.contains("SpawnWorldTime") ? nbt.getLong("SpawnWorldTime") : -1;
         this.animTicks = nbt.getInt("AnimTicks");
     }
 
     @Override
-    protected void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
+    protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag nbt) {
         nbt.putLong("SpawnWorldTime", this.spawnWorldTime);
         nbt.putInt("AnimTicks", this.animTicks);
     }
@@ -78,22 +79,22 @@ public class BalloonEntity extends Entity {
     // Targetable
     @Override public boolean isAttackable() { return true; }
     @Override public boolean isPushable()   { return false; }
-    @Override public void    pushAwayFrom(Entity entity) {} // keep public in 1.20.1
-    @Override public boolean isCollidable() { return true; }
-    @Override public boolean canHit()       { return true; }
+    @Override public void    push(Entity entity) {} // keep public in 1.20.1
+    @Override public boolean canBeCollidedWith() { return true; }
+    @Override public boolean isPickable()       { return true; }
 
     @Override
     public void tick() {
         super.tick();
-        if (this.getWorld().isClient) return;
+        if (this.level().isClientSide) return;
 
         // Initialize spawn time on first tick
         if (spawnWorldTime < 0) {
-            spawnWorldTime = getWorld().getTime();
+            spawnWorldTime = level().getGameTime();
         }
 
         // Check despawn based on world time (works even if chunk was unloaded)
-        long currentWorldTime = getWorld().getTime();
+        long currentWorldTime = level().getGameTime();
         long age = currentWorldTime - spawnWorldTime;
 
         // Debug logging every 30 seconds (600 ticks)
@@ -114,10 +115,10 @@ public class BalloonEntity extends Entity {
         double bob = Math.sin(animTicks / BOB_PERIOD_TICKS) * (BOB_AMPLITUDE / BOB_PERIOD_TICKS);
         double dx = ((getId() & 1) == 0 ? DRIFT_SPEED : -DRIFT_SPEED);
         double dz = ((getId() % 3) == 0 ? -DRIFT_SPEED : DRIFT_SPEED);
-        setPosition(getX() + dx, getY() + bob, getZ() + dz);
+        setPos(getX() + dx, getY() + bob, getZ() + dz);
 
         if (animTicks % 10 == 0) {
-            ((ServerWorld) getWorld()).spawnParticles(
+            ((ServerLevel) level()).sendParticles(
                     ParticleTypes.HAPPY_VILLAGER,
                     getX(), getY() + 0.4, getZ(), 1, 0.1, 0.1, 0.1, 0.0
             );
@@ -125,12 +126,12 @@ public class BalloonEntity extends Entity {
     }
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
-        if (getWorld().isClient) return true;
+    public boolean hurt(DamageSource source, float amount) {
+        if (level().isClientSide) return true;
 
-        final Entity src = source.getSource();
-        final boolean fromProjectile  = src instanceof net.minecraft.entity.projectile.ProjectileEntity;
-        final boolean fromPlayerMelee = source.getAttacker() != null && source.getAttacker().isPlayer();
+        final Entity src = source.getDirectEntity();
+        final boolean fromProjectile  = src instanceof net.minecraft.world.entity.projectile.Projectile;
+        final boolean fromPlayerMelee = source.getEntity() != null && source.getEntity().isAlwaysTicking();
 
         if (!fromProjectile && !fromPlayerMelee) {
             return false; // ignore e.g. cactus/environmental
@@ -141,37 +142,37 @@ public class BalloonEntity extends Entity {
     }
 
     private void popAndRainLoot() {
-        ServerWorld sw = (ServerWorld) getWorld();
+        ServerLevel sw = (ServerLevel) level();
 
         // 1) Sounds + burst FX
-        sw.playSound(null, getBlockPos(), SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, SoundCategory.AMBIENT, 0.9f, 1.5f);
-        sw.playSound(null, getBlockPos(), SoundEvents.BLOCK_BUBBLE_COLUMN_UPWARDS_INSIDE, SoundCategory.AMBIENT, 0.4f, 1.8f);
+        sw.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.AMBIENT, 0.9f, 1.5f);
+        sw.playSound(null, blockPosition(), SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE, SoundSource.AMBIENT, 0.4f, 1.8f);
 
         for (int i = 0; i < 20; i++) {
             double spread = 0.3 + sw.random.nextDouble() * 0.3;
             double ax = (sw.random.nextDouble() - 0.5) * spread;
             double ay = (sw.random.nextDouble()) * 0.4;
             double az = (sw.random.nextDouble() - 0.5) * spread;
-            sw.spawnParticles(ParticleTypes.POOF, getX(), getY(), getZ(), 1, ax, ay, az, 0.02);
+            sw.sendParticles(ParticleTypes.POOF, getX(), getY(), getZ(), 1, ax, ay, az, 0.02);
         }
 
         // Barrel "shatter" visual (block break event)
-        sw.syncWorldEvent(2001, getBlockPos(), Block.getRawIdFromState(Blocks.BARREL.getDefaultState()));
-        sw.playSound(null, getBlockPos(), SoundEvents.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 0.8f, 1.1f);
+        sw.levelEvent(2001, blockPosition(), Block.getId(Blocks.BARREL.defaultBlockState()));
+        sw.playSound(null, blockPosition(), SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.8f, 1.1f);
 
         // 2) Roll loot table
         //? if >=1.21 {
-        /*LootTable table = sw.getServer().getReloadableRegistries().getLootTable(
-                net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.LOOT_TABLE, LOOT));
+        /*LootTable table = sw.getServer().reloadableRegistries().getLootTable(
+                net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, LOOT));
         *///?} else {
-        LootTable table = sw.getServer().getLootManager().getLootTable(LOOT);
+        LootTable table = sw.getServer().getLootData().getLootTable(LOOT);
         //?}
-        LootContextParameterSet ctx = new LootContextParameterSet.Builder(sw)
-                .add(LootContextParameters.ORIGIN, this.getPos())
-                .add(LootContextParameters.THIS_ENTITY, this)
-                .build(LootContextTypes.GIFT);
+        LootParams ctx = new LootParams.Builder(sw)
+                .withParameter(LootContextParams.ORIGIN, this.position())
+                .withParameter(LootContextParams.THIS_ENTITY, this)
+                .create(LootContextParamSets.GIFT);
 
-        java.util.List<ItemStack> loot = table.generateLoot(ctx);
+        java.util.List<ItemStack> loot = table.getRandomItems(ctx);
 
         // Fallback so you SEE something if the table is empty/missing
         if (loot.isEmpty()) {
@@ -191,9 +192,9 @@ public class BalloonEntity extends Entity {
             double vy = -0.25 - sw.random.nextDouble() * 0.15; // falling down
             double vz = (sw.random.nextDouble() - 0.5) * 0.2;
 
-            item.setVelocity(vx, vy, vz);
-            item.setPickupDelay(20); // brief delay so it visibly falls before pickup
-            sw.spawnEntity(item);
+            item.setDeltaMovement(vx, vy, vz);
+            item.setPickUpDelay(20); // brief delay so it visibly falls before pickup
+            sw.addFreshEntity(item);
         }
 
         // 4) Remove the balloon entity
@@ -202,12 +203,12 @@ public class BalloonEntity extends Entity {
 
     @Override
     //? if >=1.21 {
-    /*public Packet<ClientPlayPacketListener> createSpawnPacket(net.minecraft.server.network.EntityTrackerEntry entry) {
+    /*public Packet<ClientGamePacketListener> getAddEntityPacket(net.minecraft.server.level.ServerEntity entry) {
         return new EntitySpawnS2CPacket(this, entry);
     }
     *///?} else {
-    public Packet<ClientPlayPacketListener> createSpawnPacket() {
-        return new EntitySpawnS2CPacket(this);
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+        return new ClientboundAddEntityPacket(this);
     }
     //?}
 }

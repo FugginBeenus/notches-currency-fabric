@@ -1,10 +1,9 @@
 package net.fugginbeenus.notchcurrency.entity;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.EnumSet;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class NpcPatrolGoal extends Goal {
 
@@ -17,16 +16,16 @@ public class NpcPatrolGoal extends Goal {
 
     public NpcPatrolGoal(NotchNpcEntity npc) {
         this.npc = npc;
-        this.setControls(EnumSet.of(Control.MOVE));
+        this.setFlags(EnumSet.of(Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return !npc.getWaypoints().isEmpty();
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         return !npc.getWaypoints().isEmpty();
     }
 
@@ -37,7 +36,7 @@ public class NpcPatrolGoal extends Goal {
         int nearest = 0;
         double best = Double.MAX_VALUE;
         for (int i = 0; i < route.size(); i++) {
-            double d = route.get(i).getSquaredDistance(npc.getPos());
+            double d = route.get(i).distToCenterSqr(npc.position());
             if (d < best) {
                 best = d;
                 nearest = i;
@@ -61,21 +60,21 @@ public class NpcPatrolGoal extends Goal {
         }
 
         BlockPos target = route.get(index);
-        if (target.getSquaredDistance(npc.getPos()) <= ARRIVE_DIST_SQ) {
+        if (target.distToCenterSqr(npc.position()) <= ARRIVE_DIST_SQ) {
             index = (index + 1) % route.size();
             target = route.get(index);
             repathCountdown = 0;
             // Dwell time is read live so the editor's setting applies mid-patrol.
             if (npc.getPatrolWaitTicks() > 0) {
-                waitCountdown = this.getTickCount(npc.getPatrolWaitTicks());
+                waitCountdown = this.adjustedTickDelay(npc.getPatrolWaitTicks());
                 npc.getNavigation().stop();
                 return;
             }
         }
         if (--repathCountdown <= 0) {
-            repathCountdown = this.getTickCount(20);
+            repathCountdown = this.adjustedTickDelay(20);
             // Speed is read live so the editor's setting applies mid-patrol.
-            npc.getNavigation().startMovingTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5,
+            npc.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5,
                     npc.getPatrolSpeed());
         }
     }

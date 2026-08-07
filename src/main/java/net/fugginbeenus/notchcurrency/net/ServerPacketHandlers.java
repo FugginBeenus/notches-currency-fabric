@@ -5,15 +5,13 @@ import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.fugginbeenus.notchcurrency.auction.AuctionState;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-
 import java.util.UUID;
 
 import static net.fugginbeenus.notchcurrency.core.NotchCurrency.coinIcon;
@@ -36,13 +34,13 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(
                 NotchPackets.BID_REQUEST,
                 (server, player, buf) -> {
-                    UUID listingId = buf.readUuid();
+                    UUID listingId = buf.readUUID();
                     long bidAmount = buf.readVarLong();
 
                     server.execute(() -> {
-                        // player is already a ServerPlayerEntity here
-                        ServerPlayerEntity sp = player;
-                        ServerWorld world = sp.getServerWorld();
+                        // player is already a ServerPlayer here
+                        ServerPlayer sp = player;
+                        ServerLevel world = sp.serverLevel();
                         AuctionState state = AuctionState.get(world);
                         state.placeBid(world, sp, listingId, bidAmount);
                     });
@@ -53,33 +51,33 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(
                 NotchPackets.AUCTION_CANCEL,
                 (server, player, buf) -> {
-                    UUID listingId = buf.readUuid();
+                    UUID listingId = buf.readUUID();
 
                     server.execute(() -> {
-                        ServerPlayerEntity sp = player;
-                        ServerWorld world = sp.getServerWorld();
+                        ServerPlayer sp = player;
+                        ServerLevel world = sp.serverLevel();
                         AuctionState state = AuctionState.get(world);
                         net.fugginbeenus.notchcurrency.auction.AuctionListing l = state.getListing(listingId);
 
                         if (l == null) {
-                            sp.sendMessage(Text.literal("That listing is no longer available.").formatted(Formatting.RED), false);
+                            sp.displayClientMessage(Component.literal("That listing is no longer available.").withStyle(ChatFormatting.RED), false);
                             return;
                         }
-                        if (!sp.getUuid().equals(l.sellerUuid)) {
-                            sp.sendMessage(Text.literal("Only the seller can cancel this listing.").formatted(Formatting.RED), false);
+                        if (!sp.getUUID().equals(l.sellerUuid)) {
+                            sp.displayClientMessage(Component.literal("Only the seller can cancel this listing.").withStyle(ChatFormatting.RED), false);
                             return;
                         }
                         // Refund any standing bid before removing: bids escrow coins.
                         long refunded = state.refundHighestBid(world, l);
                         state.removeListing(listingId);
                         if (refunded > 0) {
-                            sp.sendMessage(Text.literal("The high bidder was refunded " + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                                    .formatted(Formatting.GRAY), false);
+                            sp.displayClientMessage(Component.literal("The high bidder was refunded " + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                                    .withStyle(ChatFormatting.GRAY), false);
                         }
 
                         ItemStack toReturn = l.stack.copy();
                         if (StackData.hasData(toReturn)) {
-                            net.minecraft.nbt.NbtCompound tag = StackData.editData(toReturn);
+                            net.minecraft.nbt.CompoundTag tag = StackData.editData(toReturn);
                             tag.remove("nc_price");
                             tag.remove("nc_seller");
                             tag.remove("nc_created");
@@ -90,18 +88,18 @@ public final class ServerPacketHandlers {
                             if (tag.isEmpty()) StackData.clearData(toReturn);
                             else StackData.commitData(toReturn, tag);
                         }
-                        if (!sp.getInventory().insertStack(toReturn) && !toReturn.isEmpty()) {
-                            sp.dropItem(toReturn, false);
+                        if (!sp.getInventory().add(toReturn) && !toReturn.isEmpty()) {
+                            sp.drop(toReturn, false);
                         }
 
-                        sp.sendMessage(Text.literal("Cancelled listing for ").formatted(Formatting.GREEN)
-                                .append(l.stack.getName().copy().formatted(Formatting.YELLOW))
-                                .append(Text.literal(" - item returned.").formatted(Formatting.GREEN)), false);
+                        sp.displayClientMessage(Component.literal("Cancelled listing for ").withStyle(ChatFormatting.GREEN)
+                                .append(l.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
+                                .append(Component.literal(" - item returned.").withStyle(ChatFormatting.GREEN)), false);
 
                         // Refresh the open Auction House so the popup updates live.
-                        if (sp.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler ah) {
+                        if (sp.containerMenu instanceof net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler ah) {
                             ah.reload();
-                            ah.sendContentUpdates();
+                            ah.broadcastChanges();
                         }
                     });
                 }
@@ -114,7 +112,7 @@ public final class ServerPacketHandlers {
                     long price = buf.readVarLong();
                     int days = buf.readVarInt();
                     server.execute(() -> {
-                        if (player.currentScreenHandler
+                        if (player.containerMenu
                                 instanceof net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler listing) {
                             listing.listFromInput(player, price, days);
                         }
@@ -132,7 +130,7 @@ public final class ServerPacketHandlers {
                     boolean enabled = buf.readBoolean();
                     long coinsPool = buf.readVarLong();
                     server.execute(() -> {
-                        if (!player.hasPermissionLevel(2)) return;
+                        if (!player.hasPermissions(2)) return;
                         boolean wasEnabled = net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.isEnabled();
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
@@ -150,8 +148,8 @@ public final class ServerPacketHandlers {
                             // Turning it off cancels the raffle: wipe entries/pot/prize, void tickets,
                             // and hand the escrowed prize back to the admin.
                             net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.resetAndReturn(player);
-                            player.sendMessage(Text.literal("Raffle cancelled - entries & pot cleared, prize returned, tickets voided.")
-                                    .formatted(Formatting.YELLOW), false);
+                            player.displayClientMessage(Component.literal("Raffle cancelled - entries & pot cleared, prize returned, tickets voided.")
+                                    .withStyle(ChatFormatting.YELLOW), false);
                             return;
                         }
 
@@ -162,12 +160,12 @@ public final class ServerPacketHandlers {
                         }
 
                         state.setCoinsPool(coinsPool);
-                        if (player.currentScreenHandler
+                        if (player.containerMenu
                                 instanceof net.fugginbeenus.notchcurrency.economy.raffle.RaffleAdminScreenHandler h) {
                             h.applyPrizeFromInput(player);
                         }
                         net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.refreshAllOnline(server);
-                        player.sendMessage(Text.literal("Raffle settings saved & applied.").formatted(Formatting.GREEN), false);
+                        player.displayClientMessage(Component.literal("Raffle settings saved & applied.").withStyle(ChatFormatting.GREEN), false);
                     });
                 }
         );
@@ -176,7 +174,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ACTION,
                 (server, player, buf) -> {
-                    UUID bountyId = buf.readUuid();
+                    UUID bountyId = buf.readUUID();
                     int action = buf.readVarInt();
                     server.execute(() -> {
                         switch (action) {
@@ -198,7 +196,7 @@ public final class ServerPacketHandlers {
                     int takeLimit = buf.readVarInt();
                     int durationMinutes = buf.readVarInt();
                     server.execute(() -> {
-                        if (!player.hasPermissionLevel(2)) return;
+                        if (!player.hasPermissions(2)) return;
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
                         cfg.bounty.enabled = enabled;
@@ -207,11 +205,11 @@ public final class ServerPacketHandlers {
                         cfg.bounty.durationMinutes = Math.max(1, durationMinutes);
                         net.fugginbeenus.notchcurrency.config.NotchConfigIO.save(cfg);
                         net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.applyConfig(cfg);
-                        if (player.currentScreenHandler
+                        if (player.containerMenu
                                 instanceof net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler h) {
                             h.persistDecrees(player);
                         }
-                        player.sendMessage(Text.literal("Bounty settings saved & applied.").formatted(Formatting.GREEN), false);
+                        player.displayClientMessage(Component.literal("Bounty settings saved & applied.").withStyle(ChatFormatting.GREEN), false);
                     });
                 }
         );
@@ -235,7 +233,7 @@ public final class ServerPacketHandlers {
                 (server, player, buf) -> {
                     long bet = buf.readVarLong();
                     server.execute(() -> {
-                        if (player.currentScreenHandler
+                        if (player.containerMenu
                                 instanceof net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler h) {
                             h.spin(bet);
                         }
@@ -256,10 +254,10 @@ public final class ServerPacketHandlers {
 
         // ---- Notch NPC editor (owner/op re-checked inside NotchNpcManager) ----
         Net.registerServerReceiver(NotchPackets.NPC_SET_ROLE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int ord = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (!(e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) return;
                 net.fugginbeenus.notchcurrency.economy.npc.NpcRole[] all =
                         net.fugginbeenus.notchcurrency.economy.npc.NpcRole.values();
@@ -270,10 +268,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_NAME, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String name = buf.readString(64); // editor field caps at 48; wire cap is belt-and-suspenders
+            UUID id = buf.readUUID();
+            String name = buf.readUtf(64); // editor field caps at 48; wire cap is belt-and-suspenders
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setName(player, npc, name);
                 }
@@ -281,10 +279,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_FAREWELL, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String text = buf.readString(160);
+            UUID id = buf.readUUID();
+            String text = buf.readUtf(160);
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFarewell(player, npc, text);
                 }
@@ -292,9 +290,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_PICKUP, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.pickUp(player, npc);
                 }
@@ -302,9 +300,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_DELETE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.delete(player, npc);
                 }
@@ -312,17 +310,17 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String nodeId = buf.readString(64); // page ids are <=24 chars of [a-z0-9_]
+            UUID id = buf.readUUID();
+            String nodeId = buf.readUtf(64); // page ids are <=24 chars of [a-z0-9_]
             int choice = buf.readVarInt();
             server.execute(() ->
                     net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.choose(player, id, nodeId, choice));
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_TEMPLATE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.createDialogueTemplate(player, npc);
                 }
@@ -330,9 +328,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CLEAR, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.clearDialogue(player, npc);
                 }
@@ -340,10 +338,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_MODE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int mode = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setDialogueMode(player, npc, mode);
                 }
@@ -351,9 +349,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_STUDIO_OPEN, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openStudio(player, npc);
                 }
@@ -361,10 +359,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_STUDIO_SAVE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            net.minecraft.nbt.NbtCompound tree = buf.readNbt();
+            UUID id = buf.readUUID();
+            net.minecraft.nbt.CompoundTag tree = buf.readNbt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.saveDialogue(player, npc, tree);
                 }
@@ -372,10 +370,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_BILLBOARD, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String text = buf.readString(400);
+            UUID id = buf.readUUID();
+            String text = buf.readUtf(400);
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setBillboard(player, npc, text);
                 }
@@ -383,11 +381,11 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_FACTION_PICK, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            String factionId = buf.readString(32);
+            String factionId = buf.readUtf(32);
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     if (action == net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_LIST) {
                         net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.sendList(player, npc);
@@ -399,16 +397,16 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_RECRUITER_ACTION, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            String name = buf.readString(32);
-            String color = buf.readString(24);
+            String name = buf.readUtf(32);
+            String color = buf.readUtf(24);
             int fee = buf.readVarInt();
             boolean open = buf.readBoolean();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                        && player.squaredDistanceTo(npc) <= 64.0) { // same 8-block reach as dialogue
+                        && player.distanceToSqr(npc) <= 64.0) { // same 8-block reach as dialogue
                     net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.act(player, npc, action,
                             name, color, fee, open);
                 }
@@ -416,9 +414,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_ACTIONS_OPEN, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openActions(player, npc);
                 }
@@ -426,10 +424,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_ACTIONS_SAVE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            net.minecraft.nbt.NbtCompound actions = buf.readNbt();
+            UUID id = buf.readUUID();
+            net.minecraft.nbt.CompoundTag actions = buf.readNbt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.saveActions(player, npc, actions);
                 }
@@ -437,13 +435,13 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_BEHAVIOR, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int mode = buf.readVarInt();
             int radius = buf.readVarInt();
-            String followName = buf.readString(16);
+            String followName = buf.readUtf(16);
             int movesBits = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setBehavior(player, npc, mode, radius, followName, movesBits);
                 }
@@ -451,13 +449,13 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_POSE_PART, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int part = buf.readVarInt();
             int x = buf.readVarInt();
             int y = buf.readVarInt();
             int z = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setPosePart(player, npc, part, x, y, z);
                 }
@@ -465,10 +463,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_ANIM, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int anim = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setPoseAnim(player, npc, anim);
                 }
@@ -476,14 +474,14 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_TRANSFORM, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             double dx = buf.readDouble();
             double dy = buf.readDouble();
             double dz = buf.readDouble();
             float yaw = buf.readFloat();
             boolean applyYaw = buf.readBoolean();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.transform(player, npc, dx, dy, dz, yaw, applyYaw);
                 }
@@ -491,9 +489,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_EDITOR_REOPEN, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openEditor(player, npc);
                 }
@@ -501,10 +499,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_POSE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int pose = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setPose(player, npc, pose);
                 }
@@ -512,11 +510,11 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_PATROL, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int action = buf.readVarInt();
             int value = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.patrolAction(player, npc, action, value);
                 }
@@ -524,9 +522,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_EQUIP, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openEquipScreen(player, npc);
                 }
@@ -534,10 +532,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_STATS, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int bits = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setStats(player, npc, bits);
                 }
@@ -545,12 +543,12 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_ATTRS, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int maxHealth = buf.readVarInt();
             int speedPct = buf.readVarInt();
             int regen = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setAttrs(player, npc, maxHealth, speedPct, regen);
                 }
@@ -559,10 +557,10 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.SHOP_MANAGE_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
-            String text = buf.readString(160);
-            UUID listingId = buf.readBoolean() ? buf.readUuid() : null;
+            String text = buf.readUtf(160);
+            UUID listingId = buf.readBoolean() ? buf.readUUID() : null;
             server.execute(() -> {
-                if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler h) {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler h) {
                     h.handleAction(player, action, text, listingId);
                 }
             });
@@ -572,7 +570,7 @@ public final class ServerPacketHandlers {
             int action = buf.readVarInt();
             int price = buf.readVarInt();
             server.execute(() -> {
-                if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler h) {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler h) {
                     h.handleAction(player, action, price);
                 }
             });
@@ -581,16 +579,16 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.TRADE_OFFER_CREATE, (server, player, buf) -> {
             long price = buf.readVarLong();
             long giveCoins = buf.readVarLong();
-            String target = buf.readString(16);
+            String target = buf.readUtf(16);
             server.execute(() -> {
-                if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler h) {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler h) {
                     h.submit(player, price, giveCoins, target);
                 }
             });
         });
 
         Net.registerServerReceiver(NotchPackets.TRADE_OFFER_ACTION, (server, player, buf) -> {
-            java.util.UUID offerId = buf.readUuid();
+            java.util.UUID offerId = buf.readUUID();
             int action = buf.readVarInt();
             server.execute(() -> {
                 if (action == 0) net.fugginbeenus.notchcurrency.trade.TradeOfferManager.accept(player, offerId);
@@ -599,9 +597,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.COSMETIC_BUY, (server, player, buf) -> {
-            String offerId = buf.readString(128);
+            String offerId = buf.readUtf(128);
             server.execute(() -> {
-                if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler) {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler) {
                     net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.buy(player, offerId);
                 }
             });
@@ -609,20 +607,20 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.ENCHANTER_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
-            String enchId = buf.readString(128);
+            String enchId = buf.readUtf(128);
             server.execute(() -> {
-                if (player.currentScreenHandler instanceof net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler h) {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler h) {
                     h.handleAction(player, action, enchId);
                 }
             });
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_PRESET, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            String name = buf.readString(64);
+            String name = buf.readUtf(64);
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NpcPresetManager.action(player, npc, action, name);
                 }
@@ -630,9 +628,9 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_OPEN, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openSchedule(player, npc);
                 }
@@ -640,10 +638,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_SAVE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            net.minecraft.nbt.NbtCompound nbt = buf.readNbt();
+            UUID id = buf.readUUID();
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.saveSchedule(player, npc, nbt);
                 }
@@ -651,12 +649,12 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_FLAVOR, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String subtitle = buf.readString(64);
-            String voice = buf.readString(128);
+            UUID id = buf.readUUID();
+            String subtitle = buf.readUtf(64);
+            String voice = buf.readUtf(128);
             int pitch = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFlavor(player, npc, subtitle, voice, pitch);
                 }
@@ -664,10 +662,10 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_TOOL, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int entryIndex = buf.readVarInt();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.giveScheduleTool(player, npc, entryIndex);
                 }
@@ -675,13 +673,13 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SHARE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
+            UUID id = buf.readUUID();
             int action = buf.readVarInt();
             // Read the payload on the network thread, but cap it here: this is the one packet whose
             // contents come from another player's clipboard.
-            String payload = buf.readString(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
+            String payload = buf.readUtf(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NpcShareManager.action(player, npc, action, payload);
                 }
@@ -689,17 +687,17 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_APPEARANCE, (server, player, buf) -> {
-            UUID id = buf.readUuid();
-            String model = buf.readString(64);
-            String skinType = buf.readString(16);
-            String skinValue = buf.readString(256); // player name or skin URL (client field caps at 256)
+            UUID id = buf.readUUID();
+            String model = buf.readUtf(64);
+            String skinType = buf.readUtf(16);
+            String skinValue = buf.readUtf(256); // player name or skin URL (client field caps at 256)
             boolean slim = buf.readBoolean();
             float scaleX = buf.readFloat();
             float scaleY = buf.readFloat();
             float scaleZ = buf.readFloat();
             float nameOffset = buf.readFloat();
             server.execute(() -> {
-                net.minecraft.entity.Entity e = player.getServerWorld().getEntity(id);
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setAppearance(player, npc, model,
                             skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
@@ -714,17 +712,17 @@ public final class ServerPacketHandlers {
                     int requested = buf.readVarInt();
 
                     server.execute(() -> {
-                        if (!(player instanceof ServerPlayerEntity)) return;
-                        ServerPlayerEntity sp = (ServerPlayerEntity) player;
+                        if (!(player instanceof ServerPlayer)) return;
+                        ServerPlayer sp = (ServerPlayer) player;
                         if (requested <= 0) return;
 
                         long currentBal = BalanceStore.get(sp);
                         // requested is a count of physical coin items, so it fits in int.
                         int toWithdraw = (int) Math.min(currentBal, requested);
                         if (toWithdraw <= 0) {
-                            sp.sendMessage(
-                                    Text.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
-                                            .formatted(Formatting.RED),
+                            sp.displayClientMessage(
+                                    Component.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
+                                            .withStyle(ChatFormatting.RED),
                                     false
                             );
                             return;
@@ -738,10 +736,10 @@ public final class ServerPacketHandlers {
                         // Give physical coins (prefer physical stacks)
                         CoinEconomy.give(sp, toWithdraw, false);
 
-                        sp.sendMessage(
-                                Text.literal("Withdrew " + toWithdraw + " ")
+                        sp.displayClientMessage(
+                                Component.literal("Withdrew " + toWithdraw + " ")
                                         .append(NotchCurrency.coinIcon())
-                                        .formatted(Formatting.GREEN),
+                                        .withStyle(ChatFormatting.GREEN),
                                 false
                         );
                     });
@@ -751,14 +749,14 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(
                 NotchPackets.SHOP_PURCHASE,
                 (server, player, buf) -> {
-                    UUID shopId = buf.readUuid();
-                    UUID listingId = buf.readUuid();
+                    UUID shopId = buf.readUUID();
+                    UUID listingId = buf.readUUID();
                     int quantity = buf.readVarInt();
                     // Note: useCoins boolean is still read for backwards compatibility but ignored
                     buf.readBoolean();
 
                     server.execute(() -> {
-                        ServerPlayerEntity sp = player;
+                        ServerPlayer sp = player;
                         // Use unified purchase method that handles both coin AND barter
                         net.fugginbeenus.notchcurrency.shop.PlayerShopManager.PurchaseResult result =
                                 net.fugginbeenus.notchcurrency.shop.PlayerShopManager.purchase(sp, shopId, listingId, quantity);
@@ -777,7 +775,7 @@ public final class ServerPacketHandlers {
                                 case INSUFFICIENT_ITEMS -> "You don't have the required items!";
                                 default -> "Purchase failed.";
                             };
-                            sp.sendMessage(Text.literal(errorMsg).formatted(Formatting.RED), false);
+                            sp.displayClientMessage(Component.literal(errorMsg).withStyle(ChatFormatting.RED), false);
                         }
                     });
                 }
@@ -787,21 +785,21 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(
                 NotchPackets.SHOP_WITHDRAW,
                 (server, player, buf) -> {
-                    UUID shopId = buf.readUuid();
+                    UUID shopId = buf.readUUID();
 
                     server.execute(() -> {
-                        ServerPlayerEntity sp = player;
+                        ServerPlayer sp = player;
                         net.fugginbeenus.notchcurrency.shop.ShopState state =
-                                net.fugginbeenus.notchcurrency.shop.ShopState.get(sp.getServerWorld());
+                                net.fugginbeenus.notchcurrency.shop.ShopState.get(sp.serverLevel());
                         net.fugginbeenus.notchcurrency.shop.PlayerShop shop = state.getShop(shopId);
 
                         if (shop == null) {
-                            sp.sendMessage(Text.literal("Shop not found!").formatted(Formatting.RED), false);
+                            sp.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
                             return;
                         }
 
-                        if (!shop.getOwnerId().equals(sp.getUuid())) {
-                            sp.sendMessage(Text.literal("You don't own this shop!").formatted(Formatting.RED), false);
+                        if (!shop.getOwnerId().equals(sp.getUUID())) {
+                            sp.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
                             return;
                         }
 
@@ -821,11 +819,11 @@ public final class ServerPacketHandlers {
                             if (!item.isEmpty()) {
                                 int remaining = item.getCount();
                                 while (remaining > 0) {
-                                    int giveCount = Math.min(remaining, item.getMaxCount());
+                                    int giveCount = Math.min(remaining, item.getMaxStackSize());
                                     ItemStack toGive = item.copy();
                                     toGive.setCount(giveCount);
-                                    if (!sp.getInventory().insertStack(toGive)) {
-                                        sp.dropItem(toGive, false);
+                                    if (!sp.getInventory().add(toGive)) {
+                                        sp.drop(toGive, false);
                                     }
                                     remaining -= giveCount;
                                 }
@@ -833,22 +831,22 @@ public final class ServerPacketHandlers {
                         }
 
                         if (hadCoins || hadItems) {
-                            MutableText message = Text.literal("Withdrew ");
+                            MutableComponent message = Component.literal("Withdrew ");
                             if (hadCoins) {
                                 message.append(coins(amount));
                             }
                             if (hadCoins && hadItems) {
-                                message.append(Text.literal(" and "));
+                                message.append(Component.literal(" and "));
                             }
                             if (hadItems) {
                                 int totalItems = barterItems.stream().mapToInt(ItemStack::getCount).sum();
-                                message.append(Text.literal(totalItems + " barter items").formatted(Formatting.AQUA));
+                                message.append(Component.literal(totalItems + " barter items").withStyle(ChatFormatting.AQUA));
                             }
-                            message.append(Text.literal(" from your shop!").formatted(Formatting.GREEN));
-                            sp.sendMessage(message, false);
+                            message.append(Component.literal(" from your shop!").withStyle(ChatFormatting.GREEN));
+                            sp.displayClientMessage(message, false);
                             state.markDirtyAndSave();
                         } else {
-                            sp.sendMessage(Text.literal("No balance to withdraw.").formatted(Formatting.YELLOW), false);
+                            sp.displayClientMessage(Component.literal("No balance to withdraw.").withStyle(ChatFormatting.YELLOW), false);
                         }
                     });
                 }

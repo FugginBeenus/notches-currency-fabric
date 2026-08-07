@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.minecraft.client.Minecraft;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -8,12 +9,11 @@ import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueNode;
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,14 +39,14 @@ public class DialogueStudioScreen extends Screen {
     private String statusMsg = "";
     private long statusUntil = 0;
 
-    private net.minecraft.client.gui.widget.EditBoxWidget nodeTextBox; // multiline "Says" editor
-    private TextFieldWidget renameField;
-    private TextFieldWidget choiceLabelField;
-    private TextFieldWidget actionValueField, actionAmountField;
-    private TextFieldWidget condValueField, condAmountField;
+    private net.minecraft.client.gui.components.MultiLineEditBox nodeTextBox; // multiline "Says" editor
+    private EditBox renameField;
+    private EditBox choiceLabelField;
+    private EditBox actionValueField, actionAmountField;
+    private EditBox condValueField, condAmountField;
 
     public DialogueStudioScreen(UUID npcId, DialogueTree tree) {
-        super(Text.literal("Dialogue Studio"));
+        super(Component.literal("Dialogue Studio"));
         this.npcId = npcId;
         this.tree = tree;
         this.selectedId = tree.startId();
@@ -63,47 +63,47 @@ public class DialogueStudioScreen extends Screen {
         py = (this.height - H) / 2;
 
         // Multiline "Says" editor: type freely, it wraps and scrolls (finally).
-        nodeTextBox = new net.minecraft.client.gui.widget.EditBoxWidget(this.textRenderer,
+        nodeTextBox = new net.minecraft.client.gui.components.MultiLineEditBox(this.font,
                 px + ED_X, py + 54, ED_W - 4, 56,
-                Text.literal("What the NPC says...").formatted(Formatting.DARK_GRAY), Text.empty());
-        nodeTextBox.setMaxLength(500);
-        nodeTextBox.setChangeListener(s -> {
+                Component.literal("What the NPC says...").withStyle(ChatFormatting.DARK_GRAY), Component.empty());
+        nodeTextBox.setCharacterLimit(500);
+        nodeTextBox.setValueListener(s -> {
             DialogueNode n = node();
             if (n != null && choiceIdx < 0) n.setText(s);
         });
-        addDrawableChild(nodeTextBox);
+        addRenderableWidget(nodeTextBox);
 
         renameField = field(px + ED_X + 30, py + 26, 88, 24);
-        renameField.setTextPredicate(s -> s.chars().allMatch(ch -> ch == '_' || Character.isLetterOrDigit(ch)));
+        renameField.setFilter(s -> s.chars().allMatch(ch -> ch == '_' || Character.isLetterOrDigit(ch)));
 
         choiceLabelField = field(px + ED_X + 38, py + 56, ED_W - 40, 48);
-        choiceLabelField.setChangedListener(s -> {
+        choiceLabelField.setResponder(s -> {
             DialogueChoice c = choice();
             if (c != null) c.setLabel(s);
         });
 
         actionValueField = field(px + ED_X + 60, py + 108, ED_W - 62, 200);
-        actionValueField.setChangedListener(s -> {
+        actionValueField.setResponder(s -> {
             DialogueAction a = action(actionIdx, false);
             if (a != null) a.setValue(s);
         });
 
         actionAmountField = field(px + ED_X + 60, py + 126, 96, 9);
-        actionAmountField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        actionAmountField.setChangedListener(s -> {
+        actionAmountField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        actionAmountField.setResponder(s -> {
             DialogueAction a = action(actionIdx, false);
             if (a != null) a.setAmount(parse(s));
         });
 
         condValueField = field(px + ED_X + 60, py + 162, ED_W - 62, 200);
-        condValueField.setChangedListener(s -> {
+        condValueField.setResponder(s -> {
             DialogueCondition c = condition(condIdx, false);
             if (c != null) c.setValue(s);
         });
 
         condAmountField = field(px + ED_X + 60, py + 180, 96, 9);
-        condAmountField.setTextPredicate(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        condAmountField.setChangedListener(s -> {
+        condAmountField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        condAmountField.setResponder(s -> {
             DialogueCondition c = condition(condIdx, false);
             if (c != null) c.setAmount(parse(s));
         });
@@ -119,11 +119,11 @@ public class DialogueStudioScreen extends Screen {
         //?}
     }
 
-    private TextFieldWidget field(int x, int y, int w, int maxLen) {
-        TextFieldWidget f = new TextFieldWidget(this.textRenderer, x + 2, y + 3, w - 4, 9, Text.empty());
+    private EditBox field(int x, int y, int w, int maxLen) {
+        EditBox f = new EditBox(this.font, x + 2, y + 3, w - 4, 9, Component.empty());
         f.setMaxLength(maxLen);
-        f.setDrawsBackground(false);
-        addDrawableChild(f);
+        f.setBordered(false);
+        addRenderableWidget(f);
         return f;
     }
 
@@ -185,13 +185,13 @@ public class DialogueStudioScreen extends Screen {
         boolean nodeMode = (choiceIdx < 0);
 
         nodeTextBox.visible = nodeMode && n != null;
-        if (nodeMode && n != null && !nodeTextBox.getText().equals(n.text())) nodeTextBox.setText(n.text());
+        if (nodeMode && n != null && !nodeTextBox.getValue().equals(n.text())) nodeTextBox.setValue(n.text());
 
         renameField.setVisible(nodeMode && n != null);
-        if (nodeMode && n != null) renameField.setText(n.id());
+        if (nodeMode && n != null) renameField.setValue(n.id());
 
         choiceLabelField.setVisible(!nodeMode && c != null);
-        if (!nodeMode && c != null) choiceLabelField.setText(c.label());
+        if (!nodeMode && c != null) choiceLabelField.setValue(c.label());
 
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
@@ -203,9 +203,9 @@ public class DialogueStudioScreen extends Screen {
                 && (at == DialogueAction.Type.PAY_COINS || at == DialogueAction.Type.CHARGE_COINS
                 || at == DialogueAction.Type.GIVE_ITEM);
         actionValueField.setVisible(valVisible);
-        if (valVisible) actionValueField.setText(a.value());
+        if (valVisible) actionValueField.setValue(a.value());
         actionAmountField.setVisible(amtVisible);
-        if (amtVisible) actionAmountField.setText(a.amount() > 0 ? Long.toString(a.amount()) : "");
+        if (amtVisible) actionAmountField.setValue(a.amount() > 0 ? Long.toString(a.amount()) : "");
 
         DialogueCondition cd = condition(condIdx, false);
         boolean condReal = cd != null && cd.type() != DialogueCondition.Type.NONE;
@@ -215,23 +215,23 @@ public class DialogueStudioScreen extends Screen {
         boolean caVisible = !nodeMode && c != null && condReal
                 && (cd.type() == DialogueCondition.Type.HAS_COINS || cd.type() == DialogueCondition.Type.HAS_ITEM);
         condValueField.setVisible(cvVisible);
-        if (cvVisible) condValueField.setText(cd.value());
+        if (cvVisible) condValueField.setValue(cd.value());
         condAmountField.setVisible(caVisible);
-        if (caVisible) condAmountField.setText(cd.amount() > 0 ? Long.toString(cd.amount()) : "");
+        if (caVisible) condAmountField.setValue(cd.amount() > 0 ? Long.toString(cd.amount()) : "");
     }
 
     // ---- rendering ----
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Dialogue Studio", px + W / 2, py + 8);
-        NotchWidgets.centerText(ctx, this.textRenderer, "Pages are what the NPC says. Choices are the buttons players click.",
+        NotchWidgets.title(ctx, this.font, "Dialogue Studio", px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.font, "Pages are what the NPC says. Choices are the buttons players click.",
                 px + W / 2, py + 18, NotchTheme.TEXT_MUTED, false);
 
         drawPageList(ctx, mouseX, mouseY);
@@ -242,18 +242,18 @@ public class DialogueStudioScreen extends Screen {
         }
 
         // Bottom bar.
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + ED_X, py + H - 24, 104, 16, "Save & Back",
+        NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 24, 104, 16, "Save & Back",
                 over(mouseX, mouseY, px + ED_X, py + H - 24, 104, 16));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 108, py + H - 24, 78, 16, "Preview",
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 108, py + H - 24, 78, 16, "Preview",
                 !tree.isEmpty() && over(mouseX, mouseY, px + ED_X + 108, py + H - 24, 78, 16));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 190, py + H - 24, 70, 16, "Discard",
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 190, py + H - 24, 70, 16, "Discard",
                 over(mouseX, mouseY, px + ED_X + 190, py + H - 24, 70, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
     }
 
-    private void drawPageList(DrawContext ctx, int mx, int my) {
-        ctx.drawText(this.textRenderer, "Pages:", px + LIST_X, py + 28, NotchTheme.TEXT_DARK, false);
+    private void drawPageList(GuiGraphics ctx, int mx, int my) {
+        ctx.drawString(this.font, "Pages:", px + LIST_X, py + 28, NotchTheme.TEXT_DARK, false);
         List<String> ids = new ArrayList<>(tree.nodes().keySet());
         int maxScroll = Math.max(0, ids.size() - LIST_ROWS);
         if (listScroll > maxScroll) listScroll = maxScroll;
@@ -264,57 +264,57 @@ public class DialogueStudioScreen extends Screen {
             int ry = py + LIST_Y + i * ROW_H;
             boolean hover = over(mx, my, px + LIST_X, ry, LIST_W, ROW_H - 1);
             if (id.equals(selectedId)) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, ry, LIST_W, ROW_H - 1, pageLabel(id), hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, ry, LIST_W, ROW_H - 1, pageLabel(id), hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X, ry, LIST_W, ROW_H - 1, pageLabel(id), hover);
+                NotchWidgets.neutralButton(ctx, this.font, px + LIST_X, ry, LIST_W, ROW_H - 1, pageLabel(id), hover);
             }
         }
         if (tree.size() < MAX_NODES) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X, py + H - 42, LIST_W, 14, "+ Add Page",
+            NotchWidgets.neutralButton(ctx, this.font, px + LIST_X, py + H - 42, LIST_W, 14, "+ Add Page",
                     over(mx, my, px + LIST_X, py + H - 42, LIST_W, 14));
         }
-        NotchWidgets.centerText(ctx, this.textRenderer, tree.size() + "/" + MAX_NODES,
+        NotchWidgets.centerText(ctx, this.font, tree.size() + "/" + MAX_NODES,
                 px + LIST_X + LIST_W / 2, py + H - 24, NotchTheme.TEXT_MUTED, false);
     }
 
     private String pageLabel(String id) {
         String label = id.equals(tree.startId()) ? "[S] " + id : id;
-        return this.textRenderer.getWidth(label) <= LIST_W - 8 ? label
-                : this.textRenderer.trimToWidth(label, LIST_W - 14) + "..";
+        return this.font.width(label) <= LIST_W - 8 ? label
+                : this.font.plainSubstrByWidth(label, LIST_W - 14) + "..";
     }
 
-    private void drawNodeEditor(DrawContext ctx, int mx, int my) {
+    private void drawNodeEditor(GuiGraphics ctx, int mx, int my) {
         DialogueNode n = node();
         if (n == null) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Add a page to get started.",
+            NotchWidgets.centerText(ctx, this.font, "Add a page to get started.",
                     px + ED_X + ED_W / 2, py + 90, NotchTheme.TEXT_MUTED, false);
             return;
         }
         boolean isStart = n.id().equals(tree.startId());
 
         // Header row: editable page id + rename, start marker, delete.
-        ctx.drawText(this.textRenderer, "Id:", px + ED_X, py + 30,
+        ctx.drawString(this.font, "Id:", px + ED_X, py + 30,
                 isStart ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + ED_X + 26, py + 26, 94, 13, NotchTheme.DEEP);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 124, py + 26, 50, 13, "Rename",
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 124, py + 26, 50, 13, "Rename",
                 over(mx, my, px + ED_X + 124, py + 26, 50, 13));
         if (!isStart) {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 178, py + 26, 52, 13, "Start",
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 178, py + 26, 52, 13, "Start",
                     over(mx, my, px + ED_X + 178, py + 26, 52, 13));
         } else {
-            NotchWidgets.centerText(ctx, this.textRenderer, "[start]", px + ED_X + 204, py + 29,
+            NotchWidgets.centerText(ctx, this.font, "[start]", px + ED_X + 204, py + 29,
                     NotchTheme.TEXT_GOLD, false);
         }
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 234, py + 26, 40, 13, "Del",
+        NotchWidgets.dangerButton(ctx, this.font, px + ED_X + 234, py + 26, 40, 13, "Del",
                 over(mx, my, px + ED_X + 234, py + 26, 40, 13));
 
         // Says (the EditBoxWidget draws itself at py+54, h=56) + status/hint line.
-        ctx.drawText(this.textRenderer, "Says:", px + ED_X, py + 44, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Says:", px + ED_X, py + 44, NotchTheme.TEXT_DARK, false);
         if (!statusMsg.isEmpty() && System.currentTimeMillis() < statusUntil) {
-            ctx.drawText(this.textRenderer, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
+            ctx.drawString(this.font, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
         }
-        ctx.drawText(this.textRenderer, "Choices:", px + ED_X, py + 118, NotchTheme.TEXT_DARK, false);
-        ctx.drawText(this.textRenderer, "(click one to edit it)", px + ED_X + 50, py + 118, NotchTheme.TEXT_MUTED, false);
+        ctx.drawString(this.font, "Choices:", px + ED_X, py + 118, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "(click one to edit it)", px + ED_X + 50, py + 118, NotchTheme.TEXT_MUTED, false);
         List<DialogueChoice> choices = n.choices();
         for (int i = 0; i < choices.size(); i++) {
             int ry = py + 129 + i * 17;
@@ -322,48 +322,48 @@ public class DialogueStudioScreen extends Screen {
             String label = c.label().isEmpty() ? "(unnamed)" : c.label();
             String target = c.next().isEmpty() ? "end" : c.next();
             String row = label + "  ->  " + target;
-            if (this.textRenderer.getWidth(row) > 220) {
-                row = this.textRenderer.trimToWidth(row, 214) + "..";
+            if (this.font.width(row) > 220) {
+                row = this.font.plainSubstrByWidth(row, 214) + "..";
             }
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 240, 15, row,
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X, ry, 240, 15, row,
                     over(mx, my, px + ED_X, ry, 240, 15));
-            NotchWidgets.dangerButton(ctx, this.textRenderer, px + ED_X + 246, ry, 16, 15, "x",
+            NotchWidgets.dangerButton(ctx, this.font, px + ED_X + 246, ry, 16, 15, "x",
                     over(mx, my, px + ED_X + 246, ry, 16, 15));
         }
         if (choices.size() < MAX_CHOICES) {
             int ry = py + 129 + choices.size() * 17;
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X, ry, 262, 15, "+ Add Choice",
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X, ry, 262, 15, "+ Add Choice",
                     over(mx, my, px + ED_X, ry, 262, 15));
         }
     }
 
-    private void drawChoiceEditor(DrawContext ctx, int mx, int my) {
+    private void drawChoiceEditor(GuiGraphics ctx, int mx, int my) {
         DialogueChoice c = choice();
         if (c == null) {
             choiceIdx = -1;
             return;
         }
-        ctx.drawText(this.textRenderer, "Editing a choice on '" + selectedId + "'", px + ED_X, py + 30, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + ED_X + 192, py + 26, 64, 13, "< Back",
+        ctx.drawString(this.font, "Editing a choice on '" + selectedId + "'", px + ED_X, py + 30, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.primaryButton(ctx, this.font, px + ED_X + 192, py + 26, 64, 13, "< Back",
                 over(mx, my, px + ED_X + 192, py + 26, 64, 13));
 
-        ctx.drawText(this.textRenderer, "Label:", px + ED_X, py + 58, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Label:", px + ED_X, py + 58, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + ED_X + 36, py + 54, ED_W - 36, 14, NotchTheme.DEEP);
 
         String target = c.next().isEmpty() ? "(end conversation)" : c.next();
-        ctx.drawText(this.textRenderer, "Leads to:", px + ED_X, py + 76, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 72, 160, 14, target,
+        ctx.drawString(this.font, "Leads to:", px + ED_X, py + 76, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 58, py + 72, 160, 14, target,
                 over(mx, my, px + ED_X + 58, py + 72, 160, 14));
 
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
-        ctx.drawText(this.textRenderer, "Action:", px + ED_X, py + 94, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Action:", px + ED_X, py + 94, NotchTheme.TEXT_DARK, false);
         drawSlotTabs(ctx, px + ED_X + 40, py + 90, actionIdx, actionSlotUsed(0), actionSlotUsed(1), mx, my);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 80, py + 90, 138, 14, actionName(at),
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 80, py + 90, 138, 14, actionName(at),
                 over(mx, my, px + ED_X + 80, py + 90, 138, 14));
         if (at == DialogueAction.Type.OPEN_SCREEN && a != null) {
-            ctx.drawText(this.textRenderer, "Screen:", px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 58, py + 108, 160, 14,
+            ctx.drawString(this.font, "Screen:", px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 58, py + 108, 160, 14,
                     screenDisplay(a.value()), over(mx, my, px + ED_X + 58, py + 108, 160, 14));
         }
         if (actionValueField.isVisible()) {
@@ -372,31 +372,31 @@ public class DialogueStudioScreen extends Screen {
                 case SAY_LINE -> "Says:";
                 default -> "Command:";
             };
-            ctx.drawText(this.textRenderer, hint, px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, hint, px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 106, ED_W - 60, 14, NotchTheme.DEEP);
         }
         if (actionAmountField.isVisible()) {
-            ctx.drawText(this.textRenderer, "Amount:", px + ED_X, py + 130, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Amount:", px + ED_X, py + 130, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 124, 100, 14, NotchTheme.DEEP);
         }
 
         DialogueCondition cd = condition(condIdx, false);
         String condName = (cd == null || cd.type() == DialogueCondition.Type.NONE) ? "None" : conditionName(cd.type());
-        ctx.drawText(this.textRenderer, "Requires:", px + ED_X, py + 148, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Requires:", px + ED_X, py + 148, NotchTheme.TEXT_DARK, false);
         drawSlotTabs(ctx, px + ED_X + 52, py + 144, condIdx, condSlotUsed(0), condSlotUsed(1), mx, my);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 92, py + 144, 126, 14, condName,
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 92, py + 144, 126, 14, condName,
                 over(mx, my, px + ED_X + 92, py + 144, 126, 14));
         if (condValueField.isVisible()) {
-            ctx.drawText(this.textRenderer, "Item id:", px + ED_X, py + 166, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Item id:", px + ED_X, py + 166, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 160, ED_W - 60, 14, NotchTheme.DEEP);
         }
         if (condAmountField.isVisible()) {
-            ctx.drawText(this.textRenderer, "At least:", px + ED_X, py + 184, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "At least:", px + ED_X, py + 184, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 178, 100, 14, NotchTheme.DEEP);
         }
         if (condSlotUsed(0) || condSlotUsed(1)) {
             String lockLabel = c.hideWhenLocked() ? "Locked: hidden" : "Locked: greyed";
-            NotchWidgets.neutralButton(ctx, this.textRenderer, px + ED_X + 166, py + 178, 90, 14, lockLabel,
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 166, py + 178, 90, 14, lockLabel,
                     over(mx, my, px + ED_X + 166, py + 178, 90, 14));
         }
     }
@@ -443,16 +443,16 @@ public class DialogueStudioScreen extends Screen {
         };
     }
 
-    private void drawSlotTabs(DrawContext ctx, int x, int y, int selected, boolean used0, boolean used1,
+    private void drawSlotTabs(GuiGraphics ctx, int x, int y, int selected, boolean used0, boolean used1,
                               int mx, int my) {
         for (int i = 0; i < 2; i++) {
             boolean used = i == 0 ? used0 : used1;
             String label = (i + 1) + (used ? "•" : "");
             boolean hover = over(mx, my, x + i * 19, y, 17, 14);
             if (i == selected) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, x + i * 19, y, 17, 14, label, hover);
+                NotchWidgets.primaryButton(ctx, this.font, x + i * 19, y, 17, 14, label, hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, x + i * 19, y, 17, 14, label, hover);
+                NotchWidgets.neutralButton(ctx, this.font, x + i * 19, y, 17, 14, label, hover);
             }
         }
     }
@@ -475,7 +475,7 @@ public class DialogueStudioScreen extends Screen {
             if (!tree.isEmpty() && over(mx, my, px + ED_X + 108, py + H - 24, 78, 16)) {
                 NotchWidgets.click();
                 // Play the local (possibly unsaved) tree from its start page; ESC returns here.
-                net.minecraft.client.MinecraftClient.getInstance().setScreen(
+                net.minecraft.client.Minecraft.getInstance().setScreen(
                         new PreviewDialogueScreen(this, npcId, npcDisplayName(), tree, tree.startId()));
                 return true;
             }
@@ -517,7 +517,7 @@ public class DialogueStudioScreen extends Screen {
         if (n == null) return false;
         boolean isStart = n.id().equals(tree.startId());
         if (over(mx, my, px + ED_X + 124, py + 26, 50, 13)) { // Rename
-            renamePage(n.id(), renameField.getText().trim());
+            renamePage(n.id(), renameField.getValue().trim());
             return true;
         }
         if (!isStart && over(mx, my, px + ED_X + 178, py + 26, 52, 13)) { // Start
@@ -546,7 +546,7 @@ public class DialogueStudioScreen extends Screen {
                 //? if >=1.21 {
             /*choiceLabelField.setCursorToEnd(false);
             *///?} else {
-            choiceLabelField.setCursorToEnd();
+            choiceLabelField.moveCursorToEnd();
             //?}
                 return true;
             }
@@ -588,7 +588,7 @@ public class DialogueStudioScreen extends Screen {
             //? if >=1.21 {
             /*choiceLabelField.setCursorToEnd(false);
             *///?} else {
-            choiceLabelField.setCursorToEnd();
+            choiceLabelField.moveCursorToEnd();
             //?}
             return true;
         }
@@ -640,11 +640,11 @@ public class DialogueStudioScreen extends Screen {
     // ---- edit operations ----
 
     private String npcDisplayName() {
-        var c = net.minecraft.client.MinecraftClient.getInstance();
-        if (c.world != null) {
-            for (var e : c.world.getEntities()) {
+        var c = net.minecraft.client.Minecraft.getInstance();
+        if (c.level != null) {
+            for (var e : c.level.entitiesForRendering()) {
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n
-                        && n.getUuid().equals(npcId)) {
+                        && n.getUUID().equals(npcId)) {
                     return n.hasCustomName() && n.getCustomName() != null
                             ? n.getCustomName().getString() : "NPC";
                 }
@@ -697,8 +697,8 @@ public class DialogueStudioScreen extends Screen {
     }
 
     private static boolean adminActionsAllowed() {
-        var p = net.minecraft.client.MinecraftClient.getInstance().player;
-        return p != null && p.hasPermissionLevel(2);
+        var p = net.minecraft.client.Minecraft.getInstance().player;
+        return p != null && p.hasPermissions(2);
     }
 
     private void cycleAction() {
@@ -763,7 +763,7 @@ public class DialogueStudioScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -776,7 +776,7 @@ public class DialogueStudioScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

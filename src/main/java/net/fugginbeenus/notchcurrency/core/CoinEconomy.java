@@ -1,8 +1,8 @@
 package net.fugginbeenus.notchcurrency.core;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,7 +12,7 @@ public final class CoinEconomy {
 
     private CoinEconomy() {}
 
-    public static void depositToBalance(ServerPlayerEntity player, int amount) {
+    public static void depositToBalance(ServerPlayer player, int amount) {
         if (player == null || amount <= 0) return;
 
         CurrencyApi.deposit(player, amount,
@@ -21,7 +21,7 @@ public final class CoinEconomy {
                 player.getName().getString(), amount);
     }
 
-    public static long withdrawFromBalanceToInventory(ServerPlayerEntity player, int amount) {
+    public static long withdrawFromBalanceToInventory(ServerPlayer player, int amount) {
         if (player == null || amount <= 0) return 0;
 
         boolean ok = CurrencyApi.withdraw(player, amount);
@@ -37,13 +37,13 @@ public final class CoinEconomy {
         return amount;
     }
 
-    public static boolean tryCharge(ServerPlayerEntity player, int amount, boolean silent) {
+    public static boolean tryCharge(ServerPlayer player, int amount, boolean silent) {
         if (player == null || amount <= 0) return true;
 
         boolean ok = CurrencyApi.withdraw(player, amount);
         if (!ok) {
             if (!silent) {
-                player.sendMessage(Text.literal("§cYou don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), true);
+                player.displayClientMessage(Component.literal("§cYou don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), true);
             }
             LOGGER.info("[CoinEconomy] tryCharge FAILED for {} (need {}, has {})",
                     player.getName().getString(), amount, CurrencyApi.getBalance(player));
@@ -54,42 +54,42 @@ public final class CoinEconomy {
         return ok;
     }
 
-    public static void give(ServerPlayerEntity player, int amount, boolean silent) {
+    public static void give(ServerPlayer player, int amount, boolean silent) {
         if (player == null || amount <= 0) return;
 
         // Give physical coin items
-        net.minecraft.item.ItemStack coins = new net.minecraft.item.ItemStack(
+        net.minecraft.world.item.ItemStack coins = new net.minecraft.world.item.ItemStack(
                 net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN,
                 amount
         );
 
         // Insert what fits, then ALWAYS drop the remainder. (insertStack returns true when
         // it places *some*, so a partial fit used to silently discard the overflow.)
-        player.getInventory().insertStack(coins);
+        player.getInventory().add(coins);
         while (!coins.isEmpty()) {
-            int n = Math.min(coins.getCount(), coins.getMaxCount());
-            net.minecraft.item.ItemStack drop = coins.copy();
+            int n = Math.min(coins.getCount(), coins.getMaxStackSize());
+            net.minecraft.world.item.ItemStack drop = coins.copy();
             drop.setCount(n);
-            player.dropItem(drop, false);
-            coins.decrement(n);
+            player.drop(drop, false);
+            coins.shrink(n);
         }
 
         if (!silent) {
-            player.sendMessage(
-                    Text.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
+            player.displayClientMessage(
+                    Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
                     true
             );
         }
         LOGGER.info("[CoinEconomy] give {} physical coins to {}", amount, player.getName().getString());
     }
 
-    public static void giveToBalance(ServerPlayerEntity player, int amount, boolean silent) {
+    public static void giveToBalance(ServerPlayer player, int amount, boolean silent) {
         if (player == null || amount <= 0) return;
 
         CurrencyApi.deposit(player, amount);
         if (!silent) {
-            player.sendMessage(
-                    Text.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance."),
+            player.displayClientMessage(
+                    Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance."),
                     true
             );
         }

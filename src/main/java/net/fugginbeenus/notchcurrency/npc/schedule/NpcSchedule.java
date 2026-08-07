@@ -1,14 +1,14 @@
 package net.fugginbeenus.notchcurrency.npc.schedule;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 
 public final class NpcSchedule {
 
@@ -124,25 +124,25 @@ public final class NpcSchedule {
         return -1;
     }
 
-    public static boolean dimensionSupports(World world) {
-        return world != null && !world.getDimension().hasFixedTime();
+    public static boolean dimensionSupports(Level world) {
+        return world != null && !world.dimensionType().hasFixedTime();
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putBoolean("Enabled", enabled);
         nbt.putBoolean("EnforceHours", enforceHours);
-        NbtList list = new NbtList();
+        ListTag list = new ListTag();
         for (ScheduleEntry e : entries) list.add(e.toNbt());
         nbt.put("Entries", list);
         return nbt;
     }
 
-    public static NpcSchedule fromNbt(NbtCompound nbt) {
+    public static NpcSchedule fromNbt(CompoundTag nbt) {
         NpcSchedule schedule = new NpcSchedule();
         schedule.enabled = nbt.getBoolean("Enabled");
         schedule.enforceHours = !nbt.contains("EnforceHours") || nbt.getBoolean("EnforceHours");
-        NbtList list = nbt.getList("Entries", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size() && i < MAX_ENTRIES; i++) {
             schedule.entries.add(ScheduleEntry.fromNbt(list.getCompound(i)));
         }
@@ -150,12 +150,12 @@ public final class NpcSchedule {
         return schedule;
     }
 
-    public static void stripAnchors(NbtCompound parent, String key) {
+    public static void stripAnchors(CompoundTag parent, String key) {
         if (!parent.contains(key)) return;
-        NbtCompound tag = parent.getCompound(key);
-        NbtList list = tag.getList("Entries", NbtElement.COMPOUND_TYPE);
+        CompoundTag tag = parent.getCompound(key);
+        ListTag list = tag.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound e = list.getCompound(i);
+            CompoundTag e = list.getCompound(i);
             e.remove("X");
             e.remove("Y");
             e.remove("Z");

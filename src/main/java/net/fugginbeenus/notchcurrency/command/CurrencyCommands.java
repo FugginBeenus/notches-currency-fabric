@@ -18,21 +18,13 @@ import net.fugginbeenus.notchcurrency.crate.GoldenCacheManager;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.fugginbeenus.notchcurrency.trade.TradeManager;
-import net.minecraft.command.argument.BlockPosArgumentType;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -43,29 +35,29 @@ public final class CurrencyCommands {
 
     private CurrencyCommands() {}
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // ===== /givnotches <amount> (admin only) =====
         dispatcher.register(
-                CommandManager.literal("givnotches")
-                        .requires(src -> src.hasPermissionLevel(2))
-                        .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
+                Commands.literal("givnotches")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(ctx -> {
-                                    ServerPlayerEntity player = ctx.getSource().getPlayer();
+                                    ServerPlayer player = ctx.getSource().getPlayer();
                                     int amount = IntegerArgumentType.getInteger(ctx, "amount");
-                                    player.giveItemStack(new ItemStack(ModItems.NOTCH_COIN, amount));
-                                    player.sendMessage(Text.literal("Given " + amount + " Notch Coins!"), false);
+                                    player.addItem(new ItemStack(ModItems.NOTCH_COIN, amount));
+                                    player.displayClientMessage(Component.literal("Given " + amount + " Notch Coins!"), false);
                                     return 1;
                                 }))
         );
 
         // ===== /balance + /bal =====
         dispatcher.register(
-                CommandManager.literal("balance")
+                Commands.literal("balance")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            ServerPlayer p = ctx.getSource().getPlayer();
                             long bal = BalanceStore.get(p);
-                            p.sendMessage(
-                                    Text.literal("Balance: " + bal + " ")
+                            p.displayClientMessage(
+                                    Component.literal("Balance: " + bal + " ")
                                             .append(NotchCurrency.coinIcon()),
                                     true
                             );
@@ -74,38 +66,38 @@ public final class CurrencyCommands {
                         })
         );
         dispatcher.register(
-                CommandManager.literal("bal")
+                Commands.literal("bal")
                         .executes(ctx -> {
                             // Block form: executeWithPrefix stopped returning an int in 1.21.
-                            ctx.getSource().getServer().getCommandManager()
-                                    .executeWithPrefix(ctx.getSource(), "balance");
+                            ctx.getSource().getServer().getCommands()
+                                    .performPrefixedCommand(ctx.getSource(), "balance");
                             return 1;
                         })
         );
 
         // ===== /pay <player> <amount> =====
         dispatcher.register(
-                CommandManager.literal("pay")
-                        .then(CommandManager.argument("target", EntityArgumentType.player())
-                                .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
+                Commands.literal("pay")
+                        .then(Commands.argument("target", EntityArgument.player())
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                         .executes(ctx -> {
-                                            ServerPlayerEntity from = ctx.getSource().getPlayer();
-                                            ServerPlayerEntity to = EntityArgumentType.getPlayer(ctx, "target");
+                                            ServerPlayer from = ctx.getSource().getPlayer();
+                                            ServerPlayer to = EntityArgument.getPlayer(ctx, "target");
                                             int amt = IntegerArgumentType.getInteger(ctx, "amount");
 
                                             if (from == to) {
-                                                from.sendMessage(
-                                                        Text.literal("You can’t pay yourself.")
-                                                                .formatted(Formatting.RED),
+                                                from.displayClientMessage(
+                                                        Component.literal("You can’t pay yourself.")
+                                                                .withStyle(ChatFormatting.RED),
                                                         false);
                                                 return 0;
                                             }
 
                                             long bal = BalanceStore.get(from);
                                             if (bal < amt) {
-                                                from.sendMessage(
-                                                        Text.literal("Insufficient funds.")
-                                                                .formatted(Formatting.RED),
+                                                from.displayClientMessage(
+                                                        Component.literal("Insufficient funds.")
+                                                                .withStyle(ChatFormatting.RED),
                                                         false);
                                                 return 0;
                                             }
@@ -116,18 +108,18 @@ public final class CurrencyCommands {
                                             NotchPackets.sendBalance(from, BalanceStore.get(from));
                                             NotchPackets.sendBalance(to, BalanceStore.get(to));
 
-                                            from.sendMessage(
-                                                    Text.literal("Paid " + amt + " ")
+                                            from.displayClientMessage(
+                                                    Component.literal("Paid " + amt + " ")
                                                             .append(NotchCurrency.coinIcon())
-                                                            .append(Text.literal(" to " + to.getName().getString()))
-                                                            .formatted(Formatting.GREEN),
+                                                            .append(Component.literal(" to " + to.getName().getString()))
+                                                            .withStyle(ChatFormatting.GREEN),
                                                     false
                                             );
 
-                                            to.sendMessage(
-                                                    Text.literal(from.getName().getString() + " paid you " + amt + " ")
+                                            to.displayClientMessage(
+                                                    Component.literal(from.getName().getString() + " paid you " + amt + " ")
                                                             .append(NotchCurrency.coinIcon())
-                                                            .formatted(Formatting.GREEN),
+                                                            .withStyle(ChatFormatting.GREEN),
                                                     false
                                             );
                                             return 1;

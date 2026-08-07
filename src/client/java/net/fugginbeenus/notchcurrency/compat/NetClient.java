@@ -1,9 +1,9 @@
 package net.fugginbeenus.notchcurrency.compat;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 public final class NetClient {
 
@@ -11,10 +11,10 @@ public final class NetClient {
 
     @FunctionalInterface
     public interface ClientReceiver {
-        void receive(MinecraftClient client, PacketByteBuf buf);
+        void receive(Minecraft client, FriendlyByteBuf buf);
     }
 
-    public static void registerClientReceiver(Identifier id, ClientReceiver receiver) {
+    public static void registerClientReceiver(ResourceLocation id, ClientReceiver receiver) {
         //? if >=1.21 {
         /*ClientPlayNetworking.registerGlobalReceiver(Net.channel(id), (payload, context) ->
                 receiver.receive(context.client(), Net.toBuf(payload)));
@@ -24,7 +24,7 @@ public final class NetClient {
         //?}
     }
 
-    public static void sendToServer(Identifier id, PacketByteBuf buf) {
+    public static void sendToServer(ResourceLocation id, FriendlyByteBuf buf) {
         //? if >=1.21 {
         /*ClientPlayNetworking.send(new Net.RawPayload(Net.channel(id), Net.toBytes(buf)));
         *///?} else {

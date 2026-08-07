@@ -1,14 +1,13 @@
 package net.fugginbeenus.notchcurrency.crate;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-
-public final class BalloonConfigState extends PersistentState {
+public final class BalloonConfigState extends SavedData {
     public BlockPos center = new BlockPos(0, 80, 0);
     public int radius = 25;
     public int minY = 110;
@@ -16,14 +15,14 @@ public final class BalloonConfigState extends PersistentState {
     public int perDay = 3;
     public boolean announce = true;
 
-    public static BalloonConfigState get(ServerWorld world) {
-        PersistentStateManager mgr = world.getPersistentStateManager();
-        return StateData.getOrCreate(mgr, BalloonConfigState::new, BalloonConfigState::readNbt, "notchcurrency_balloon_cfg");
+    public static BalloonConfigState get(ServerLevel world) {
+        DimensionDataStorage mgr = world.getDataStorage();
+        return StateData.getOrCreate(mgr, BalloonConfigState::new, BalloonConfigState::load, "notchcurrency_balloon_cfg");
     }
 
     public BalloonConfigState() {}
 
-    public static BalloonConfigState readNbt(NbtCompound nbt) {
+    public static BalloonConfigState load(CompoundTag nbt) {
         BalloonConfigState s = new BalloonConfigState();
         int cx = nbt.getInt("cx");
         int cy = nbt.getInt("cy");
@@ -39,9 +38,9 @@ public final class BalloonConfigState extends PersistentState {
 
     @Override
     //? if >=1.21 {
-    /*public NbtCompound writeNbt(NbtCompound nbt, net.minecraft.registry.RegistryWrapper.WrapperLookup registries) {
+    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
     *///?} else {
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag save(CompoundTag nbt) {
     //?}
         nbt.putInt("cx", center.getX());
         nbt.putInt("cy", center.getY());

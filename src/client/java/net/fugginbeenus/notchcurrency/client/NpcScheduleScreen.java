@@ -1,16 +1,16 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.minecraft.client.Minecraft;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule;
 import net.fugginbeenus.notchcurrency.npc.schedule.NpcStance;
 import net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,10 +29,10 @@ public class NpcScheduleScreen extends Screen {
     private boolean enforceHours;
     private int selected = -1;
     private int scroll = 0;
-    @org.jetbrains.annotations.Nullable private List<Text> tooltip = null;
+    @org.jetbrains.annotations.Nullable private List<Component> tooltip = null;
 
     public NpcScheduleScreen(UUID npcId, boolean dimensionOk, NpcSchedule schedule) {
-        super(Text.literal("Schedule"));
+        super(Component.literal("Schedule"));
         this.npcId = npcId;
         this.dimensionOk = dimensionOk;
         this.enabled = schedule.isEnabled();
@@ -71,7 +71,7 @@ public class NpcScheduleScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
@@ -80,7 +80,7 @@ public class NpcScheduleScreen extends Screen {
         tooltip = null;
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Daily Schedule", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Daily Schedule", px + W / 2, py + 8);
 
         if (!dimensionOk) {
             renderNoDayHere(ctx, mouseX, mouseY, px, py);
@@ -94,9 +94,9 @@ public class NpcScheduleScreen extends Screen {
 
         NotchWidgets.inset(ctx, px + LIST_X, py + LIST_Y, LIST_W, LIST_H, NotchTheme.DEEP);
         if (entries.isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "No entries yet.",
+            NotchWidgets.centerText(ctx, this.font, "No entries yet.",
                     px + LIST_X + LIST_W / 2, py + LIST_Y + LIST_H / 2 - 8, NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.centerText(ctx, this.textRenderer, "Add one below.",
+            NotchWidgets.centerText(ctx, this.font, "Add one below.",
                     px + LIST_X + LIST_W / 2, py + LIST_Y + LIST_H / 2 + 2, NotchTheme.TEXT_MUTED, false);
         }
         for (int v = 0; v < VISIBLE_ROWS; v++) {
@@ -106,17 +106,17 @@ public class NpcScheduleScreen extends Screen {
             boolean hover = over(mouseX, mouseY, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2);
             String text = e.clock() + "  " + e.stance().label() + (e.isBroken() ? " !" : "");
             if (i == selected) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
             } else if (e.isBroken()) {
-                NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
+                NotchWidgets.dangerButton(ctx, this.font, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.textRenderer, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
+                NotchWidgets.neutralButton(ctx, this.font, px + LIST_X + 2, rowY(v), LIST_W - 4, ROW_H - 2, text, hover);
             }
         }
 
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + LIST_X, py + 194, 58, 14, "Add",
+        NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + 194, 58, 14, "Add",
                 over(mouseX, mouseY, px + LIST_X, py + 194, 58, 14));
-        NotchWidgets.dangerButton(ctx, this.textRenderer, px + LIST_X + 62, py + 194, 58, 14, "Remove",
+        NotchWidgets.dangerButton(ctx, this.font, px + LIST_X + 62, py + 194, 58, 14, "Remove",
                 over(mouseX, mouseY, px + LIST_X + 62, py + 194, 58, 14));
 
         renderEntryPane(ctx, mouseX, mouseY, px, py);
@@ -124,151 +124,151 @@ public class NpcScheduleScreen extends Screen {
         int broken = brokenCount();
         if (broken > 0) {
             String msg = broken == 1 ? "1 entry needs a spot" : broken + " entries need a spot";
-            ctx.drawText(this.textRenderer, msg, px + 12, py + 214, 0xFFFFAA55, false);
-            NotchWidgets.primaryButton(ctx, this.textRenderer, px + 150, py + 211, 76, 14, "Fix next",
+            ctx.drawString(this.font, msg, px + 12, py + 214, 0xFFFFAA55, false);
+            NotchWidgets.primaryButton(ctx, this.font, px + 150, py + 211, 76, 14, "Fix next",
                     over(mouseX, mouseY, px + 150, py + 211, 76, 14));
         }
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 232, py + 211, 96, 14, "Save & Close",
+        NotchWidgets.primaryButton(ctx, this.font, px + 232, py + 211, 96, 14, "Save & Close",
                 over(mouseX, mouseY, px + 232, py + 211, 96, 14));
 
         super.render(ctx, mouseX, mouseY, delta);
-        if (tooltip != null) ctx.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
+        if (tooltip != null) ctx.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
     }
 
-    private void renderNoDayHere(DrawContext ctx, int mouseX, int mouseY, int px, int py) {
-        NotchWidgets.centerText(ctx, this.textRenderer, "Schedules aren't available in this dimension.",
+    private void renderNoDayHere(GuiGraphics ctx, int mouseX, int mouseY, int px, int py) {
+        NotchWidgets.centerText(ctx, this.font, "Schedules aren't available in this dimension.",
                 px + W / 2, py + 90, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "There's no sunrise here to follow, so a schedule",
+        NotchWidgets.centerText(ctx, this.font, "There's no sunrise here to follow, so a schedule",
                 px + W / 2, py + 108, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "would sit on one entry forever.",
+        NotchWidgets.centerText(ctx, this.font, "would sit on one entry forever.",
                 px + W / 2, py + 120, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "The Moves tab has wander, patrol and follow,",
+        NotchWidgets.centerText(ctx, this.font, "The Moves tab has wander, patrol and follow,",
                 px + W / 2, py + 140, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.centerText(ctx, this.textRenderer, "which all work fine down here.",
+        NotchWidgets.centerText(ctx, this.font, "which all work fine down here.",
                 px + W / 2, py + 152, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + W / 2 - 60, py + 190, 120, 16, "Back",
+        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 - 60, py + 190, 120, 16, "Back",
                 over(mouseX, mouseY, px + W / 2 - 60, py + 190, 120, 16));
     }
 
-    private void renderEntryPane(DrawContext ctx, int mouseX, int mouseY, int px, int py) {
+    private void renderEntryPane(GuiGraphics ctx, int mouseX, int mouseY, int px, int py) {
         if (selected < 0 || selected >= entries.size()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, "Pick an entry on the left.",
+            NotchWidgets.centerText(ctx, this.font, "Pick an entry on the left.",
                     px + PANE_X + PANE_W / 2, py + 100, NotchTheme.TEXT_MUTED, false);
             return;
         }
         ScheduleEntry e = entries.get(selected);
         int x = px + PANE_X;
 
-        ctx.drawText(this.textRenderer, "Starts at", x, py + 44, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Starts at", x, py + 44, NotchTheme.TEXT_DARK, false);
         boolean minusHover = over(mouseX, mouseY, x + 60, py + 41, 18, 14);
         boolean plusHover = over(mouseX, mouseY, x + 114, py + 41, 18, 14);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 41, 18, 14, "-", minusHover);
-        NotchWidgets.centerText(ctx, this.textRenderer, e.clock(), x + 96, py + 44, NotchTheme.TEXT_LIGHT, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, x + 114, py + 41, 18, 14, "+", plusHover);
+        NotchWidgets.neutralButton(ctx, this.font, x + 60, py + 41, 18, 14, "-", minusHover);
+        NotchWidgets.centerText(ctx, this.font, e.clock(), x + 96, py + 44, NotchTheme.TEXT_LIGHT, false);
+        NotchWidgets.neutralButton(ctx, this.font, x + 114, py + 41, 18, 14, "+", plusHover);
         if (minusHover || plusHover) {
             // The step note used to sit here as text and ran off the panel edge.
             tooltip = List.of(
-                    Text.literal("Starts at").formatted(Formatting.WHITE),
-                    Text.literal("Click for an hour.").formatted(Formatting.GRAY),
-                    Text.literal("Hold Shift for 15 minutes.").formatted(Formatting.GRAY),
-                    Text.literal("Minecraft's day starts at 06:00.").formatted(Formatting.DARK_GRAY));
+                    Component.literal("Starts at").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Click for an hour.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Hold Shift for 15 minutes.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Minecraft's day starts at 06:00.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        ctx.drawText(this.textRenderer, "Does", x, py + 66, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Does", x, py + 66, NotchTheme.TEXT_DARK, false);
         boolean stanceHover = over(mouseX, mouseY, x + 60, py + 63, 72, 14);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, x + 60, py + 63, 72, 14, e.stance().label(), stanceHover);
+        NotchWidgets.primaryButton(ctx, this.font, x + 60, py + 63, 72, 14, e.stance().label(), stanceHover);
         if (stanceHover) {
-            tooltip = List.of(Text.literal(e.stance().label()).formatted(Formatting.WHITE),
-                    Text.literal(e.stance().hint()).formatted(Formatting.GRAY),
-                    Text.literal("Click to cycle.").formatted(Formatting.DARK_GRAY));
+            tooltip = List.of(Component.literal(e.stance().label()).withStyle(ChatFormatting.WHITE),
+                    Component.literal(e.stance().hint()).withStyle(ChatFormatting.GRAY),
+                    Component.literal("Click to cycle.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
         // The spot, and the repair prompt when there isn't one.
         String problem = e.problem();
-        ctx.drawText(this.textRenderer, e.stance() == NpcStance.SLEEP ? "Bed" : "Spot",
+        ctx.drawString(this.font, e.stance() == NpcStance.SLEEP ? "Bed" : "Spot",
                 x, py + 104, NotchTheme.TEXT_DARK, false);
         if (problem != null) {
-            ctx.drawText(this.textRenderer, problem, x + 60, py + 104, 0xFFFFAA55, false);
+            ctx.drawString(this.font, problem, x + 60, py + 104, 0xFFFFAA55, false);
         } else if (e.anchor() != null) {
-            ctx.drawText(this.textRenderer, e.anchor().getX() + ", " + e.anchor().getY() + ", " + e.anchor().getZ(),
+            ctx.drawString(this.font, e.anchor().getX() + ", " + e.anchor().getY() + ", " + e.anchor().getZ(),
                     x + 60, py + 104, NotchTheme.TEXT_LIGHT, false);
         } else {
-            ctx.drawText(this.textRenderer, "not needed", x + 60, py + 104, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "not needed", x + 60, py + 104, NotchTheme.TEXT_MUTED, false);
         }
         if (e.stance().needsSpot()) {
             boolean spotHover = over(mouseX, mouseY, x, py + 116, 90, 14);
-            NotchWidgets.primaryButton(ctx, this.textRenderer, x, py + 116, 90, 14, "Set with tool", spotHover);
+            NotchWidgets.primaryButton(ctx, this.font, x, py + 116, 90, 14, "Set with tool", spotHover);
             if (spotHover) {
                 tooltip = List.of(
-                        Text.literal("Set with tool").formatted(Formatting.WHITE),
-                        Text.literal(e.stance() == NpcStance.SLEEP
+                        Component.literal("Set with tool").withStyle(ChatFormatting.WHITE),
+                        Component.literal(e.stance() == NpcStance.SLEEP
                                 ? "Hands you a tool. Right-click the bed."
-                                : "Hands you a tool. Right-click the spot.").formatted(Formatting.GRAY),
-                        Text.literal("Right-click the air to cancel.").formatted(Formatting.DARK_GRAY));
+                                : "Hands you a tool. Right-click the spot.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("Right-click the air to cancel.").withStyle(ChatFormatting.DARK_GRAY));
             }
         }
 
         if (e.stance() == NpcStance.STAND) {
             // Same slot the radius uses for Wander: only one of them is ever relevant at a time.
-            ctx.drawText(this.textRenderer, "Faces", x, py + 138, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Faces", x, py + 138, NotchTheme.TEXT_DARK, false);
             boolean ccw = over(mouseX, mouseY, x + 60, py + 135, 18, 14);
             boolean cw = over(mouseX, mouseY, x + 158, py + 135, 18, 14);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 135, 18, 14, "<", ccw);
-            NotchWidgets.centerText(ctx, this.textRenderer, e.facingLabel(), x + 118, py + 138,
+            NotchWidgets.neutralButton(ctx, this.font, x + 60, py + 135, 18, 14, "<", ccw);
+            NotchWidgets.centerText(ctx, this.font, e.facingLabel(), x + 118, py + 138,
                     NotchTheme.TEXT_LIGHT, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 158, py + 135, 18, 14, ">", cw);
+            NotchWidgets.neutralButton(ctx, this.font, x + 158, py + 135, 18, 14, ">", cw);
             if (ccw || cw) {
                 tooltip = List.of(
-                        Text.literal("Faces").formatted(Formatting.WHITE),
-                        Text.literal("Which way it looks once it settles.").formatted(Formatting.GRAY),
-                        Text.literal("It still turns to whoever talks to it").formatted(Formatting.GRAY),
-                        Text.literal("and goes back to this afterwards.").formatted(Formatting.DARK_GRAY));
+                        Component.literal("Faces").withStyle(ChatFormatting.WHITE),
+                        Component.literal("Which way it looks once it settles.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("It still turns to whoever talks to it").withStyle(ChatFormatting.GRAY),
+                        Component.literal("and goes back to this afterwards.").withStyle(ChatFormatting.DARK_GRAY));
             }
         }
         if (e.stance() == NpcStance.WANDER) {
-            ctx.drawText(this.textRenderer, "Radius", x, py + 138, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 60, py + 135, 18, 14, "-",
+            ctx.drawString(this.font, "Radius", x, py + 138, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, x + 60, py + 135, 18, 14, "-",
                     over(mouseX, mouseY, x + 60, py + 135, 18, 14));
-            NotchWidgets.centerText(ctx, this.textRenderer, String.valueOf(e.radius()), x + 96, py + 138,
+            NotchWidgets.centerText(ctx, this.font, String.valueOf(e.radius()), x + 96, py + 138,
                     NotchTheme.TEXT_LIGHT, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + 114, py + 135, 18, 14, "+",
+            NotchWidgets.neutralButton(ctx, this.font, x + 114, py + 135, 18, 14, "+",
                     over(mouseX, mouseY, x + 114, py + 135, 18, 14));
         }
 
         int acts = e.onBegin().size();
         boolean actHover = over(mouseX, mouseY, x, py + 178, 146, 14);
-        NotchWidgets.goldButton(ctx, this.textRenderer, x, py + 178, 146, 14,
+        NotchWidgets.goldButton(ctx, this.font, x, py + 178, 146, 14,
                 acts == 0 ? "When it starts..." : "When it starts (" + acts + ")", actHover);
         if (actHover) {
             tooltip = List.of(
-                    Text.literal("When it starts").formatted(Formatting.GOLD),
-                    Text.literal("Say a line, hand something over, run a").formatted(Formatting.GRAY),
-                    Text.literal("command. Runs once as this block begins.").formatted(Formatting.GRAY),
-                    Text.literal("This is how a shop restocks at opening.").formatted(Formatting.DARK_GRAY));
+                    Component.literal("When it starts").withStyle(ChatFormatting.GOLD),
+                    Component.literal("Say a line, hand something over, run a").withStyle(ChatFormatting.GRAY),
+                    Component.literal("command. Runs once as this block begins.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("This is how a shop restocks at opening.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
         toggleRow(ctx, x, py + 158, 106, 40, "Role usable now", e.roleOpen(), mouseX, mouseY);
         if (over(mouseX, mouseY, x, py + 158, 146, 14)) {
-            List<Text> lines = new ArrayList<>();
-            lines.add(Text.literal("Role usable now").formatted(Formatting.WHITE));
-            lines.add(Text.literal(e.roleOpen()
+            List<Component> lines = new ArrayList<>();
+            lines.add(Component.literal("Role usable now").withStyle(ChatFormatting.WHITE));
+            lines.add(Component.literal(e.roleOpen()
                     ? "Players can use this NPC's role during this block."
-                    : "Players are turned away during this block.").formatted(Formatting.GRAY));
+                    : "Players are turned away during this block.").withStyle(ChatFormatting.GRAY));
             if (!enforceHours) {
-                lines.add(Text.literal("Ignored: Keep opening hours is off.").formatted(Formatting.YELLOW));
+                lines.add(Component.literal("Ignored: Keep opening hours is off.").withStyle(ChatFormatting.YELLOW));
             }
             tooltip = lines;
         }
     }
 
-    private void toggleRow(DrawContext ctx, int x, int y, int labelW, int btnW, String label,
+    private void toggleRow(GuiGraphics ctx, int x, int y, int labelW, int btnW, String label,
                            boolean on, int mouseX, int mouseY) {
-        ctx.drawText(this.textRenderer, label, x, y + 3, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, label, x, y + 3, NotchTheme.TEXT_DARK, false);
         boolean hover = over(mouseX, mouseY, x + labelW, y, btnW, 14);
         if (on) {
-            NotchWidgets.primaryButton(ctx, this.textRenderer, x + labelW, y, btnW, 14, "ON", hover);
+            NotchWidgets.primaryButton(ctx, this.font, x + labelW, y, btnW, 14, "ON", hover);
         } else {
-            NotchWidgets.neutralButton(ctx, this.textRenderer, x + labelW, y, btnW, 14, "OFF", hover);
+            NotchWidgets.neutralButton(ctx, this.font, x + labelW, y, btnW, 14, "OFF", hover);
         }
     }
 
@@ -308,7 +308,7 @@ public class NpcScheduleScreen extends Screen {
         }
         if (over(mx, my, px + LIST_X, py + 194, 58, 14)) {
             if (entries.size() >= NpcSchedule.MAX_ENTRIES) {
-                say("That's the most entries one schedule can hold.", Formatting.RED);
+                say("That's the most entries one schedule can hold.", ChatFormatting.RED);
                 return true;
             }
             NotchWidgets.click();
@@ -412,8 +412,8 @@ public class NpcScheduleScreen extends Screen {
             // Hands the edited list straight back to this screen. The schedule is saved in one
             // piece, so an entry's actions have no business making their own trip to the server.
             final int editing = selected;
-            if (this.client != null) {
-                this.client.setScreen(new NpcScheduleActionsScreen(this, e.clock(), e.onBegin(),
+            if (this.minecraft != null) {
+                this.minecraft.setScreen(new NpcScheduleActionsScreen(this, e.clock(), e.onBegin(),
                         updated -> {
                             if (editing >= 0 && editing < entries.size()) {
                                 entries.set(editing, entries.get(editing).withActions(updated));
@@ -428,7 +428,7 @@ public class NpcScheduleScreen extends Screen {
     private void requestAnchorTool(int entryIndex) {
         save();
         NotchPacketsClient.sendNpcScheduleTool(npcId, entryIndex);
-        this.close();
+        this.onClose();
     }
 
     private void save() {
@@ -439,9 +439,9 @@ public class NpcScheduleScreen extends Screen {
         NotchPacketsClient.sendNpcScheduleSave(npcId, out.toNbt());
     }
 
-    private void say(String text, Formatting color) {
-        if (this.client != null && this.client.player != null) {
-            this.client.player.sendMessage(Text.literal(text).formatted(color), false);
+    private void say(String text, ChatFormatting color) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(Component.literal(text).withStyle(color), false);
         }
     }
 
@@ -461,7 +461,7 @@ public class NpcScheduleScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -474,7 +474,7 @@ public class NpcScheduleScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

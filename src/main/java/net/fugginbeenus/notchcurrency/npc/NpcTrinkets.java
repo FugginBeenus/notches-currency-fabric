@@ -5,8 +5,8 @@ import dev.emi.trinkets.api.SlotType;
 import dev.emi.trinkets.api.TrinketInventory;
 import dev.emi.trinkets.api.TrinketsApi;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.inventory.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -36,11 +36,11 @@ public final class NpcTrinkets {
     }
 
     @Nullable
-    public static Inventory inventoryFor(NotchNpcEntity npc, String group, String slot) {
+    public static Container inventoryFor(NotchNpcEntity npc, String group, String slot) {
         return TrinketsApi.getTrinketComponent(npc)
                 .map(component -> {
                     Map<String, TrinketInventory> inGroup = component.getInventory().get(group);
-                    return inGroup == null ? null : (Inventory) inGroup.get(slot);
+                    return inGroup == null ? null : (Container) inGroup.get(slot);
                 })
                 .orElse(null);
     }

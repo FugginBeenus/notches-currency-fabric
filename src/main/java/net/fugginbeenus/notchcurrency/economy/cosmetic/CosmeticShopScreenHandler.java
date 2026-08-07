@@ -3,52 +3,52 @@ package net.fugginbeenus.notchcurrency.economy.cosmetic;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
 
-public class CosmeticShopScreenHandler extends ScreenHandler {
+public class CosmeticShopScreenHandler extends AbstractContainerMenu {
 
     // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
     public static final int VIS_ROWS = 6, PER_PAGE = VIS_ROWS;
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2;
     private static final int PROP_COUNT = 3;
 
-    private final PlayerInventory playerInv;
+    private final Inventory playerInv;
     @Nullable private final UUID npcId;
-    private final SimpleInventory rowInv = new SimpleInventory(PER_PAGE);
-    private final PropertyDelegate props = new ArrayPropertyDelegate(PROP_COUNT);
+    private final SimpleContainer rowInv = new SimpleContainer(PER_PAGE);
+    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
     private int page = 0;
 
     private static final class ReadOnlySlot extends Slot {
-        ReadOnlySlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack s) { return false; }
-        @Override public boolean canTakeItems(PlayerEntity p) { return false; }
+        ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
+        @Override public boolean mayPlace(ItemStack s) { return false; }
+        @Override public boolean mayPickup(Player p) { return false; }
     }
 
-    public CosmeticShopScreenHandler(int syncId, PlayerInventory inv, PacketByteBuf buf) {
-        this(syncId, inv, buf.readBoolean() ? buf.readUuid() : null);
+    public CosmeticShopScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
+        this(containerId, inv, buf.readBoolean() ? buf.readUUID() : null);
     }
 
-    public CosmeticShopScreenHandler(int syncId, PlayerInventory inv, @Nullable UUID npcId) {
-        super(ModScreenHandlers.COSMETIC_SHOP, syncId);
+    public CosmeticShopScreenHandler(int containerId, Inventory inv, @Nullable UUID npcId) {
+        super(ModScreenHandlers.COSMETIC_SHOP, containerId);
         this.playerInv = inv;
         this.npcId = npcId;
-        this.addProperties(props);
+        this.addDataSlots(props);
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
@@ -65,21 +65,21 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
         refresh();
     }
 
-    public static void open(ServerPlayerEntity sp, @Nullable UUID npcId) {
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Text.literal("Cosmetics"),
-                (syncId, inv, p) -> new CosmeticShopScreenHandler(syncId, inv, npcId),
+    public static void open(ServerPlayer sp, @Nullable UUID npcId) {
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal("Cosmetics"),
+                (containerId, inv, p) -> new CosmeticShopScreenHandler(containerId, inv, npcId),
                 buf -> {
                     buf.writeBoolean(npcId != null);
-                    if (npcId != null) buf.writeUuid(npcId);
+                    if (npcId != null) buf.writeUUID(npcId);
                 });
     }
 
-    public ItemStack rowStack(int i) { return rowInv.getStack(i); }
+    public ItemStack rowStack(int i) { return rowInv.getItem(i); }
     public int prop(int i) { return props.get(i); }
     @Nullable public UUID npcId() { return npcId; }
 
     private void refresh() {
-        if (!(playerInv.player instanceof ServerPlayerEntity sp) || sp.getServer() == null) return;
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
         CosmeticState state = CosmeticState.get(sp.getServer());
         List<CosmeticOffer> offers = CosmeticRegistry.all();
 
@@ -95,10 +95,10 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
             int idx = start + i;
             if (idx < offers.size()) {
                 CosmeticOffer o = offers.get(idx);
-                boolean owned = o.oneTime() && state.owns(sp.getUuid(), o.id());
-                rowInv.setStack(i, display(o, owned));
+                boolean owned = o.oneTime() && state.owns(sp.getUUID(), o.id());
+                rowInv.setItem(i, display(o, owned));
             } else {
-                rowInv.setStack(i, ItemStack.EMPTY);
+                rowInv.setItem(i, ItemStack.EMPTY);
             }
         }
     }
@@ -107,7 +107,7 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
         ItemStack carrier = offer.icon().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
         carrier.setCount(1);
-        NbtCompound t = StackData.editData(carrier);
+        CompoundTag t = StackData.editData(carrier);
         t.putString("nc_cid", offer.id());
         t.putString("nc_name", offer.name());
         t.putLong("nc_price", offer.price());
@@ -117,29 +117,29 @@ public class CosmeticShopScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void sendContentUpdates() {
+    public void broadcastChanges() {
         refresh();
-        super.sendContentUpdates();
+        super.broadcastChanges();
     }
 
     @Override
-    public boolean onButtonClick(PlayerEntity player, int id) {
-        if (!(player instanceof ServerPlayerEntity)) return false;
+    public boolean clickMenuButton(Player player, int id) {
+        if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1; // clamped in refresh()
         else return false;
         refresh();
-        sendContentUpdates();
+        broadcastChanges();
         return true;
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 }

@@ -52,7 +52,13 @@ dependencies {
     // real names already on it, and asking Loom to map to Mojang names there is asking it to
     // translate something into itself: it refuses outright.
     if (!unobfuscated) {
-        mappings loom.officialMojangMappings()
+        // migrateMappings reads the project's current mappings as its SOURCE, so the tree has to be
+        // on Yarn while the migration runs. Flip -PmigrateFrom=yarn off once the source is converted.
+        if (findProperty('migrateFrom') == 'yarn') {
+            mappings "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
+        } else {
+            mappings loom.officialMojangMappings()
+        }
     }
     // The mod* configurations exist to remap a dependency's names into ours. On an unobfuscated
     // version there is nothing to remap, so the non-remapping plugin does not create them and a mod

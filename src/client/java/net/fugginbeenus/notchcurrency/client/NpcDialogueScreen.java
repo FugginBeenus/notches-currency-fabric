@@ -4,16 +4,13 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.StringVisitable;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.entity.Entity;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,13 +30,13 @@ public class NpcDialogueScreen extends Screen {
     protected final boolean[] enabled;
 
     private int px, py;
-    private List<OrderedText> wrapped;
+    private List<FormattedCharSequence> wrapped;
     private NotchNpcEntity portrait;
     protected boolean chose = false;
 
     public NpcDialogueScreen(UUID npcId, String npcName, String nodeId, String text,
                              int[] indices, String[] labels, boolean[] enabled) {
-        super(Text.literal(npcName));
+        super(Component.literal(npcName));
         this.npcId = npcId;
         this.npcName = npcName;
         this.nodeId = nodeId;
@@ -53,7 +50,7 @@ public class NpcDialogueScreen extends Screen {
     protected void init() {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
-        wrapped = this.textRenderer.wrapLines(StringVisitable.plain(text), TEXT_W);
+        wrapped = this.font.split(FormattedText.of(text), TEXT_W);
     }
 
     private int choiceY(int i) {
@@ -61,16 +58,16 @@ public class NpcDialogueScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
         /*renderInGameBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, npcName, px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, npcName, px + W / 2, py + 8);
         if (!bannerText().isEmpty()) {
-            NotchWidgets.centerText(ctx, this.textRenderer, bannerText(), px + W / 2, py + 18,
+            NotchWidgets.centerText(ctx, this.font, bannerText(), px + W / 2, py + 18,
                     NotchTheme.TEXT_MUTED, false);
         }
 
@@ -78,19 +75,19 @@ public class NpcDialogueScreen extends Screen {
         NotchWidgets.inset(ctx, px + PORTRAIT_X, py + PORTRAIT_Y, PORTRAIT_W, PORTRAIT_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findNpc();
         if (npc != null) {
-            float oldYaw = npc.getYaw(), oldBody = npc.bodyYaw;
-            npc.setYaw(180);
-            npc.bodyYaw = 180;
+            float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
+            npc.setYRot(180);
+            npc.yBodyRot = 180;
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
                     (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 30f) - mouseY, npc);
-            npc.setYaw(oldYaw);
-            npc.bodyYaw = oldBody;
+            npc.setYRot(oldYaw);
+            npc.yBodyRot = oldBody;
         }
 
         // Speech text.
         int ty = py + TEXT_Y;
-        for (OrderedText line : wrapped) {
-            ctx.drawText(this.textRenderer, line, px + TEXT_X, ty, NotchTheme.TEXT_DARK, false);
+        for (FormattedCharSequence line : wrapped) {
+            ctx.drawString(this.font, line, px + TEXT_X, ty, NotchTheme.TEXT_DARK, false);
             ty += 10;
             if (ty > choiceY(0) - 12) break; // don't run into the buttons
         }
@@ -100,10 +97,10 @@ public class NpcDialogueScreen extends Screen {
             int cy = choiceY(i);
             boolean hover = enabled[i] && over(mouseX, mouseY, px + TEXT_X, cy, TEXT_W, CHOICE_H);
             if (enabled[i]) {
-                NotchWidgets.primaryButton(ctx, this.textRenderer, px + TEXT_X, cy, TEXT_W, CHOICE_H, labels[i], hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + TEXT_X, cy, TEXT_W, CHOICE_H, labels[i], hover);
             } else {
                 NotchWidgets.button(ctx, px + TEXT_X, cy, TEXT_W, CHOICE_H, false, false);
-                NotchWidgets.centerText(ctx, this.textRenderer, labels[i] + " (locked)",
+                NotchWidgets.centerText(ctx, this.font, labels[i] + " (locked)",
                         px + TEXT_X + TEXT_W / 2, cy + (CHOICE_H - 8) / 2, NotchTheme.TEXT_MUTED, false);
             }
         }
@@ -136,11 +133,11 @@ public class NpcDialogueScreen extends Screen {
     }
 
     private NotchNpcEntity findNpc() {
-        MinecraftClient c = MinecraftClient.getInstance();
-        if (c.world == null) return null;
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
         if (portrait != null && !portrait.isRemoved()) return portrait;
-        for (Entity e : c.world.getEntities()) {
-            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) {
+        for (Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof NotchNpcEntity n && n.getUUID().equals(npcId)) {
                 portrait = n;
                 return n;
             }
@@ -153,7 +150,7 @@ public class NpcDialogueScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -166,7 +163,7 @@ public class NpcDialogueScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

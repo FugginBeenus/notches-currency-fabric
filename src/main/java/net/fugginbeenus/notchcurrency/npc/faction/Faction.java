@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.npc.faction;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 
 public class Faction {
 
@@ -15,22 +15,22 @@ public class Faction {
 
     private final String id;
     private String displayName;
-    private Formatting color;
+    private ChatFormatting color;
     @Nullable private UUID founder;
     private String motto = "";
     private int joinFee = 0;
     private boolean openToJoin = true;
 
-    public Faction(String id, String displayName, Formatting color, @Nullable UUID founder) {
+    public Faction(String id, String displayName, ChatFormatting color, @Nullable UUID founder) {
         this.id = id;
         this.displayName = displayName;
-        this.color = color == null ? Formatting.WHITE : color;
+        this.color = color == null ? ChatFormatting.WHITE : color;
         this.founder = founder;
     }
 
     public String id() { return id; }
     public String displayName() { return displayName; }
-    public Formatting color() { return color; }
+    public ChatFormatting color() { return color; }
     @Nullable public UUID founder() { return founder; }
     public String motto() { return motto; }
     public int joinFee() { return joinFee; }
@@ -51,7 +51,7 @@ public class Faction {
         }
     }
 
-    public void setColor(Formatting color) {
+    public void setColor(ChatFormatting color) {
         if (color != null && color.isColor()) this.color = color;
     }
 
@@ -70,12 +70,12 @@ public class Faction {
         return id.length() > MAX_ID_LENGTH ? id.substring(0, MAX_ID_LENGTH) : id;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putString("Id", id);
         nbt.putString("Name", displayName);
         nbt.putString("Color", color.getName());
-        if (founder != null) nbt.putUuid("Founder", founder);
+        if (founder != null) nbt.putUUID("Founder", founder);
         nbt.putString("Motto", motto);
         nbt.putInt("JoinFee", joinFee);
         nbt.putBoolean("Open", openToJoin);
@@ -83,15 +83,15 @@ public class Faction {
     }
 
     @Nullable
-    public static Faction fromNbt(NbtCompound nbt) {
+    public static Faction fromNbt(CompoundTag nbt) {
         String id = nbt.getString("Id");
         if (id == null || id.isBlank()) return null;
-        Formatting color = Formatting.byName(nbt.getString("Color"));
+        ChatFormatting color = ChatFormatting.getByName(nbt.getString("Color"));
         Faction f = new Faction(
                 id,
                 nbt.getString("Name").isBlank() ? id : nbt.getString("Name"),
-                color == null || !color.isColor() ? Formatting.WHITE : color,
-                nbt.containsUuid("Founder") ? nbt.getUuid("Founder") : null);
+                color == null || !color.isColor() ? ChatFormatting.WHITE : color,
+                nbt.hasUUID("Founder") ? nbt.getUUID("Founder") : null);
         f.setMotto(nbt.getString("Motto"));
         f.setJoinFee(nbt.getInt("JoinFee"));
         // Factions saved before this setting existed were all open, which is the sane default anyway.

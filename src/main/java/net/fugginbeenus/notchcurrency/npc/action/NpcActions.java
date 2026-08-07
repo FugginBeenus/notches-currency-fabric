@@ -1,10 +1,9 @@
 package net.fugginbeenus.notchcurrency.npc.action;
 
 import net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -54,12 +53,12 @@ public class NpcActions {
         return true;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         for (NpcTrigger trigger : NpcTrigger.values()) {
             List<DialogueAction> list = byTrigger.get(trigger);
             if (list == null || list.isEmpty()) continue;
-            NbtList out = new NbtList();
+            ListTag out = new ListTag();
             for (DialogueAction a : list) out.add(a.toNbt());
             nbt.put(trigger.name(), out);
         }
@@ -67,12 +66,12 @@ public class NpcActions {
         return nbt;
     }
 
-    public static NpcActions fromNbt(NbtCompound nbt) {
+    public static NpcActions fromNbt(CompoundTag nbt) {
         NpcActions actions = new NpcActions();
         if (nbt == null) return actions;
         for (NpcTrigger trigger : NpcTrigger.values()) {
             if (!nbt.contains(trigger.name())) continue;
-            NbtList list = nbt.getList(trigger.name(), NbtElement.COMPOUND_TYPE);
+            ListTag list = nbt.getList(trigger.name(), Tag.TAG_COMPOUND);
             List<DialogueAction> parsed = new ArrayList<>();
             for (int i = 0; i < list.size() && i < MAX_PER_TRIGGER; i++) {
                 parsed.add(DialogueAction.fromNbt(list.getCompound(i)));

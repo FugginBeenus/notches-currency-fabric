@@ -4,13 +4,12 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import java.util.UUID;
 
 public class NpcMoveScreen extends Screen {
@@ -29,7 +28,7 @@ public class NpcMoveScreen extends Screen {
     private int grabDx, grabDy;
 
     public NpcMoveScreen(UUID npcId) {
-        super(Text.literal("Move & Rotate"));
+        super(Component.literal("Move & Rotate"));
         this.npcId = npcId;
     }
 
@@ -37,7 +36,7 @@ public class NpcMoveScreen extends Screen {
     protected void init() {
         NotchNpcEntity npc = findNpc();
         if (npc != null) {
-            yaw = Math.round(MathHelper.wrapDegrees(npc.getYaw()));
+            yaw = Math.round(Mth.wrapDegrees(npc.getYRot()));
             lastSentYaw = yaw;
         }
         // Default to the bottom-left corner, out of the NPC's way; keep the spot across resizes.
@@ -45,19 +44,19 @@ public class NpcMoveScreen extends Screen {
             panelX = 8;
             panelY = this.height - H - 8;
         }
-        panelX = MathHelper.clamp(panelX, 0, Math.max(0, this.width - W));
-        panelY = MathHelper.clamp(panelY, 0, Math.max(0, this.height - H));
+        panelX = Mth.clamp(panelX, 0, Math.max(0, this.width - W));
+        panelY = Mth.clamp(panelY, 0, Math.max(0, this.height - H));
     }
 
     private int px() { return panelX; }
     private int py() { return panelY; }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // No dimmed background: the point is watching the NPC in the world while adjusting.
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.textRenderer, "Move, Rotate & Size", px + W / 2, py + 6);
+        NotchWidgets.title(ctx, this.font, "Move, Rotate & Size", px + W / 2, py + 6);
         // Grip lines at both title corners: the title bar is the drag handle.
         for (int g = 0; g < 3; g++) {
             ctx.fill(px + 6, py + 6 + g * 3, px + 26, py + 7 + g * 3, NotchTheme.PANEL_MID);
@@ -66,11 +65,11 @@ public class NpcMoveScreen extends Screen {
 
         // Yaw row: slider + Face Me.
         int sy = py + 20;
-        ctx.drawText(this.textRenderer, "Yaw", px + 10, sy + 2, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Yaw", px + 10, sy + 2, NotchTheme.TEXT_DARK, false);
         boolean hoverYaw = draggingYaw || over(mouseX, mouseY, px + SLIDER_X, sy, SLIDER_W, SLIDER_H);
         NotchWidgets.slider(ctx, px + SLIDER_X, sy, SLIDER_W, SLIDER_H, (yaw + 180) / 360f, hoverYaw);
-        ctx.drawText(this.textRenderer, yaw + "°", px + SLIDER_X + SLIDER_W + 5, sy + 2, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 226, sy - 1, 56, 14, "Face Me",
+        ctx.drawString(this.font, yaw + "°", px + SLIDER_X + SLIDER_W + 5, sy + 2, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 226, sy - 1, 56, 14, "Face Me",
                 over(mouseX, mouseY, px + 226, sy - 1, 56, 14));
 
         // Nudge row: X/Y/Z minus-plus pairs, then snaps.
@@ -78,15 +77,15 @@ public class NpcMoveScreen extends Screen {
         String[] axes = {"X", "Y", "Z"};
         for (int a = 0; a < 3; a++) {
             int gx = px + 10 + a * 56;
-            ctx.drawText(this.textRenderer, axes[a], gx, ny + 3, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 10, ny, 16, 14, "-",
+            ctx.drawString(this.font, axes[a], gx, ny + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, gx + 10, ny, 16, 14, "-",
                     over(mouseX, mouseY, gx + 10, ny, 16, 14));
-            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 28, ny, 16, 14, "+",
+            NotchWidgets.neutralButton(ctx, this.font, gx + 28, ny, 16, 14, "+",
                     over(mouseX, mouseY, gx + 28, ny, 16, 14));
         }
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 178, ny, 50, 14, "Center",
+        NotchWidgets.neutralButton(ctx, this.font, px + 178, ny, 50, 14, "Center",
                 over(mouseX, mouseY, px + 178, ny, 50, 14));
-        NotchWidgets.neutralButton(ctx, this.textRenderer, px + 232, ny, 50, 14, "To Me",
+        NotchWidgets.neutralButton(ctx, this.font, px + 232, ny, 50, 14, "To Me",
                 over(mouseX, mouseY, px + 232, ny, 50, 14));
 
         // Size row: one group per axis. Sizing lives here rather than on a tab because the whole point
@@ -98,19 +97,19 @@ public class NpcMoveScreen extends Screen {
         String[] dims = {"W", "H", "D"};
         for (int a = 0; a < 3; a++) {
             int gx = px + 8 + a * 92;
-            ctx.drawText(this.textRenderer, dims[a], gx, zy + 3, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 12, zy, 14, 14, "-",
+            ctx.drawString(this.font, dims[a], gx, zy + 3, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, gx + 12, zy, 14, 14, "-",
                     over(mouseX, mouseY, gx + 12, zy, 14, 14));
-            NotchWidgets.centerText(ctx, this.textRenderer, String.format("%.1fx", sizes[a]),
+            NotchWidgets.centerText(ctx, this.font, String.format("%.1fx", sizes[a]),
                     gx + 46, zy + 3, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.textRenderer, gx + 62, zy, 14, 14, "+",
+            NotchWidgets.neutralButton(ctx, this.font, gx + 62, zy, 14, 14, "+",
                     over(mouseX, mouseY, gx + 62, zy, 14, 14));
         }
 
         // Bottom row: hint + back.
-        ctx.drawText(this.textRenderer, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 84,
+        ctx.drawString(this.font, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 84,
                 NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.textRenderer, px + 10, py + 100, 272, 16, "Back to Editor",
+        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 100, 272, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 10, py + 100, 272, 16));
 
         super.render(ctx, mouseX, mouseY, delta);
@@ -174,8 +173,8 @@ public class NpcMoveScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (draggingPanel) {
-            panelX = MathHelper.clamp((int) mouseX - grabDx, 0, Math.max(0, this.width - W));
-            panelY = MathHelper.clamp((int) mouseY - grabDy, 0, Math.max(0, this.height - H));
+            panelX = Mth.clamp((int) mouseX - grabDx, 0, Math.max(0, this.width - W));
+            panelY = Mth.clamp((int) mouseY - grabDy, 0, Math.max(0, this.height - H));
             return true;
         }
         if (draggingYaw) {
@@ -231,11 +230,11 @@ public class NpcMoveScreen extends Screen {
 
     private void faceMe() {
         NotchNpcEntity npc = findNpc();
-        MinecraftClient c = MinecraftClient.getInstance();
+        Minecraft c = Minecraft.getInstance();
         if (npc == null || c.player == null) return;
         double dx = c.player.getX() - npc.getX();
         double dz = c.player.getZ() - npc.getZ();
-        yaw = Math.round(MathHelper.wrapDegrees((float) (Math.toDegrees(MathHelper.atan2(dz, dx)) - 90.0)));
+        yaw = Math.round(Mth.wrapDegrees((float) (Math.toDegrees(Mth.atan2(dz, dx)) - 90.0)));
         lastSentYaw = yaw;
         sendYaw();
     }
@@ -250,7 +249,7 @@ public class NpcMoveScreen extends Screen {
 
     private void bringToMe() {
         NotchNpcEntity npc = findNpc();
-        MinecraftClient c = MinecraftClient.getInstance();
+        Minecraft c = Minecraft.getInstance();
         if (npc == null || c.player == null) return;
         NotchPacketsClient.sendNpcTransform(npcId,
                 c.player.getX() - npc.getX(), c.player.getY() - npc.getY(), c.player.getZ() - npc.getZ(),
@@ -258,11 +257,11 @@ public class NpcMoveScreen extends Screen {
     }
 
     private NotchNpcEntity findNpc() {
-        MinecraftClient c = MinecraftClient.getInstance();
-        if (c.world == null) return null;
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
         if (cached != null && !cached.isRemoved()) return cached;
-        for (Entity e : c.world.getEntities()) {
-            if (e instanceof NotchNpcEntity n && n.getUuid().equals(npcId)) {
+        for (Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof NotchNpcEntity n && n.getUUID().equals(npcId)) {
                 cached = n;
                 return n;
             }
@@ -275,7 +274,7 @@ public class NpcMoveScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -288,7 +287,7 @@ public class NpcMoveScreen extends Screen {
 
     //? if >=1.21 {
     /*@Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         // Drawn manually at the top of render(). This screen paints its panel after the darkening,
         // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }

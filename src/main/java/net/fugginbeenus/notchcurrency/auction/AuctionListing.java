@@ -1,10 +1,9 @@
 package net.fugginbeenus.notchcurrency.auction;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public final class AuctionListing {
@@ -51,10 +50,10 @@ public final class AuctionListing {
         EXPIRED
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound tag = new NbtCompound();
-        tag.putUuid("Id", id);
-        tag.putUuid("Seller", sellerUuid);
+    public CompoundTag toNbt() {
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("Id", id);
+        tag.putUUID("Seller", sellerUuid);
         tag.putString("SellerName", sellerName);
         tag.putLong("Price", price);
         tag.putLong("Created", createdGameTime);
@@ -65,7 +64,7 @@ public final class AuctionListing {
         // bidding fields
         tag.putLong("HighestBid", highestBid);
         if (highestBidderUuid != null) {
-            tag.putUuid("HighestBidderUuid", highestBidderUuid);
+            tag.putUUID("HighestBidderUuid", highestBidderUuid);
         }
         if (highestBidderName != null) {
             tag.putString("HighestBidder", highestBidderName);
@@ -73,9 +72,9 @@ public final class AuctionListing {
         return tag;
     }
 
-    public static AuctionListing fromNbt(NbtCompound tag) {
-        UUID id = tag.getUuid("Id");
-        UUID seller = tag.getUuid("Seller");
+    public static AuctionListing fromNbt(CompoundTag tag) {
+        UUID id = tag.getUUID("Id");
+        UUID seller = tag.getUUID("Seller");
         String sellerName = tag.getString("SellerName");
         long price = tag.getLong("Price");
         long created = tag.getLong("Created");
@@ -88,13 +87,13 @@ public final class AuctionListing {
         );
 
         // bidding fields (backwards-compatible if absent)
-        if (tag.contains("HighestBid", NbtElement.LONG_TYPE)) {
+        if (tag.contains("HighestBid", Tag.TAG_LONG)) {
             listing.highestBid = tag.getLong("HighestBid");
         }
-        if (tag.contains("HighestBidderUuid", NbtElement.INT_ARRAY_TYPE)) {
-            listing.highestBidderUuid = tag.getUuid("HighestBidderUuid");
+        if (tag.contains("HighestBidderUuid", Tag.TAG_INT_ARRAY)) {
+            listing.highestBidderUuid = tag.getUUID("HighestBidderUuid");
         }
-        if (tag.contains("HighestBidder", NbtElement.STRING_TYPE)) {
+        if (tag.contains("HighestBidder", Tag.TAG_STRING)) {
             String name = tag.getString("HighestBidder");
             listing.highestBidderName = name.isEmpty() ? null : name;
         }

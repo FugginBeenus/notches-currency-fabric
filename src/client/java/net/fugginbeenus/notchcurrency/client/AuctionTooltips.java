@@ -3,14 +3,11 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-//? if <1.21 {
-import net.minecraft.client.item.TooltipContext;
-//?}
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public final class AuctionTooltips {
@@ -23,16 +20,16 @@ public final class AuctionTooltips {
 
     //? if >=1.21 {
     /*private static void onTooltip(ItemStack stack,
-                                  net.minecraft.item.Item.TooltipContext context,
-                                  net.minecraft.item.tooltip.TooltipType type,
-                                  List<Text> lines) {
+                                  net.minecraft.world.item.Item.TooltipContext context,
+                                  net.minecraft.world.item.TooltipFlag type,
+                                  List<Component> lines) {
     *///?} else {
     private static void onTooltip(ItemStack stack,
-                                  TooltipContext context,
-                                  List<Text> lines) {
+                                  TooltipFlag context,
+                                  List<Component> lines) {
     //?}
 
-        NbtCompound tag = StackData.getData(stack);
+        CompoundTag tag = StackData.getData(stack);
         if (!tag.contains("nc_price")) {
             return; // not an auction-tagged item
         }
@@ -41,30 +38,30 @@ public final class AuctionTooltips {
         String seller = tag.contains("nc_seller") ? tag.getString("nc_seller") : "Unknown";
 
         // Keep the first line as name if present; otherwise use stack name
-        Text name = lines.isEmpty() ? stack.getName() : lines.get(0);
+        Component name = lines.isEmpty() ? stack.getHoverName() : lines.get(0);
         lines.clear();
 
         // Name line
-        lines.add(name.copy().formatted(Formatting.WHITE));
+        lines.add(name.copy().withStyle(ChatFormatting.WHITE));
 
         // Price line: "Price: 45 ⛁"
-        Text priceLine = Text.empty()
-                .append(Text.literal("Price: ").formatted(Formatting.GOLD))
-                .append(Text.literal(String.valueOf(price) + " ").formatted(Formatting.YELLOW))
+        Component priceLine = Component.empty()
+                .append(Component.literal("Price: ").withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(String.valueOf(price) + " ").withStyle(ChatFormatting.YELLOW))
                 .append(NotchCurrency.coinIcon());
 
         lines.add(priceLine);
 
         // Seller line
         lines.add(
-                Text.literal("Seller: " + seller)
-                        .formatted(Formatting.GRAY)
+                Component.literal("Seller: " + seller)
+                        .withStyle(ChatFormatting.GRAY)
         );
 
         // Hint line
         lines.add(
-                Text.literal("Click to buy")
-                        .formatted(Formatting.YELLOW)
+                Component.literal("Click to buy")
+                        .withStyle(ChatFormatting.YELLOW)
         );
     }
 }

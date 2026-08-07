@@ -5,19 +5,18 @@ import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import java.util.Random;
 
 public final class CrateManager {
@@ -36,45 +35,45 @@ public final class CrateManager {
 
     // ---- opening ----
 
-    public static void open(ServerPlayerEntity player, String crateType, ServerWorld world, BlockPos pos) {
+    public static void open(ServerPlayer player, String crateType, ServerLevel world, BlockPos pos) {
         if (!enabled) {
-            player.sendMessage(Text.literal("Crates are disabled.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED), false);
             return;
         }
         CrateDef def = CrateRegistry.get(crateType);
         if (def == null) {
-            player.sendMessage(Text.literal("This crate isn't configured.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("This crate isn't configured.").withStyle(ChatFormatting.RED), false);
             return;
         }
         int keys = countKeys(player);
         if (keys < def.keysRequired()) {
-            player.sendMessage(Text.literal("You need " + def.keysRequired() + " key"
+            player.displayClientMessage(Component.literal("You need " + def.keysRequired() + " key"
                     + (def.keysRequired() == 1 ? "" : "s") + " to open the " + def.name()
-                    + " (you have " + keys + ").").formatted(Formatting.RED), false);
+                    + " (you have " + keys + ").").withStyle(ChatFormatting.RED), false);
             showOdds(player, crateType);
             return;
         }
 
         CrateDef.LootEntry loot = CrateRegistry.roll(def, RNG);
         if (loot == null) {
-            player.sendMessage(Text.literal("This crate is empty.").formatted(Formatting.GRAY), false);
+            player.displayClientMessage(Component.literal("This crate is empty.").withStyle(ChatFormatting.GRAY), false);
             return;
         }
         // Guard BEFORE keys are consumed: a bad datapack entry must never pay out "Air".
-        if (loot.isItem() && !Registries.ITEM.containsId(loot.itemId())) {
-            player.sendMessage(Text.literal("This crate is misconfigured (unknown item "
-                    + loot.itemId() + ") - check the server log.").formatted(Formatting.RED), false);
+        if (loot.isItem() && !BuiltInRegistries.ITEM.containsKey(loot.itemId())) {
+            player.displayClientMessage(Component.literal("This crate is misconfigured (unknown item "
+                    + loot.itemId() + ") - check the server log.").withStyle(ChatFormatting.RED), false);
             return;
         }
         consumeKeys(player, def.keysRequired());
 
-        Text rewardText;
+        Component rewardText;
         if (loot.isItem()) {
             int n = randRange(loot.min(), loot.max());
-            ItemStack reward = new ItemStack(Registries.ITEM.get(loot.itemId()), n);
+            ItemStack reward = new ItemStack(BuiltInRegistries.ITEM.get(loot.itemId()), n);
             // Name BEFORE insertion: offerOrDrop empties the stack, and an empty stack names "Air".
-            rewardText = Text.literal(n + "x ").append(reward.getName().copy().formatted(Formatting.WHITE));
-            player.getInventory().offerOrDrop(reward);
+            rewardText = Component.literal(n + "x ").append(reward.getHoverName().copy().withStyle(ChatFormatting.WHITE));
+            player.getInventory().placeItemBackInInventory(reward);
         } else {
             CurrencyApi.deposit(player, loot.coins(), TransactionReason.FAUCET, "crate: " + def.name());
             rewardText = NotchCurrency.coins(loot.coins());
@@ -82,56 +81,56 @@ public final class CrateManager {
 
         net.fugginbeenus.notchcurrency.block.CrateBlock.animateOpen(world, pos); // pop the lid
         effects(world, pos);
-        player.sendMessage(Text.literal("🎁 You opened the " + def.name() + " and won ").formatted(Formatting.GOLD)
+        player.displayClientMessage(Component.literal("🎁 You opened the " + def.name() + " and won ").withStyle(ChatFormatting.GOLD)
                 .append(rewardText)
-                .append(Text.literal("!").formatted(Formatting.GOLD)), false);
+                .append(Component.literal("!").withStyle(ChatFormatting.GOLD)), false);
     }
 
-    public static void showOdds(ServerPlayerEntity player, String crateType) {
+    public static void showOdds(ServerPlayer player, String crateType) {
         CrateDef def = CrateRegistry.get(crateType);
         if (def == null) return;
         int total = def.totalWeight();
-        player.sendMessage(Text.literal("═══ " + def.name() + " - Odds ═══").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        player.sendMessage(Text.literal("Cost: " + def.keysRequired() + " key" + (def.keysRequired() == 1 ? "" : "s"))
-                .formatted(Formatting.GRAY), false);
+        player.displayClientMessage(Component.literal("═══ " + def.name() + " - Odds ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        player.displayClientMessage(Component.literal("Cost: " + def.keysRequired() + " key" + (def.keysRequired() == 1 ? "" : "s"))
+                .withStyle(ChatFormatting.GRAY), false);
         for (CrateDef.LootEntry e : def.loot()) {
             String pct = total > 0 ? String.format("%.1f%%", 100.0 * e.weight() / total) : "0%";
-            Text name;
+            Component name;
             if (e.isItem()) {
                 String range = e.min() == e.max() ? String.valueOf(e.min()) : e.min() + "-" + e.max();
-                name = Text.literal(range + "x ").append(new ItemStack(Registries.ITEM.get(e.itemId())).getName().copy().formatted(Formatting.WHITE));
+                name = Component.literal(range + "x ").append(new ItemStack(BuiltInRegistries.ITEM.get(e.itemId())).getHoverName().copy().withStyle(ChatFormatting.WHITE));
             } else {
-                name = Text.literal(e.coins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).formatted(Formatting.YELLOW);
+                name = Component.literal(e.coins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).withStyle(ChatFormatting.YELLOW);
             }
-            player.sendMessage(Text.literal(" • ").formatted(Formatting.DARK_GRAY)
+            player.displayClientMessage(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(name)
-                    .append(Text.literal("  " + pct).formatted(Formatting.AQUA)), false);
+                    .append(Component.literal("  " + pct).withStyle(ChatFormatting.AQUA)), false);
         }
     }
 
     // ---- keys ----
 
-    public static void buyKey(ServerPlayerEntity player, int amount) {
+    public static void buyKey(ServerPlayer player, int amount) {
         if (!enabled) {
-            player.sendMessage(Text.literal("Crates are disabled.").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED), false);
             return;
         }
         if (amount <= 0) return;
         long cost = keyPrice * amount;
         if (CurrencyApi.getBalance(player) < cost) {
-            player.sendMessage(Text.literal("You can't afford " + amount + " key" + (amount == 1 ? "" : "s") + " (")
-                    .formatted(Formatting.RED).append(NotchCurrency.coins(cost)).append(Text.literal(").").formatted(Formatting.RED)), false);
+            player.displayClientMessage(Component.literal("You can't afford " + amount + " key" + (amount == 1 ? "" : "s") + " (")
+                    .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(cost)).append(Component.literal(").").withStyle(ChatFormatting.RED)), false);
             return;
         }
         CurrencyApi.withdraw(player, cost, TransactionReason.SINK, "crate keys x" + amount);
         giveKeys(player, amount);
-        player.sendMessage(Text.literal("Bought " + amount + " Crate Key" + (amount == 1 ? "" : "s") + " for ")
-                .formatted(Formatting.GREEN).append(NotchCurrency.coins(cost)).append(Text.literal(".").formatted(Formatting.GREEN)), false);
+        player.displayClientMessage(Component.literal("Bought " + amount + " Crate Key" + (amount == 1 ? "" : "s") + " for ")
+                .withStyle(ChatFormatting.GREEN).append(NotchCurrency.coins(cost)).append(Component.literal(".").withStyle(ChatFormatting.GREEN)), false);
     }
 
-    public static void giveKeys(ServerPlayerEntity player, int amount) {
+    public static void giveKeys(ServerPlayer player, int amount) {
         ItemStack keys = new ItemStack(ModItems.CRATE_KEY, amount);
-        player.getInventory().offerOrDrop(keys);
+        player.getInventory().placeItemBackInInventory(keys);
     }
 
     public static long getKeyPrice() {
@@ -140,35 +139,35 @@ public final class CrateManager {
 
     // ---- helpers ----
 
-    private static int countKeys(ServerPlayerEntity player) {
+    private static int countKeys(ServerPlayer player) {
         int n = 0;
-        PlayerInventory inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            if (inv.getStack(i).isOf(ModItems.CRATE_KEY)) n += inv.getStack(i).getCount();
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(ModItems.CRATE_KEY)) n += inv.getItem(i).getCount();
         }
         return n;
     }
 
-    private static void consumeKeys(ServerPlayerEntity player, int amount) {
+    private static void consumeKeys(ServerPlayer player, int amount) {
         Item key = ModItems.CRATE_KEY;
-        PlayerInventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
         int remaining = amount;
-        for (int i = 0; i < inv.size() && remaining > 0; i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.isOf(key)) {
+        for (int i = 0; i < inv.getContainerSize() && remaining > 0; i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(key)) {
                 int take = Math.min(remaining, s.getCount());
-                s.decrement(take);
+                s.shrink(take);
                 remaining -= take;
             }
         }
     }
 
-    private static void effects(ServerWorld world, BlockPos pos) {
-        world.playSound(null, pos, SoundEvents.BLOCK_ENDER_CHEST_OPEN, SoundCategory.BLOCKS, 1.0f, 1.2f);
-        world.playSound(null, pos, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.BLOCKS, 0.6f, 1.4f);
-        world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+    private static void effects(ServerLevel world, BlockPos pos) {
+        world.playSound(null, pos, SoundEvents.ENDER_CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.2f);
+        world.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.6f, 1.4f);
+        world.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
                 24, 0.4, 0.4, 0.4, 0.1);
-        world.spawnParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+        world.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
                 12, 0.3, 0.4, 0.3, 0.05);
     }
 

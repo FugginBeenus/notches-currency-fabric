@@ -26,7 +26,7 @@ public final class NotchTheme {
     public static final int GOLD_LO      = 0xFFAA7410; // gold button shadow
     public static final int ACCENT_TAN   = 0xFFBEB49B; // label banner
 
-    // ---- Text (matches the values the original screens already use) ----
+    // ---- Component (matches the values the original screens already use) ----
     public static final int TEXT_DARK    = 0xFF404040; // labels on the light panel
     public static final int TEXT_LIGHT   = 0xFFFFFFFF;
     public static final int TEXT_MUTED   = 0xFF686868;

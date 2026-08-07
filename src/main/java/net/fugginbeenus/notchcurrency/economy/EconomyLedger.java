@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.WorldSavePath;
+import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,9 +84,9 @@ public final class EconomyLedger {
 
     private static String resolveName(MinecraftServer server, UUID id) {
         try {
-            var cache = server.getUserCache();
+            var cache = server.getProfileCache();
             if (cache != null) {
-                var profile = cache.getByUuid(id);
+                var profile = cache.get(id);
                 if (profile.isPresent() && profile.get().getName() != null) {
                     return profile.get().getName();
                 }
@@ -132,7 +132,7 @@ public final class EconomyLedger {
             try { writer.close(); } catch (IOException ignored) {}
             writer = null;
         }
-        Path dir = server.getSavePath(WorldSavePath.ROOT).resolve("notchcurrency").resolve("ledger");
+        Path dir = server.getWorldPath(LevelResource.ROOT).resolve("notchcurrency").resolve("ledger");
         Files.createDirectories(dir);
         Path file = dir.resolve("economy-" + today + ".jsonl");
         writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8,

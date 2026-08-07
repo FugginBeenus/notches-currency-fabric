@@ -4,14 +4,14 @@ import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.minecraft.item.ItemStack;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -34,78 +34,78 @@ public final class PlayerShopManager {
     // --- Shop Creation ---
 
     @Nullable
-    public static PlayerShop createShop(ServerPlayerEntity player, String shopName) {
-        ShopState state = ShopState.get(player.getServerWorld());
+    public static PlayerShop createShop(ServerPlayer player, String shopName) {
+        ShopState state = ShopState.get(player.serverLevel());
 
         PlayerShop shop = state.createShop(
-                player.getUuid(),
+                player.getUUID(),
                 player.getName().getString(),
                 shopName,
                 MAX_SHOPS_PER_PLAYER
         );
 
         if (shop == null) {
-            player.sendMessage(Text.literal("You've reached the maximum number of shops (" + MAX_SHOPS_PER_PLAYER + ")!")
-                    .formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("You've reached the maximum number of shops (" + MAX_SHOPS_PER_PLAYER + ")!")
+                    .withStyle(ChatFormatting.RED), false);
             return null;
         }
 
-        player.sendMessage(Text.literal("Created shop: ")
-                .append(Text.literal(shopName).formatted(Formatting.GOLD))
-                .formatted(Formatting.GREEN), false);
+        player.displayClientMessage(Component.literal("Created shop: ")
+                .append(Component.literal(shopName).withStyle(ChatFormatting.GOLD))
+                .withStyle(ChatFormatting.GREEN), false);
 
         return shop;
     }
 
-    public static boolean deleteShop(ServerPlayerEntity player, UUID shopId) {
-        ShopState state = ShopState.get(player.getServerWorld());
+    public static boolean deleteShop(ServerPlayer player, UUID shopId) {
+        ShopState state = ShopState.get(player.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.sendMessage(Text.literal("Shop not found!").formatted(Formatting.RED), false);
+            player.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
-        if (!shop.getOwnerId().equals(player.getUuid())) {
-            player.sendMessage(Text.literal("You don't own this shop!").formatted(Formatting.RED), false);
+        if (!shop.getOwnerId().equals(player.getUUID())) {
+            player.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         // Return all stock, pending coins, and barter items via the single canonical path
         returnAllShopContents(player.getServer(), shop, player);
 
-        state.deleteShop(shopId, player.getUuid());
-        player.sendMessage(Text.literal("Shop deleted. Everything has been returned to you.")
-                .formatted(Formatting.YELLOW), false);
+        state.deleteShop(shopId, player.getUUID());
+        player.displayClientMessage(Component.literal("Shop deleted. Everything has been returned to you.")
+                .withStyle(ChatFormatting.YELLOW), false);
 
         return true;
     }
 
     // --- Listing Management ---
 
-    public static boolean addListing(ServerPlayerEntity owner, UUID shopId, ItemStack item, int coinPrice) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+    public static boolean addListing(ServerPlayer owner, UUID shopId, ItemStack item, int coinPrice) {
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
-            owner.sendMessage(Text.literal("You don't own this shop!").formatted(Formatting.RED), false);
+        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+            owner.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         if (!shop.canAddListing()) {
-            owner.sendMessage(Text.literal("Shop is full! Maximum " + PlayerShop.MAX_LISTINGS + " listings.")
-                    .formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Shop is full! Maximum " + PlayerShop.MAX_LISTINGS + " listings.")
+                    .withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         if (item == null || item.isEmpty()) {
-            owner.sendMessage(Text.literal("Invalid item!").formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Invalid item!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         if (coinPrice < MIN_PRICE || coinPrice > MAX_PRICE) {
-            owner.sendMessage(Text.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                    .formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                    .withStyle(ChatFormatting.RED), false);
             return false;
         }
 
@@ -118,34 +118,34 @@ public final class PlayerShopManager {
         shop.addListing(listing);
         state.markDirtyAndSave();
 
-        owner.sendMessage(Text.literal("Listed ")
-                .append(Text.literal(stockAmount + "x ").formatted(Formatting.WHITE))
-                .append(item.getName())
-                .append(Text.literal(" for ").formatted(Formatting.GREEN))
+        owner.displayClientMessage(Component.literal("Listed ")
+                .append(Component.literal(stockAmount + "x ").withStyle(ChatFormatting.WHITE))
+                .append(item.getHoverName())
+                .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
                 .append(NotchCurrency.coins(coinPrice))
-                .append(Text.literal(" each").formatted(Formatting.GREEN)), false);
+                .append(Component.literal(" each").withStyle(ChatFormatting.GREEN)), false);
 
         return true;
     }
 
-    public static boolean addStock(ServerPlayerEntity owner, UUID shopId, UUID listingId, ItemStack items) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+    public static boolean addStock(ServerPlayer owner, UUID shopId, UUID listingId, ItemStack items) {
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
-            owner.sendMessage(Text.literal("You don't own this shop!").formatted(Formatting.RED), false);
+        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+            owner.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         ShopListing listing = shop.getListing(listingId);
         if (listing == null) {
-            owner.sendMessage(Text.literal("Listing not found!").formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Listing not found!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         // Verify item matches
         if (!StackData.canCombine(listing.getItemForSale(), items)) {
-            owner.sendMessage(Text.literal("Item doesn't match the listing!").formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Item doesn't match the listing!").withStyle(ChatFormatting.RED), false);
             return false;
         }
 
@@ -153,19 +153,19 @@ public final class PlayerShopManager {
         listing.addStock(addAmount);
         state.markDirtyAndSave();
 
-        owner.sendMessage(Text.literal("Added ")
-                .append(Text.literal(addAmount + "x ").formatted(Formatting.WHITE))
-                .append(items.getName())
-                .append(Text.literal(" to stock. Total: " + listing.getStockQuantity()).formatted(Formatting.GREEN)), false);
+        owner.displayClientMessage(Component.literal("Added ")
+                .append(Component.literal(addAmount + "x ").withStyle(ChatFormatting.WHITE))
+                .append(items.getHoverName())
+                .append(Component.literal(" to stock. Total: " + listing.getStockQuantity()).withStyle(ChatFormatting.GREEN)), false);
 
         return true;
     }
 
-    public static boolean updatePrice(ServerPlayerEntity owner, UUID shopId, UUID listingId, int newPrice) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+    public static boolean updatePrice(ServerPlayer owner, UUID shopId, UUID listingId, int newPrice) {
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
+        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
             return false;
         }
 
@@ -175,27 +175,27 @@ public final class PlayerShopManager {
         }
 
         if (newPrice < MIN_PRICE || newPrice > MAX_PRICE) {
-            owner.sendMessage(Text.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + ".")
-                    .formatted(Formatting.RED), false);
+            owner.displayClientMessage(Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + ".")
+                    .withStyle(ChatFormatting.RED), false);
             return false;
         }
 
         listing.setCoinPrice(newPrice);
         state.markDirtyAndSave();
 
-        owner.sendMessage(Text.literal("Price updated to ")
+        owner.displayClientMessage(Component.literal("Price updated to ")
                 .append(NotchCurrency.coins(newPrice))
-                .formatted(Formatting.GREEN), false);
+                .withStyle(ChatFormatting.GREEN), false);
 
         return true;
     }
 
-    public static boolean setBarterPrice(ServerPlayerEntity owner, UUID shopId, UUID listingId,
+    public static boolean setBarterPrice(ServerPlayer owner, UUID shopId, UUID listingId,
                                          ItemStack requiredItem, int requiredCount) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
+        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
             return false;
         }
 
@@ -208,22 +208,22 @@ public final class PlayerShopManager {
         state.markDirtyAndSave();
 
         if (requiredItem == null || requiredItem.isEmpty()) {
-            owner.sendMessage(Text.literal("Barter price removed.").formatted(Formatting.YELLOW), false);
+            owner.displayClientMessage(Component.literal("Barter price removed.").withStyle(ChatFormatting.YELLOW), false);
         } else {
-            owner.sendMessage(Text.literal("Barter price set: ")
-                    .append(Text.literal(requiredCount + "x ").formatted(Formatting.WHITE))
-                    .append(requiredItem.getName())
-                    .formatted(Formatting.GREEN), false);
+            owner.displayClientMessage(Component.literal("Barter price set: ")
+                    .append(Component.literal(requiredCount + "x ").withStyle(ChatFormatting.WHITE))
+                    .append(requiredItem.getHoverName())
+                    .withStyle(ChatFormatting.GREEN), false);
         }
 
         return true;
     }
 
-    public static boolean removeListing(ServerPlayerEntity owner, UUID shopId, UUID listingId) {
-        ShopState state = ShopState.get(owner.getServerWorld());
+    public static boolean removeListing(ServerPlayer owner, UUID shopId, UUID listingId) {
+        ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUuid())) {
+        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
             return false;
         }
 
@@ -241,20 +241,20 @@ public final class PlayerShopManager {
         shop.removeListing(listingId);
         state.markDirtyAndSave();
 
-        owner.sendMessage(Text.literal("Listing removed. Stock returned.").formatted(Formatting.YELLOW), false);
+        owner.displayClientMessage(Component.literal("Listing removed. Stock returned.").withStyle(ChatFormatting.YELLOW), false);
         return true;
     }
 
     // --- Purchasing ---
 
-    public static PurchaseResult purchase(ServerPlayerEntity buyer, UUID shopId, UUID listingId, int quantity) {
+    public static PurchaseResult purchase(ServerPlayer buyer, UUID shopId, UUID listingId, int quantity) {
         MinecraftServer server = buyer.getServer();
         ShopState state = ShopState.get(server);
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) return PurchaseResult.SHOP_NOT_FOUND;
         if (!shop.isOpen() || shop.isRentPaused()) return PurchaseResult.SHOP_CLOSED;
-        if (shop.getOwnerId().equals(buyer.getUuid())) return PurchaseResult.OWN_SHOP;
+        if (shop.getOwnerId().equals(buyer.getUUID())) return PurchaseResult.OWN_SHOP;
 
         ShopListing listing = shop.getListing(listingId);
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
@@ -313,7 +313,7 @@ public final class PlayerShopManager {
         giveItemsToPlayer(buyer, purchased);
 
         // Handle earnings - add to shop's pending balance (NOT directly to seller)
-        ServerPlayerEntity seller = server.getPlayerManager().getPlayer(shop.getOwnerId());
+        ServerPlayer seller = server.getPlayerList().getPlayer(shop.getOwnerId());
 
         // Coin earnings (with tax) - added to shop's pending balance via recordSale
         int sellerEarnings = 0;
@@ -333,26 +333,26 @@ public final class PlayerShopManager {
 
         // Notify seller
         if (seller != null) {
-            MutableText message = Text.literal("")
-                    .append(Text.literal(buyer.getName().getString()).formatted(Formatting.AQUA))
-                    .append(Text.literal(" bought ").formatted(Formatting.GREEN))
-                    .append(Text.literal(totalItems + "x ").formatted(Formatting.WHITE))
-                    .append(purchased.getName())
-                    .append(Text.literal(" for ").formatted(Formatting.GREEN));
+            MutableComponent message = Component.literal("")
+                    .append(Component.literal(buyer.getName().getString()).withStyle(ChatFormatting.AQUA))
+                    .append(Component.literal(" bought ").withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal(totalItems + "x ").withStyle(ChatFormatting.WHITE))
+                    .append(purchased.getHoverName())
+                    .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN));
 
             if (needsCoins && needsBarter) {
                 message.append(NotchCurrency.coins(totalCoinCost))
-                        .append(Text.literal(" + ").formatted(Formatting.WHITE))
-                        .append(Text.literal(totalBarterCost + "x ").formatted(Formatting.WHITE))
-                        .append(barterItem.getName());
+                        .append(Component.literal(" + ").withStyle(ChatFormatting.WHITE))
+                        .append(Component.literal(totalBarterCost + "x ").withStyle(ChatFormatting.WHITE))
+                        .append(barterItem.getHoverName());
             } else if (needsCoins) {
                 message.append(NotchCurrency.coins(totalCoinCost));
             } else if (needsBarter) {
-                message.append(Text.literal(totalBarterCost + "x ").formatted(Formatting.WHITE))
-                        .append(barterItem.getName());
+                message.append(Component.literal(totalBarterCost + "x ").withStyle(ChatFormatting.WHITE))
+                        .append(barterItem.getHoverName());
             }
 
-            seller.sendMessage(message, false);
+            seller.displayClientMessage(message, false);
         }
         // (Offline owners: coins are already held in the shop's pending balance via
         //  recordSale() above, and are paid out when the owner withdraws or the shop closes.)
@@ -363,60 +363,60 @@ public final class PlayerShopManager {
 
         // Feedback to buyer
         //? if >=1.21 {
-        /*buyer.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        /*buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
         *///?} else {
-        buyer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.2F);
+        buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
         //?}
 
-        MutableText buyerMessage = Text.literal("Purchased ")
-                .append(Text.literal(totalItems + "x ").formatted(Formatting.WHITE))
-                .append(purchased.getName())
-                .append(Text.literal(" for ").formatted(Formatting.GREEN));
+        MutableComponent buyerMessage = Component.literal("Purchased ")
+                .append(Component.literal(totalItems + "x ").withStyle(ChatFormatting.WHITE))
+                .append(purchased.getHoverName())
+                .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN));
 
         if (needsCoins && needsBarter) {
             buyerMessage.append(NotchCurrency.coins(totalCoinCost))
-                    .append(Text.literal(" + ").formatted(Formatting.WHITE))
-                    .append(Text.literal(totalBarterCost + "x ").formatted(Formatting.WHITE))
-                    .append(barterItem.getName());
+                    .append(Component.literal(" + ").withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(totalBarterCost + "x ").withStyle(ChatFormatting.WHITE))
+                    .append(barterItem.getHoverName());
         } else if (needsCoins) {
             buyerMessage.append(NotchCurrency.coins(totalCoinCost));
         } else if (needsBarter) {
-            buyerMessage.append(Text.literal(totalBarterCost + "x ").formatted(Formatting.WHITE))
-                    .append(barterItem.getName());
+            buyerMessage.append(Component.literal(totalBarterCost + "x ").withStyle(ChatFormatting.WHITE))
+                    .append(barterItem.getHoverName());
         }
 
-        buyer.sendMessage(buyerMessage, false);
+        buyer.displayClientMessage(buyerMessage, false);
 
         LOGGER.info("{} purchased {}x {} from {}'s shop",
                 buyer.getName().getString(), totalItems,
-                purchased.getName().getString(), shop.getOwnerName());
+                purchased.getHoverName().getString(), shop.getOwnerName());
 
         return PurchaseResult.SUCCESS;
     }
 
     // --- Utility Methods ---
 
-    private static void giveItemsToPlayer(ServerPlayerEntity player, ItemStack items) {
+    private static void giveItemsToPlayer(ServerPlayer player, ItemStack items) {
         if (items.isEmpty()) return;
 
         // Split into max stack sizes
         int remaining = items.getCount();
         while (remaining > 0) {
-            int giveCount = Math.min(remaining, items.getMaxCount());
+            int giveCount = Math.min(remaining, items.getMaxStackSize());
             ItemStack toGive = items.copy();
             toGive.setCount(giveCount);
 
-            if (!player.getInventory().insertStack(toGive)) {
-                player.dropItem(toGive, false);
+            if (!player.getInventory().add(toGive)) {
+                player.drop(toGive, false);
             }
             remaining -= giveCount;
         }
     }
 
-    private static int countItemsInInventory(ServerPlayerEntity player, ItemStack template) {
+    private static int countItemsInInventory(ServerPlayer player, ItemStack template) {
         int count = 0;
-        for (int i = 0; i < player.getInventory().size(); i++) {
-            ItemStack stack = player.getInventory().getStack(i);
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
             if (StackData.canCombine(template, stack)) {
                 count += stack.getCount();
             }
@@ -424,19 +424,19 @@ public final class PlayerShopManager {
         return count;
     }
 
-    private static void removeItemsFromInventory(ServerPlayerEntity player, ItemStack template, int amount) {
+    private static void removeItemsFromInventory(ServerPlayer player, ItemStack template, int amount) {
         int remaining = amount;
-        for (int i = 0; i < player.getInventory().size() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().getStack(i);
+        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
+            ItemStack stack = player.getInventory().getItem(i);
             if (StackData.canCombine(template, stack)) {
                 int take = Math.min(remaining, stack.getCount());
-                stack.decrement(take);
+                stack.shrink(take);
                 remaining -= take;
             }
         }
     }
 
-    public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, @Nullable ServerPlayerEntity owner) {
+    public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, @Nullable ServerPlayer owner) {
         // Pending coin balance is the single source of truth for shop earnings.
         long totalCurrency = shop.withdrawBalance();
 
@@ -448,7 +448,7 @@ public final class PlayerShopManager {
             int stock = listing.getStockQuantitySafe();
             if (stock > 0) {
                 ItemStack baseItem = listing.getItemForSale();
-                int maxStackSize = baseItem.getMaxCount();
+                int maxStackSize = baseItem.getMaxStackSize();
                 while (stock > 0) {
                     int stackSize = Math.min(stock, maxStackSize);
                     ItemStack returnStack = baseItem.copy();
@@ -472,10 +472,10 @@ public final class PlayerShopManager {
                 giveItemsToPlayer(owner, item);
             }
             if (totalCurrency > 0 || !itemsToReturn.isEmpty()) {
-                owner.sendMessage(Text.literal("Returned ")
+                owner.displayClientMessage(Component.literal("Returned ")
                         .append(NotchCurrency.coins(totalCurrency))
-                        .append(Text.literal(" and " + itemsToReturn.size() + " item stack(s) from your shop.")
-                                .formatted(Formatting.YELLOW)), false);
+                        .append(Component.literal(" and " + itemsToReturn.size() + " item stack(s) from your shop.")
+                                .withStyle(ChatFormatting.YELLOW)), false);
             }
         }
 
