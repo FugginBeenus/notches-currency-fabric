@@ -107,9 +107,9 @@ public final class AuctionState extends SavedData {
 
         public CompoundTag toNbt() {
             CompoundTag tag = new CompoundTag();
-            tag.putUUID("Id", listingId);
-            tag.putUUID("Seller", sellerUuid);
-            tag.putUUID("Winner", winnerUuid);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "Id", listingId);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "Seller", sellerUuid);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "Winner", winnerUuid);
             tag.putString("SellerName", sellerName);
             tag.putString("WinnerName", winnerName);
             tag.putLong("FinalPrice", finalPrice);
@@ -118,9 +118,9 @@ public final class AuctionState extends SavedData {
         }
 
         public static PendingWinnings fromNbt(CompoundTag tag) {
-            UUID id = tag.getUUID("Id");
-            UUID seller = tag.getUUID("Seller");
-            UUID winner = tag.getUUID("Winner");
+            UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "Id");
+            UUID seller = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "Seller");
+            UUID winner = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "Winner");
             String sellerName = tag.getString("SellerName");
             String winnerName = tag.getString("WinnerName");
             long price = tag.getLong("FinalPrice");
@@ -294,7 +294,7 @@ public final class AuctionState extends SavedData {
         CompoundTag tag = StackData.editData(listingStack);
         tag.putLong("nc_price", price);
         tag.putString("nc_seller", seller.getName().getString());
-        tag.putUUID("nc_listing_id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "nc_listing_id", id);
         tag.putLong("nc_created", now);
         tag.putLong("nc_expires", expires);
         StackData.commitData(listingStack, tag);

@@ -55,8 +55,8 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     private Row row(ItemStack stack) {
         if (stack.isEmpty()) return null;
         CompoundTag t = StackData.getData(stack);
-        if (!t.hasUUID("nc_oid")) return null;
-        return new Row(stack, t.getUUID("nc_oid"), readStacks(t, "nc_gives"), t.getLong("nc_gcoins"),
+        if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "nc_oid")) return null;
+        return new Row(stack, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "nc_oid"), readStacks(t, "nc_gives"), t.getLong("nc_gcoins"),
                 t.getLong("nc_price"), readStacks(t, "nc_wants"),
                 t.getString("nc_from"), t.getString("nc_target"));
     }

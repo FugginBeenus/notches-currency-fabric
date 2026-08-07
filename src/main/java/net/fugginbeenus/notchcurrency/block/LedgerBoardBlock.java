@@ -163,7 +163,7 @@ public class LedgerBoardBlock extends Block implements EntityBlock {
             return InteractionResult.SUCCESS;
         }
         if (player instanceof ServerPlayer sp) {
-            for (Component line : EconomyLeaderboard.topLines(sp.getServer(), TOP_LIMIT)) {
+            for (Component line : EconomyLeaderboard.topLines(sp.level().getServer(), TOP_LIMIT)) {
                 sp.displayClientMessage(line, false);
             }
         }

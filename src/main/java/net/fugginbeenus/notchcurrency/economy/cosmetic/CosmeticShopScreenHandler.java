@@ -79,8 +79,8 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
     @Nullable public UUID npcId() { return npcId; }
 
     private void refresh() {
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
-        CosmeticState state = CosmeticState.get(sp.getServer());
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
+        CosmeticState state = CosmeticState.get(sp.level().getServer());
         List<CosmeticOffer> offers = CosmeticRegistry.all();
 
         int totalPages = Math.max(1, (offers.size() + PER_PAGE - 1) / PER_PAGE);

@@ -56,8 +56,8 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
     public int prop(int i) { return props.get(i); }
 
     private void refresh() {
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
-        TradeOfferState state = TradeOfferState.get(sp.getServer());
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
+        TradeOfferState state = TradeOfferState.get(sp.level().getServer());
 
         List<TradeOffer> incoming = state.incomingFor(sp.getUUID(), sp.getName().getString());
         int totalPages = Math.max(1, (incoming.size() + INCOMING - 1) / INCOMING);
@@ -84,7 +84,7 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
         ItemStack carrier = offer.firstOffered().copy();
         if (carrier.isEmpty()) carrier = new ItemStack(net.minecraft.world.item.Items.PAPER); // coins-only offer
         CompoundTag t = StackData.editData(carrier);
-        t.putUUID("nc_oid", offer.id());
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "nc_oid", offer.id());
         t.putLong("nc_price", offer.priceCoins());
         t.putLong("nc_gcoins", offer.offeredCoins());
         // Every stack on both sides, so the row can draw the whole exchange like trade ingredients.

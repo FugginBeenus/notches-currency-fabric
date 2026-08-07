@@ -66,7 +66,7 @@ public final class LoanManager {
     // ---- borrow / repay ----
 
     public static void borrow(ServerPlayer player, long amount) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (!enabled) {
             player.displayClientMessage(Component.literal("Loans aren't available right now.").withStyle(ChatFormatting.RED), false);
@@ -95,7 +95,7 @@ public final class LoanManager {
     }
 
     public static void repay(ServerPlayer player, long amount) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         LoanState state = LoanState.get(server);
         long debt = state.getDebt(player.getUUID());

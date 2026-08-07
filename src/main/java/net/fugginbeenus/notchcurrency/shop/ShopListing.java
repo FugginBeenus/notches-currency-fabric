@@ -160,7 +160,7 @@ public class ShopListing {
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
-        nbt.putUUID("Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Id", id);
         nbt.put("Item", StackData.writeStack(itemForSale));
         nbt.putInt("Stock", stockQuantity);
         nbt.putInt("CoinPrice", coinPrice);
@@ -177,7 +177,7 @@ public class ShopListing {
     }
 
     public static ShopListing fromNbt(CompoundTag nbt) {
-        UUID id = nbt.getUUID("Id");
+        UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Id");
         ShopListing listing = new ShopListing(id);
 
         if (nbt.contains("Item", Tag.TAG_COMPOUND)) {

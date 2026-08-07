@@ -146,10 +146,26 @@ loom {
     }
 }
 
-stonecutter {
-    replacements {
-        string(usesIdentifier) {
-            replace("ResourceLocation", "Identifier")
+// Token rewrites for Mojang's renames between 1.21.1 and 1.21.11. Each is a pure rename or package
+// move with no behaviour attached, which is what makes rewriting the token safe; anything that
+// actually changed shape gets a real version branch instead.
+//
+// Registered inside an if rather than passed a boolean, because that boolean is the replacement's
+// DIRECTION, not a condition. Passing false does not skip the rule, it runs it backwards, which
+// happily rewrote every legitimate EnumProperty into DirectionProperty on the older versions.
+if (usesIdentifier) {
+    stonecutter {
+        replacements {
+            string(true) {
+                replace("ResourceLocation", "Identifier")
+                // Villager moved one package deeper; the simple name is unchanged.
+                replace("net.minecraft.world.entity.npc.Villager", "net.minecraft.world.entity.npc.villager.Villager")
+                // DirectionProperty collapsed into EnumProperty<Direction>. The import must lose the
+                // generic while usages gain it, so the import line is rewritten first: after that it
+                // no longer holds the old token for the second rule to catch.
+                replace("properties.DirectionProperty;", "properties.EnumProperty;")
+                replace("DirectionProperty", "EnumProperty<Direction>")
+            }
         }
     }
 }

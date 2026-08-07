@@ -82,7 +82,7 @@ public class LoanState extends SavedData {
         ListTag list = new ListTag();
         for (Map.Entry<UUID, Loan> e : loans.entrySet()) {
             CompoundTag o = new CompoundTag();
-            o.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Player", e.getKey());
             o.putLong("Debt", e.getValue().debt);
             o.putLong("Due", e.getValue().dueTime);
             o.putBoolean("Late", e.getValue().lateFeeApplied);
@@ -99,7 +99,7 @@ public class LoanState extends SavedData {
             CompoundTag o = list.getCompound(i);
             try {
                 long debt = o.getLong("Debt");
-                if (debt > 0) state.loans.put(o.getUUID("Player"),
+                if (debt > 0) state.loans.put(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player"),
                         new Loan(debt, o.getLong("Due"), o.getBoolean("Late")));
             } catch (IllegalArgumentException ignored) {
                 // skip

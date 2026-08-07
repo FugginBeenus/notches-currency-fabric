@@ -97,9 +97,9 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         ItemStack stack = menu.rowStack(i);
         if (stack.isEmpty()) return null;
         CompoundTag t = StackData.getData(stack);
-        if (!t.hasUUID("nc_lid")) return null;
+        if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "nc_lid")) return null;
         ItemStack barter = t.contains("nc_bstack") ? StackData.readStack(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
-        return new Row(stack, t.getUUID("nc_lid"), t.getInt("nc_price"),
+        return new Row(stack, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "nc_lid"), t.getInt("nc_price"),
                 t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }
 

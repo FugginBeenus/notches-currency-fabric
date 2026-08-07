@@ -81,7 +81,7 @@ public class Bounty {
 
     public CompoundTag toNbt() {
         CompoundTag o = new CompoundTag();
-        o.putUUID("Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Id", id);
         o.putString("Type", type.name());
         o.putString("Target", target.toString());
         o.putInt("Required", required);
@@ -97,7 +97,7 @@ public class Bounty {
     public static Bounty fromNbt(CompoundTag o) {
         ItemStack reward = o.contains("RewardItem") ? StackData.readStack(o.getCompound("RewardItem")) : ItemStack.EMPTY;
         return new Bounty(
-                o.getUUID("Id"),
+                net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Id"),
                 BountyType.valueOf(o.getString("Type")),
                 Reg.parse(o.getString("Target")),
                 o.getInt("Required"),

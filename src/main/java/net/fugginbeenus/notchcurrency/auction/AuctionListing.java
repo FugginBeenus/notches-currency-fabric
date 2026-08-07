@@ -52,8 +52,8 @@ public final class AuctionListing {
 
     public CompoundTag toNbt() {
         CompoundTag tag = new CompoundTag();
-        tag.putUUID("Id", id);
-        tag.putUUID("Seller", sellerUuid);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "Seller", sellerUuid);
         tag.putString("SellerName", sellerName);
         tag.putLong("Price", price);
         tag.putLong("Created", createdGameTime);
@@ -64,7 +64,7 @@ public final class AuctionListing {
         // bidding fields
         tag.putLong("HighestBid", highestBid);
         if (highestBidderUuid != null) {
-            tag.putUUID("HighestBidderUuid", highestBidderUuid);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "HighestBidderUuid", highestBidderUuid);
         }
         if (highestBidderName != null) {
             tag.putString("HighestBidder", highestBidderName);
@@ -73,8 +73,8 @@ public final class AuctionListing {
     }
 
     public static AuctionListing fromNbt(CompoundTag tag) {
-        UUID id = tag.getUUID("Id");
-        UUID seller = tag.getUUID("Seller");
+        UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "Id");
+        UUID seller = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "Seller");
         String sellerName = tag.getString("SellerName");
         long price = tag.getLong("Price");
         long created = tag.getLong("Created");
@@ -91,7 +91,7 @@ public final class AuctionListing {
             listing.highestBid = tag.getLong("HighestBid");
         }
         if (tag.contains("HighestBidderUuid", Tag.TAG_INT_ARRAY)) {
-            listing.highestBidderUuid = tag.getUUID("HighestBidderUuid");
+            listing.highestBidderUuid = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "HighestBidderUuid");
         }
         if (tag.contains("HighestBidder", Tag.TAG_STRING)) {
             String name = tag.getString("HighestBidder");

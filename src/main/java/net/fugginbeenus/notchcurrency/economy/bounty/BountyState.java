@@ -157,7 +157,7 @@ public class BountyState extends SavedData {
         for (Map.Entry<UUID, Map<UUID, TakenBounty>> e : taken.entrySet()) {
             if (e.getValue().isEmpty()) continue;
             CompoundTag o = new CompoundTag();
-            o.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Player", e.getKey());
             ListTag entries = new ListTag();
             for (TakenBounty tb : e.getValue().values()) entries.add(tb.toNbt());
             o.put("Taken", entries);
@@ -169,11 +169,11 @@ public class BountyState extends SavedData {
         for (Map.Entry<UUID, Set<UUID>> e : completed.entrySet()) {
             if (e.getValue().isEmpty()) continue;
             CompoundTag o = new CompoundTag();
-            o.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Player", e.getKey());
             ListTag ids = new ListTag();
             for (UUID id : e.getValue()) {
                 CompoundTag io = new CompoundTag();
-                io.putUUID("Id", id);
+                net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(io, "Id", id);
                 ids.add(io);
             }
             o.put("Ids", ids);
@@ -203,7 +203,7 @@ public class BountyState extends SavedData {
         for (int i = 0; i < takenList.size(); i++) {
             CompoundTag o = takenList.getCompound(i);
             try {
-                UUID player = o.getUUID("Player");
+                UUID player = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player");
                 Map<UUID, TakenBounty> m = new LinkedHashMap<>();
                 ListTag entries = o.getList("Taken", Tag.TAG_COMPOUND);
                 for (int j = 0; j < entries.size(); j++) {
@@ -220,7 +220,7 @@ public class BountyState extends SavedData {
         for (int i = 0; i < doneList.size(); i++) {
             CompoundTag o = doneList.getCompound(i);
             try {
-                UUID player = o.getUUID("Player");
+                UUID player = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player");
                 Set<UUID> s = new HashSet<>();
                 ListTag ids = o.getList("Ids", Tag.TAG_COMPOUND);
                 for (int j = 0; j < ids.size(); j++) s.add(ids.getCompound(j).getUUID("Id"));

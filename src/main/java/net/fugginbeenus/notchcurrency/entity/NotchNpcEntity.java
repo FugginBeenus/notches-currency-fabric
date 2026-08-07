@@ -1286,9 +1286,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     // Excludes the custom name; the caller handles that.
     public void writeConfig(CompoundTag nbt) {
         nbt.putString("Role", role.name());
-        if (roleTarget != null) nbt.putUUID("RoleTarget", roleTarget);
+        if (roleTarget != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "RoleTarget", roleTarget);
         nbt.putString("OwnerType", ownerType.name());
-        if (owner != null) nbt.putUUID("Owner", owner);
+        if (owner != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Owner", owner);
         nbt.putString("OwnerName", ownerName);
         nbt.putString("Model", getModelId());
         nbt.putString("SkinType", getSkinType());
@@ -1364,13 +1364,13 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         } catch (IllegalArgumentException e) {
             role = NpcRole.NONE;
         }
-        roleTarget = nbt.hasUUID("RoleTarget") ? nbt.getUUID("RoleTarget") : null;
+        roleTarget = net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(nbt, "RoleTarget") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "RoleTarget") : null;
         try {
             ownerType = OwnerType.valueOf(nbt.getString("OwnerType"));
         } catch (IllegalArgumentException e) {
             ownerType = OwnerType.PLAYER;
         }
-        owner = nbt.hasUUID("Owner") ? nbt.getUUID("Owner") : null;
+        owner = net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(nbt, "Owner") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Owner") : null;
         ownerName = nbt.getString("OwnerName");
         if (nbt.contains("Model")) setModelId(nbt.getString("Model"));
         if (nbt.contains("SkinType")) setSkinType(nbt.getString("SkinType"));

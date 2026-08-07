@@ -45,9 +45,9 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         ItemStack s = menu.rowStack(i);
         if (s.isEmpty()) return null;
         CompoundTag t = StackData.getData(s);
-        if (!t.hasUUID("nc_lid")) return null;
+        if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "nc_lid")) return null;
         ItemStack barter = t.contains("nc_bstack") ? StackData.readStack(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
-        return new Cell(s, t.getUUID("nc_lid"), t.getInt("nc_price"), t.getString("nc_bname"),
+        return new Cell(s, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "nc_lid"), t.getInt("nc_price"), t.getString("nc_bname"),
                 t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }
 

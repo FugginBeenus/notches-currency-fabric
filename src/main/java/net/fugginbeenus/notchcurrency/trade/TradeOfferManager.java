@@ -22,7 +22,7 @@ public final class TradeOfferManager {
     private TradeOfferManager() {}
 
     public static void deliverMail(ServerPlayer sp) {
-        TradeOfferState state = TradeOfferState.get(sp.getServer());
+        TradeOfferState state = TradeOfferState.get(sp.level().getServer());
         if (!state.hasMail(sp.getUUID())) return;
         List<ItemStack> items = state.claimMail(sp.getUUID());
         java.util.List<ItemStack> leftover = new java.util.ArrayList<>();

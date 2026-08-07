@@ -75,7 +75,7 @@ public class Faction {
         nbt.putString("Id", id);
         nbt.putString("Name", displayName);
         nbt.putString("Color", color.getName());
-        if (founder != null) nbt.putUUID("Founder", founder);
+        if (founder != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Founder", founder);
         nbt.putString("Motto", motto);
         nbt.putInt("JoinFee", joinFee);
         nbt.putBoolean("Open", openToJoin);
@@ -91,7 +91,7 @@ public class Faction {
                 id,
                 nbt.getString("Name").isBlank() ? id : nbt.getString("Name"),
                 color == null || !color.isColor() ? ChatFormatting.WHITE : color,
-                nbt.hasUUID("Founder") ? nbt.getUUID("Founder") : null);
+                net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(nbt, "Founder") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Founder") : null);
         f.setMotto(nbt.getString("Motto"));
         f.setJoinFee(nbt.getInt("JoinFee"));
         // Factions saved before this setting existed were all open, which is the sane default anyway.

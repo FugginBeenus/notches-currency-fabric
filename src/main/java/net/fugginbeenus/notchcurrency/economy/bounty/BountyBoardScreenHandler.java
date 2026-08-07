@@ -67,9 +67,9 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
     private void refresh() {
         if (!(world instanceof ServerLevel)) return;
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
-        BountyState state = BountyState.get(sp.getServer());
-        long now = BountyManager.worldTime(sp.getServer());
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
+        BountyState state = BountyState.get(sp.level().getServer());
+        long now = BountyManager.worldTime(sp.level().getServer());
 
         props.set(P_TAKE_LIMIT, BountyManager.getTakeLimit());
 
@@ -107,7 +107,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
     private static ItemStack display(Bounty b, boolean mine, int progress, long expiry) {
         ItemStack carrier = !b.getRewardItem().isEmpty() ? b.getRewardItem().copy() : new ItemStack(ModItems.NOTCH_COIN);
         CompoundTag t = StackData.editData(carrier);
-        t.putUUID("bid", b.getId());
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "bid", b.getId());
         t.putString("desc", b.describe());
         t.putString("rew", b.rewardSummary());
         t.putLong("rewc", b.getRewardCoins());

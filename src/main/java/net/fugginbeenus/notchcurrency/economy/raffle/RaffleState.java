@@ -201,7 +201,7 @@ public class RaffleState extends SavedData {
         ListTag ticketList = new ListTag();
         for (Map.Entry<UUID, Integer> e : tickets.entrySet()) {
             CompoundTag o = new CompoundTag();
-            o.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Player", e.getKey());
             o.putInt("Count", e.getValue());
             o.putString("Name", names.getOrDefault(e.getKey(), "Someone"));
             ticketList.add(o);
@@ -212,7 +212,7 @@ public class RaffleState extends SavedData {
         for (Result r : unclaimed.values()) {
             CompoundTag o = new CompoundTag();
             o.putLong("Round", r.round);
-            o.putUUID("Winner", r.winner);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Winner", r.winner);
             o.putString("Name", r.winnerName);
             o.putLong("Prize", r.prize);
             if (!r.prizeItem.isEmpty()) o.put("PrizeItem", StackData.writeStack(r.prizeItem));
@@ -223,7 +223,7 @@ public class RaffleState extends SavedData {
         ListTag redeemed = new ListTag();
         for (UUID u : redeemedThisRound) {
             CompoundTag o = new CompoundTag();
-            o.putUUID("Id", u);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Id", u);
             redeemed.add(o);
         }
         nbt.put("Redeemed", redeemed);
@@ -243,7 +243,7 @@ public class RaffleState extends SavedData {
         for (int i = 0; i < ticketList.size(); i++) {
             CompoundTag o = ticketList.getCompound(i);
             try {
-                UUID id = o.getUUID("Player");
+                UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player");
                 state.tickets.put(id, o.getInt("Count"));
                 state.names.put(id, o.getString("Name"));
             } catch (IllegalArgumentException ignored) {
@@ -258,7 +258,7 @@ public class RaffleState extends SavedData {
                 long round = o.getLong("Round");
                 ItemStack prize = o.contains("PrizeItem", Tag.TAG_COMPOUND)
                         ? StackData.readStack(o.getCompound("PrizeItem")) : ItemStack.EMPTY;
-                state.unclaimed.put(round, new Result(round, o.getUUID("Winner"),
+                state.unclaimed.put(round, new Result(round, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Winner"),
                         o.getString("Name"), o.getLong("Prize"), prize));
             } catch (IllegalArgumentException ignored) {
                 // skip malformed entry

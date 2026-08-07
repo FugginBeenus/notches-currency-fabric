@@ -72,7 +72,7 @@ public final class PlayerShopManager {
         }
 
         // Return all stock, pending coins, and barter items via the single canonical path
-        returnAllShopContents(player.getServer(), shop, player);
+        returnAllShopContents(player.level().getServer(), shop, player);
 
         state.deleteShop(shopId, player.getUUID());
         player.displayClientMessage(Component.literal("Shop deleted. Everything has been returned to you.")

@@ -69,8 +69,8 @@ public class TradeOffer {
 
     public CompoundTag toNbt() {
         CompoundTag t = new CompoundTag();
-        t.putUUID("Id", id);
-        t.putUUID("Creator", creatorUuid);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "Creator", creatorUuid);
         t.putString("CreatorName", creatorName);
         t.putString("Target", targetName);
         t.put("OfferedList", writeStacks(offeredItems));
@@ -112,8 +112,8 @@ public class TradeOffer {
             if (!st.isEmpty()) wants.add(st);
         }
         return new TradeOffer(
-                t.getUUID("Id"),
-                t.getUUID("Creator"),
+                net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "Id"),
+                net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "Creator"),
                 t.getString("CreatorName"),
                 t.getString("Target"),
                 items,

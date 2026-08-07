@@ -1128,9 +1128,9 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
             if (slot >= 0) {
                 ItemStack stack = menu.getUserPopupInventory().getItem(slot);
                 CompoundTag tag = StackData.getData(stack);
-                if (!stack.isEmpty() && tag.hasUUID("nc_listing_id")) {
+                if (!stack.isEmpty() && net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(tag, "nc_listing_id")) {
                     FriendlyByteBuf buf = PacketByteBufs.create();
-                    buf.writeUUID(tag.getUUID("nc_listing_id"));
+                    buf.writeUUID(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "nc_listing_id"));
                     NetClient.sendToServer(NotchPackets.AUCTION_CANCEL, buf);
                 }
                 return true;
@@ -1190,13 +1190,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 ItemStack stack = clicked.getItem();
                 CompoundTag tag = StackData.getData(stack);
                 if (tag.contains("nc_expires", Tag.TAG_LONG)
-                        && tag.hasUUID("nc_listing_id")) {
+                        && net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(tag, "nc_listing_id")) {
 
                     long expires = tag.getLong("nc_expires");
 
                     // Timed auction (expires > 0): open the in-GUI bid prompt (no id in chat).
                     if (expires > 0L) {
-                        bidListingId = tag.getUUID("nc_listing_id");
+                        bidListingId = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "nc_listing_id");
                         bidItemName = stack.getHoverName().getString();
                         bidStartPrice = tag.getLong("nc_price");
                         bidHighest = tag.contains("nc_highest_bid", Tag.TAG_LONG)

@@ -52,8 +52,8 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
         this.addDataSlots(props);
 
         // Prefill decree slots from the saved board decrees.
-        if (inv.player instanceof ServerPlayer sp && sp.getServer() != null) {
-            List<ItemStack> saved = BountyState.get(sp.getServer()).getDecrees();
+        if (inv.player instanceof ServerPlayer sp && sp.level().getServer() != null) {
+            List<ItemStack> saved = BountyState.get(sp.level().getServer()).getDecrees();
             for (int i = 0; i < DECREE_SLOTS && i < saved.size(); i++) decreeInv.setItem(i, saved.get(i));
         }
         for (int i = 0; i < DECREE_SLOTS; i++) {
@@ -95,7 +95,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
             ItemStack s = decreeInv.getItem(i);
             if (!s.isEmpty()) items.add(s.copy());
         }
-        BountyState.get(sp.getServer()).setDecrees(items);
+        BountyState.get(sp.level().getServer()).setDecrees(items);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
         if (!(player instanceof ServerPlayer sp) || !sp.hasPermissions(2)) return false;
         if (id == 0) { // regenerate now
             persistDecrees(sp);
-            BountyManager.regenerate(sp.getServer());
+            BountyManager.regenerate(sp.level().getServer());
             sp.displayClientMessage(Component.literal("Bounties regenerated."), false);
             return true;
         }
@@ -119,7 +119,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        if (player instanceof ServerPlayer sp && sp.getServer() != null) {
+        if (player instanceof ServerPlayer sp && sp.level().getServer() != null) {
             persistDecrees(sp);
         }
     }

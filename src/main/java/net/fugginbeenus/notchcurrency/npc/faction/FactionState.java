@@ -124,7 +124,7 @@ public class FactionState extends SavedData {
         ListTag members = new ListTag();
         for (var e : membership.entrySet()) {
             CompoundTag m = new CompoundTag();
-            m.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(m, "Player", e.getKey());
             m.putString("Faction", e.getValue());
             members.add(m);
         }
@@ -144,8 +144,8 @@ public class FactionState extends SavedData {
             CompoundTag m = members.getCompound(i);
             String factionId = m.getString("Faction");
             // Drop members of factions that no longer exist rather than carrying a dead pointer.
-            if (m.hasUUID("Player") && state.factions.containsKey(factionId)) {
-                state.membership.put(m.getUUID("Player"), factionId);
+            if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(m, "Player") && state.factions.containsKey(factionId)) {
+                state.membership.put(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(m, "Player"), factionId);
             }
         }
         return state;

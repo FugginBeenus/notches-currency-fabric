@@ -44,7 +44,7 @@ public final class CosmeticManager {
             sp.displayClientMessage(Component.literal("That cosmetic is no longer available.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        CosmeticState state = CosmeticState.get(sp.getServer());
+        CosmeticState state = CosmeticState.get(sp.level().getServer());
         if (offer.oneTime() && state.owns(sp.getUUID(), offerId)) {
             sp.displayClientMessage(Component.literal("You already own that cosmetic.").withStyle(ChatFormatting.YELLOW), false);
             return;
@@ -62,7 +62,7 @@ public final class CosmeticManager {
                     .replace("%player%", sp.getName().getString())
                     .replace("%uuid%", sp.getUUID().toString());
             // Run as the server (console) so unlock commands don't need the player to be an op.
-            sp.getServer().getCommands().performPrefixedCommand(sp.getServer().createCommandSourceStack(), cmd);
+            sp.level().getServer().getCommands().performPrefixedCommand(sp.level().getServer().createCommandSourceStack(), cmd);
         } else if (!offer.itemReward().isEmpty()) {
             ItemStack reward = offer.itemReward().copy();
             sp.getInventory().placeItemBackInInventory(reward);

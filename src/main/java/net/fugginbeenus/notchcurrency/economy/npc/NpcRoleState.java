@@ -54,9 +54,9 @@ public class NpcRoleState extends SavedData {
         ListTag list = new ListTag();
         for (Map.Entry<UUID, Assignment> e : roles.entrySet()) {
             CompoundTag o = new CompoundTag();
-            o.putUUID("Npc", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Npc", e.getKey());
             o.putString("Role", e.getValue().role().name());
-            if (e.getValue().shopId() != null) o.putUUID("Shop", e.getValue().shopId());
+            if (e.getValue().shopId() != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Shop", e.getValue().shopId());
             list.add(o);
         }
         nbt.put("Roles", list);
@@ -69,9 +69,9 @@ public class NpcRoleState extends SavedData {
         for (int i = 0; i < list.size(); i++) {
             CompoundTag o = list.getCompound(i);
             try {
-                UUID npc = o.getUUID("Npc");
+                UUID npc = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Npc");
                 NpcRole role = NpcRole.valueOf(o.getString("Role"));
-                UUID shop = o.hasUUID("Shop") ? o.getUUID("Shop") : null;
+                UUID shop = net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(o, "Shop") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Shop") : null;
                 state.roles.put(npc, new Assignment(role, shop));
             } catch (IllegalArgumentException ignored) {
                 // skip unknown role names

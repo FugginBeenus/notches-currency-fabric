@@ -106,7 +106,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
         ItemStack carrier = listing.getItemForSale().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
         CompoundTag t = StackData.editData(carrier);
-        t.putUUID("nc_lid", listing.getId());
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "nc_lid", listing.getId());
         t.putInt("nc_price", listing.getCoinPrice());
         t.putString("nc_bname", listing.acceptsBarter() ? listing.getItemPrice().getHoverName().getString() : "");
         t.putInt("nc_bcount", listing.acceptsBarter() ? listing.getItemPriceCount() : 0);

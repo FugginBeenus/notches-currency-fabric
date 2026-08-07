@@ -454,7 +454,7 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         tag.putString("nc_seller", listing.sellerName);
         tag.putLong("nc_created", listing.createdGameTime);
         tag.putLong("nc_expires", listing.expiresGameTime);
-        tag.putUUID("nc_listing_id", listing.id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "nc_listing_id", listing.id);
 
         if (listing.highestBid > 0) {
             tag.putLong("nc_highest_bid", listing.highestBid);

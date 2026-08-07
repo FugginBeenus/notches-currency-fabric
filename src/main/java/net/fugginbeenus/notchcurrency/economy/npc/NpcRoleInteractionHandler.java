@@ -24,7 +24,7 @@ public final class NpcRoleInteractionHandler {
         if (world.isClientSide() || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (!(player instanceof ServerPlayer sp)) return InteractionResult.PASS;
 
-        MinecraftServer server = sp.getServer();
+        MinecraftServer server = sp.level().getServer();
         NpcRoleState.Assignment a = NpcRoleState.get(server).get(entity.getUUID());
         if (a == null) return InteractionResult.PASS;   // not a role NPC: let others handle it
 

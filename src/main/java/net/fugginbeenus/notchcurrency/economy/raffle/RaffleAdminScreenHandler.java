@@ -78,20 +78,20 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
 
     private void refresh() {
         if (!(world instanceof ServerLevel)) return;
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
         NotchConfig.Raffle r = NotchConfigIO.get().raffle;
         props.set(A_PRICE, (int) Math.min(Integer.MAX_VALUE, r.ticketPrice));
         props.set(A_CUT, r.houseCutPercent);
         props.set(A_INTERVAL, r.drawIntervalMinutes);
         props.set(A_ENABLED, r.enabled ? 1 : 0);
-        props.set(A_COINS, (int) Math.min(Integer.MAX_VALUE, RaffleState.get(sp.getServer()).getCoinsPool()));
-        currentInv.setItem(0, RaffleState.get(sp.getServer()).getPrizeItem().copy());
+        props.set(A_COINS, (int) Math.min(Integer.MAX_VALUE, RaffleState.get(sp.level().getServer()).getCoinsPool()));
+        currentInv.setItem(0, RaffleState.get(sp.level().getServer()).getPrizeItem().copy());
     }
 
     public void applyPrizeFromInput(ServerPlayer sp) {
         ItemStack template = inputInv.getItem(0);
         if (!template.isEmpty()) {
-            RaffleState state = RaffleState.get(sp.getServer());
+            RaffleState state = RaffleState.get(sp.level().getServer());
             ItemStack previous = state.getPrizeItem().copy();
             state.setPrizeItem(template.copy());
             inputInv.setItem(0, ItemStack.EMPTY); // taken into escrow
@@ -111,7 +111,7 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
         if (!sp.hasPermissions(2)) return false;
         switch (id) {
             case 0 -> RaffleManager.clearPrize(sp);            // clear configured prize
-            case 1 -> RaffleManager.draw(sp.getServer(), true); // draw now
+            case 1 -> RaffleManager.draw(sp.level().getServer(), true); // draw now
             case 2 -> RaffleManager.resetAndReturn(sp); // wipe round, return escrowed prize
             default -> { return false; }
         }

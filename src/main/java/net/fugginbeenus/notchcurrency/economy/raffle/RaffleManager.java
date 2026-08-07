@@ -62,7 +62,7 @@ public final class RaffleManager {
     // ---- ticket sales ----
 
     public static void buyTicket(ServerPlayer player, int qty) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (!enabled) {
             player.displayClientMessage(Component.literal("The raffle isn't running right now.").withStyle(ChatFormatting.RED), false);
@@ -115,7 +115,7 @@ public final class RaffleManager {
     }
 
     public static void redeemTicket(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (!enabled || !redeemEnabled) {
             player.displayClientMessage(Component.literal("There's no raffle to redeem into right now.").withStyle(ChatFormatting.RED), false);
@@ -216,7 +216,7 @@ public final class RaffleManager {
     // ---- claiming ----
 
     public static void claim(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         refreshTickets(player);
 
@@ -310,7 +310,7 @@ public final class RaffleManager {
     // ---- ticket restamping ----
 
     public static void refreshTickets(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         RaffleState state = RaffleState.get(server);
         long current = state.getCurrentRound();
@@ -353,7 +353,7 @@ public final class RaffleManager {
 
     public static void remindOnJoin(ServerPlayer player) {
         refreshTickets(player);
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         List<Result> wins = RaffleState.get(server).getUnclaimedWins(player.getUUID());
         if (wins.isEmpty()) return;
@@ -402,7 +402,7 @@ public final class RaffleManager {
     }
 
     public static long unclaimedPrizeTotal(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return 0L;
         long total = 0L;
         for (Result r : RaffleState.get(server).getUnclaimedWins(player.getUUID())) total += r.prize;
@@ -410,7 +410,7 @@ public final class RaffleManager {
     }
 
     public static boolean hasUnclaimedWin(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         return server != null && !RaffleState.get(server).getUnclaimedWins(player.getUUID()).isEmpty();
     }
 
@@ -448,7 +448,7 @@ public final class RaffleManager {
     }
 
     public static boolean canRedeem(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (!enabled || !redeemEnabled || server == null) return false;
         return !RaffleState.get(server).hasRedeemed(player.getUUID());
     }

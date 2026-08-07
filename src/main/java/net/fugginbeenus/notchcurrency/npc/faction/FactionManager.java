@@ -68,7 +68,7 @@ public final class FactionManager {
             msg(sp, "That isn't your faction to disband.", ChatFormatting.RED);
             return false;
         }
-        clearFromNpcs(sp.getServer(), factionId);
+        clearFromNpcs(sp.level().getServer(), factionId);
         state.remove(factionId);
         msg(sp, "Disbanded " + faction.displayName() + ".", ChatFormatting.YELLOW);
         return true;

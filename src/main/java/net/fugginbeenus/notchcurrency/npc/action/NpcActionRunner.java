@@ -146,7 +146,7 @@ public final class NpcActionRunner {
     private static void runCommand(@Nullable ServerPlayer sp, NotchNpcEntity npc,
                                    String command, boolean asPlayer) {
         if (command == null || command.isBlank()) return;
-        MinecraftServer server = sp != null ? sp.getServer() : npc.getServer();
+        MinecraftServer server = sp != null ? sp.level().getServer() : npc.getServer();
         if (server == null) return;
         if (!ownerMayRunCommands(npc, server)) return;
         String cmd = NpcText.substitute(command, sp, NpcText.npcName(npc));

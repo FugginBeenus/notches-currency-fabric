@@ -79,7 +79,7 @@ public class AdminShopEntry {
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
-        nbt.putUUID("Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Id", id);
         nbt.put("Item", StackData.writeStack(item));
         nbt.putLong("Buy", baseBuyPrice);
         nbt.putLong("Sell", baseSellPrice);
@@ -89,7 +89,7 @@ public class AdminShopEntry {
     }
 
     public static AdminShopEntry fromNbt(CompoundTag nbt) {
-        AdminShopEntry e = new AdminShopEntry(nbt.getUUID("Id"));
+        AdminShopEntry e = new AdminShopEntry(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Id"));
         e.item = StackData.readStack(nbt.getCompound("Item"));
         e.baseBuyPrice = nbt.getLong("Buy");
         e.baseSellPrice = nbt.getLong("Sell");

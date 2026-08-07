@@ -55,7 +55,7 @@ public class ReceiptState extends SavedData {
         ListTag players = nbt.getList("Players", Tag.TAG_COMPOUND);
         for (int i = 0; i < players.size(); i++) {
             CompoundTag entry = players.getCompound(i);
-            UUID id = entry.getUUID("Player");
+            UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(entry, "Player");
             Deque<Receipt> q = new ArrayDeque<>();
             ListTag recs = entry.getList("Receipts", Tag.TAG_COMPOUND);
             for (int j = 0; j < recs.size(); j++) {
@@ -78,7 +78,7 @@ public class ReceiptState extends SavedData {
         for (Map.Entry<UUID, Deque<Receipt>> e : history.entrySet()) {
             if (e.getValue().isEmpty()) continue;
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(entry, "Player", e.getKey());
             ListTag recs = new ListTag();
             for (Receipt rec : e.getValue()) {
                 CompoundTag r = new CompoundTag();

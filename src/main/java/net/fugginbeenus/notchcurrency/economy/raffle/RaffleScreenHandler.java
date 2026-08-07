@@ -60,9 +60,9 @@ public class RaffleScreenHandler extends AbstractContainerMenu {
 
     private void refreshFromState() {
         if (!(world instanceof ServerLevel)) return;
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
 
-        RaffleState state = RaffleState.get(sp.getServer());
+        RaffleState state = RaffleState.get(sp.level().getServer());
         props.set(P_ENABLED, RaffleManager.isEnabled() ? 1 : 0);
         props.set(P_POT, (int) Math.min(Integer.MAX_VALUE, state.getPot()));
         props.set(P_PRICE, (int) Math.min(Integer.MAX_VALUE, RaffleManager.getTicketPrice()));

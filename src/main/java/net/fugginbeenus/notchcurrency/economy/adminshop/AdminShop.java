@@ -54,7 +54,7 @@ public class AdminShop {
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
-        nbt.putUUID("Id", id);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Id", id);
         nbt.putString("Name", name);
         ListTag list = new ListTag();
         for (AdminShopEntry e : entries) list.add(e.toNbt());
@@ -63,7 +63,7 @@ public class AdminShop {
     }
 
     public static AdminShop fromNbt(CompoundTag nbt) {
-        AdminShop shop = new AdminShop(nbt.getUUID("Id"), nbt.getString("Name"));
+        AdminShop shop = new AdminShop(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Id"), nbt.getString("Name"));
         ListTag list = nbt.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             shop.entries.add(AdminShopEntry.fromNbt(list.getCompound(i)));

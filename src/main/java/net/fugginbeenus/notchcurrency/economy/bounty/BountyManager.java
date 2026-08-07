@@ -106,7 +106,7 @@ public final class BountyManager {
     // ---- taking ----
 
     public static void take(ServerPlayer player, UUID offerId) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
@@ -138,7 +138,7 @@ public final class BountyManager {
     // ---- kill tracking (only toward taken bounties) ----
 
     private static void onKill(ServerPlayer player, ResourceLocation typeId) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
@@ -162,7 +162,7 @@ public final class BountyManager {
     // ---- collecting ----
 
     public static void claim(ServerPlayer player, @Nullable UUID only) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
@@ -195,7 +195,7 @@ public final class BountyManager {
     }
 
     public static void turnIn(ServerPlayer player, UUID offerId) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
@@ -226,7 +226,7 @@ public final class BountyManager {
     }
 
     public static void syncTracker(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
         long now = worldTime(server);
@@ -265,7 +265,7 @@ public final class BountyManager {
     // ---- opening the board ----
 
     public static void openScreen(ServerPlayer sp) {
-        if (sp.getServer() != null) ensurePopulated(sp.getServer());
+        if (sp.level().getServer() != null) ensurePopulated(sp.level().getServer());
         sp.openMenu(new SimpleMenuProvider(
                 (containerId, inv, p) -> new BountyBoardScreenHandler(containerId, inv),
                 Component.literal("Bounty Board")));

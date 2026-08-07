@@ -243,9 +243,9 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
 
     private void action(ItemStack stack, int action) {
         CompoundTag t = StackData.getData(stack);
-        if (!t.hasUUID("bid")) return;
+        if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "bid")) return;
         NotchWidgets.click();
-        UUID id = t.getUUID("bid");
+        UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "bid");
         FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeUUID(id);
         buf.writeVarInt(action);

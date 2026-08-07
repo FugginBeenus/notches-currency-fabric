@@ -106,7 +106,7 @@ public class TradeOfferState extends SavedData {
         ListTag mail = nbt.getList("Mailbox", Tag.TAG_COMPOUND);
         for (int i = 0; i < mail.size(); i++) {
             CompoundTag entry = mail.getCompound(i);
-            UUID id = entry.getUUID("Player");
+            UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(entry, "Player");
             List<ItemStack> items = new ArrayList<>();
             ListTag stacks = entry.getList("Items", Tag.TAG_COMPOUND);
             for (int j = 0; j < stacks.size(); j++) {
@@ -131,7 +131,7 @@ public class TradeOfferState extends SavedData {
         for (Map.Entry<UUID, List<ItemStack>> e : mailbox.entrySet()) {
             if (e.getValue().isEmpty()) continue;
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(entry, "Player", e.getKey());
             ListTag stacks = new ListTag();
             for (ItemStack st : e.getValue()) stacks.add(StackData.writeStack(st));
             entry.put("Items", stacks);

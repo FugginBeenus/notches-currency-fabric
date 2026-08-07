@@ -34,7 +34,7 @@ public class ReceiptsScreenHandler extends AbstractContainerMenu {
     }
 
     public static void open(ServerPlayer sp) {
-        List<ReceiptState.Receipt> recent = ReceiptState.get(sp.getServer()).recent(sp.getUUID());
+        List<ReceiptState.Receipt> recent = ReceiptState.get(sp.level().getServer()).recent(sp.getUUID());
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal("Receipts"),
                 (containerId, inv, p) -> new ReceiptsScreenHandler(containerId, inv),
                 buf -> {

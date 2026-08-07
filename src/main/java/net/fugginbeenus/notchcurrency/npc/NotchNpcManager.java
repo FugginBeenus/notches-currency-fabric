@@ -710,7 +710,7 @@ public final class NotchNpcManager {
         ShopState state = ShopState.get(sp.serverLevel());
         PlayerShop shop = state.getShopByNpc(npcUuid);
         if (shop == null) return;
-        PlayerShopManager.returnAllShopContents(sp.getServer(), shop, sp);
+        PlayerShopManager.returnAllShopContents(sp.level().getServer(), shop, sp);
         state.removeShop(shop.getShopId());
         state.markDirtyAndSave();
     }

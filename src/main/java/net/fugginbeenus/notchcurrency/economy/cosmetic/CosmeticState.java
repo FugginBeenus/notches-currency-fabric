@@ -43,7 +43,7 @@ public class CosmeticState extends SavedData {
         ListTag players = nbt.getList("Players", Tag.TAG_COMPOUND);
         for (int i = 0; i < players.size(); i++) {
             CompoundTag entry = players.getCompound(i);
-            UUID id = entry.getUUID("Player");
+            UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(entry, "Player");
             Set<String> set = new HashSet<>();
             ListTag ids = entry.getList("Owned", Tag.TAG_STRING);
             for (int j = 0; j < ids.size(); j++) {
@@ -63,7 +63,7 @@ public class CosmeticState extends SavedData {
         ListTag players = new ListTag();
         for (Map.Entry<UUID, Set<String>> e : owned.entrySet()) {
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Player", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(entry, "Player", e.getKey());
             ListTag ids = new ListTag();
             for (String s : e.getValue()) {
                 ids.add(net.minecraft.nbt.StringTag.valueOf(s));

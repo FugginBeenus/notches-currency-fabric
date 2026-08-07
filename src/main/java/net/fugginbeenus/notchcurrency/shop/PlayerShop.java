@@ -230,13 +230,13 @@ public class PlayerShop {
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
 
-        nbt.putUUID("ShopId", shopId);
-        nbt.putUUID("OwnerId", ownerId);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "ShopId", shopId);
+        net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "OwnerId", ownerId);
         nbt.putString("OwnerName", ownerName);
         nbt.putString("ShopName", shopName);
 
         if (linkedNpcId != null) {
-            nbt.putUUID("LinkedNpcId", linkedNpcId);
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "LinkedNpcId", linkedNpcId);
         }
 
         if (shopkeeperDialog != null && !shopkeeperDialog.isEmpty()) {
@@ -268,15 +268,15 @@ public class PlayerShop {
     }
 
     public static PlayerShop fromNbt(CompoundTag nbt) {
-        UUID shopId = nbt.getUUID("ShopId");
-        UUID ownerId = nbt.getUUID("OwnerId");
+        UUID shopId = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "ShopId");
+        UUID ownerId = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "OwnerId");
 
         PlayerShop shop = new PlayerShop(shopId, ownerId);
         shop.ownerName = nbt.getString("OwnerName");
         shop.shopName = nbt.getString("ShopName");
 
         if (nbt.contains("LinkedNpcId")) {
-            shop.linkedNpcId = nbt.getUUID("LinkedNpcId");
+            shop.linkedNpcId = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "LinkedNpcId");
         }
 
         if (nbt.contains("ShopkeeperDialog")) {

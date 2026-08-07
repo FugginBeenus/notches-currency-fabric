@@ -37,7 +37,7 @@ public final class NpcRoleDispatch {
             net.fugginbeenus.notchcurrency.npc.NpcText.say(sp, n, n.closedLineNow());
             return;
         }
-        MinecraftServer server = sp.getServer();
+        MinecraftServer server = sp.level().getServer();
         switch (role) {
             case ADMIN_SHOP -> {
                 AdminShop shop = target != null ? AdminShopState.get(server).get(target) : null;

@@ -122,7 +122,7 @@ public final class StackData {
     }
 
     public static void putUuid(ItemStack stack, String key, UUID value) {
-        mutate(stack, data -> data.putUUID(key, value));
+        mutate(stack, data -> net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(data, key, value));
     }
 
     public static void putCompound(ItemStack stack, String key, CompoundTag value) {

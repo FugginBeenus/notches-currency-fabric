@@ -39,13 +39,13 @@ public class LoanScreenHandler extends AbstractContainerMenu {
 
     private void refresh() {
         if (!(world instanceof ServerLevel)) return;
-        if (!(playerInv.player instanceof ServerPlayer sp) || sp.getServer() == null) return;
+        if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
         props.set(P_ENABLED, LoanManager.isEnabled() ? 1 : 0);
-        props.set(P_DEBT, clamp(LoanState.get(sp.getServer()).getDebt(sp.getUUID())));
+        props.set(P_DEBT, clamp(LoanState.get(sp.level().getServer()).getDebt(sp.getUUID())));
         props.set(P_MAX, clamp(LoanManager.getMaxDebt()));
         props.set(P_INTEREST, LoanManager.getInterestPercent());
         props.set(P_TERM, LoanManager.getTermDays());
-        props.set(P_DAYS_LEFT, LoanManager.daysLeft(sp.getServer(), sp.getUUID()));
+        props.set(P_DAYS_LEFT, LoanManager.daysLeft(sp.level().getServer(), sp.getUUID()));
     }
 
     private static int clamp(long v) {
