@@ -363,9 +363,9 @@ public final class PlayerShopManager {
 
         // Feedback to buyer
         //? if >=1.21 {
-        /*buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        /*buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         *///?} else {
-        buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         //?}
 
         MutableComponent buyerMessage = Component.literal("Purchased ")

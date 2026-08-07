@@ -399,7 +399,7 @@ public final class NotchNpcManager {
             return;
         }
         var clean = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
-        boolean allowCommands = sp.hasPermissions(2);
+        boolean allowCommands = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         boolean strippedCommands = false;
         for (var node : tree.nodes().values()) {
             if (node.id().isBlank() || node.id().length() > 32) continue; // ids are <=24 in the studio
@@ -440,7 +440,7 @@ public final class NotchNpcManager {
         if (nbt == null) return;
         var actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
         boolean stripped = false;
-        boolean allowAdminActions = sp.hasPermissions(2);
+        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
             var kept = new java.util.ArrayList<>(actions.get(trigger));
             if (!allowAdminActions) {
@@ -481,7 +481,7 @@ public final class NotchNpcManager {
         if (nbt == null) return;
         var schedule = net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt);
         boolean stripped = false;
-        boolean allowAdminActions = sp.hasPermissions(2);
+        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
 
         var cleaned = new java.util.ArrayList<net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry>();
         for (var entry : schedule.entries()) {

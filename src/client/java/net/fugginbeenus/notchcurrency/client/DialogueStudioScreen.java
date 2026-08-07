@@ -698,7 +698,7 @@ public class DialogueStudioScreen extends Screen {
 
     private static boolean adminActionsAllowed() {
         var p = net.minecraft.client.Minecraft.getInstance().player;
-        return p != null && p.hasPermissions(2);
+        return p != null && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(p);
     }
 
     private void cycleAction() {

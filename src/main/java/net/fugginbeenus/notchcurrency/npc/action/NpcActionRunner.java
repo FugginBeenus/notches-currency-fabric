@@ -137,7 +137,7 @@ public final class NpcActionRunner {
         UUID owner = npc.getOwner();
         if (owner == null) return false;
         ServerPlayer online = server.getPlayerList().getPlayer(owner);
-        if (online != null) return online.hasPermissions(2);
+        if (online != null) return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(online);
         var profile = server.getProfileCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
                 : server.getProfileCache().get(owner);
         return profile.isPresent() && server.getPlayerList().isOp(profile.get());

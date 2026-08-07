@@ -130,7 +130,7 @@ public final class ServerPacketHandlers {
                     boolean enabled = buf.readBoolean();
                     long coinsPool = buf.readVarLong();
                     server.execute(() -> {
-                        if (!player.hasPermissions(2)) return;
+                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
                         boolean wasEnabled = net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.isEnabled();
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
@@ -196,7 +196,7 @@ public final class ServerPacketHandlers {
                     int takeLimit = buf.readVarInt();
                     int durationMinutes = buf.readVarInt();
                     server.execute(() -> {
-                        if (!player.hasPermissions(2)) return;
+                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
                         cfg.bounty.enabled = enabled;

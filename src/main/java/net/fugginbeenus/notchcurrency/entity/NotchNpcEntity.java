@@ -1191,7 +1191,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public boolean canEdit(ServerPlayer player) {
-        return isOwnedBy(player) || player.hasPermissions(2);
+        return isOwnedBy(player) || net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
     }
 
     // ---- interaction ----

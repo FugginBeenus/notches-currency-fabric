@@ -43,9 +43,9 @@ public final class AdminShopManager {
         entry.recordBuy(qty);
 
         //? if >=1.21 {
-        /*buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        /*buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         *///?} else {
-        buyer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         //?}
         buyer.displayClientMessage(Component.literal("Bought ")
                 .append(Component.literal((qty * perBundle) + "x ").withStyle(ChatFormatting.WHITE))
@@ -79,9 +79,9 @@ public final class AdminShopManager {
         entry.recordSell(qty);
 
         //? if >=1.21 {
-        /*seller.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
+        /*seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
         *///?} else {
-        seller.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
+        seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
         //?}
         seller.displayClientMessage(Component.literal("Sold ")
                 .append(Component.literal(needed + "x ").withStyle(ChatFormatting.WHITE))

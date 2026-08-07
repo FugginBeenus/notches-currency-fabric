@@ -108,7 +108,7 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer sp)) return false;
-        if (!sp.hasPermissions(2)) return false;
+        if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) return false;
         switch (id) {
             case 0 -> RaffleManager.clearPrize(sp);            // clear configured prize
             case 1 -> RaffleManager.draw(sp.level().getServer(), true); // draw now
@@ -155,6 +155,6 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.hasPermissions(2);
+        return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
     }
 }

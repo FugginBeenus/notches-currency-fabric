@@ -173,6 +173,9 @@ if (usesIdentifier) {
                 // no longer holds the old token for the second rule to catch.
                 replace("properties.DirectionProperty;", "properties.EnumProperty;")
                 replace("DirectionProperty", "EnumProperty<Direction>")
+                // ServerPlayer.level() became covariant and serverLevel() went away with it. The
+                // call sites want a ServerLevel either way, so the name is all that changes.
+                replace(".serverLevel()", ".level()")
             }
         }
     }

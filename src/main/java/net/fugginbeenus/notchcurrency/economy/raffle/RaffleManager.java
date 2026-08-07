@@ -252,7 +252,7 @@ public final class RaffleManager {
     // ---- admin: prize item + opening the screen ----
 
     public static void setPrize(ServerPlayer admin) {
-        MinecraftServer server = admin.getServer();
+        MinecraftServer server = admin.level().getServer();
         if (server == null) return;
         RaffleState state = RaffleState.get(server);
         ItemStack previous = state.getPrizeItem().copy();
@@ -277,7 +277,7 @@ public final class RaffleManager {
     }
 
     public static void clearPrize(ServerPlayer admin) {
-        MinecraftServer server = admin.getServer();
+        MinecraftServer server = admin.level().getServer();
         if (server == null) return;
         RaffleState state = RaffleState.get(server);
         ItemStack previous = state.getPrizeItem().copy();
@@ -291,7 +291,7 @@ public final class RaffleManager {
     }
 
     public static void resetAndReturn(ServerPlayer admin) {
-        MinecraftServer server = admin.getServer();
+        MinecraftServer server = admin.level().getServer();
         if (server == null) return;
         RaffleState state = RaffleState.get(server);
         ItemStack prize = state.getPrizeItem().copy();

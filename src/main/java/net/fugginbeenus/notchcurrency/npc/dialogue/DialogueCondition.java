@@ -47,7 +47,7 @@ public class DialogueCondition {
             case HAS_COINS -> CurrencyApi.getBalance(sp) >= amount;
             case HAS_ITEM -> countItem(sp) >= amount;
             case IS_OWNER -> npc.isOwnedBy(sp);
-            case IS_OP -> sp.hasPermissions(2);
+            case IS_OP -> net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
             case IS_FACTION -> matchesFaction(sp, npc);
         };
     }

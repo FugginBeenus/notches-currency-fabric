@@ -18,7 +18,7 @@ public final class NpcActionEditing {
 
     public static boolean adminActionsAllowed() {
         return Minecraft.getInstance().player != null
-                && Minecraft.getInstance().player.hasPermissions(2);
+                && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(Minecraft.getInstance().player);
     }
 
     public static boolean needsValue(DialogueAction.Type t) {

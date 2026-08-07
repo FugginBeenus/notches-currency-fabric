@@ -16,12 +16,12 @@ public final class FactionManager {
     private FactionManager() {}
 
     public static boolean canFound(ServerPlayer sp) {
-        if (sp.hasPermissions(2)) return true;
+        if (net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) return true;
         return FactionState.get(sp.serverLevel()).foundedBy(sp.getUUID()) == null;
     }
 
     public static boolean canManage(ServerPlayer sp, Faction faction) {
-        return sp.hasPermissions(2) || faction.isFoundedBy(sp.getUUID());
+        return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp) || faction.isFoundedBy(sp.getUUID());
     }
 
     @Nullable
@@ -114,7 +114,7 @@ public final class FactionManager {
             return;
         }
         // A founder leaving would orphan the faction, so send them to disband instead.
-        if (faction.isFoundedBy(sp.getUUID()) && !sp.hasPermissions(2)) {
+        if (faction.isFoundedBy(sp.getUUID()) && !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
             msg(sp, "You founded " + faction.displayName() + " - disband it rather than walking out.",
                     ChatFormatting.RED);
             return;
