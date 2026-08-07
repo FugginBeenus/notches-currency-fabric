@@ -131,7 +131,7 @@ public final class StackData {
 
     public static boolean canCombine(ItemStack a, ItemStack b) {
         //? if >=1.21 {
-        /*return ItemStack.areItemsAndComponentsEqual(a, b);
+        /*return ItemStack.isSameItemSameComponents(a, b);
         *///?} else {
         return ItemStack.isSameItemSameTags(a, b);
         //?}

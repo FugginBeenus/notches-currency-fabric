@@ -96,7 +96,7 @@ public final class Ench {
 
     public static boolean canCombine(Enchantment a, Enchantment b) {
         //? if >=1.21 {
-        /*return Enchantment.canBeCombined(entryOf(a), entryOf(b));
+        /*return Enchantment.canStoreEnchantment(entryOf(a), entryOf(b));
         *///?} else {
         return a.isCompatibleWith(b);
         //?}

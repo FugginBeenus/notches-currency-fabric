@@ -204,7 +204,7 @@ public class BalloonEntity extends Entity {
     @Override
     //? if >=1.21 {
     /*public Packet<ClientGamePacketListener> getAddEntityPacket(net.minecraft.server.level.ServerEntity entry) {
-        return new EntitySpawnS2CPacket(this, entry);
+        return new ClientboundAddEntityPacket(this, entry);
     }
     *///?} else {
     public Packet<ClientGamePacketListener> getAddEntityPacket() {

@@ -57,7 +57,7 @@ public final class VillagerCoinTrades {
             int chance = emeralds >= 8 ? Math.min(100, chancePercent * 2) : chancePercent;
             if (random.nextInt(100) >= chance) continue;
 
-            offers.set(i, new TradeOffer(
+            offers.set(i, new MerchantOffer(
                     new net.minecraft.world.item.trading.ItemCost(ModItems.NOTCH_COIN, coins.getCount()),
                     secondOut, offer.getResult(),
                     offer.getUses(), offer.getMaxUses(), offer.getXp(),
