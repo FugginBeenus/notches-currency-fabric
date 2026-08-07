@@ -176,6 +176,34 @@ if (usesIdentifier) {
                 // ServerPlayer.level() became covariant and serverLevel() went away with it. The
                 // call sites want a ServerLevel either way, so the name is all that changes.
                 replace(".serverLevel()", ".level()")
+                // 1.21.11 turned the NBT getters into Optionals and added *OrEmpty variants that
+                // keep the old semantics exactly. Swapping the name is the whole migration.
+                replace(".getCompound(", ".getCompoundOrEmpty(")
+            }
+            regex(true) {
+                // getList also lost its type argument, so this one needs the capture.
+                // Single-quoted: \$1 is a group reference, and Groovy would read it as a placeholder.
+                fromPattern = '\\.getList\\(([^,()]+), *[A-Za-z0-9_.]+\\)'
+                toValue = '.getListOrEmpty($1)'
+                // A regex rule has to declare both directions even when only one is ever applied.
+                // This one is never run backwards: direction is fixed true above.
+                reversePattern = '\\.getListOrEmpty\\(([^,()]+)\\)'
+                reverseValue = '.getList($1, net.minecraft.nbt.Tag.TAG_COMPOUND)'
+            }
+            regex(true) {
+                // Level.isClientSide went private; the accessor is the method of the same name. The
+                // lookahead keeps it off call sites that already say isClientSide().
+                fromPattern = '\\.isClientSide(?![(A-Za-z])'
+                toValue = '.isClientSide()'
+                reversePattern = '\\.isClientSide\\(\\)'
+                reverseValue = '.isClientSide'
+            }
+            regex(true) {
+                // CompoundTag.contains lost its type argument; presence is all it reports now.
+                fromPattern = '\\.contains\\(([^,()]+), *[A-Za-z0-9_.]+\\)'
+                toValue = '.contains($1)'
+                reversePattern = '\\.contains\\(([^,()]+)\\)'
+                reverseValue = '.contains($1, net.minecraft.nbt.Tag.TAG_COMPOUND)'
             }
         }
     }

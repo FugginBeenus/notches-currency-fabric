@@ -31,7 +31,7 @@ public final class Nbt {
 
     public static UUID getUuid(CompoundTag tag, String key) {
         //? if >=1.21.11 {
-        /*return net.minecraft.core.UUIDUtil.uuidFromIntArray(tag.getIntArray(key));
+        /*return net.minecraft.core.UUIDUtil.uuidFromIntArray(tag.getIntArray(key).orElse(new int[4]));
         *///?} else {
         return tag.getUUID(key);
         //?}
@@ -40,7 +40,7 @@ public final class Nbt {
     /** True when the key holds a UUID this can read back. */
     public static boolean hasUuid(CompoundTag tag, String key) {
         //? if >=1.21.11 {
-        /*return tag.getIntArray(key).length == 4;
+        /*return tag.getIntArray(key).map(a -> a.length == 4).orElse(false);
         *///?} else {
         return tag.hasUUID(key);
         //?}

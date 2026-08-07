@@ -22,7 +22,16 @@ import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 // Only the types this class actually names in a signature. The utility calls live in compat/Geo;
 // these cannot, because they appear in an implements clause and in override signatures.
-//? if >=1.21 {
+// GeckoLib moves these at every major version. 5.x (MC 1.21.5 and up) put AnimatableManager under
+// animatable.manager and PlayState under animation.object, and replaced AnimationState with
+// AnimationTest. Only the names moved; the calls below are the same on both.
+//? if >=1.21.5 {
+/*import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animatable.manager.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.state.AnimationTest;
+import software.bernie.geckolib.animation.object.PlayState;
+*///?} elif >=1.21 {
 /*import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
@@ -1497,10 +1506,20 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // 5.x dropped the animatable argument: the controller is handed to the animatable, not the
+        // other way round.
+        //? if >=1.21.5 {
+        /*controllers.add(new AnimationController<>("main", 4, this::idlePredicate));
+        *///?} else {
         controllers.add(new AnimationController<>(this, "main", 4, this::idlePredicate));
+        //?}
     }
 
+    //? if >=1.21.5 {
+    /*private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationTest<E> state) {
+    *///?} else {
     private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationState<E> state) {
+    //?}
         state.setAndContinue(net.fugginbeenus.notchcurrency.compat.Geo.loop(IDLE_ANIM));
         return PlayState.CONTINUE;
     }
