@@ -42,7 +42,7 @@ public final class CurrencyPackGenerator {
 
     private static java.util.Collection<String> enabledPacks(Minecraft client) {
         //? if >=1.21 {
-        /*return client.getResourcePackRepository().getEnabledIds();
+        /*return client.getResourcePackRepository().getSelectedIds();
         *///?} else {
         return client.getResourcePackRepository().getSelectedIds();
         //?}

@@ -787,10 +787,10 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                     *///?}
 
                     //? if >=1.21 {
-                    /*List<Component> vanillaLines = cleanStack.getTooltip(
+                    /*List<Component> vanillaLines = cleanStack.getTooltipLines(
                             net.minecraft.world.item.Item.TooltipContext.EMPTY,
-                            this.client != null ? this.client.player : null,
-                            this.client != null && this.client.options.advancedItemTooltips
+                            this.minecraft != null ? this.minecraft.player : null,
+                            this.minecraft != null && this.minecraft.options.advancedItemTooltips
                                     ? net.minecraft.world.item.TooltipFlag.ADVANCED
                                     : net.minecraft.world.item.TooltipFlag.NORMAL
                     );
@@ -1214,7 +1214,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
 
     //? if >=1.21 {
     /*@Override
-    protected void applyBlur(float delta) {
+    protected void renderBlurredBackground(float delta) {
         // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}

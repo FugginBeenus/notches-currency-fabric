@@ -22,7 +22,11 @@ public final class NpcSkins {
             PRESETS[i] = NotchCurrency.id("textures/skins/preset_" + (i + 1) + ".png");
         }
     }
+    //? if >=1.21 {
+    /*private static final ResourceLocation DEFAULT = DefaultPlayerSkin.getDefaultTexture();
+    *///?} else {
     private static final ResourceLocation DEFAULT = DefaultPlayerSkin.getDefaultSkin();
+    //?}
 
     private static final Map<String, ResourceLocation> cache = new HashMap<>();
     private static final Map<String, Boolean> loading = new HashMap<>();
@@ -109,7 +113,7 @@ public final class NpcSkins {
                     try {
                         GameProfile profile = new GameProfile(uuid, username);
                         //? if >=1.21 {
-                        /*Minecraft.getInstance().getSkinManager().fetchSkinTextures(profile)
+                        /*Minecraft.getInstance().getSkinManager().getOrLoad(profile)
                                 .thenAccept(textures -> Minecraft.getInstance().execute(() -> {
                                     cache.put(key, textures.texture());
                                     loading.put(key, false);

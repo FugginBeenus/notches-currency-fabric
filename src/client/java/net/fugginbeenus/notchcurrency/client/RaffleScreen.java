@@ -218,7 +218,7 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
     //? if >=1.21 {
     /*@Override
-    protected void applyBlur(float delta) {
+    protected void renderBlurredBackground(float delta) {
         // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
