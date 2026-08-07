@@ -20,7 +20,7 @@ public final class Ench {
 
     //? if >=1.21 {
     /*private static net.minecraft.core.Registry<Enchantment> registry() {
-        return RegistryAccess.get().get(net.minecraft.core.registries.Registries.ENCHANTMENT);
+        return RegistryAccess.get().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
     }
 
     private static net.minecraft.core.Holder<Enchantment> entryOf(Enchantment ench) {
@@ -38,7 +38,7 @@ public final class Ench {
 
     public static ResourceLocation idOf(Enchantment ench) {
         //? if >=1.21 {
-        /*return registry().getId(ench);
+        /*return registry().getKey(ench);
         *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.getKey(ench);
         //?}
@@ -96,7 +96,7 @@ public final class Ench {
 
     public static boolean canCombine(Enchantment a, Enchantment b) {
         //? if >=1.21 {
-        /*return Enchantment.canStoreEnchantment(entryOf(a), entryOf(b));
+        /*return Enchantment.areCompatible(entryOf(a), entryOf(b));
         *///?} else {
         return a.isCompatibleWith(b);
         //?}
@@ -104,7 +104,7 @@ public final class Ench {
 
     public static Component name(Enchantment ench, int level) {
         //? if >=1.21 {
-        /*return Enchantment.getName(entryOf(ench), level);
+        /*return Enchantment.getFullname(entryOf(ench), level);
         *///?} else {
         return ench.getFullname(level);
         //?}

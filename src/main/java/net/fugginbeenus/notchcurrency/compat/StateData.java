@@ -14,7 +14,7 @@ public final class StateData {
             DimensionDataStorage manager, Supplier<T> constructor, Function<CompoundTag, T> reader, String key) {
         //? if >=1.21 {
         /*return manager.getOrCreate(
-                new SavedData.Type<>(constructor, (nbt, registries) -> reader.apply(nbt), null), key);
+                new SavedData.Factory<>(constructor, (nbt, registries) -> reader.apply(nbt), null), key);
         *///?} else {
         return manager.computeIfAbsent(reader, constructor, key);
         //?}

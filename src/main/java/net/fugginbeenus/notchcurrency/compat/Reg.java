@@ -25,7 +25,7 @@ public final class Reg {
 
     public static ResourceLocation parse(String full) {
         //? if >=1.21 {
-        /*return ResourceLocation.fromNamespaceAndPath(full);
+        /*return ResourceLocation.parse(full);
         *///?} else {
         return new ResourceLocation(full);
         //?}
