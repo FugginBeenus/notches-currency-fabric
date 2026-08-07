@@ -1,8 +1,18 @@
 plugins {
     id "java"
-    id "fabric-loom" version "1.17.14"
+    id "net.fabricmc.fabric-loom-remap" version "1.17.19" apply false
+    id "net.fabricmc.fabric-loom" version "1.17.19" apply false
     id "com.modrinth.minotaur" version "2.+"
 }
+
+// Minecraft is obfuscated up to 1.21.11 and unobfuscated from 26.1, and Loom ships a separate entry
+// point for each: -remap does the obf/intermediary dance, the plain one does not because there is
+// nothing left to remap. Both publish in lockstep, so they are one Loom behind two front doors.
+// Declared apply-false above and picked per version here, since a Stonecutter tree runs this one
+// script for every target. Version ids went calendar-style at 26.1, so a leading two-digit year is
+// what tells the two eras apart.
+def unobfuscated = property('minecraft_version').toString() ==~ /^\d\d\..*/
+apply plugin: unobfuscated ? "net.fabricmc.fabric-loom" : "net.fabricmc.fabric-loom-remap"
 
 // ===== Project Info =====
 group = findProperty("group") ?: "net.fugginbeenus.notchcurrency"
@@ -26,7 +36,7 @@ repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://maven.terraformersmc.com/releases/" } // ModMenu
-    maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" } // GeckoLib
+    maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" } // GeckoLib (both groups)
     maven { url = "https://maven.ladysnake.org/releases" } // Trinkets + Cardinal Components
 }
 
@@ -34,9 +44,23 @@ repositories {
 dependencies {
     // Minecraft & Fabric
     minecraft "com.mojang:minecraft:${property('minecraft_version')}"
-    mappings "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${property('loader_version')}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}"
+    // Mojang's own names everywhere. Yarn stops at 1.21.11, so official mappings are the only
+    // vocabulary spanning the whole range, and they reach back to 1.14. That is what lets 1.20.1
+    // speak the same language as 26.2 and keeps this a single source tree.
+    //
+    // Only the obfuscated versions get a mappings declaration. From 26.1 the game ships with its
+    // real names already on it, and asking Loom to map to Mojang names there is asking it to
+    // translate something into itself: it refuses outright.
+    if (!unobfuscated) {
+        mappings loom.officialMojangMappings()
+    }
+    // The mod* configurations exist to remap a dependency's names into ours. On an unobfuscated
+    // version there is nothing to remap, so the non-remapping plugin does not create them and a mod
+    // is just an ordinary dependency. Same coordinates either way, different configuration name.
+    add(unobfuscated ? "implementation" : "modImplementation",
+            "net.fabricmc:fabric-loader:${property('loader_version')}")
+    add(unobfuscated ? "implementation" : "modImplementation",
+            "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}")
 
     // Local mod dependencies (place jars in /libs folder)
     // Using runtimeOnly to avoid remapping issues with pre-compiled mods
@@ -46,20 +70,28 @@ dependencies {
     }
 
     // Config GUI entrypoint: ModMenu (the settings screen itself is code-drawn, no Cloth Config)
-    modImplementation("com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
+    add(unobfuscated ? "implementation" : "modImplementation",
+            "com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
 
-    // GeckoLib: animation/model framework for the Notch NPC entity (hard dependency)
-    modImplementation "software.bernie.geckolib:geckolib-fabric-${property('minecraft_version')}:${property('geckolib_version')}"
+    // GeckoLib: animation/model framework for the Notch NPC entity (hard dependency). The group
+    // moved from software.bernie.geckolib to com.geckolib at the 26.x builds, so it is a per-version
+    // property rather than a constant. Same repo, same artifact name, different group.
+    add(unobfuscated ? "implementation" : "modImplementation",
+            "${property('geckolib_group')}:geckolib-fabric-${property('minecraft_version')}:${property('geckolib_version')}")
 
-    // Waystones fee: SOFT integration. Compile against the Waystones + Balm APIs only (Loom remaps
-    // these to yarn); they are NOT shipped and NOT required at runtime (gated by isModLoaded).
-    // Jars are per-version: drop each Minecraft version's Waystones + Balm into api-libs/<mc>/.
-    modCompileOnly fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar')
+    // Waystones fee: SOFT integration. Compiled against the Waystones + Balm APIs only; they are NOT
+    // shipped and NOT required at runtime (gated by isModLoaded). Jars are per-version: drop each
+    // Minecraft version's Waystones + Balm into api-libs/<mc>/.
+    add(unobfuscated ? "compileOnly" : "modCompileOnly",
+            fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar'))
 
-    // Trinkets on NPCs: SOFT integration, same deal (compile against the API, gated by isModLoaded).
-    // modLocalRuntime puts it (and Cardinal Components, transitively) in the dev client for testing.
-    modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
-    modLocalRuntime "dev.emi:trinkets:${property('trinkets_version')}"
+    // Trinkets on NPCs: SOFT integration, same deal. Upstream stops at 1.21.1 and its successor
+    // stops at 1.21.8, so newer targets simply have no accessory mod to integrate with. The feature
+    // already hides itself when one is absent, so those versions just declare nothing.
+    if (project.hasProperty('trinkets_version')) {
+        modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
+        modLocalRuntime "dev.emi:trinkets:${property('trinkets_version')}"
+    }
 }
 
 // ===== Loom Configuration =====
@@ -123,8 +155,12 @@ tasks.processResources {
     }
 }
 
+// The task that produces the finished mod jar. Remapping versions hand off to remapJar; on an
+// unobfuscated version there is no remap step at all, so plain jar is already the output.
+def modJar = unobfuscated ? tasks.named("jar") : tasks.named("remapJar")
+
 // Jars are named notchcurrency-<version>+<minecraft>.jar so the per-version builds don't collide.
-tasks.remapJar {
+modJar.configure {
     archiveVersion = "${project.version}+${mcVersion}"
 }
 
@@ -153,9 +189,9 @@ tasks.register("generateModrinthStamp") {
 }
 
 tasks.register("stampedJar", Jar) {
-    dependsOn(tasks.remapJar, "generateModrinthStamp")
+    dependsOn(modJar, "generateModrinthStamp")
 
-    from(zipTree(tasks.remapJar.archiveFile)) {
+    from(zipTree(modJar.flatMap { it.archiveFile })) {
         exclude("fabric.mod.json")
     }
     from(layout.buildDirectory.dir("resources/main")) {
