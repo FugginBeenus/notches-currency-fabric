@@ -12,6 +12,22 @@ plugins {
 // script for every target. Version ids went calendar-style at 26.1, so a leading two-digit year is
 // what tells the two eras apart.
 def unobfuscated = property('minecraft_version').toString() ==~ /^\d\d\..*/
+
+// Mojang renamed ResourceLocation to Identifier between 1.21.1 and 1.21.11, adopting the name Yarn
+// had used all along. It is a pure rename in the same package, but the simple name differs and Java
+// has no type aliases, so 88 references cannot each carry a version branch. Stonecutter rewrites the
+// token while it processes sources instead: the tree is written in the older name and the newer
+// targets get the newer one. One line here in place of a branch per reference.
+def mcParts = property('minecraft_version').toString().tokenize('.').collect { it.toInteger() }
+def atLeast = { List want ->
+    for (int i = 0; i < want.size(); i++) {
+        int have = i < mcParts.size() ? mcParts[i] : 0
+        if (have != want[i]) return have > want[i]
+    }
+    return true
+}
+// Calendar versions (26.x) are always newer than any 1.x, and they carry the rename too.
+def usesIdentifier = unobfuscated || atLeast([1, 21, 11])
 apply plugin: unobfuscated ? "net.fabricmc.fabric-loom" : "net.fabricmc.fabric-loom-remap"
 
 // ===== Project Info =====
@@ -126,6 +142,14 @@ loom {
             server()
             name "Dedicated Server"
             runDir "runs/server"
+        }
+    }
+}
+
+stonecutter {
+    replacements {
+        string(usesIdentifier) {
+            replace("ResourceLocation", "Identifier")
         }
     }
 }
