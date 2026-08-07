@@ -88,7 +88,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
 
     @Override
     //? if >=1.21 {
-    /*protected void setupRotations(NotchNpcEntity entity, MatrixStack matrices, float animationProgress,
+    /*protected void setupRotations(NotchNpcEntity entity, PoseStack matrices, float animationProgress,
                                    float yBodyRot, float tickDelta, float scale) {
     *///?} else {
     protected void setupRotations(NotchNpcEntity entity, PoseStack matrices, float animationProgress,
@@ -118,7 +118,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     //? if >=1.21 {
     /*protected void renderNameTag(NotchNpcEntity entity, net.minecraft.network.chat.Component text,
-                                       MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                       PoseStack matrices, MultiBufferSource vertexConsumers,
                                        int light, float tickDelta) {
     *///?} else {
     protected void renderNameTag(NotchNpcEntity entity, net.minecraft.network.chat.Component text,

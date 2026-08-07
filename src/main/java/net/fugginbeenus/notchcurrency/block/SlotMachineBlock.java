@@ -61,7 +61,7 @@ public class SlotMachineBlock extends Block {
 
     @Override
     //? if >=1.21 {
-    /*protected InteractionResult onUse(BlockState state, Level world, BlockPos pos,
+    /*protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos,
                                  Player player, BlockHitResult hit) {
     *///?} else {
     public InteractionResult use(BlockState state, Level world, BlockPos pos,

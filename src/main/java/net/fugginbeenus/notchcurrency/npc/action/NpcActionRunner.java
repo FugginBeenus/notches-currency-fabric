@@ -126,7 +126,7 @@ public final class NpcActionRunner {
         if (item == Items.AIR || a.amount() <= 0) return;
         int remaining = (int) Math.min(a.amount(), 64L * 9L);
         while (remaining > 0) {
-            int give = Math.min(remaining, item.getMaxStackSize());
+            int give = Math.min(remaining, new ItemStack(item).getMaxStackSize());
             sp.getInventory().placeItemBackInInventory(new ItemStack(item, give));
             remaining -= give;
         }

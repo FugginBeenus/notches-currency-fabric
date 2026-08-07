@@ -72,7 +72,7 @@ public class ATMBlock extends HorizontalDirectionalBlock {
 
     @Override
     //? if >=1.21 {
-    /*protected InteractionResult onUse(BlockState state,
+    /*protected InteractionResult useWithoutItem(BlockState state,
                                  Level world,
                                  BlockPos pos,
                                  Player player,

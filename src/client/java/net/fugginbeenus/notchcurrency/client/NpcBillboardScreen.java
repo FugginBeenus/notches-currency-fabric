@@ -74,7 +74,7 @@ public class NpcBillboardScreen extends Screen {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
-        /*renderInGameBackground(ctx);
+        /*renderTransparentBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}

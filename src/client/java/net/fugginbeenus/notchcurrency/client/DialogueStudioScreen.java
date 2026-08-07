@@ -225,7 +225,7 @@ public class DialogueStudioScreen extends Screen {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         //? if >=1.21 {
-        /*renderInGameBackground(ctx);
+        /*renderTransparentBackground(ctx);
         *///?} else {
         this.renderBackground(ctx);
         //?}
@@ -544,7 +544,7 @@ public class DialogueStudioScreen extends Screen {
                 // Hand focus straight to the label so it's immediately editable.
                 this.setFocused(choiceLabelField);
                 //? if >=1.21 {
-            /*choiceLabelField.setCursorToEnd(false);
+            /*choiceLabelField.moveCursorToEnd(false);
             *///?} else {
             choiceLabelField.moveCursorToEnd();
             //?}
@@ -586,7 +586,7 @@ public class DialogueStudioScreen extends Screen {
         if (over(mx, my, px + ED_X + 36, py + 54, ED_W - 36, 14)) {
             this.setFocused(choiceLabelField);
             //? if >=1.21 {
-            /*choiceLabelField.setCursorToEnd(false);
+            /*choiceLabelField.moveCursorToEnd(false);
             *///?} else {
             choiceLabelField.moveCursorToEnd();
             //?}

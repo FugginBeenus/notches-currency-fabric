@@ -89,8 +89,8 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     @Override
     //? if >=1.21 {
-    /*public CompoundTag toInitialChunkDataNbt(net.minecraft.core.HolderLookup.Provider registries) {
-        return save(registries);
+    /*public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     *///?} else {
     public CompoundTag getUpdateTag() {
         return saveWithoutMetadata();

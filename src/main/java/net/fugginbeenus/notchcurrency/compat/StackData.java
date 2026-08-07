@@ -40,7 +40,7 @@ public final class StackData {
 
     public static boolean hasData(ItemStack stack) {
         //? if >=1.21 {
-        /*return stack.contains(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        /*return stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
         *///?} else {
         return stack.hasTag();
         //?}

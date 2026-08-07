@@ -109,7 +109,7 @@ public final class NpcSkins {
                     try {
                         GameProfile profile = new GameProfile(uuid, username);
                         //? if >=1.21 {
-                        /*Minecraft.getInstance().getSkinProvider().fetchSkinTextures(profile)
+                        /*Minecraft.getInstance().getSkinManager().fetchSkinTextures(profile)
                                 .thenAccept(textures -> Minecraft.getInstance().execute(() -> {
                                     cache.put(key, textures.texture());
                                     loading.put(key, false);

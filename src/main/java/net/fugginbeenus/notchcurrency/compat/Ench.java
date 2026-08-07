@@ -114,7 +114,7 @@ public final class Ench {
         //? if >=1.21 {
         /*Map<Enchantment, Integer> map = new LinkedHashMap<>();
         net.minecraft.world.item.enchantment.ItemEnchantments component =
-                EnchantmentHelper.getEnchantments(stack);
+                EnchantmentHelper.getEnchantmentsForCrafting(stack);
         for (net.minecraft.core.Holder<Enchantment> entry : component.keySet()) {
             map.put(entry.value(), component.getLevel(entry));
         }
@@ -126,8 +126,8 @@ public final class Ench {
 
     public static void set(Map<Enchantment, Integer> map, ItemStack stack) {
         //? if >=1.21 {
-        /*EnchantmentHelper.apply(stack, builder -> {
-            builder.remove(e -> true);
+        /*EnchantmentHelper.updateEnchantments(stack, builder -> {
+            builder.removeIf(e -> true);
             for (Map.Entry<Enchantment, Integer> e : map.entrySet()) {
                 builder.set(entryOf(e.getKey()), e.getValue());
             }
@@ -140,7 +140,7 @@ public final class Ench {
     public static ItemStack enchantedBook(Enchantment ench, int level) {
         ItemStack book = new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK);
         //? if >=1.21 {
-        /*EnchantmentHelper.apply(book, builder -> builder.set(entryOf(ench), level));
+        /*EnchantmentHelper.updateEnchantments(book, builder -> builder.set(entryOf(ench), level));
         *///?} else {
         net.minecraft.world.item.EnchantedBookItem.addEnchantment(book,
                 new net.minecraft.world.item.enchantment.EnchantmentInstance(ench, level));

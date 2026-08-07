@@ -39,14 +39,14 @@ public final class Render {
         float yHeadRot = entity.yHeadRot;
         entity.yBodyRot = 180.0F + yawAngle * 20.0F;
         entity.setYRot(180.0F + yawAngle * 40.0F);
-        entity.setPitch(-pitchAngle * 20.0F);
+        entity.setXRot(-pitchAngle * 20.0F);
         entity.yHeadRot = entity.getYRot();
         entity.yHeadRotO = entity.getYRot();
         net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventory(
                 ctx, x, y, size, new org.joml.Vector3f(), flip, pitchRot, entity);
         entity.yBodyRot = yBodyRot;
         entity.setYRot(yaw);
-        entity.setPitch(pitch);
+        entity.setXRot(pitch);
         entity.yHeadRotO = prevHeadYaw;
         entity.yHeadRot = yHeadRot;
         *///?} else {

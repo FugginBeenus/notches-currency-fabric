@@ -17,8 +17,8 @@ public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
 
     @Override
     //? if >=1.21 {
-    /*public void preRender(MatrixStack poseStack, NotchNpcEntity animatable, BakedGeoModel model,
-                          VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender,
+    /*public void preRender(PoseStack poseStack, NotchNpcEntity animatable, BakedGeoModel model,
+                          MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender,
                           float partialTick, int packedLight, int packedOverlay, int colour) {
     *///?} else {
     public void preRender(PoseStack poseStack, NotchNpcEntity animatable, BakedGeoModel model,

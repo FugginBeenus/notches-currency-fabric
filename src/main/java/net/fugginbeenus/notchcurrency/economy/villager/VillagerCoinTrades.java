@@ -41,7 +41,7 @@ public final class VillagerCoinTrades {
             // The price has to fit the two buy slots: one coin stack, or an overflow split into the
             // second slot when it's free. Anything pricier stays an emerald trade.
             //? if >=1.21 {
-            /*java.util.Optional<net.minecraft.world.item.trading.ItemCost> second = offer.getCostB();
+            /*java.util.Optional<net.minecraft.world.item.trading.ItemCost> second = offer.getItemCostB();
             java.util.Optional<net.minecraft.world.item.trading.ItemCost> secondOut;
             if (cost <= max) {
                 coins.setCount(cost);
