@@ -51,6 +51,18 @@ public final class AuctionCategories {
         }
 
         // ===== GEAR =====
+        // 1.21.11 deleted the item subclasses this used to ask about (ArmorItem, SwordItem,
+        // TieredItem and the rest) and moved what they meant into data components. So from there the
+        // question changes from what an item IS to what it DOES, which is the better question anyway:
+        // a modded sword that never extended SwordItem was always miscategorised before.
+        //? if >=1.21.11 {
+        /*net.minecraft.world.item.ItemStack probe = item.getDefaultInstance();
+        if (probe.has(net.minecraft.core.component.DataComponents.TOOL)
+                || probe.has(net.minecraft.core.component.DataComponents.WEAPON)
+                || probe.has(net.minecraft.core.component.DataComponents.EQUIPPABLE)) {
+            return "gear";
+        }
+        *///?} else {
         if (item instanceof ArmorItem ||
                 item instanceof TieredItem ||
                 item instanceof SwordItem ||
@@ -64,6 +76,7 @@ public final class AuctionCategories {
                 //?}
             return "gear";
         }
+        //?}
 
         // ===== VALUABLES (ore/gem/ingot style stuff) =====
         if (path.contains("diamond") || path.contains("emerald") ||
