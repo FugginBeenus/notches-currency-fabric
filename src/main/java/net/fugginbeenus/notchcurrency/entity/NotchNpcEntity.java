@@ -20,22 +20,21 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
+// Only the types this class actually names in a signature. The utility calls live in compat/Geo;
+// these cannot, because they appear in an implements clause and in override signatures.
 //? if >=1.21 {
 /*import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.animation.PlayState;
 *///?} else {
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 //?}
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
@@ -47,8 +46,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public enum DialogueMode { WINDOW, CHAT }
 
-    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.notch_npc.idle");
-    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+    private static final String IDLE_ANIM = "animation.notch_npc.idle";
+    private final AnimatableInstanceCache geoCache = net.fugginbeenus.notchcurrency.compat.Geo.cache(this);
 
     // Model + skin identifiers.
     public static final String MODEL_HUMANOID = "humanoid";
@@ -1502,7 +1501,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationState<E> state) {
-        state.setAndContinue(IDLE);
+        state.setAndContinue(net.fugginbeenus.notchcurrency.compat.Geo.loop(IDLE_ANIM));
         return PlayState.CONTINUE;
     }
 

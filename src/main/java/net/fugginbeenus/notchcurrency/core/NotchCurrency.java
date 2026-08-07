@@ -79,10 +79,9 @@ public class NotchCurrency implements ModInitializer {
         // TradeManager.init() below registers receivers, so this has to be the first thing that runs.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
 
-        // GeckoLib (animation framework for the Notch NPC entity): must init before entities.
-        // 4.8 (the 1.21 build) initializes itself; the manual call only exists on 4.4.
-        //? if <1.21
-        software.bernie.geckolib.GeckoLib.initialize();
+        // GeckoLib must be up before entities register. Whether that needs a call at all depends on
+        // the version, which is Geo's problem rather than this file's.
+        net.fugginbeenus.notchcurrency.compat.Geo.init();
 
         // Registries
         ModBlocks.register();
