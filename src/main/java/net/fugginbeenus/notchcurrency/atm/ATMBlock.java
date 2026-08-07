@@ -65,8 +65,8 @@ public class ATMBlock extends HorizontalDirectionalBlock {
 
     //? if >=1.21 {
     /*@Override
-    protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.block.HorizontalDirectionalBlock> getCodec() {
-        return createCodec(ATMBlock::new);
+    protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.block.HorizontalDirectionalBlock> codec() {
+        return simpleCodec(ATMBlock::new);
     }
     *///?}
 

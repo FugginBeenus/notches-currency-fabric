@@ -49,8 +49,8 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     @Override
     //? if >=1.21 {
-    /*protected void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
-        super.save(nbt, registries);
+    /*protected void saveAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(nbt, registries);
     *///?} else {
     public void saveAdditional(CompoundTag nbt) {
         super.saveAdditional(nbt);
@@ -67,8 +67,8 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     @Override
     //? if >=1.21 {
-    /*public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
-        super.load(nbt, registries);
+    /*public void loadAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(nbt, registries);
     *///?} else {
     public void load(CompoundTag nbt) {
         super.load(nbt);

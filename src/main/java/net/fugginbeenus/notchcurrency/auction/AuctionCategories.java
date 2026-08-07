@@ -10,7 +10,9 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.EnchantedBookItem;
+//? if <1.21 {
 import net.minecraft.world.item.HorseArmorItem;
+//?}
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShieldItem;
