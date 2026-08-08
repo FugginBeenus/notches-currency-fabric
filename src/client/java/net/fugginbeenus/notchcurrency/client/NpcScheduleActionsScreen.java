@@ -133,7 +133,7 @@ public class NpcScheduleActionsScreen extends Screen {
         }
 
         if (sel != null && NpcActionEditing.needsValue(sel.type())) {
-            ctx.drawString(this.font, "Component", px + 14, py + VALUE_Y + 3, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Text", px + 14, py + VALUE_Y + 3, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + 56, py + VALUE_Y, W - 72, 14, NotchTheme.DEEP);
             if (valueField.getValue().isEmpty()) {
                 ctx.drawString(this.font, NpcActionEditing.valueHint(sel.type()),

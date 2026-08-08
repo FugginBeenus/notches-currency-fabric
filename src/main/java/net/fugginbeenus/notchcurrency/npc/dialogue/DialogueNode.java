@@ -31,7 +31,7 @@ public class DialogueNode {
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("Id", id);
-        nbt.putString("Component", text);
+        nbt.putString("Text", text);
         ListTag list = new ListTag();
         for (DialogueChoice c : choices) list.add(c.toNbt());
         nbt.put("Choices", list);
@@ -40,7 +40,7 @@ public class DialogueNode {
 
     public static DialogueNode fromNbt(CompoundTag nbt) {
         DialogueNode n = new DialogueNode(nbt.getString("Id"));
-        n.text = nbt.getString("Component");
+        n.text = nbt.getString("Text");
         ListTag list = nbt.getList("Choices", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) n.choices.add(DialogueChoice.fromNbt(list.getCompound(i)));
         return n;
