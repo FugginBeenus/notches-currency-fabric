@@ -181,6 +181,11 @@ if (usesIdentifier) {
                 // Level.isDay said nothing about weather; the new name is about the light level.
                 replace(".isDay()", ".isBrightOutside()")
                 replace(".getAllKeys()", ".keySet()")
+                // Tooltips are queued for the next frame now instead of drawn on the spot.
+                replace(".renderComponentTooltip(", ".setComponentTooltipForNextFrame(")
+                // Two client classes moved package without changing shape.
+                replace("net.minecraft.client.model.PlayerModel", "net.minecraft.client.model.player.PlayerModel")
+                replace("net.minecraft.client.renderer.RenderType", "net.minecraft.client.renderer.rendertype.RenderType")
                 // World height stopped being about where you may build.
                 replace(".getMinBuildHeight()", ".getMinY()")
                 replace(".getMaxBuildHeight()", ".getMaxY()")
@@ -189,6 +194,15 @@ if (usesIdentifier) {
                 replace(".clearRestriction()", ".clearHome()")
                 // ResourceKey followed ResourceLocation into the Identifier naming.
                 replace(".location()", ".identifier()")
+            }
+            regex(true) {
+                // Only the GuiGraphics overloads moved, and those all take a Font first.
+                // AbstractContainerScreen.renderTooltip(GuiGraphics, int, int) is untouched and must
+                // keep its name, so this cannot be a plain string swap.
+                fromPattern = '\\.renderTooltip\\((this\\.)?font, '
+                toValue = '.setTooltipForNextFrame($1font, '
+                reversePattern = '\\.setTooltipForNextFrame\\((this\\.)?font, '
+                reverseValue = '.renderTooltip($1font, '
             }
             regex(true) {
                 // 1.21.11 turned the NBT getters into Optionals and added *OrEmpty variants that keep
@@ -296,6 +310,8 @@ if (usesIdentifier) {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = javaVersion
+    // javac stops listing after 100 by default, which makes a big port look like it has stalled.
+    options.compilerArgs << "-Xmaxerrs" << "2000"
 }
 
 def mcVersion = property('minecraft_version').toString()

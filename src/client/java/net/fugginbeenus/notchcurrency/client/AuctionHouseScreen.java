@@ -720,7 +720,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 List<Component> lines = new ArrayList<>();
 
                 // Check if shift is held for detailed item view
-                boolean shiftHeld = Screen.hasShiftDown();
+                boolean shiftHeld = net.fugginbeenus.notchcurrency.compat.Render.shiftDown();
 
                 if (shiftHeld) {
                     // === SHIFT HELD: Show item details with compact auction banner ===

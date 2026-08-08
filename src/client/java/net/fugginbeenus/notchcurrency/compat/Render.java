@@ -53,4 +53,21 @@ public final class Render {
         net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(ctx, x, y, size, mouseX, mouseY, entity);
         //?}
     }
+
+    /**
+     * Whether either shift key is held.
+     *
+     * <p>Screen.hasShiftDown went away in 1.21.11, where modifier state rides on the input event.
+     * Several callers here are plain helpers with no event in scope, so this asks the window instead,
+     * which reads the same on every version.
+     */
+    public static boolean shiftDown() {
+        //? if >=1.21.11 {
+        /*com.mojang.blaze3d.platform.Window window = net.minecraft.client.Minecraft.getInstance().getWindow();
+        *///?} else {
+        long window = net.minecraft.client.Minecraft.getInstance().getWindow().getWindow();
+        //?}
+        return com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT)
+                || com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT);
+    }
 }

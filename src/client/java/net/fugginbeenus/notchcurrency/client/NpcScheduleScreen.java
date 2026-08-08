@@ -371,7 +371,7 @@ public class NpcScheduleScreen extends Screen {
     private boolean paneClicked(int mx, int my, int px, int py) {
         ScheduleEntry e = entries.get(selected);
         int x = px + PANE_X;
-        boolean fine = hasShiftDown();
+        boolean fine = net.fugginbeenus.notchcurrency.compat.Render.shiftDown();
 
         if (over(mx, my, x + 60, py + 41, 18, 14)) {
             NotchWidgets.tick();

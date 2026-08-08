@@ -339,7 +339,7 @@ public final class NotchConfigScreen extends Screen {
             return true;
         }
         if (e instanceof SelectEntry sel && mouseX >= right - 110 && mouseX < right) {
-            sel.cycle(button == 1 || hasShiftDown() ? -1 : 1);
+            sel.cycle(button == 1 || net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? -1 : 1);
             NotchWidgets.tick();
             return true;
         }

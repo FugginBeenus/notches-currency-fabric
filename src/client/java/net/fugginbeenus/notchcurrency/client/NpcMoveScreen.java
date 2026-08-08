@@ -139,7 +139,7 @@ public class NpcMoveScreen extends Screen {
                 return true;
             }
             int ny = py + 40;
-            double step = hasShiftDown() ? 1.0 : 0.1;
+            double step = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 1.0 : 0.1;
             for (int a = 0; a < 3; a++) {
                 int gx = px + 10 + a * 56;
                 if (over(mx, my, gx + 10, ny, 16, 14)) { NotchWidgets.tick(); nudge(a, -step); return true; }

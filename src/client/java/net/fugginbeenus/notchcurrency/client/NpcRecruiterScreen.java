@@ -274,7 +274,7 @@ public class NpcRecruiterScreen extends Screen {
     }
 
     private int feeStep() {
-        return hasShiftDown() ? 100 : 10;
+        return net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 100 : 10;
     }
 
     private void send(int action, String text) {

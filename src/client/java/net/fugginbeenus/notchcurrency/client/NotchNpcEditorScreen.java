@@ -538,12 +538,12 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
         if (over(mx, my, px + 208, py + 222, 16, 14)) {
-            currentVoicePitch = Math.max(50, currentVoicePitch - (hasShiftDown() ? 5 : 10));
+            currentVoicePitch = Math.max(50, currentVoicePitch - (net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 5 : 10));
             sendFlavor();
             return true;
         }
         if (over(mx, my, px + 254, py + 222, 16, 14)) {
-            currentVoicePitch = Math.min(200, currentVoicePitch + (hasShiftDown() ? 5 : 10));
+            currentVoicePitch = Math.min(200, currentVoicePitch + (net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 5 : 10));
             sendFlavor();
             return true;
         }

@@ -199,7 +199,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                     if (c != null && c.stock() >= bundle && over(mx, my, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
                         // Shift still means "grab a lot", measured in bundles so it tops out around a
                         // stack of items the way it did when every listing sold singles.
-                        int qty = hasShiftDown()
+                        int qty = net.fugginbeenus.notchcurrency.compat.Render.shiftDown()
                                 ? Math.max(1, Math.min(c.stock() / bundle, Math.max(1, 64 / bundle)))
                                 : 1;
                         NotchWidgets.click();
