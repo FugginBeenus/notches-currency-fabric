@@ -37,7 +37,7 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
     /*@Override
     public void setupAnim(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
         super.setupAnim(state);
-        NotchNpcRenderState entity = (NotchNpcRenderState) state;
+        NotchNpcRenderState entity = NotchNpcRenderState.of(state);
         float animationProgress = state.ageInTicks;
         this.attackTime = state.attackTime;
         this.crouching = state.isCrouching;
@@ -220,8 +220,8 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
     }
 
     private void syncOverlays() {
-        // copyFrom went away in 26.1; storing and loading the pose copies the same values.
-        //? if >=26.1 {
+        // copyFrom went away in 1.21.11; storing and loading the pose copies the same values.
+        //? if >=1.21.11 {
         /*    this.hat.loadPose(this.head.storePose());
         this.jacket.loadPose(this.body.storePose());
         this.rightSleeve.loadPose(this.rightArm.storePose());
