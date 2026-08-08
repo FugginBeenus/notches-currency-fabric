@@ -35,6 +35,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public float scaleX = 1f, scaleY = 1f, scaleZ = 1f;
     public String[] billboard = new String[0];
     public net.minecraft.resources.Identifier texture;
+    public String skinValue = "";
 
     // Which of the three drawing paths this NPC takes, decided while the entity is still in hand.
     public boolean invisible;

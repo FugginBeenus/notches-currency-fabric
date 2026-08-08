@@ -1,4 +1,7 @@
 {
+  "render_type": "minecraft:cutout",
   "parent": "notchcurrency:block/template_coin_flip",
-  "textures": { "coin": "notchcurrency:item/coin" }
+  "textures": {
+    "coin": "notchcurrency:item/coin"
+  }
 }

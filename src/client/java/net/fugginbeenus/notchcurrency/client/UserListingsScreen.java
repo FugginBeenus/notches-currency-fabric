@@ -51,10 +51,13 @@ public class UserListingsScreen extends AbstractContainerScreen<UserListingsScre
     public UserListingsScreen(UserListingsScreenHandler handler,
                               Inventory playerInventory,
                               Component title) {
+        //? if >=26.1 {
+        /*super(handler, playerInventory, title, POPUP_W, POPUP_H);
+        *///?} else {
         super(handler, playerInventory, title);
-
         this.imageWidth  = POPUP_W;
         this.imageHeight = POPUP_H;
+        //?}
 
         // Hide default titles; we draw our own player name
         this.titleLabelX = -1000;
@@ -101,18 +104,25 @@ public class UserListingsScreen extends AbstractContainerScreen<UserListingsScre
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
     //?}
         // Draw just the popup window from the texture (top-left 176×96)
+        // Draw just the popup window from the texture (top-left 176x96)
+        //? if >=1.21.11 {
+        /*ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TEX,
+                this.leftPos, this.topPos, 0f, 0f,
+                this.imageWidth, this.imageHeight, 256, 256);
+        *///?} else {
         ctx.blit(TEX,
                 this.leftPos, this.topPos,       // screen position
                 0, 0,                 // U,V in the texture
                 this.imageWidth, // width to draw
                 this.imageHeight // height to draw
         );
+        //?}
     }
 
     @Override

@@ -173,12 +173,16 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         int color = ready ? 0x4CF06C : 0xFFFFFF; // green when ready
         ctx.drawString(this.font, label, lx, ly, color, false);
 
+        //? if >=26.1 {
+        /*extractTooltip(ctx, mouseX, mouseY);
+        *///?} else {
         renderTooltip(ctx, mouseX, mouseY);
+        //?}
     }
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
@@ -198,9 +202,16 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
             super(x, y, w, h, Component.empty());
             this.onClick = onClick;
         }
+        //? if >=1.21.11 {
+        /*@Override public void onPress(net.minecraft.client.input.InputWithModifiers input) { onClick.run(); }
+        *///?} else {
         @Override public void onPress() { onClick.run(); }
+        //?}
+        // Deliberately empty: the panel texture already has this button painted on it.
         //? if >=26.1 {
-        /*@Override protected void extractWidgetRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
+        /*@Override protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
+        *///?} elif >=1.21.11 {
+        /*@Override protected void renderContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
         *///?} elif >=1.21 {
         /*@Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
         *///?} else {

@@ -1,14 +1,22 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if <1.21.11 {
 import com.mojang.blaze3d.vertex.VertexConsumer;
+//?}
 import com.mojang.math.Axis;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.crate.BalloonEntity;
 import net.minecraft.client.Minecraft;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
+//? if <1.21.11 {
 import net.minecraft.client.renderer.RenderType;
+//?}
+//? if <1.21.11 {
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+//?}
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;

@@ -161,6 +161,18 @@ loom {
 // Registered inside an if rather than passed a boolean, because that boolean is the replacement's
 // DIRECTION, not a condition. Passing false does not skip the rule, it runs it backwards, which
 // happily rewrote every legitimate EnumProperty into DirectionProperty on the older versions.
+// 26.2 moved the entity type constants into their own holder. 26.1.2 still has them on EntityType,
+// so this cannot ride along with the rest of the 26.x rewrites.
+if (atLeast([26, 2])) {
+    stonecutter {
+        replacements {
+            string(true) {
+                replace("EntityType.ARMOR_STAND", "net.minecraft.world.entity.EntityTypes.ARMOR_STAND")
+            }
+        }
+    }
+}
+
 // 26.x renames that do not apply to any 1.x target. Keyed on the same flag that picks the Loom
 // plugin, since "unobfuscated" and "26.1 or newer" are the same set.
 if (unobfuscated) {
@@ -194,6 +206,13 @@ if (unobfuscated) {
                 replace("renderLabels", "extractLabels")
                 replace(".renderItemDecorations(", ".itemDecorations(")
                 replace(".setScreen(", ".setScreenAndShow(")
+                replace("EntityModelLayerRegistry", "ModelLayerRegistry")
+                replace("InventoryScreen.renderEntityInInventoryFollowsMouse",
+                        "InventoryScreen.extractEntityInInventoryFollowsMouse")
+                replace("Screens.getButtons(", "Screens.getWidgets(")
+                replace("ScreenEvents.afterRender(", "ScreenEvents.afterExtract(")
+                replace("net.minecraft.client.renderer.state.CameraRenderState",
+                        "net.minecraft.client.renderer.state.level.CameraRenderState")
                 replace("renderBlurredBackground", "extractBlurredBackground")
                 replace("renderBackground", "extractBackground")
                 // Screen.renderTransparentBackground went away with the render/extract split. This is

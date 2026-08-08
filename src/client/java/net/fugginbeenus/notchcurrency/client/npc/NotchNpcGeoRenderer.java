@@ -1,9 +1,13 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if <1.21.11 {
 import com.mojang.blaze3d.vertex.VertexConsumer;
+//?}
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? if >=1.21.11 {
 /*import software.bernie.geckolib.cache.model.BakedGeoModel;

@@ -2,27 +2,43 @@ package net.fugginbeenus.notchcurrency.compat;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
+//? if <1.21.11 {
 import net.minecraft.client.renderer.entity.ItemRenderer;
+//?}
 import net.minecraft.network.chat.Component;
+//? if <1.21.11 {
 import net.minecraft.world.item.ItemDisplayContext;
+//?}
 import net.minecraft.world.item.ItemStack;
+//? if <1.21.11 {
 import net.minecraft.world.level.Level;
+//?}
+//? if <1.21.11 {
 import org.joml.Matrix4f;
+//?}
 
 public final class Render {
 
     private Render() {}
 
+    // Both of these speak the pre-1.21.11 world-drawing API. Their callers submit instead there,
+    // so they simply do not exist from that version on.
+    //? if <1.21.11 {
     public static void renderFixedItem(ItemRenderer itemRenderer, ItemStack stack, int light, int overlay,
                                        PoseStack matrices, MultiBufferSource vcp, Level world, int seed) {
         itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, matrices, vcp, world, seed);
     }
+    //?}
 
+    //? if <1.21.11 {
     public static void drawText(Font text, Component str, float x, float y, int color,
                                 Matrix4f matrix, MultiBufferSource vcp, int light) {
         text.drawInBatch(str, x, y, color, false, matrix, vcp, Font.DisplayMode.NORMAL, 0, light);
     }
+    //?}
 
     //? if >=1.21.11 {
     /*// Text in the world is submitted for the drawing pass now rather than batched on the spot.
@@ -66,9 +82,65 @@ public final class Render {
         //?}
     }
 
+    /**
+     * Restricts what a text field will accept, and optionally watches it change.
+     *
+     * <p>EditBox.setFilter went away in 26.1. The stand-in is a responder that puts back the last
+     * good value, which means it occupies the one responder slot a field has, so anything that also
+     * wanted to watch the field has to come through here rather than set its own afterwards.
+     */
+    public static void setFilter(net.minecraft.client.gui.components.EditBox box,
+                                 java.util.function.Predicate<String> allowed) {
+        setFilter(box, allowed, null);
+    }
+
+    public static void setFilter(net.minecraft.client.gui.components.EditBox box,
+                                 java.util.function.Predicate<String> allowed,
+                                 java.util.function.Consumer<String> onChange) {
+        //? if >=26.1 {
+        /*String[] lastGood = { box.getValue() };
+        box.setResponder(value -> {
+            if (!allowed.test(value)) {
+                box.setValue(lastGood[0]);
+                return;
+            }
+            lastGood[0] = value;
+            if (onChange != null) onChange.accept(value);
+        });
+        *///?} else {
+        box.setFilter(allowed);
+        if (onChange != null) box.setResponder(onChange);
+        //?}
+    }
+
+    // One line of floating text above an entity. Flat rather than nested because its caller already
+    // sits inside a version block, and 26.2 dropped the distance argument.
+    //? if >=26.2 {
+    /*public static void submitNameLine(net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
+                                      net.minecraft.network.chat.Component text,
+                                      com.mojang.blaze3d.vertex.PoseStack matrices,
+                                      net.minecraft.client.renderer.SubmitNodeCollector collector,
+                                      net.minecraft.client.renderer.state.CameraRenderState camera) {
+        collector.submitNameTag(matrices, anchor.nameTagAttachment, 0, text, !anchor.isDiscrete,
+                anchor.lightCoords, camera);
+    }
+    *///?} elif >=1.21.11 {
+    /*public static void submitNameLine(net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
+                                      net.minecraft.network.chat.Component text,
+                                      com.mojang.blaze3d.vertex.PoseStack matrices,
+                                      net.minecraft.client.renderer.SubmitNodeCollector collector,
+                                      net.minecraft.client.renderer.state.CameraRenderState camera) {
+        collector.submitNameTag(matrices, anchor.nameTagAttachment, 0, text, !anchor.isDiscrete,
+                anchor.lightCoords, anchor.distanceToCameraSq, camera);
+    }
+    *///?}
+
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
-        //? if >=1.21 {
+        //? if >=1.21.11 {
+        /*net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
+                ctx, x - size, y - size * 2, x + size, y, size, 0.0625f, mouseX, mouseY, entity);
+        *///?} elif >=1.21 {
         /*float yawAngle = (float) Math.atan(mouseX / 40.0F);
         float pitchAngle = (float) Math.atan(mouseY / 40.0F);
         org.joml.Quaternionf flip = new org.joml.Quaternionf().rotateZ((float) Math.PI);

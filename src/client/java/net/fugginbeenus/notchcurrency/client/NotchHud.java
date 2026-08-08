@@ -113,7 +113,9 @@ public final class NotchHud implements HudRenderCallback {
     }
 
     private static boolean shouldHide(Minecraft mc) {
+        //? if <26.1 {
         if (mc.options.hideGui) return true;
+        //?}
 
         //? if >=1.21 {
         /*if (System.currentTimeMillis() < chatClashUntil) return true;

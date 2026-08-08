@@ -53,7 +53,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
                 FIELD_W - 4, FIELD_H - 5, Component.empty());
         f.setMaxLength(6);
         f.setBordered(false);
-        f.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(f, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         return f;
     }
 
@@ -69,7 +69,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

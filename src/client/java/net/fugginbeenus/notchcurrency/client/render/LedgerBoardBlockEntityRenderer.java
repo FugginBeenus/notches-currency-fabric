@@ -6,8 +6,9 @@ import net.fugginbeenus.notchcurrency.block.entity.LedgerBoardBlockEntity;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.LightTexture;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
@@ -39,6 +40,9 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     private static final float SCALE = 0.0125f;   // text scale (smaller so full names fit)
     private static final int LINE_H = 13;         // line spacing (text px)
     private static final int LEFT_X = -55;        // left margin: rank + name start here (text px)
+    // 26.1 dropped LightTexture.FULL_BRIGHT; this is the value it always held, the same on every
+    // version, so the constant lives here rather than behind a branch.
+    private static final int FULL_BRIGHT = 0xF000F0;
     private static final int RIGHT_X = 55;        // right margin: balance right-aligns here (text px)
 
     private final Font text;
@@ -112,7 +116,7 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         matrices.scale(SCALE, -SCALE, SCALE);
         matrices.translate(0.0, 0.0, 0.5); // a texel off the surface, avoids z-fighting
 
-        int lb = LightTexture.FULL_BRIGHT;
+        int lb = FULL_BRIGHT;
         //? if <1.21.11 {
         var matrix = matrices.last().pose();
         //?}

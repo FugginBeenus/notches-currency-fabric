@@ -51,7 +51,11 @@ public final class BountyTrackerHud implements HudRenderCallback {
     public void onHudRender(GuiGraphics ctx, float tickDelta) {
     //?}
         Minecraft client = Minecraft.getInstance();
+        //? if >=26.1 {
+        /*if (!visible || client.player == null || client.level == null) return;
+        *///?} else {
         if (!visible || client.player == null || client.level == null || client.options.hideGui) return;
+        //?}
 
         long now = client.level.getGameTime();
         List<Entry> live = new ArrayList<>();

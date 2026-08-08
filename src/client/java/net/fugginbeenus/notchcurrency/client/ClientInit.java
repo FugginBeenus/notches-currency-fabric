@@ -69,10 +69,19 @@ public final class ClientInit implements ClientModInitializer {
                 net.fugginbeenus.notchcurrency.client.render.CoinFlipBlockEntityRenderer::new);
 
         // Cutout layer so the coin crest / standing coin's transparent corners aren't black.
+        //? if >=26.1 {
+        /*// 26.x reads the layer off the block model instead; see render_type in the model json.
+        *///?} elif >=1.21.11 {
+        /*net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap.putBlocks(
+                net.minecraft.client.renderer.chunk.ChunkSectionLayer.CUTOUT,
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
+        *///?} else {
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlocks(
                 net.minecraft.client.renderer.RenderType.cutout(),
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
+        //?}
 
         BarrelCleanupManager.init();
 
@@ -101,11 +110,11 @@ public final class ClientInit implements ClientModInitializer {
 
         //? if >=26.1 {
         /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
-                NotchCurrency.id("balance"), new NotchHud());
+                net.fugginbeenus.notchcurrency.core.NotchCurrency.id("balance"), new NotchHud());
         net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
-                NotchCurrency.id("route"), new RouteHud());
+                net.fugginbeenus.notchcurrency.core.NotchCurrency.id("route"), new RouteHud());
         net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
-                NotchCurrency.id("bounty_tracker"), new BountyTrackerHud());
+                net.fugginbeenus.notchcurrency.core.NotchCurrency.id("bounty_tracker"), new BountyTrackerHud());
         *///?} else {
         HudRenderCallback.EVENT.register(new NotchHud());
         HudRenderCallback.EVENT.register(new RouteHud());
@@ -115,10 +124,20 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerCurrencySyncReceiver();
 
         // Toggle the bounty tracker HUD (default B).
-        var trackerKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
+        var trackerKey = //? if >=26.1 {
+                /*net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
+                *///?} else {
+                net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
+                //?}
+                //? if >=1.21.11 {
+                /*new net.minecraft.client.KeyMapping("key.notchcurrency.bounty_tracker",
+                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
+                        net.minecraft.client.KeyMapping.Category.MISC));
+                *///?} else {
                 new net.minecraft.client.KeyMapping("key.notchcurrency.bounty_tracker",
                         com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
                         "key.categories.notchcurrency"));
+                //?}
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (trackerKey.consumeClick()) {
                 BountyTrackerHud.toggle();
@@ -144,7 +163,7 @@ public final class ClientInit implements ClientModInitializer {
                 if (client.player != null) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("Trade cancelled: " + reason).withStyle(ChatFormatting.RED));
                 }
-                if (client.screen instanceof TradeScreen) client.setScreen(null);
+                if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof TradeScreen) client.setScreen(null);
             });
         });
         NetClient.registerClientReceiver(NotchPackets.TRADE_COMPLETE, (client, buf) -> {
@@ -152,7 +171,7 @@ public final class ClientInit implements ClientModInitializer {
                 if (client.player != null) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("Trade complete!").withStyle(ChatFormatting.GREEN));
                 }
-                if (client.screen instanceof TradeScreen) client.setScreen(null);
+                if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof TradeScreen) client.setScreen(null);
             });
         });
 

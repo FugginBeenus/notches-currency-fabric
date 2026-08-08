@@ -172,7 +172,7 @@ public class NpcRecruiterScreen extends Screen {
 
         ctx.drawString(this.font, "Colour:", px + PAD, rowColor() + 4, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + 76, rowColor(), 100, 15,
-                titleCase(color().getName()), over(mx, my, px + 76, rowColor(), 100, 15));
+                titleCase(net.fugginbeenus.notchcurrency.compat.Colors.name(color())), over(mx, my, px + 76, rowColor(), 100, 15));
         ctx.drawCenteredString(this.font, Component.literal("Aa").withStyle(color()),
                 px + 200, rowColor() + 4, 0xFFFFFF);
 
@@ -287,7 +287,7 @@ public class NpcRecruiterScreen extends Screen {
     }
 
     private void send(int action, String text) {
-        NotchPacketsClient.sendRecruiterAction(npcId, action, text, color().getName(), fee, openToJoin);
+        NotchPacketsClient.sendRecruiterAction(npcId, action, text, net.fugginbeenus.notchcurrency.compat.Colors.name(color()), fee, openToJoin);
     }
 
     private void rebuildPane() {

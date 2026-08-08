@@ -51,7 +51,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         String s = nameField == null ? "" : nameField.getValue();
         for (int i = 0; i + 1 < s.length(); i++) {
             if (s.charAt(i) == '&' && ChatFormatting.getByCode(s.charAt(i + 1)) != null
-                    && ChatFormatting.getByCode(s.charAt(i + 1)).isColor()) {
+                    && net.fugginbeenus.notchcurrency.compat.Colors.isColor(ChatFormatting.getByCode(s.charAt(i + 1)))) {
                 return Character.toLowerCase(s.charAt(i + 1));
             }
         }
@@ -60,7 +60,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
     private int swatchArgb() {
         ChatFormatting f = firstColorCode() == 0 ? null : ChatFormatting.getByCode(firstColorCode());
-        return f == null || f.getColor() == null ? 0xFFFFFFFF : 0xFF000000 | f.getColor();
+        Integer rgb = f == null ? null : net.fugginbeenus.notchcurrency.compat.Colors.rgb(f);
+        return rgb == null ? 0xFFFFFFFF : 0xFF000000 | rgb;
     }
 
     private void cycleTitleColor() {
@@ -109,7 +110,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

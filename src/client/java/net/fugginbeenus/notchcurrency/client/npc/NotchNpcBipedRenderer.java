@@ -12,7 +12,9 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 //?}
 import net.minecraft.client.model.geom.ModelLayers;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
@@ -112,7 +114,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
             if (!line.isBlank()) {
                 matrices.pushPose();
                 matrices.translate(0.0, y, 0.0);
-                //? if >=26.1 {
+                //? if >=26.2 {
                 /*collector.submitNameTag(matrices, state.nameTagAttachment, 0,
                         net.minecraft.network.chat.Component.literal(line), !state.isDiscrete,
                         state.lightCoords, camera);
@@ -157,6 +159,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         state.scaleZ = entity.getScaleZ();
         state.billboard = NpcBillboard.lines(entity);
         state.texture = NpcSkins.resolve(entity);
+        state.skinValue = entity.getSkinValue();
         vanilla.isCrouching = entity.isCrouching();
     }
     *///?}
@@ -249,7 +252,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
             matrices.translate(0.0, entity.getNameOffset() - NpcBillboard.LINE_HEIGHT, 0.0);
             net.minecraft.network.chat.Component line = net.minecraft.network.chat.Component.literal(
                     net.fugginbeenus.notchcurrency.npc.NpcText.colorize(subtitle));
-            //? if >=26.1 {
+            //? if >=26.2 {
             /*collector.submitNameTag(matrices, state.nameTagAttachment, 0, line,
                     !state.isDiscrete, state.lightCoords, camera);
             *///?} elif >=1.21.11 {

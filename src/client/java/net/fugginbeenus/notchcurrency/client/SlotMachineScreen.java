@@ -67,7 +67,7 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
                 FIELD_W - 4, FIELD_H - 5, Component.literal("Bet"));
         betField.setMaxLength(12);
         betField.setBordered(false);
-        betField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(betField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         int min = menu.prop(SlotMachineScreenHandler.P_MIN);
         betField.setValue(Integer.toString(Math.max(1, min)));
         addRenderableWidget(betField);
@@ -75,7 +75,7 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

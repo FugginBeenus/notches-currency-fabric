@@ -135,7 +135,7 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
@@ -230,7 +230,13 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
     }
 
     // Component field typing
-    //? if >=1.21.11 {
+    // 26.2 dropped the modifier bits from a character event; nothing here reads them.
+    //? if >=26.1 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = 0;
+    *///?} elif >=1.21.11 {
     /*@Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
         char chr = (char) event.codepoint();

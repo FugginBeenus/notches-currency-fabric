@@ -193,7 +193,11 @@ public final class NotchConfigScreen extends Screen {
         if (search.getValue().isEmpty() && !search.isFocused()) {
             ctx.drawString(this.font, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
         }
+        //? if >=26.1 {
+        /*if (editField != null) editField.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         if (editField != null) editField.render(ctx, mouseX, mouseY, delta);
+        //?}
 
         // Tooltip last, above everything.
         if (hoveredEntry != null && editing == null) {
@@ -366,7 +370,7 @@ public final class NotchConfigScreen extends Screen {
         editField = new EditBox(this.font, px + pw - 20 - w, ry + 2, w, 13, Component.literal("value"));
         if (e instanceof NumberEntry n) {
             editField.setMaxLength(14);
-            editField.setFilter(s -> s.matches("-?[0-9]*"));
+            net.fugginbeenus.notchcurrency.compat.Render.setFilter(editField, s -> s.matches("-?[0-9]*"));
             editField.setValue(Long.toString(n.value));
         } else {
             editField.setMaxLength(((StringEntry) e).maxLength);
@@ -481,7 +485,13 @@ public final class NotchConfigScreen extends Screen {
         //?}
     }
 
-    //? if >=1.21.11 {
+    // 26.2 dropped the modifier bits from a character event; nothing here reads them.
+    //? if >=26.1 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = 0;
+    *///?} elif >=1.21.11 {
     /*@Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
         char chr = (char) event.codepoint();

@@ -56,7 +56,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         field.setMaxLength(9);
         field.setBordered(false);
         field.setHint(Component.literal("0").withStyle(ChatFormatting.DARK_GRAY));
-        field.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(field, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         field.setValue(kept);
         addRenderableWidget(field);
         return field;
@@ -72,7 +72,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

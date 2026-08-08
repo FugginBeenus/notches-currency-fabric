@@ -83,7 +83,16 @@ public final class WaystoneFeeOverlay {
 
     @Nullable
     private static Object hoveredWaystone(Screen screen, int mouseX, int mouseY) {
-        //? if >=1.21 {
+        //? if >=1.21.11 {
+        /*// Back to top-level buttons, as on 1.20.1: the list widgets are gone again.
+        for (AbstractWidget widget : Screens.getButtons(screen)) {
+            if (widget instanceof net.blay09.mods.waystones.client.gui.widget.WaystoneButton button
+                    && button.visible && button.isMouseOver(mouseX, mouseY)) {
+                return readWaystone(button);
+            }
+        }
+        return null;
+        *///?} elif >=1.21 {
         /*// 1.21: destinations are rows in a scrolling list; each entry's own isMouseOver is scroll-correct.
         for (net.minecraft.client.gui.components.events.GuiEventListener element : screen.children()) {
             if (element instanceof net.blay09.mods.waystones.client.gui.widget.AbstractWaystoneList<?> list
@@ -109,7 +118,7 @@ public final class WaystoneFeeOverlay {
         //?}
     }
 
-    //? if >=1.21 {
+    //? if >=1.21 && <1.21.11 {
     /*// The waystone button nested inside a 1.21 list entry, found by type (the entry's field is private).
     @Nullable
     private static Object buttonOf(Object entry) {

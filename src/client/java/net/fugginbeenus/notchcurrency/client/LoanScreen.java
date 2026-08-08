@@ -42,14 +42,14 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
         amountField.setMaxLength(12);
         amountField.setBordered(false);
         amountField.setHint(Component.literal("amount").withStyle(ChatFormatting.DARK_GRAY));
-        amountField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(amountField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         addRenderableWidget(amountField);
         setInitialFocus(amountField);
     }
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

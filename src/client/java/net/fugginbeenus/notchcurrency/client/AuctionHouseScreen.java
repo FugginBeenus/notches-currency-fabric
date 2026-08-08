@@ -329,7 +329,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
@@ -586,8 +586,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractTooltip(GuiGraphics ctx, int mouseX, int mouseY) {
+    *///?} else {
     @Override
     protected void renderTooltip(GuiGraphics ctx, int mouseX, int mouseY) {
+    //?}
         // Popup: show a cancel hint over the player's own listings; block other tooltips beneath.
         if (showUserPopup) {
             if (hoveredPopupSlot(mouseX, mouseY) >= 0) return; // tooltip drawn in render(), above the popup
@@ -1021,7 +1026,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         //?}
     }
 
-    //? if >=1.21.11 {
+    // 26.2 dropped the modifier bits from a character event; nothing here reads them.
+    //? if >=26.1 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = 0;
+    *///?} elif >=1.21.11 {
     /*@Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
         char chr = (char) event.codepoint();

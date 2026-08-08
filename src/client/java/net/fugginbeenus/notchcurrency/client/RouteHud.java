@@ -28,7 +28,11 @@ public final class RouteHud implements HudRenderCallback {
     public void onHudRender(GuiGraphics ctx, float tickDelta) {
     //?}
         Minecraft client = Minecraft.getInstance();
+        //? if >=26.1 {
+        /*if (client.player == null) return;
+        *///?} else {
         if (client.player == null || client.options.hideGui) return;
+        //?}
 
         ItemStack held = client.player.getMainHandItem();
         if (!(held.getItem() instanceof RoutePlannerItem)) {

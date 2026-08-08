@@ -5,7 +5,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.Minecraft;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.MultiBufferSource;
+//?}
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -155,9 +157,8 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     private void submitLine(NotchNpcRenderState state, net.minecraft.network.chat.Component text,
                             PoseStack matrices, net.minecraft.client.renderer.SubmitNodeCollector collector,
                             net.minecraft.client.renderer.state.CameraRenderState camera) {
-        net.minecraft.client.renderer.entity.state.EntityRenderState proxy = state.proxyState;
-        collector.submitNameTag(matrices, proxy.nameTagAttachment, 0, text, !proxy.isDiscrete,
-                proxy.lightCoords, proxy.distanceToCameraSq, camera);
+        net.fugginbeenus.notchcurrency.compat.Render.submitNameLine(
+                state.proxyState, text, matrices, collector, camera);
     }
     *///?} else {
     private boolean renderDisguise(NotchNpcEntity npc, String typeId, float yaw, float tickDelta,

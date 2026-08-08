@@ -63,9 +63,17 @@ public class DialogueStudioScreen extends Screen {
         py = (this.height - H) / 2;
 
         // Multiline "Says" editor: type freely, it wraps and scrolls (finally).
+        //? if >=1.21.11 {
+        /*nodeTextBox = net.minecraft.client.gui.components.MultiLineEditBox.builder()
+                .setX(px + ED_X)
+                .setY(py + 54)
+                .setPlaceholder(Component.literal("What the NPC says...").withStyle(ChatFormatting.DARK_GRAY))
+                .build(this.font, ED_W - 4, 56, Component.empty());
+        *///?} else {
         nodeTextBox = new net.minecraft.client.gui.components.MultiLineEditBox(this.font,
                 px + ED_X, py + 54, ED_W - 4, 56,
                 Component.literal("What the NPC says...").withStyle(ChatFormatting.DARK_GRAY), Component.empty());
+        //?}
         nodeTextBox.setCharacterLimit(500);
         nodeTextBox.setValueListener(s -> {
             DialogueNode n = node();
@@ -74,7 +82,7 @@ public class DialogueStudioScreen extends Screen {
         addRenderableWidget(nodeTextBox);
 
         renameField = field(px + ED_X + 30, py + 26, 88, 24);
-        renameField.setFilter(s -> s.chars().allMatch(ch -> ch == '_' || Character.isLetterOrDigit(ch)));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(renameField, s -> s.chars().allMatch(ch -> ch == '_' || Character.isLetterOrDigit(ch)));
 
         choiceLabelField = field(px + ED_X + 38, py + 56, ED_W - 40, 48);
         choiceLabelField.setResponder(s -> {
@@ -89,11 +97,12 @@ public class DialogueStudioScreen extends Screen {
         });
 
         actionAmountField = field(px + ED_X + 60, py + 126, 96, 9);
-        actionAmountField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        actionAmountField.setResponder(s -> {
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(actionAmountField,
+                s -> s.isEmpty() || s.chars().allMatch(Character::isDigit),
+                s -> {
             DialogueAction a = action(actionIdx, false);
             if (a != null) a.setAmount(parse(s));
-        });
+                });
 
         condValueField = field(px + ED_X + 60, py + 162, ED_W - 62, 200);
         condValueField.setResponder(s -> {
@@ -102,11 +111,12 @@ public class DialogueStudioScreen extends Screen {
         });
 
         condAmountField = field(px + ED_X + 60, py + 180, 96, 9);
-        condAmountField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
-        condAmountField.setResponder(s -> {
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(condAmountField,
+                s -> s.isEmpty() || s.chars().allMatch(Character::isDigit),
+                s -> {
             DialogueCondition c = condition(condIdx, false);
             if (c != null) c.setAmount(parse(s));
-        });
+                });
 
         refreshFields();
     }

@@ -44,7 +44,7 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         priceField.setMaxLength(7);
         priceField.setBordered(false);
         priceField.setHint(Component.literal("0").withStyle(ChatFormatting.DARK_GRAY));
-        priceField.setFilter(s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(priceField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         priceField.setValue(old);
         addRenderableWidget(priceField);
     }
@@ -64,7 +64,7 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
 
     //? if >=26.1 {
     /*@Override
-    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {

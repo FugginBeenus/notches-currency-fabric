@@ -43,6 +43,17 @@ public final class Colors {
         //?}
     }
 
+    /** The RGB behind a colour formatting, or null for a style that has none. */
+    public static Integer rgb(ChatFormatting formatting) {
+        //? if >=26.2 {
+        /*net.minecraft.network.chat.TextColor color =
+                net.minecraft.network.chat.TextColor.fromLegacyFormat(formatting);
+        return color == null ? null : color.getValue();
+        *///?} else {
+        return formatting.getColor();
+        //?}
+    }
+
     /** True for the sixteen colours, false for bold, italic and the rest. */
     public static boolean isColor(ChatFormatting formatting) {
         //? if >=26.2 {

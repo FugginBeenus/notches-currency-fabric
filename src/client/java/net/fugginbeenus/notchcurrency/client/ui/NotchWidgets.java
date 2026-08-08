@@ -236,7 +236,7 @@ public final class NotchWidgets {
                         || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
                         || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
                 //? if >=1.21.11 {
-                /*if (editKey) f.keyPressed(event);
+                /*if (editKey) f.keyPressed(new net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers));
                 *///?} else {
                 if (editKey) f.keyPressed(keyCode, scanCode, modifiers);
                 //?}
@@ -259,7 +259,7 @@ public final class NotchWidgets {
                 || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
                 || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
         //? if >=1.21.11 {
-        /*if (editKey) box.keyPressed(event);
+        /*if (editKey) box.keyPressed(new net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers));
         *///?} else {
         if (editKey) box.keyPressed(keyCode, scanCode, modifiers);
         //?}

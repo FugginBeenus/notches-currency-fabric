@@ -5,7 +5,9 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.Minecraft;
+//? if <1.21.11 {
 import net.minecraft.client.renderer.texture.HttpTexture;
+//?}
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.resources.ResourceLocation;
 import java.util.HashMap;
@@ -58,11 +60,22 @@ public final class NpcSkins {
         Minecraft.getInstance().execute(() -> {
             try {
                 ResourceLocation id = NotchCurrency.id("skins/url/" + Integer.toHexString(url.hashCode()));
+                //? if >=1.21.11 {
+                /*Minecraft mc = Minecraft.getInstance();
+                new net.minecraft.client.renderer.texture.SkinTextureDownloader(
+                        mc.getProxy(), mc.getTextureManager(), java.util.concurrent.ForkJoinPool.commonPool())
+                        .downloadAndRegisterSkin(id, mc.gameDirectory.toPath().resolve("assets/skins"), url, true)
+                        .thenAccept(asset -> mc.execute(() -> {
+                            cache.put("url:" + url, asset.texturePath());
+                            loading.put("url:" + url, false);
+                        }));
+                *///?} else {
                 Minecraft.getInstance().getTextureManager().register(id,
                         new HttpTexture(null, url, DEFAULT, true, () -> {
                             cache.put("url:" + url, id);
                             loading.put("url:" + url, false);
                         }));
+                //?}
             } catch (Exception e) {
                 loading.put("url:" + url, false);
             }
@@ -112,7 +125,13 @@ public final class NpcSkins {
                 Minecraft.getInstance().execute(() -> {
                     try {
                         GameProfile profile = new GameProfile(uuid, username);
-                        //? if >=1.21 {
+                        //? if >=1.21.11 {
+                        /*Minecraft.getInstance().getSkinManager().get(profile)
+                                .thenAccept(skin -> Minecraft.getInstance().execute(() -> {
+                                    skin.ifPresent(loaded -> cache.put(key, loaded.body().texturePath()));
+                                    loading.put(key, false);
+                                }));
+                        *///?} elif >=1.21 {
                         /*Minecraft.getInstance().getSkinManager().getOrLoad(profile)
                                 .thenAccept(textures -> Minecraft.getInstance().execute(() -> {
                                     cache.put(key, textures.texture());
