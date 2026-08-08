@@ -530,3 +530,4 @@ modrinth {
 tasks.modrinth {
     dependsOn("stampedJar")
 }
+

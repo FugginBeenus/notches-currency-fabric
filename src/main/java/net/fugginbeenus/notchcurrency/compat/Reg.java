@@ -48,6 +48,21 @@ public final class Reg {
         return props;
     }
 
+    /**
+     * Settings for the item form of a block.
+     *
+     * <p>A BlockItem used to borrow its translation key from the block it places. From 1.21.11 the key
+     * follows the id set here, which is an item id, so without this every block item would look for
+     * an {@code item.} entry and show its raw id instead of the {@code block.} name in the lang file.
+     */
+    public static net.minecraft.world.item.Item.Properties blockItemProps(String path) {
+        net.minecraft.world.item.Item.Properties props = itemProps(path);
+        //? if >=1.21.11 {
+        /*props = props.useBlockDescriptionPrefix();
+        *///?}
+        return props;
+    }
+
     /** Item settings, for the same reason. */
     public static net.minecraft.world.item.Item.Properties itemProps(String path) {
         net.minecraft.world.item.Item.Properties props = new net.minecraft.world.item.Item.Properties();

@@ -29,7 +29,7 @@ public final class ModBlocks {
     public static final Item ATM_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("atm"),
-            new BlockItem(ATM, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("atm"))
+            new BlockItem(ATM, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("atm"))
     );
 
     // Golden Cache (crate)
@@ -47,7 +47,7 @@ public final class ModBlocks {
     public static final Item GOLDEN_CACHE_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("golden_cache"),
-            new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("golden_cache"))
+            new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache"))
     );
 
     // Ledger Board: shows the balance leaderboard on use. Placeholder model/texture for now.
@@ -63,7 +63,7 @@ public final class ModBlocks {
     public static final Item LEDGER_BOARD_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("ledger_board"),
-            new BlockItem(LEDGER_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("ledger_board"))
+            new BlockItem(LEDGER_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("ledger_board"))
     );
 
     // Bounty Board: shows the auto-generated bounties on use. Placeholder model/texture for now.
@@ -79,7 +79,7 @@ public final class ModBlocks {
     public static final Item BOUNTY_BOARD_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("bounty_board"),
-            new BlockItem(BOUNTY_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("bounty_board"))
+            new BlockItem(BOUNTY_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("bounty_board"))
     );
 
     // Slot Machine: right-click to play the slots. Non-full model, so nonOpaque keeps
@@ -96,7 +96,7 @@ public final class ModBlocks {
     public static final Item SLOT_MACHINE_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("slot_machine"),
-            new BlockItem(SLOT_MACHINE, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("slot_machine"))
+            new BlockItem(SLOT_MACHINE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("slot_machine"))
     );
 
     // Coin Flip block: right-click to bet, it "flips" then reveals. Placeholder model/texture.
@@ -112,7 +112,7 @@ public final class ModBlocks {
     public static final Item COIN_FLIP_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("coin_flip"),
-            new BlockItem(COIN_FLIP, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("coin_flip"))
+            new BlockItem(COIN_FLIP, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("coin_flip"))
     );
 
     // Crates (opened with keys). Each block is bound to a datapack crate type id.
@@ -123,7 +123,7 @@ public final class ModBlocks {
     private static Block registerCrate(String blockId, String crateType) {
         Block block = Registry.register(BuiltInRegistries.BLOCK, NotchCurrency.id(blockId),
                 new CrateBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps(blockId).strength(2.0f).requiresCorrectToolForDrops().noOcclusion(), crateType));
-        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.itemProps(blockId)));
+        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps(blockId)));
         return block;
     }
 
