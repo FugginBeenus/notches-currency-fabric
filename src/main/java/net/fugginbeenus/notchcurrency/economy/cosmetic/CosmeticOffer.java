@@ -6,8 +6,31 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-public record CosmeticOffer(String id, String name, ItemStack icon, long price, boolean oneTime,
-                            boolean isCommand, ItemStack itemReward, String command) {
+/**
+ * One entry in the cosmetic shop, as written in a datapack.
+ *
+ * <p>The icon and the reward are held as item ids rather than stacks. From 26.2 an ItemStack cannot
+ * be built before item components are bound, and these are parsed during a resource reload, which
+ * happens earlier than that. The two accessors build a stack when something actually needs one.
+ */
+public record CosmeticOffer(String id, String name, String iconItemId, long price, boolean oneTime,
+                            boolean isCommand, String rewardItemId, int rewardCount, String command) {
+
+    public ItemStack icon() {
+        if (!iconItemId.isEmpty()) return new ItemStack(itemOf(iconItemId));
+        ItemStack reward = itemReward();
+        if (!reward.isEmpty()) {
+            ItemStack single = reward.copy();
+            single.setCount(1);
+            return single;
+        }
+        return new ItemStack(Items.PLAYER_HEAD);
+    }
+
+    public ItemStack itemReward() {
+        if (isCommand || rewardItemId.isEmpty()) return ItemStack.EMPTY;
+        return new ItemStack(itemOf(rewardItemId), Math.max(1, rewardCount));
+    }
 
     public static CosmeticOffer fromJson(String id, JsonObject o) {
         String name = o.has("name") ? o.get("name").getAsString() : id;
@@ -19,24 +42,14 @@ public record CosmeticOffer(String id, String name, ItemStack icon, long price, 
         boolean isCommand = type.equalsIgnoreCase("command");
 
         String command = reward.has("command") ? reward.get("command").getAsString() : "";
-        ItemStack itemReward = ItemStack.EMPTY;
-        if (!isCommand && reward.has("item")) {
-            int count = reward.has("count") ? reward.get("count").getAsInt() : 1;
-            itemReward = new ItemStack(itemOf(reward.get("item").getAsString()), Math.max(1, count));
-        }
+        String rewardItemId = !isCommand && reward.has("item") ? reward.get("item").getAsString() : "";
+        int rewardCount = reward.has("count") ? reward.get("count").getAsInt() : 1;
 
-        // Icon: explicit, else the item reward, else a generic placeholder.
-        ItemStack icon;
-        if (o.has("icon")) {
-            icon = new ItemStack(itemOf(o.get("icon").getAsString()));
-        } else if (!itemReward.isEmpty()) {
-            icon = itemReward.copy();
-            icon.setCount(1);
-        } else {
-            icon = new ItemStack(Items.PLAYER_HEAD);
-        }
+        // Icon: explicit, else the item reward, else a generic placeholder. Resolved in icon().
+        String iconItemId = o.has("icon") ? o.get("icon").getAsString() : "";
 
-        return new CosmeticOffer(id, name, icon, Math.max(0, price), oneTime, isCommand, itemReward, command);
+        return new CosmeticOffer(id, name, iconItemId, Math.max(0, price), oneTime,
+                isCommand, rewardItemId, rewardCount, command);
     }
 
     private static net.minecraft.world.item.Item itemOf(String idStr) {

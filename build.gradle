@@ -422,6 +422,30 @@ tasks.processResources {
     filesMatching("pack.mcmeta") {
         expand("pack_format": packFormat)
     }
+    // 1.21.2 flattened recipe ingredients: a key is the item id itself rather than an object, and a
+    // result names its item with "id". The tree keeps the 1.20 shape, so it is converted after the
+    // copy for the versions that want the newer one. Whole-file, because the JSON is pretty-printed
+    // and a key and its closing brace land on different lines.
+    if (atLeast([1, 21, 2])) {
+        doLast {
+            def dir = new File(destinationDir, "data/notchcurrency/recipe")
+            if (!dir.isDirectory()) return
+            dir.eachFileMatch(~/.*\.json/) { file ->
+                def json = new groovy.json.JsonSlurper().parseText(file.text)
+                json.key?.each { slot, value ->
+                    if (value instanceof Map) {
+                        json.key[slot] = value.tag ? "#" + value.tag : value.item
+                    }
+                }
+                if (json.result instanceof Map) {
+                    if (json.result.item && !json.result.id) json.result.id = json.result.item
+                    json.result.remove("item")
+                }
+                file.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
+            }
+        }
+    }
+
     // 1.21 renamed the datapack folders to singular; the source tree keeps the 1.20 names.
     if (packFormat.toInteger() >= 34) {
         eachFile { f ->
