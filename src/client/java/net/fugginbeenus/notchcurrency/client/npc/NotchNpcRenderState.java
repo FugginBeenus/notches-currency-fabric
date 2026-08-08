@@ -21,6 +21,10 @@ package net.fugginbeenus.notchcurrency.client.npc;
     // Nothing has been drawn yet when a state is fresh, so a blank one has to be harmless.
     public static final NotchNpcRenderState BLANK = new NotchNpcRenderState();
 
+    // Loads this class, and with it the key, at a time of the caller's choosing.
+    public static void touch() {
+    }
+
     public static NotchNpcRenderState of(net.minecraft.client.renderer.entity.state.EntityRenderState state) {
         return state.getDataOrDefault(KEY, BLANK);
     }

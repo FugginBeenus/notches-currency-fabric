@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-//? if <26.1 {
+//? if <1.21.11 {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 //?}
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -32,6 +32,12 @@ public final class ClientInit implements ClientModInitializer {
 
         // Keeps track of which screen is open. A no-op before 26.1, where Minecraft still tells us.
         net.fugginbeenus.notchcurrency.compat.Render.trackScreens();
+
+        // Claims the NPC's render-state data key before any entity is drawn. Fabric hands these out
+        // by index, so a key created on the first frame that needs it can miss states already made.
+        //? if >=1.21.11 {
+        /*net.fugginbeenus.notchcurrency.client.npc.NotchNpcRenderState.touch();
+        *///?}
 
         // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
@@ -108,7 +114,7 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
         MenuScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
 
-        //? if >=26.1 {
+        //? if >=1.21.11 {
         /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
                 net.fugginbeenus.notchcurrency.core.NotchCurrency.id("balance"), new NotchHud());
         net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(

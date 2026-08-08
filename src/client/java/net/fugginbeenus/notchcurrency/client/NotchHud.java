@@ -1,7 +1,7 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.minecraft.network.chat.Component;
-//? if >=26.1 {
+//? if >=1.21.11 {
 /*import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 *///?} else {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-//? if >=26.1 {
+//? if >=1.21.11 {
 /*public final class NotchHud implements HudElement {
 *///?} else {
 public final class NotchHud implements HudRenderCallback {
@@ -63,6 +63,8 @@ public final class NotchHud implements HudRenderCallback {
     @Override
     //? if >=26.1 {
     /*public void extractRenderState(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
+    *///?} elif >=1.21.11 {
+    /*public void render(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} elif >=1.21 {
     /*public void onHudRender(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} else {

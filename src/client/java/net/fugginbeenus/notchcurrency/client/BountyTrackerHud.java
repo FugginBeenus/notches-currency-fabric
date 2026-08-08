@@ -1,6 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
-//? if >=26.1 {
+//? if >=1.21.11 {
 /*import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 *///?} else {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -18,7 +18,7 @@ import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.List;
 
-//? if >=26.1 {
+//? if >=1.21.11 {
 /*public final class BountyTrackerHud implements HudElement {
 *///?} else {
 public final class BountyTrackerHud implements HudRenderCallback {
@@ -52,6 +52,8 @@ public final class BountyTrackerHud implements HudRenderCallback {
     @Override
     //? if >=26.1 {
     /*public void extractRenderState(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
+    *///?} elif >=1.21.11 {
+    /*public void render(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} elif >=1.21 {
     /*public void onHudRender(GuiGraphics ctx, net.minecraft.client.DeltaTracker tickCounter) {
     *///?} else {
