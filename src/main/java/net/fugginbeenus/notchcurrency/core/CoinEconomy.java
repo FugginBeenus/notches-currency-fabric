@@ -43,7 +43,7 @@ public final class CoinEconomy {
         boolean ok = CurrencyApi.withdraw(player, amount);
         if (!ok) {
             if (!silent) {
-                player.displayClientMessage(Component.literal("§cYou don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), true);
+                net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§cYou don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
             }
             LOGGER.info("[CoinEconomy] tryCharge FAILED for {} (need {}, has {})",
                     player.getName().getString(), amount, CurrencyApi.getBalance(player));
@@ -75,10 +75,7 @@ public final class CoinEconomy {
         }
 
         if (!silent) {
-            player.displayClientMessage(
-                    Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
-                    true
-            );
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
         }
         LOGGER.info("[CoinEconomy] give {} physical coins to {}", amount, player.getName().getString());
     }
@@ -88,10 +85,7 @@ public final class CoinEconomy {
 
         CurrencyApi.deposit(player, amount);
         if (!silent) {
-            player.displayClientMessage(
-                    Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance."),
-                    true
-            );
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance."));
         }
         LOGGER.info("[CoinEconomy] giveToBalance {} coins to {}", amount, player.getName().getString());
     }

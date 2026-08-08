@@ -25,8 +25,8 @@ public final class NpcText {
     public static void sendLine(ServerPlayer sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
         String name = npcName(npc);
-        sp.displayClientMessage(net.minecraft.network.chat.Component.literal("<" + name + "> " + substitute(line, sp, name))
-                .withStyle(net.minecraft.ChatFormatting.WHITE), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, net.minecraft.network.chat.Component.literal("<" + name + "> " + substitute(line, sp, name))
+                .withStyle(net.minecraft.ChatFormatting.WHITE));
     }
 
     public static String substitute(String text, @Nullable ServerPlayer sp, String npcName) {

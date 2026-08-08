@@ -128,8 +128,7 @@ public final class ClientInit implements ClientModInitializer {
             String reason = buf.readUtf(64);
             client.execute(() -> {
                 if (client.player != null) {
-                    client.player.displayClientMessage(
-                            Component.literal("Trade cancelled: " + reason).withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("Trade cancelled: " + reason).withStyle(ChatFormatting.RED));
                 }
                 if (client.screen instanceof TradeScreen) client.setScreen(null);
             });
@@ -137,8 +136,7 @@ public final class ClientInit implements ClientModInitializer {
         NetClient.registerClientReceiver(NotchPackets.TRADE_COMPLETE, (client, buf) -> {
             client.execute(() -> {
                 if (client.player != null) {
-                    client.player.displayClientMessage(
-                            Component.literal("Trade complete!").withStyle(ChatFormatting.GREEN), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("Trade complete!").withStyle(ChatFormatting.GREEN));
                 }
                 if (client.screen instanceof TradeScreen) client.setScreen(null);
             });

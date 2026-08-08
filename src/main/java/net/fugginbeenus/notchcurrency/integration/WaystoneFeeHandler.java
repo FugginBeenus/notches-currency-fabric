@@ -47,7 +47,7 @@ public final class WaystoneFeeHandler {
     }
 
     private static void sendFees(ServerPlayer sp) {
-        var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeBoolean(enabled);
         buf.writeVarInt(fee);
         buf.writeVarInt(dimensionalFee);
@@ -67,16 +67,16 @@ public final class WaystoneFeeHandler {
 
         if (BalanceStore.get(sp) < cost) {
             event.setCanceled(true);
-            sp.displayClientMessage(Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to use this waystone.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to use this waystone.")
+                    .withStyle(ChatFormatting.RED));
             return;
         }
 
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, "waystone fee");
         NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         if (announce) {
-            sp.displayClientMessage(Component.literal("Paid " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in waystone fees.")
-                    .withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Paid " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in waystone fees.")
+                    .withStyle(ChatFormatting.GRAY));
         }
     }
 }

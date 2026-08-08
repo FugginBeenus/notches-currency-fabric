@@ -46,11 +46,8 @@ public final class NpcShopLogic {
 
         // 3) Feedback: ding + actionbar
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
-        buyer.displayClientMessage(
-                Component.literal("§aYou bought §e" + quantity + "x §f" + item.getHoverName().getString()
-                        + " §afor §e" + totalCost + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."),
-                true
-        );
+        net.fugginbeenus.notchcurrency.compat.Msg.actionBar(buyer, Component.literal("§aYou bought §e" + quantity + "x §f" + item.getHoverName().getString()
+                        + " §afor §e" + totalCost + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
 
         return true;
     }
@@ -60,7 +57,7 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.displayClientMessage(Component.literal("§cShop not found!"), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("§cShop not found!"));
             return;
         }
 
@@ -86,12 +83,12 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            owner.displayClientMessage(Component.literal("§cShop not found!"), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("§cShop not found!"));
             return;
         }
 
         if (!shop.getOwnerId().equals(owner.getUUID())) {
-            owner.displayClientMessage(Component.literal("§cYou don't own this shop!"), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("§cYou don't own this shop!"));
             return;
         }
 
@@ -112,7 +109,7 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.displayClientMessage(Component.literal("§cShop not found!"), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("§cShop not found!"));
             return;
         }
 

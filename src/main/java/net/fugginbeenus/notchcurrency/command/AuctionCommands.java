@@ -61,9 +61,9 @@ public final class AuctionCommands {
                                     var world = ctx.getSource().getLevel();
                                     AuctionState state = AuctionState.get((ServerLevel) world);
 
-                                    p.displayClientMessage(Component.literal("=== Auction Listings ==="), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("=== Auction Listings ==="));
                                     if (state.getListings().isEmpty()) {
-                                        p.displayClientMessage(Component.literal("No active listings."), false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No active listings."));
                                         return 1;
                                     }
 
@@ -73,9 +73,9 @@ public final class AuctionCommands {
                                                 .append(NotchCurrency.coinIcon())
                                                 .append(Component.literal(" | Seller: " + l.sellerName));
 
-                                        p.displayClientMessage(line, false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, line);
                                     }
-                                    p.displayClientMessage(Component.literal("Use /ah buy <id> to purchase or /ah bid <id> <amount> to bid."), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Use /ah buy <id> to purchase or /ah bid <id> <amount> to bid."));
 
                                     return 1;
                                 })
@@ -129,9 +129,9 @@ public final class AuctionCommands {
                                             try {
                                                 id = UUID.fromString(raw);
                                             } catch (IllegalArgumentException e) {
-                                                p.displayClientMessage(Component.literal(
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                                                         "Invalid listing id (must be a UUID)."
-                                                ), false);
+                                                ));
                                                 return 0;
                                             }
 
@@ -163,21 +163,15 @@ public final class AuctionCommands {
                                             try {
                                                 id = UUID.fromString(raw);
                                             } catch (IllegalArgumentException e) {
-                                                p.displayClientMessage(
-                                                        Component.literal("Invalid listing id (must be a UUID).")
-                                                                .withStyle(ChatFormatting.RED),
-                                                        false
-                                                );
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Invalid listing id (must be a UUID).")
+                                                                .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
                                             AuctionState.PendingWinnings pw = state.getPending(id);
                                             if (pw == null) {
-                                                p.displayClientMessage(
-                                                        Component.literal("No pending winnings for that id.")
-                                                                .withStyle(ChatFormatting.RED),
-                                                        false
-                                                );
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No pending winnings for that id.")
+                                                                .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
@@ -189,13 +183,10 @@ public final class AuctionCommands {
                                                 BalanceStore.add(p, amt);
                                                 NotchPackets.sendBalance(p, BalanceStore.get(p));
 
-                                                p.displayClientMessage(
-                                                        Component.literal("Claimed ")
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Claimed ")
                                                                 .append(Component.literal(String.valueOf(amt) + " ").withStyle(ChatFormatting.GOLD))
                                                                 .append(NotchCurrency.coinIcon())
-                                                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)),
-                                                        false
-                                                );
+                                                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)));
                                                 pw.finalPrice = 0L;
                                                 claimedSomething = true;
                                             }
@@ -225,23 +216,17 @@ public final class AuctionCommands {
                                                     p.drop(toGive, false);
                                                 }
 
-                                                p.displayClientMessage(
-                                                        Component.literal("Claimed item: ")
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Claimed item: ")
                                                                 .append(pw.stack.getHoverName().copy())
-                                                                .withStyle(ChatFormatting.GREEN),
-                                                        false
-                                                );
+                                                                .withStyle(ChatFormatting.GREEN));
                                                 pw.stack = ItemStack.EMPTY;
                                                 claimedSomething = true;
                                             }
 
                                             // If you don't match either role
                                             if (!claimedSomething) {
-                                                p.displayClientMessage(
-                                                        Component.literal("You have nothing to claim for that listing.")
-                                                                .withStyle(ChatFormatting.RED),
-                                                        false
-                                                );
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You have nothing to claim for that listing.")
+                                                                .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
@@ -272,9 +257,9 @@ public final class AuctionCommands {
                                                     try {
                                                         id = UUID.fromString(raw);
                                                     } catch (IllegalArgumentException e) {
-                                                        p.displayClientMessage(Component.literal(
+                                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                                                                 "Invalid listing id (must be a UUID)."
-                                                        ), false);
+                                                        ));
                                                         return 0;
                                                     }
 
@@ -303,13 +288,13 @@ public final class AuctionCommands {
                                     }
 
                                     if (myListings.isEmpty()) {
-                                        p.displayClientMessage(Component.literal("You have no active auction listings.")
-                                                .withStyle(ChatFormatting.GRAY), false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You have no active auction listings.")
+                                                .withStyle(ChatFormatting.GRAY));
                                         return 0;
                                     }
 
-                                    p.displayClientMessage(Component.literal("─── Your Auction Listings ───")
-                                            .withStyle(ChatFormatting.GOLD), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("─── Your Auction Listings ───")
+                                            .withStyle(ChatFormatting.GOLD));
 
                                     for (AuctionListing l : myListings) {
                                         int count = l.stack.getCount();
@@ -339,11 +324,11 @@ public final class AuctionCommands {
                                                 );
 
                                         line.append(cancelBtn);
-                                        p.displayClientMessage(line, false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, line);
                                     }
 
-                                    p.displayClientMessage(Component.literal("────────────────────")
-                                            .withStyle(ChatFormatting.GOLD), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("────────────────────")
+                                            .withStyle(ChatFormatting.GOLD));
                                     return 1;
                                 })
                                 .then(Commands.argument("id", StringArgumentType.word())
@@ -357,23 +342,23 @@ public final class AuctionCommands {
                                             try {
                                                 id = UUID.fromString(raw);
                                             } catch (IllegalArgumentException e) {
-                                                p.displayClientMessage(Component.literal(
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                                                         "Invalid listing id (must be a UUID)."
-                                                ), false);
+                                                ));
                                                 return 0;
                                             }
 
                                             AuctionListing l = state.getListing(id);
                                             if (l == null) {
-                                                p.displayClientMessage(Component.literal(
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                                                         "No listing with that id."
-                                                ), false);
+                                                ));
                                                 return 0;
                                             }
                                             if (!p.getUUID().equals(l.sellerUuid)) {
-                                                p.displayClientMessage(Component.literal(
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                                                         "Only the seller can cancel this listing."
-                                                ), false);
+                                                ));
                                                 return 0;
                                             }
 
@@ -382,8 +367,8 @@ public final class AuctionCommands {
                                             long refunded = state.refundHighestBid((ServerLevel) world, l);
                                             state.removeListing(id);
                                             if (refunded > 0) {
-                                                p.displayClientMessage(Component.literal("The high bidder was refunded "
-                                                        + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GRAY), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("The high bidder was refunded "
+                                                        + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GRAY));
                                             }
 
                                             ItemStack toReturn = l.stack.copy();
@@ -408,10 +393,10 @@ public final class AuctionCommands {
                                                 p.drop(toReturn, false);
                                             }
 
-                                            p.displayClientMessage(Component.literal("Cancelled listing for ")
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Cancelled listing for ")
                                                     .withStyle(ChatFormatting.GREEN)
                                                     .append(l.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
-                                                    .append(Component.literal(".").withStyle(ChatFormatting.GREEN)), false);
+                                                    .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
                                             return 1;
                                         })
                                 )
@@ -430,9 +415,9 @@ public final class AuctionCommands {
         ItemStack hand = p.getMainHandItem();
 
         if (hand.isEmpty()) {
-            p.displayClientMessage(Component.literal(
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(
                     "Hold the item you want to list in your main hand."
-            ), false);
+            ));
             return 0;
         }
 
@@ -441,28 +426,22 @@ public final class AuctionCommands {
         if (fee > 0) {
             long bal = BalanceStore.get(p);
             if (bal < fee) {
-                p.displayClientMessage(
-                        Component.literal("You need ")
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You need ")
                                 .append(Component.literal(String.valueOf(fee) + " ").withStyle(ChatFormatting.GOLD))
                                 .append(NotchCurrency.coinIcon())
                                 .append(Component.literal(" to pay the auction listing fee.")
-                                        .withStyle(ChatFormatting.RED)),
-                        false
-                );
+                                        .withStyle(ChatFormatting.RED)));
                 return 0;
             }
 
             BalanceStore.subtract(p, fee, net.fugginbeenus.notchcurrency.economy.TransactionReason.SINK, "auction listing fee");
             NotchPackets.sendBalance(p, BalanceStore.get(p));
 
-            p.displayClientMessage(
-                    Component.literal("Paid ")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Paid ")
                             .append(Component.literal(String.valueOf(fee) + " ").withStyle(ChatFormatting.GOLD))
                             .append(NotchCurrency.coinIcon())
                             .append(Component.literal(" as auction listing fee.")
-                                    .withStyle(ChatFormatting.GRAY)),
-                    false
-            );
+                                    .withStyle(ChatFormatting.GRAY)));
         }
         // --- end listing fee ---
 
@@ -506,7 +485,7 @@ public final class AuctionCommands {
             );
         }
 
-        p.displayClientMessage(listedMsg, false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, listedMsg);
 
         return 1;
     }

@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.npc;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
@@ -33,7 +32,7 @@ public final class NotchNpcManager {
 
     public static void openEditor(ServerPlayer sp, NotchNpcEntity npc) {
         if (!npc.canEdit(sp)) {
-            sp.displayClientMessage(Component.literal("Only the owner can edit this NPC.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the owner can edit this NPC.").withStyle(ChatFormatting.RED));
             return;
         }
         // Back to '&' on the way out. The name is stored with real § codes because that is what
@@ -41,7 +40,7 @@ public final class NotchNpcManager {
         // section signs and the codes would stop being editable.
         String name = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString().replace('\u00a7', '&') : "";
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeVarInt(npc.getRole().ordinal());
         buf.writeUtf(name);
@@ -148,8 +147,8 @@ public final class NotchNpcManager {
         if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
             String lower = skinValue.trim().toLowerCase();
             if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
-                sp.displayClientMessage(Component.literal("Skin URLs must start with http:// or https://.")
-                        .withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Skin URLs must start with http:// or https://.")
+                        .withStyle(ChatFormatting.RED));
                 return;
             }
         }
@@ -222,7 +221,7 @@ public final class NotchNpcManager {
                     + (npc.getWaypoints().size() == 1 ? "" : "s") + ")";
             case GUARD -> "Guard (radius " + npc.getWanderRadius() + ")";
         };
-        sp.displayClientMessage(Component.literal("Behavior set: " + desc + ".").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Behavior set: " + desc + ".").withStyle(ChatFormatting.GREEN));
 
         // Follow with an unresolvable target does nothing: say why. (Common in dev, where each
         // launch gets a fresh random username/UUID.)
@@ -230,12 +229,12 @@ public final class NotchNpcManager {
             String who = npc.getFollowPlayerName().isEmpty()
                     ? "its owner (" + (npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName()) + ")"
                     : npc.getFollowPlayerName();
-            sp.displayClientMessage(Component.literal("Note: " + who + " isn't online, so it has no one to follow.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Note: " + who + " isn't online, so it has no one to follow.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
         if (mode == NotchNpcEntity.Behavior.PATROL && npc.getWaypoints().isEmpty()) {
-            sp.displayClientMessage(Component.literal("Add waypoints (stand somewhere and click 'Add waypoint here') so it has a route.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Add waypoints (stand somewhere and click 'Add waypoint here') so it has a route.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
     }
 
@@ -278,23 +277,23 @@ public final class NotchNpcManager {
                 if (!sp.getInventory().add(tool)) {
                     sp.drop(tool, false);
                 }
-                sp.displayClientMessage(Component.literal("Route tool added - walk the route and right-click the ground to drop waypoints.")
-                        .withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Route tool added - walk the route and right-click the ground to drop waypoints.")
+                        .withStyle(ChatFormatting.GREEN));
             }
             case 1 -> {
                 npc.clearWaypoints();
-                sp.displayClientMessage(Component.literal("Waypoints cleared.").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Waypoints cleared.").withStyle(ChatFormatting.GREEN));
             }
             case 2 -> confirmRoute(sp, npc);
             case 3 -> {
                 int idx = Math.max(0, Math.min(PATROL_SPEEDS.length - 1, value));
                 npc.setPatrolSpeed(PATROL_SPEEDS[idx]);
-                sp.displayClientMessage(Component.literal("Patrol speed: " + PATROL_SPEED_NAMES[idx] + ".").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Patrol speed: " + PATROL_SPEED_NAMES[idx] + ".").withStyle(ChatFormatting.GREEN));
             }
             case 4 -> {
                 int idx = Math.max(0, Math.min(PATROL_WAITS.length - 1, value));
                 npc.setPatrolWaitTicks(PATROL_WAITS[idx]);
-                sp.displayClientMessage(Component.literal("Waypoint wait: " + PATROL_WAIT_NAMES[idx] + ".").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Waypoint wait: " + PATROL_WAIT_NAMES[idx] + ".").withStyle(ChatFormatting.GREEN));
             }
             default -> { }
         }
@@ -303,28 +302,28 @@ public final class NotchNpcManager {
     public static void addWaypointAt(ServerPlayer sp, NotchNpcEntity npc, net.minecraft.core.BlockPos pos) {
         if (!guard(sp, npc)) return;
         if (npc.addWaypoint(pos)) {
-            sp.displayClientMessage(Component.literal("Waypoint " + npc.getWaypoints().size() + " added.")
-                    .withStyle(ChatFormatting.GREEN), true);
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(sp, Component.literal("Waypoint " + npc.getWaypoints().size() + " added.")
+                    .withStyle(ChatFormatting.GREEN));
         } else {
-            sp.displayClientMessage(Component.literal("Route is full (16 waypoints).").withStyle(ChatFormatting.RED), true);
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(sp, Component.literal("Route is full (16 waypoints).").withStyle(ChatFormatting.RED));
         }
     }
 
     public static void removeLastWaypoint(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         if (npc.removeLastWaypoint()) {
-            sp.displayClientMessage(Component.literal("Removed last waypoint (" + npc.getWaypoints().size() + " left).")
-                    .withStyle(ChatFormatting.YELLOW), true);
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(sp, Component.literal("Removed last waypoint (" + npc.getWaypoints().size() + " left).")
+                    .withStyle(ChatFormatting.YELLOW));
         } else {
-            sp.displayClientMessage(Component.literal("The route is already empty.").withStyle(ChatFormatting.YELLOW), true);
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(sp, Component.literal("The route is already empty.").withStyle(ChatFormatting.YELLOW));
         }
     }
 
     public static void confirmRoute(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         if (npc.getWaypoints().size() < 2) {
-            sp.displayClientMessage(Component.literal("Add at least 2 waypoints first (right-click the ground).")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Add at least 2 waypoints first (right-click the ground).")
+                    .withStyle(ChatFormatting.YELLOW));
             return;
         }
         int removed = 0;
@@ -337,9 +336,9 @@ public final class NotchNpcManager {
             }
         }
         npc.setBehavior(NotchNpcEntity.Behavior.PATROL);
-        sp.displayClientMessage(Component.literal("Route confirmed - " + npc.getWaypoints().size()
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Route confirmed - " + npc.getWaypoints().size()
                 + " waypoints, patrol started." + (removed > 0 ? " The route tool vanished." : ""))
-                .withStyle(ChatFormatting.GREEN), false);
+                .withStyle(ChatFormatting.GREEN));
     }
 
     // ---- dialogue setup ----
@@ -370,19 +369,19 @@ public final class NotchNpcManager {
     public static void createDialogueTemplate(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         npc.setDialogue(buildStarterTree(npc));
-        sp.displayClientMessage(Component.literal("Starter dialogue created - talk to the NPC to try it.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Starter dialogue created - talk to the NPC to try it.").withStyle(ChatFormatting.GREEN));
     }
 
     public static void clearDialogue(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         npc.getDialogue().clear();
-        sp.displayClientMessage(Component.literal("Dialogue cleared.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Dialogue cleared.").withStyle(ChatFormatting.GREEN));
     }
 
     public static void openStudio(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         var tree = npc.getDialogue().isEmpty() ? buildStarterTree(npc) : npc.getDialogue();
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeNbt(tree.toNbt());
         Net.sendToClient(sp, NotchPackets.NPC_STUDIO_DATA, buf);
@@ -395,7 +394,7 @@ public final class NotchNpcManager {
         if (treeNbt == null) return;
         var tree = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(treeNbt);
         if (tree.size() > 64) {
-            sp.displayClientMessage(Component.literal("That dialogue is too large (max 64 pages).").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That dialogue is too large (max 64 pages).").withStyle(ChatFormatting.RED));
             return;
         }
         var clean = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
@@ -414,21 +413,21 @@ public final class NotchNpcManager {
             clean.put(node);
         }
         if (strippedCommands) {
-            sp.displayClientMessage(Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
         clean.setStartId(tree.startId());
         if (clean.get(clean.startId()) == null && clean.size() > 0) {
             clean.setStartId(clean.nodes().keySet().iterator().next()); // start page was dropped
         }
         npc.setDialogue(clean);
-        sp.displayClientMessage(Component.literal("Dialogue saved (" + clean.size() + " page" + (clean.size() == 1 ? "" : "s") + ").")
-                .withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Dialogue saved (" + clean.size() + " page" + (clean.size() == 1 ? "" : "s") + ").")
+                .withStyle(ChatFormatting.GREEN));
     }
 
     public static void openActions(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeNbt(npc.getActions().toNbt());
         Net.sendToClient(sp, NotchPackets.NPC_ACTIONS_DATA, buf);
@@ -455,16 +454,16 @@ public final class NotchNpcManager {
             actions.set(trigger, kept);
         }
         if (stripped) {
-            sp.displayClientMessage(Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
         npc.setActions(actions);
-        sp.displayClientMessage(Component.literal("Reactions saved.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Reactions saved.").withStyle(ChatFormatting.GREEN));
     }
 
     public static void openSchedule(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         // Whether a schedule can run here at all. Sent with the data so the screen can explain itself
         // instead of the owner building a whole day that silently never advances.
@@ -501,17 +500,17 @@ public final class NotchNpcManager {
         schedule.setEntries(cleaned);
 
         if (stripped) {
-            sp.displayClientMessage(Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Actions that hand out coins, items or run commands were removed - those are admin-only.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
         npc.setSchedule(schedule);
         int broken = schedule.brokenCount();
         if (broken > 0) {
-            sp.displayClientMessage(Component.literal("Schedule saved. " + broken
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Schedule saved. " + broken
                             + (broken == 1 ? " entry still needs a spot." : " entries still need a spot."))
-                    .withStyle(ChatFormatting.YELLOW), false);
+                    .withStyle(ChatFormatting.YELLOW));
         } else {
-            sp.displayClientMessage(Component.literal("Schedule saved.").withStyle(ChatFormatting.GREEN), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Schedule saved.").withStyle(ChatFormatting.GREEN));
         }
     }
 
@@ -519,7 +518,7 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         var entry = npc.getSchedule().get(entryIndex);
         if (entry == null) {
-            sp.displayClientMessage(Component.literal("That schedule entry is gone.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That schedule entry is gone.").withStyle(ChatFormatting.RED));
             return;
         }
         // Clear any tool from a previous attempt first. Opening the picker, changing your mind and
@@ -535,10 +534,10 @@ public final class NotchNpcManager {
             sp.drop(tool, false);
         }
         boolean bed = entry.stance() == net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.SLEEP;
-        sp.displayClientMessage(Component.literal(bed
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(bed
                         ? "Right-click the bed for the " + entry.clock() + " entry. Right-click the air to cancel."
                         : "Right-click the spot for the " + entry.clock() + " entry. Right-click the air to cancel.")
-                .withStyle(ChatFormatting.GREEN), false);
+                .withStyle(ChatFormatting.GREEN));
     }
 
     public static void setScheduleAnchor(ServerPlayer sp, NotchNpcEntity npc, int entryIndex,
@@ -547,14 +546,14 @@ public final class NotchNpcManager {
         var schedule = npc.getSchedule();
         var entry = schedule.get(entryIndex);
         if (entry == null) {
-            sp.displayClientMessage(Component.literal("That schedule entry is gone.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That schedule entry is gone.").withStyle(ChatFormatting.RED));
             return;
         }
         var entries = new java.util.ArrayList<>(schedule.entries());
         entries.set(entryIndex, entry.withAnchor(pos, facing));
         schedule.setEntries(entries);
         npc.setSchedule(schedule);
-        sp.displayClientMessage(Component.literal("Spot set for the " + entry.clock() + " entry.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Spot set for the " + entry.clock() + " entry.").withStyle(ChatFormatting.GREEN));
         openSchedule(sp, npc);
     }
 
@@ -590,7 +589,7 @@ public final class NotchNpcManager {
         if (!cleaned.isEmpty()) {
             net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(cleaned);
             if (id == null || !net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(id)) {
-                sp.displayClientMessage(Component.literal("No sound called '" + cleaned + "'.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No sound called '" + cleaned + "'.").withStyle(ChatFormatting.RED));
                 cleaned = npc.getVoice();
             }
         }
@@ -612,7 +611,7 @@ public final class NotchNpcManager {
             removeLinkedShop(sp, npc.getUUID());
         }
         seedRoleEntryChoice(sp, npc);
-        sp.displayClientMessage(Component.literal("Role set to " + role.name() + ".").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Role set to " + role.name() + ".").withStyle(ChatFormatting.GREEN));
     }
 
     private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueChoice roleEntryChoice(NotchNpcEntity npc) {
@@ -642,10 +641,10 @@ public final class NotchNpcManager {
             }
         }
         start.withChoice(roleEntryChoice(npc));
-        sp.displayClientMessage(Component.literal("Added a \""
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Added a \""
                 + net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch.entryLabel(npc.getRole())
                 + "\" choice to its dialogue: edit or remove it in the Studio.")
-                .withStyle(ChatFormatting.YELLOW), false);
+                .withStyle(ChatFormatting.YELLOW));
     }
 
     public static void setFarewell(ServerPlayer sp, NotchNpcEntity npc, String text) {
@@ -653,8 +652,8 @@ public final class NotchNpcManager {
         String trimmed = text == null ? "" : text.trim();
         if (trimmed.length() > 150) trimmed = trimmed.substring(0, 150);
         npc.setFarewellText(trimmed);
-        sp.displayClientMessage(Component.literal(trimmed.isEmpty() ? "Goodbye line cleared." : "Goodbye line saved.")
-                .withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(trimmed.isEmpty() ? "Goodbye line cleared." : "Goodbye line saved.")
+                .withStyle(ChatFormatting.GREEN));
     }
 
     public static void setName(ServerPlayer sp, NotchNpcEntity npc, String name) {
@@ -669,7 +668,7 @@ public final class NotchNpcManager {
             npc.setCustomName(Component.literal(NpcText.colorize(trimmed)));
             npc.setCustomNameVisible(true);
         }
-        sp.displayClientMessage(Component.literal("NPC name updated.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC name updated.").withStyle(ChatFormatting.GREEN));
     }
 
     public static void pickUp(ServerPlayer sp, NotchNpcEntity npc) {
@@ -683,14 +682,14 @@ public final class NotchNpcManager {
         if (!sp.getInventory().add(stack)) {
             sp.drop(stack, false);
         }
-        sp.displayClientMessage(Component.literal("Picked up the NPC - place the item to set it down again.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Picked up the NPC - place the item to set it down again.").withStyle(ChatFormatting.GREEN));
     }
 
     public static void delete(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
         removeLinkedShop(sp, npc.getUUID());
         npc.discard();
-        sp.displayClientMessage(Component.literal("NPC deleted.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC deleted.").withStyle(ChatFormatting.GREEN));
     }
 
     // ---- shop linkage (SHOP role) ----
@@ -717,7 +716,7 @@ public final class NotchNpcManager {
 
     static boolean guard(ServerPlayer sp, NotchNpcEntity npc) {
         if (npc.canEdit(sp)) return true;
-        sp.displayClientMessage(Component.literal("Only the owner can edit this NPC.").withStyle(ChatFormatting.RED), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the owner can edit this NPC.").withStyle(ChatFormatting.RED));
         return false;
     }
 }

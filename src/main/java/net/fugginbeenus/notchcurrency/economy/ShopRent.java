@@ -119,6 +119,6 @@ public final class ShopRent {
     private static void notify(MinecraftServer server, UUID owner, Component message) {
         if (!announce) return;
         ServerPlayer p = server.getPlayerList().getPlayer(owner);
-        if (p != null) p.displayClientMessage(message, false);
+        if (p != null) net.fugginbeenus.notchcurrency.compat.Msg.chat(p, message);
     }
 }

@@ -47,11 +47,11 @@ public final class AdminShopManager {
         *///?} else {
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         //?}
-        buyer.displayClientMessage(Component.literal("Bought ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(buyer, Component.literal("Bought ")
                 .append(Component.literal((qty * perBundle) + "x ").withStyle(ChatFormatting.WHITE))
                 .append(template.getHoverName())
                 .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
-                .append(NotchCurrency.coins(total)), false);
+                .append(NotchCurrency.coins(total)));
         return Result.SUCCESS;
     }
 
@@ -83,11 +83,11 @@ public final class AdminShopManager {
         *///?} else {
         seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
         //?}
-        seller.displayClientMessage(Component.literal("Sold ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(seller, Component.literal("Sold ")
                 .append(Component.literal(needed + "x ").withStyle(ChatFormatting.WHITE))
                 .append(template.getHoverName())
                 .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
-                .append(NotchCurrency.coins(total)), false);
+                .append(NotchCurrency.coins(total)));
         return Result.SUCCESS;
     }
 

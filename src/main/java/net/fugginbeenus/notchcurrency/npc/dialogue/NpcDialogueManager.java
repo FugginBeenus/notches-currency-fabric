@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.npc.dialogue;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -30,8 +29,8 @@ public final class NpcDialogueManager {
             DialogueNode pick = pages.get(sp.getRandom().nextInt(pages.size()));
             String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                     ? npc.getCustomName().getString() : "NPC";
-            sp.displayClientMessage(Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
-                    .withStyle(ChatFormatting.WHITE), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
+                    .withStyle(ChatFormatting.WHITE));
             if (hasRoleScreen(npc)) {
                 // Give the greeting a beat to be read before the GUI covers it.
                 pendingOpens.add(new PendingOpen(sp.getUUID(), npc.getUUID(), GREETING_DELAY_TICKS));
@@ -85,7 +84,7 @@ public final class NpcDialogueManager {
 
         // Reaching the role screen is a REAL choice with an OPEN_ROLE action (seeded by default for
         // role NPCs, but the author can edit or remove it), not a synthetic appended here.
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeUtf(npcName);
         buf.writeUtf(node.id());
@@ -166,8 +165,8 @@ public final class NpcDialogueManager {
                 if (inScreen) {
                     w.sawScreen = true;
                 } else if (w.sawScreen) {
-                    sp.displayClientMessage(Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
-                            .withStyle(ChatFormatting.WHITE), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
+                            .withStyle(ChatFormatting.WHITE));
                     it.remove();
                 }
             }
@@ -175,7 +174,7 @@ public final class NpcDialogueManager {
     }
 
     private static void sendClose(ServerPlayer sp) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(UUID.randomUUID());
         buf.writeUtf("");
         buf.writeUtf(""); // empty node id = close

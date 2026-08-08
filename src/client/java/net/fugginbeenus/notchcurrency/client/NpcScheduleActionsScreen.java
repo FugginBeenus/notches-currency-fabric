@@ -228,7 +228,7 @@ public class NpcScheduleActionsScreen extends Screen {
 
     private void say(String text) {
         if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(Component.literal(text).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, Component.literal(text).withStyle(ChatFormatting.RED));
         }
     }
 

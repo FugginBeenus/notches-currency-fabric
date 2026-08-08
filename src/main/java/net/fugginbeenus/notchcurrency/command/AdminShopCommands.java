@@ -197,7 +197,7 @@ public final class AdminShopCommands {
                 case INVALID_QUANTITY -> "Invalid quantity.";
                 default -> "Trade failed.";
             };
-            p.displayClientMessage(Component.literal(msg).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(msg).withStyle(ChatFormatting.RED));
             return 0;
         }
         return 1;

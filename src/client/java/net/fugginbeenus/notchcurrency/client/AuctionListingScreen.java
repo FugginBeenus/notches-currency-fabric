@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -167,11 +166,11 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         }
         if (price <= 0) {
             if (this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED));
             }
             return;
         }
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarLong(price);
         buf.writeVarInt(currentDays());
         NetClient.sendToServer(NotchPackets.AUCTION_LIST, buf);

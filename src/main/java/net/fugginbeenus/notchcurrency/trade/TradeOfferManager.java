@@ -31,11 +31,11 @@ public final class TradeOfferManager {
         }
         if (!leftover.isEmpty()) {
             state.returnMail(sp.getUUID(), leftover); // no room; keep for next time
-            sp.displayClientMessage(Component.literal("You have trade items waiting - free up inventory space to receive them.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You have trade items waiting - free up inventory space to receive them.")
+                    .withStyle(ChatFormatting.YELLOW));
         }
         if (items.size() != leftover.size()) {
-            sp.displayClientMessage(Component.literal("Received items from a completed trade offer.").withStyle(ChatFormatting.GREEN), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Received items from a completed trade offer.").withStyle(ChatFormatting.GREEN));
         }
     }
 
@@ -43,12 +43,12 @@ public final class TradeOfferManager {
                                       long price, List<ItemStack> requested, String targetName) {
         TradeOfferState state = TradeOfferState.get(creator.level().getServer());
         if (state.countBy(creator.getUUID()) >= MAX_PER_PLAYER) {
-            creator.displayClientMessage(Component.literal("You already have " + MAX_PER_PLAYER + " open offers.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("You already have " + MAX_PER_PLAYER + " open offers.").withStyle(ChatFormatting.RED));
             return false;
         }
         if (offeredCoins > 0) {
             if (BalanceStore.get(creator) < offeredCoins) {
-                creator.displayClientMessage(Component.literal("You don't have " + offeredCoins + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to attach.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("You don't have " + offeredCoins + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to attach.").withStyle(ChatFormatting.RED));
                 return false;
             }
             BalanceStore.subtract(creator, offeredCoins, TransactionReason.TRADE, "trade offer escrow");
@@ -58,8 +58,8 @@ public final class TradeOfferManager {
                 creator.getName().getString(), targetName, copyAll(offered), offeredCoins, price,
                 copyAll(requested), creator.level().getGameTime());
         state.add(offer);
-        creator.displayClientMessage(Component.literal("Trade offer created" + (offer.isOpen() ? " (open to anyone)."
-                : " for " + targetName + ".")).withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("Trade offer created" + (offer.isOpen() ? " (open to anyone)."
+                : " for " + targetName + ".")).withStyle(ChatFormatting.GREEN));
         return true;
     }
 
@@ -67,27 +67,27 @@ public final class TradeOfferManager {
         TradeOfferState state = TradeOfferState.get(accepter.level().getServer());
         TradeOffer offer = state.get(offerId);
         if (offer == null) {
-            accepter.displayClientMessage(Component.literal("That offer is no longer available.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("That offer is no longer available.").withStyle(ChatFormatting.RED));
             return false;
         }
         if (offer.creatorUuid().equals(accepter.getUUID())) {
-            accepter.displayClientMessage(Component.literal("You can't accept your own offer.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("You can't accept your own offer.").withStyle(ChatFormatting.RED));
             return false;
         }
         if (!offer.acceptableBy(accepter.getName().getString())) {
-            accepter.displayClientMessage(Component.literal("This offer isn't directed at you.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("This offer isn't directed at you.").withStyle(ChatFormatting.RED));
             return false;
         }
         // Verify the accepter can pay (coins + every requested stack, totals merged by item type).
         if (offer.priceCoins() > 0 && BalanceStore.get(accepter) < offer.priceCoins()) {
-            accepter.displayClientMessage(Component.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").withStyle(ChatFormatting.RED));
             return false;
         }
         List<ItemStack> wants = aggregate(offer.requestedItems());
         for (ItemStack want : wants) {
             if (countInInventory(accepter, want) < want.getCount()) {
-                accepter.displayClientMessage(Component.literal("You need " + want.getCount() + "x "
-                        + want.getHoverName().getString() + " for this trade.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("You need " + want.getCount() + "x "
+                        + want.getHoverName().getString() + " for this trade.").withStyle(ChatFormatting.RED));
                 return false;
             }
         }
@@ -114,16 +114,16 @@ public final class TradeOfferManager {
             NotchPackets.sendBalance(accepter, BalanceStore.get(accepter));
         }
         accepter.playSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.2F);
-        accepter.displayClientMessage(Component.literal("Trade complete - received ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("Trade complete - received ")
                 .append(Component.literal(offer.summary()).withStyle(ChatFormatting.YELLOW))
-                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN), false);
+                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN));
 
         // Notify the creator if online.
         ServerPlayer creator = server.getPlayerList().getPlayer(offer.creatorUuid());
         if (creator != null) {
-            creator.displayClientMessage(Component.literal(accepter.getName().getString() + " accepted your trade offer for ")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal(accepter.getName().getString() + " accepted your trade offer for ")
                     .append(Component.literal(offer.summary()).withStyle(ChatFormatting.YELLOW))
-                    .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN), false);
+                    .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN));
         }
 
         state.remove(offerId);
@@ -134,7 +134,7 @@ public final class TradeOfferManager {
         TradeOfferState state = TradeOfferState.get(creator.level().getServer());
         TradeOffer offer = state.get(offerId);
         if (offer == null || !offer.creatorUuid().equals(creator.getUUID())) {
-            creator.displayClientMessage(Component.literal("That isn't one of your offers.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("That isn't one of your offers.").withStyle(ChatFormatting.RED));
             return false;
         }
         for (ItemStack st : offer.offeredItems()) {
@@ -145,7 +145,7 @@ public final class TradeOfferManager {
             NotchPackets.sendBalance(creator, BalanceStore.get(creator));
         }
         state.remove(offerId);
-        creator.displayClientMessage(Component.literal("Offer cancelled - your items were returned.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("Offer cancelled - your items were returned.").withStyle(ChatFormatting.GREEN));
         return true;
     }
 

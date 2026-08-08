@@ -176,7 +176,7 @@ public class LedgerBoardBlock extends Block implements EntityBlock {
         }
         if (player instanceof ServerPlayer sp) {
             for (Component line : EconomyLeaderboard.topLines(sp.level().getServer(), TOP_LIMIT)) {
-                sp.displayClientMessage(line, false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, line);
             }
         }
         return InteractionResult.CONSUME;

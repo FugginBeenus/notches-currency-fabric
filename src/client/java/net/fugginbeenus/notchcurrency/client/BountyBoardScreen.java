@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -257,7 +256,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "bid")) return;
         NotchWidgets.click();
         UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "bid");
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(id);
         buf.writeVarInt(action);
         NetClient.sendToServer(NotchPackets.BOUNTY_ACTION, buf);

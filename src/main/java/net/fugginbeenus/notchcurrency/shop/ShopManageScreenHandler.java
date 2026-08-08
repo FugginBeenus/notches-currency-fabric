@@ -110,7 +110,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     public void handleAction(ServerPlayer sp, int action, String text, @Nullable UUID listingId) {
         if (shop == null) return;
         if (!shop.getOwnerId().equals(sp.getUUID())) {
-            sp.displayClientMessage(Component.literal("Only the shop owner can manage this shop.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the shop owner can manage this shop.").withStyle(ChatFormatting.RED));
             return;
         }
         ShopState state = ShopState.get(sp.serverLevel());
@@ -118,24 +118,24 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
             case ACTION_RENAME -> {
                 String name = clean(text, 32);
                 if (name.isEmpty()) {
-                    sp.displayClientMessage(Component.literal("Give the shop a name first.").withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Give the shop a name first.").withStyle(ChatFormatting.RED));
                     return;
                 }
                 shop.setShopName(name);
                 state.markDirtyAndSave();
-                sp.displayClientMessage(Component.literal("Shop renamed to '" + name + "'.").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Shop renamed to '" + name + "'.").withStyle(ChatFormatting.GREEN));
             }
             case ACTION_GREETING -> {
                 shop.setShopkeeperDialog(clean(text, 128));
                 state.markDirtyAndSave();
-                sp.displayClientMessage(Component.literal("Greeting updated.").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Greeting updated.").withStyle(ChatFormatting.GREEN));
             }
             case ACTION_TOGGLE_OPEN -> {
                 shop.setOpen(!shop.isOpen());
                 state.markDirtyAndSave();
-                sp.displayClientMessage(Component.literal(shop.isOpen() ? "Shop is now open for business."
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(shop.isOpen() ? "Shop is now open for business."
                         : "Shop closed - nobody can buy until you reopen it.")
-                        .withStyle(shop.isOpen() ? ChatFormatting.GREEN : ChatFormatting.YELLOW), false);
+                        .withStyle(shop.isOpen() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
             }
             case ACTION_EDIT_LISTING -> {
                 if (listingId != null && shop.getListing(listingId) != null) {
@@ -144,8 +144,8 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
             }
             case ACTION_NEW_LISTING -> {
                 if (shop.getListings().size() >= PlayerShop.MAX_LISTINGS) {
-                    sp.displayClientMessage(Component.literal("This shop is full (" + PlayerShop.MAX_LISTINGS + " listings).")
-                            .withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop is full (" + PlayerShop.MAX_LISTINGS + " listings).")
+                            .withStyle(ChatFormatting.RED));
                     return;
                 }
                 ShopListingEditScreenHandler.open(sp, shop, null);

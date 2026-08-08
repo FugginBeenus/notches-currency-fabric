@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.ui;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.NotchHud;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -281,7 +280,7 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
 
         if (amount <= 0) return;
 
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarInt(amount);
         NetClient.sendToServer(NotchPackets.ATM_WITHDRAW, buf);
     }

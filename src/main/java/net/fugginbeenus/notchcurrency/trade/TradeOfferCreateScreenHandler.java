@@ -64,12 +64,12 @@ public class TradeOfferCreateScreenHandler extends AbstractContainerMenu {
             if (!samples.getItem(GIVE_COUNT + i).isEmpty()) wanted.add(samples.getItem(GIVE_COUNT + i));
         }
         if (given.isEmpty() && giveCoins <= 0) {
-            sp.displayClientMessage(Component.literal("Put the items (and/or " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ") you're offering on the GIVE side.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Put the items (and/or " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ") you're offering on the GIVE side.")
+                    .withStyle(ChatFormatting.RED));
             return;
         }
         if (price <= 0 && wanted.isEmpty()) {
-            sp.displayClientMessage(Component.literal("Ask for " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " and/or items in return.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Ask for " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " and/or items in return.").withStyle(ChatFormatting.RED));
             return;
         }
         boolean created = TradeOfferManager.createOffer(sp, given, giveCoins, price, wanted, targetName);

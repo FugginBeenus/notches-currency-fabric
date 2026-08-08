@@ -52,7 +52,7 @@ public class Faction {
     }
 
     public void setColor(ChatFormatting color) {
-        if (color != null && color.isColor()) this.color = color;
+        if (color != null && net.fugginbeenus.notchcurrency.compat.Colors.isColor(color)) this.color = color;
     }
 
     public void setFounder(@Nullable UUID founder) { this.founder = founder; }
@@ -74,7 +74,7 @@ public class Faction {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("Id", id);
         nbt.putString("Name", displayName);
-        nbt.putString("Color", color.getName());
+        nbt.putString("Color", net.fugginbeenus.notchcurrency.compat.Colors.name(color));
         if (founder != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Founder", founder);
         nbt.putString("Motto", motto);
         nbt.putInt("JoinFee", joinFee);
@@ -86,11 +86,11 @@ public class Faction {
     public static Faction fromNbt(CompoundTag nbt) {
         String id = nbt.getString("Id");
         if (id == null || id.isBlank()) return null;
-        ChatFormatting color = ChatFormatting.getByName(nbt.getString("Color"));
+        ChatFormatting color = net.fugginbeenus.notchcurrency.compat.Colors.byName(nbt.getString("Color"));
         Faction f = new Faction(
                 id,
                 nbt.getString("Name").isBlank() ? id : nbt.getString("Name"),
-                color == null || !color.isColor() ? ChatFormatting.WHITE : color,
+                color == null || !net.fugginbeenus.notchcurrency.compat.Colors.isColor(color) ? ChatFormatting.WHITE : color,
                 net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(nbt, "Founder") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Founder") : null);
         f.setMotto(nbt.getString("Motto"));
         f.setJoinFee(nbt.getInt("JoinFee"));

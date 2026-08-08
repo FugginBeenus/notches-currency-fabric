@@ -2,7 +2,6 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler;
@@ -317,7 +316,7 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
             frozenBalance = bal;
             errorMsg = null;
             playSnd(SoundEvents.LEVER_CLICK, 0.8f);
-            FriendlyByteBuf buf = PacketByteBufs.create();
+            FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
             buf.writeVarLong(bet);
             NetClient.sendToServer(NotchPackets.SLOTS_SPIN, buf);
             return true;

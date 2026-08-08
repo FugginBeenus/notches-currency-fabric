@@ -110,7 +110,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
         if (id == 0) { // regenerate now
             persistDecrees(sp);
             BountyManager.regenerate(sp.level().getServer());
-            sp.displayClientMessage(Component.literal("Bounties regenerated."), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Bounties regenerated."));
             return true;
         }
         return false;

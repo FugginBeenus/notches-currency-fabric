@@ -73,7 +73,7 @@ public class RoutePlannerItem extends Item {
             if (StackData.has(stack, ENTRY_KEY)) {
                 // Nothing to confirm when marking a single spot: this is the way to back out.
                 consume(sp, stack);
-                sp.displayClientMessage(Component.literal("Spot unchanged.").withStyle(ChatFormatting.GRAY), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Spot unchanged.").withStyle(ChatFormatting.GRAY));
                 NotchNpcManager.reopenScheduleFor(sp, stack);
             } else {
                 NotchNpcEntity npc = boundNpc(stack, (ServerLevel) world, sp);
@@ -169,14 +169,14 @@ public class RoutePlannerItem extends Item {
     private static NotchNpcEntity boundNpc(ItemStack stack, ServerLevel world, ServerPlayer sp) {
         UUID npcId = StackData.getUuid(stack, NPC_KEY);
         if (npcId == null) {
-            sp.displayClientMessage(Component.literal("This route tool isn't bound to an NPC - get one from the NPC editor.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This route tool isn't bound to an NPC - get one from the NPC editor.")
+                    .withStyle(ChatFormatting.RED));
             return null;
         }
         if (world.getEntity(npcId) instanceof NotchNpcEntity npc) {
             return npc;
         }
-        sp.displayClientMessage(Component.literal("Can't reach that NPC (unloaded or removed).").withStyle(ChatFormatting.RED), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Can't reach that NPC (unloaded or removed).").withStyle(ChatFormatting.RED));
         return null;
     }
 

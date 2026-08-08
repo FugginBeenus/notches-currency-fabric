@@ -98,7 +98,7 @@ public final class BountyManager {
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             int dropped = state.cleanupExpired(p.getUUID(), now);
             if (dropped > 0) {
-                p.displayClientMessage(Component.literal(dropped + " of your bounties expired.").withStyle(ChatFormatting.GRAY), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(dropped + " of your bounties expired.").withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -113,25 +113,25 @@ public final class BountyManager {
 
         Bounty offer = state.getOffer(offerId);
         if (offer == null || offer.isExpired(now)) {
-            player.displayClientMessage(Component.literal("That bounty is no longer available.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("That bounty is no longer available.").withStyle(ChatFormatting.RED));
             return;
         }
         if (state.hasTaken(player.getUUID(), offerId)) {
-            player.displayClientMessage(Component.literal("You've already taken that bounty.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You've already taken that bounty.").withStyle(ChatFormatting.RED));
             return;
         }
         if (state.takeCount(player.getUUID()) >= takeLimit) {
-            player.displayClientMessage(Component.literal("You can only carry " + takeLimit + " bounties at once - finish or wait one out.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You can only carry " + takeLimit + " bounties at once - finish or wait one out.")
+                    .withStyle(ChatFormatting.RED));
             return;
         }
 
         long deadline = durationTicks <= 0 ? 0 : now + durationTicks;
         state.take(player.getUUID(), new TakenBounty(offer, deadline, 0));
         long mins = durationTicks / 20L / 60L;
-        player.displayClientMessage(Component.literal("Took bounty: ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Took bounty: ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(offer.describe()).withStyle(offer.getRarity().color()))
-                .append(Component.literal(" - finish within " + mins + "m.").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" - finish within " + mins + "m.").withStyle(ChatFormatting.GREEN)));
         syncTracker(player);
     }
 
@@ -152,9 +152,9 @@ public final class BountyManager {
             state.setDirty();
             syncTracker(player);
             if (next >= b.getRequired()) {
-                player.displayClientMessage(Component.literal("✔ Bounty complete: ").withStyle(ChatFormatting.GREEN)
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("✔ Bounty complete: ").withStyle(ChatFormatting.GREEN)
                         .append(Component.literal(b.describe()).withStyle(b.getRarity().color()))
-                        .append(Component.literal(" - collect it at the board!").withStyle(ChatFormatting.GREEN)), false);
+                        .append(Component.literal(" - collect it at the board!").withStyle(ChatFormatting.GREEN)));
             }
         }
     }
@@ -183,14 +183,14 @@ public final class BountyManager {
         }
 
         if (count > 0) {
-            player.displayClientMessage(Component.literal("Collected " + count + " bount" + (count == 1 ? "y" : "ies") + "!")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Collected " + count + " bount" + (count == 1 ? "y" : "ies") + "!")
                     .withStyle(ChatFormatting.GREEN)
                     .append(totalCoins > 0 ? Component.literal(" (+").withStyle(ChatFormatting.GREEN)
                             .append(NotchCurrency.coins(totalCoins)).append(Component.literal(")").withStyle(ChatFormatting.GREEN))
-                            : Component.empty()), false);
+                            : Component.empty()));
             syncTracker(player);
         } else {
-            player.displayClientMessage(Component.literal("Nothing ready to collect.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Nothing ready to collect.").withStyle(ChatFormatting.GRAY));
         }
     }
 
@@ -202,16 +202,16 @@ public final class BountyManager {
 
         TakenBounty tb = state.getTaken(player.getUUID(), offerId);
         if (tb == null || tb.isExpired(now) || tb.bounty().getType() != BountyType.FETCH) {
-            player.displayClientMessage(Component.literal("That delivery isn't in your taken bounties.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("That delivery isn't in your taken bounties.").withStyle(ChatFormatting.RED));
             return;
         }
         Bounty b = tb.bounty();
         Item item = BuiltInRegistries.ITEM.get(b.getTarget());
         int have = countItem(player, item);
         if (have < b.getRequired()) {
-            player.displayClientMessage(Component.literal("You need " + b.getRequired() + " ").withStyle(ChatFormatting.RED)
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You need " + b.getRequired() + " ").withStyle(ChatFormatting.RED)
                     .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
-                    .append(Component.literal(" - you have " + have + ".").withStyle(ChatFormatting.RED)), false);
+                    .append(Component.literal(" - you have " + have + ".").withStyle(ChatFormatting.RED)));
             return;
         }
 
@@ -219,9 +219,9 @@ public final class BountyManager {
         giveReward(player, b);
         state.removeTaken(player.getUUID(), offerId);
         state.markOfferCompleted(player.getUUID(), offerId); // hide it from their board until it rotates
-        player.displayClientMessage(Component.literal("Delivered " + b.getRequired() + " ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Delivered " + b.getRequired() + " ").withStyle(ChatFormatting.GREEN)
                 .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(" - reward: " + b.rewardSummary() + "!").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" - reward: " + b.rewardSummary() + "!").withStyle(ChatFormatting.GREEN)));
         syncTracker(player);
     }
 
@@ -232,7 +232,7 @@ public final class BountyManager {
         long now = worldTime(server);
 
         var taken = state.getTakenAll(player.getUUID());
-        var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         int count = 0;
         for (TakenBounty tb : taken) {
             if (!tb.isExpired(now)) count++;

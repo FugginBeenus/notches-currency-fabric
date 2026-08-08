@@ -69,11 +69,11 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
     public boolean listFromInput(ServerPlayer sp, long price, int days) {
         ItemStack item = input.getItem(0);
         if (item.isEmpty()) {
-            sp.displayClientMessage(Component.literal("Put the item you want to list in the slot.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Put the item you want to list in the slot.").withStyle(ChatFormatting.RED));
             return false;
         }
         if (price <= 0) {
-            sp.displayClientMessage(Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Enter a price above 0.").withStyle(ChatFormatting.RED));
             return false;
         }
         if (!(sp.level() instanceof ServerLevel world)) return false;
@@ -81,7 +81,7 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
         long fee = AuctionConfig.listingFee(price);
         if (fee > 0) {
             if (BalanceStore.get(sp) < fee) {
-                sp.displayClientMessage(Component.literal("You need " + fee + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for the listing fee.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You need " + fee + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for the listing fee.").withStyle(ChatFormatting.RED));
                 return false;
             }
             BalanceStore.subtract(sp, fee, TransactionReason.SINK, "auction listing fee");
@@ -101,10 +101,10 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
         AuctionState state = AuctionState.get(world);
         state.addListing(world, sp, listed, price, AuctionCategories.classify(listed), durationTicks);
 
-        sp.displayClientMessage(Component.literal("Listed ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listed ").withStyle(ChatFormatting.GREEN)
                 .append(listed.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" for " + price + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()
-                        + (clampedDays > 0 ? " (" + clampedDays + "-day auction)." : " (buy now).")).withStyle(ChatFormatting.GREEN)), false);
+                        + (clampedDays > 0 ? " (" + clampedDays + "-day auction)." : " (buy now).")).withStyle(ChatFormatting.GREEN)));
         broadcastChanges();
         return true;
     }

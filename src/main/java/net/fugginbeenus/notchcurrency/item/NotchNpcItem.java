@@ -69,9 +69,9 @@ public class NotchNpcItem extends Item {
             stack.shrink(1);
         }
         if (player instanceof ServerPlayer sp) {
-            sp.displayClientMessage(Component.literal("NPC placed. ").withStyle(ChatFormatting.GREEN)
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC placed. ").withStyle(ChatFormatting.GREEN)
                     .append(Component.literal("Sneak + right-click").withStyle(ChatFormatting.YELLOW))
-                    .append(Component.literal(" it to configure.").withStyle(ChatFormatting.GREEN)), false);
+                    .append(Component.literal(" it to configure.").withStyle(ChatFormatting.GREEN)));
         }
         return InteractionResult.CONSUME;
     }

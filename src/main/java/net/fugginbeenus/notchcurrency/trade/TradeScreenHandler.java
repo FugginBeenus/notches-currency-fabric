@@ -2,7 +2,9 @@ package net.fugginbeenus.notchcurrency.trade;
 
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.world.Container;
+//? if <26.1 {
 import net.minecraft.world.ContainerListener;
+//?}
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -45,12 +47,14 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     private int invStart, invEnd;
     private int hotbarStart, hotbarEnd;
 
+    //? if <26.1 {
     private final ContainerListener selfListener = inv -> {
         if (session != null && inv == selfInv) {
             unreadySelfAndSync();   // <-- NEW
             mirrorSelfToPartner();
         }
     };
+    //?}
 
     // ---------- CLIENT constructor ----------
     public TradeScreenHandler(int containerId, Inventory inv) {
@@ -76,7 +80,11 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     }
 
     private void hookInventories() {
+        // 26.1 dropped container listeners. slotsChanged below already fires for this same container
+        // and runs the same two steps, so there it is simply the only path in.
+        //? if <26.1 {
         selfInv.addListener(selfListener);
+        //?}
     }
 
     private void buildSlots() {

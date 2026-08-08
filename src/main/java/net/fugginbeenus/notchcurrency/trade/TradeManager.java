@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -58,11 +57,11 @@ public final class TradeManager {
 
     public static void invite(ServerPlayer from, ServerPlayer to) {
         if (from == to) {
-            from.displayClientMessage(Component.literal("You cannot trade yourself.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("You cannot trade yourself.").withStyle(ChatFormatting.RED));
             return;
         }
         if (get(from.getUUID()) != null || get(to.getUUID()) != null) {
-            from.displayClientMessage(Component.literal("Either you or the target is already trading.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Either you or the target is already trading.").withStyle(ChatFormatting.RED));
             return;
         }
         TradeSession sess = new TradeSession(from, to);
@@ -78,15 +77,15 @@ public final class TradeManager {
                 Style.EMPTY.withColor(ChatFormatting.RED)
                         .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/trade decline " + from.getName().getString()))
         );
-        to.displayClientMessage(Component.literal(from.getName().getString() + " wants to trade: ")
-                .append(accept).append(Component.literal(" ")).append(decline), false);
-        from.displayClientMessage(Component.literal("Trade invite sent to " + to.getName().getString()).withStyle(ChatFormatting.GRAY), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(to, Component.literal(from.getName().getString() + " wants to trade: ")
+                .append(accept).append(Component.literal(" ")).append(decline));
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Trade invite sent to " + to.getName().getString()).withStyle(ChatFormatting.GRAY));
     }
 
     public static void accept(ServerPlayer target, String inviterName) {
         TradeSession sess = get(target.getUUID());
         if (sess == null || !sess.involves(inviterName)) {
-            target.displayClientMessage(Component.literal("No pending trade with " + inviterName + ".").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(target, Component.literal("No pending trade with " + inviterName + ".").withStyle(ChatFormatting.RED));
             return;
         }
         sess.openScreens();
@@ -225,13 +224,13 @@ public final class TradeManager {
         /* ---------- helpers ---------- */
 
         private void sendCancel(ServerPlayer p, String reason) {
-            var buf = PacketByteBufs.create();
+            var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
             buf.writeUtf(reason);
             Net.sendToClient(p, NotchPackets.TRADE_CANCEL, buf);
         }
 
         private void sendDone(ServerPlayer p) {
-            Net.sendToClient(p, NotchPackets.TRADE_COMPLETE, PacketByteBufs.empty());
+            Net.sendToClient(p, NotchPackets.TRADE_COMPLETE, net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
         }
     }
 }

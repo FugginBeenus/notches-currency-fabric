@@ -72,10 +72,10 @@ public final class WealthTax {
             if (p != null) {
                 NotchPackets.sendBalance(p, BalanceStore.get(p));
                 if (announce) {
-                    p.displayClientMessage(Component.literal("Wealth tax: ")
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Wealth tax: ")
                             .withStyle(ChatFormatting.GRAY)
                             .append(NotchCurrency.coins(tax))
-                            .append(Component.literal(" was deducted from your balance.").withStyle(ChatFormatting.GRAY)), false);
+                            .append(Component.literal(" was deducted from your balance.").withStyle(ChatFormatting.GRAY)));
                 }
             }
         }

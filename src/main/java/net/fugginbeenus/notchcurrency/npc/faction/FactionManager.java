@@ -100,10 +100,10 @@ public final class FactionManager {
             }
         }
         state.join(sp.getUUID(), factionId);
-        sp.displayClientMessage(Component.literal("You joined ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You joined ")
                 .withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(faction.displayName()).withStyle(faction.color()))
-                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
     }
 
     public static void leave(ServerPlayer sp) {
@@ -139,6 +139,6 @@ public final class FactionManager {
     }
 
     private static void msg(ServerPlayer sp, String text, ChatFormatting color) {
-        sp.displayClientMessage(Component.literal(text).withStyle(color), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(text).withStyle(color));
     }
 }

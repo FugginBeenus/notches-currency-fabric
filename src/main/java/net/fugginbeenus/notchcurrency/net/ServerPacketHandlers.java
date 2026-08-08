@@ -60,19 +60,19 @@ public final class ServerPacketHandlers {
                         net.fugginbeenus.notchcurrency.auction.AuctionListing l = state.getListing(listingId);
 
                         if (l == null) {
-                            sp.displayClientMessage(Component.literal("That listing is no longer available.").withStyle(ChatFormatting.RED), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That listing is no longer available.").withStyle(ChatFormatting.RED));
                             return;
                         }
                         if (!sp.getUUID().equals(l.sellerUuid)) {
-                            sp.displayClientMessage(Component.literal("Only the seller can cancel this listing.").withStyle(ChatFormatting.RED), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the seller can cancel this listing.").withStyle(ChatFormatting.RED));
                             return;
                         }
                         // Refund any standing bid before removing: bids escrow coins.
                         long refunded = state.refundHighestBid(world, l);
                         state.removeListing(listingId);
                         if (refunded > 0) {
-                            sp.displayClientMessage(Component.literal("The high bidder was refunded " + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                                    .withStyle(ChatFormatting.GRAY), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The high bidder was refunded " + refunded + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                                    .withStyle(ChatFormatting.GRAY));
                         }
 
                         ItemStack toReturn = l.stack.copy();
@@ -92,9 +92,9 @@ public final class ServerPacketHandlers {
                             sp.drop(toReturn, false);
                         }
 
-                        sp.displayClientMessage(Component.literal("Cancelled listing for ").withStyle(ChatFormatting.GREEN)
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Cancelled listing for ").withStyle(ChatFormatting.GREEN)
                                 .append(l.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
-                                .append(Component.literal(" - item returned.").withStyle(ChatFormatting.GREEN)), false);
+                                .append(Component.literal(" - item returned.").withStyle(ChatFormatting.GREEN)));
 
                         // Refresh the open Auction House so the popup updates live.
                         if (sp.containerMenu instanceof net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler ah) {
@@ -148,8 +148,8 @@ public final class ServerPacketHandlers {
                             // Turning it off cancels the raffle: wipe entries/pot/prize, void tickets,
                             // and hand the escrowed prize back to the admin.
                             net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.resetAndReturn(player);
-                            player.displayClientMessage(Component.literal("Raffle cancelled - entries & pot cleared, prize returned, tickets voided.")
-                                    .withStyle(ChatFormatting.YELLOW), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Raffle cancelled - entries & pot cleared, prize returned, tickets voided.")
+                                    .withStyle(ChatFormatting.YELLOW));
                             return;
                         }
 
@@ -165,7 +165,7 @@ public final class ServerPacketHandlers {
                             h.applyPrizeFromInput(player);
                         }
                         net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.refreshAllOnline(server);
-                        player.displayClientMessage(Component.literal("Raffle settings saved & applied.").withStyle(ChatFormatting.GREEN), false);
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Raffle settings saved & applied.").withStyle(ChatFormatting.GREEN));
                     });
                 }
         );
@@ -209,7 +209,7 @@ public final class ServerPacketHandlers {
                                 instanceof net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler h) {
                             h.persistDecrees(player);
                         }
-                        player.displayClientMessage(Component.literal("Bounty settings saved & applied.").withStyle(ChatFormatting.GREEN), false);
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Bounty settings saved & applied.").withStyle(ChatFormatting.GREEN));
                     });
                 }
         );
@@ -720,11 +720,8 @@ public final class ServerPacketHandlers {
                         // requested is a count of physical coin items, so it fits in int.
                         int toWithdraw = (int) Math.min(currentBal, requested);
                         if (toWithdraw <= 0) {
-                            sp.displayClientMessage(
-                                    Component.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
-                                            .withStyle(ChatFormatting.RED),
-                                    false
-                            );
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
+                                            .withStyle(ChatFormatting.RED));
                             return;
                         }
 
@@ -736,12 +733,9 @@ public final class ServerPacketHandlers {
                         // Give physical coins (prefer physical stacks)
                         CoinEconomy.give(sp, toWithdraw, false);
 
-                        sp.displayClientMessage(
-                                Component.literal("Withdrew " + toWithdraw + " ")
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Withdrew " + toWithdraw + " ")
                                         .append(NotchCurrency.coinIcon())
-                                        .withStyle(ChatFormatting.GREEN),
-                                false
-                        );
+                                        .withStyle(ChatFormatting.GREEN));
                     });
                 }
         );
@@ -775,7 +769,7 @@ public final class ServerPacketHandlers {
                                 case INSUFFICIENT_ITEMS -> "You don't have the required items!";
                                 default -> "Purchase failed.";
                             };
-                            sp.displayClientMessage(Component.literal(errorMsg).withStyle(ChatFormatting.RED), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(errorMsg).withStyle(ChatFormatting.RED));
                         }
                     });
                 }
@@ -794,12 +788,12 @@ public final class ServerPacketHandlers {
                         net.fugginbeenus.notchcurrency.shop.PlayerShop shop = state.getShop(shopId);
 
                         if (shop == null) {
-                            sp.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Shop not found!").withStyle(ChatFormatting.RED));
                             return;
                         }
 
                         if (!shop.getOwnerId().equals(sp.getUUID())) {
-                            sp.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
                             return;
                         }
 
@@ -843,10 +837,10 @@ public final class ServerPacketHandlers {
                                 message.append(Component.literal(totalItems + " barter items").withStyle(ChatFormatting.AQUA));
                             }
                             message.append(Component.literal(" from your shop!").withStyle(ChatFormatting.GREEN));
-                            sp.displayClientMessage(message, false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, message);
                             state.markDirtyAndSave();
                         } else {
-                            sp.displayClientMessage(Component.literal("No balance to withdraw.").withStyle(ChatFormatting.YELLOW), false);
+                            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No balance to withdraw.").withStyle(ChatFormatting.YELLOW));
                         }
                     });
                 }

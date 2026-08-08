@@ -45,14 +45,14 @@ public final class PlayerShopManager {
         );
 
         if (shop == null) {
-            player.displayClientMessage(Component.literal("You've reached the maximum number of shops (" + MAX_SHOPS_PER_PLAYER + ")!")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You've reached the maximum number of shops (" + MAX_SHOPS_PER_PLAYER + ")!")
+                    .withStyle(ChatFormatting.RED));
             return null;
         }
 
-        player.displayClientMessage(Component.literal("Created shop: ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Created shop: ")
                 .append(Component.literal(shopName).withStyle(ChatFormatting.GOLD))
-                .withStyle(ChatFormatting.GREEN), false);
+                .withStyle(ChatFormatting.GREEN));
 
         return shop;
     }
@@ -62,12 +62,12 @@ public final class PlayerShopManager {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            player.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop not found!").withStyle(ChatFormatting.RED));
             return false;
         }
 
         if (!shop.getOwnerId().equals(player.getUUID())) {
-            player.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
 
@@ -75,8 +75,8 @@ public final class PlayerShopManager {
         returnAllShopContents(player.level().getServer(), shop, player);
 
         state.deleteShop(shopId, player.getUUID());
-        player.displayClientMessage(Component.literal("Shop deleted. Everything has been returned to you.")
-                .withStyle(ChatFormatting.YELLOW), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop deleted. Everything has been returned to you.")
+                .withStyle(ChatFormatting.YELLOW));
 
         return true;
     }
@@ -88,24 +88,24 @@ public final class PlayerShopManager {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
-            owner.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
 
         if (!shop.canAddListing()) {
-            owner.displayClientMessage(Component.literal("Shop is full! Maximum " + PlayerShop.MAX_LISTINGS + " listings.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Shop is full! Maximum " + PlayerShop.MAX_LISTINGS + " listings.")
+                    .withStyle(ChatFormatting.RED));
             return false;
         }
 
         if (item == null || item.isEmpty()) {
-            owner.displayClientMessage(Component.literal("Invalid item!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Invalid item!").withStyle(ChatFormatting.RED));
             return false;
         }
 
         if (coinPrice < MIN_PRICE || coinPrice > MAX_PRICE) {
-            owner.displayClientMessage(Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                    .withStyle(ChatFormatting.RED));
             return false;
         }
 
@@ -118,12 +118,12 @@ public final class PlayerShopManager {
         shop.addListing(listing);
         state.markDirtyAndSave();
 
-        owner.displayClientMessage(Component.literal("Listed ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Listed ")
                 .append(Component.literal(stockAmount + "x ").withStyle(ChatFormatting.WHITE))
                 .append(item.getHoverName())
                 .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
                 .append(NotchCurrency.coins(coinPrice))
-                .append(Component.literal(" each").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" each").withStyle(ChatFormatting.GREEN)));
 
         return true;
     }
@@ -133,19 +133,19 @@ public final class PlayerShopManager {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
-            owner.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
 
         ShopListing listing = shop.getListing(listingId);
         if (listing == null) {
-            owner.displayClientMessage(Component.literal("Listing not found!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Listing not found!").withStyle(ChatFormatting.RED));
             return false;
         }
 
         // Verify item matches
         if (!StackData.canCombine(listing.getItemForSale(), items)) {
-            owner.displayClientMessage(Component.literal("Item doesn't match the listing!").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Item doesn't match the listing!").withStyle(ChatFormatting.RED));
             return false;
         }
 
@@ -153,10 +153,10 @@ public final class PlayerShopManager {
         listing.addStock(addAmount);
         state.markDirtyAndSave();
 
-        owner.displayClientMessage(Component.literal("Added ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Added ")
                 .append(Component.literal(addAmount + "x ").withStyle(ChatFormatting.WHITE))
                 .append(items.getHoverName())
-                .append(Component.literal(" to stock. Total: " + listing.getStockQuantity()).withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" to stock. Total: " + listing.getStockQuantity()).withStyle(ChatFormatting.GREEN)));
 
         return true;
     }
@@ -175,17 +175,17 @@ public final class PlayerShopManager {
         }
 
         if (newPrice < MIN_PRICE || newPrice > MAX_PRICE) {
-            owner.displayClientMessage(Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + ".")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Price must be between " + MIN_PRICE + " and " + MAX_PRICE + ".")
+                    .withStyle(ChatFormatting.RED));
             return false;
         }
 
         listing.setCoinPrice(newPrice);
         state.markDirtyAndSave();
 
-        owner.displayClientMessage(Component.literal("Price updated to ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Price updated to ")
                 .append(NotchCurrency.coins(newPrice))
-                .withStyle(ChatFormatting.GREEN), false);
+                .withStyle(ChatFormatting.GREEN));
 
         return true;
     }
@@ -208,12 +208,12 @@ public final class PlayerShopManager {
         state.markDirtyAndSave();
 
         if (requiredItem == null || requiredItem.isEmpty()) {
-            owner.displayClientMessage(Component.literal("Barter price removed.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Barter price removed.").withStyle(ChatFormatting.YELLOW));
         } else {
-            owner.displayClientMessage(Component.literal("Barter price set: ")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Barter price set: ")
                     .append(Component.literal(requiredCount + "x ").withStyle(ChatFormatting.WHITE))
                     .append(requiredItem.getHoverName())
-                    .withStyle(ChatFormatting.GREEN), false);
+                    .withStyle(ChatFormatting.GREEN));
         }
 
         return true;
@@ -241,7 +241,7 @@ public final class PlayerShopManager {
         shop.removeListing(listingId);
         state.markDirtyAndSave();
 
-        owner.displayClientMessage(Component.literal("Listing removed. Stock returned.").withStyle(ChatFormatting.YELLOW), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Listing removed. Stock returned.").withStyle(ChatFormatting.YELLOW));
         return true;
     }
 
@@ -352,7 +352,7 @@ public final class PlayerShopManager {
                         .append(barterItem.getHoverName());
             }
 
-            seller.displayClientMessage(message, false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(seller, message);
         }
         // (Offline owners: coins are already held in the shop's pending balance via
         //  recordSale() above, and are paid out when the owner withdraws or the shop closes.)
@@ -385,7 +385,7 @@ public final class PlayerShopManager {
                     .append(barterItem.getHoverName());
         }
 
-        buyer.displayClientMessage(buyerMessage, false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(buyer, buyerMessage);
 
         LOGGER.info("{} purchased {}x {} from {}'s shop",
                 buyer.getName().getString(), totalItems,
@@ -472,10 +472,10 @@ public final class PlayerShopManager {
                 giveItemsToPlayer(owner, item);
             }
             if (totalCurrency > 0 || !itemsToReturn.isEmpty()) {
-                owner.displayClientMessage(Component.literal("Returned ")
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Returned ")
                         .append(NotchCurrency.coins(totalCurrency))
                         .append(Component.literal(" and " + itemsToReturn.size() + " item stack(s) from your shop.")
-                                .withStyle(ChatFormatting.YELLOW)), false);
+                                .withStyle(ChatFormatting.YELLOW)));
             }
         }
 

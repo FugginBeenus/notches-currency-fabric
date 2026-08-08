@@ -58,18 +58,18 @@ public final class ShopCommands {
                                     var shops = state.getShopsByOwner(p.getUUID());
 
                                     if (shops.isEmpty()) {
-                                        p.displayClientMessage(Component.literal("You don't have any shops. Use /shop create <name> to create one.")
-                                                .withStyle(ChatFormatting.YELLOW), false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You don't have any shops. Use /shop create <name> to create one.")
+                                                .withStyle(ChatFormatting.YELLOW));
                                         return 0;
                                     }
 
-                                    p.displayClientMessage(Component.literal("Your Shops:").withStyle(ChatFormatting.GOLD), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Your Shops:").withStyle(ChatFormatting.GOLD));
                                     for (var shop : shops) {
                                         String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
                                         int listings = shop.getListings().size();
-                                        p.displayClientMessage(Component.literal(" - " + shop.getShopName() + " [" + status + "§r] (" + listings + " items)")
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" - " + shop.getShopName() + " [" + status + "§r] (" + listings + " items)")
                                                 .append(Component.literal(" [" + shop.getShopId().toString().substring(0, 8) + "...]")
-                                                        .withStyle(ChatFormatting.GRAY)), false);
+                                                        .withStyle(ChatFormatting.GRAY)));
                                     }
                                     return 1;
                                 })
@@ -99,19 +99,19 @@ public final class ShopCommands {
                                     var shops = state.getAllOpenShops();
 
                                     if (shops.isEmpty()) {
-                                        p.displayClientMessage(Component.literal("No shops are currently open.")
-                                                .withStyle(ChatFormatting.YELLOW), false);
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No shops are currently open.")
+                                                .withStyle(ChatFormatting.YELLOW));
                                         return 0;
                                     }
 
-                                    p.displayClientMessage(Component.literal("Open Shops:").withStyle(ChatFormatting.GOLD), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Open Shops:").withStyle(ChatFormatting.GOLD));
                                     for (var shop : shops) {
                                         int listings = shop.getInStockListings().size();
-                                        p.displayClientMessage(Component.literal(" - " + shop.getShopName() + " by " + shop.getOwnerName() + " (" + listings + " items)")
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" - " + shop.getShopName() + " by " + shop.getOwnerName() + " (" + listings + " items)")
                                                 .append(Component.literal(" [" + shop.getShopId().toString().substring(0, 8) + "...]")
-                                                        .withStyle(ChatFormatting.GRAY)), false);
+                                                        .withStyle(ChatFormatting.GRAY)));
                                     }
-                                    p.displayClientMessage(Component.literal("Use /shop visit <id> to browse a shop.").withStyle(ChatFormatting.YELLOW), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Use /shop visit <id> to browse a shop.").withStyle(ChatFormatting.YELLOW));
                                     return 1;
                                 })
                         )
@@ -130,12 +130,12 @@ public final class ShopCommands {
                                             var shop = state.getShop(shopId);
 
                                             if (shop == null) {
-                                                p.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop not found!").withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
                                             if (!shop.isOpen() && !shop.getOwnerId().equals(p.getUUID())) {
-                                                p.displayClientMessage(Component.literal("This shop is currently closed.").withStyle(ChatFormatting.RED), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("This shop is currently closed.").withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
@@ -183,10 +183,10 @@ public final class ShopCommands {
                                                 state.markDirtyAndSave();
 
                                                 var shop = state.getShop(shopId);
-                                                p.displayClientMessage(Component.literal("✓ Linked NPC to shop: " + (shop != null ? shop.getShopName() : shopId)).withStyle(ChatFormatting.GREEN), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Linked NPC to shop: " + (shop != null ? shop.getShopName() : shopId)).withStyle(ChatFormatting.GREEN));
                                                 return 1;
                                             } else {
-                                                p.displayClientMessage(Component.literal("Look at an NPC to link it!").withStyle(ChatFormatting.RED), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Look at an NPC to link it!").withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
                                         })
@@ -207,7 +207,7 @@ public final class ShopCommands {
                                             var shop = state.getShop(shopId);
 
                                             if (shop == null || !shop.getOwnerId().equals(p.getUUID())) {
-                                                p.displayClientMessage(Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
@@ -215,7 +215,7 @@ public final class ShopCommands {
                                             state.markDirtyAndSave();
 
                                             String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
-                                            p.displayClientMessage(Component.literal("Shop is now: " + status), false);
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop is now: " + status));
                                             return 1;
                                         })
                                 )
@@ -235,28 +235,28 @@ public final class ShopCommands {
                                             var shops = state.getAllShops();
 
                                             if (shops.isEmpty()) {
-                                                p.displayClientMessage(Component.literal("No shops exist on this server.").withStyle(ChatFormatting.YELLOW), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No shops exist on this server.").withStyle(ChatFormatting.YELLOW));
                                                 return 0;
                                             }
 
-                                            p.displayClientMessage(Component.literal("=== All Shops (" + shops.size() + ") ===").withStyle(ChatFormatting.GOLD), false);
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("=== All Shops (" + shops.size() + ") ===").withStyle(ChatFormatting.GOLD));
                                             for (var shop : shops) {
                                                 String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
                                                 String npcStatus = shop.getLinkedNpcId() != null ? "§aLinked" : "§7No NPC";
                                                 // Line 1: Shop name and status
-                                                p.displayClientMessage(Component.literal(" • " + shop.getShopName())
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" • " + shop.getShopName())
                                                         .withStyle(ChatFormatting.WHITE)
                                                         .append(Component.literal(" [" + status + "§r] "))
-                                                        .append(Component.literal("[" + npcStatus + "§r]")), false);
+                                                        .append(Component.literal("[" + npcStatus + "§r]")));
                                                 // Line 2: Owner and ID (clickable to copy)
                                                 String fullId = shop.getShopId().toString();
-                                                p.displayClientMessage(Component.literal("   Owner: ").withStyle(ChatFormatting.GRAY)
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("   Owner: ").withStyle(ChatFormatting.GRAY)
                                                         .append(Component.literal(shop.getOwnerName()).withStyle(ChatFormatting.AQUA))
                                                         .append(Component.literal(" | ID: ").withStyle(ChatFormatting.GRAY))
                                                         .append(Component.literal(fullId).withStyle(ChatFormatting.DARK_GRAY)
                                                                 .withStyle(style -> style
                                                                         .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.copyToClipboard(fullId))
-                                                                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Click to copy ID"))))), false);
+                                                                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Click to copy ID"))))));
                                             }
                                             return 1;
                                         })
@@ -275,7 +275,7 @@ public final class ShopCommands {
 
                                                     var shop = state.getShop(shopId);
                                                     if (shop == null) {
-                                                        p.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
+                                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop not found!").withStyle(ChatFormatting.RED));
                                                         return 0;
                                                     }
 
@@ -293,8 +293,8 @@ public final class ShopCommands {
                                                     state.removeShop(shopId);
                                                     state.markDirtyAndSave();
 
-                                                    p.displayClientMessage(Component.literal("✓ Deleted shop: " + shop.getShopName() + " (owned by " + shop.getOwnerName() + ")")
-                                                            .withStyle(ChatFormatting.GREEN), false);
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Deleted shop: " + shop.getShopName() + " (owned by " + shop.getOwnerName() + ")")
+                                                            .withStyle(ChatFormatting.GREEN));
                                                     return 1;
                                                 })
                                         )
@@ -313,20 +313,20 @@ public final class ShopCommands {
 
                                                     var shop = state.getShop(shopId);
                                                     if (shop == null) {
-                                                        p.displayClientMessage(Component.literal("Shop not found!").withStyle(ChatFormatting.RED), false);
+                                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop not found!").withStyle(ChatFormatting.RED));
                                                         return 0;
                                                     }
 
-                                                    p.displayClientMessage(Component.literal("=== Shop Info ===").withStyle(ChatFormatting.GOLD), false);
-                                                    p.displayClientMessage(Component.literal("Name: " + shop.getShopName()), false);
-                                                    p.displayClientMessage(Component.literal("Owner: " + shop.getOwnerName() + " (" + shop.getOwnerId() + ")"), false);
-                                                    p.displayClientMessage(Component.literal("Shop ID: " + shop.getShopId()), false);
-                                                    p.displayClientMessage(Component.literal("Status: " + (shop.isOpen() ? "§aOPEN" : "§cCLOSED")), false);
-                                                    p.displayClientMessage(Component.literal("NPC: " + (shop.getLinkedNpcId() != null ? shop.getLinkedNpcId().toString() : "None")), false);
-                                                    p.displayClientMessage(Component.literal("Listings: " + shop.getListings().size()), false);
-                                                    p.displayClientMessage(Component.literal("Pending Balance: " + shop.getPendingBalance() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()), false);
-                                                    p.displayClientMessage(Component.literal("Total Revenue: " + shop.getTotalRevenue() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()), false);
-                                                    p.displayClientMessage(Component.literal("Total Transactions: " + shop.getTotalTransactions()), false);
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("=== Shop Info ===").withStyle(ChatFormatting.GOLD));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Name: " + shop.getShopName()));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Owner: " + shop.getOwnerName() + " (" + shop.getOwnerId() + ")"));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop ID: " + shop.getShopId()));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Status: " + (shop.isOpen() ? "§aOPEN" : "§cCLOSED")));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("NPC: " + (shop.getLinkedNpcId() != null ? shop.getLinkedNpcId().toString() : "None")));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Listings: " + shop.getListings().size()));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Pending Balance: " + shop.getPendingBalance() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Total Revenue: " + shop.getTotalRevenue() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Total Transactions: " + shop.getTotalTransactions()));
                                                     return 1;
                                                 })
                                         )
@@ -349,12 +349,12 @@ public final class ShopCommands {
                                                                     p.level().getServer(), shopId, newOwner.getUUID(), newOwner.getName().getString());
 
                                                             if (success) {
-                                                                p.displayClientMessage(Component.literal("✓ Transferred shop to " + newOwner.getName().getString())
-                                                                        .withStyle(ChatFormatting.GREEN), false);
-                                                                newOwner.displayClientMessage(Component.literal("You are now the owner of a shop!")
-                                                                        .withStyle(ChatFormatting.GREEN), false);
+                                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Transferred shop to " + newOwner.getName().getString())
+                                                                        .withStyle(ChatFormatting.GREEN));
+                                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(newOwner, Component.literal("You are now the owner of a shop!")
+                                                                        .withStyle(ChatFormatting.GREEN));
                                                             } else {
-                                                                p.displayClientMessage(Component.literal("Failed to transfer shop!").withStyle(ChatFormatting.RED), false);
+                                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Failed to transfer shop!").withStyle(ChatFormatting.RED));
                                                             }
                                                             return success ? 1 : 0;
                                                         })
@@ -368,15 +368,15 @@ public final class ShopCommands {
                                             ServerPlayer p = ctx.getSource().getPlayer();
                                             var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
 
-                                            p.displayClientMessage(Component.literal("⚠ Running orphan cleanup...").withStyle(ChatFormatting.YELLOW), false);
-                                            p.displayClientMessage(Component.literal("Note: Only NPCs in loaded chunks will be detected!").withStyle(ChatFormatting.GRAY), false);
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("⚠ Running orphan cleanup...").withStyle(ChatFormatting.YELLOW));
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Note: Only NPCs in loaded chunks will be detected!").withStyle(ChatFormatting.GRAY));
 
                                             int cleaned = state.cleanupOrphans(p.serverLevel());
 
                                             if (cleaned > 0) {
-                                                p.displayClientMessage(Component.literal("✓ Cleaned up " + cleaned + " orphaned NPC links.").withStyle(ChatFormatting.GREEN), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Cleaned up " + cleaned + " orphaned NPC links.").withStyle(ChatFormatting.GREEN));
                                             } else {
-                                                p.displayClientMessage(Component.literal("No orphaned links found.").withStyle(ChatFormatting.GREEN), false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No orphaned links found.").withStyle(ChatFormatting.GREEN));
                                             }
                                             return 1;
                                         })
@@ -418,7 +418,7 @@ public final class ShopCommands {
             }
         }
 
-        player.displayClientMessage(Component.literal("Shop not found: " + input).withStyle(ChatFormatting.RED), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop not found: " + input).withStyle(ChatFormatting.RED));
         return null;
     }
 
@@ -445,7 +445,7 @@ public final class ShopCommands {
             }
         }
 
-        player.displayClientMessage(Component.literal("Shop not found: " + input).withStyle(ChatFormatting.RED), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop not found: " + input).withStyle(ChatFormatting.RED));
         return null;
     }
 }

@@ -84,19 +84,19 @@ public final class FactionCommands {
         FactionState state = FactionState.get(sp.serverLevel());
         Faction faction = state.get(factionId);
         if (faction == null) {
-            sp.displayClientMessage(Component.literal("No faction by that name.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No faction by that name.").withStyle(ChatFormatting.RED));
             return 0;
         }
         if (!FactionManager.canManage(sp, faction)) {
-            sp.displayClientMessage(Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
             return 0;
         }
         // The id never changes: NPCs point at it, so renaming is display-only on purpose.
         faction.setDisplayName(name);
         state.touch();
-        sp.displayClientMessage(Component.literal("Renamed to ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Renamed to ")
                 .withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(faction.displayName()).withStyle(faction.color())), false);
+                .append(Component.literal(faction.displayName()).withStyle(faction.color())));
         return 1;
     }
 }

@@ -25,7 +25,10 @@ public final class BossCurrencyInject {
     private BossCurrencyInject() {}
 
     public static void init() {
-        //? if >=1.21 {
+        //? if >=26.1 {
+        /*LootTableEvents.MODIFY.register((key, table, source, registries) -> {
+            ResourceLocation id = key.location();
+        *///?} elif >=1.21 {
         /*LootTableEvents.MODIFY.register((key, table, source) -> {
             ResourceLocation id = key.location();
         *///?} else {

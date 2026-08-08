@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.npc.faction;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
@@ -27,11 +26,11 @@ public final class RecruiterManager {
         boolean mayAssign = npc.canEdit(sp);
         boolean canFound = mayAssign && faction == null && FactionManager.canFound(sp);
 
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeUtf(faction == null ? "" : faction.id());
         buf.writeUtf(faction == null ? "" : faction.displayName());
-        buf.writeUtf(faction == null ? ChatFormatting.WHITE.getName() : faction.color().getName());
+        buf.writeUtf(faction == null ? net.fugginbeenus.notchcurrency.compat.Colors.name(ChatFormatting.WHITE) : net.fugginbeenus.notchcurrency.compat.Colors.name(faction.color()));
         buf.writeVarInt(faction == null ? 0 : state.memberCount(faction.id()));
         buf.writeBoolean(faction != null && faction.id().equals(state.factionIdOf(sp.getUUID())));
         buf.writeBoolean(canFound);
@@ -55,21 +54,21 @@ public final class RecruiterManager {
         if (action == PICK_SET) {
             Faction faction = state.get(factionId);
             if (faction == null) {
-                sp.displayClientMessage(Component.literal("No faction by that name.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No faction by that name.").withStyle(ChatFormatting.RED));
                 return;
             }
             // Admins can point an NPC at anything; everyone else only at factions they founded.
             if (!FactionManager.canManage(sp, faction)) {
-                sp.displayClientMessage(Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
                 return;
             }
             npc.setFactionId(faction.id());
-            sp.displayClientMessage(Component.literal("")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("")
                     .append(Component.literal(faction.displayName()).withStyle(faction.color()))
-                    .append(Component.literal(" now flies here.").withStyle(ChatFormatting.GREEN)), false);
+                    .append(Component.literal(" now flies here.").withStyle(ChatFormatting.GREEN)));
         } else if (action == PICK_CLEAR) {
             npc.setFactionId("");
-            sp.displayClientMessage(Component.literal("Faction cleared.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Faction cleared.").withStyle(ChatFormatting.YELLOW));
         }
         sendList(sp, npc);
     }
@@ -81,14 +80,14 @@ public final class RecruiterManager {
         for (Faction f : state.all()) {
             if (FactionManager.canManage(sp, f)) offered.add(f);
         }
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeUtf(npc.getFactionId());
         buf.writeVarInt(offered.size());
         for (Faction f : offered) {
             buf.writeUtf(f.id());
             buf.writeUtf(f.displayName());
-            buf.writeUtf(f.color().getName());
+            buf.writeUtf(net.fugginbeenus.notchcurrency.compat.Colors.name(f.color()));
             buf.writeVarInt(state.memberCount(f.id()));
         }
         Net.sendToClient(sp, NotchPackets.NPC_FACTION_LIST, buf);
@@ -102,8 +101,8 @@ public final class RecruiterManager {
         switch (action) {
             case ACTION_JOIN -> {
                 if (!state.exists(factionId)) {
-                    sp.displayClientMessage(Component.literal("This recruiter isn't signed up to a faction yet.")
-                            .withStyle(ChatFormatting.YELLOW), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This recruiter isn't signed up to a faction yet.")
+                            .withStyle(ChatFormatting.YELLOW));
                     return;
                 }
                 FactionManager.join(sp, factionId);
@@ -112,17 +111,17 @@ public final class RecruiterManager {
             case ACTION_FOUND -> {
                 // Founding is an owner action on their own recruiter, and it re-checks the one-each rule.
                 if (!npc.canEdit(sp)) {
-                    sp.displayClientMessage(Component.literal("This isn't your recruiter.").withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This isn't your recruiter.").withStyle(ChatFormatting.RED));
                     return;
                 }
                 if (state.exists(npc.getFactionId())) {
-                    sp.displayClientMessage(Component.literal("This recruiter already represents a faction.")
-                            .withStyle(ChatFormatting.YELLOW), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This recruiter already represents a faction.")
+                            .withStyle(ChatFormatting.YELLOW));
                     return;
                 }
-                ChatFormatting chosen = ChatFormatting.getByName(color);
+                ChatFormatting chosen = net.fugginbeenus.notchcurrency.compat.Colors.byName(color);
                 Faction created = FactionManager.create(sp, name,
-                        chosen == null || !chosen.isColor() ? ChatFormatting.WHITE : chosen);
+                        chosen == null || !net.fugginbeenus.notchcurrency.compat.Colors.isColor(chosen) ? ChatFormatting.WHITE : chosen);
                 if (created != null) {
                     created.setJoinFee(fee);
                     created.setOpenToJoin(open);
@@ -133,16 +132,16 @@ public final class RecruiterManager {
             case ACTION_SETTINGS -> {
                 Faction faction = state.get(factionId);
                 if (faction == null || !FactionManager.canManage(sp, faction)) {
-                    sp.displayClientMessage(Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
                     return;
                 }
                 faction.setMotto(name); // the settings pane sends the motto in the name slot
                 faction.setJoinFee(fee);
                 faction.setOpenToJoin(open);
-                ChatFormatting chosen = ChatFormatting.getByName(color);
-                if (chosen != null && chosen.isColor()) faction.setColor(chosen);
+                ChatFormatting chosen = net.fugginbeenus.notchcurrency.compat.Colors.byName(color);
+                if (chosen != null && net.fugginbeenus.notchcurrency.compat.Colors.isColor(chosen)) faction.setColor(chosen);
                 state.touch();
-                sp.displayClientMessage(Component.literal("Saved.").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Saved.").withStyle(ChatFormatting.GREEN));
             }
             default -> { return; }
         }

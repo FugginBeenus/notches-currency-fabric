@@ -42,7 +42,7 @@ public final class NpcRoleDispatch {
             case ADMIN_SHOP -> {
                 AdminShop shop = target != null ? AdminShopState.get(server).get(target) : null;
                 if (shop == null) {
-                    sp.displayClientMessage(Component.literal("This shop NPC isn't linked to a valid shop.").withStyle(ChatFormatting.RED), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop NPC isn't linked to a valid shop.").withStyle(ChatFormatting.RED));
                 } else {
                     AdminShopMenu.sendListing(sp, shop);
                 }
@@ -98,14 +98,14 @@ public final class NpcRoleDispatch {
                 return;
             }
         }
-        sp.displayClientMessage(Component.literal("This NPC's job isn't installed on this server.").withStyle(ChatFormatting.GRAY), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This NPC's job isn't installed on this server.").withStyle(ChatFormatting.GRAY));
     }
 
     private static void openPlayerShop(ServerPlayer sp, @Nullable Entity npc) {
         if (npc == null) return;
         PlayerShop shop = ShopState.get(sp.serverLevel()).getShopByNpc(npc.getUUID());
         if (shop == null) {
-            sp.displayClientMessage(Component.literal("This shop hasn't been set up yet.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop hasn't been set up yet.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         if (shop.getOwnerId().equals(sp.getUUID())) {
@@ -118,7 +118,7 @@ public final class NpcRoleDispatch {
     private static void greet(ServerPlayer sp, @Nullable Entity npc) {
         String name = (npc != null && npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
-        sp.displayClientMessage(Component.literal("<" + name + "> Hello there!").withStyle(ChatFormatting.WHITE), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + name + "> Hello there!").withStyle(ChatFormatting.WHITE));
     }
 
     private static void openAtm(ServerPlayer sp) {

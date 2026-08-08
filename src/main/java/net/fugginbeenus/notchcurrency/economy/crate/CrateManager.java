@@ -37,32 +37,32 @@ public final class CrateManager {
 
     public static void open(ServerPlayer player, String crateType, ServerLevel world, BlockPos pos) {
         if (!enabled) {
-            player.displayClientMessage(Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED));
             return;
         }
         CrateDef def = CrateRegistry.get(crateType);
         if (def == null) {
-            player.displayClientMessage(Component.literal("This crate isn't configured.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This crate isn't configured.").withStyle(ChatFormatting.RED));
             return;
         }
         int keys = countKeys(player);
         if (keys < def.keysRequired()) {
-            player.displayClientMessage(Component.literal("You need " + def.keysRequired() + " key"
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You need " + def.keysRequired() + " key"
                     + (def.keysRequired() == 1 ? "" : "s") + " to open the " + def.name()
-                    + " (you have " + keys + ").").withStyle(ChatFormatting.RED), false);
+                    + " (you have " + keys + ").").withStyle(ChatFormatting.RED));
             showOdds(player, crateType);
             return;
         }
 
         CrateDef.LootEntry loot = CrateRegistry.roll(def, RNG);
         if (loot == null) {
-            player.displayClientMessage(Component.literal("This crate is empty.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This crate is empty.").withStyle(ChatFormatting.GRAY));
             return;
         }
         // Guard BEFORE keys are consumed: a bad datapack entry must never pay out "Air".
         if (loot.isItem() && !BuiltInRegistries.ITEM.containsKey(loot.itemId())) {
-            player.displayClientMessage(Component.literal("This crate is misconfigured (unknown item "
-                    + loot.itemId() + ") - check the server log.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This crate is misconfigured (unknown item "
+                    + loot.itemId() + ") - check the server log.").withStyle(ChatFormatting.RED));
             return;
         }
         consumeKeys(player, def.keysRequired());
@@ -81,18 +81,18 @@ public final class CrateManager {
 
         net.fugginbeenus.notchcurrency.block.CrateBlock.animateOpen(world, pos); // pop the lid
         effects(world, pos);
-        player.displayClientMessage(Component.literal("🎁 You opened the " + def.name() + " and won ").withStyle(ChatFormatting.GOLD)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("🎁 You opened the " + def.name() + " and won ").withStyle(ChatFormatting.GOLD)
                 .append(rewardText)
-                .append(Component.literal("!").withStyle(ChatFormatting.GOLD)), false);
+                .append(Component.literal("!").withStyle(ChatFormatting.GOLD)));
     }
 
     public static void showOdds(ServerPlayer player, String crateType) {
         CrateDef def = CrateRegistry.get(crateType);
         if (def == null) return;
         int total = def.totalWeight();
-        player.displayClientMessage(Component.literal("═══ " + def.name() + " - Odds ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
-        player.displayClientMessage(Component.literal("Cost: " + def.keysRequired() + " key" + (def.keysRequired() == 1 ? "" : "s"))
-                .withStyle(ChatFormatting.GRAY), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("═══ " + def.name() + " - Odds ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Cost: " + def.keysRequired() + " key" + (def.keysRequired() == 1 ? "" : "s"))
+                .withStyle(ChatFormatting.GRAY));
         for (CrateDef.LootEntry e : def.loot()) {
             String pct = total > 0 ? String.format("%.1f%%", 100.0 * e.weight() / total) : "0%";
             Component name;
@@ -102,9 +102,9 @@ public final class CrateManager {
             } else {
                 name = Component.literal(e.coins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()).withStyle(ChatFormatting.YELLOW);
             }
-            player.displayClientMessage(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(name)
-                    .append(Component.literal("  " + pct).withStyle(ChatFormatting.AQUA)), false);
+                    .append(Component.literal("  " + pct).withStyle(ChatFormatting.AQUA)));
         }
     }
 
@@ -112,20 +112,20 @@ public final class CrateManager {
 
     public static void buyKey(ServerPlayer player, int amount) {
         if (!enabled) {
-            player.displayClientMessage(Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED));
             return;
         }
         if (amount <= 0) return;
         long cost = keyPrice * amount;
         if (CurrencyApi.getBalance(player) < cost) {
-            player.displayClientMessage(Component.literal("You can't afford " + amount + " key" + (amount == 1 ? "" : "s") + " (")
-                    .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(cost)).append(Component.literal(").").withStyle(ChatFormatting.RED)), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You can't afford " + amount + " key" + (amount == 1 ? "" : "s") + " (")
+                    .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(cost)).append(Component.literal(").").withStyle(ChatFormatting.RED)));
             return;
         }
         CurrencyApi.withdraw(player, cost, TransactionReason.SINK, "crate keys x" + amount);
         giveKeys(player, amount);
-        player.displayClientMessage(Component.literal("Bought " + amount + " Crate Key" + (amount == 1 ? "" : "s") + " for ")
-                .withStyle(ChatFormatting.GREEN).append(NotchCurrency.coins(cost)).append(Component.literal(".").withStyle(ChatFormatting.GREEN)), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Bought " + amount + " Crate Key" + (amount == 1 ? "" : "s") + " for ")
+                .withStyle(ChatFormatting.GREEN).append(NotchCurrency.coins(cost)).append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
     }
 
     public static void giveKeys(ServerPlayer player, int amount) {

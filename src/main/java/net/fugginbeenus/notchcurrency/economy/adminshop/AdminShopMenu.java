@@ -13,10 +13,10 @@ public final class AdminShopMenu {
     private AdminShopMenu() {}
 
     public static void sendListing(ServerPlayer player, AdminShop shop) {
-        player.displayClientMessage(Component.literal("═══ " + shop.getName() + " ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("═══ " + shop.getName() + " ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 
         if (shop.getEntries().isEmpty()) {
-            player.displayClientMessage(Component.literal("This shop has no items yet.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This shop has no items yet.").withStyle(ChatFormatting.GRAY));
             return;
         }
 
@@ -42,11 +42,11 @@ public final class AdminShopMenu {
                 line.append(Component.literal(" ~").withStyle(ChatFormatting.AQUA)
                         .withStyle(s -> s.withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Dynamic price - moves with supply & demand")))));
             }
-            player.displayClientMessage(line, false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, line);
         }
-        player.displayClientMessage(Component.literal("(Prices in ").withStyle(ChatFormatting.DARK_GRAY)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("(Prices in ").withStyle(ChatFormatting.DARK_GRAY)
                 .append(NotchCurrency.coinIcon())
-                .append(Component.literal(". Click a button to trade 1 at a time.)").withStyle(ChatFormatting.DARK_GRAY)), false);
+                .append(Component.literal(". Click a button to trade 1 at a time.)").withStyle(ChatFormatting.DARK_GRAY)));
     }
 
     private static MutableComponent button(String label, ChatFormatting color, String command, String hover) {

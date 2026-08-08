@@ -128,11 +128,8 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
 
             if (withdrawn <= 0) {
                 // optional feedback if they don't have enough balance
-                sp.displayClientMessage(
-                        Component.literal("You don't have enough balance to withdraw that many Notch Coins.")
-                                .withStyle(ChatFormatting.RED),
-                        false
-                );
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have enough balance to withdraw that many Notch Coins.")
+                                .withStyle(ChatFormatting.RED));
             }
 
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));

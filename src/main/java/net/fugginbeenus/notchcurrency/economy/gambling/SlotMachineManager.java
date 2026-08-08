@@ -55,7 +55,7 @@ public final class SlotMachineManager {
 
     public static void openScreen(ServerPlayer sp) {
         if (!GamblingManager.isEnabled()) {
-            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED));
             return;
         }
         sp.openMenu(new SimpleMenuProvider(
@@ -69,16 +69,16 @@ public final class SlotMachineManager {
 
     public static SpinResult spin(ServerPlayer sp, long bet) {
         if (!GamblingManager.isEnabled()) {
-            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED));
             return SpinResult.fail();
         }
         if (!GamblingManager.betInRange(bet)) {
-            sp.displayClientMessage(Component.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Bet must be between " + GamblingManager.getMinBet()
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED));
             return SpinResult.fail();
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Slots bet")) {
-            sp.displayClientMessage(Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED));
             return SpinResult.fail();
         }
 

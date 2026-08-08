@@ -65,7 +65,7 @@ public final class RaffleManager {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (!enabled) {
-            player.displayClientMessage(Component.literal("The raffle isn't running right now.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("The raffle isn't running right now.").withStyle(ChatFormatting.RED));
             return;
         }
         if (qty <= 0) return;
@@ -76,18 +76,18 @@ public final class RaffleManager {
         if (maxTicketsPerPlayer > 0) {
             int have = state.getTickets(player.getUUID());
             if (have + qty > maxTicketsPerPlayer) {
-                player.displayClientMessage(Component.literal("You can hold at most " + maxTicketsPerPlayer
-                        + " entries this round (you have " + have + ").").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You can hold at most " + maxTicketsPerPlayer
+                        + " entries this round (you have " + have + ").").withStyle(ChatFormatting.RED));
                 return;
             }
         }
 
         long cost = ticketPrice * qty;
         if (CurrencyApi.getBalance(player) < cost) {
-            player.displayClientMessage(Component.literal("You can't afford " + qty + " entr" + (qty == 1 ? "y" : "ies") + " (")
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You can't afford " + qty + " entr" + (qty == 1 ? "y" : "ies") + " (")
                     .withStyle(ChatFormatting.RED)
                     .append(NotchCurrency.coins(cost))
-                    .append(Component.literal(").").withStyle(ChatFormatting.RED)), false);
+                    .append(Component.literal(").").withStyle(ChatFormatting.RED)));
             return;
         }
 
@@ -100,11 +100,11 @@ public final class RaffleManager {
         issueOrUpdateTicket(player, state);
 
         int have = state.getTickets(player.getUUID());
-        player.displayClientMessage(Component.literal("Bought ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Bought ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(qty + " entr" + (qty == 1 ? "y" : "ies")).withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(". You hold " + have + " (" + oddsString(state, have) + " to win). Pot: ").withStyle(ChatFormatting.GREEN))
                 .append(NotchCurrency.coins(state.getPot()))
-                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
 
         if (announce) {
             server.getPlayerList().broadcastSystemMessage(Component.literal(player.getName().getString()).withStyle(ChatFormatting.YELLOW)
@@ -118,14 +118,14 @@ public final class RaffleManager {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (!enabled || !redeemEnabled) {
-            player.displayClientMessage(Component.literal("There's no raffle to redeem into right now.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("There's no raffle to redeem into right now.").withStyle(ChatFormatting.RED));
             return;
         }
         refreshTickets(player);
         RaffleState state = RaffleState.get(server);
 
         if (state.hasRedeemed(player.getUUID())) {
-            player.displayClientMessage(Component.literal("You've already redeemed an old ticket this raffle.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You've already redeemed an old ticket this raffle.").withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -140,7 +140,7 @@ public final class RaffleManager {
             }
         }
         if (loserSlot < 0) {
-            player.displayClientMessage(Component.literal("You have no old losing tickets to redeem.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You have no old losing tickets to redeem.").withStyle(ChatFormatting.GRAY));
             return;
         }
 
@@ -153,10 +153,10 @@ public final class RaffleManager {
         issueOrUpdateTicket(player, state);
 
         int have = state.getTickets(player.getUUID());
-        player.displayClientMessage(Component.literal("Redeemed an old ticket (" + oldEntries + " entr" + (oldEntries == 1 ? "y" : "ies")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Redeemed an old ticket (" + oldEntries + " entr" + (oldEntries == 1 ? "y" : "ies")
                 + ") for ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(free + " free entr" + (free == 1 ? "y" : "ies")).withStyle(ChatFormatting.WHITE))
-                .append(Component.literal("! You now hold " + have + " (" + oddsString(state, have) + " to win).").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal("! You now hold " + have + " (" + oddsString(state, have) + " to win).").withStyle(ChatFormatting.GREEN)));
     }
 
     private static int redeemEntriesFor(int oldEntries) {
@@ -198,9 +198,9 @@ public final class RaffleManager {
 
         ServerPlayer online = server.getPlayerList().getPlayer(winnerId);
         if (online != null) {
-            online.displayClientMessage(Component.literal("🎉 You won Raffle #" + round + "! ").withStyle(ChatFormatting.GOLD)
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(online, Component.literal("🎉 You won Raffle #" + round + "! ").withStyle(ChatFormatting.GOLD)
                     .append(prizeDescription(prize, prizeItem))
-                    .append(Component.literal(" is waiting - claim it at the raffle or with /raffle claim.").withStyle(ChatFormatting.GOLD)), false);
+                    .append(Component.literal(" is waiting - claim it at the raffle or with /raffle claim.").withStyle(ChatFormatting.GOLD)));
         }
 
         if (broadcast && announce) {
@@ -223,7 +223,7 @@ public final class RaffleManager {
         RaffleState state = RaffleState.get(server);
         List<Result> wins = state.claimWins(player.getUUID());
         if (wins.isEmpty()) {
-            player.displayClientMessage(Component.literal("You have no raffle prizes to claim.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You have no raffle prizes to claim.").withStyle(ChatFormatting.GRAY));
             return;
         }
 
@@ -246,7 +246,7 @@ public final class RaffleManager {
         boolean anyItem = wins.stream().anyMatch(r -> !r.prizeItem.isEmpty());
         if (anyItem) msg.append(Component.literal(total > 0 ? " plus your prize item" : "your prize item").withStyle(ChatFormatting.GOLD));
         msg.append(Component.literal(wins.size() == 1 ? " from your winning ticket!" : " from " + wins.size() + " winning tickets!").withStyle(ChatFormatting.GOLD));
-        player.displayClientMessage(msg, false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, msg);
     }
 
     // ---- admin: prize item + opening the screen ----
@@ -261,8 +261,8 @@ public final class RaffleManager {
         if (held.isEmpty()) {
             state.setPrizeItem(ItemStack.EMPTY);
             if (!previous.isEmpty()) admin.getInventory().placeItemBackInInventory(previous);
-            admin.displayClientMessage(Component.literal(previous.isEmpty() ? "No prize was set."
-                    : "Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal(previous.isEmpty() ? "No prize was set."
+                    : "Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW));
             return;
         }
 
@@ -270,10 +270,10 @@ public final class RaffleManager {
         held.shrink(held.getCount()); // escrow the held stack
         state.setPrizeItem(prize);
         if (!previous.isEmpty()) admin.getInventory().placeItemBackInInventory(previous);
-        admin.displayClientMessage(Component.literal("Raffle prize set to ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("Raffle prize set to ").withStyle(ChatFormatting.GREEN)
                 .append(prize.getHoverName().copy().withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(prize.getCount() > 1 ? " x" + prize.getCount() : "").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal(previous.isEmpty() ? "." : " (previous prize returned).").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(previous.isEmpty() ? "." : " (previous prize returned).").withStyle(ChatFormatting.GREEN)));
     }
 
     public static void clearPrize(ServerPlayer admin) {
@@ -284,9 +284,9 @@ public final class RaffleManager {
         state.setPrizeItem(ItemStack.EMPTY);
         if (!previous.isEmpty()) {
             admin.getInventory().placeItemBackInInventory(previous);
-            admin.displayClientMessage(Component.literal("Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW));
         } else {
-            admin.displayClientMessage(Component.literal("No prize set.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("No prize set.").withStyle(ChatFormatting.YELLOW));
         }
     }
 
@@ -359,9 +359,9 @@ public final class RaffleManager {
         if (wins.isEmpty()) return;
         long total = 0L;
         for (Result r : wins) total += r.prize;
-        player.displayClientMessage(Component.literal("🎟 You have an unclaimed raffle prize of ").withStyle(ChatFormatting.GOLD)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("🎟 You have an unclaimed raffle prize of ").withStyle(ChatFormatting.GOLD)
                 .append(NotchCurrency.coins(total))
-                .append(Component.literal("! Use /raffle claim.").withStyle(ChatFormatting.GOLD)), false);
+                .append(Component.literal("! Use /raffle claim.").withStyle(ChatFormatting.GOLD)));
     }
 
     // ---- inventory helpers ----

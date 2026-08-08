@@ -56,10 +56,10 @@ public final class CurrencyPackGenerator {
             return;
         }
         remindedThisSession = true;
-        client.player.displayClientMessage(Component.literal("[Notch Currency] Custom coin art is ready - enable ")
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("[Notch Currency] Custom coin art is ready - enable ")
                 .withStyle(ChatFormatting.GOLD)
                 .append(Component.literal("\"NotchCurrencyCustom\"").withStyle(ChatFormatting.YELLOW))
-                .append(Component.literal(" in Options → Resource Packs to see it.").withStyle(ChatFormatting.GOLD)), false);
+                .append(Component.literal(" in Options → Resource Packs to see it.").withStyle(ChatFormatting.GOLD)));
     }
 
     private static Path target() {
@@ -191,9 +191,9 @@ public final class CurrencyPackGenerator {
                     client.options.updateResourcePacks(mgr);
                     client.reloadResourcePacks();
                 } else if (client.player != null) {
-                    client.player.displayClientMessage(Component.literal(
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal(
                             "[Notch Currency] This server has custom coin art - enable \"NotchCurrencyServer\" in Options → Resource Packs.")
-                            .withStyle(ChatFormatting.GOLD), false);
+                            .withStyle(ChatFormatting.GOLD));
                 }
             } else if (contentChanged) {
                 client.reloadResourcePacks();

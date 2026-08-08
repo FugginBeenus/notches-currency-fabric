@@ -51,7 +51,10 @@ public final class Chat {
     }
 
     public static HoverEvent showItem(ItemStack stack) {
-        //? if >=1.21.11 {
+        //? if >=26.1 {
+        /*return new HoverEvent.ShowItem(new net.minecraft.world.item.ItemStackTemplate(
+                stack.getItem(), stack.getCount()));
+        *///?} elif >=1.21.11 {
         /*return new HoverEvent.ShowItem(stack);
         *///?} else {
         return new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(stack));

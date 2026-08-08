@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.npc;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
@@ -44,7 +43,7 @@ public final class NpcPresetManager {
     private static void save(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         String name = sanitize(rawName);
         if (name.isEmpty()) {
-            sp.displayClientMessage(Component.literal("Give the preset a name first.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Give the preset a name first.").withStyle(ChatFormatting.RED));
             return;
         }
         CompoundTag tag = npc.writeToItem();
@@ -52,8 +51,8 @@ public final class NpcPresetManager {
         try {
             File file = dir().resolve(name + ".nbt").toFile();
             if (!file.isFile() && list().size() >= MAX_PRESETS) {
-                sp.displayClientMessage(Component.literal("Preset limit reached (" + MAX_PRESETS + ") - delete one first.")
-                        .withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Preset limit reached (" + MAX_PRESETS + ") - delete one first.")
+                        .withStyle(ChatFormatting.RED));
                 return;
             }
             //? if >=1.21 {
@@ -61,9 +60,9 @@ public final class NpcPresetManager {
             *///?} else {
             NbtIo.writeCompressed(tag, file);
             //?}
-            sp.displayClientMessage(Component.literal("Preset '" + name + "' saved.").withStyle(ChatFormatting.GREEN), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Preset '" + name + "' saved.").withStyle(ChatFormatting.GREEN));
         } catch (IOException e) {
-            sp.displayClientMessage(Component.literal("Couldn't save the preset: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't save the preset: " + e.getMessage()).withStyle(ChatFormatting.RED));
         }
     }
 
@@ -126,7 +125,7 @@ public final class NpcPresetManager {
 
     private static void msg(@Nullable ServerPlayer actor, String text, ChatFormatting color) {
         if (actor != null) {
-            actor.displayClientMessage(Component.literal(text).withStyle(color), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(actor, Component.literal(text).withStyle(color));
         }
     }
 
@@ -134,18 +133,18 @@ public final class NpcPresetManager {
         String name = sanitize(rawName);
         try {
             if (Files.deleteIfExists(dir().resolve(name + ".nbt"))) {
-                sp.displayClientMessage(Component.literal("Preset '" + name + "' deleted.").withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Preset '" + name + "' deleted.").withStyle(ChatFormatting.GREEN));
             } else {
-                sp.displayClientMessage(Component.literal("No preset named '" + name + "'.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No preset named '" + name + "'.").withStyle(ChatFormatting.RED));
             }
         } catch (IOException e) {
-            sp.displayClientMessage(Component.literal("Couldn't delete the preset: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't delete the preset: " + e.getMessage()).withStyle(ChatFormatting.RED));
         }
     }
 
     public static void sendList(ServerPlayer sp, NotchNpcEntity npc) {
         List<String> names = list();
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeVarInt(names.size());
         for (String n : names) {

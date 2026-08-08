@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler;
@@ -148,7 +147,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
     }
 
     private void save() {
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeBoolean(enabledToggle);
         buf.writeVarInt((int) parse(activeField.getValue(), 5));
         buf.writeVarInt((int) parse(limitField.getValue(), 3));

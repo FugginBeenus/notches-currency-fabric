@@ -102,7 +102,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         if (!EnchanterManager.enabled) return;
         ItemStack stack = input.getItem(0);
         if (stack.isEmpty()) {
-            sp.displayClientMessage(Component.literal("Put an item in the slot first.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Put an item in the slot first.").withStyle(ChatFormatting.RED));
             return;
         }
         switch (action) {
@@ -118,7 +118,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         if (plan == null) {
             String why = stack.isDamaged() ? "Repair it first - worn gear can't be salvaged for full parts."
                     : "That item has no crafting recipe to reverse.";
-            sp.displayClientMessage(Component.literal(why).withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(why).withStyle(ChatFormatting.YELLOW));
             return;
         }
         long cost = EnchanterManager.uncraftCost;
@@ -130,13 +130,13 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         }
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 0.8f);
-        sp.displayClientMessage(Component.literal("Uncrafted into its parts for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Uncrafted into its parts for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN));
     }
 
     private void repair(ServerPlayer sp, ItemStack stack) {
         long cost = EnchanterManager.repairCost(stack, EnchanterManager.repairFullCost);
         if (cost <= 0) {
-            sp.displayClientMessage(Component.literal("That item doesn't need repairs.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That item doesn't need repairs.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         if (!charge(sp, cost, "enchanter repair")) return;
@@ -144,9 +144,9 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         input.setChanged();
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.2f);
-        sp.displayClientMessage(Component.literal("Repaired ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Repaired ").withStyle(ChatFormatting.GREEN)
                 .append(stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
-                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)));
     }
 
     private void upgrade(ServerPlayer sp, ItemStack stack, String enchId) {
@@ -161,7 +161,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
             }
         }
         if (level < 0) {
-            sp.displayClientMessage(Component.literal("That enchantment can't go on this item.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That enchantment can't go on this item.").withStyle(ChatFormatting.RED));
             return;
         }
         long cost = EnchanterManager.upgradeCost(ench, level, EnchanterManager.pricing());
@@ -172,9 +172,9 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         input.setChanged();
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.8f, 1.0f);
-        sp.displayClientMessage(Component.literal("Applied ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Applied ").withStyle(ChatFormatting.GREEN)
                 .append(Ench.name(ench, level).copy().withStyle(ChatFormatting.LIGHT_PURPLE))
-                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" for " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)));
     }
 
     private void extract(ServerPlayer sp, ItemStack stack, String enchId) {
@@ -183,7 +183,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         Map<Enchantment, Integer> map = Ench.get(stack);
         Integer level = map.get(ench);
         if (level == null) {
-            sp.displayClientMessage(Component.literal("That enchantment isn't on this item.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That enchantment isn't on this item.").withStyle(ChatFormatting.RED));
             return;
         }
         long cost = EnchanterManager.extractPrice(ench, level, EnchanterManager.pricing());
@@ -195,9 +195,9 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         sp.getInventory().placeItemBackInInventory(book);
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 1.1f);
-        sp.displayClientMessage(Component.literal("Extracted ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Extracted ").withStyle(ChatFormatting.GREEN)
                 .append(Ench.name(ench, level).copy().withStyle(ChatFormatting.LIGHT_PURPLE))
-                .append(Component.literal(" onto a book.").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" onto a book.").withStyle(ChatFormatting.GREEN)));
     }
 
     @org.jetbrains.annotations.Nullable
@@ -209,7 +209,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
     private boolean charge(ServerPlayer sp, long cost, String detail) {
         if (cost <= 0) return true;
         if (BalanceStore.get(sp) < cost) {
-            sp.displayClientMessage(Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You need " + cost + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").withStyle(ChatFormatting.RED));
             return false;
         }
         BalanceStore.subtract(sp, cost, TransactionReason.SINK, detail);

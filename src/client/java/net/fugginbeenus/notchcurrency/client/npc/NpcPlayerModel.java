@@ -1,13 +1,28 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+//? if >=1.21.11 {
+/*import net.minecraft.client.model.player.PlayerModel;
+*///?} else {
 import net.minecraft.client.model.PlayerModel;
+//?}
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 
+//? if >=1.21.11 {
+/*public class NpcPlayerModel extends PlayerModel {
+*///?} else {
 public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
+//?}
 
     private final boolean thinArms;
+
+    // Both used to be inherited from HumanoidModel and are on the render state now. Keeping the
+    // names as fields means the animation code below reads the same on every version.
+    //? if >=1.21.11 {
+    /*private float attackTime;
+    private boolean crouching;
+    *///?}
 
     public NpcPlayerModel(ModelPart root, boolean thinArms) {
         super(root, thinArms);
@@ -16,10 +31,22 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
 
     private static final float DEG = (float) (Math.PI / 180.0);
 
+    // A model is handed a render state rather than the entity from 1.21.11. Unpacking it under the
+    // old names keeps everything below this line identical across versions.
+    //? if >=1.21.11 {
+    /*@Override
+    public void setupAnim(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
+        super.setupAnim(state);
+        NotchNpcRenderState entity = (NotchNpcRenderState) state;
+        float animationProgress = state.ageInTicks;
+        this.attackTime = state.attackTime;
+        this.crouching = state.isCrouching;
+    *///?} else {
     @Override
     public void setupAnim(NotchNpcEntity entity, float limbAngle, float limbDistance,
                           float animationProgress, float yHeadRot, float headPitch) {
         super.setupAnim(entity, limbAngle, limbDistance, animationProgress, yHeadRot, headPitch);
+    //?}
 
         // Mid attack swing (the model field is the render-time value the swing animates with):
         // vanilla just animated the main arm: poses must not stomp it.
@@ -45,7 +72,11 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
 
     private static final float SWING_TICKS = 8f;
 
+    //? if >=1.21.11 {
+    /*private void applyAttackSwing(NotchNpcRenderState entity, float t) {
+    *///?} else {
     private void applyAttackSwing(NotchNpcEntity entity, float t) {
+    //?}
         float p = this.attackTime;
         if (p <= 0f) {
             float since = t - entity.clientSwingStartAge;
@@ -72,7 +103,11 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.leftLeg.setPos(1.9f, 12f, 0f);
     }
 
+    //? if >=1.21.11 {
+    /*private void applyPose(NotchNpcRenderState entity, float animationProgress, boolean swinging) {
+    *///?} else {
     private void applyPose(NotchNpcEntity entity, float animationProgress, boolean swinging) {
+    //?}
         resetPivots();
         int pose = entity.getNpcPose();
         if (pose == NotchNpcEntity.POSE_WAVING) {
@@ -146,7 +181,11 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         }
     }
 
+    //? if >=1.21.11 {
+    /*private void applyIdleAnim(NotchNpcRenderState entity, float t, boolean swinging) {
+    *///?} else {
     private void applyIdleAnim(NotchNpcEntity entity, float t, boolean swinging) {
+    //?}
         if (entity.getPoseAnim() < NotchNpcEntity.ANIM_LIVELY) return;
 
         // Breathing chest with the arms drifting slightly out and back in.

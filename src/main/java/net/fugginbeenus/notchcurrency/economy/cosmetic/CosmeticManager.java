@@ -27,11 +27,11 @@ public final class CosmeticManager {
 
     public static void openScreen(ServerPlayer sp, java.util.UUID npcId) {
         if (!enabled) {
-            sp.displayClientMessage(Component.literal("The cosmetics shop is closed right now.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The cosmetics shop is closed right now.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         if (CosmeticRegistry.count() == 0) {
-            sp.displayClientMessage(Component.literal("No cosmetics are on offer yet.").withStyle(ChatFormatting.GRAY), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No cosmetics are on offer yet.").withStyle(ChatFormatting.GRAY));
             return;
         }
         CosmeticShopScreenHandler.open(sp, npcId);
@@ -41,16 +41,16 @@ public final class CosmeticManager {
         if (!enabled) return;
         CosmeticOffer offer = CosmeticRegistry.get(offerId);
         if (offer == null) {
-            sp.displayClientMessage(Component.literal("That cosmetic is no longer available.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That cosmetic is no longer available.").withStyle(ChatFormatting.RED));
             return;
         }
         CosmeticState state = CosmeticState.get(sp.level().getServer());
         if (offer.oneTime() && state.owns(sp.getUUID(), offerId)) {
-            sp.displayClientMessage(Component.literal("You already own that cosmetic.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You already own that cosmetic.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         if (BalanceStore.get(sp) < offer.price()) {
-            sp.displayClientMessage(Component.literal("You need " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You need " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for that.").withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -74,8 +74,8 @@ public final class CosmeticManager {
 
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                 SoundSource.PLAYERS, 0.6f, 1.4f);
-        sp.displayClientMessage(Component.literal("Purchased ").withStyle(ChatFormatting.GREEN)
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Purchased ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(offer.name()).withStyle(ChatFormatting.LIGHT_PURPLE))
-                .append(Component.literal(" for " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)), false);
+                .append(Component.literal(" for " + offer.price() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.GREEN)));
     }
 }

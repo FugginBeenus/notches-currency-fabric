@@ -57,8 +57,8 @@ public final class EnchanterManager {
 
     public static void openScreen(ServerPlayer sp) {
         if (!enabled) {
-            sp.displayClientMessage(Component.literal("The enchanter isn't offering services right now.")
-                    .withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The enchanter isn't offering services right now.")
+                    .withStyle(ChatFormatting.YELLOW));
             return;
         }
         EnchanterScreenHandler.open(sp);
@@ -92,7 +92,13 @@ public final class EnchanterManager {
         // the full list plus assemble(), which for an ordinary crafting recipe just hands back its
         // fixed result whatever the input. A recipe that computes its output instead returns something
         // that will not match the stack below, so it is simply skipped rather than offered wrongly.
-        //? if >=1.21.11 {
+        //? if >=26.1 {
+        /*if (!(world instanceof net.minecraft.server.level.ServerLevel serverLevel)) return null;
+        for (net.minecraft.world.item.crafting.RecipeHolder<?> recipeEntry
+                : serverLevel.recipeAccess().getRecipes()) {
+            if (!(recipeEntry.value() instanceof net.minecraft.world.item.crafting.CraftingRecipe recipe)) continue;
+            ItemStack out = recipe.assemble(net.minecraft.world.item.crafting.CraftingInput.EMPTY);
+        *///?} elif >=1.21.11 {
         /*if (!(world instanceof net.minecraft.server.level.ServerLevel serverLevel)) return null;
         for (net.minecraft.world.item.crafting.RecipeHolder<?> recipeEntry
                 : serverLevel.recipeAccess().getRecipes()) {

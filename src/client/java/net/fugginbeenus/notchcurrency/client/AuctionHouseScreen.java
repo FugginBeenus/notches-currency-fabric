@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -238,7 +237,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                         );
 
                 Component message = Component.literal("Need help? ").withStyle(ChatFormatting.YELLOW).append(linkText);
-                this.minecraft.player.displayClientMessage(message, false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, message);
             }
         }).bounds(this.leftPos + HELP_X, this.topPos + HELP_Y, HELP_W, HELP_H).build();
         helpButton.setAlpha(0.0f);
@@ -968,12 +967,12 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         long min = (bidHighest > 0 ? bidHighest : bidStartPrice) + 1;
         if (amount < min) {
             if (this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(Component.literal("Bid must be at least " + min + ".").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, Component.literal("Bid must be at least " + min + ".").withStyle(ChatFormatting.RED));
             }
             return;
         }
         if (bidListingId != null) {
-            FriendlyByteBuf buf = PacketByteBufs.create();
+            FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
             buf.writeUUID(bidListingId);
             buf.writeVarLong(amount);
             NetClient.sendToServer(NotchPackets.BID_REQUEST, buf);
@@ -1151,7 +1150,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 ItemStack stack = menu.getUserPopupInventory().getItem(slot);
                 CompoundTag tag = StackData.getData(stack);
                 if (!stack.isEmpty() && net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(tag, "nc_listing_id")) {
-                    FriendlyByteBuf buf = PacketByteBufs.create();
+                    FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
                     buf.writeUUID(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(tag, "nc_listing_id"));
                     NetClient.sendToServer(NotchPackets.AUCTION_CANCEL, buf);
                 }
@@ -1185,11 +1184,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
 
                     // Only block BUY-NOW listings (expires <= 0), not timed auctions
                     if (expires <= 0L && seller.equals(selfName)) {
-                        this.minecraft.player.displayClientMessage(
-                                Component.literal("You can't buy your own listing.")
-                                        .withStyle(ChatFormatting.RED),
-                                false
-                        );
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, Component.literal("You can't buy your own listing.")
+                                        .withStyle(ChatFormatting.RED));
                         // Swallow the click; do not send it to the server
                         return true;
                     }

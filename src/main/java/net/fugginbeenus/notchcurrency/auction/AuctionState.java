@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.auction;
 
 import net.fugginbeenus.notchcurrency.compat.Chat;
+import net.fugginbeenus.notchcurrency.compat.Msg;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -252,12 +253,9 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                 .withClickEvent(Chat.runCommand("/ah claim"))
                                 .withHoverEvent(Chat.showText(Component.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items"))));
 
-                p.displayClientMessage(
-                        Component.literal("You have unclaimed auction rewards! ")
+                Msg.chat(p, Component.literal("You have unclaimed auction rewards! ")
                                 .withStyle(ChatFormatting.YELLOW)
-                                .append(claim),
-                        false
-                );
+                                .append(claim));
             }
 
             it.remove(); // Fire once per login
@@ -325,12 +323,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
     public void buyListing(ServerPlayer buyer, UUID id) {
         AuctionListing listing = listings.get(id);
         if (listing == null) {
-            buyer.displayClientMessage(Component.literal("No listing with that id."), false);
+            Msg.chat(buyer, Component.literal("No listing with that id."));
             return;
         }
 
         if (buyer.getUUID().equals(listing.sellerUuid)) {
-            buyer.displayClientMessage(Component.literal("You cannot buy your own listing."), false);
+            Msg.chat(buyer, Component.literal("You cannot buy your own listing."));
             return;
         }
 
@@ -338,10 +336,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         ServerLevel world = buyer.serverLevel();
         long now = world.getGameTime();  // use global tick time
         if (listing.expiresGameTime > 0L && now >= listing.expiresGameTime) {
-            buyer.displayClientMessage(
-                    Component.literal("This listing has expired.").withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(buyer, Component.literal("This listing has expired.").withStyle(ChatFormatting.RED));
             listings.remove(id);
             setDirty();
             return;
@@ -349,11 +344,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
         // If this is a timed auction with any bids, force /ah bid instead
         if (listing.expiresGameTime > 0L && listing.highestBid > 0L) {
-            buyer.displayClientMessage(
-                    Component.literal("This is a timed auction. Use /ah bid instead.")
-                            .withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(buyer, Component.literal("This is a timed auction. Use /ah bid instead.")
+                            .withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -361,7 +353,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         long price = listing.price;
 
         if (bal < price) {
-            buyer.displayClientMessage(Component.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."), false);
+            Msg.chat(buyer, Component.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
             return;
         }
 
@@ -408,7 +400,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
             sellerMsg.append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-            sellerPlayer.displayClientMessage(sellerMsg, false);
+            Msg.chat(sellerPlayer, sellerMsg);
             sellerPlayer.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
             sellerPaidNow = true;
         }
@@ -444,13 +436,10 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                     Chat.showText(Component.literal("Click to claim your purchased item"))
                             ));
 
-            buyer.displayClientMessage(
-                    Component.literal("Your inventory was full. ")
+            Msg.chat(buyer, Component.literal("Your inventory was full. ")
                             .withStyle(ChatFormatting.YELLOW)
                             .append(claim)
-                            .append(Component.literal(" to receive your item from the mailbox.")),
-                    false
-            );
+                            .append(Component.literal(" to receive your item from the mailbox.")));
         }
 
         listings.remove(id);
@@ -468,7 +457,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                 .append(NotchCurrency.coinIcon())
                 .append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-        buyer.displayClientMessage(buyerMsg, false);
+        Msg.chat(buyer, buyerMsg);
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
         // If seller was offline, their coins are in mailbox and will be claimable via /ah claim
@@ -484,37 +473,25 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
         AuctionListing listing = listings.get(id);
         if (listing == null) {
-            bidder.displayClientMessage(
-                    Component.literal("No listing with that id.").withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(bidder, Component.literal("No listing with that id.").withStyle(ChatFormatting.RED));
             return;
         }
 
         long now = world.getGameTime();
         if (listing.expiresGameTime > 0L && now >= listing.expiresGameTime) {
-            bidder.displayClientMessage(
-                    Component.literal("This auction has expired.").withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(bidder, Component.literal("This auction has expired.").withStyle(ChatFormatting.RED));
             return;
         }
 
         if (listing.expiresGameTime <= 0L) {
-            bidder.displayClientMessage(
-                    Component.literal("This is a buy-now listing. Click to purchase.")
-                            .withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(bidder, Component.literal("This is a buy-now listing. Click to purchase.")
+                            .withStyle(ChatFormatting.RED));
             return;
         }
 
         if (bidder.getUUID().equals(listing.sellerUuid)) {
-            bidder.displayClientMessage(
-                    Component.literal("You can't bid on your own listing.")
-                            .withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(bidder, Component.literal("You can't bid on your own listing.")
+                            .withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -522,22 +499,16 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         long minBid = baseline + 1;
 
         if (amount < minBid) {
-            bidder.displayClientMessage(
-                    Component.literal("Minimum bid is " + minBid + " ")
+            Msg.chat(bidder, Component.literal("Minimum bid is " + minBid + " ")
                             .append(NotchCurrency.coinIcon())
-                            .withStyle(ChatFormatting.RED),
-                    false
-            );
+                            .withStyle(ChatFormatting.RED));
             return;
         }
 
         long bal = BalanceStore.get(bidder);
         if (bal < amount) {
-            bidder.displayClientMessage(
-                    Component.literal("Insufficient funds for that bid.")
-                            .withStyle(ChatFormatting.RED),
-                    false
-            );
+            Msg.chat(bidder, Component.literal("Insufficient funds for that bid.")
+                            .withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -549,12 +520,9 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             if (prevTop != null) {
                 BalanceStore.add(prevTop, listing.highestBid, TransactionReason.AUCTION_REFUND, "outbid refund");
                 NotchPackets.sendBalance(prevTop, BalanceStore.get(prevTop));
-                prevTop.displayClientMessage(
-                        Component.literal("Your bid was refunded on ")
+                Msg.chat(prevTop, Component.literal("Your bid was refunded on ")
                                 .append(listing.stack.getHoverName().copy())
-                                .withStyle(ChatFormatting.YELLOW),
-                        false
-                );
+                                .withStyle(ChatFormatting.YELLOW));
                 prevTop.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
             } else {
                 BalanceStore.add(world.getServer(), listing.highestBidderUuid, listing.highestBid,
@@ -576,27 +544,21 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         tag.putString("nc_highest_bidder", listing.highestBidderName);
         StackData.commitData(listing.stack, tag);
 
-        bidder.displayClientMessage(
-                Component.literal("You bid " + amount + " ")
+        Msg.chat(bidder, Component.literal("You bid " + amount + " ")
                         .append(NotchCurrency.coinIcon())
                         .append(Component.literal(" on "))
                         .append(listing.stack.getHoverName().copy())
-                        .withStyle(ChatFormatting.GREEN),
-                false
-        );
+                        .withStyle(ChatFormatting.GREEN));
         bidder.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
 
         // Notify seller if online
         ServerPlayer seller = world.getServer().getPlayerList()
                 .getPlayer(listing.sellerUuid);
         if (seller != null) {
-            seller.displayClientMessage(
-                    Component.literal(listing.highestBidderName + " bid " + amount + " ")
+            Msg.chat(seller, Component.literal(listing.highestBidderName + " bid " + amount + " ")
                             .append(NotchCurrency.coinIcon())
                             .append(Component.literal(" on your listing."))
-                            .withStyle(ChatFormatting.YELLOW),
-                    false
-            );
+                            .withStyle(ChatFormatting.YELLOW));
             seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
         }
 
@@ -618,9 +580,9 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         if (bidder != null) {
             BalanceStore.add(bidder, amount, TransactionReason.AUCTION_REFUND, "auction cancelled - bid refunded");
             NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
-            bidder.displayClientMessage(Component.literal("Your bid was refunded - ")
+            Msg.chat(bidder, Component.literal("Your bid was refunded - ")
                     .append(listing.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
-                    .append(Component.literal(" was cancelled by the seller.").withStyle(ChatFormatting.YELLOW)), false);
+                    .append(Component.literal(" was cancelled by the seller.").withStyle(ChatFormatting.YELLOW)));
         } else {
             BalanceStore.add(server, listing.highestBidderUuid, amount,
                     TransactionReason.AUCTION_REFUND, "auction cancelled - bid refunded (offline)");
@@ -705,7 +667,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
                     sellerMsg.append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-                    seller.displayClientMessage(sellerMsg, false);
+                    Msg.chat(seller, sellerMsg);
                     seller.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
                     sellerPaidNow = true;
                 }
@@ -723,7 +685,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                 .append(NotchCurrency.coins(finalPrice))
                                 .append(Component.literal("!").withStyle(ChatFormatting.GREEN));
 
-                        winner.displayClientMessage(winMsg, false);
+                        Msg.chat(winner, winMsg);
                         winner.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
                     } else {
                         // Inventory full – store pending & send clickable "Claim Item"
@@ -758,7 +720,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                 .append(prize.getHoverName().copy().withStyle(ChatFormatting.WHITE))
                                 .append(Component.literal(".").withStyle(ChatFormatting.YELLOW));
 
-                        winner.displayClientMessage(msg, false);
+                        Msg.chat(winner, msg);
                         winner.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
                     }
                 } else {
@@ -808,25 +770,19 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                                 Chat.showText(Component.literal("Click to claim your returned item"))
                                         ));
 
-                        seller.displayClientMessage(
-                                Component.literal("Your auction for ")
+                        Msg.chat(seller, Component.literal("Your auction for ")
                                         .append(listing.stack.getHoverName().copy())
                                         .append(Component.literal(" expired with no bids. "))
                                         .append(claim)
                                         .append(Component.literal(" to retrieve your item from the mailbox."))
-                                        .withStyle(ChatFormatting.YELLOW),
-                                false
-                        );
+                                        .withStyle(ChatFormatting.YELLOW));
                         seller.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
 
                     } else {
-                        seller.displayClientMessage(
-                                Component.literal("Your auction for ")
+                        Msg.chat(seller, Component.literal("Your auction for ")
                                         .append(listing.stack.getHoverName().copy())
                                         .append(Component.literal(" expired with no bids. Item returned."))
-                                        .withStyle(ChatFormatting.YELLOW),
-                                false
-                        );
+                                        .withStyle(ChatFormatting.YELLOW));
                         seller.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.8F);
 
                     }
@@ -854,11 +810,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
     public void claimAll(ServerLevel world, ServerPlayer player) {
         if (pendingWinnings.isEmpty()) {
-            player.displayClientMessage(
-                    Component.literal("You have no pending auction rewards.")
-                            .withStyle(ChatFormatting.GRAY),
-                    false
-            );
+            Msg.chat(player, Component.literal("You have no pending auction rewards.")
+                            .withStyle(ChatFormatting.GRAY));
             return;
         }
 
@@ -875,13 +828,10 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                 BalanceStore.add(player, amt, TransactionReason.AUCTION, "claimed auction winnings");
                 NotchPackets.sendBalance(player, BalanceStore.get(player));
 
-                player.displayClientMessage(
-                        Component.literal("Claimed ")
+                Msg.chat(player, Component.literal("Claimed ")
                                 .append(Component.literal(String.valueOf(amt) + " ").withStyle(ChatFormatting.GOLD))
                                 .append(NotchCurrency.coinIcon())
-                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)),
-                        false
-                );
+                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)));
                 player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
 
                 pw.finalPrice = 0L;
@@ -896,19 +846,13 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
                 if (!inserted && !toGive.isEmpty()) {
                     // Still no room; keep in mailbox
-                    player.displayClientMessage(
-                            Component.literal("Your inventory is full. "
+                    Msg.chat(player, Component.literal("Your inventory is full. "
                                             + "Free up space and run /ah claim again.")
-                                    .withStyle(ChatFormatting.RED),
-                            false
-                    );
+                                    .withStyle(ChatFormatting.RED));
                 } else {
-                    player.displayClientMessage(
-                            Component.literal("Claimed auction item: ")
+                    Msg.chat(player, Component.literal("Claimed auction item: ")
                                     .append(pw.stack.getHoverName().copy())
-                                    .withStyle(ChatFormatting.GREEN),
-                            false
-                    );
+                                    .withStyle(ChatFormatting.GREEN));
                     player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
 
                     pw.stack = ItemStack.EMPTY;
@@ -922,11 +866,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         }
 
         if (!claimedSomething) {
-            player.displayClientMessage(
-                    Component.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
-                            .withStyle(ChatFormatting.GRAY),
-                    false
-            );
+            Msg.chat(player, Component.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
+                            .withStyle(ChatFormatting.GRAY));
         }
 
         setDirty();

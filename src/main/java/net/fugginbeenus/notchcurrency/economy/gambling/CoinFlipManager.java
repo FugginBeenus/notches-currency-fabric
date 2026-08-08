@@ -58,7 +58,7 @@ public final class CoinFlipManager {
 
     public static void openScreen(ServerPlayer sp, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
-            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED));
             return;
         }
         pendingBlock.put(sp.getUUID(), pos.immutable());
@@ -68,7 +68,7 @@ public final class CoinFlipManager {
     }
 
     public static void notifyBusy(ServerPlayer sp) {
-        sp.displayClientMessage(Component.literal("The coin is still in the air - wait for it to land.").withStyle(ChatFormatting.YELLOW), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The coin is still in the air - wait for it to land.").withStyle(ChatFormatting.YELLOW));
     }
 
     public static void flipFromScreen(ServerPlayer sp, boolean guessHeads, long bet) {
@@ -84,12 +84,12 @@ public final class CoinFlipManager {
 
     private static void resolve(ServerPlayer sp, boolean guessHeads, long bet, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
-            sp.displayClientMessage(Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED));
             return;
         }
         if (!GamblingManager.betInRange(bet)) {
-            sp.displayClientMessage(Component.literal("Bet must be between " + GamblingManager.getMinBet()
-                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Bet must be between " + GamblingManager.getMinBet()
+                    + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED));
             return;
         }
         ServerLevel world = sp.serverLevel();
@@ -103,7 +103,7 @@ public final class CoinFlipManager {
             }
         }
         if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Coin flip bet")) {
-            sp.displayClientMessage(Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -168,11 +168,11 @@ public final class CoinFlipManager {
         if (sp != null) {
             String side = landedHeads ? "HEADS" : "TAILS";
             if (won) {
-                sp.displayClientMessage(Component.literal("The coin landed " + side + " - you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
-                        .withStyle(ChatFormatting.GREEN), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The coin landed " + side + " - you won " + payout + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!")
+                        .withStyle(ChatFormatting.GREEN));
             } else {
-                sp.displayClientMessage(Component.literal("The coin landed " + side + " - you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
-                        .withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("The coin landed " + side + " - you lost " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                        .withStyle(ChatFormatting.RED));
             }
         }
     }

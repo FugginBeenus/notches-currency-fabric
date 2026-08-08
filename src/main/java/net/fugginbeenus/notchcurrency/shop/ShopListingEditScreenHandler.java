@@ -132,8 +132,8 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                     listingId = null;
                     props.set(P_HAS_LISTING, 0);
                     props.set(P_STOCK, 0);
-                    sp.displayClientMessage(Component.literal("Listing removed - its stock is back in your inventory.")
-                            .withStyle(ChatFormatting.GREEN), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listing removed - its stock is back in your inventory.")
+                            .withStyle(ChatFormatting.GREEN));
                     NpcShopLogic.openShopManager(sp, shop.getShopId());
                 }
             }
@@ -143,7 +143,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                 if (l != null) {
                     l.setBarterPrice(ItemStack.EMPTY, 0);
                     state.markDirtyAndSave();
-                    sp.displayClientMessage(Component.literal("Barter price removed.").withStyle(ChatFormatting.GREEN), false);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Barter price removed.").withStyle(ChatFormatting.GREEN));
                 }
             }
         }
@@ -159,16 +159,16 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         if (l == null) {
             // Creating: need a sale sample and at least one pricing mode.
             if (sale.isEmpty()) {
-                sp.displayClientMessage(Component.literal("Put a sample of the item you're selling in the top slot.")
-                        .withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Put a sample of the item you're selling in the top slot.")
+                        .withStyle(ChatFormatting.RED));
                 return;
             }
             if (price <= 0 && barter.isEmpty()) {
-                sp.displayClientMessage(Component.literal("Set a coin price and/or a barter item.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Set a coin price and/or a barter item.").withStyle(ChatFormatting.RED));
                 return;
             }
             if (shop.getListings().size() >= PlayerShop.MAX_LISTINGS) {
-                sp.displayClientMessage(Component.literal("This shop is full.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop is full.").withStyle(ChatFormatting.RED));
                 return;
             }
             ShopListing created = new ShopListing(sale.copy(), 0, price);
@@ -177,7 +177,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             listingId = created.getId();
             props.set(P_HAS_LISTING, 1);
             state.markDirtyAndSave();
-            sp.displayClientMessage(Component.literal("Listing created - drop stock into the bin.").withStyle(ChatFormatting.GREEN), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listing created - drop stock into the bin.").withStyle(ChatFormatting.GREEN));
             return;
         }
 
@@ -188,26 +188,26 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             if (old > 0) {
                 give(sp, l.getItemForSale(), old);
                 l.setStock(0);
-                sp.displayClientMessage(Component.literal("Returned " + old + " old stock (the item changed).")
-                        .withStyle(ChatFormatting.YELLOW), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Returned " + old + " old stock (the item changed).")
+                        .withStyle(ChatFormatting.YELLOW));
             }
         }
         if (!sale.isEmpty()) l.setItemForSale(sale.copy());
         if (!barter.isEmpty()) l.setBarterPrice(barter.copy(), barter.getCount());
         if (price <= 0 && !l.acceptsBarter() && barter.isEmpty()) {
-            sp.displayClientMessage(Component.literal("A listing needs a coin price and/or a barter item.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("A listing needs a coin price and/or a barter item.").withStyle(ChatFormatting.RED));
             return;
         }
         l.setCoinPrice(price);
         props.set(P_PRICE, price);
         state.markDirtyAndSave();
-        sp.displayClientMessage(Component.literal("Listing saved.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listing saved.").withStyle(ChatFormatting.GREEN));
     }
 
     private void deposit(ServerPlayer sp, ShopState state) {
         ShopListing l = listing();
         if (l == null) {
-            sp.displayClientMessage(Component.literal("Save the listing first, then deposit stock.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Save the listing first, then deposit stock.").withStyle(ChatFormatting.RED));
             return;
         }
         int moved = 0;
@@ -219,12 +219,12 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             }
         }
         if (moved == 0) {
-            sp.displayClientMessage(Component.literal("You aren't carrying any matching items.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You aren't carrying any matching items.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         l.addStock(moved);
         state.markDirtyAndSave();
-        sp.displayClientMessage(Component.literal("Deposited " + moved + " into stock.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Deposited " + moved + " into stock.").withStyle(ChatFormatting.GREEN));
     }
 
     private void returnStock(ServerPlayer sp, ShopState state) {
@@ -232,13 +232,13 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         if (l == null) return;
         int stock = l.getStockQuantitySafe();
         if (stock <= 0) {
-            sp.displayClientMessage(Component.literal("There's no stock to take back.").withStyle(ChatFormatting.YELLOW), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("There's no stock to take back.").withStyle(ChatFormatting.YELLOW));
             return;
         }
         l.setStock(0);
         give(sp, l.getItemForSale(), stock);
         state.markDirtyAndSave();
-        sp.displayClientMessage(Component.literal("Returned " + stock + " stock to your inventory.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Returned " + stock + " stock to your inventory.").withStyle(ChatFormatting.GREEN));
     }
 
     private static void give(ServerPlayer sp, ItemStack template, int count) {
@@ -261,7 +261,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                 l.addStock(moved);
                 samples.setItem(SLOT_STOCK, ItemStack.EMPTY);
                 ShopState.get(sp.serverLevel()).markDirtyAndSave();
-                sp.displayClientMessage(Component.literal("Added " + moved + " to stock.").withStyle(ChatFormatting.GREEN), true);
+                net.fugginbeenus.notchcurrency.compat.Msg.actionBar(sp, Component.literal("Added " + moved + " to stock.").withStyle(ChatFormatting.GREEN));
             }
         }
         if (l != null) {

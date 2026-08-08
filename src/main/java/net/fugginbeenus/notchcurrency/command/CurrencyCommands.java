@@ -45,7 +45,7 @@ public final class CurrencyCommands {
                                     ServerPlayer player = ctx.getSource().getPlayer();
                                     int amount = IntegerArgumentType.getInteger(ctx, "amount");
                                     player.addItem(new ItemStack(ModItems.NOTCH_COIN, amount));
-                                    player.displayClientMessage(Component.literal("Given " + amount + " Notch Coins!"), false);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Given " + amount + " Notch Coins!"));
                                     return 1;
                                 }))
         );
@@ -56,11 +56,8 @@ public final class CurrencyCommands {
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             long bal = BalanceStore.get(p);
-                            p.displayClientMessage(
-                                    Component.literal("Balance: " + bal + " ")
-                                            .append(NotchCurrency.coinIcon()),
-                                    true
-                            );
+                            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(p, Component.literal("Balance: " + bal + " ")
+                                            .append(NotchCurrency.coinIcon()));
                             NotchPackets.sendBalance(p, bal);
                             return 1;
                         })
@@ -86,19 +83,15 @@ public final class CurrencyCommands {
                                             int amt = IntegerArgumentType.getInteger(ctx, "amount");
 
                                             if (from == to) {
-                                                from.displayClientMessage(
-                                                        Component.literal("You can’t pay yourself.")
-                                                                .withStyle(ChatFormatting.RED),
-                                                        false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("You can’t pay yourself.")
+                                                                .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
                                             long bal = BalanceStore.get(from);
                                             if (bal < amt) {
-                                                from.displayClientMessage(
-                                                        Component.literal("Insufficient funds.")
-                                                                .withStyle(ChatFormatting.RED),
-                                                        false);
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Insufficient funds.")
+                                                                .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
 
@@ -108,20 +101,14 @@ public final class CurrencyCommands {
                                             NotchPackets.sendBalance(from, BalanceStore.get(from));
                                             NotchPackets.sendBalance(to, BalanceStore.get(to));
 
-                                            from.displayClientMessage(
-                                                    Component.literal("Paid " + amt + " ")
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Paid " + amt + " ")
                                                             .append(NotchCurrency.coinIcon())
                                                             .append(Component.literal(" to " + to.getName().getString()))
-                                                            .withStyle(ChatFormatting.GREEN),
-                                                    false
-                                            );
+                                                            .withStyle(ChatFormatting.GREEN));
 
-                                            to.displayClientMessage(
-                                                    Component.literal(from.getName().getString() + " paid you " + amt + " ")
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(to, Component.literal(from.getName().getString() + " paid you " + amt + " ")
                                                             .append(NotchCurrency.coinIcon())
-                                                            .withStyle(ChatFormatting.GREEN),
-                                                    false
-                                            );
+                                                            .withStyle(ChatFormatting.GREEN));
                                             return 1;
                                         })
                                 )

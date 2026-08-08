@@ -87,9 +87,9 @@ public final class NpcActionRunner {
                 case CHARGE_COINS -> {
                     if (sp == null || a.amount() <= 0) break;
                     if (!CurrencyApi.withdraw(sp, a.amount(), TransactionReason.SINK, "NPC dialogue fee")) {
-                        sp.displayClientMessage(Component.literal("You can't afford that (" + a.amount() + " "
+                        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You can't afford that (" + a.amount() + " "
                                         + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ").")
-                                .withStyle(ChatFormatting.RED), false);
+                                .withStyle(ChatFormatting.RED));
                         return Outcome.ABORTED;
                     }
                 }

@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.currency;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
@@ -31,7 +30,7 @@ public final class CurrencyServerSync {
         byte[] coin = readTexture(dir.resolve("coin.png"));
         byte[] tails = readTexture(dir.resolve("coin_tails.png"));
 
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUtf(itemName, 64);
         buf.writeBoolean(coin != null);
         if (coin != null) buf.writeByteArray(coin);

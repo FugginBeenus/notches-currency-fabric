@@ -130,7 +130,7 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         try {
             money = Integer.parseInt(selfMoneyField.getValue().trim());
         } catch (NumberFormatException ignored) {}
-        var buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarInt(Math.max(0, money));
         buf.writeBoolean(ready);
         NetClient.sendToServer(NotchPackets.TRADE_UPDATE, buf);

@@ -161,6 +161,51 @@ loom {
 // Registered inside an if rather than passed a boolean, because that boolean is the replacement's
 // DIRECTION, not a condition. Passing false does not skip the rule, it runs it backwards, which
 // happily rewrote every legitimate EnumProperty into DirectionProperty on the older versions.
+// 26.x renames that do not apply to any 1.x target. Keyed on the same flag that picks the Loom
+// plugin, since "unobfuscated" and "26.1 or newer" are the same set.
+if (unobfuscated) {
+    stonecutter {
+        replacements {
+            string(true) {
+                // The saved-data store lost its dimension framing.
+                replace("DimensionDataStorage", "SavedDataStorage")
+                // Time of day is asked of the overworld clock now. Schedules only run there anyway:
+                // the Nether and the End already refuse, so this is the same number they always read.
+                replace(".getDayTime()", ".getOverworldClockTime()")
+                // GeckoLib's maven group moved and took its package with it.
+                replace("software.bernie.geckolib", "com.geckolib")
+                // Fabric renamed its creative-tab and menu APIs to match Mojang's own names.
+                replace("net.fabricmc.fabric.api.itemgroup.v1", "net.fabricmc.fabric.api.creativetab.v1")
+                replace("ItemGroupEvents", "CreativeModeTabEvents")
+                replace("net.fabricmc.fabric.api.screenhandler.v1", "net.fabricmc.fabric.api.menu.v1")
+                replace("ExtendedScreenHandlerFactory", "ExtendedMenuProvider")
+                replace("ExtendedScreenHandlerType", "ExtendedMenuType")
+                // Fabric's view helpers renamed their key enumeration, which keeps the entity NBT
+                // flat rather than nested and so keeps an upgraded world readable.
+                replace(".keys()", ".keySet()")
+                // Fabric's loot events moved a version on.
+                replace("net.fabricmc.fabric.api.loot.v2", "net.fabricmc.fabric.api.loot.v3")
+                // The creative-tab builder and its per-tab event were renamed with the package.
+                replace("FabricItemGroup", "FabricCreativeModeTab")
+                replace("modifyEntriesEvent", "modifyOutputEvent")
+                // Payload registries name the direction in full now.
+                replace("PayloadTypeRegistry.playC2S()", "PayloadTypeRegistry.serverboundPlay()")
+                replace("PayloadTypeRegistry.playS2C()", "PayloadTypeRegistry.clientboundPlay()")
+                // A slot click carries a richer object than the old enum.
+                replace("net.minecraft.world.inventory.ClickType", "net.minecraft.world.inventory.ContainerInput")
+                replace("ClickType", "ContainerInput")
+            }
+            regex(true) {
+                // Level.random went protected; the accessor was always there.
+                fromPattern = '\\.random\\.next'
+                toValue = '.getRandom().next'
+                reversePattern = '\\.getRandom\\(\\)\\.next'
+                reverseValue = '.random.next'
+            }
+        }
+    }
+}
+
 if (usesIdentifier) {
     stonecutter {
         replacements {

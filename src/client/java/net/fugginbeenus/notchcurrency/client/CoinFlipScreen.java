@@ -2,7 +2,6 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler;
@@ -186,7 +185,7 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
                 int max = menu.prop(CoinFlipScreenHandler.P_MAX);
                 if (bet < min || bet > max) { setError("Bet must be " + min + "-" + max + " " + NotchWidgets.coinName() + "."); playErr(); return true; }
                 if (bet > bal) { setError("Not enough " + NotchWidgets.coinName() + " for that bet."); playErr(); return true; }
-                FriendlyByteBuf buf = PacketByteBufs.create();
+                FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
                 buf.writeBoolean(selectedHeads);
                 buf.writeVarLong(bet);
                 NetClient.sendToServer(NotchPackets.COINFLIP_FLIP, buf);

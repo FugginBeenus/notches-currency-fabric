@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.compat;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -34,7 +33,7 @@ public final class Screens {
 
             @Override
             public FriendlyByteBuf getScreenOpeningData(ServerPlayer player) {
-                FriendlyByteBuf buf = PacketByteBufs.create();
+                FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
                 data.accept(buf);
                 return buf;
             }

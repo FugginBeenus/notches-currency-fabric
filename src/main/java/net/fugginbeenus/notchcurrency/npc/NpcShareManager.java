@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.npc;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -34,18 +33,18 @@ public final class NpcShareManager {
     private static void copy(ServerPlayer sp, NotchNpcEntity npc) {
         String code = exportCode(npc);
         if (code == null) {
-            sp.displayClientMessage(Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED));
             return;
         }
         // A code longer than a packet allows could be sent out (server to client is far roomier) but
         // never pasted back, so handing one over would just be a trap. The file route has no such
         // limit and produces the same text.
         if (code.length() > NpcShareCodec.MAX_WIRE_CHARS) {
-            sp.displayClientMessage(Component.literal("This NPC is too detailed to copy as a code. Use 'To file' instead.")
-                    .withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This NPC is too detailed to copy as a code. Use 'To file' instead.")
+                    .withStyle(ChatFormatting.RED));
             return;
         }
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUtf(code, NpcShareCodec.MAX_WIRE_CHARS);
         Net.sendToClient(sp, NotchPackets.NPC_SHARE_CODE, buf);
     }
@@ -55,30 +54,30 @@ public final class NpcShareManager {
         try {
             tag = NpcShareCodec.decode(code);
         } catch (NpcShareCodec.BadCode e) {
-            sp.displayClientMessage(Component.literal(e.getMessage()).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(e.getMessage()).withStyle(ChatFormatting.RED));
             return;
         }
         NpcPresetManager.applyTag(npc, tag, sp);
-        sp.displayClientMessage(Component.literal("NPC imported.").withStyle(ChatFormatting.GREEN), false);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC imported.").withStyle(ChatFormatting.GREEN));
     }
 
     private static void saveFile(ServerPlayer sp, NotchNpcEntity npc, String rawName) {
         String name = sanitize(rawName);
         if (name.isEmpty()) {
-            sp.displayClientMessage(Component.literal("Give the file a name first.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Give the file a name first.").withStyle(ChatFormatting.RED));
             return;
         }
         String code = exportCode(npc);
         if (code == null) {
-            sp.displayClientMessage(Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED));
             return;
         }
         try {
             Path file = dir().resolve(name + ".npc");
             Files.writeString(file, code + System.lineSeparator(), StandardCharsets.UTF_8);
-            sp.displayClientMessage(Component.literal("Exported to npc_share/" + name + ".npc").withStyle(ChatFormatting.GREEN), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Exported to npc_share/" + name + ".npc").withStyle(ChatFormatting.GREEN));
         } catch (IOException e) {
-            sp.displayClientMessage(Component.literal("Couldn't write the file: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't write the file: " + e.getMessage()).withStyle(ChatFormatting.RED));
         }
     }
 
@@ -88,17 +87,17 @@ public final class NpcShareManager {
         try {
             Path file = dir().resolve(name + ".npc");
             if (!Files.isRegularFile(file)) {
-                sp.displayClientMessage(Component.literal("No file named '" + name + ".npc' in npc_share.")
-                        .withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No file named '" + name + ".npc' in npc_share.")
+                        .withStyle(ChatFormatting.RED));
                 return;
             }
             if (Files.size(file) > NpcShareCodec.MAX_CODE_CHARS) {
-                sp.displayClientMessage(Component.literal("That file is too big to be an NPC.").withStyle(ChatFormatting.RED), false);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That file is too big to be an NPC.").withStyle(ChatFormatting.RED));
                 return;
             }
             code = Files.readString(file, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            sp.displayClientMessage(Component.literal("Couldn't read the file: " + e.getMessage()).withStyle(ChatFormatting.RED), false);
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't read the file: " + e.getMessage()).withStyle(ChatFormatting.RED));
             return;
         }
         paste(sp, npc, code);

@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleAdminScreenHandler;
@@ -188,7 +187,7 @@ public class RaffleAdminScreen extends AbstractContainerScreen<RaffleAdminScreen
     }
 
     private void save() {
-        FriendlyByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarLong(parse(priceField.getValue(), 1));
         buf.writeVarInt((int) parse(cutField.getValue(), 0));
         buf.writeVarInt((int) parse(daysField.getValue(), 0));
