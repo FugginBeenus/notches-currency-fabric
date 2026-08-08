@@ -166,6 +166,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         return this.entityRenderDispatcher.distanceToSqr(entity);
     }
     static boolean lodApplies() {
-        return Minecraft.getInstance().screen == null;
+        return net.fugginbeenus.notchcurrency.compat.Render.currentScreen() == null;
     }
 }

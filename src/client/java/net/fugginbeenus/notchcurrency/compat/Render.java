@@ -70,4 +70,32 @@ public final class Render {
         return com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT)
                 || com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
+
+    // 26.1 stopped exposing the open screen on Minecraft: it only takes one, it does not hand one
+    // back. Two places here need to know what is open, so the mod keeps its own note of it, kept in
+    // step by the screen lifecycle events. Older versions just read the field.
+    //? if >=26.1 {
+    /*private static net.minecraft.client.gui.screens.Screen openScreen;
+
+    public static void trackScreens() {
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+            openScreen = screen;
+            net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.remove(screen).register(closed -> {
+                if (openScreen == closed) openScreen = null;
+            });
+        });
+    }
+
+    public static net.minecraft.client.gui.screens.Screen currentScreen() {
+        return openScreen;
+    }
+    *///?} else {
+    public static void trackScreens() {
+        // Nothing to track: Minecraft still holds the open screen itself.
+    }
+
+    public static net.minecraft.client.gui.screens.Screen currentScreen() {
+        return net.minecraft.client.Minecraft.getInstance().screen;
+    }
+    //?}
 }

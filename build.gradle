@@ -193,6 +193,7 @@ if (unobfuscated) {
                 replace(".renderItem(", ".item(")
                 replace("renderLabels", "extractLabels")
                 replace(".renderItemDecorations(", ".itemDecorations(")
+                replace(".setScreen(", ".setScreenAndShow(")
                 // Screen.renderTransparentBackground went away with the render/extract split. This is
                 // exactly what it drew, so the dimming behind a panel looks the same as before.
                 replace("renderTransparentBackground(ctx)",

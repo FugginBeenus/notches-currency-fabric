@@ -6,7 +6,9 @@ import net.minecraft.client.Minecraft;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
+//? if <26.1 {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+//?}
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
@@ -27,6 +29,9 @@ public final class ClientInit implements ClientModInitializer {
     public void onInitializeClient() {
         // Packet channels must be declared before any receiver is registered or anything is sent.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
+
+        // Keeps track of which screen is open. A no-op before 26.1, where Minecraft still tells us.
+        net.fugginbeenus.notchcurrency.compat.Render.trackScreens();
 
         // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
@@ -94,9 +99,18 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
         MenuScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
 
+        //? if >=26.1 {
+        /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+                NotchCurrency.id("balance"), new NotchHud());
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+                NotchCurrency.id("route"), new RouteHud());
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+                NotchCurrency.id("bounty_tracker"), new BountyTrackerHud());
+        *///?} else {
         HudRenderCallback.EVENT.register(new NotchHud());
         HudRenderCallback.EVENT.register(new RouteHud());
         HudRenderCallback.EVENT.register(new BountyTrackerHud());
+        //?}
         NotchPacketsClient.registerBountyTrackerReceiver();
         NotchPacketsClient.registerCurrencySyncReceiver();
 

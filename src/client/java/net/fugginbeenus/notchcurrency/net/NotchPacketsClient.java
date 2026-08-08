@@ -289,7 +289,7 @@ public final class NotchPacketsClient {
             }
             client.execute(() -> {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.screen instanceof net.fugginbeenus.notchcurrency.client.NpcPresetScreen s
+                if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof net.fugginbeenus.notchcurrency.client.NpcPresetScreen s
                         && s.isFor(npcId)) {
                     s.setPresets(names);
                 } else {
@@ -339,7 +339,7 @@ public final class NotchPacketsClient {
                 Minecraft mc = Minecraft.getInstance();
                 if (nodeId.isEmpty()) {
                     // Close signal: only if the dialogue screen is up.
-                    if (mc.screen instanceof net.fugginbeenus.notchcurrency.client.NpcDialogueScreen) {
+                    if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof net.fugginbeenus.notchcurrency.client.NpcDialogueScreen) {
                         mc.setScreen(null);
                     }
                 } else {

@@ -220,11 +220,21 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
     }
 
     private void syncOverlays() {
+        // copyFrom went away in 26.1; storing and loading the pose copies the same values.
+        //? if >=26.1 {
+        /*    this.hat.loadPose(this.head.storePose());
+        this.jacket.loadPose(this.body.storePose());
+        this.rightSleeve.loadPose(this.rightArm.storePose());
+        this.leftSleeve.loadPose(this.leftArm.storePose());
+        this.rightPants.loadPose(this.rightLeg.storePose());
+        this.leftPants.loadPose(this.leftLeg.storePose());
+        *///?} else {
         this.hat.copyFrom(this.head);
         this.jacket.copyFrom(this.body);
         this.rightSleeve.copyFrom(this.rightArm);
         this.leftSleeve.copyFrom(this.leftArm);
         this.rightPants.copyFrom(this.rightLeg);
         this.leftPants.copyFrom(this.leftLeg);
+        //?}
     }
 }
