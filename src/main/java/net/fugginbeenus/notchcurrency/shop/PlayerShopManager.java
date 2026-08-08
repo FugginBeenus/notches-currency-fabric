@@ -248,7 +248,7 @@ public final class PlayerShopManager {
     // --- Purchasing ---
 
     public static PurchaseResult purchase(ServerPlayer buyer, UUID shopId, UUID listingId, int quantity) {
-        MinecraftServer server = buyer.getServer();
+        MinecraftServer server = buyer.level().getServer();
         ShopState state = ShopState.get(server);
         PlayerShop shop = state.getShop(shopId);
 

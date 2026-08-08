@@ -211,8 +211,15 @@ public class NotchNpcModelPickerScreen extends Screen {
         return this.font.width(s) <= TILE_W - 6 ? s : this.font.plainSubstrByWidth(s, TILE_W - 10) + "..";
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, px + W / 2 - 40, py + H - 22, 80, 16)) {
@@ -239,7 +246,11 @@ public class NotchNpcModelPickerScreen extends Screen {
                 }
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     @Override
@@ -254,19 +265,41 @@ public class NotchNpcModelPickerScreen extends Screen {
         return true;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    //?}
         if (draggingScroll) {
             scrollbarTo(mouseY, VISIBLE_ROWS * TILE_H);
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseDragged(event, dx, dy);
+        *///?} else {
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    //?}
         draggingScroll = false;
+        //? if >=1.21.11 {
+        /*return super.mouseReleased(event);
+        *///?} else {
         return super.mouseReleased(mouseX, mouseY, button);
+        //?}
     }
 
     private void scrollbarTo(double my, int gridH) {

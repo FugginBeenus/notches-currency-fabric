@@ -27,4 +27,14 @@ public final class Perms {
         return player.hasPermissions(2);
         //?}
     }
+
+    /** The same tier, asked of a command source. This is what gates every admin subcommand. */
+    public static boolean isOperator(net.minecraft.commands.CommandSourceStack source) {
+        //? if >=1.21.11 {
+        /*return source.permissions()
+                .hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
+        *///?} else {
+        return source.hasPermission(2);
+        //?}
+    }
 }

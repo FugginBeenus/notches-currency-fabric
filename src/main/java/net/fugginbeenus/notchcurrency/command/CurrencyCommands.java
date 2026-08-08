@@ -39,7 +39,7 @@ public final class CurrencyCommands {
         // ===== /givnotches <amount> (admin only) =====
         dispatcher.register(
                 Commands.literal("givnotches")
-                        .requires(src -> src.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayer();

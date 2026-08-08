@@ -47,8 +47,14 @@ public class LedgerBoardBlockEntity extends BlockEntity {
 
     // ---- sync ----
 
+    // 1.21.11 swapped the tag for a write view. The body below still fills a tag, which Nbt then
+    // copies across key for key, so what lands on disk is the same either way.
     @Override
-    //? if >=1.21 {
+    //? if >=1.21.11 {
+    /*protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput out) {
+        super.saveAdditional(out);
+        CompoundTag nbt = new CompoundTag();
+    *///?} elif >=1.21 {
     /*protected void saveAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
         super.saveAdditional(nbt, registries);
     *///?} else {
@@ -63,10 +69,17 @@ public class LedgerBoardBlockEntity extends BlockEntity {
             list.add(row);
         }
         nbt.put("Rows", list);
+        //? if >=1.21.11 {
+        /*net.fugginbeenus.notchcurrency.compat.Nbt.copyInto(nbt, out);
+        *///?}
     }
 
     @Override
-    //? if >=1.21 {
+    //? if >=1.21.11 {
+    /*protected void loadAdditional(net.minecraft.world.level.storage.ValueInput in) {
+        super.loadAdditional(in);
+        CompoundTag nbt = net.fugginbeenus.notchcurrency.compat.Nbt.readAll(in);
+    *///?} elif >=1.21 {
     /*public void loadAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
         super.loadAdditional(nbt, registries);
     *///?} else {

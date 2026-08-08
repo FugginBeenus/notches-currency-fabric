@@ -70,7 +70,7 @@ public final class BountyCommands {
 
                 // ---- admin ----
                 .then(Commands.literal("admin")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
@@ -171,8 +171,8 @@ public final class BountyCommands {
                     .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
                     .append(Component.literal(" (" + b.rewardSummary() + ") ").withStyle(ChatFormatting.GRAY))
                     .append(Component.literal("[X]").withStyle(ChatFormatting.RED).withStyle(s -> s
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bounty admin remove " + b.getId()))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Remove this bounty")))));
+                            .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/bounty admin remove " + b.getId()))
+                            .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Remove this bounty")))));
             src.sendSuccess(() -> line, false);
         }
         return 1;

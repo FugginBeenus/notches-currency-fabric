@@ -82,16 +82,28 @@ public class LedgerBoardBlock extends Block implements EntityBlock {
         super.setPlacedBy(world, pos, state, placer, itemStack);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    protected BlockState updateShape(BlockState state, net.minecraft.world.level.LevelReader world,
+                                     net.minecraft.world.level.ScheduledTickAccess tickAccess,
+                                     BlockPos pos, Direction direction, BlockPos neighborPos,
+                                     BlockState neighborState, net.minecraft.util.RandomSource random) {
+    *///?} else {
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
                                                 LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
+    //?}
         DoubleBlockHalf half = state.getValue(HALF);
         if (direction.getAxis() == Direction.Axis.Y
                 && (half == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
             return neighborState.is(this) && neighborState.getValue(HALF) != half
                     ? state : Blocks.AIR.defaultBlockState();
         }
+        //? if >=1.21.11 {
+        /*return super.updateShape(state, world, tickAccess, pos, direction, neighborPos, neighborState, random);
+        *///?} else {
         return super.updateShape(state, direction, neighborState, world, pos, neighborPos);
+        //?}
     }
 
     @Override

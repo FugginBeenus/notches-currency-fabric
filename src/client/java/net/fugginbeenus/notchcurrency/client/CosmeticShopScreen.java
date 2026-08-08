@@ -139,8 +139,15 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
@@ -158,11 +165,22 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    //?}
         if (draggingScroll && pages() > 1) {
             int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH() / 2;
             int track = SB_H - thumbH();
@@ -171,13 +189,28 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
             if (target != page()) clickButton(target > page() ? 1 : 0);
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseDragged(event, dx, dy);
+        *///?} else {
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    //?}
         draggingScroll = false;
+        //? if >=1.21.11 {
+        /*return super.mouseReleased(event);
+        *///?} else {
         return super.mouseReleased(mouseX, mouseY, button);
+        //?}
     }
 
     @Override

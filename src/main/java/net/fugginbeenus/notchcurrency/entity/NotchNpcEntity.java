@@ -100,7 +100,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public static final int POSE_CUSTOM = 7;   // per-part rotations from the pose editor
 
     private static final EntityDataAccessor<CompoundTag> CUSTOM_POSE =
-            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.COMPOUND_TAG);
+            SynchedEntityData.defineId(NotchNpcEntity.class,
+                    net.fugginbeenus.notchcurrency.compat.Sync.compound());
 
     private static final EntityDataAccessor<Integer> POSE_ANIM =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
@@ -246,9 +247,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
     //?}
 
+    // 1.21.11 handed the server level to every combat hook rather than making them dig it back out.
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean doHurtTarget(net.minecraft.server.level.ServerLevel level,
+                                net.minecraft.world.entity.Entity target) {
+        boolean hit = super.doHurtTarget(level, target);
+    *///?} else {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hit = super.doHurtTarget(target);
+    //?}
         if (hit && !this.level().isClientSide) {
             // Pulse the swing to clients (wraps safely: the client only watches for CHANGE).
             this.entityData.set(ATTACK_PULSE, this.entityData.get(ATTACK_PULSE) + 1);
@@ -282,7 +291,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt == null || nbt.isEmpty()) return null;
         float[] out = new float[18];
         for (int part = 0; part < 6; part++) {
-            int[] rot = nbt.getIntArray(Integer.toString(part));
+            int[] rot = net.fugginbeenus.notchcurrency.compat.Nbt.intArray(nbt, Integer.toString(part));
             if (rot.length == 3) {
                 out[part * 3] = rot[0];
                 out[part * 3 + 1] = rot[1];
@@ -356,8 +365,26 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     private static float clampNpcScale(float s) { return Math.max(0.3f, Math.min(3.0f, s)); }
 
-    public float getScale() { return this.entityData.get(SCALE); }
-    public void setScale(float scale) { this.entityData.set(SCALE, clampNpcScale(scale)); }
+    // The X axis of our own per-axis scale, which the renderers apply themselves. It doubles as
+    // vanilla's entity scale, which is what makes a tall NPC's hitbox tall too. 1.21.11 made
+    // getScale final and had it read the scale attribute, so there the value is pushed into that
+    // attribute instead of overriding, and the hitbox still follows.
+    public float npcScale() { return this.entityData.get(SCALE); }
+
+    //? if <1.21.11 {
+    @Override
+    public float getScale() { return npcScale(); }
+    //?}
+
+    public void setScale(float scale) {
+        float clamped = clampNpcScale(scale);
+        this.entityData.set(SCALE, clamped);
+        //? if >=1.21.11 {
+        /*net.minecraft.world.entity.ai.attributes.AttributeInstance scaleAttr =
+                this.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scaleAttr != null) scaleAttr.setBaseValue(clamped);
+        *///?}
+    }
 
     public float getScaleY() { return this.entityData.get(SCALE_Y); }
     public void setScaleY(float scale) { this.entityData.set(SCALE_Y, clampNpcScale(scale)); }
@@ -553,7 +580,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private void applyDoorCapability() {
         if (this.getNavigation() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation nav) {
             nav.setCanOpenDoors(opensDoors);
+            // Pass-through moved off the navigation and onto the evaluator that does the pathing.
+            //? if >=1.21.11 {
+            /*if (nav.getNodeEvaluator() != null) nav.getNodeEvaluator().setCanPassDoors(true);
+            *///?} else {
             nav.setCanPassDoors(true);
+            //?}
             if (nav.getNodeEvaluator() != null) nav.getNodeEvaluator().setCanOpenDoors(opensDoors);
         }
         if (opensDoors && doorGoal == null) {
@@ -600,8 +632,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     @Nullable
     public Player resolveFollowTarget() {
-        if (!followPlayerName.isEmpty() && this.getServer() != null) {
-            return this.getServer().getPlayerList().getPlayerByName(followPlayerName);
+        if (!followPlayerName.isEmpty() && this.level().getServer() != null) {
+            return this.level().getServer().getPlayerList().getPlayerByName(followPlayerName);
         }
         return owner != null ? this.level().getPlayerByUUID(owner) : null;
     }
@@ -879,7 +911,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             // Hostile mobs, but never creepers (iron-golem rule: don't walk a blast into the shop).
             net.minecraft.world.entity.ai.goal.Goal targets = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.monster.Monster.class, 10, true, false,
+                    //? if >=1.21.11 {
+                    /*(e, checkLevel) -> !(e instanceof net.minecraft.world.entity.monster.Creeper));
+                    *///?} else {
                     e -> !(e instanceof net.minecraft.world.entity.monster.Creeper));
+                    //?}
             this.targetSelector.addGoal(1, targets);
             behaviorTargetGoals.add(targets);
         }
@@ -894,7 +930,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             // a guard that turns on its own people is nobody's idea of a guard.
             net.minecraft.world.entity.ai.goal.Goal huntPlayers = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.player.Player.class, 10, true, false,
+                    //? if >=1.21.11 {
+                    /*(e, checkLevel) -> !isAlly(e));
+                    *///?} else {
                     e -> !isAlly(e));
+                    //?}
             this.targetSelector.addGoal(2, huntPlayers);
             behaviorTargetGoals.add(huntPlayers);
         }
@@ -903,7 +943,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             // left alone, so a faction war doesn't sweep up everyone who never joined.
             net.minecraft.world.entity.ai.goal.Goal rivals = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.LivingEntity.class, 10, true, false,
+                    //? if >=1.21.11 {
+                    /*(e, checkLevel) -> isRivalFaction(e));
+                    *///?} else {
                     this::isRivalFaction);
+                    //?}
             this.targetSelector.addGoal(2, rivals);
             behaviorTargetGoals.add(rivals);
         }
@@ -1234,9 +1278,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     // ---- damage protection (owned NPCs are protected, like the old shopkeeper) ----
 
+    // hurt() became final in 1.21.11 and split: the server side of it is hurtServer, which is only
+    // ever called on the server and so drops the client guard below.
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
+                              DamageSource source, float amount) {
+    *///?} else {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (this.level().isClientSide()) return false;
+    //?}
         // Fires on being HIT, not on damage getting through. Protection is on by default, so an
         // "if it takes damage" reading would never run for an ordinary shopkeeper, and a shopkeeper
         // snapping at someone who punched it is the whole point.
@@ -1247,7 +1299,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (protectedNpc && (owner != null || ownerType == OwnerType.SERVER)) {
             // Only the void or /kill can remove a protected NPC.
             if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                //? if >=1.21.11 {
+                /*return super.hurtServer(level, source, amount);
+                *///?} else {
                 return super.hurt(source, amount);
+                //?}
             }
             // The hit is cancelled, but Fights Back still needs to know who swung: record the
             // attacker so the RevengeGoal can retaliate even while the NPC itself is unhurtable.
@@ -1256,7 +1312,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             }
             return false;
         }
+        //? if >=1.21.11 {
+        /*return super.hurtServer(level, source, amount);
+        *///?} else {
         return super.hurt(source, amount);
+        //?}
     }
 
     @Override
@@ -1268,10 +1328,18 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         super.die(source);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean killedEntity(net.minecraft.server.level.ServerLevel world,
+                                net.minecraft.world.entity.LivingEntity other,
+                                DamageSource cause) {
+        boolean result = super.killedEntity(world, other, cause);
+    *///?} else {
     @Override
     public boolean killedEntity(net.minecraft.server.level.ServerLevel world,
                                  net.minecraft.world.entity.LivingEntity other) {
         boolean result = super.killedEntity(world, other);
+    //?}
         // A player only comes along when the NPC killed a player, otherwise there's no one to talk to.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_KILL,
                 other instanceof ServerPlayer p ? p : null);
@@ -1280,6 +1348,23 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     // ---- NBT ----
 
+    // writeConfig and readConfig stay tag-based on every version: presets, share codes and the
+    // pick-up item all go through them too. Nbt bridges the tag across 1.21.11's view API.
+    //? if >=1.21.11 {
+    /*@Override
+    public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
+        super.addAdditionalSaveData(out);
+        CompoundTag nbt = new CompoundTag();
+        writeConfig(nbt);
+        net.fugginbeenus.notchcurrency.compat.Nbt.copyInto(nbt, out);
+    }
+
+    @Override
+    public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
+        super.readAdditionalSaveData(in);
+        readConfig(net.fugginbeenus.notchcurrency.compat.Nbt.readAll(in));
+    }
+    *///?} else {
     @Override
     public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
@@ -1291,6 +1376,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         super.readAdditionalSaveData(nbt);
         readConfig(nbt);
     }
+    //?}
 
     // Excludes the custom name; the caller handles that.
     public void writeConfig(CompoundTag nbt) {
@@ -1303,7 +1389,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putString("SkinType", getSkinType());
         nbt.putString("SkinValue", getSkinValue());
         nbt.putBoolean("Slim", isSlim());
-        nbt.putFloat("Scale", getScale());
+        nbt.putFloat("Scale", npcScale());
         nbt.putFloat("ScaleY", getScaleY());
         nbt.putFloat("ScaleZ", getScaleZ());
         nbt.putFloat("NameOffset", getNameOffset());
@@ -1387,8 +1473,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Slim")) setSlim(nbt.getBoolean("Slim"));
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
         // Older NPCs only stored one scale: fall back to it so they stay the shape they were.
-        setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : getScale());
-        setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : getScale());
+        setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : npcScale());
+        setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : npcScale());
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
         if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
@@ -1408,13 +1494,13 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("WanderRadius")) wanderRadius = Math.max(4, Math.min(64, nbt.getInt("WanderRadius")));
         if (nbt.contains("PatrolSpeed")) setPatrolSpeed(nbt.getFloat("PatrolSpeed"));
         if (nbt.contains("PatrolWait")) setPatrolWaitTicks(nbt.getInt("PatrolWait"));
-        int[] home = nbt.getIntArray("Home");
+        int[] home = net.fugginbeenus.notchcurrency.compat.Nbt.intArray(nbt, "Home");
         if (home.length == 3) homePos = new net.minecraft.core.BlockPos(home[0], home[1], home[2]);
         if (nbt.contains("Waypoints")) {
             waypoints.clear();
             net.minecraft.nbt.ListTag wps = nbt.getList("Waypoints", net.minecraft.nbt.Tag.TAG_INT_ARRAY);
             for (int i = 0; i < wps.size(); i++) {
-                int[] wp = wps.getIntArray(i);
+                int[] wp = net.fugginbeenus.notchcurrency.compat.Nbt.intArray(wps, i);
                 if (wp.length == 3) waypoints.add(new net.minecraft.core.BlockPos(wp[0], wp[1], wp[2]));
             }
         }
@@ -1476,8 +1562,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Equip")) {
             CompoundTag equip = nbt.getCompound("Equip");
             for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
-                if (equip.contains(slot.getName())) {
-                    this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slot.getName())));
+                String slotKey = slot.getName();
+                if (equip.contains(slotKey)) {
+                    this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slotKey)));
                     this.setDropChance(slot, 1.0f); // owner's items always drop if it dies
                 }
             }
@@ -1509,14 +1596,14 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         // 5.x dropped the animatable argument: the controller is handed to the animatable, not the
         // other way round.
         //? if >=1.21.5 {
-        /*controllers.add(new AnimationController<>("main", 4, this::idlePredicate));
+        /*controllers.add(new AnimationController<NotchNpcEntity>("main", 4, this::idlePredicate));
         *///?} else {
         controllers.add(new AnimationController<>(this, "main", 4, this::idlePredicate));
         //?}
     }
 
     //? if >=1.21.5 {
-    /*private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationTest<E> state) {
+    /*private PlayState idlePredicate(AnimationTest<NotchNpcEntity> state) {
     *///?} else {
     private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationState<E> state) {
     //?}

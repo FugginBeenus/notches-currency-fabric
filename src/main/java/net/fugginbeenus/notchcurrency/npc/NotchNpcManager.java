@@ -51,7 +51,7 @@ public final class NotchNpcManager {
         buf.writeUtf(npc.getSkinType());
         buf.writeUtf(npc.getSkinValue());
         buf.writeBoolean(npc.isSlim());
-        buf.writeFloat(npc.getScale());
+        buf.writeFloat(npc.npcScale());
         buf.writeFloat(npc.getScaleY());
         buf.writeFloat(npc.getScaleZ());
         buf.writeFloat(npc.getNameOffset());

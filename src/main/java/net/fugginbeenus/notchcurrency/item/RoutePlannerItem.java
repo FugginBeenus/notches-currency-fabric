@@ -11,7 +11,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+//? if <1.21.11 {
 import net.minecraft.world.InteractionResultHolder;
+//?}
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -59,32 +61,49 @@ public class RoutePlannerItem extends Item {
         return InteractionResult.CONSUME;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+    *///?} else {
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
+    //?}
         ItemStack stack = user.getItemInHand(hand);
-        if (world.isClientSide()) {
-            return InteractionResultHolder.success(stack);
-        }
-        if (user instanceof ServerPlayer sp) {
+        if (!world.isClientSide() && user instanceof ServerPlayer sp) {
             if (StackData.has(stack, ENTRY_KEY)) {
                 // Nothing to confirm when marking a single spot: this is the way to back out.
                 consume(sp, stack);
                 sp.displayClientMessage(Component.literal("Spot unchanged.").withStyle(ChatFormatting.GRAY), false);
                 NotchNpcManager.reopenScheduleFor(sp, stack);
-                return InteractionResultHolder.success(stack);
-            }
-            NotchNpcEntity npc = boundNpc(stack, (ServerLevel) world, sp);
-            if (npc != null) {
-                NotchNpcManager.confirmRoute(sp, npc);
+            } else {
+                NotchNpcEntity npc = boundNpc(stack, (ServerLevel) world, sp);
+                if (npc != null) {
+                    NotchNpcManager.confirmRoute(sp, npc);
+                }
             }
         }
+        //? if >=1.21.11 {
+        /*return InteractionResult.SUCCESS;
+        *///?} else {
         return InteractionResultHolder.success(stack);
+        //?}
     }
 
+    // 1.21.11 only ticks this on the server and says which slot the stack sits in, rather than
+    // handing over a raw index and a "selected" flag.
+    //? if >=1.21.11 {
+    /*@Override
+    public void inventoryTick(ItemStack stack, ServerLevel world, Entity entity,
+                              net.minecraft.world.entity.EquipmentSlot slot) {
+        if (!(entity instanceof ServerPlayer sp)) return;
+        boolean held = slot == net.minecraft.world.entity.EquipmentSlot.MAINHAND
+                || slot == net.minecraft.world.entity.EquipmentSlot.OFFHAND;
+    *///?} else {
     @Override
     public void inventoryTick(ItemStack stack, Level world, Entity entity, int slot, boolean selected) {
         if (world.isClientSide() || !(entity instanceof ServerPlayer sp)) return;
         boolean held = selected || sp.getOffhandItem() == stack;
+    //?}
         if (!held || world.getGameTime() % 10 != 0) return;
 
         if (StackData.has(stack, ENTRY_KEY)) return; // nothing to beacon: no route being built
@@ -99,8 +118,13 @@ public class RoutePlannerItem extends Item {
         ServerLevel sw = (ServerLevel) world;
         for (BlockPos wp : route) {
             for (int i = 0; i < 3; i++) {
+                //? if >=1.21.11 {
+                /*sw.sendParticles(sp, ParticleTypes.END_ROD, true, false,
+                        wp.getX() + 0.5, wp.getY() + 0.3 + i * 0.55, wp.getZ() + 0.5, 1, 0, 0, 0, 0);
+                *///?} else {
                 sw.sendParticles(sp, ParticleTypes.END_ROD, true,
                         wp.getX() + 0.5, wp.getY() + 0.3 + i * 0.55, wp.getZ() + 0.5, 1, 0, 0, 0, 0);
+                //?}
             }
         }
     }
@@ -157,7 +181,15 @@ public class RoutePlannerItem extends Item {
     }
 
     @Override
-    //? if >=1.21 {
+    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
+    // a list, which is handed over in one go, ahead of whatever the superclass adds.
+    //? if >=1.21.11 {
+    /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
+                                net.minecraft.world.item.component.TooltipDisplay display,
+                                java.util.function.Consumer<Component> lines,
+                                net.minecraft.world.item.TooltipFlag type) {
+        List<Component> tooltip = new java.util.ArrayList<>();
+    *///?} elif >=1.21 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, net.minecraft.world.item.TooltipFlag type) {
     *///?} else {
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
@@ -168,7 +200,10 @@ public class RoutePlannerItem extends Item {
         tooltip.add(Component.literal("Right-click ground: add waypoint").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("Sneak + right-click: undo last").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("Right-click the air: confirm route").withStyle(ChatFormatting.GRAY));
-        //? if >=1.21 {
+        //? if >=1.21.11 {
+        /*tooltip.forEach(lines);
+        super.appendHoverText(stack, context, display, lines, type);
+        *///?} elif >=1.21 {
         /*super.appendHoverText(stack, context, tooltip, type);
         *///?} else {
         super.appendHoverText(stack, world, tooltip, context);

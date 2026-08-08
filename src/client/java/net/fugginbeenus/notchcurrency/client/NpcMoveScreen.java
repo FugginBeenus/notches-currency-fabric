@@ -93,7 +93,7 @@ public class NpcMoveScreen extends Screen {
         int zy = py + 60;
         NotchNpcEntity npc = findNpc();
         float[] sizes = npc == null ? new float[]{1f, 1f, 1f}
-                : new float[]{npc.getScale(), npc.getScaleY(), npc.getScaleZ()};
+                : new float[]{npc.npcScale(), npc.getScaleY(), npc.getScaleZ()};
         String[] dims = {"W", "H", "D"};
         for (int a = 0; a < 3; a++) {
             int gx = px + 8 + a * 92;
@@ -115,8 +115,15 @@ public class NpcMoveScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int px = px(), py = py();
@@ -167,11 +174,22 @@ public class NpcMoveScreen extends Screen {
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double deltaX, double deltaY) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    //?}
         if (draggingPanel) {
             panelX = Mth.clamp((int) mouseX - grabDx, 0, Math.max(0, this.width - W));
             panelY = Mth.clamp((int) mouseY - grabDy, 0, Math.max(0, this.height - H));
@@ -181,18 +199,33 @@ public class NpcMoveScreen extends Screen {
             updateYawFromMouse(mouseX);
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseDragged(event, deltaX, deltaY);
+        *///?} else {
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    //?}
         draggingPanel = false;
         if (draggingYaw) {
             draggingYaw = false;
             sendYaw();
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseReleased(event);
+        *///?} else {
         return super.mouseReleased(mouseX, mouseY, button);
+        //?}
     }
 
     private void updateYawFromMouse(double mouseX) {
@@ -221,7 +254,7 @@ public class NpcMoveScreen extends Screen {
     private void resize(int axis, float step) {
         NotchNpcEntity npc = findNpc();
         if (npc == null) return;
-        float x = npc.getScale(), y = npc.getScaleY(), z = npc.getScaleZ();
+        float x = npc.npcScale(), y = npc.getScaleY(), z = npc.getScaleZ();
         float updated = Math.max(0.3f, Math.min(3.0f, Math.round(((axis == 0 ? x : axis == 1 ? y : z) + step) * 10f) / 10f));
         if (axis == 0) x = updated; else if (axis == 1) y = updated; else z = updated;
         NotchPacketsClient.sendNpcSetAppearance(npcId, npc.getModelId(), npc.getSkinType(),

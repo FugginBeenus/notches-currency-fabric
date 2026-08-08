@@ -72,11 +72,11 @@ public final class TradeManager {
         Component accept = Component.literal("[ACCEPT]").setStyle(
                 Style.EMPTY.withColor(ChatFormatting.GREEN)
                         .withBold(true)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/trade accept " + from.getName().getString()))
+                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/trade accept " + from.getName().getString()))
         );
         Component decline = Component.literal("[DECLINE]").setStyle(
                 Style.EMPTY.withColor(ChatFormatting.RED)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/trade decline " + from.getName().getString()))
+                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/trade decline " + from.getName().getString()))
         );
         to.displayClientMessage(Component.literal(from.getName().getString() + " wants to trade: ")
                 .append(accept).append(Component.literal(" ")).append(decline), false);

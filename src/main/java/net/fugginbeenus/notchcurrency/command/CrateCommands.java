@@ -39,7 +39,7 @@ public final class CrateCommands {
         // ===== /balloon (spawn + admin settings) =====
         dispatcher.register(
                 Commands.literal("balloon")
-                        .requires(src -> src.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
 
                         // /balloon spawn [pos]
                         .then(Commands.literal("spawn")
@@ -160,7 +160,7 @@ public final class CrateCommands {
         // ===== /cache =====
         dispatcher.register(
                 Commands.literal("cache")
-                        .requires(src -> src.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         // /cache spawn [radius]
                         .then(Commands.literal("spawn")
                                 .then(Commands.argument("radius", IntegerArgumentType.integer(8, 256))

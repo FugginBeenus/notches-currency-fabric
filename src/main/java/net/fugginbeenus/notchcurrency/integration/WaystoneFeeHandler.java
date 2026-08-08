@@ -1,9 +1,7 @@
 package net.fugginbeenus.notchcurrency.integration;
 
 // Balm dropped its api package and moved the entry point up a level for its 1.21.11 build.
-//? if >=1.21.11 {
-/*import net.blay09.mods.balm.Balm;
-*///?} else {
+//? if <1.21.11 {
 import net.blay09.mods.balm.api.Balm;
 //?}
 //? if >=1.21 {
@@ -36,7 +34,11 @@ public final class WaystoneFeeHandler {
     }
 
     public static void register() {
+        //? if >=1.21.11 {
+        /*WaystoneTeleportEvent.Before.EVENT.register(WaystoneFeeHandler::onPre);
+        *///?} else {
         Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, WaystoneFeeHandler::onPre);
+        //?}
 
         // Fees to each joining client, so the waystone selection menu can price its destinations.
         // Join-only: fee changes mid-session reach players on their next login.
@@ -52,7 +54,11 @@ public final class WaystoneFeeHandler {
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(sp, NotchPackets.WAYSTONE_FEE_SYNC, buf);
     }
 
+    //? if >=1.21.11 {
+    /*private static void onPre(WaystoneTeleportEvent.Before event) {
+    *///?} else {
     private static void onPre(WaystoneTeleportEvent.Pre event) {
+    //?}
         if (!enabled) return;
         if (!(event.getContext().getEntity() instanceof ServerPlayer sp)) return;
 

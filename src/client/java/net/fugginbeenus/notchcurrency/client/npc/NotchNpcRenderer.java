@@ -65,7 +65,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.tickCount = npc.tickCount;
         copyAnimationState(npc, le);
 
-        float sx = npc.getScale(), sy = npc.getScaleY(), sz = npc.getScaleZ();
+        float sx = npc.npcScale(), sy = npc.getScaleY(), sz = npc.getScaleZ();
         boolean scaled = sx != 1.0f || sy != 1.0f || sz != 1.0f;
         if (scaled) {
             matrices.pushPose();

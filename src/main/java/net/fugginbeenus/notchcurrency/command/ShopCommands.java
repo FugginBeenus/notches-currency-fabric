@@ -163,7 +163,7 @@ public final class ShopCommands {
 
                         // /shop linknpc <shopId> - Link current target NPC to shop (admin)
                         .then(Commands.literal("linknpc")
-                                .requires(src -> src.hasPermission(2))
+                                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                                 .then(Commands.argument("shopId", StringArgumentType.word())
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
@@ -226,7 +226,7 @@ public final class ShopCommands {
 
                         // /shop admin list - List ALL shops (admin only)
                         .then(Commands.literal("admin")
-                                .requires(src -> src.hasPermission(2))
+                                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
 
                                 .then(Commands.literal("list")
                                         .executes(ctx -> {
@@ -255,11 +255,8 @@ public final class ShopCommands {
                                                         .append(Component.literal(" | ID: ").withStyle(ChatFormatting.GRAY))
                                                         .append(Component.literal(fullId).withStyle(ChatFormatting.DARK_GRAY)
                                                                 .withStyle(style -> style
-                                                                        .withClickEvent(new net.minecraft.network.chat.ClickEvent(
-                                                                                net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, fullId))
-                                                                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
-                                                                                net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                                                                Component.literal("Click to copy ID"))))), false);
+                                                                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.copyToClipboard(fullId))
+                                                                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Click to copy ID"))))), false);
                                             }
                                             return 1;
                                         })
@@ -283,8 +280,8 @@ public final class ShopCommands {
                                                     }
 
                                                     // Return items to owner if online
-                                                    ServerPlayer owner = p.getServer().getPlayerList().getPlayer(shop.getOwnerId());
-                                                    net.fugginbeenus.notchcurrency.shop.PlayerShopManager.returnAllShopContents(p.getServer(), shop, owner);
+                                                    ServerPlayer owner = p.level().getServer().getPlayerList().getPlayer(shop.getOwnerId());
+                                                    net.fugginbeenus.notchcurrency.shop.PlayerShopManager.returnAllShopContents(p.level().getServer(), shop, owner);
 
                                                     // Remove NPC if linked
                                                     if (shop.getLinkedNpcId() != null) {
@@ -349,7 +346,7 @@ public final class ShopCommands {
                                                             if (shopId == null) return 0;
 
                                                             boolean success = net.fugginbeenus.notchcurrency.shop.PlayerShopManager.transferOwnership(
-                                                                    p.getServer(), shopId, newOwner.getUUID(), newOwner.getName().getString());
+                                                                    p.level().getServer(), shopId, newOwner.getUUID(), newOwner.getName().getString());
 
                                                             if (success) {
                                                                 p.displayClientMessage(Component.literal("✓ Transferred shop to " + newOwner.getName().getString())

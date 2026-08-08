@@ -88,7 +88,18 @@ public final class EnchanterManager {
     @org.jetbrains.annotations.Nullable
     public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.level.Level world) {
         if (stack.isEmpty() || stack.isDamaged()) return null;
-        //? if >=1.21 {
+        // 1.21.11 took the by-type lookup and the plain result accessor off recipes. What is left is
+        // the full list plus assemble(), which for an ordinary crafting recipe just hands back its
+        // fixed result whatever the input. A recipe that computes its output instead returns something
+        // that will not match the stack below, so it is simply skipped rather than offered wrongly.
+        //? if >=1.21.11 {
+        /*if (!(world instanceof net.minecraft.server.level.ServerLevel serverLevel)) return null;
+        for (net.minecraft.world.item.crafting.RecipeHolder<?> recipeEntry
+                : serverLevel.recipeAccess().getRecipes()) {
+            if (!(recipeEntry.value() instanceof net.minecraft.world.item.crafting.CraftingRecipe recipe)) continue;
+            ItemStack out = recipe.assemble(
+                    net.minecraft.world.item.crafting.CraftingInput.EMPTY, world.registryAccess());
+        *///?} elif >=1.21 {
         /*for (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe> recipeEntry
                 : world.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING)) {
             net.minecraft.world.item.crafting.CraftingRecipe recipe = recipeEntry.value();
@@ -101,9 +112,19 @@ public final class EnchanterManager {
             if (out.isEmpty() || !out.is(stack.getItem())) continue;
             if (stack.getCount() < out.getCount()) continue;
             List<ItemStack> returns = new ArrayList<>();
+            // The ingredient list moved onto the placement info, and an ingredient now reports the
+            // items it accepts as holders rather than as ready-made stacks.
+            //? if >=1.21.11 {
+            /*net.minecraft.world.item.crafting.PlacementInfo placement = recipe.placementInfo();
+            if (placement.isImpossibleToPlace()) continue;
+            for (net.minecraft.world.item.crafting.Ingredient ing : placement.ingredients()) {
+                if (ing.isEmpty()) continue;
+                ItemStack[] options = ing.items().map(ItemStack::new).toArray(ItemStack[]::new);
+            *///?} else {
             for (net.minecraft.world.item.crafting.Ingredient ing : recipe.getIngredients()) {
                 if (ing.isEmpty()) continue;
                 ItemStack[] options = ing.getItems();
+            //?}
                 if (options.length == 0 || options[0].isEmpty()) continue;
                 boolean merged = false;
                 for (ItemStack have : returns) {

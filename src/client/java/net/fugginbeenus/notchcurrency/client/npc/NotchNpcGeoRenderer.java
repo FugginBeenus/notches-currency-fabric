@@ -26,7 +26,7 @@ public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
                           float partialTick, int packedLight, int packedOverlay,
                           float red, float green, float blue, float alpha) {
     //?}
-        float scale = animatable.getScale();
+        float scale = animatable.npcScale();
         if (!isReRender && scale > 0f && scale != 1.0f) {
             poseStack.scale(scale, scale, scale);
         }

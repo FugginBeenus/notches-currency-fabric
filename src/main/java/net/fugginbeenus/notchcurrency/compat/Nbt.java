@@ -45,4 +45,57 @@ public final class Nbt {
         return tag.hasUUID(key);
         //?}
     }
+
+    //? if <1.21.11 {
+    public static int[] intArray(CompoundTag tag, String key) {
+        return tag.getIntArray(key);
+    }
+
+    public static int[] intArray(net.minecraft.nbt.ListTag list, int index) {
+        return list.getIntArray(index);
+    }
+    //?}
+
+    //? if >=1.21.11 {
+    /*// Int arrays went Optional with the rest of the getters. Not a blanket rewrite like the others,
+    // because the UUID helpers above already unwrap the Optional themselves and would end up
+    // unwrapping it twice.
+    public static int[] intArray(CompoundTag tag, String key) {
+        return tag.getIntArray(key).orElse(new int[0]);
+    }
+
+    public static int[] intArray(net.minecraft.nbt.ListTag list, int index) {
+        return list.getIntArray(index).orElse(new int[0]);
+    }
+
+    // Entities stopped being handed a CompoundTag to fill in and now get a ValueOutput view. The
+    // NPC's own read and write still work in tags, because presets, share codes and the pick-up item
+    // all reuse the same two methods, so the pair below carries a whole tag across that boundary.
+    //
+    // Key by key, at the top level, rather than nesting the lot under one name: an NPC saved by an
+    // older version has its keys sitting directly on the entity, and burying them would read back as
+    // a factory-fresh NPC on a world that had simply been upgraded.
+    //
+    // There is no codec for "any tag" in vanilla, so this makes one: PASSTHROUGH keeps the value as
+    // a Dynamic, and converting it to NBT ops on the way out gets the original tag back untouched.
+    private static final com.mojang.serialization.Codec<net.minecraft.nbt.Tag> TAG_CODEC =
+            com.mojang.serialization.Codec.PASSTHROUGH.xmap(
+                    dynamic -> dynamic.convert(net.minecraft.nbt.NbtOps.INSTANCE).getValue(),
+                    tag -> new com.mojang.serialization.Dynamic<>(net.minecraft.nbt.NbtOps.INSTANCE, tag));
+
+    public static void copyInto(CompoundTag source, net.minecraft.world.level.storage.ValueOutput out) {
+        for (String key : source.keySet()) {
+            out.store(key, TAG_CODEC, source.get(key));
+        }
+    }
+
+    // Everything the view holds, as a tag. Vanilla's own entity keys ride along; the NPC ignores them.
+    public static CompoundTag readAll(net.minecraft.world.level.storage.ValueInput in) {
+        CompoundTag tag = new CompoundTag();
+        for (String key : in.keys()) {
+            in.read(key, TAG_CODEC).ifPresent(value -> tag.put(key, value));
+        }
+        return tag;
+    }
+    *///?}
 }

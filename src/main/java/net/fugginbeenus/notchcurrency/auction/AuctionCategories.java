@@ -2,14 +2,18 @@ package net.fugginbeenus.notchcurrency.auction;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-//? if >=1.21 {
+//? if >=1.21 && <1.21.11 {
 /*import net.minecraft.world.item.AnimalArmorItem;
 *///?}
+//? if <1.21.11 {
 import net.minecraft.world.item.ArmorItem;
+//?}
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
+//? if <1.21.11 {
 import net.minecraft.world.item.EnchantedBookItem;
+//?}
 //? if <1.21 {
 import net.minecraft.world.item.HorseArmorItem;
 //?}
@@ -17,8 +21,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SpawnEggItem;
+//? if <1.21.11 {
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.TieredItem;
+//?}
 import net.minecraft.world.item.WritableBookItem;
 import net.minecraft.world.item.WrittenBookItem;
 import java.util.Locale;
@@ -38,7 +44,10 @@ public final class AuctionCategories {
         String namespace = id.getNamespace().toLowerCase(Locale.ROOT);
 
         // ===== BOOKS =====
-        if (item instanceof EnchantedBookItem ||
+        if (
+                //? if <1.21.11 {
+                item instanceof EnchantedBookItem ||
+                //?}
                 item instanceof WritableBookItem ||
                 item instanceof WrittenBookItem ||
                 path.contains("book")) {

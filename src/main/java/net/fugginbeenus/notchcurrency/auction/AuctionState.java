@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.Chat;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -30,7 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.HashMap;
 
-public final class AuctionState extends SavedData {
+public final class AuctionState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     // UUID → listing
     private final Map<UUID, AuctionListing> listings = new LinkedHashMap<>();
@@ -133,12 +134,24 @@ public final class AuctionState extends SavedData {
         }
     }
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(tag);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag tag) {
+        return writeNbt(tag);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag tag) {
         // Listings
         ListTag list = new ListTag();
         for (AuctionListing l : listings.values()) {
@@ -236,14 +249,8 @@ public final class AuctionState extends SavedData {
                 MutableComponent claim = Component.literal("[Claim All]")
                         .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
                         .withStyle(style -> style
-                                .withClickEvent(new ClickEvent(
-                                        ClickEvent.Action.RUN_COMMAND,
-                                        "/ah claim"
-                                ))
-                                .withHoverEvent(new HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Component.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items")
-                                )));
+                                .withClickEvent(Chat.runCommand("/ah claim"))
+                                .withHoverEvent(Chat.showText(Component.literal("Click to claim all pending auction " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " & items"))));
 
                 p.displayClientMessage(
                         Component.literal("You have unclaimed auction rewards! ")
@@ -364,7 +371,7 @@ public final class AuctionState extends SavedData {
 
         // Pay seller if online; if offline, store coins in mailbox
         ServerPlayer sellerPlayer =
-                buyer.getServer().getPlayerList().getPlayer(listing.sellerUuid);
+                buyer.level().getServer().getPlayerList().getPlayer(listing.sellerUuid);
 
         boolean sellerPaidNow = false;
 
@@ -431,16 +438,10 @@ public final class AuctionState extends SavedData {
                     .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
                     .withStyle(style -> style
                             .withClickEvent(
-                                    new ClickEvent(
-                                            ClickEvent.Action.RUN_COMMAND,
-                                            "/ah claim " + listing.id.toString()
-                                    )
+                                    Chat.runCommand("/ah claim " + listing.id.toString())
                             )
                             .withHoverEvent(
-                                    new HoverEvent(
-                                            HoverEvent.Action.SHOW_TEXT,
-                                            Component.literal("Click to claim your purchased item")
-                                    )
+                                    Chat.showText(Component.literal("Click to claim your purchased item"))
                             ));
 
             buyer.displayClientMessage(
@@ -743,16 +744,10 @@ public final class AuctionState extends SavedData {
                                 .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
                                 .withStyle(style -> style
                                         .withClickEvent(
-                                                new ClickEvent(
-                                                        ClickEvent.Action.RUN_COMMAND,
-                                                        "/ah claim " + listing.id.toString()
-                                                )
+                                                Chat.runCommand("/ah claim " + listing.id.toString())
                                         )
                                         .withHoverEvent(
-                                                new HoverEvent(
-                                                        HoverEvent.Action.SHOW_TEXT,
-                                                        Component.literal("Click to claim your winnings")
-                                                )
+                                                Chat.showText(Component.literal("Click to claim your winnings"))
                                         ));
 
                         Component msg = Component.literal("Inventory full! ")
@@ -807,16 +802,10 @@ public final class AuctionState extends SavedData {
                                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
                                 .withStyle(style -> style
                                         .withClickEvent(
-                                                new ClickEvent(
-                                                        ClickEvent.Action.RUN_COMMAND,
-                                                        "/ah claim " + listing.id.toString()
-                                                )
+                                                Chat.runCommand("/ah claim " + listing.id.toString())
                                         )
                                         .withHoverEvent(
-                                                new HoverEvent(
-                                                        HoverEvent.Action.SHOW_TEXT,
-                                                        Component.literal("Click to claim your returned item")
-                                                )
+                                                Chat.showText(Component.literal("Click to claim your returned item"))
                                         ));
 
                         seller.displayClientMessage(

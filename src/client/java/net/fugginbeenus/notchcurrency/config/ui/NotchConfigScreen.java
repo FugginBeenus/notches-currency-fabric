@@ -263,9 +263,20 @@ public final class NotchConfigScreen extends Screen {
 
     /* input */
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
+        //? if >=1.21.11 {
+        /*if (editField != null && editField.mouseClicked(event, doubleClick)) return true;
+        *///?} else {
         if (editField != null && editField.mouseClicked(mouseX, mouseY, button)) return true;
+        //?}
         if (editing != null) closeEdit(true);
 
         if (hit((int) mouseX, (int) mouseY, saveX(), footerY(), 104, 16)) {
@@ -303,7 +314,11 @@ public final class NotchConfigScreen extends Screen {
                 if (clickRow(row.entry(), ry, mouseX, mouseY, button)) return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private boolean clickRow(ConfigEntry e, int ry, double mouseX, double mouseY, int button) {
@@ -368,8 +383,15 @@ public final class NotchConfigScreen extends Screen {
         editField = null;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    //?}
         if (draggingBar) {
             scrollBarTo(mouseY);
             return true;
@@ -378,17 +400,32 @@ public final class NotchConfigScreen extends Screen {
             draggingSlider.setFromFraction((mouseX - sliderX()) / (double) (sliderW() - 6));
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseDragged(event, dx, dy);
+        *///?} else {
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    //?}
         if (draggingSlider != null) {
             draggingSlider = null;
             NotchWidgets.tick();
         }
         draggingBar = false;
+        //? if >=1.21.11 {
+        /*return super.mouseReleased(event);
+        *///?} else {
         return super.mouseReleased(mouseX, mouseY, button);
+        //?}
     }
 
     @Override
@@ -407,8 +444,14 @@ public final class NotchConfigScreen extends Screen {
         scroll = Math.max(0, Math.min(f, 1)) * maxScroll();
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         if (editing != null) {
             if (keyCode == 257 || keyCode == 335) { // enter
                 closeEdit(true);
@@ -422,13 +465,32 @@ public final class NotchConfigScreen extends Screen {
             if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, editField)) return true;
         }
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, search)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean charTyped(char chr, int modifiers) {
+    //?}
+        //? if >=1.21.11 {
+        /*if (editField != null && editField.charTyped(event)) return true;
+        *///?} else {
         if (editField != null && editField.charTyped(chr, modifiers)) return true;
+        //?}
+        //? if >=1.21.11 {
+        /*return super.charTyped(event);
+        *///?} else {
         return super.charTyped(chr, modifiers);
+        //?}
     }
 
     @Override

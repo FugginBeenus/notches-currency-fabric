@@ -176,9 +176,28 @@ if (usesIdentifier) {
                 // ServerPlayer.level() became covariant and serverLevel() went away with it. The
                 // call sites want a ServerLevel either way, so the name is all that changes.
                 replace(".serverLevel()", ".level()")
-                // 1.21.11 turned the NBT getters into Optionals and added *OrEmpty variants that
-                // keep the old semantics exactly. Swapping the name is the whole migration.
-                replace(".getCompound(", ".getCompoundOrEmpty(")
+                // RegistryAccess grew a separate lookup vocabulary and the old name went away.
+                replace(".registryOrThrow(", ".lookupOrThrow(")
+                // Level.isDay said nothing about weather; the new name is about the light level.
+                replace(".isDay()", ".isBrightOutside()")
+                replace(".getAllKeys()", ".keySet()")
+                // World height stopped being about where you may build.
+                replace(".getMinBuildHeight()", ".getMinY()")
+                replace(".getMaxBuildHeight()", ".getMaxY()")
+                // A mob's leash-to-a-spot is called its home now.
+                replace(".restrictTo(", ".setHomeTo(")
+                replace(".clearRestriction()", ".clearHome()")
+                // ResourceKey followed ResourceLocation into the Identifier naming.
+                replace(".location()", ".identifier()")
+            }
+            regex(true) {
+                // 1.21.11 turned the NBT getters into Optionals and added *OrEmpty variants that keep
+                // the old semantics exactly. One argument only: our own StackData.getCompound takes a
+                // stack and a key, and a plain string swap renamed that unrelated method too.
+                fromPattern = '\\.getCompound\\(([^,()]+)\\)'
+                toValue = '.getCompoundOrEmpty($1)'
+                reversePattern = '\\.getCompoundOrEmpty\\(([^,()]+)\\)'
+                reverseValue = '.getCompound($1)'
             }
             regex(true) {
                 // getList also lost its type argument, so this one needs the capture.
@@ -204,6 +223,70 @@ if (usesIdentifier) {
                 toValue = '.contains($1)'
                 reversePattern = '\\.contains\\(([^,()]+)\\)'
                 reverseValue = '.contains($1, net.minecraft.nbt.Tag.TAG_COMPOUND)'
+            }
+            regex(true) {
+                // Entity.moveTo became snapTo, to say plainly that it teleports rather than walks.
+                // PathNavigation.moveTo really does walk and kept its name, so the one case that
+                // must not change is excluded by looking at what precedes the call. Replacements are
+                // merged rather than applied in order, so a placeholder round trip is not an option.
+                fromPattern = '(?<!getNavigation\\(\\))\\.moveTo\\('
+                toValue = '.snapTo('
+                reversePattern = '\\.snapTo\\('
+                reverseValue = '.moveTo('
+            }
+            regex(true) {
+                fromPattern = 'BuiltInRegistries\\.([A-Z_]+)\\.get\\('
+                toValue = 'BuiltInRegistries.$1.getValue('
+                reversePattern = 'BuiltInRegistries\\.([A-Z_]+)\\.getValue\\('
+                reverseValue = 'BuiltInRegistries.$1.get('
+            }
+            regex(true) {
+                fromPattern = '\\.getString\\(([^,()]+)\\)'
+                toValue = '.getStringOr($1, "")'
+                reversePattern = '\\.getStringOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getString($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getInt\\(([^,()]+)\\)'
+                toValue = '.getIntOr($1, 0)'
+                reversePattern = '\\.getIntOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getInt($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getLong\\(([^,()]+)\\)'
+                toValue = '.getLongOr($1, 0L)'
+                reversePattern = '\\.getLongOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getLong($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getBoolean\\(([^,()]+)\\)'
+                toValue = '.getBooleanOr($1, false)'
+                reversePattern = '\\.getBooleanOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getBoolean($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getFloat\\(([^,()]+)\\)'
+                toValue = '.getFloatOr($1, 0.0F)'
+                reversePattern = '\\.getFloatOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getFloat($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getDouble\\(([^,()]+)\\)'
+                toValue = '.getDoubleOr($1, 0.0)'
+                reversePattern = '\\.getDoubleOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getDouble($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getByte\\(([^,()]+)\\)'
+                toValue = '.getByteOr($1, (byte) 0)'
+                reversePattern = '\\.getByteOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getByte($1)'
+            }
+            regex(true) {
+                fromPattern = '\\.getShort\\(([^,()]+)\\)'
+                toValue = '.getShortOr($1, (short) 0)'
+                reversePattern = '\\.getShortOr\\(([^,()]+), *[^()]+\\)'
+                reverseValue = '.getShort($1)'
             }
         }
     }

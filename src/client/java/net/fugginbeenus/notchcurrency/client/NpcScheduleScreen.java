@@ -272,9 +272,20 @@ public class NpcScheduleScreen extends Screen {
         }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
+        //? if >=1.21.11 {
+        /*if (button != 0) return super.mouseClicked(event, doubleClick);
+        *///?} else {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
+        //?}
         int mx = (int) mouseX, my = (int) mouseY;
         int px = px(), py = py();
 
@@ -284,7 +295,11 @@ public class NpcScheduleScreen extends Screen {
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 1);
                 return true;
             }
+            //? if >=1.21.11 {
+            /*return super.mouseClicked(event, doubleClick);
+            *///?} else {
             return super.mouseClicked(mouseX, mouseY, button);
+            //?}
         }
 
         if (over(mx, my, px + 12 + 96, py + 22, 40, 14)) {
@@ -346,7 +361,11 @@ public class NpcScheduleScreen extends Screen {
         if (selected >= 0 && selected < entries.size() && paneClicked(mx, my, px, py)) {
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private boolean paneClicked(int mx, int my, int px, int py) {

@@ -46,7 +46,9 @@ public final class Ench {
 
     @Nullable
     public static Enchantment byId(ResourceLocation id) {
-        //? if >=1.21 {
+        //? if >=1.21.11 {
+        /*return registry().getValue(id);
+        *///?} elif >=1.21 {
         /*return registry().get(id);
         *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.get(id);

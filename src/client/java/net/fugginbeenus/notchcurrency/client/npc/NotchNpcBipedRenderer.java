@@ -111,7 +111,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     protected void scale(NotchNpcEntity entity, PoseStack matrices, float amount) {
         // Scale only the model here (not the name label, which is rendered separately).
-        float sx = entity.getScale(), sy = entity.getScaleY(), sz = entity.getScaleZ();
+        float sx = entity.npcScale(), sy = entity.getScaleY(), sz = entity.getScaleZ();
         if (sx != 1.0f || sy != 1.0f || sz != 1.0f) matrices.scale(sx, sy, sz);
     }
 

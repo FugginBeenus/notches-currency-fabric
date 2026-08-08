@@ -195,8 +195,15 @@ public class NpcRecruiterScreen extends Screen {
                 px + W / 2, rowConfirm() + 22, NotchTheme.TEXT_MUTED, false);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
 
@@ -259,7 +266,11 @@ public class NpcRecruiterScreen extends Screen {
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private int feeStep() {
@@ -275,10 +286,20 @@ public class NpcRecruiterScreen extends Screen {
         this.init();
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, textField)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     private static String titleCase(String s) {

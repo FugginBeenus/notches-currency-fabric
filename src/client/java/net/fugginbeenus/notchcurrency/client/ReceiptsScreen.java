@@ -98,14 +98,25 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
         super.render(ctx, mouseX, mouseY, delta);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0 && totalPages() > 1) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, leftPos + 190, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
             if (over(mx, my, leftPos + 227, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

@@ -41,7 +41,7 @@ public final class TradeOfferManager {
 
     public static boolean createOffer(ServerPlayer creator, List<ItemStack> offered, long offeredCoins,
                                       long price, List<ItemStack> requested, String targetName) {
-        TradeOfferState state = TradeOfferState.get(creator.getServer());
+        TradeOfferState state = TradeOfferState.get(creator.level().getServer());
         if (state.countBy(creator.getUUID()) >= MAX_PER_PLAYER) {
             creator.displayClientMessage(Component.literal("You already have " + MAX_PER_PLAYER + " open offers.").withStyle(ChatFormatting.RED), false);
             return false;
@@ -64,7 +64,7 @@ public final class TradeOfferManager {
     }
 
     public static boolean accept(ServerPlayer accepter, UUID offerId) {
-        TradeOfferState state = TradeOfferState.get(accepter.getServer());
+        TradeOfferState state = TradeOfferState.get(accepter.level().getServer());
         TradeOffer offer = state.get(offerId);
         if (offer == null) {
             accepter.displayClientMessage(Component.literal("That offer is no longer available.").withStyle(ChatFormatting.RED), false);
@@ -92,7 +92,7 @@ public final class TradeOfferManager {
             }
         }
 
-        MinecraftServer server = accepter.getServer();
+        MinecraftServer server = accepter.level().getServer();
 
         // Take payment from the accepter → creator (coins by UUID, items to the mailbox if offline).
         if (offer.priceCoins() > 0) {
@@ -131,7 +131,7 @@ public final class TradeOfferManager {
     }
 
     public static boolean cancel(ServerPlayer creator, UUID offerId) {
-        TradeOfferState state = TradeOfferState.get(creator.getServer());
+        TradeOfferState state = TradeOfferState.get(creator.level().getServer());
         TradeOffer offer = state.get(offerId);
         if (offer == null || !offer.creatorUuid().equals(creator.getUUID())) {
             creator.displayClientMessage(Component.literal("That isn't one of your offers.").withStyle(ChatFormatting.RED), false);

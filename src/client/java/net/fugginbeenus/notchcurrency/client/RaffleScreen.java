@@ -189,8 +189,15 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
         }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0 && this.minecraft != null && this.minecraft.gameMode != null) {
             int id = buttonAt(mouseX, mouseY);
             if (id >= 0) {
@@ -199,7 +206,11 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private int buttonAt(double mx, double my) {

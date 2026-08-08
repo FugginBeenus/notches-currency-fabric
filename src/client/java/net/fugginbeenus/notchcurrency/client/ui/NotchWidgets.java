@@ -235,7 +235,11 @@ public final class NotchWidgets {
                         || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
                         || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
                         || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+                //? if >=1.21.11 {
+                /*if (editKey) f.keyPressed(event);
+                *///?} else {
                 if (editKey) f.keyPressed(keyCode, scanCode, modifiers);
+                //?}
                 return true; // swallow everything else so HandledScreen doesn't close/hotbar-swap
             }
         }
@@ -254,7 +258,11 @@ public final class NotchWidgets {
                 || keyCode == GLFW.GLFW_KEY_PAGE_UP || keyCode == GLFW.GLFW_KEY_PAGE_DOWN
                 || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
                 || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+        //? if >=1.21.11 {
+        /*if (editKey) box.keyPressed(event);
+        *///?} else {
         if (editKey) box.keyPressed(keyCode, scanCode, modifiers);
+        //?}
         return true; // swallow plain characters: charTyped inserts them
     }
 }

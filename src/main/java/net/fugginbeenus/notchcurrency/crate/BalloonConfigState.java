@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 
-public final class BalloonConfigState extends SavedData {
+public final class BalloonConfigState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
     public BlockPos center = new BlockPos(0, 80, 0);
     public int radius = 25;
     public int minY = 110;
@@ -36,12 +36,24 @@ public final class BalloonConfigState extends SavedData {
         return s;
     }
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         nbt.putInt("cx", center.getX());
         nbt.putInt("cy", center.getY());
         nbt.putInt("cz", center.getZ());

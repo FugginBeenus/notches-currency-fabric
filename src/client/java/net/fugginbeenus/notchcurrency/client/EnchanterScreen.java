@@ -251,8 +251,15 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (menu.repairCostProp() > 0 && over(mx, my, leftPos + 156, topPos + 21, 92, 18)) {
@@ -299,11 +306,22 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                 }
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    //?}
         if (draggingScroll) {
             int count = cards().size();
             int track = SB_H - thumbH(count);
@@ -314,13 +332,28 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             }
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.mouseDragged(event, dx, dy);
+        *///?} else {
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    //?}
         draggingScroll = false;
+        //? if >=1.21.11 {
+        /*return super.mouseReleased(event);
+        *///?} else {
         return super.mouseReleased(mouseX, mouseY, button);
+        //?}
     }
 
     @Override

@@ -128,8 +128,15 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             for (int i = 0; i < DURATIONS.length; i++) {
                 if (over((int) mouseX, (int) mouseY, this.leftPos + SEG_X[i], this.topPos + SEG_Y, SEG_W[i], SEG_H)) {
@@ -144,7 +151,11 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private void submit() {
@@ -167,11 +178,21 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         priceField.setValue("");
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, priceField)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     //? if >=1.21 {

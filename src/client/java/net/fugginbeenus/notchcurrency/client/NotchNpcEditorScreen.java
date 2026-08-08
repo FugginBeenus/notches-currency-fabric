@@ -852,8 +852,15 @@ public class NotchNpcEditorScreen extends Screen {
 
     // ---- input ----
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < 6; i++) {
@@ -938,7 +945,11 @@ public class NotchNpcEditorScreen extends Screen {
                 }
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private boolean clickAppearance(int mx, int my) {
@@ -1036,8 +1047,14 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.inset(ctx, x, y, 12, 12, checked ? NotchTheme.ACCENT_GREEN : NotchTheme.DEEP);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         // Enter re-applies the focused skin field (when its checkbox is on).
         if (keyCode == 257 || keyCode == 335) {
             if (playerField != null && playerField.isFocused() && NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
@@ -1055,7 +1072,11 @@ public class NotchNpcEditorScreen extends Screen {
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField, farewellField)) {
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     private static float round1(float v) { return Math.round(v * 10f) / 10f; }

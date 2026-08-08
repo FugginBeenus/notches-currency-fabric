@@ -31,7 +31,13 @@ public class NpcEquipScreenHandler extends AbstractContainerMenu {
     private final String[] trinketLabels;
 
     private static EquipmentSlot preferredSlot(ItemStack stack) {
-        //? if >=1.21 {
+        // Equipable went away in 1.21.11; what a stack can wear is a data component now.
+        //? if >=1.21.11 {
+        /*net.minecraft.world.item.equipment.Equippable eq =
+                stack.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+        if (eq != null) return eq.slot();
+        return stack.is(net.minecraft.world.item.Items.SHIELD) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
+        *///?} elif >=1.21 {
         /*net.minecraft.world.item.Equipable eq = net.minecraft.world.item.Equipable.get(stack);
         if (eq != null) return eq.getEquipmentSlot();
         return stack.is(net.minecraft.world.item.Items.SHIELD) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;

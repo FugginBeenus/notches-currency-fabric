@@ -40,8 +40,7 @@ public final class AdminShopMenu {
             }
             if (e.isDynamic()) {
                 line.append(Component.literal(" ~").withStyle(ChatFormatting.AQUA)
-                        .withStyle(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                Component.literal("Dynamic price - moves with supply & demand")))));
+                        .withStyle(s -> s.withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Dynamic price - moves with supply & demand")))));
             }
             player.displayClientMessage(line, false);
         }
@@ -53,7 +52,7 @@ public final class AdminShopMenu {
     private static MutableComponent button(String label, ChatFormatting color, String command, String hover) {
         return Component.literal("[" + label + "]").withStyle(color)
                 .withStyle(s -> s
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(hover))));
+                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand(command))
+                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal(hover))));
     }
 }

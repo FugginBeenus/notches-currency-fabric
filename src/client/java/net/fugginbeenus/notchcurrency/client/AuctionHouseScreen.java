@@ -233,14 +233,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.GOLD)
                                 .withUnderlined(true)
-                                .withClickEvent(new net.minecraft.network.chat.ClickEvent(
-                                        net.minecraft.network.chat.ClickEvent.Action.OPEN_URL,
-                                        "https://github.com/FugginBeenus/NotchCurrency/wiki"
-                                ))
-                                .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
-                                        net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                        Component.literal("Open the Notch Currency wiki")
-                                ))
+                                .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.openUrl("https://github.com/FugginBeenus/NotchCurrency/wiki"))
+                                .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Open the Notch Currency wiki")))
                         );
 
                 Component message = Component.literal("Need help? ").withStyle(ChatFormatting.YELLOW).append(linkText);
@@ -987,8 +981,14 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         showBidPopup = false;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         if (showBidPopup) {
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) { showBidPopup = false; return true; }
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) { submitBid(); return true; }
@@ -998,16 +998,31 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
             }
             return true; // consume all keys while bidding
         }
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean charTyped(char chr, int modifiers) {
+    //?}
         if (showBidPopup) {
             if (Character.isDigit(chr) && bidInput.length() < 12) bidInput += chr;
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.charTyped(event);
+        *///?} else {
         return super.charTyped(chr, modifiers);
+        //?}
     }
 
     /** Cancel hint for a hovered popup listing, drawn above the popup (Z 600). */
@@ -1097,8 +1112,15 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         matrices.popPose();
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         // Bid prompt swallows all clicks while open.
         if (showBidPopup) {
             int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
@@ -1176,7 +1198,11 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         }
 
         // Let HandledScreen send click to server (for buy-now behaviour, inventory, etc.)
+        //? if >=1.21.11 {
+        /*boolean handled = super.mouseClicked(event, doubleClick);
+        *///?} else {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        //?}
 
         // Left click on a TIMED auction => open bid command in chat (existing behaviour)
         if (button == 0 && !showUserPopup && this.minecraft != null) {

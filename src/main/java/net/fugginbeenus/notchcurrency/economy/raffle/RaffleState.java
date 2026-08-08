@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.raffle;
 
+import net.fugginbeenus.notchcurrency.compat.Nbt;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -21,7 +22,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-public class RaffleState extends SavedData {
+public class RaffleState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String DATA_KEY = "notchcurrency_raffle";
 
@@ -187,12 +188,24 @@ public class RaffleState extends SavedData {
 
     // ---- NBT ----
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         nbt.putLong("Round", currentRound);
         nbt.putLong("Pot", pot);
         nbt.putLong("CoinsPool", coinsPool);
@@ -268,7 +281,7 @@ public class RaffleState extends SavedData {
         ListTag redeemed = nbt.getList("Redeemed", Tag.TAG_COMPOUND);
         for (int i = 0; i < redeemed.size(); i++) {
             try {
-                state.redeemedThisRound.add(redeemed.getCompound(i).getUUID("Id"));
+                state.redeemedThisRound.add(Nbt.getUuid(redeemed.getCompound(i), "Id"));
             } catch (IllegalArgumentException ignored) {
                 // skip malformed entry
             }

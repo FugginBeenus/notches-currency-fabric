@@ -71,7 +71,8 @@ public class NpcActions {
         if (nbt == null) return actions;
         for (NpcTrigger trigger : NpcTrigger.values()) {
             if (!nbt.contains(trigger.name())) continue;
-            ListTag list = nbt.getList(trigger.name(), Tag.TAG_COMPOUND);
+            String key = trigger.name();
+            ListTag list = nbt.getList(key, Tag.TAG_COMPOUND);
             List<DialogueAction> parsed = new ArrayList<>();
             for (int i = 0; i < list.size() && i < MAX_PER_TRIGGER; i++) {
                 parsed.add(DialogueAction.fromNbt(list.getCompound(i)));

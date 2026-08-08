@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FactionState extends SavedData {
+public class FactionState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String DATA_KEY = "notchcurrency_factions";
 
@@ -111,12 +111,24 @@ public class FactionState extends SavedData {
 
     // ---- NBT ----
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         ListTag list = new ListTag();
         for (Faction f : factions.values()) list.add(f.toNbt());
         nbt.put("Factions", list);

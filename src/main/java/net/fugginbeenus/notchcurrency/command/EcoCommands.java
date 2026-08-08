@@ -54,7 +54,7 @@ public final class EcoCommands {
         // ===== /eco (admin) =====
         dispatcher.register(
                 Commands.literal("eco")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.literal("give")
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .then(Commands.argument("amount", LongArgumentType.longArg(1))

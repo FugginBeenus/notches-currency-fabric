@@ -23,7 +23,8 @@ public final class CurrencyServerSync {
     private CurrencyServerSync() {}
 
     public static void send(ServerPlayer sp) {
-        if (sp.level().getServer() != null && sp.level().getServer().isSingleplayerOwner(sp.getGameProfile())) return;
+        if (sp.level().getServer() != null
+                && net.fugginbeenus.notchcurrency.compat.Profiles.isSingleplayerOwner(sp.level().getServer(), sp)) return;
 
         Path dir = FabricLoader.getInstance().getConfigDir().resolve("notchcurrency").resolve("currency");
         String itemName = NotchConfigIO.get().currency.itemName.trim();

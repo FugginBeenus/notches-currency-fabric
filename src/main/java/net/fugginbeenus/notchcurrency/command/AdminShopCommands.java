@@ -29,7 +29,7 @@ public final class AdminShopCommands {
         dispatcher.register(Commands.literal("adminshop")
                 // ---- admin setup ----
                 .then(Commands.literal("create")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {
                                     AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
@@ -44,7 +44,7 @@ public final class AdminShopCommands {
                                     return 1;
                                 })))
                 .then(Commands.literal("delete")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {
                                     AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
@@ -55,7 +55,7 @@ public final class AdminShopCommands {
                                     return 1;
                                 })))
                 .then(Commands.literal("list")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .executes(ctx -> {
                             AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
                             if (state.all().isEmpty()) {
@@ -70,7 +70,7 @@ public final class AdminShopCommands {
                             return 1;
                         }))
                 .then(Commands.literal("additem")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .then(Commands.argument("buyPrice", LongArgumentType.longArg(0))
                                         .then(Commands.argument("sellPrice", LongArgumentType.longArg(0))
@@ -85,11 +85,11 @@ public final class AdminShopCommands {
                                                                 LongArgumentType.getLong(ctx, "sellPrice"),
                                                                 BoolArgumentType.getBool(ctx, "dynamic"))))))))
                 .then(Commands.literal("info")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> info(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
                 .then(Commands.literal("removeitem")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("shopId", StringArgumentType.word())
                                 .then(Commands.argument("entryId", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -166,9 +166,8 @@ public final class AdminShopCommands {
                             + (e.isDynamic() ? " (dyn)" : "")).withStyle(ChatFormatting.GRAY))
                     .append(Component.literal("  "))
                     .append(Component.literal("[X]").withStyle(ChatFormatting.RED).withStyle(s -> s
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                    "/adminshop removeitem " + shop.getId() + " " + e.getId()))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Remove this item")))));
+                            .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/adminshop removeitem " + shop.getId() + " " + e.getId()))
+                            .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Remove this item")))));
             src.sendSuccess(() -> line, false);
         }
         return 1;

@@ -54,13 +54,8 @@ public final class EconomyLeaderboard {
 
     public static String nameOf(MinecraftServer server, UUID id) {
         try {
-            var cache = server.getProfileCache();
-            if (cache != null) {
-                var profile = cache.get(id);
-                if (profile.isPresent() && profile.get().getName() != null) {
-                    return profile.get().getName();
-                }
-            }
+            var name = net.fugginbeenus.notchcurrency.compat.Profiles.nameOf(server, id);
+            if (name.isPresent()) return name.get();
         } catch (Exception ignored) {}
         return id.toString().substring(0, 8);
     }

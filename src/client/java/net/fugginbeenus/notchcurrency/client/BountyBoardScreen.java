@@ -196,8 +196,15 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         return null;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int btnX = this.leftPos + W - 8 - BTN_W;
@@ -238,7 +245,11 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private void action(ItemStack stack, int action) {

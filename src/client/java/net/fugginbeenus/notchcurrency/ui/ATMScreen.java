@@ -186,9 +186,20 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         super.renderLabels(ctx, mouseX, mouseY);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
+        //? if >=1.21.11 {
+        /*boolean handled = super.mouseClicked(event, doubleClick);
+        *///?} else {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        //?}
         int slotIndex = this.hoveredSlot != null ? this.hoveredSlot.index : -1;
         if (slotIndex >= 0 && slotIndex < 5) {
             if (minecraft != null && minecraft.player != null) {
@@ -202,24 +213,53 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
     }
 
     // Component field typing
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        char chr = (char) event.codepoint();
+        int modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean charTyped(char chr, int modifiers) {
+    //?}
+        //? if >=1.21.11 {
+        /*if (withdrawField != null && withdrawField.charTyped(event)) {
+        *///?} else {
         if (withdrawField != null && withdrawField.charTyped(chr, modifiers)) {
+        //?}
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.charTyped(event);
+        *///?} else {
         return super.charTyped(chr, modifiers);
+        //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
+        //? if >=1.21.11 {
+        /*if (withdrawField != null && withdrawField.keyPressed(event)) {
+        *///?} else {
         if (withdrawField != null && withdrawField.keyPressed(keyCode, scanCode, modifiers)) {
+        //?}
             if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
                 onWithdrawClicked();
                 return true;
             }
             return true;
         }
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     // ---------------------------------------------------------------------

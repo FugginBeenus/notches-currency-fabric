@@ -59,14 +59,13 @@ public class NotchCurrency implements ModInitializer {
 
     public static Component coinIcon() {
         MutableComponent t = Component.literal("\uE000");  // Character mapped in minecraft:default font
-        HoverEvent.ItemStackInfo content =
-                new HoverEvent.ItemStackInfo(new ItemStack(ModItems.NOTCH_COIN));
 
         // Force white so the coin glyph renders at full brightness (untinted) no matter what colour
         // the surrounding price text is drawn in, otherwise dark price text darkens the coin.
         return t.withStyle(style -> style
                 .withColor(net.minecraft.network.chat.TextColor.fromRgb(0xFFFFFF))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, content)));
+                .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showItem(
+                        new ItemStack(ModItems.NOTCH_COIN))));
     }
 
     public static Component coins(long amount) {

@@ -31,7 +31,7 @@ public final class CrateKeyCommands {
                                     return 1;
                                 })))
                 .then(Commands.literal("givekey")
-                        .requires(s -> s.hasPermission(2))
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
                                         .executes(ctx -> {

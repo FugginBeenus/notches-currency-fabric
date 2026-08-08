@@ -334,14 +334,8 @@ public final class AuctionCommands {
                                         MutableComponent cancelBtn = Component.literal("[Cancel]")
                                                 .withStyle(ChatFormatting.RED)
                                                 .withStyle(style -> style
-                                                        .withClickEvent(new net.minecraft.network.chat.ClickEvent(
-                                                                net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
-                                                                "/ah cancel " + l.id.toString()
-                                                        ))
-                                                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
-                                                                net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                                                Component.literal("Click to cancel this listing")
-                                                        ))
+                                                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand("/ah cancel " + l.id.toString()))
+                                                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal("Click to cancel this listing")))
                                                 );
 
                                         line.append(cancelBtn);

@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class BalanceState extends SavedData {
+public class BalanceState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String KEY_ROOT = "balances";
 
@@ -61,12 +61,24 @@ public class BalanceState extends SavedData {
 
     /* ---------- Persistence ---------- */
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         CompoundTag map = new CompoundTag();
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
             map.putLong(e.getKey().toString(), e.getValue());

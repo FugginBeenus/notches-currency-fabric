@@ -108,8 +108,15 @@ public class QuickLinesScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < lines.size(); i++) {
@@ -157,7 +164,11 @@ public class QuickLinesScreen extends Screen {
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private void save() {
@@ -178,8 +189,14 @@ public class QuickLinesScreen extends Screen {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         // Enter applies the current line, like clicking Apply.
         if ((keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER)
                 && editField.isFocused() && !editField.getValue().isBlank()) {
@@ -196,7 +213,11 @@ public class QuickLinesScreen extends Screen {
         }
         // Plain characters insert via charTyped only (guards against the select-all wipe).
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, editField)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     @Override

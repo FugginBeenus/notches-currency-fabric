@@ -209,8 +209,15 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         return true;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int pageCount = menu.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
@@ -236,7 +243,11 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
                 }
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private void clickButton(int id) {

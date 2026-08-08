@@ -64,23 +64,40 @@ public class BalloonEntity extends Entity {
     //?}
 
     @Override
+    //? if >=1.21.11 {
+    /*protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
+        net.minecraft.nbt.CompoundTag nbt = net.fugginbeenus.notchcurrency.compat.Nbt.readAll(in);
+    *///?} else {
     protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag nbt) {
+    //?}
         // If SpawnWorldTime is missing (old balloon), it will be 0, and we'll re-init in tick()
         this.spawnWorldTime = nbt.contains("SpawnWorldTime") ? nbt.getLong("SpawnWorldTime") : -1;
         this.animTicks = nbt.getInt("AnimTicks");
     }
 
     @Override
+    //? if >=1.21.11 {
+    /*protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
+        net.minecraft.nbt.CompoundTag nbt = new net.minecraft.nbt.CompoundTag();
+    *///?} else {
     protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag nbt) {
+    //?}
         nbt.putLong("SpawnWorldTime", this.spawnWorldTime);
         nbt.putInt("AnimTicks", this.animTicks);
+        //? if >=1.21.11 {
+        /*net.fugginbeenus.notchcurrency.compat.Nbt.copyInto(nbt, out);
+        *///?}
     }
 
     // Targetable
     @Override public boolean isAttackable() { return true; }
     @Override public boolean isPushable()   { return false; }
     @Override public void    push(Entity entity) {} // keep public in 1.20.1
+    //? if >=1.21.11 {
+    /*@Override public boolean canBeCollidedWith(Entity by) { return true; }
+    *///?} else {
     @Override public boolean canBeCollidedWith() { return true; }
+    //?}
     @Override public boolean isPickable()       { return true; }
 
     @Override
@@ -125,9 +142,15 @@ public class BalloonEntity extends Entity {
         }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
+                              DamageSource source, float amount) {
+    *///?} else {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (level().isClientSide) return true;
+    //?}
 
         final Entity src = source.getDirectEntity();
         final boolean fromProjectile  = src instanceof net.minecraft.world.entity.projectile.Projectile;

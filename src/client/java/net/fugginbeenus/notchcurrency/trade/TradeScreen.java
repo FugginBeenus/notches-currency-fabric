@@ -189,11 +189,21 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         @Override protected void updateWidgetNarration(NarrationElementOutput builder) { /* no narration */ }
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, selfMoneyField, otherMoneyField)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     //? if >=1.21 {

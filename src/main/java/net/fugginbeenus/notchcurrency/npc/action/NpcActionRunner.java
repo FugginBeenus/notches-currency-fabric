@@ -138,15 +138,13 @@ public final class NpcActionRunner {
         if (owner == null) return false;
         ServerPlayer online = server.getPlayerList().getPlayer(owner);
         if (online != null) return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(online);
-        var profile = server.getProfileCache() == null ? java.util.Optional.<com.mojang.authlib.GameProfile>empty()
-                : server.getProfileCache().get(owner);
-        return profile.isPresent() && server.getPlayerList().isOp(profile.get());
+        return net.fugginbeenus.notchcurrency.compat.Profiles.isOp(server, owner);
     }
 
     private static void runCommand(@Nullable ServerPlayer sp, NotchNpcEntity npc,
                                    String command, boolean asPlayer) {
         if (command == null || command.isBlank()) return;
-        MinecraftServer server = sp != null ? sp.level().getServer() : npc.getServer();
+        MinecraftServer server = sp != null ? sp.level().getServer() : npc.level().getServer();
         if (server == null) return;
         if (!ownerMayRunCommands(npc, server)) return;
         String cmd = NpcText.substitute(command, sp, NpcText.npcName(npc));

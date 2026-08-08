@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ShopState extends SavedData {
+public class ShopState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-ShopState");
     private static final String DATA_KEY = "notchcurrency_shops";
@@ -222,12 +222,24 @@ public class ShopState extends SavedData {
 
     // --- NBT Serialization ---
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         ListTag shopList = new ListTag();
         for (PlayerShop shop : shops.values()) {
             shopList.add(shop.toNbt());

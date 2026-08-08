@@ -459,8 +459,15 @@ public class DialogueStudioScreen extends Screen {
 
     // ---- input ----
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
 
@@ -509,7 +516,11 @@ public class DialogueStudioScreen extends Screen {
                 return true;
             }
         }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
+        //?}
     }
 
     private boolean clickNodeEditor(int mx, int my) {
@@ -752,14 +763,24 @@ public class DialogueStudioScreen extends Screen {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
         // Plain characters insert via charTyped only: forwarding them trips select-all (the
         // "typing 'a' wipes the line" bug). Edit/nav keys are forwarded by the guards.
         if (NotchWidgets.typingInEditBox(keyCode, scanCode, modifiers, nodeTextBox)) return true;
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, renameField, choiceLabelField,
                 actionValueField, actionAmountField, condValueField, condAmountField)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
         return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
     }
 
     @Override

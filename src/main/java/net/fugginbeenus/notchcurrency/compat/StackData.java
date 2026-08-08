@@ -53,7 +53,7 @@ public final class StackData {
 
     public static boolean hasUuid(ItemStack stack, String key) {
         CompoundTag nbt = read(stack);
-        return nbt != null && nbt.hasUUID(key);
+        return nbt != null && Nbt.hasUuid(nbt, key);
     }
 
     public static void remove(ItemStack stack, String key) {
@@ -91,7 +91,7 @@ public final class StackData {
     @Nullable
     public static UUID getUuid(ItemStack stack, String key) {
         CompoundTag nbt = read(stack);
-        return (nbt != null && nbt.hasUUID(key)) ? nbt.getUUID(key) : null;
+        return (nbt != null && Nbt.hasUuid(nbt, key)) ? Nbt.getUuid(nbt, key) : null;
     }
 
     public static CompoundTag getCompound(ItemStack stack, String key) {

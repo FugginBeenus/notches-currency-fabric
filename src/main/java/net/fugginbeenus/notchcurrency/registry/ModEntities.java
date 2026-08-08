@@ -23,7 +23,13 @@ public final class ModEntities {
                         .dimensions(EntityDimensions.fixed(0.9f, 1.4f)) // solid hitbox
                         .trackRangeBlocks(64)
                         .trackedUpdateRate(1)
+                        //? if >=1.21.11 {
+                        /*.build(net.minecraft.resources.ResourceKey.create(
+                                net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                NotchCurrency.id("balloon")))
+                        *///?} else {
                         .build()
+                        //?}
         );
 
         NOTCH_NPC = Registry.register(
@@ -33,7 +39,13 @@ public final class ModEntities {
                         .dimensions(EntityDimensions.fixed(0.6f, 1.95f)) // player-ish, humanoid geo
                         .trackRangeBlocks(64)
                         .trackedUpdateRate(3)
+                        //? if >=1.21.11 {
+                        /*.build(net.minecraft.resources.ResourceKey.create(
+                                net.minecraft.core.registries.Registries.ENTITY_TYPE,
+                                NotchCurrency.id("notch_npc")))
+                        *///?} else {
                         .build()
+                        //?}
         );
     }
 

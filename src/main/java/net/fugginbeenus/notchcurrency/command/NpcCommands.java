@@ -30,7 +30,7 @@ public final class NpcCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("npc")
-                .requires(s -> s.hasPermission(2))
+                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                 .then(Commands.literal("setrole")
                         .then(Commands.literal("banker").executes(ctx -> setRole(ctx.getSource(), NpcRole.BANKER, null)))
                         .then(Commands.literal("auctioneer").executes(ctx -> setRole(ctx.getSource(), NpcRole.AUCTIONEER, null)))

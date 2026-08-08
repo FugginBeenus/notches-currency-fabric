@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.Nbt;
 import net.fugginbeenus.notchcurrency.compat.StateData;
 
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -23,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class BountyState extends SavedData {
+public class BountyState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String DATA_KEY = "notchcurrency_bounties";
 
@@ -143,12 +144,24 @@ public class BountyState extends SavedData {
 
     // ---- NBT ----
 
-    @Override
-    //? if >=1.21 {
-    /*public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
+    // nothing on SavedData left to override there.
+    //? if >=1.21.11 {
+    /*
+    *///?} elif >=1.21 {
+    /*@Override
+    public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+        return writeNbt(nbt);
+    }
     *///?} else {
+    @Override
     public CompoundTag save(CompoundTag nbt) {
+        return writeNbt(nbt);
+    }
     //?}
+
+    @Override
+    public CompoundTag writeNbt(CompoundTag nbt) {
         ListTag offerList = new ListTag();
         for (Bounty b : offers.values()) offerList.add(b.toNbt());
         nbt.put("Offers", offerList);
@@ -223,7 +236,7 @@ public class BountyState extends SavedData {
                 UUID player = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player");
                 Set<UUID> s = new HashSet<>();
                 ListTag ids = o.getList("Ids", Tag.TAG_COMPOUND);
-                for (int j = 0; j < ids.size(); j++) s.add(ids.getCompound(j).getUUID("Id"));
+                for (int j = 0; j < ids.size(); j++) s.add(Nbt.getUuid(ids.getCompound(j), "Id"));
                 state.completed.put(player, s);
             } catch (IllegalArgumentException ignored) {
                 // skip
