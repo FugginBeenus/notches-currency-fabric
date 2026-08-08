@@ -18,7 +18,20 @@ import com.mojang.math.Axis;
 import java.util.ArrayList;
 import java.util.List;
 
+//? if >=1.21.11 {
+/*public class LedgerBoardBlockEntityRenderer
+        implements BlockEntityRenderer<LedgerBoardBlockEntity, LedgerBoardBlockEntityRenderer.State> {
+
+    // The board reads its rows and its facing while the block entity is in hand; drawing works
+    // only from these.
+    public static class State extends net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState {
+        public boolean draw;
+        public float angle;
+        public List<EconomyLeaderboard.Entry> rows = List.of();
+    }
+*///?} else {
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
+//?}
 
     // --- tunables (block units unless noted) ---
     private static final float PLATE_TOP = 1.5f;  // top of the screen (y), rows descend from here
@@ -31,7 +44,11 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
     private final Font text;
 
     public LedgerBoardBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
+        //? if >=1.21.11 {
+        /*this.text = ctx.font();
+        *///?} else {
         this.text = ctx.getFont();
+        //?}
     }
 
     /** Create's AngleHelper.horizontalAngle: facing yaw, negated on the X axis. */
@@ -40,6 +57,38 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         return f.getAxis() == Direction.Axis.X ? -a : a;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public State createRenderState() {
+        return new State();
+    }
+
+    @Override
+    public void extractRenderState(LedgerBoardBlockEntity be, State out, float tickDelta,
+                                   net.minecraft.world.phys.Vec3 cameraPos,
+                                   net.minecraft.client.renderer.feature.ModelFeatureRenderer.CrumblingOverlay crumbling) {
+        BlockEntityRenderer.super.extractRenderState(be, out, tickDelta, cameraPos, crumbling);
+        var blockState = be.getBlockState();
+        out.draw = blockState.getBlock() instanceof LedgerBoardBlock
+                && blockState.getValue(LedgerBoardBlock.HALF) == DoubleBlockHalf.LOWER;
+        if (!out.draw) return;
+        out.angle = horizontalAngle(blockState.getValue(LedgerBoardBlock.FACING));
+        out.rows = be.rows();
+    }
+
+    @Override
+    public void submit(State state, PoseStack matrices,
+                       net.minecraft.client.renderer.SubmitNodeCollector collector,
+                       net.minecraft.client.renderer.state.CameraRenderState camera) {
+        if (!state.draw) return;
+        List<EconomyLeaderboard.Entry> rows = state.rows;
+
+        matrices.pushPose();
+        // centre -> rotateY(facing) -> unCentre  (Create's FlapDisplayRenderer frame)
+        matrices.translate(0.5, 0.5, 0.5);
+        matrices.mulPose(Axis.YP.rotationDegrees(state.angle));
+        matrices.translate(-0.5, -0.5, -0.5);
+    *///?} else {
     @Override
     public void render(LedgerBoardBlockEntity be, float tickDelta, PoseStack matrices,
                        MultiBufferSource vertexConsumers, int light, int overlay) {
@@ -53,25 +102,36 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         List<EconomyLeaderboard.Entry> rows = be.rows();
 
         matrices.pushPose();
-        // centre → rotateY(facing) → unCentre  (Create's FlapDisplayRenderer frame)
+        // centre -> rotateY(facing) -> unCentre  (Create's FlapDisplayRenderer frame)
         matrices.translate(0.5, 0.5, 0.5);
         matrices.mulPose(Axis.YP.rotationDegrees(horizontalAngle(facing)));
         matrices.translate(-0.5, -0.5, -0.5);
+    //?}
         // step to the screen top-centre, on the front plane
         matrices.translate(0.5, PLATE_TOP, FRONT_Z);
         matrices.scale(SCALE, -SCALE, SCALE);
         matrices.translate(0.0, 0.0, 0.5); // a texel off the surface, avoids z-fighting
 
         int lb = LightTexture.FULL_BRIGHT;
+        //? if <1.21.11 {
         var matrix = matrices.last().pose();
+        //?}
 
         // Header, centred.
         Component header = Component.literal("TOP BALANCES").withStyle(ChatFormatting.GOLD);
-        Render.drawText(text, header, -text.width(header) / 2f, 0, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+        //? if >=1.21.11 {
+            /*Render.submitText(text, header, -text.width(header) / 2f, 0, 0xFFFFFFFF, matrices, collector, lb);
+            *///?} else {
+            Render.drawText(text, header, -text.width(header) / 2f, 0, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            //?}
 
         if (rows.isEmpty()) {
             Component none = Component.literal("No balances yet").withStyle(ChatFormatting.GRAY);
+            //? if >=1.21.11 {
+            /*Render.submitText(text, none, -text.width(none) / 2f, LINE_H, 0xFFFFFFFF, matrices, collector, lb);
+            *///?} else {
             Render.drawText(text, none, -text.width(none) / 2f, LINE_H, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            //?}
         }
         // Rows: rank + name left-aligned, balance right-aligned (Create-style columns).
         for (int i = 0; i < rows.size(); i++) {
@@ -81,8 +141,16 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
             Component name = Component.literal((i + 1) + " ").withStyle(rank)
                     .copy().append(Component.literal(e.name()).withStyle(ChatFormatting.AQUA));
             Component bal = Component.literal(compact(e.balance())).withStyle(ChatFormatting.YELLOW);
+            //? if >=1.21.11 {
+            /*Render.submitText(text, name, LEFT_X, y, 0xFFFFFFFF, matrices, collector, lb);
+            *///?} else {
             Render.drawText(text, name, LEFT_X, y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            //?}
+            //? if >=1.21.11 {
+            /*Render.submitText(text, bal, RIGHT_X - text.width(bal), y, 0xFFFFFFFF, matrices, collector, lb);
+            *///?} else {
             Render.drawText(text, bal, RIGHT_X - text.width(bal), y, 0xFFFFFFFF, matrix, vertexConsumers, lb);
+            //?}
         }
         matrices.popPose();
     }
@@ -99,8 +167,15 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         return (whole < 10 && tenth > 0) ? whole + "." + tenth + suffix : whole + suffix;
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean shouldRenderOffScreen() {
+        return true;
+    }
+    *///?} else {
     @Override
     public boolean shouldRenderOffScreen(LedgerBoardBlockEntity be) {
         return true;
     }
+    //?}
 }

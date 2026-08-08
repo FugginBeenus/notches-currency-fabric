@@ -187,7 +187,13 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         //?}
     }
 
-    //? if >=1.21 {
+    // The blur hook is handed the graphics now instead of the partial tick.
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
+    }
+    *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
         // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.

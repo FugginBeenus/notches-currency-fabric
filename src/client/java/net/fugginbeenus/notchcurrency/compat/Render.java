@@ -24,6 +24,16 @@ public final class Render {
         text.drawInBatch(str, x, y, color, false, matrix, vcp, Font.DisplayMode.NORMAL, 0, light);
     }
 
+    //? if >=1.21.11 {
+    /*// Text in the world is submitted for the drawing pass now rather than batched on the spot.
+    public static void submitText(Font text, Component str, float x, float y, int color,
+                                  PoseStack matrices,
+                                  net.minecraft.client.renderer.SubmitNodeCollector collector, int light) {
+        collector.submitText(matrices, x, y, str.getVisualOrderText(), false,
+                Font.DisplayMode.NORMAL, light, color, 0, 0);
+    }
+    *///?}
+
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21 {
