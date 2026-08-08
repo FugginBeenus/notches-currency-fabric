@@ -75,9 +75,9 @@ public final class BountyTrackerHud implements HudRenderCallback {
                 : sw - scaledW - cfg.bountyTrackerX;
         int y = corner.contains("BOTTOM") ? sh - scaledH - cfg.bountyTrackerY : cfg.bountyTrackerY;
 
-        ctx.pose().pushPose();
-        ctx.pose().translate(x, y, 0);
-        ctx.pose().scale(s, s, 1);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, x, y);
+        net.fugginbeenus.notchcurrency.compat.Render.scaleGui(ctx, s, s);
 
         var tr = client.font;
         int py = 0;
@@ -113,7 +113,7 @@ public final class BountyTrackerHud implements HudRenderCallback {
             py += PILL_H + PILL_GAP;
         }
 
-        ctx.pose().popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     /* Location Tooltip's pill helpers */

@@ -77,12 +77,11 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         int ccx = x + W / 2, ccy = y + COIN_CY;
         drawGlow(ctx, ccx, ccy, now);
         drawSparkles(ctx, ccx, ccy, now);
-        PoseStack m = ctx.pose();
-        m.pushPose();
-        m.translate(ccx - COIN_HALF, ccy - COIN_HALF, 0);
-        m.scale(3f, 3f, 1f);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, ccx - COIN_HALF, ccy - COIN_HALF);
+        net.fugginbeenus.notchcurrency.compat.Render.scaleGui(ctx, 3f, 3f);
         ctx.renderItem(new ItemStack(selectedHeads ? ModItems.NOTCH_COIN : ModItems.COIN_TAILS), 0, 0);
-        m.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
 
         // Side pickers: selected = green, other = neutral grey.
         boolean hHover = over(mouseX, mouseY, x + HEADS_X, y + SIDE_Y, SIDE_W, SIDE_H);

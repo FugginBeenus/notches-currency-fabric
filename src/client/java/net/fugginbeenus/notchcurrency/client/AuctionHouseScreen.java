@@ -532,9 +532,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                                  String[] options,
                                  String activeLabel) {
         // Push Z-level to render above inventory items
-        var matrices = ctx.pose();
-        matrices.pushPose();
-        matrices.translate(0.0F, 0.0F, 400.0F);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
 
         int maxWidth = this.font.width(title);
 
@@ -584,7 +583,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
             textY += lineHeight;
         }
 
-        matrices.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     @Override
@@ -936,11 +935,11 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         }
     }
 
-    /** Bid prompt drawn above everything (Z 500); manual text input keeps the listing id hidden. */
+    /** Bid prompt drawn above everything (Z 500); manual text */
     private void drawBidPopup(GuiGraphics ctx, int mouseX, int mouseY) {
         var matrices = ctx.pose();
-        matrices.pushPose();
-        matrices.translate(0.0F, 0.0F, 500.0F);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
 
         ctx.fill(0, 0, this.width, this.height, 0x88000000);
 
@@ -972,7 +971,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         NotchWidgets.dangerButton(ctx, this.font, px + 72, py + 68, 58, 14, "Cancel",
                 over(mouseX, mouseY, px + 72, py + 68, 58, 14));
 
-        matrices.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     private void submitBid() {
@@ -1058,16 +1057,15 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         lines.add(Component.literal("Click to cancel & reclaim").withStyle(ChatFormatting.RED));
 
         var matrices = ctx.pose();
-        matrices.pushPose();
-        matrices.translate(0.0F, 0.0F, 600.0F);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
         ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
-        matrices.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     private void drawUserPopup(GuiGraphics ctx) {
-        var matrices = ctx.pose();
-        matrices.pushPose();
-        matrices.translate(0.0F, 0.0F, 500.0F);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
 
         int dimX1 = this.leftPos + DIM_MARGIN_LEFT;
         int dimY1 = this.topPos + DIM_MARGIN_TOP;
@@ -1126,7 +1124,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                     0xFFFF0000);
         }
 
-        matrices.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     //? if >=1.21.11 {

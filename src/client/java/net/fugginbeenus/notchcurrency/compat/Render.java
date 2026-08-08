@@ -34,6 +34,38 @@ public final class Render {
     }
     *///?}
 
+    public static void pushGui(net.minecraft.client.gui.GuiGraphics ctx) {
+        //? if >=1.21.11 {
+        /*ctx.pose().pushMatrix();
+        *///?} else {
+        ctx.pose().pushPose();
+        //?}
+    }
+
+    public static void popGui(net.minecraft.client.gui.GuiGraphics ctx) {
+        //? if >=1.21.11 {
+        /*ctx.pose().popMatrix();
+        *///?} else {
+        ctx.pose().popPose();
+        //?}
+    }
+
+    public static void translateGui(net.minecraft.client.gui.GuiGraphics ctx, float x, float y) {
+        //? if >=1.21.11 {
+        /*ctx.pose().translate(x, y);
+        *///?} else {
+        ctx.pose().translate(x, y, 0f);
+        //?}
+    }
+
+    public static void scaleGui(net.minecraft.client.gui.GuiGraphics ctx, float sx, float sy) {
+        //? if >=1.21.11 {
+        /*ctx.pose().scale(sx, sy);
+        *///?} else {
+        ctx.pose().scale(sx, sy, 1f);
+        //?}
+    }
+
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21 {

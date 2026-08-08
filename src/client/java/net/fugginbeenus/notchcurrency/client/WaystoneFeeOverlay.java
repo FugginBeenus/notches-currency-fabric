@@ -71,15 +71,14 @@ public final class WaystoneFeeOverlay {
         int x = Math.max(2, Math.min(mouseX + 12, screen.width - boxW - 2));
         int y = Math.max(2, Math.min(mouseY - 12, screen.height - boxH - 2));
 
-        ctx.pose().pushPose();
-        ctx.pose().translate(0f, 0f, 400f); // above the menu, like a vanilla tooltip
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx); // drawn last, so it sits above the menu like a vanilla tooltip
         ctx.fill(x - 1, y - 1, x + boxW + 1, y + boxH + 1, 0xFF000000);
         ctx.fill(x, y, x + boxW, y + boxH, 0xF01B1B22);
         ctx.drawString(tr, label, x + pad, y + pad, 0xFFB8B8B8, true);
         int rowY = y + pad + line + gap;
         ctx.renderItem(COIN, x + pad, rowY);
         ctx.drawString(tr, amount, x + pad + coin + gap, rowY + (coin - 8) / 2, NotchTheme.TEXT_GOLD, true);
-        ctx.pose().popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     @Nullable

@@ -75,13 +75,12 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             drawGlow(ctx, x + CASE_X + CASE_W / 2, y + CASE_Y + CASE_H / 2);
             drawCase(ctx, x + CASE_X, y + CASE_Y, CASE_W, CASE_H, false);
 
-            var m = ctx.pose();
-            m.pushPose();
-            m.translate(x + CASE_X + CASE_W / 2f - 16f, y + CASE_Y + CASE_H / 2f - 16f, 0f);
-            m.scale(2f, 2f, 1f);
+            net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+            net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, x + CASE_X + CASE_W / 2f - 16f, y + CASE_Y + CASE_H / 2f - 16f);
+            net.fugginbeenus.notchcurrency.compat.Render.scaleGui(ctx, 2f, 2f);
             ctx.renderItem(prize, 0, 0);
             if (prize.getCount() > 1) ctx.renderItemDecorations(this.font, prize, 0, 0);
-            m.popPose();
+            net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
 
             // Prize name: white hero text (readable on the light panel).
             String prizeName = hasItem ? prize.getHoverName().getString() : "Coin Jackpot";

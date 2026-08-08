@@ -201,12 +201,11 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         SlotSymbol[] syms = SlotSymbol.values();
         if (symbolIndex < 0 || symbolIndex >= syms.length) symbolIndex = 0;
         ItemStack stack = new ItemStack(syms[symbolIndex].displayItem());
-        PoseStack m = ctx.pose();
-        m.pushPose();
-        m.translate(cx - 16, cy - 16, 0);
-        m.scale(2f, 2f, 1f);
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
+        net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, cx - 16, cy - 16);
+        net.fugginbeenus.notchcurrency.compat.Render.scaleGui(ctx, 2f, 2f);
         ctx.renderItem(stack, 0, 0);
-        m.popPose();
+        net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
     // ---- cabinet decoration ----
