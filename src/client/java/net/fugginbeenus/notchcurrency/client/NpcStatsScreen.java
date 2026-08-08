@@ -45,8 +45,13 @@ public class NpcStatsScreen extends Screen {
     private int toggleY(int i) { return py() + 106 + (i / 2) * 19; }
     private int visibility() { return (statsBits >> 8) & 3; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -83,7 +88,11 @@ public class NpcStatsScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 244, 160, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 70, py + 244, 160, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     private float sliderT(int i) {

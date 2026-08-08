@@ -145,8 +145,13 @@ public class NotchNpcModelPickerScreen extends Screen {
         scrollRow = 0;
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -186,7 +191,11 @@ public class NotchNpcModelPickerScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 40, py + H - 22, 80, 16, "Back",
                 over(mouseX, mouseY, px + W / 2 - 40, py + H - 22, 80, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     private void drawTile(GuiGraphics ctx, Entry e, int tx, int ty, boolean hover) {

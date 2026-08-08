@@ -54,8 +54,13 @@ public class QuickLinesScreen extends Screen {
 
     private int rowY(int i) { return py + LIST_Y + i * ROW_H; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -105,7 +110,11 @@ public class QuickLinesScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + 168, py + H - 26, 90, 16, "Discard",
                 over(mouseX, mouseY, px + 168, py + H - 26, 90, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

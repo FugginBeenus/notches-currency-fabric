@@ -71,9 +71,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
     private boolean ready = false;
 
     public TradeScreen(TradeScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, PANEL_W, PANEL_H);
+        *///?} else {
         super(handler, inv, title);
-        this.imageWidth  = PANEL_W;
+        this.imageWidth = PANEL_W;
         this.imageHeight = PANEL_H;
+        //?}
         this.titleLabelX = this.titleLabelY = 9999;
         this.inventoryLabelX = this.inventoryLabelY = 9999;
     }
@@ -136,8 +140,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         NetClient.sendToServer(NotchPackets.TRADE_UPDATE, buf);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         // Keep the other player's amount mirrored into the right field
         int other = this.menu.getProperties().get(1);
         String want = Integer.toString(other);
@@ -148,7 +157,11 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
 
         // Draw "CONFIRM"/"READY" label (independent nudge from hitbox)
         int bx = (this.width - imageWidth) / 2 + CONFIRM_X + CONFIRM_LABEL_DX;
@@ -163,8 +176,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         renderTooltip(ctx, mouseX, mouseY);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         int x = (this.width - imageWidth) / 2;
         int y = (this.height - imageHeight) / 2;
 
@@ -181,10 +199,12 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
             this.onClick = onClick;
         }
         @Override public void onPress() { onClick.run(); }
-        //? if >=1.21 {
+        //? if >=26.1 {
+        /*@Override protected void extractWidgetRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
+        *///?} elif >=1.21 {
         /*@Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
         *///?} else {
-        @Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { /* invisible */ }
+        @Override protected void renderWidget(GuiGraphics ctx, int mouseX, int mouseY, float delta) { }
         //?}
         @Override protected void updateWidgetNarration(NarrationElementOutput builder) { /* no narration */ }
     }

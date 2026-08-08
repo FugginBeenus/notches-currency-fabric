@@ -106,8 +106,13 @@ public final class NotchConfigScreen extends Screen {
 
     /* render */
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderBackground(ctx, mouseX, mouseY, delta);
         *///?} else {
@@ -180,7 +185,11 @@ public final class NotchConfigScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, saveX(), footerY(), 104, 16, "Save & Apply",
                 hit(mouseX, mouseY, saveX(), footerY(), 104, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         if (search.getValue().isEmpty() && !search.isFocused()) {
             ctx.drawString(this.font, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
         }

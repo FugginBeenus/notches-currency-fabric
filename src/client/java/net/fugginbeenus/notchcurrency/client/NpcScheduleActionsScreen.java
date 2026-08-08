@@ -93,8 +93,13 @@ public class NpcScheduleActionsScreen extends Screen {
         }
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -148,7 +153,11 @@ public class NpcScheduleActionsScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, px + W / 2 - 70, py + SAVE_Y, 140, 16, "Save & Back",
                 over(mouseX, mouseY, px + W / 2 - 70, py + SAVE_Y, 140, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

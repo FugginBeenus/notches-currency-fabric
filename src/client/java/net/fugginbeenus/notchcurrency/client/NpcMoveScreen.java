@@ -51,8 +51,13 @@ public class NpcMoveScreen extends Screen {
     private int px() { return panelX; }
     private int py() { return panelY; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         // No dimmed background: the point is watching the NPC in the world while adjusting.
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
@@ -112,7 +117,11 @@ public class NpcMoveScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 100, 272, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 10, py + 100, 272, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

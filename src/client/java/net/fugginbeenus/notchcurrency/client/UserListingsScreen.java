@@ -99,8 +99,13 @@ public class UserListingsScreen extends AbstractContainerScreen<UserListingsScre
         addRenderableWidget(minusButton);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         // Draw just the popup window from the texture (top-left 176×96)
         ctx.blit(TEX,
                 this.leftPos, this.topPos,       // screen position
@@ -129,10 +134,19 @@ public class UserListingsScreen extends AbstractContainerScreen<UserListingsScre
         // (No inventory titles; all visual labels are baked into the texture)
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         // Don’t dim the whole screen; we want to see the world / AH behind
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
 
         if (DEBUG_OUTLINES) {

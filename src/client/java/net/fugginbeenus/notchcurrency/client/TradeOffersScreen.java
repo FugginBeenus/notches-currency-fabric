@@ -29,9 +29,13 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     private static final int ACTION_ACCEPT = 0, ACTION_CANCEL = 1;
 
     public TradeOffersScreen(TradeOffersScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -121,8 +125,13 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         }
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8);
@@ -166,12 +175,21 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         }
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
         // Row tooltip: the full exchange, spelled out.
         for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {

@@ -40,8 +40,13 @@ public class NpcFactionPickerScreen extends Screen {
 
     private int rowY(int i) { return py + LIST_Y + i * ROW_H; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -85,7 +90,11 @@ public class NpcFactionPickerScreen extends Screen {
                 over(mouseX, mouseY, px + 12, py + H - 26, 120, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + W - 132, py + H - 26, 120, 16, "Back",
                 over(mouseX, mouseY, px + W - 132, py + H - 26, 120, 16));
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

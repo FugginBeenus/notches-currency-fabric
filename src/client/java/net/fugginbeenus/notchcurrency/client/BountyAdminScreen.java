@@ -26,9 +26,13 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
     private boolean prefilled = false;
 
     public BountyAdminScreen(BountyAdminScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -63,8 +67,13 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
         prefilled = true;
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         prefillIfReady();
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);

@@ -67,8 +67,13 @@ public class NpcPresetScreen extends Screen {
         addRenderableWidget(nameField);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -124,7 +129,11 @@ public class NpcPresetScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + BACK_Y, 160, 16, "Back to Editor",
                 over(mouseX, mouseY, px + 70, py + BACK_Y, 160, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

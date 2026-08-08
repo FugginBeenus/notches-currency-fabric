@@ -31,9 +31,13 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     private EditBox greetField;
 
     public ShopManageScreen(ShopManageScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -103,8 +107,13 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                 t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Shop Manager", x + W / 2, y + 8);
@@ -210,12 +219,21 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                 over(mouseX, mouseY, x + 8, y + 224, 240, 15));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         if (over(mouseX, mouseY, leftPos + 195, topPos + 59, 14, 14)) {
             ctx.renderComponentTooltip(this.font, List.of(
                     Component.literal("Title color - click to cycle"),

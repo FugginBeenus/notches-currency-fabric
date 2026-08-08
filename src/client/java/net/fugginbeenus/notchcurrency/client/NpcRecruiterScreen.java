@@ -91,8 +91,13 @@ public class NpcRecruiterScreen extends Screen {
     private int rowOpen() { return py + 120; }
     private int rowConfirm() { return py + 148; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -111,7 +116,11 @@ public class NpcRecruiterScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + PAD, py + H - 26, BTN_W, ROW_H,
                 mode == Mode.SETTINGS ? "Back" : "Close",
                 over(mouseX, mouseY, px + PAD, py + H - 26, BTN_W, ROW_H));
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     private void renderView(GuiGraphics ctx, int mx, int my) {

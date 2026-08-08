@@ -30,9 +30,13 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     private boolean draggingScroll;
 
     public CosmeticShopScreen(CosmeticShopScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -52,8 +56,13 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     private int pages() { return Math.max(1, menu.prop(CosmeticShopScreenHandler.P_TOTAL_PAGES)); }
     private int page() { return menu.prop(CosmeticShopScreenHandler.P_PAGE); }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7);
@@ -119,12 +128,21 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {

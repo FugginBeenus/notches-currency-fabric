@@ -31,9 +31,13 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private boolean draggingScroll;
 
     public ShopBrowseScreen(ShopBrowseScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -56,8 +60,13 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private int page() { return menu.prop(ShopBrowseScreenHandler.P_PAGE); }
     private boolean open() { return menu.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_OPEN; }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         // Owners can color the title with &-codes in the shop name ("&6Golden Goods").
@@ -150,12 +159,21 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         // Trade-row tooltip.
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);

@@ -183,6 +183,20 @@ if (unobfuscated) {
                 // Fabric's view helpers renamed their key enumeration, which keeps the entity NBT
                 // flat rather than nested and so keeps an upgraded world readable.
                 replace(".keys()", ".keySet()")
+                // GUI drawing became state extraction in 26.x. The handle kept its whole surface but
+                // not its name, and the drawing calls were shortened to say what they draw. These are
+                // the pure renames; the overrides whose parameters were also reordered are branched
+                // in the screens themselves.
+                replace("GuiGraphics", "GuiGraphicsExtractor")
+                replace(".drawString(", ".text(")
+                replace(".drawCenteredString(", ".centeredText(")
+                replace(".renderItem(", ".item(")
+                replace("renderLabels", "extractLabels")
+                replace(".renderItemDecorations(", ".itemDecorations(")
+                // Screen.renderTransparentBackground went away with the render/extract split. This is
+                // exactly what it drew, so the dimming behind a panel looks the same as before.
+                replace("renderTransparentBackground(ctx)",
+                        "ctx.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)")
                 // Fabric's loot events moved a version on.
                 replace("net.fabricmc.fabric.api.loot.v2", "net.fabricmc.fabric.api.loot.v3")
                 // The creative-tab builder and its per-tab event were renamed with the package.
@@ -194,6 +208,14 @@ if (unobfuscated) {
                 // A slot click carries a richer object than the old enum.
                 replace("net.minecraft.world.inventory.ClickType", "net.minecraft.world.inventory.ContainerInput")
                 replace("ClickType", "ContainerInput")
+            }
+            regex(true) {
+                // AbstractContainerScreen's own tooltip hook, renamed with the extract split. Three
+                // arguments, so it cannot collide with the Font overloads handled elsewhere.
+                fromPattern = '\\.renderTooltip\\((\\w+), (\\w+), (\\w+)\\)'
+                toValue = '.extractTooltip($1, $2, $3)'
+                reversePattern = '\\.extractTooltip\\((\\w+), (\\w+), (\\w+)\\)'
+                reverseValue = '.renderTooltip($1, $2, $3)'
             }
             regex(true) {
                 // Level.random went protected; the accessor was always there.
@@ -226,6 +248,10 @@ if (usesIdentifier) {
                 // Level.isDay said nothing about weather; the new name is about the light level.
                 replace(".isDay()", ".isBrightOutside()")
                 replace(".getAllKeys()", ".keySet()")
+                // GuiGraphics.pose() is a 2D matrix stack from here on, with its own push and pop.
+                // Scoped to that receiver: the entity renderers' PoseStack keeps the old names.
+                replace(".pose().pushPose()", ".pose().pushMatrix()")
+                replace(".pose().popPose()", ".pose().popMatrix()")
                 // Tooltips are queued for the next frame now instead of drawn on the spot.
                 replace(".renderComponentTooltip(", ".setComponentTooltipForNextFrame(")
                 // Two client classes moved package without changing shape.

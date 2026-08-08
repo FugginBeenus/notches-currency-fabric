@@ -195,9 +195,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     public AuctionHouseScreen(AuctionHouseScreenHandler handler,
                               Inventory inv,
                               Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, TEX_W, TEX_H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = TEX_W;
         this.imageHeight = TEX_H;
+        //?}
 
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
@@ -323,8 +327,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         addRenderableWidget(raffleButton);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
 
         // Window (measured 178x210 from the original texture).
@@ -883,12 +892,21 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
 
 
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
 
         if (showUserPopup) {

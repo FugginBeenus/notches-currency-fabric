@@ -175,8 +175,13 @@ public class NotchNpcEditorScreen extends Screen {
         followField.visible = (tab == 1 && currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -194,7 +199,11 @@ public class NotchNpcEditorScreen extends Screen {
             case 4 -> drawPose(ctx, mouseX, mouseY);
             case 5 -> drawManage(ctx, mouseX, mouseY);
         }
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         if (tooltip != null) {
             ctx.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }

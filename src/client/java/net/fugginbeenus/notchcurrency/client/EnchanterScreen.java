@@ -36,9 +36,13 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     private EnchanterManager.UncraftPlan plan;
 
     public EnchanterScreen(EnchanterScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -81,8 +85,13 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
 
     private int cardY(int v) { return this.topPos + LIST_Y + v * CARD_STEP; }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Enchanter", x + W / 2, y + 8);
@@ -223,12 +232,21 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         return this.topPos + SB_Y + (int) ((scroll / (double) max) * (SB_H - thumbH(count)));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
         // Card tooltip: full name, description, price.
         if (tab != 2) {

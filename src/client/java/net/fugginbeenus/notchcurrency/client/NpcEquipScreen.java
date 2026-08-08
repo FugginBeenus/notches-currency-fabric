@@ -29,15 +29,24 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
 
     public NpcEquipScreen(NpcEquipScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Equipment", x + W / 2, y + 7);
@@ -85,12 +94,21 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
         }
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
 
         // Empty gear and trinket slots explain what they take.

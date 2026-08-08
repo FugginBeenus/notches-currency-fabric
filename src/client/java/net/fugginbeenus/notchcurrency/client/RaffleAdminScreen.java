@@ -32,9 +32,13 @@ public class RaffleAdminScreen extends AbstractContainerScreen<RaffleAdminScreen
     private boolean prefilled = false;
 
     public RaffleAdminScreen(RaffleAdminScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -72,8 +76,13 @@ public class RaffleAdminScreen extends AbstractContainerScreen<RaffleAdminScreen
         prefilled = true;
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         prefillIfReady();
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
@@ -140,9 +149,18 @@ public class RaffleAdminScreen extends AbstractContainerScreen<RaffleAdminScreen
         // No default labels.
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         // Explain the two prize boxes on hover (when empty; item tooltips show otherwise).
         if (overItem(mouseX, mouseY, RaffleAdminScreenHandler.CUR_X, RaffleAdminScreenHandler.CUR_Y)
                 && menu.getCurrentPrizeStack().isEmpty()) {

@@ -52,8 +52,13 @@ public class PoseEditorScreen extends Screen {
     private int partY(int i) { return py() + 30 + (i / 2) * 18; }
     private int sliderY(int axis) { return py() + 96 + axis * 22; }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -110,7 +115,11 @@ public class PoseEditorScreen extends Screen {
         NotchWidgets.primaryButton(ctx, this.font, px + RX, py + 198, 208, 16, "Back to Editor",
                 over(mouseX, mouseY, px + RX, py + 198, 208, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     // ---- input ----

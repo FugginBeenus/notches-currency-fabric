@@ -23,9 +23,13 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
     private EditBox priceField;
 
     public ShopListingEditScreen(ShopListingEditScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, W, H);
+        *///?} else {
         super(handler, inv, title);
         this.imageWidth = W;
         this.imageHeight = H;
+        //?}
         this.titleLabelX = -1000;
         this.inventoryLabelX = -1000;
     }
@@ -58,8 +62,13 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         return s;
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = this.leftPos, y = this.topPos;
         boolean editing = menu.hasListing();
         NotchWidgets.panel(ctx, x, y, W, H);
@@ -156,12 +165,21 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         }
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
         // Guidance tooltip for the empty stock bin.
         if (menu.stockSample().isEmpty()

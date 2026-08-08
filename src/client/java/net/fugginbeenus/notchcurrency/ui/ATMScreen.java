@@ -60,9 +60,13 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
     private Button withdrawButton;
 
     public ATMScreen(ATMTestScreenHandler handler, Inventory inv, Component title) {
+        //? if >=26.1 {
+        /*super(handler, inv, title, 176, 200);
+        *///?} else {
         super(handler, inv, title);
-        this.imageWidth  = 176;
+        this.imageWidth = 176;
         this.imageHeight = 200; // taller texture
+        //?}
 
         this.titleLabelX = 9999;
         this.titleLabelY = 9999;
@@ -111,17 +115,31 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         withdrawButton.setAlpha(0.0f);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21 {
         this.renderBackground(ctx);
         //?}
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
         this.renderTooltip(ctx, mouseX, mouseY);
     }
 
+    //? if >=26.1 {
+    /*@Override
+    protected void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     protected void renderBg(GuiGraphics ctx, float delta, int mouseX, int mouseY) {
+    //?}
         final int x = (this.width - this.imageWidth) / 2;
         final int y = (this.height - this.imageHeight) / 2;
 

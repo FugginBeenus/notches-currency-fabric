@@ -95,8 +95,13 @@ public class NpcActionsScreen extends Screen {
     private int trigY(int i) { return py + TRIG_Y + i * (TRIG_H + 2); }
     private int rowY(int i) { return py + 70 + i * (ROW_H + 2); }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -189,7 +194,11 @@ public class NpcActionsScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 126, py + H - 26, 70, 16, "Discard",
                 over(mouseX, mouseY, px + ED_X + 126, py + H - 26, 70, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     //? if >=1.21.11 {

@@ -222,8 +222,13 @@ public class DialogueStudioScreen extends Screen {
 
     // ---- rendering ----
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
         //? if >=1.21 {
         /*renderTransparentBackground(ctx);
         *///?} else {
@@ -249,7 +254,11 @@ public class DialogueStudioScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 190, py + H - 24, 70, 16, "Discard",
                 over(mouseX, mouseY, px + ED_X + 190, py + H - 24, 70, 16));
 
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
     }
 
     private void drawPageList(GuiGraphics ctx, int mx, int my) {
