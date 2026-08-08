@@ -24,8 +24,14 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     private static final int LIST_X = 10, LIST_Y = 66, CARD_W = 210, CARD_H = 26, CARD_STEP = 28, VISIBLE = 3;
     private static final int SB_X = 226, SB_Y = 66, SB_W = 8, SB_H = 80;
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     private int tab = 0; // 0 upgrades / 1 extract / 2 uncraft
     private int scroll = 0;
@@ -174,8 +180,8 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             ctx.drawString(this.font, name, x + LIST_X + 24, cy + 9,
                     net.fugginbeenus.notchcurrency.compat.Ench.isTreasure(c.ench()) ? 0xFF9A5CC6 : NotchTheme.TEXT_DARK, false);
 
-            ctx.renderItem(COIN, x + LIST_X + CARD_W - 22, cy + 5);
-            ctx.renderItemDecorations(this.font, COIN, x + LIST_X + CARD_W - 22, cy + 5,
+            ctx.renderItem(coin(), x + LIST_X + CARD_W - 22, cy + 5);
+            ctx.renderItemDecorations(this.font, coin(), x + LIST_X + CARD_W - 22, cy + 5,
                     NotchWidgets.compactCount(c.cost()));
         }
 

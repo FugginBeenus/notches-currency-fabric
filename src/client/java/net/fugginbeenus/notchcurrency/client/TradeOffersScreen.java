@@ -22,8 +22,14 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     private static final int ROW_X = 8, ROW_W = 232, ROW_H = 20;
     private static final int IN_Y = 34, MINE_Y = 152, ROW_STEP = 21;
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     // Action ids (mirror the packet).
     private static final int ACTION_ACCEPT = 0, ACTION_CANCEL = 1;
@@ -73,8 +79,8 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         // The give side: attached coins, then up to two item stacks, then a "+N" for the rest.
         int gx = x + ROW_X + 4;
         if (r.giveCoins() > 0) {
-            ctx.renderItem(COIN, gx, ry + 2);
-            ctx.renderItemDecorations(this.font, COIN, gx, ry + 2, NotchWidgets.compactCount(r.giveCoins()));
+            ctx.renderItem(coin(), gx, ry + 2);
+            ctx.renderItemDecorations(this.font, coin(), gx, ry + 2, NotchWidgets.compactCount(r.giveCoins()));
             gx += 22;
         }
         int shown = 0;
@@ -95,8 +101,8 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         // What they want back: coins, then up to two item stacks, then a "+N" for the rest.
         int ix = x + ROW_X + 106;
         if (r.price() > 0) {
-            ctx.renderItem(COIN, ix, ry + 2);
-            ctx.renderItemDecorations(this.font, COIN, ix, ry + 2, NotchWidgets.compactCount(r.price()));
+            ctx.renderItem(coin(), ix, ry + 2);
+            ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(r.price()));
             ix += 22;
         }
         int wantsShown = 0;

@@ -21,7 +21,10 @@ public final class Sync {
             EntityDataSerializer.forValueType(net.minecraft.network.codec.ByteBufCodecs.TRUSTED_COMPOUND_TAG);
 
     static {
-        net.minecraft.network.syncher.EntityDataSerializers.registerSerializer(COMPOUND);
+        // Registered through Fabric rather than vanilla: vanilla's own call assigns raw numeric ids
+        // in load order, which two mods can disagree about, and it refuses the call for that reason.
+        net.fabricmc.fabric.api.object.builder.v1.entity.FabricTrackedDataRegistry.register(
+                Reg.id("compound_tag"), COMPOUND);
     }
     *///?}
 

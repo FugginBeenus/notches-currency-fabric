@@ -32,7 +32,14 @@ public final class BountyTrackerHud implements HudRenderCallback {
 
     private static final int PILL_W = 150, PILL_H = 26, PILL_GAP = 4;
 
-    private static final ItemStack SWORD = new ItemStack(Items.IRON_SWORD);
+    private static ItemStack sword;
+
+    private static ItemStack sword() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // which happens after this class is loaded.
+        if (sword == null) sword = new ItemStack(Items.IRON_SWORD);
+        return sword;
+    }
 
     public static void setEntries(List<Entry> list) {
         entries = list;
@@ -89,7 +96,7 @@ public final class BountyTrackerHud implements HudRenderCallback {
             fillRound(ctx, 0, py, PILL_W, PILL_H, 1, bg);
 
             // Icon: the delivery item, or a sword for kill bounties.
-            ItemStack icon = e.kill() ? SWORD : stackOf(e.targetItemId());
+            ItemStack icon = e.kill() ? sword() : stackOf(e.targetItemId());
             ctx.renderItem(icon, 4, py + 5);
 
             // Task + count.

@@ -18,8 +18,14 @@ import java.lang.reflect.Field;
 
 public final class WaystoneFeeOverlay {
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     //? if >=1.21 {
     /*private static final Class<?> WAYSTONE_API = net.blay09.mods.waystones.api.Waystone.class;
@@ -76,7 +82,7 @@ public final class WaystoneFeeOverlay {
         ctx.fill(x, y, x + boxW, y + boxH, 0xF01B1B22);
         ctx.drawString(tr, label, x + pad, y + pad, 0xFFB8B8B8, true);
         int rowY = y + pad + line + gap;
-        ctx.renderItem(COIN, x + pad, rowY);
+        ctx.renderItem(coin(), x + pad, rowY);
         ctx.drawString(tr, amount, x + pad + coin + gap, rowY + (coin - 8) / 2, NotchTheme.TEXT_GOLD, true);
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }

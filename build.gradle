@@ -207,6 +207,7 @@ if (unobfuscated) {
                 replace(".renderItemDecorations(", ".itemDecorations(")
                 replace(".setScreen(", ".setScreenAndShow(")
                 replace("EntityModelLayerRegistry", "ModelLayerRegistry")
+                replace("FabricTrackedDataRegistry", "FabricEntityDataRegistry")
                 replace("InventoryScreen.renderEntityInInventoryFollowsMouse",
                         "InventoryScreen.extractEntityInInventoryFollowsMouse")
                 replace("Screens.getButtons(", "Screens.getWidgets(")

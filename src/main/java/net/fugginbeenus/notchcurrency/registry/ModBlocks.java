@@ -21,7 +21,7 @@ public final class ModBlocks {
     public static final Block ATM = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("atm"),
-            new ATMBlock(BlockBehaviour.Properties.of()
+            new ATMBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps("atm")
                     .strength(2.0f)
                     .noOcclusion())
     );
@@ -29,7 +29,7 @@ public final class ModBlocks {
     public static final Item ATM_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("atm"),
-            new BlockItem(ATM, new Item.Properties())
+            new BlockItem(ATM, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("atm"))
     );
 
     // Golden Cache (crate)
@@ -37,7 +37,7 @@ public final class ModBlocks {
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("golden_cache"),
             new GoldenCacheBlock(
-                    BlockBehaviour.Properties.of()
+                    net.fugginbeenus.notchcurrency.compat.Reg.blockProps("golden_cache")
                             .strength(2.0f)
                             .noOcclusion()
                             .lightLevel(state -> 12)   // <--- glowy boi
@@ -47,14 +47,14 @@ public final class ModBlocks {
     public static final Item GOLDEN_CACHE_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("golden_cache"),
-            new BlockItem(GOLDEN_CACHE, new Item.Properties())
+            new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("golden_cache"))
     );
 
     // Ledger Board: shows the balance leaderboard on use. Placeholder model/texture for now.
     public static final Block LEDGER_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("ledger_board"),
-            new LedgerBoardBlock(BlockBehaviour.Properties.of()
+            new LedgerBoardBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps("ledger_board")
                     .strength(2.0f)
                     .requiresCorrectToolForDrops()
                     .noOcclusion())
@@ -63,14 +63,14 @@ public final class ModBlocks {
     public static final Item LEDGER_BOARD_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("ledger_board"),
-            new BlockItem(LEDGER_BOARD, new Item.Properties())
+            new BlockItem(LEDGER_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("ledger_board"))
     );
 
     // Bounty Board: shows the auto-generated bounties on use. Placeholder model/texture for now.
     public static final Block BOUNTY_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("bounty_board"),
-            new BountyBoardBlock(BlockBehaviour.Properties.of()
+            new BountyBoardBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps("bounty_board")
                     .strength(2.0f)
                     .requiresCorrectToolForDrops()
                     .noOcclusion())
@@ -79,7 +79,7 @@ public final class ModBlocks {
     public static final Item BOUNTY_BOARD_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("bounty_board"),
-            new BlockItem(BOUNTY_BOARD, new Item.Properties())
+            new BlockItem(BOUNTY_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("bounty_board"))
     );
 
     // Slot Machine: right-click to play the slots. Non-full model, so nonOpaque keeps
@@ -87,7 +87,7 @@ public final class ModBlocks {
     public static final Block SLOT_MACHINE = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("slot_machine"),
-            new SlotMachineBlock(BlockBehaviour.Properties.of()
+            new SlotMachineBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps("slot_machine")
                     .strength(2.0f)
                     .requiresCorrectToolForDrops()
                     .noOcclusion())
@@ -96,14 +96,14 @@ public final class ModBlocks {
     public static final Item SLOT_MACHINE_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("slot_machine"),
-            new BlockItem(SLOT_MACHINE, new Item.Properties())
+            new BlockItem(SLOT_MACHINE, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("slot_machine"))
     );
 
     // Coin Flip block: right-click to bet, it "flips" then reveals. Placeholder model/texture.
     public static final Block COIN_FLIP = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("coin_flip"),
-            new CoinFlipBlock(BlockBehaviour.Properties.of()
+            new CoinFlipBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps("coin_flip")
                     .strength(2.0f)
                     .requiresCorrectToolForDrops()
                     .noOcclusion())
@@ -112,7 +112,7 @@ public final class ModBlocks {
     public static final Item COIN_FLIP_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("coin_flip"),
-            new BlockItem(COIN_FLIP, new Item.Properties())
+            new BlockItem(COIN_FLIP, net.fugginbeenus.notchcurrency.compat.Reg.itemProps("coin_flip"))
     );
 
     // Crates (opened with keys). Each block is bound to a datapack crate type id.
@@ -122,8 +122,8 @@ public final class ModBlocks {
 
     private static Block registerCrate(String blockId, String crateType) {
         Block block = Registry.register(BuiltInRegistries.BLOCK, NotchCurrency.id(blockId),
-                new CrateBlock(BlockBehaviour.Properties.of().strength(2.0f).requiresCorrectToolForDrops().noOcclusion(), crateType));
-        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, new Item.Properties()));
+                new CrateBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps(blockId).strength(2.0f).requiresCorrectToolForDrops().noOcclusion(), crateType));
+        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.itemProps(blockId)));
         return block;
     }
 

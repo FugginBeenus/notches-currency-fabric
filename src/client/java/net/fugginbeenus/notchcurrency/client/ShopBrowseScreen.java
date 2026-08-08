@@ -24,8 +24,14 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private static final int SB_X = 160, SB_Y = 22, SB_W = 8, SB_H = 126;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
     private boolean draggingScroll;
@@ -90,8 +96,8 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             int ix = x + LIST_X + 4;
             if (c.price() > 0) {
                 // Coin cost with the vanilla stack-count renderer, like emeralds in villager trades.
-                ctx.renderItem(COIN, ix, ry + 2);
-                ctx.renderItemDecorations(this.font, COIN, ix, ry + 2, NotchWidgets.compactCount(c.price()));
+                ctx.renderItem(coin(), ix, ry + 2);
+                ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(c.price()));
                 ix += 28;
             }
             if (!c.barterStack().isEmpty()) {

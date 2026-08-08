@@ -16,8 +16,14 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
 
     private static final int W = 226, H = 256;
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     private EditBox giveCoinsField;
     private EditBox priceField;
@@ -89,7 +95,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
                     y + TradeOfferCreateScreenHandler.GIVE_Y + (i / 3) * 18 - 1);
         }
         NotchWidgets.pill(ctx, x + 14, y + 92, 82, 15);
-        ctx.renderItem(COIN, x + 78, y + 91);
+        ctx.renderItem(coin(), x + 78, y + 91);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " attached", x + 55, y + 111, NotchTheme.TEXT_MUTED, false);
 
         // The exchange arrow.
@@ -103,7 +109,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
                     y + TradeOfferCreateScreenHandler.WANT_Y + (i / 3) * 18 - 1);
         }
         NotchWidgets.pill(ctx, x + 130, y + 92, 82, 15);
-        ctx.renderItem(COIN, x + 194, y + 91);
+        ctx.renderItem(coin(), x + 194, y + 91);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " wanted", x + 171, y + 111, NotchTheme.TEXT_MUTED, false);
 
         // Who can accept + create.

@@ -13,43 +13,43 @@ public final class ModItems {
     public static final Item NOTCH_COIN = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("notch_coin"),
-            new Item(new Item.Properties())
+            new Item(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("notch_coin"))
     );
 
     public static final Item BALLOON = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("balloon"),
-            new Item(new Item.Properties())
+            new Item(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("balloon"))
     );
 
     public static final Item RAFFLE_TICKET = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("raffle_ticket"),
-            new RaffleTicketItem(new Item.Properties())
+            new RaffleTicketItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("raffle_ticket"))
     );
 
     public static final Item CRATE_KEY = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("crate_key"),
-            new CrateKeyItem(new Item.Properties())
+            new CrateKeyItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("crate_key"))
     );
 
     public static final Item COIN_TAILS = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("coin_tails"),
-            new Item(new Item.Properties())
+            new Item(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("coin_tails"))
     );
 
     public static final Item NOTCH_NPC_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("notch_npc"),
-            new NotchNpcItem(new Item.Properties())
+            new NotchNpcItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("notch_npc"))
     );
 
     public static final Item ROUTE_PLANNER = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("route_planner"),
-            new net.fugginbeenus.notchcurrency.item.RoutePlannerItem(new Item.Properties())
+            new net.fugginbeenus.notchcurrency.item.RoutePlannerItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("route_planner"))
     );
 
     public static final Item GOLDEN_CACHE = ModBlocks.GOLDEN_CACHE_ITEM;

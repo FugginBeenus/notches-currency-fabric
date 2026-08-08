@@ -88,8 +88,14 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         return n;
     }
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     private void drawRow(GuiGraphics ctx, int x, int y, ItemStack stack, int mouseX, int mouseY) {
         if (stack.isEmpty() || !StackData.hasData(stack)) return;
@@ -117,8 +123,8 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         }
         if (rewCoins > 0) {
             rewX -= 22;
-            ctx.renderItem(COIN, rewX, y + 2);
-            ctx.renderItemDecorations(this.font, COIN, rewX, y + 2, NotchWidgets.compactCount(rewCoins));
+            ctx.renderItem(coin(), rewX, y + 2);
+            ctx.renderItemDecorations(this.font, coin(), rewX, y + 2, NotchWidgets.compactCount(rewCoins));
         }
 
         // Task text (with a live progress bar on kill bounties you've taken).

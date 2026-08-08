@@ -5,7 +5,7 @@
   "textures": {
     "0": "notchcurrency:block/ledger_board",
     "particle": "notchcurrency:block/ledger_board",
-    "coin": "notchcurrency:item/coin"
+    "coin": "notchcurrency:block/coin"
   },
   "elements": [
     {

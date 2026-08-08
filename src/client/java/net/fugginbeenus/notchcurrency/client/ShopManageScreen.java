@@ -24,8 +24,14 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     private static final int W = 256, H = 244;
     private static final int ROW_X = 8, ROW_W = 240, ROW_H = 18, ROW_STEP = 19, ROWS_Y = 110;
 
-    private static final ItemStack COIN =
-            new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+    private static ItemStack coin;
+
+    private static ItemStack coin() {
+        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
+        // and a static field would run while the class loads, which can be earlier than that.
+        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
+        return coin;
+    }
 
     private EditBox nameField;
     private EditBox greetField;
@@ -193,8 +199,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             // Vanilla-trade card, same as the browse screen: price icons -> arrow -> item.
             NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
             if (row.price() > 0) {
-                ctx.renderItem(COIN, x + ROW_X + 3, ry + 1);
-                ctx.renderItemDecorations(this.font, COIN, x + ROW_X + 3, ry + 1,
+                ctx.renderItem(coin(), x + ROW_X + 3, ry + 1);
+                ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 3, ry + 1,
                         NotchWidgets.compactCount(row.price()));
             }
             if (!row.barterStack().isEmpty()) {
