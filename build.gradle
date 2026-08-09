@@ -419,6 +419,21 @@ tasks.processResources {
     filesMatching("fabric.mod.json") {
         expand("version": project.version, "minecraft_dep": minecraftDep)
     }
+    // The render-state mixin only exists from 1.21.11, so it is only listed there. Mixin refuses to
+    // start if a config names a class that is not in the jar, and on older versions that file
+    // compiles to nothing.
+    if (atLeast([1, 21, 11])) {
+        filesMatching("notchcurrency.mixins.json") {
+            filter { line ->
+                // Under "client", not "mixins": it targets a client-only class, and a dedicated
+                // server would fail to load it.
+                line.contains('"mixins": [')
+                        ? '  "client": [\n    "EntityRenderStateMixin",\n    "EntityRenderDispatcherMixin"\n  ],\n' + line
+                        : line
+            }
+        }
+    }
+
     filesMatching("pack.mcmeta") {
         expand("pack_format": packFormat)
     }

@@ -2,11 +2,15 @@ package net.fugginbeenus.notchcurrency.client.npc;
 
 // Everything the NPC renderer and model need to draw one NPC, copied off the entity once a frame.
 //
-// From 1.21.11 a renderer never sees the entity: it fills a render state and the drawing then works
-// only from that. This rides along on the vanilla AvatarRenderState under a Fabric data key rather
-// than subclassing it. Subclassing looks tidier and does not work: HumanoidArmorLayer requires its
-// model to be a HumanoidModel of exactly the state type, and PlayerModel is bound to
-// AvatarRenderState, so a subclass puts the armour layer out of reach.
+// From 1.21.11 a renderer never sees the entity: it fills a render state in one pass and draws from
+// it in a later one, so this has to survive the gap. It rides on the vanilla AvatarRenderState in a
+// field a mixin adds, the way EasyNPC does it; see NotchNpcStateHolder and EntityRenderStateMixin.
+// Fabric's RenderStateDataKey was tried first and does not work: it sets during extract and reads
+// back empty at drawing time.
+//
+// Carrying the data is only half of it. The drawing pass picks the renderer from the state, and
+// hands anything that is an AvatarRenderState to the vanilla player renderer, so our own submit was
+// never called. EntityRenderDispatcherMixin puts NPCs back on their own renderer.
 //
 // The accessors carry the same names as the entity's, so the animation code in NpcPlayerModel reads
 // identically on every version and only its signature differs.
@@ -15,18 +19,18 @@ package net.fugginbeenus.notchcurrency.client.npc;
 //? if >=1.21.11 {
 /*public class NotchNpcRenderState {
 
-    public static final net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<NotchNpcRenderState> KEY =
-            net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey.create();
-
     // Nothing has been drawn yet when a state is fresh, so a blank one has to be harmless.
     public static final NotchNpcRenderState BLANK = new NotchNpcRenderState();
 
-    // Loads this class, and with it the key, at a time of the caller's choosing.
-    public static void touch() {
+    public static NotchNpcRenderState of(net.minecraft.client.renderer.entity.state.EntityRenderState state) {
+        NotchNpcRenderState npc = ((NotchNpcStateHolder) state).notchcurrency$getNpcState();
+        return npc == null ? BLANK : npc;
     }
 
-    public static NotchNpcRenderState of(net.minecraft.client.renderer.entity.state.EntityRenderState state) {
-        return state.getDataOrDefault(KEY, BLANK);
+    // Hangs this NPC's data on the vanilla state, for the drawing pass to pick up.
+    public static void attachTo(net.minecraft.client.renderer.entity.state.EntityRenderState state,
+                                NotchNpcRenderState npc) {
+        ((NotchNpcStateHolder) state).notchcurrency$setNpcState(npc);
     }
 
     public int poseAnim;

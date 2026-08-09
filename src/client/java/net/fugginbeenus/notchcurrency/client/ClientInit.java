@@ -33,12 +33,6 @@ public final class ClientInit implements ClientModInitializer {
         // Keeps track of which screen is open. A no-op before 26.1, where Minecraft still tells us.
         net.fugginbeenus.notchcurrency.compat.Render.trackScreens();
 
-        // Claims the NPC's render-state data key before any entity is drawn. Fabric hands these out
-        // by index, so a key created on the first frame that needs it can miss states already made.
-        //? if >=1.21.11 {
-        /*net.fugginbeenus.notchcurrency.client.npc.NotchNpcRenderState.touch();
-        *///?}
-
         // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
                 () -> net.minecraft.client.Minecraft.getInstance().isSameThread());

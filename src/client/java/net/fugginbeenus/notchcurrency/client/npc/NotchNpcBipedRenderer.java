@@ -40,12 +40,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     private static final double ANIM_RANGE_SQ = 28.0 * 28.0;
     private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
 
-    // TEMPORARY diagnostics, removed once the NPC render path is understood.
-    //? if >=1.21.11 {
-    /*private static int DIAG_TEX = 0;
-    private static int DIAG_EXTRACT = 0;
-    *///?}
-
     public NotchNpcBipedRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcPlayerModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.live = (NpcPlayerModel) this.model; // the model handed to super() just above
@@ -152,7 +146,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     public void extractRenderState(NotchNpcEntity entity, net.minecraft.client.renderer.entity.state.AvatarRenderState vanilla, float partialTick) {
         super.extractRenderState(entity, vanilla, partialTick);
         NotchNpcRenderState state = new NotchNpcRenderState();
-        vanilla.setData(NotchNpcRenderState.KEY, state);
+        NotchNpcRenderState.attachTo(vanilla, state);
         state.poseAnim = entity.getPoseAnim();
         state.npcPose = entity.getNpcPose();
         state.customPoseAngles = entity.getCustomPoseAngles();
@@ -282,11 +276,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     //? if >=1.21.11 {
     /*@Override
     public ResourceLocation getTextureLocation(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
-        if (DIAG_TEX++ < 3) {
-            org.slf4j.LoggerFactory.getLogger("NotchCurrency-DIAG").info(
-                    "texture: ours={} blank={}", NotchNpcRenderState.of(state).texture,
-                    NotchNpcRenderState.of(state) == NotchNpcRenderState.BLANK);
-        }
         return NotchNpcRenderState.of(state).texture;
     }
     *///?} else {
