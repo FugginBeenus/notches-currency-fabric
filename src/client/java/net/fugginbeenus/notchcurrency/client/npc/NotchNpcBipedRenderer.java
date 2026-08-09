@@ -40,6 +40,12 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     private static final double ANIM_RANGE_SQ = 28.0 * 28.0;
     private static final double LABEL_RANGE_SQ = 32.0 * 32.0;
 
+    // TEMPORARY diagnostics, removed once the NPC render path is understood.
+    //? if >=1.21.11 {
+    /*private static int DIAG_TEX = 0;
+    private static int DIAG_EXTRACT = 0;
+    *///?}
+
     public NotchNpcBipedRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcPlayerModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.live = (NpcPlayerModel) this.model; // the model handed to super() just above
@@ -160,6 +166,12 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         state.billboard = NpcBillboard.lines(entity);
         state.texture = NpcSkins.resolve(entity);
         state.skinValue = entity.getSkinValue();
+        vanilla.skin = new net.minecraft.world.entity.player.PlayerSkin(
+                new net.minecraft.core.ClientAsset.ResourceTexture(state.texture, state.texture),
+                null, null,
+                state.slim ? net.minecraft.world.entity.player.PlayerModelType.SLIM
+                           : net.minecraft.world.entity.player.PlayerModelType.WIDE,
+                false);
         vanilla.isCrouching = entity.isCrouching();
     }
     *///?}
@@ -270,6 +282,11 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     //? if >=1.21.11 {
     /*@Override
     public ResourceLocation getTextureLocation(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
+        if (DIAG_TEX++ < 3) {
+            org.slf4j.LoggerFactory.getLogger("NotchCurrency-DIAG").info(
+                    "texture: ours={} blank={}", NotchNpcRenderState.of(state).texture,
+                    NotchNpcRenderState.of(state) == NotchNpcRenderState.BLANK);
+        }
         return NotchNpcRenderState.of(state).texture;
     }
     *///?} else {
