@@ -118,6 +118,12 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         for (int col = 0; col < 9; col++) {
             NotchWidgets.slot(ctx, x + 43 + col * 18 - 1, y + 158 + 58 - 1);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private static void arrow(GuiGraphics ctx, int x, int y, int color) {

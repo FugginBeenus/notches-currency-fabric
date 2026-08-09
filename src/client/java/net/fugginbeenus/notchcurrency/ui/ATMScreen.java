@@ -93,7 +93,7 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         withdrawField.setMaxLength(12);
         withdrawField.setValue("");
         withdrawField.setBordered(false); // let the black bar texture show
-        withdrawField.setTextColor(0xFFFFFF);
+        withdrawField.setTextColor(0xFFFFFFFF);
 
         // IMPORTANT: add as drawable child so it renders and receives input
         this.addRenderableWidget(withdrawField);
@@ -180,6 +180,12 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         for (int col = 0; col < 9; col++) {
             NotchWidgets.slot(ctx, invX + col * 18 - 1, y + 171 - 1);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private void greenButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hovered) {

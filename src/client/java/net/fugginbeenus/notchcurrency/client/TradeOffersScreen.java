@@ -179,6 +179,12 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
             NotchWidgets.centerText(ctx, this.font, "You have no open offers. Use /trade offer to create one.",
                     x + W / 2, y + MINE_Y + 14, NotchTheme.TEXT_MUTED, false);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     //? if >=26.1 {

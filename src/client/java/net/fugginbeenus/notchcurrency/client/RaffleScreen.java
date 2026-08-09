@@ -116,6 +116,12 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             NotchWidgets.neutralButton(ctx, this.font, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H,
                     "Redeem an old ticket", over(mouseX, mouseY, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H));
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private void drawPlaceholder(GuiGraphics ctx, int x, int y) {

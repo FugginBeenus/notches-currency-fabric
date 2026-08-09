@@ -120,6 +120,12 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
 
         NotchWidgets.centerText(ctx, this.font, "A true 50/50. Win pays " + payout + "%.",
                 x + W / 2, y + 182, NotchTheme.TEXT_MUTED, false);
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     // ---- coin flair ----

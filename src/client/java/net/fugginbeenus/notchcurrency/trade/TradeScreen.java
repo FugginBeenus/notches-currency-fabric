@@ -170,7 +170,7 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         int lw = this.font.width(label);
         int lx = bx + (CONFIRM_W - lw) / 2;
         int ly = by + (CONFIRM_H - this.font.lineHeight) / 2;
-        int color = ready ? 0x4CF06C : 0xFFFFFF; // green when ready
+        int color = ready ? 0xFF4CF06C : 0xFFFFFFFF; // green when ready
         ctx.drawString(this.font, label, lx, ly, color, false);
 
         //? if >=26.1 {
@@ -199,6 +199,12 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         *///?} else {
         ctx.blit(TEX, x, y, TEX_U, TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
         //?}
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     // ----- Invisible clickable widget (renders nothing) -----

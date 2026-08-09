@@ -69,8 +69,15 @@ public class NpcDialogueScreen extends Screen {
         *///?} else {
         this.renderBackground(ctx);
         //?}
+        NotchNpcEntity npc = findNpc();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, npcName, px + W / 2, py + 8);
+        // The heading is the NPC's own name where we can see it. The portrait below draws without a
+        // nameplate, since the plate sat at the very top of the box and came out clipped, so this
+        // is the only place the name appears.
+        String heading = npc != null && npc.hasCustomName()
+                ? npc.getCustomName().getString()
+                : npcName;
+        NotchWidgets.title(ctx, this.font, heading, px + W / 2, py + 8);
         if (!bannerText().isEmpty()) {
             NotchWidgets.centerText(ctx, this.font, bannerText(), px + W / 2, py + 18,
                     NotchTheme.TEXT_MUTED, false);
@@ -78,15 +85,17 @@ public class NpcDialogueScreen extends Screen {
 
         // Portrait of the actual NPC (looks toward the cursor, like the editor preview).
         NotchWidgets.inset(ctx, px + PORTRAIT_X, py + PORTRAIT_Y, PORTRAIT_W, PORTRAIT_H, NotchTheme.DEEP);
-        NotchNpcEntity npc = findNpc();
         if (npc != null) {
             float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
+            boolean showedName = npc.isCustomNameVisible();
             npc.setYRot(180);
             npc.yBodyRot = 180;
+            npc.setCustomNameVisible(false); // the heading above carries the name instead
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
                     (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 30f) - mouseY, npc);
             npc.setYRot(oldYaw);
             npc.yBodyRot = oldBody;
+            npc.setCustomNameVisible(showedName);
         }
 
         // Speech text.

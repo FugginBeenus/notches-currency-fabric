@@ -121,6 +121,12 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
             NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INV_X + col * 18 - 1,
                     y + AuctionListingScreenHandler.HOTBAR_Y - 1);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private int currentDays() {

@@ -94,6 +94,12 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
                 over(mouseX, mouseY, x + REPAY_X, y + BTN_Y, BTN_W, BTN_H));
         NotchWidgets.neutralButton(ctx, this.font, x + ALL_X, y + ALL_Y, ALL_W, ALL_H, "Repay Everything",
                 over(mouseX, mouseY, x + ALL_X, y + ALL_Y, ALL_W, ALL_H));
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

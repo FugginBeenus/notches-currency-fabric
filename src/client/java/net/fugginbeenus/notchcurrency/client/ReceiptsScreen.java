@@ -97,6 +97,12 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
             ctx.drawString(this.font, t, x + ROW_X + ROW_W - 6 - this.font.width(t), ry + 5,
                     NotchTheme.TEXT_MUTED, false);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     //? if >=26.1 {

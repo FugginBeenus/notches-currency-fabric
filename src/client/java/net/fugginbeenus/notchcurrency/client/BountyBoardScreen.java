@@ -78,6 +78,12 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
             drawRow(ctx, x, y + TAKEN_Y + 8 + i * ROW_H, menu.takenStack(i), mouseX, mouseY);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     private int countTaken() {

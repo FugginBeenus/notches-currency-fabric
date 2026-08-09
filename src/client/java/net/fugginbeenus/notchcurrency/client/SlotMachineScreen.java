@@ -140,6 +140,12 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
             String mult = "x" + (m10 / 10) + "." + (m10 % 10);
             NotchWidgets.centerText(ctx, this.font, mult, cx, y + 180, NotchTheme.TEXT_DARK, false);
         }
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     // ---- reel state / animation ----

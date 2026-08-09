@@ -224,6 +224,12 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
         NotchWidgets.primaryButton(ctx, this.font, x + 8, y + 224, 240, 15, "+ New Listing",
                 over(mouseX, mouseY, x + 8, y + 224, 240, 15));
+        //? if >=26.1 {
+        /*// Widgets are drawn by the base implementation of this method, so a screen that
+        // replaces it and never calls up loses every real widget it added. Last, so the
+        // panel above stays behind them.
+        super.extractContents(ctx, mouseX, mouseY, delta);
+        *///?}
     }
 
     //? if >=26.1 {
