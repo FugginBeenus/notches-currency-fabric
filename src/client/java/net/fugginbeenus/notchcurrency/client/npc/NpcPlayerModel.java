@@ -219,16 +219,13 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.leftPants.visible = visible;
     }
 
+    // The second skin layer used to be six loose parts that had to be walked in step with the body.
+    // From 1.21.11 each one is a child of the part it covers (left_sleeve under leftArm, jacket
+    // under body, and so on), so it inherits the pose for free. Copying the parent's transform onto
+    // it there applies that transform twice and throws the sleeves out sideways, so on those
+    // versions this does nothing at all.
     private void syncOverlays() {
-        // copyFrom went away in 1.21.11; storing and loading the pose copies the same values.
-        //? if >=1.21.11 {
-        /*    this.hat.loadPose(this.head.storePose());
-        this.jacket.loadPose(this.body.storePose());
-        this.rightSleeve.loadPose(this.rightArm.storePose());
-        this.leftSleeve.loadPose(this.leftArm.storePose());
-        this.rightPants.loadPose(this.rightLeg.storePose());
-        this.leftPants.loadPose(this.leftLeg.storePose());
-        *///?} else {
+        //? if <1.21.11 {
         this.hat.copyFrom(this.head);
         this.jacket.copyFrom(this.body);
         this.rightSleeve.copyFrom(this.rightArm);

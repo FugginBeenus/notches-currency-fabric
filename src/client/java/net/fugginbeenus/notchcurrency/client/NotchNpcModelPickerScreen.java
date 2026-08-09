@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -132,6 +131,10 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private static void faceForward(LivingEntity le) {
+        // A preview entity is never added to the level, so nothing ever gives it a network id. From
+        // 26.1 getId throws on an unassigned one rather than returning zero, and the renderer asks
+        // for it while extracting held items, which took out every tile in this list.
+        le.setId(-1);
         le.setYRot(180);
         le.yRotO = 180;
         le.yBodyRot = le.yBodyRotO = 180;
@@ -210,9 +213,11 @@ public class NotchNpcModelPickerScreen extends Screen {
             if (model == null) throw new IllegalStateException("no preview");
             // Fit each preview inside its tile using BOTH dimensions (so wide/tall mobs don't bleed
             // into neighbouring tiles), leaving room for the label under it.
-            float h = Math.max(0.5f, model.getBbHeight());
-            float w = Math.max(0.5f, model.getBbWidth());
-            int size = (int) Math.max(3, Math.min((TILE_H - 20) / h, (TILE_W - 10) / w));
+            // Fit on the larger of the two dimensions rather than each one separately. A flat mob
+            // like an axolotl has a short collision box and a long model, so fitting on height
+            // alone scaled it up until it covered its neighbours.
+            float extent = Math.max(0.5f, Math.max(model.getBbHeight(), model.getBbWidth()));
+            int size = (int) Math.max(3, Math.min((TILE_H - 22) / extent, (TILE_W - 12) / extent));
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, model);
         } catch (Exception ignored) {
             NotchWidgets.centerText(ctx, this.font, "?", cx, ty + 20, NotchTheme.TEXT_MUTED, false);

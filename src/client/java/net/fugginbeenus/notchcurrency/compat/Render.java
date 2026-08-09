@@ -138,8 +138,30 @@ public final class Render {
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21.11 {
-        /*net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
-                ctx, x - size, y - size * 2, x + size, y, size, 0.0625f, mouseX, mouseY, entity);
+        /*// Every caller here means "stand the entity on (x, y) at this scale", which is what the
+        // old anchored call did. This one takes a rectangle instead and centres the entity inside
+        // it, so the rectangle has to be built around where the entity will actually end up.
+        // Deriving it from the scale, as this once did, put the centre a whole tile too high.
+        //
+        // Rendered pixels are the scale times the entity's size in blocks. Sit the box so the feet
+        // land on y, and pad it, because plenty of mobs draw outside their collision box (wings,
+        // tails, ears) and the rectangle crops whatever leaves it.
+        // A given scale also draws bigger here than it used to, by about half again, so every
+        // caller's long-tuned number came out oversized. Bring it back down rather than retune five
+        // call sites, and keep the box maths in the old units the callers still think in.
+        int scale = Math.max(1, Math.round(size / 1.5f));
+        float bbHeight = Math.max(0.1f, entity.getBbHeight());
+        float bbWidth = Math.max(0.1f, entity.getBbWidth());
+        int drawnHeight = Math.max(2, Math.round(size * bbHeight));
+        int drawnWidth = Math.max(2, Math.round(size * bbWidth));
+        // A square box on the larger dimension, because models routinely reach past their collision
+        // box in whichever direction is the short one, and anything outside the box is cropped.
+        int extent = Math.max(drawnWidth, drawnHeight);
+        int half = extent / 2 + Math.max(3, extent / 4);
+        int centreY = y - drawnHeight / 2;
+        net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
+                ctx, x - half, centreY - half, x + half, centreY + half,
+                scale, 0.0625f, mouseX, mouseY, entity);
         *///?} elif >=1.21 {
         /*float yawAngle = (float) Math.atan(mouseX / 40.0F);
         float pitchAngle = (float) Math.atan(mouseY / 40.0F);

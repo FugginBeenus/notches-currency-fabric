@@ -71,7 +71,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             submitLabels(state, vanilla, matrices, collector, camera);
             return;
         }
-        if (state.proxyRenderer != null && submitDisguise(state, matrices, collector, camera)) return;
+        if (state.proxyRenderer != null && submitDisguise(state, vanilla, matrices, collector, camera)) return;
         biped.submit(vanilla, matrices, collector, camera);
     }
     *///?} else {
@@ -126,7 +126,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
 
     @SuppressWarnings("unchecked")
-    private boolean submitDisguise(NotchNpcRenderState state, PoseStack matrices,
+    private boolean submitDisguise(NotchNpcRenderState state,
+                                   net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
+                                   PoseStack matrices,
                                    net.minecraft.client.renderer.SubmitNodeCollector collector,
                                    net.minecraft.client.renderer.state.CameraRenderState camera) {
         float sx = state.npcScale(), sy = state.getScaleY(), sz = state.getScaleZ();
@@ -143,7 +145,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         }
         if (scaled) matrices.popPose();
 
-        submitLabels(state, state.proxyState, matrices, collector, camera);
+        // Anchored to the NPC's own state, not the proxy's: the borrowed entity has no custom name,
+        // so its state carries no name-tag attachment and the label came out nowhere.
+        submitLabels(state, anchor, matrices, collector, camera);
         return true;
     }
 
@@ -294,6 +298,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             if (type != null && world != null) proxy = type.create(world);
             //?}
         } catch (Exception ignored) {}
+        // The proxy is never added to the level, so nothing gives it a network id. From 26.1 getId
+        // throws on an unassigned one instead of returning zero, and extracting the render state
+        // asks for it, which silently dropped every disguise back to the plain player model.
+        if (proxy != null) proxy.setId(-1);
         proxies.put(typeId, proxy); // caches null too, so we don't retry a bad type every frame
         return proxy;
     }
