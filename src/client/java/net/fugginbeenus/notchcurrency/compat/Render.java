@@ -135,6 +135,32 @@ public final class Render {
     }
     *///?}
 
+    /**
+     * Builds an entity to look at rather than to put in the world: a picker preview or the body a
+     * disguised NPC borrows.
+     *
+     * <p>From 26.2 the plain create runs a spawn check first and returns null for anything that
+     * fails it, which on a peaceful world is every single monster. A preview is not a spawn, so the
+     * check is skipped. The entity is never added to a level either, so nothing hands it a network
+     * id, and getId throws on an unassigned one from 26.1 on.
+     */
+    @org.jetbrains.annotations.Nullable
+    public static net.minecraft.world.entity.Entity createDetached(
+            net.minecraft.world.level.Level level, net.minecraft.world.entity.EntityType<?> type) {
+        //? if >=26.2 {
+        /*net.minecraft.world.entity.Entity entity = type.create(level,
+                new net.minecraft.world.entity.EntitySpawnRequest(
+                        net.minecraft.world.entity.EntitySpawnReason.LOAD, true));
+        *///?} elif >=1.21.11 {
+        /*net.minecraft.world.entity.Entity entity = type.create(level,
+                net.minecraft.world.entity.EntitySpawnReason.LOAD);
+        *///?} else {
+        net.minecraft.world.entity.Entity entity = type.create(level);
+        //?}
+        if (entity != null) entity.setId(-1);
+        return entity;
+    }
+
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21.11 {
@@ -146,10 +172,6 @@ public final class Render {
         // Rendered pixels are the scale times the entity's size in blocks. Sit the box so the feet
         // land on y, and pad it, because plenty of mobs draw outside their collision box (wings,
         // tails, ears) and the rectangle crops whatever leaves it.
-        // A given scale also draws bigger here than it used to, by about half again, so every
-        // caller's long-tuned number came out oversized. Bring it back down rather than retune five
-        // call sites, and keep the box maths in the old units the callers still think in.
-        int scale = Math.max(1, Math.round(size / 1.5f));
         float bbHeight = Math.max(0.1f, entity.getBbHeight());
         float bbWidth = Math.max(0.1f, entity.getBbWidth());
         int drawnHeight = Math.max(2, Math.round(size * bbHeight));
@@ -159,9 +181,14 @@ public final class Render {
         int extent = Math.max(drawnWidth, drawnHeight);
         int half = extent / 2 + Math.max(3, extent / 4);
         int centreY = y - drawnHeight / 2;
+        // Callers hand in the look offset already worked out, the way every earlier version wanted
+        // it. This one wants the raw pointer position and subtracts the centre itself, so give it
+        // back something it can subtract from. Passing the offset straight through subtracted twice,
+        // which spun every preview off to one side, and a caller asking for no rotation at all with
+        // a plain zero got the whole distance from the screen corner instead.
         net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
                 ctx, x - half, centreY - half, x + half, centreY + half,
-                scale, 0.0625f, mouseX, mouseY, entity);
+                size, 0.0625f, x - mouseX, centreY - mouseY, entity);
         *///?} elif >=1.21 {
         /*float yawAngle = (float) Math.atan(mouseX / 40.0F);
         float pitchAngle = (float) Math.atan(mouseY / 40.0F);

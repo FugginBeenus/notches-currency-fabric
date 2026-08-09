@@ -290,18 +290,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         try {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(Reg.parse(typeId));
             var world = Minecraft.getInstance().level;
-            //? if >=1.21.11 {
-            /*if (type != null && world != null) {
-                proxy = type.create(world, net.minecraft.world.entity.EntitySpawnReason.LOAD);
+            if (type != null && world != null) {
+                proxy = net.fugginbeenus.notchcurrency.compat.Render.createDetached(world, type);
             }
-            *///?} else {
-            if (type != null && world != null) proxy = type.create(world);
-            //?}
         } catch (Exception ignored) {}
-        // The proxy is never added to the level, so nothing gives it a network id. From 26.1 getId
-        // throws on an unassigned one instead of returning zero, and extracting the render state
-        // asks for it, which silently dropped every disguise back to the plain player model.
-        if (proxy != null) proxy.setId(-1);
         proxies.put(typeId, proxy); // caches null too, so we don't retry a bad type every frame
         return proxy;
     }

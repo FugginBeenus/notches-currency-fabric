@@ -104,11 +104,8 @@ public class NotchNpcModelPickerScreen extends Screen {
         if (world == null) return null;
         try {
             if (e.type != null) {
-                //? if >=1.21.11 {
-                /*if (e.type.create(world, net.minecraft.world.entity.EntitySpawnReason.LOAD) instanceof LivingEntity le) {
-                *///?} else {
-                if (e.type.create(world) instanceof LivingEntity le) {
-                //?}
+                if (net.fugginbeenus.notchcurrency.compat.Render.createDetached(world, e.type)
+                        instanceof LivingEntity le) {
                     faceForward(le);
                     e.preview = le;
                 }
