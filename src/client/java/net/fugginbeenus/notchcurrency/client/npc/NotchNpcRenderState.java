@@ -53,7 +53,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
     @SuppressWarnings("rawtypes")
     public net.minecraft.client.renderer.entity.EntityRenderer proxyRenderer;
     public net.minecraft.client.renderer.entity.state.EntityRenderState proxyState;
-    public boolean showDisguiseName;
+    public boolean showLabel;
     public net.minecraft.network.chat.Component displayName;
 
     public int getPoseAnim() { return poseAnim; }

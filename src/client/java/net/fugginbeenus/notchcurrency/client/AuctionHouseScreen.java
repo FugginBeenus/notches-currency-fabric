@@ -564,7 +564,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         int textX = x + 4;
         int textY = y + 4;
 
-        ctx.drawString(this.font, title, textX, textY, 0xFFFFFF);
+        // Opaque white: a bare 0xFFFFFF is alpha zero from 1.21.11 and draws nothing.
+        ctx.drawString(this.font, title, textX, textY, 0xFFFFFFFF);
         textY += lineHeight;
 
         ctx.fill(x + 2, textY - 2, x + boxWidth - 2, textY - 1, 0xFF404040);

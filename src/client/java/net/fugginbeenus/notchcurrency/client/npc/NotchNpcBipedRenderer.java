@@ -167,6 +167,18 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
                            : net.minecraft.world.entity.player.PlayerModelType.WIDE,
                 false);
         vanilla.isCrouching = entity.isCrouching();
+        // The second skin layer is driven off these flags now: PlayerModel.setupAnim assigns each
+        // overlay part's visibility from the state every frame, so anything set on the model itself
+        // is overwritten. Left unset they default to false and the whole outer layer disappears.
+        // Same distance rule setOverlaysVisible uses, so near NPCs keep their jackets and far ones
+        // do not pay for them.
+        boolean overlays = !lodApplies() || vanilla.distanceToCameraSq < DETAIL_RANGE_SQ;
+        vanilla.showHat = overlays;
+        vanilla.showJacket = overlays;
+        vanilla.showLeftSleeve = overlays;
+        vanilla.showRightSleeve = overlays;
+        vanilla.showLeftPants = overlays;
+        vanilla.showRightPants = overlays;
     }
     *///?}
 

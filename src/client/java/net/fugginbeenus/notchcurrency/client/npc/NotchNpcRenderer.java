@@ -1,7 +1,6 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.minecraft.network.chat.Component;
-import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.Minecraft;
@@ -27,14 +26,12 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
 
     private final NotchNpcBipedRenderer biped;
     private final NotchNpcGeoRenderer geo;
-    private final boolean applyLoaded;
     private final Map<String, Entity> proxies = new HashMap<>();
 
     public NotchNpcRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.biped = new NotchNpcBipedRenderer(ctx);
         this.geo = new NotchNpcGeoRenderer(ctx);
-        this.applyLoaded = FabricLoader.getInstance().isModLoaded("apply");
     }
 
     //? if >=1.21.11 {
@@ -49,8 +46,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         NotchNpcRenderState state = NotchNpcRenderState.of(vanilla);
         String model = entity.getModelId();
         state.invisible = entity.isInvisible();
-        state.useGeo = applyLoaded && NotchNpcEntity.MODEL_APPLY.equals(model);
+        state.useGeo = NotchNpcEntity.MODEL_APPLY.equals(model);
         state.displayName = entity.getDisplayName();
+        if (state.useGeo) {
+            state.showLabel = labelShows(entity);
+        }
         if (!state.invisible && !state.useGeo && model != null && model.startsWith("entity:")) {
             extractDisguise(entity, state, model.substring("entity:".length()), partialTick);
         }
@@ -66,6 +66,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         if (state.invisible) return;
         if (state.useGeo) {
             geo.submit(vanilla, matrices, collector, camera);
+            // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
+            // are ours to draw, exactly as on the disguise path.
+            submitLabels(state, vanilla, matrices, collector, camera);
             return;
         }
         if (state.proxyRenderer != null && submitDisguise(state, matrices, collector, camera)) return;
@@ -81,8 +84,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             // path would hide the body on its own, but the geo/disguise paths would not.
             return;
         }
-        if (applyLoaded && NotchNpcEntity.MODEL_APPLY.equals(model)) {
+        if (NotchNpcEntity.MODEL_APPLY.equals(model)) {
             geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+            // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
+            // are ours to draw, exactly as on the disguise path.
+            renderLabels(entity, matrices, vertexConsumers, light, tickDelta);
             return;
         }
         if (model != null && model.startsWith("entity:")
@@ -109,10 +115,14 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         } catch (Exception ignored) {
             state.proxyRenderer = null;
         }
-        // Same range cap the biped path uses, so crowds do not pay for unreadable text.
-        boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
+        state.showLabel = labelShows(npc);
+    }
+
+    // Same range cap the biped path uses, so crowds do not pay for unreadable text.
+    private boolean labelShows(NotchNpcEntity npc) {
+        boolean inRange = !NotchNpcBipedRenderer.lodApplies()
                 || this.entityRenderDispatcher.distanceToSqr(npc) < 32.0 * 32.0;
-        state.showDisguiseName = npc.hasCustomName() && npc.isCustomNameVisible() && labelInRange;
+        return npc.hasCustomName() && npc.isCustomNameVisible() && inRange;
     }
 
     @SuppressWarnings("unchecked")
@@ -133,32 +143,41 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         }
         if (scaled) matrices.popPose();
 
-        // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height).
-        if (state.showDisguiseName) {
+        submitLabels(state, state.proxyState, matrices, collector, camera);
+        return true;
+    }
+
+    // The nameplate and the floating sign, for the two paths that borrow someone else's renderer.
+    // Neither the disguise proxy nor GeckoLib knows anything about them, and both are drawn
+    // unscaled so the text sits at a consistent height whatever the NPC's size.
+    private void submitLabels(NotchNpcRenderState state,
+                              net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
+                              PoseStack matrices, net.minecraft.client.renderer.SubmitNodeCollector collector,
+                              net.minecraft.client.renderer.state.CameraRenderState camera) {
+        if (state.showLabel) {
             matrices.pushPose();
             matrices.translate(0.0, state.getNameOffset(), 0.0);
-            submitLine(state, state.displayName, matrices, collector, camera);
+            submitLine(anchor, state.displayName, matrices, collector, camera);
             matrices.popPose();
         }
-        // The disguise's own renderer knows nothing about our sign, so draw it here too.
         double signY = state.getNameOffset() + NpcBillboard.BASE_GAP;
         for (String line : state.billboard) {
             if (!line.isBlank()) {
                 matrices.pushPose();
                 matrices.translate(0.0, signY, 0.0);
-                submitLine(state, net.minecraft.network.chat.Component.literal(line), matrices, collector, camera);
+                submitLine(anchor, net.minecraft.network.chat.Component.literal(line), matrices, collector, camera);
                 matrices.popPose();
             }
             signY += NpcBillboard.LINE_HEIGHT;
         }
-        return true;
     }
 
-    private void submitLine(NotchNpcRenderState state, net.minecraft.network.chat.Component text,
+    private void submitLine(net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
+                            net.minecraft.network.chat.Component text,
                             PoseStack matrices, net.minecraft.client.renderer.SubmitNodeCollector collector,
                             net.minecraft.client.renderer.state.CameraRenderState camera) {
         net.fugginbeenus.notchcurrency.compat.Render.submitNameLine(
-                state.proxyState, text, matrices, collector, camera);
+                anchor, text, matrices, collector, camera);
     }
     *///?} else {
     private boolean renderDisguise(NotchNpcEntity npc, String typeId, float yaw, float tickDelta,
@@ -194,8 +213,16 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             return false;
         }
         if (scaled) matrices.popPose();
-        // The disguise proxy has no name, so draw the NPC's own label (unscaled, consistent height),
-        // subject to the same range cap the biped path uses so crowds don't pay for unreadable text.
+        renderLabels(npc, matrices, vcp, light, tickDelta);
+        return true;
+    }
+
+    // The nameplate and the floating sign, for the two paths that borrow someone else's renderer.
+    // Neither the disguise proxy nor GeckoLib knows anything about them, and both are drawn
+    // unscaled so the text sits at a consistent height whatever the NPC's size. The range cap is
+    // the one the biped path uses, so crowds do not pay for unreadable text.
+    private void renderLabels(NotchNpcEntity npc, PoseStack matrices, MultiBufferSource vcp,
+                              int light, float tickDelta) {
         boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
                 || this.entityRenderDispatcher.distanceToSqr(npc) < 32.0 * 32.0;
         if (npc.hasCustomName() && npc.isCustomNameVisible() && labelInRange) {
@@ -208,7 +235,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             //?}
             matrices.popPose();
         }
-        // The disguise's own renderer knows nothing about our sign, so draw it here too.
         String[] sign = NpcBillboard.lines(npc);
         double signY = npc.getNameOffset() + NpcBillboard.BASE_GAP;
         for (String line : sign) {
@@ -225,7 +251,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             }
             signY += NpcBillboard.LINE_HEIGHT;
         }
-        return true;
     }
     //?}
 

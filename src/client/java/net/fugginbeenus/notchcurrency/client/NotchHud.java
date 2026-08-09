@@ -107,11 +107,21 @@ public final class NotchHud implements HudRenderCallback {
             ctx.renderItemDecorations(mc.font, stack, iconX, iconY);
         } else {
             // Uses a raw HUD sprite at assets/notchcurrency/textures/item/coin.png
+            //? if >=1.21.11 {
+            /*// The old nine-argument blit still exists here but means something else entirely:
+            // (x, y, width, height, u0, v0, u1, v1). Passing the old arguments to it asks for a
+            // zero by zero icon, which draws nothing. This overload keeps the original meaning.
+            ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, COIN_HUD_TEX,
+                    iconX, iconY, 0f, 0f, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
+            *///?} else {
             ctx.blit(COIN_HUD_TEX, iconX, iconY,
                     0, 0, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
+            //?}
         }
 
-        ctx.drawString(mc.font, s, textX, textY, 0xFFFFFF, true);
+        // Opaque white. Text colours are ARGB from 1.21.11, and a bare 0xFFFFFF has an alpha of
+        // zero, which the renderer drops on the floor without drawing anything.
+        ctx.drawString(mc.font, s, textX, textY, 0xFFFFFFFF, true);
     }
 
     private static boolean shouldHide(Minecraft mc) {

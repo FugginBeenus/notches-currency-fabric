@@ -191,7 +191,14 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         int y = (this.height - imageHeight) / 2;
 
         // Draw full panel background (includes baked-in button)
+        //? if >=1.21.11 {
+        /*// The nine-argument blit means (x, y, width, height, u0, v0, u1, v1) here, so the old
+        // arguments would ask for a two by two smear. This overload keeps the original meaning.
+        ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TEX,
+                x, y, (float) TEX_U, (float) TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
+        *///?} else {
         ctx.blit(TEX, x, y, TEX_U, TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
+        //?}
     }
 
     // ----- Invisible clickable widget (renders nothing) -----

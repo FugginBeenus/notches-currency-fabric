@@ -79,9 +79,9 @@ public class NotchNpcModelPickerScreen extends Screen {
     private void buildEntries() {
         // No entities are created here: just the list. Previews are built lazily as tiles are drawn.
         all.add(new Entry(NotchNpcEntity.MODEL_HUMANOID, "Humanoid", null, NotchNpcEntity.MODEL_HUMANOID, "1"));
-        if (FabricLoader.getInstance().isModLoaded("apply")) {
-            all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
-        }
+        // The model, its animation and all five skins ship in this mod and only need GeckoLib, which
+        // is a hard dependency, so there is nothing to gate this on.
+        all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
         List<Entry> mobs = new ArrayList<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
