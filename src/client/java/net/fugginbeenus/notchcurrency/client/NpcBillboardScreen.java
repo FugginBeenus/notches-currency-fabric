@@ -96,7 +96,7 @@ public class NpcBillboardScreen extends Screen {
             String preview = NotchWidgets.colorize(lines[i]);
             if (!preview.isBlank()) {
                 ctx.drawString(this.font, this.font.plainSubstrByWidth(preview, W - PAD * 2 - 8),
-                        px + PAD + 4, rowY(i) + 17, 0xFFFFFF, true);
+                        px + PAD + 4, rowY(i) + 17, 0xFFFFFFFF, true);
             }
         }
 
@@ -109,7 +109,7 @@ public class NpcBillboardScreen extends Screen {
             ctx.drawString(this.font, "Blacksmith", px + PAD + 4, titleRow() + 4, 0xFF555555, false);
         } else {
             ctx.drawString(this.font, NotchWidgets.colorize(title), px + PAD + 4, titleRow() + 20,
-                    0xFFFFFF, true);
+                    0xFFFFFFFF, true);
         }
 
         NotchWidgets.centerText(ctx, this.font, "&-colours, %player%, %npc% and %balance% all work.",

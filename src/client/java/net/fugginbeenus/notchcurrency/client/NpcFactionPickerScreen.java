@@ -75,7 +75,7 @@ public class NpcFactionPickerScreen extends Screen {
                 NotchWidgets.button(ctx, px + LIST_X, ry, W - 24, ROW_H - 2, hover, false);
             }
             ctx.drawString(this.font, Component.literal(f.name()).withStyle(f.color()),
-                    px + LIST_X + 6, ry + 4, 0xFFFFFF, selected);
+                    px + LIST_X + 6, ry + 4, 0xFFFFFFFF, selected);
             String members = f.members() == 1 ? "1 member" : f.members() + " members";
             ctx.drawString(this.font, members, px + W - 92, ry + 4,
                     selected ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_MUTED, false);

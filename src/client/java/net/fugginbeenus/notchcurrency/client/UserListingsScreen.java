@@ -143,7 +143,7 @@ public class UserListingsScreen extends AbstractContainerScreen<UserListingsScre
                 name,
                 NAME_X,   // GUI-local coords (relative to popup)
                 NAME_Y,
-                0x404040, // dark gray like vanilla
+                0xFF404040, // dark gray like vanilla
                 false
         );
 
