@@ -1,14 +1,28 @@
 # Notch Currency Mod
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1-green.svg)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1%20%7C%201.21.11%20%7C%2026.1.2%20%7C%2026.2-green.svg)](https://www.minecraft.net/)
 [![Fabric API](https://img.shields.io/badge/Fabric_API-required-blue.svg)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/FugginBeenus/notches-currency-fabric)](https://github.com/FugginBeenus/notches-currency-fabric/releases)
 
-A server-side economy mod for Fabric on Minecraft 1.20.1 and 1.21.1 (grab the jar matching your
-game version). It started as a simple currency + ATM system and has
+A server-side economy mod for Fabric. It started as a simple currency + ATM system and has
 grown into a full economy suite: player shops, an auction house, a deeply customizable NPC system,
 and a wide range of money sinks and faucets designed to keep a server's economy balanced.
+
+### Supported versions
+
+Grab the jar matching your game version. Every version is built from the same source, so they all
+have the same features.
+
+| Minecraft | Jar |
+|---|---|
+| 1.20.1 | `notchcurrency-<version>+1.20.1.jar` |
+| 1.21.1 | `notchcurrency-<version>+1.21.1.jar` |
+| 1.21.11 | `notchcurrency-<version>+1.21.11.jar` |
+| 26.1.2 | `notchcurrency-<version>+26.1.2.jar` |
+| 26.2 | `notchcurrency-<version>+26.2.jar` |
+
+Requires Fabric API, and GeckoLib for the animated NPC model.
 
 > Heavily inspired by the Origin Realms economy system. The core concept isn't mine, but all the code and assets are written from scratch. I'm still fairly new to modding so development may be slow. Open to collaboration if anyone's interested.
 
