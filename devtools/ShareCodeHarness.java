@@ -129,8 +129,11 @@ public final class ShareCodeHarness {
                 continue;
             }
 
-            Map<String, String> want = parseDump(Files.readString(sourceDump));
-            Map<String, String> got = flatten(roundTripped);
+            // The Native block inside each equipment slot is the stack in whatever shape the running
+            // version uses, and it is meant to be rewritten on the way through. Item and Num beside
+            // it are the portable pair, and those are what has to survive.
+            Map<String, String> want = strip(parseDump(Files.readString(sourceDump)));
+            Map<String, String> got = strip(flatten(roundTripped));
 
             List<String> lost = new ArrayList<>();
             List<String> changed = new ArrayList<>();
@@ -282,6 +285,14 @@ public final class ShareCodeHarness {
         return sb.toString();
     }
 
+    private static Map<String, String> strip(Map<String, String> keys) {
+        Map<String, String> out = new TreeMap<>();
+        keys.forEach((k, v) -> {
+            if (!k.contains(".Native.")) out.put(k, v);
+        });
+        return out;
+    }
+
     private static Map<String, String> parseDump(String text) {
         Map<String, String> map = new TreeMap<>();
         for (String line : text.split("\n")) {
@@ -299,7 +310,7 @@ public final class ShareCodeHarness {
 
     private static void walk(String prefix, Tag tag, Map<String, String> out) {
         if (tag instanceof CompoundTag compound) {
-            for (String key : net.fugginbeenus.notchcurrency.compat.Nbt.keys(compound)) {
+            for (String key : compound.getAllKeys()) {
                 Tag child = compound.get(key);
                 if (child != null) walk(prefix.isEmpty() ? key : prefix + "." + key, child, out);
             }

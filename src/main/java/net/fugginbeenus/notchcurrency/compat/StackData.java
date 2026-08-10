@@ -3,6 +3,7 @@ package net.fugginbeenus.notchcurrency.compat;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -183,6 +184,50 @@ public final class StackData {
         *///?} else {
         return stack.save(new CompoundTag());
         //?}
+    }
+
+    /**
+     * An item written so that a different Minecraft version can still read it, for share codes and
+     * presets.
+     *
+     * <p>Item stacks moved from tags to components at 1.21, and the two shapes do not read each
+     * other. Worse, they half read each other: an older stack handed to the newer codec keeps its id
+     * and silently loses its count, while a newer stack handed to the older reader comes back empty.
+     * Both go quiet about it. So the item and the count are written plainly alongside the native
+     * form, and the native form is only trusted when it agrees about which item this is.
+     */
+    public static CompoundTag writePortableStack(ItemStack stack) {
+        CompoundTag out = new CompoundTag();
+        net.minecraft.resources.ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        out.putString("Item", id.toString());
+        out.putInt("Num", stack.getCount());
+        out.put("Native", writeStack(stack));
+        return out;
+    }
+
+    /** Reverses {@link #writePortableStack}, and still reads a bare stack from before that existed. */
+    public static ItemStack readPortableStack(CompoundTag nbt) {
+        if (!nbt.contains("Item")) return readStack(nbt);
+
+        // One line: the lookup is rewritten by pattern on the newer versions, and the pattern wants
+        // the registry and the call together.
+        net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.get(Reg.parse(nbt.getString("Item")));
+        if (item == null || item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY;
+        int count = Math.max(1, nbt.getInt("Num"));
+
+        // Enchantments and the rest ride in the native block, which is worth having whenever this
+        // version can actually read it. Anything it says about the count is not: that is the field
+        // the two shapes disagree on.
+        try {
+            ItemStack full = readStack(nbt.getCompound("Native"));
+            if (!full.isEmpty() && full.getItem() == item) {
+                full.setCount(count);
+                return full;
+            }
+        } catch (Exception ignored) {
+            // Written by the other side of the 1.21 line. The plain fields below carry it instead.
+        }
+        return new ItemStack(item, count);
     }
 
     public static ItemStack readStack(CompoundTag nbt) {

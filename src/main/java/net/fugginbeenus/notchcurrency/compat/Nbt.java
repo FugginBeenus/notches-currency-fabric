@@ -98,13 +98,4 @@ public final class Nbt {
         return tag;
     }
     *///?}
-
-    /** Every key in a tag. getAllKeys became keySet in 1.21.11. */
-    public static java.util.Set<String> keys(CompoundTag tag) {
-        //? if >=1.21.11 {
-        /*return tag.keySet();
-        *///?} else {
-        return tag.getAllKeys();
-        //?}
-    }
 }

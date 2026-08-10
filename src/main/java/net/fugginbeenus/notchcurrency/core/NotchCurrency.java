@@ -74,7 +74,6 @@ public class NotchCurrency implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        net.fugginbeenus.notchcurrency.npc.ShareCodeHarness.init();
         // Packet channels must be declared before ANYTHING registers a receiver or sends.
         // TradeManager.init() below registers receivers, so this has to be the first thing that runs.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();

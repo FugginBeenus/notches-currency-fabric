@@ -1448,7 +1448,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         CompoundTag equip = new CompoundTag();
         for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
             net.minecraft.world.item.ItemStack st = this.getItemBySlot(slot);
-            if (!st.isEmpty()) equip.put(slot.getName(), net.fugginbeenus.notchcurrency.compat.StackData.writeStack(st));
+            if (!st.isEmpty()) equip.put(slot.getName(), net.fugginbeenus.notchcurrency.compat.StackData.writePortableStack(st));
         }
         nbt.put("Equip", equip);
     }
@@ -1564,7 +1564,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
                 String slotKey = slot.getName();
                 if (equip.contains(slotKey)) {
-                    this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readStack(equip.getCompound(slotKey)));
+                    this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readPortableStack(equip.getCompound(slotKey)));
                     this.setDropChance(slot, 1.0f); // owner's items always drop if it dies
                 }
             }
