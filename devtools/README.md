@@ -46,10 +46,22 @@ Equipment used to break silently across the 1.21 line, because item stacks moved
 components there. Fixed by `StackData.writePortableStack`, which writes the item id and count plainly
 alongside the native form and only trusts the native form when it agrees about which item it is.
 
-A clean run is **25 of 25 pairs**. The comparison deliberately ignores anything under
-`Equip.<slot>.Native`, which is the stack in whatever shape the reading version uses and is meant to
-be rewritten on the way through.
+Enchantments turned out to have their own three eras, narrower than the item split: `1.20.1`,
+`1.21.1`, and `1.21.11` upwards, with 1.21.1 able to read the newest group but not the reverse. They
+now travel by name and level in the portable block, so they cross too.
 
-Four keys are still not covered, because `writeConfig` omits them when empty and the fixture leaves
-them so: `Actions`, `Waypoints`, `PoseBeforeSchedule`, and the nested action lists inside dialogue
-choices and schedule entries.
+A clean run is **25 of 25 pairs**, with `sharpness=3` on the mainhand in every one. The comparison
+deliberately ignores anything under `Equip.<slot>.Native`, which is the stack in whatever shape the
+reading version uses and is meant to be rewritten on the way through, so the report prints the
+mainhand and offhand in full instead: that is where you check enchantments actually survived.
+
+The fixture covers every key `writeConfig` writes, including the ones it only writes when non-empty
+(`Actions`, `Waypoints`, `PoseBeforeSchedule`, and the action lists nested in dialogue choices and
+schedule entries). `PoseBeforeSchedule` has no setter, so export puts it straight into the tag;
+reading it still goes through `readConfig`, which is the half that has to survive.
+
+Two traps in the runner, both already handled, worth not reintroducing:
+- The output directory must not contain spaces. `JAVA_TOOL_OPTIONS` splits `-D` values on
+  whitespace, and this repo lives under a path with spaces, so it defaults to `/tmp`.
+- `local a=$1 b=$2 c=$b` does not work: every right hand side is expanded before any assignment
+  happens, so `c` comes out blank.

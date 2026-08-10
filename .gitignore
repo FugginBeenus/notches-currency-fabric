@@ -23,4 +23,4 @@ libs/*.jar
 
 # Borrowed mod API jars for soft-dep compilation (not ours to redistribute)
 api-libs/
-devtools/sharetest-out/
+

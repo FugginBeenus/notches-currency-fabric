@@ -69,9 +69,20 @@ public final class ShareCodeHarness {
 
     // ---- export ----
 
+    private static CompoundTag action(String type, String value, long amount) {
+        CompoundTag nbt = new CompoundTag();
+        nbt.putString("Type", type);
+        nbt.putString("Value", value);
+        nbt.putLong("Amount", amount);
+        return nbt;
+    }
+
     private static void export(Path base, String version, NotchNpcEntity npc) throws IOException {
         configure(npc);
         CompoundTag tag = npc.writeToItem();
+        // The schedule sets this one at runtime and there is no setter, so it goes straight into the
+        // tag. Reading still goes through readConfig, which is the half that has to survive.
+        tag.putInt("PoseBeforeSchedule", 2);
         String code = NpcShareCodec.encode(tag);
         Files.writeString(base.resolve(version + ".code"), code);
         Files.writeString(base.resolve(version + ".dump"), dump(tag));
@@ -109,6 +120,12 @@ public final class ShareCodeHarness {
                 fresh.readFromItem(decoded);
                 roundTripped = fresh.writeToItem();
                 reEncoded = NpcShareCodec.encode(roundTripped);
+                // Spelled out, because the key comparison skips the native block on purpose and would
+                // otherwise call a stripped enchantment a clean pass.
+                report.append("  mainhand: ").append(describe(
+                        fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND))).append("\n");
+                report.append("  offhand:  ").append(describe(
+                        fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND))).append("\n");
             } catch (Exception e) {
                 report.append("  DECODE FAILED: ").append(e).append("\n\n");
                 bad++;
@@ -217,7 +234,9 @@ public final class ShareCodeHarness {
         choice.putString("Label", "&eWho are you?");
         choice.putString("Next", "about");
         choice.putBoolean("Hide", true);
-        choice.put("Actions", new ListTag());
+        ListTag choiceActions = new ListTag();
+        choiceActions.add(action("GIVE_ITEM", "minecraft:emerald", 2));
+        choice.put("Actions", choiceActions);
         choice.put("Conditions", new ListTag());
         ListTag choices = new ListTag();
         choices.add(choice);
@@ -241,14 +260,37 @@ public final class ShareCodeHarness {
         npc.setDialogue(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(tree));
         npc.setDialogueMode(NotchNpcEntity.DialogueMode.CHAT);
 
+        // A non-empty trigger list, so the Actions key is actually written. It is skipped when empty.
         CompoundTag actions = new CompoundTag();
         actions.putInt("ProximityRadius", 7);
+        ListTag onInteract = new ListTag();
+        onInteract.add(action("RUN_COMMAND", "say hello", 0));
+        onInteract.add(action("PAY_COINS", "", 25));
+        actions.put("ON_INTERACT", onInteract);
+        ListTag onHurt = new ListTag();
+        onHurt.add(action("RUN_COMMAND_AS_PLAYER", "me flinches", 0));
+        actions.put("ON_HURT", onHurt);
         npc.setActions(net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(actions));
+
+        npc.addWaypoint(new net.minecraft.core.BlockPos(3, 64, 8));
+        npc.addWaypoint(new net.minecraft.core.BlockPos(-7, 66, 21));
 
         // Equipment. This is the one part of the tag that is a serialised ItemStack, and stacks moved
         // from tags to components at 1.20.5, so it is the field most likely not to cross versions.
-        npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,
-                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD));
+        // Enchanted, because enchantments are components from 1.21 and tags before it, so they are
+        // the part of a stack least likely to cross. Everything the portable form keeps is item and
+        // count; this is here to show plainly what is lost beyond that.
+        net.minecraft.world.item.ItemStack sword =
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+        net.minecraft.world.item.enchantment.Enchantment sharpness =
+                net.fugginbeenus.notchcurrency.compat.Ench.byId(
+                        net.fugginbeenus.notchcurrency.compat.Reg.parse("minecraft:sharpness"));
+        if (sharpness != null) {
+            Map<net.minecraft.world.item.enchantment.Enchantment, Integer> ench = new java.util.HashMap<>();
+            ench.put(sharpness, 3);
+            net.fugginbeenus.notchcurrency.compat.Ench.set(ench, sword);
+        }
+        npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, sword);
         npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET));
         npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND,
@@ -264,6 +306,9 @@ public final class ShareCodeHarness {
         entry.putFloat("Facing", 90f);
         entry.putBoolean("RoleOpen", true);
         entry.putString("Label", "Morning");
+        ListTag onBegin = new ListTag();
+        onBegin.add(action("RUN_COMMAND", "time set day", 0));
+        entry.put("OnBegin", onBegin);
         ListTag entries = new ListTag();
         entries.add(entry);
         CompoundTag schedule = new CompoundTag();
@@ -282,6 +327,24 @@ public final class ShareCodeHarness {
     private static String dump(CompoundTag tag) {
         StringBuilder sb = new StringBuilder();
         flatten(tag).forEach((k, v) -> sb.append(k).append('\t').append(v).append('\n'));
+        return sb.toString();
+    }
+
+    /** An item as "id xN [enchantment=level]", for reading in a report. */
+    private static String describe(net.minecraft.world.item.ItemStack stack) {
+        if (stack.isEmpty()) return "EMPTY";
+        StringBuilder sb = new StringBuilder(
+                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+        sb.append(" x").append(stack.getCount());
+        Map<net.minecraft.world.item.enchantment.Enchantment, Integer> ench =
+                net.fugginbeenus.notchcurrency.compat.Ench.get(stack);
+        if (ench.isEmpty()) {
+            sb.append(" [no enchantments]");
+        } else {
+            ench.forEach((e, level) -> sb.append(" [")
+                    .append(net.fugginbeenus.notchcurrency.compat.Ench.idOf(e))
+                    .append('=').append(level).append(']'));
+        }
         return sb.toString();
     }
 

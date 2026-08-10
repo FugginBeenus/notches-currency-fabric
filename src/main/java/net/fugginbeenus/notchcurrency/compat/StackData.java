@@ -202,6 +202,20 @@ public final class StackData {
         out.putString("Item", id.toString());
         out.putInt("Num", stack.getCount());
         out.put("Native", writeStack(stack));
+
+        // Enchantments by name, because the component that holds them has its own shape per era and
+        // does not survive a crossing either: 1.20.1, 1.21.1 and 1.21.11 upwards all disagree. Names
+        // and levels are the part worth keeping, and they have not changed.
+        java.util.Map<net.minecraft.world.item.enchantment.Enchantment, Integer> enchantments =
+                Ench.get(stack);
+        if (!enchantments.isEmpty()) {
+            CompoundTag levels = new CompoundTag();
+            for (var entry : enchantments.entrySet()) {
+                net.minecraft.resources.ResourceLocation key = Ench.idOf(entry.getKey());
+                if (key != null) levels.putInt(key.toString(), entry.getValue());
+            }
+            out.put("Ench", levels);
+        }
         return out;
     }
 
@@ -218,16 +232,33 @@ public final class StackData {
         // Enchantments and the rest ride in the native block, which is worth having whenever this
         // version can actually read it. Anything it says about the count is not: that is the field
         // the two shapes disagree on.
+        ItemStack out = null;
         try {
             ItemStack full = readStack(nbt.getCompound("Native"));
             if (!full.isEmpty() && full.getItem() == item) {
                 full.setCount(count);
-                return full;
+                out = full;
             }
         } catch (Exception ignored) {
             // Written by the other side of the 1.21 line. The plain fields below carry it instead.
         }
-        return new ItemStack(item, count);
+        if (out == null) out = new ItemStack(item, count);
+        applyPortableEnchantments(nbt, out);
+        return out;
+    }
+
+    /** Puts back the enchantments recorded by name, for a stack whose native block did not carry them. */
+    private static void applyPortableEnchantments(CompoundTag nbt, ItemStack stack) {
+        if (!nbt.contains("Ench") || !Ench.get(stack).isEmpty()) return;
+        CompoundTag levels = nbt.getCompound("Ench");
+        java.util.Map<net.minecraft.world.item.enchantment.Enchantment, Integer> found =
+                new java.util.LinkedHashMap<>();
+        for (String key : levels.getAllKeys()) {
+            net.minecraft.world.item.enchantment.Enchantment ench = Ench.byId(Reg.parse(key));
+            // An enchantment the reading version does not have is simply skipped.
+            if (ench != null) found.put(ench, levels.getInt(key));
+        }
+        if (!found.isEmpty()) Ench.set(found, stack);
     }
 
     public static ItemStack readStack(CompoundTag nbt) {
