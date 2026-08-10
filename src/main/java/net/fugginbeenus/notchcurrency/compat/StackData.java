@@ -216,7 +216,100 @@ public final class StackData {
             }
             out.put("Ench", levels);
         }
+
+        // The rest of what makes a piece of gear look like itself. Same reasoning as the
+        // enchantments: these live in components now and in tags before 1.21, so the native block
+        // carries them only between versions of the same era.
+        if (stack.isDamaged()) out.putInt("Dmg", stack.getDamageValue());
+        String name = customName(stack);
+        if (!name.isEmpty()) out.putString("CustomName", name);
+        int dye = dyedColour(stack);
+        if (dye != NO_DYE) out.putInt("Dye", dye);
+        String[] trim = armourTrim(stack);
+        if (trim != null) {
+            out.putString("TrimMat", trim[0]);
+            out.putString("TrimPat", trim[1]);
+        }
         return out;
+    }
+
+    /** The trim's material and pattern ids, or null if the piece has no trim. */
+    @Nullable
+    private static String[] armourTrim(ItemStack stack) {
+        try {
+            //? if >=1.21.11 {
+            /*net.minecraft.world.item.equipment.trim.ArmorTrim trim =
+                    stack.get(net.minecraft.core.component.DataComponents.TRIM);
+            if (trim == null) return null;
+            return new String[]{holderId(trim.material()), holderId(trim.pattern())};
+            *///?} elif >=1.21 {
+            /*net.minecraft.world.item.armortrim.ArmorTrim trim =
+                    stack.get(net.minecraft.core.component.DataComponents.TRIM);
+            if (trim == null) return null;
+            return new String[]{holderId(trim.material()), holderId(trim.pattern())};
+            *///?} else {
+            // Before components the trim was read back out of the tag, and it needs the registries
+            // to resolve what it finds there.
+            java.util.Optional<net.minecraft.world.item.armortrim.ArmorTrim> trim =
+                    net.minecraft.world.item.armortrim.ArmorTrim.getTrim(RegistryAccess.get(), stack);
+            if (trim.isEmpty()) return null;
+            return new String[]{holderId(trim.get().material()), holderId(trim.get().pattern())};
+            //?}
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static String holderId(net.minecraft.core.Holder<?> holder) {
+        return holder.unwrapKey().map(key -> key.location().toString()).orElse("");
+    }
+
+    private static final int NO_DYE = Integer.MIN_VALUE;
+
+    private static String customName(ItemStack stack) {
+        //? if >=1.21 {
+        /*net.minecraft.network.chat.Component name =
+                stack.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        return name == null ? "" : name.getString();
+        *///?} else {
+        return stack.hasCustomHoverName() ? stack.getHoverName().getString() : "";
+        //?}
+    }
+
+    private static void setCustomName(ItemStack stack, String name) {
+        //? if >=1.21 {
+        /*stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal(name));
+        *///?} else {
+        stack.setHoverName(net.minecraft.network.chat.Component.literal(name));
+        //?}
+    }
+
+    private static int dyedColour(ItemStack stack) {
+        //? if >=1.21 {
+        /*net.minecraft.world.item.component.DyedItemColor dyed =
+                stack.get(net.minecraft.core.component.DataComponents.DYED_COLOR);
+        return dyed == null ? NO_DYE : dyed.rgb();
+        *///?} else {
+        return stack.getItem() instanceof net.minecraft.world.item.DyeableLeatherItem dyeable
+                && dyeable.hasCustomColor(stack)
+                ? dyeable.getColor(stack) : NO_DYE;
+        //?}
+    }
+
+    private static void setDyedColour(ItemStack stack, int rgb) {
+        //? if >=1.21.11 {
+        /*stack.set(net.minecraft.core.component.DataComponents.DYED_COLOR,
+                new net.minecraft.world.item.component.DyedItemColor(rgb));
+        *///?} elif >=1.21 {
+        /*// The tooltip flag was part of the component here and went away again later.
+        stack.set(net.minecraft.core.component.DataComponents.DYED_COLOR,
+                new net.minecraft.world.item.component.DyedItemColor(rgb, true));
+        *///?} else {
+        if (stack.getItem() instanceof net.minecraft.world.item.DyeableLeatherItem dyeable) {
+            dyeable.setColor(stack, rgb);
+        }
+        //?}
     }
 
     /** Reverses {@link #writePortableStack}, and still reads a bare stack from before that existed. */
@@ -244,7 +337,77 @@ public final class StackData {
         }
         if (out == null) out = new ItemStack(item, count);
         applyPortableEnchantments(nbt, out);
+        applyPortableExtras(nbt, out);
         return out;
+    }
+
+    /**
+     * Puts back the look of a piece of gear: damage, custom name, dye.
+     *
+     * <p>Applied whether or not the native block was read, because it was recorded from the same
+     * stack and setting it again changes nothing. Each is guarded on its own: a version that cannot
+     * take one of them should not cost us the others.
+     */
+    private static void applyPortableExtras(CompoundTag nbt, ItemStack stack) {
+        if (nbt.contains("Dmg")) {
+            try {
+                stack.setDamageValue(nbt.getInt("Dmg"));
+            } catch (Exception ignored) {
+                // Not damageable here.
+            }
+        }
+        if (nbt.contains("CustomName")) {
+            try {
+                setCustomName(stack, nbt.getString("CustomName"));
+            } catch (Exception ignored) {
+                // Leave it with the item's own name.
+            }
+        }
+        if (nbt.contains("Dye")) {
+            try {
+                setDyedColour(stack, nbt.getInt("Dye"));
+            } catch (Exception ignored) {
+                // Not dyeable here.
+            }
+        }
+        if (nbt.contains("TrimMat") && nbt.contains("TrimPat")) {
+            try {
+                setArmourTrim(stack, nbt.getString("TrimMat"), nbt.getString("TrimPat"));
+            } catch (Exception ignored) {
+                // A material or pattern this version does not have, or not trimmable.
+            }
+        }
+    }
+
+    private static void setArmourTrim(ItemStack stack, String material, String pattern) {
+        // var, because TrimMaterial and TrimPattern moved package at 1.21.11 and the registry key
+        // already knows which one it means.
+        var mat = holderOf(net.minecraft.core.registries.Registries.TRIM_MATERIAL, material);
+        var pat = holderOf(net.minecraft.core.registries.Registries.TRIM_PATTERN, pattern);
+        if (mat == null || pat == null) return;
+        //? if >=1.21.11 {
+        /*stack.set(net.minecraft.core.component.DataComponents.TRIM,
+                new net.minecraft.world.item.equipment.trim.ArmorTrim(mat, pat));
+        *///?} elif >=1.21 {
+        /*stack.set(net.minecraft.core.component.DataComponents.TRIM,
+                new net.minecraft.world.item.armortrim.ArmorTrim(mat, pat));
+        *///?} else {
+        net.minecraft.world.item.armortrim.ArmorTrim.setTrim(RegistryAccess.get(), stack,
+                new net.minecraft.world.item.armortrim.ArmorTrim(mat, pat));
+        //?}
+    }
+
+    @Nullable
+    private static <T> net.minecraft.core.Holder<T> holderOf(
+            net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<T>> registryKey, String id) {
+        net.minecraft.core.Registry<T> registry = RegistryAccess.get().registryOrThrow(registryKey);
+        net.minecraft.resources.ResourceLocation location = Reg.parse(id);
+        //? if >=1.21.11 {
+        /*return registry.get(location).orElse(null);
+        *///?} else {
+        return registry.getHolder(net.minecraft.resources.ResourceKey.create(registryKey, location))
+                .orElse(null);
+        //?}
     }
 
     /** Puts back the enchantments recorded by name, for a stack whose native block did not carry them. */

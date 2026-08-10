@@ -126,6 +126,10 @@ public final class ShareCodeHarness {
                         fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND))).append("\n");
                 report.append("  offhand:  ").append(describe(
                         fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND))).append("\n");
+                report.append("  head:     ").append(describe(
+                        fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD))).append("\n");
+                report.append("  feet:     ").append(describe(
+                        fresh.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET))).append("\n");
             } catch (Exception e) {
                 report.append("  DECODE FAILED: ").append(e).append("\n\n");
                 bad++;
@@ -291,8 +295,28 @@ public final class ShareCodeHarness {
             net.fugginbeenus.notchcurrency.compat.Ench.set(ench, sword);
         }
         npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, sword);
+        // Damaged, renamed, trimmed and dyed gear, built through the portable reader so no test-only
+        // setters have to exist on StackData. Each of these lives in a component now and in a tag
+        // before 1.21, so each is its own chance to be dropped on the way across.
+        CompoundTag helmetTag = new CompoundTag();
+        helmetTag.putString("Item", "minecraft:diamond_helmet");
+        helmetTag.putInt("Num", 1);
+        helmetTag.put("Native", new CompoundTag());
+        helmetTag.putInt("Dmg", 45);
+        helmetTag.putString("CustomName", "Warden's Crown");
+        helmetTag.putString("TrimMat", "minecraft:gold");
+        helmetTag.putString("TrimPat", "minecraft:sentry");
         npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
-                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET));
+                net.fugginbeenus.notchcurrency.compat.StackData.readPortableStack(helmetTag));
+
+        CompoundTag bootsTag = new CompoundTag();
+        bootsTag.putString("Item", "minecraft:leather_boots");
+        bootsTag.putInt("Num", 1);
+        bootsTag.put("Native", new CompoundTag());
+        bootsTag.putInt("Dye", 0x3FA9F5);
+        npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET,
+                net.fugginbeenus.notchcurrency.compat.StackData.readPortableStack(bootsTag));
+
         npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 3));
 
@@ -336,6 +360,16 @@ public final class ShareCodeHarness {
         StringBuilder sb = new StringBuilder(
                 net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
         sb.append(" x").append(stack.getCount());
+        if (stack.isDamaged()) sb.append(" dmg=").append(stack.getDamageValue());
+        // Read back out of the portable form, which is the only way to ask about these without a
+        // pile of per-version accessors here.
+        CompoundTag portable = net.fugginbeenus.notchcurrency.compat.StackData.writePortableStack(stack);
+        if (portable.contains("CustomName")) sb.append(" name=\"").append(portable.getString("CustomName")).append('"');
+        if (portable.contains("Dye")) sb.append(" dye=#").append(Integer.toHexString(portable.getInt("Dye")));
+        if (portable.contains("TrimMat")) {
+            sb.append(" trim=").append(portable.getString("TrimMat"))
+                    .append('/').append(portable.getString("TrimPat"));
+        }
         Map<net.minecraft.world.item.enchantment.Enchantment, Integer> ench =
                 net.fugginbeenus.notchcurrency.compat.Ench.get(stack);
         if (ench.isEmpty()) {

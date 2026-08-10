@@ -50,7 +50,14 @@ Enchantments turned out to have their own three eras, narrower than the item spl
 `1.21.1`, and `1.21.11` upwards, with 1.21.1 able to read the newest group but not the reverse. They
 now travel by name and level in the portable block, so they cross too.
 
-A clean run is **25 of 25 pairs**, with `sharpness=3` on the mainhand in every one. The comparison
+The rest of what a piece of gear looks like goes the same way: damage, custom name, dye and armour
+trim. Each is written plainly next to the item id, and put back on the other side. Anything the
+reading version does not recognise, such as a trim pattern it has never heard of, is skipped rather
+than guessed at. Whatever is left over beyond these, custom model data say, still rides only in the
+native block and so crosses within an era but not between.
+
+A clean run is **25 of 25 pairs**, with the mainhand keeping `sharpness=3`, the helmet keeping its
+damage, name and trim, the boots keeping their dye, and the bread keeping its stack of three. The comparison
 deliberately ignores anything under `Equip.<slot>.Native`, which is the stack in whatever shape the
 reading version uses and is meant to be rewritten on the way through, so the report prints the
 mainhand and offhand in full instead: that is where you check enchantments actually survived.
