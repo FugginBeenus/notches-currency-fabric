@@ -33,6 +33,20 @@ public final class ClientInit implements ClientModInitializer {
         // Keeps track of which screen is open. A no-op before 26.1, where Minecraft still tells us.
         net.fugginbeenus.notchcurrency.compat.Render.trackScreens();
 
+        // Our panels are laid out at a fixed size, so on a small display at a high GUI scale they run
+        // off the edges. One rule for all of them, rather than thirty-seven layouts to rework.
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+            if (net.fugginbeenus.notchcurrency.compat.GuiScale.isOurs(screen)) {
+                net.fugginbeenus.notchcurrency.compat.GuiScale.fit(client, screen);
+                // Closing to the world fires no init anywhere, so the scale goes back from here. No
+                // relayout: the screen is on its way out, and anything opening next lays itself out.
+                net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.remove(screen).register(
+                        closed -> net.fugginbeenus.notchcurrency.compat.GuiScale.release(client, null));
+            } else {
+                net.fugginbeenus.notchcurrency.compat.GuiScale.release(client, screen);
+            }
+        });
+
         // Registry lookups from the render thread must use the client's registries (see RegistryAccess).
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
                 () -> net.minecraft.client.Minecraft.getInstance().isSameThread());
