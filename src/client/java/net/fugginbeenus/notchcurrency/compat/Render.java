@@ -135,6 +135,22 @@ public final class Render {
     }
     *///?}
 
+    // Which way the camera is looking, for anything billboarded into the world. 1.21.11 hands over a
+    // ready-made orientation; 26.2 replaced it with the two angles and expects them assembled here.
+    // Flat rather than nested, because a directive inside an already-commented branch is only text.
+    //? if >=26.2 {
+    /*public static org.joml.Quaternionf cameraFacing(
+            net.minecraft.client.renderer.state.level.CameraRenderState camera) {
+        return new org.joml.Quaternionf().rotationYXZ(
+                -camera.yRot * ((float) Math.PI / 180f), camera.xRot * ((float) Math.PI / 180f), 0f);
+    }
+    *///?} elif >=1.21.11 {
+    /*public static org.joml.Quaternionf cameraFacing(
+            net.minecraft.client.renderer.state.CameraRenderState camera) {
+        return camera.orientation;
+    }
+    *///?}
+
     /**
      * Builds an entity to look at rather than to put in the world: a picker preview or the body a
      * disguised NPC borrows.

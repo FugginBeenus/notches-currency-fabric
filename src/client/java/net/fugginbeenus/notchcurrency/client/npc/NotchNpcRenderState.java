@@ -54,6 +54,9 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public net.minecraft.client.renderer.entity.EntityRenderer proxyRenderer;
     public net.minecraft.client.renderer.entity.state.EntityRenderState proxyState;
     public boolean showLabel;
+    public boolean talkBubble;
+    public float ageInTicks;
+    public float bodyHeight;
     public net.minecraft.network.chat.Component displayName;
 
     public int getPoseAnim() { return poseAnim; }

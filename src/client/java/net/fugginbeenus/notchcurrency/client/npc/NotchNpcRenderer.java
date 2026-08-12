@@ -64,6 +64,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         // Invisible (stats toggle or day/night rule): draw nothing, label included. The biped
         // path would hide the body on its own, but the geo/disguise paths would not.
         if (state.invisible) return;
+        if (state.talkBubble) submitTalkBubble(state, matrices, collector, camera);
         if (state.useGeo) {
             geo.submit(vanilla, matrices, collector, camera);
             // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
@@ -84,6 +85,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             // path would hide the body on its own, but the geo/disguise paths would not.
             return;
         }
+        if (entity.showsTalkBubble()) renderTalkBubble(entity, matrices, vertexConsumers);
         if (NotchNpcEntity.MODEL_APPLY.equals(model)) {
             geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
             // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
@@ -283,6 +285,77 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.attackAnim = npc.attackAnim;
         le.oAttackAnim = npc.oAttackAnim;
     }
+
+    // ---- talk bubble ----
+
+    // A bitmap glyph in the mod's font rather than geometry of its own. Text already has a way
+    // through both drawing pipelines here, so the bubble gets billboarding, depth and version
+    // compatibility for free. Drawn as plain text rather than a name tag, because a name tag brings
+    // a dark plate with it and the sprite is meant to sit on its own.
+    private static final String BUBBLE_GLYPH = "\uE001";
+    // Always lit. It is a marker, and a marker in a dark corner is no use.
+    private static final int BUBBLE_LIGHT = 0xF000F0;
+    // Vanilla shrinks world-space text by 0.025. The bubble is a marker rather than a label and reads
+    // better a touch larger, so it gets a fifth more.
+    private static final float BUBBLE_SCALE = 0.03f;
+
+    /**
+     * Clear of the nameplate and any sign lines, with a slow bob so it reads as alive.
+     *
+     * <p>Measured from the NPC's feet, because this is drawn straight onto the pose stack. The sign
+     * lines look like they use small numbers only because a name tag is positioned by its own
+     * attachment, already up at head height, and the offset is added to that. There is no attachment
+     * here, so the height of the body has to be part of the sum or the bubble ends up inside it.
+     */
+    private static float bubbleHeight(float bodyHeight, float nameOffset, int signLines, float ageInTicks) {
+        float stack = bodyHeight + NAMEPLATE_GAP + nameOffset + (float) NpcBillboard.BASE_GAP
+                + (float) NpcBillboard.LINE_HEIGHT * signLines + 0.35f;
+        return stack + net.minecraft.util.Mth.sin(ageInTicks * 0.12f) * 0.045f;
+    }
+
+    // Where vanilla floats a name tag above the top of the bounding box.
+    private static final float NAMEPLATE_GAP = 0.5f;
+
+    private static int usedLines(String[] lines) {
+        int used = 0;
+        if (lines != null) {
+            for (String line : lines) {
+                if (line != null && !line.isBlank()) used++;
+            }
+        }
+        return used;
+    }
+
+    //? if >=1.21.11 {
+    /*private void submitTalkBubble(NotchNpcRenderState state, PoseStack matrices,
+                                  net.minecraft.client.renderer.SubmitNodeCollector collector,
+                                  net.minecraft.client.renderer.state.CameraRenderState camera) {
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        Component glyph = Component.literal(BUBBLE_GLYPH);
+        matrices.pushPose();
+        matrices.translate(0.0f, bubbleHeight(state.bodyHeight, state.getNameOffset(),
+                usedLines(state.billboard), state.ageInTicks), 0.0f);
+        matrices.mulPose(net.fugginbeenus.notchcurrency.compat.Render.cameraFacing(camera));
+        matrices.scale(-BUBBLE_SCALE, -BUBBLE_SCALE, BUBBLE_SCALE);
+        net.fugginbeenus.notchcurrency.compat.Render.submitText(font, glyph,
+                -font.width(glyph) / 2f, 0f, 0xFFFFFFFF, matrices, collector, BUBBLE_LIGHT);
+        matrices.popPose();
+    }
+    *///?} else {
+    private void renderTalkBubble(NotchNpcEntity npc, PoseStack matrices, MultiBufferSource vertexConsumers) {
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        Component glyph = Component.literal(BUBBLE_GLYPH);
+        matrices.pushPose();
+        matrices.translate(0.0f, bubbleHeight(npc.getBbHeight(), npc.getNameOffset(),
+                usedLines(NpcBillboard.lines(npc)), npc.tickCount), 0.0f);
+        matrices.mulPose(this.entityRenderDispatcher.cameraOrientation());
+        matrices.scale(-BUBBLE_SCALE, -BUBBLE_SCALE, BUBBLE_SCALE);
+        net.fugginbeenus.notchcurrency.compat.Render.drawText(font, glyph,
+                -font.width(glyph) / 2f, 0f, 0xFFFFFFFF,
+                matrices.last().pose(), vertexConsumers, BUBBLE_LIGHT);
+        matrices.popPose();
+    }
+    //?}
 
     private Entity getProxy(String typeId) {
         if (proxies.containsKey(typeId)) return proxies.get(typeId);

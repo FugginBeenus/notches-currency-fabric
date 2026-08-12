@@ -17,9 +17,9 @@ public class NpcStatsScreen extends Screen {
     // NPC IS, not who it picks a fight with.
     private static final String[] TOGGLE_NAMES = {
             "Protected", "Silent", "Glowing", "Nameplate",
-            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable"};
+            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable", "Talk bubble"};
     // Explicit bit per toggle (bits 8-9 are reserved for the visibility rule, so Pushable jumps to 1024).
-    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024};
+    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024, 2048};
 
     private final UUID npcId;
     private int statsBits;

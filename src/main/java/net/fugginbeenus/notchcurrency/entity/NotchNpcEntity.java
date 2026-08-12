@@ -75,6 +75,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> SLIM =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> TALK_BUBBLE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> SCALE =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> SCALE_Y =
@@ -216,6 +218,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SKIN_TYPE, SKIN_PRESET);
         builder.define(SKIN_VALUE, "1");
         builder.define(SLIM, false);
+        builder.define(TALK_BUBBLE, false);
         builder.define(SCALE, 1.0f);
         builder.define(SCALE_Y, 1.0f);
         builder.define(SCALE_Z, 1.0f);
@@ -234,6 +237,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SKIN_TYPE, SKIN_PRESET);
         this.entityData.define(SKIN_VALUE, "1");
         this.entityData.define(SLIM, false);
+        this.entityData.define(TALK_BUBBLE, false);
         this.entityData.define(SCALE, 1.0f);
         this.entityData.define(SCALE_Y, 1.0f);
         this.entityData.define(SCALE_Z, 1.0f);
@@ -362,6 +366,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public boolean isSlim() { return this.entityData.get(SLIM); }
     public void setSlim(boolean slim) { this.entityData.set(SLIM, slim); }
+
+    /** A bubble hanging over the NPC's head, to mark it as worth talking to. */
+    public boolean showsTalkBubble() { return this.entityData.get(TALK_BUBBLE); }
+    public void setTalkBubble(boolean show) { this.entityData.set(TALK_BUBBLE, show); }
 
     private static float clampNpcScale(float s) { return Math.max(0.3f, Math.min(3.0f, s)); }
 
@@ -1389,6 +1397,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putString("SkinType", getSkinType());
         nbt.putString("SkinValue", getSkinValue());
         nbt.putBoolean("Slim", isSlim());
+        nbt.putBoolean("TalkBubble", showsTalkBubble());
         nbt.putFloat("Scale", npcScale());
         nbt.putFloat("ScaleY", getScaleY());
         nbt.putFloat("ScaleZ", getScaleZ());
@@ -1471,6 +1480,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("SkinType")) setSkinType(nbt.getString("SkinType"));
         if (nbt.contains("SkinValue")) setSkinValue(nbt.getString("SkinValue"));
         if (nbt.contains("Slim")) setSlim(nbt.getBoolean("Slim"));
+        setTalkBubble(nbt.getBoolean("TalkBubble"));
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
         // Older NPCs only stored one scale: fall back to it so they stay the shape they were.
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : npcScale());

@@ -90,6 +90,7 @@ public final class NotchNpcManager {
 
     public static int statsBits(NotchNpcEntity npc) {
         int bits = 0;
+        if (npc.showsTalkBubble()) bits |= 2048;
         if (npc.isProtectedNpc()) bits |= 1;
         if (npc.isSilent()) bits |= 2;
         if (npc.isCurrentlyGlowing()) bits |= 4;
@@ -107,6 +108,7 @@ public final class NotchNpcManager {
 
     public static void setStats(ServerPlayer sp, NotchNpcEntity npc, int bits) {
         if (!guard(sp, npc)) return;
+        npc.setTalkBubble((bits & 2048) != 0);
         npc.setProtectedNpc((bits & 1) != 0);
         npc.setSilent((bits & 2) != 0);
         npc.setGlowingTag((bits & 4) != 0);
