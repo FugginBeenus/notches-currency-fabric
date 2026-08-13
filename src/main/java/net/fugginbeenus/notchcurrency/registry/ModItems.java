@@ -28,6 +28,13 @@ public final class ModItems {
             new RaffleTicketItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("raffle_ticket"))
     );
 
+    public static final Item PARCEL = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("parcel"),
+            new net.fugginbeenus.notchcurrency.item.ParcelItem(
+                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("parcel"))
+    );
+
     public static final Item CRATE_KEY = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("crate_key"),

@@ -411,17 +411,14 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Taking mail. The all-zero id means "the money", which is all the inbox has a button for.
+        // Take all: hands over the parcels on screen, as many as the player can hold.
         Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
-            UUID entryId = buf.readUUID();
+            buf.readUUID(); // kept so older clients still parse; the inbox has one button
             server.execute(() -> {
-                if (entryId.getMostSignificantBits() == 0L && entryId.getLeastSignificantBits() == 0L) {
-                    net.fugginbeenus.notchcurrency.mail.MailManager.collectCoins(player);
-                } else {
-                    net.fugginbeenus.notchcurrency.mail.MailManager.collect(player, entryId);
+                if (player.containerMenu instanceof
+                        net.fugginbeenus.notchcurrency.mail.MailInboxMenu inbox) {
+                    inbox.takeAll(player);
                 }
-                // Refresh the money line; the slots keep themselves right.
-                net.fugginbeenus.notchcurrency.mail.MailManager.sendSummary(player);
             });
         });
 

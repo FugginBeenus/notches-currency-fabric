@@ -9,26 +9,26 @@ package net.fugginbeenus.notchcurrency.mail;
  *
  * <p>Kept on the server side of the mod because the menus need the slot positions too, and a slot
  * whose menu and screen disagree is a slot that draws in one place and clicks in another.
+ *
+ * <p>The window is vanilla chest width. It was half again as wide when the Inbox needed a column
+ * explaining who sent what; parcels carry that on their own tooltips now, so the column went and
+ * the window came in with it.
  */
 public final class MailLayout {
 
     private MailLayout() {}
 
-    /** The window itself. Both tabs are the same size, so the panel never jumps. */
-    public static final int W = 296, H = 232;
+    public static final int W = 176, H = 222;
 
     /** The tab strip, and the first row of content under it. */
-    public static final int TAB_Y = 22, TAB_H = 16;
-    public static final int HEADING_Y = 42;
+    public static final int TAB_X = 8, TAB_W = 78, TAB_GAP = 4, TAB_Y = 18, TAB_H = 16;
+    public static final int CONTENT_Y = 38;
+    public static final int CONTENT_BOTTOM = 126;
 
-    /** The left column: the recipient list on one tab, what is waiting on the other. */
-    public static final int SIDE_X = 8, SIDE_W = 100;
-
-    /** The right column, which both tabs fill with slots. */
-    public static final int MAIN_X = 118;
-    public static final int SLOTS_Y = 62;
+    /** The Inbox grid, which lines up with the inventory below it. */
+    public static final int SLOTS_X = 8, SLOTS_Y = 42;
 
     /** The player's inventory. Identical on both tabs, on purpose. */
-    public static final int INV_LABEL_Y = 142;
-    public static final int INV_X = MAIN_X, INV_Y = 152, HOTBAR_Y = 210;
+    public static final int INV_LABEL_Y = 130;
+    public static final int INV_X = 8, INV_Y = 140, HOTBAR_Y = 198;
 }

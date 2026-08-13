@@ -21,18 +21,33 @@ import net.minecraft.world.item.ItemStack;
  */
 public class MailPostScreenHandler extends AbstractContainerMenu {
 
-    public static final int PARCEL_SLOTS = 6;
-    public static final int PARCEL_X = 200, PARCEL_Y = MailLayout.SLOTS_Y;
+    public static final int PARCEL_SLOTS = MailItem.MAX_CONTENTS;
+    /** One row, centred under the recipient button. */
+    public static final int PARCEL_X = 34, PARCEL_Y = 64;
     private static final int INV_X = MailLayout.INV_X, INV_Y = MailLayout.INV_Y,
             HOTBAR_Y = MailLayout.HOTBAR_Y;
 
     private final SimpleContainer parcel = new SimpleContainer(PARCEL_SLOTS);
 
+    /**
+     * Set by the screen while the recipient list is dropped down over these slots.
+     *
+     * <p>An inactive slot is not drawn, hovered or clicked, which is the only way to stop the items
+     * in it painting straight through a panel laid over the top. Client side only: the menu the
+     * server holds is a different object and never hears about it.
+     */
+    public boolean parcelSlotsHidden;
+
     public MailPostScreenHandler(int containerId, Inventory playerInv) {
         super(ModScreenHandlers.MAIL_POST, containerId);
 
         for (int i = 0; i < PARCEL_SLOTS; i++) {
-            addSlot(new Slot(parcel, i, PARCEL_X + (i % 2) * 18, PARCEL_Y + (i / 2) * 18));
+            addSlot(new Slot(parcel, i, PARCEL_X + i * 18, PARCEL_Y) {
+                @Override
+                public boolean isActive() {
+                    return !parcelSlotsHidden;
+                }
+            });
         }
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {

@@ -37,6 +37,7 @@ public class ModCreativeTab {
                 entries.accept(ModBlocks.crateItem("rare_crate"));
                 entries.accept(ModBlocks.crateItem("epic_crate"));
                 entries.accept(ModItems.CRATE_KEY);
+                entries.accept(ModItems.PARCEL);
                 entries.accept(ModBlocks.SLOT_MACHINE_ITEM);
                 entries.accept(ModBlocks.COIN_FLIP_ITEM);
 

@@ -21,10 +21,11 @@ public final class MailTabs {
 
     public static final int INBOX = 0, OUTBOX = 1;
 
-    public static final int TAB_W = 78, TAB_GAP = 2;
-    public static final int TAB_H = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_H;
-    public static final int TAB_Y = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_Y;
-    public static final int TAB_X = net.fugginbeenus.notchcurrency.mail.MailLayout.SIDE_X;
+    private static final int TAB_W = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_W;
+    private static final int TAB_H = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_H;
+    private static final int TAB_Y = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_Y;
+    private static final int TAB_X = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_X;
+    private static final int TAB_GAP = net.fugginbeenus.notchcurrency.mail.MailLayout.TAB_GAP;
 
     /**
      * Who the Outbox should be aimed at, when the mailbox was somebody else's.

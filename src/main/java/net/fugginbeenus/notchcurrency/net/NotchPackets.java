@@ -137,7 +137,6 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_FACTION_LIST = NotchCurrency.id("npc_faction_list");
 
     // Server -> client: open the mailbox screen (owner name, then each waiting entry)
-    public static final ResourceLocation MAIL_OPEN = NotchCurrency.id("mail_open");
     // Server -> client: who has a mailbox, for the send screen's list (each: uuid, name, online)
     public static final ResourceLocation MAIL_RECIPIENTS = NotchCurrency.id("mail_recipients");
     // Client -> server: switch tab, 0 inbox / 1 outbox. Two menus behind one tabbed look, because
