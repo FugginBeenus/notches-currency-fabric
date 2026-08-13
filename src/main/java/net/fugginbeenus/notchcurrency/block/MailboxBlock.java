@@ -130,7 +130,7 @@ public class MailboxBlock extends Block implements EntityBlock {
         }
 
         if (box.isOwner(sp.getUUID())) {
-            net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(sp, box.ownerName());
+            net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(sp);
             return InteractionResult.CONSUME;
         }
 

@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.client;
 
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
+import net.fugginbeenus.notchcurrency.mail.MailLayout;
 import net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.minecraft.ChatFormatting;
@@ -27,8 +28,9 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     /** A player who has a mailbox, as the server described them. */
     public record Recipient(UUID id, String name, boolean online) {}
 
-    private static final int W = 296, H = 232;
-    private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, VISIBLE = 6;
+    private static final int W = MailLayout.W, H = MailLayout.H;
+    private static final int LIST_X = MailLayout.SIDE_X, LIST_W = MailLayout.SIDE_W;
+    private static final int LIST_Y = 72, ROW_H = 14, VISIBLE = 6;
 
     // Filled by the recipients packet, which arrives just after the screen opens.
     private static List<Recipient> knownRecipients = List.of();
@@ -72,7 +74,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         }
 
         String oldSearch = search == null ? "" : search.getValue();
-        search = new EditBox(this.font, this.leftPos + LIST_X + 4, this.topPos + 26,
+        search = new EditBox(this.font, this.leftPos + LIST_X + 4, this.topPos + 55,
                 LIST_W - 8, 10, Component.literal("Search"));
         search.setMaxLength(16);
         search.setBordered(false);
@@ -82,7 +84,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         addRenderableWidget(search);
 
         String oldNote = note == null ? "" : note.getValue();
-        note = new EditBox(this.font, this.leftPos + 120, this.topPos + 116, 160, 10,
+        note = new EditBox(this.font, this.leftPos + MailLayout.MAIN_X + 2, this.topPos + 109, 160, 10,
                 Component.literal("Note"));
         note.setMaxLength(80);
         note.setBordered(false);
@@ -110,8 +112,8 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         return this.topPos + LIST_Y + i * ROW_H;
     }
 
-    private int sendX() { return this.leftPos + 120; }
-    private int sendY() { return this.topPos + 130; }
+    private int sendX() { return this.leftPos + MailLayout.MAIN_X; }
+    private int sendY() { return this.topPos + 124; }
 
     //? if >=26.1 {
     /*@Override
@@ -122,11 +124,13 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Post a Parcel", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, this.title.getString(), x + W / 2, y + 8);
+        MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, mouseX, mouseY);
 
         // Left: who it is going to.
-        ctx.drawString(this.font, "Mailboxes", x + LIST_X + 2, y + 16, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + LIST_X, y + 23, LIST_W, 14, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Mailboxes", x + LIST_X + 2, y + MailLayout.HEADING_Y,
+                NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, x + LIST_X, y + 52, LIST_W, 14, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, x + LIST_X, y + LIST_Y - 2, LIST_W, VISIBLE * ROW_H + 4, NotchTheme.PANEL_MID);
 
         if (knownRecipients.isEmpty()) {
@@ -156,16 +160,18 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                     x + LIST_X + LIST_W / 2, y + LIST_Y + VISIBLE * ROW_H + 6, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Right: the parcel itself.
-        ctx.drawString(this.font, "Parcel", x + 120, y + 30, NotchTheme.TEXT_DARK, false);
+        // Right: the parcel itself. The hint sits under the label, clear of the slots.
+        ctx.drawString(this.font, "Parcel", x + MailLayout.MAIN_X + 2, y + MailLayout.HEADING_Y,
+                NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Drop items in, then send.", x + MailLayout.MAIN_X + 2, y + 54,
+                NotchTheme.TEXT_MUTED, false);
         for (int i = 0; i < MailPostScreenHandler.PARCEL_SLOTS; i++) {
-            NotchWidgets.slot(ctx, x + 200 + (i % 2) * 18 - 1, y + 40 + (i / 2) * 18 - 1);
+            NotchWidgets.slot(ctx, x + MailPostScreenHandler.PARCEL_X + (i % 2) * 18 - 1,
+                    y + MailPostScreenHandler.PARCEL_Y + (i / 2) * 18 - 1);
         }
-        NotchWidgets.centerText(ctx, this.font, "Drop items in, then send.",
-                x + 160, y + 46, NotchTheme.TEXT_MUTED, false);
 
-        ctx.drawString(this.font, "Note:", x + 120, y + 105, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + 118, y + 113, 164, 14, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Note:", x + MailLayout.MAIN_X + 2, y + 96, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, x + MailLayout.MAIN_X, y + 106, 164, 14, NotchTheme.DEEP);
 
         String to = nameOf(chosen);
         boolean ready = chosen != null;
@@ -176,15 +182,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
             NotchWidgets.neutralButton(ctx, this.font, sendX(), sendY(), 164, 16, "Pick a mailbox", false);
         }
 
-        ctx.drawString(this.font, "Inventory", x + 118, y + 140, NotchTheme.TEXT_DARK, false);
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                NotchWidgets.slot(ctx, x + 118 + col * 18 - 1, y + 150 + row * 18 - 1);
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            NotchWidgets.slot(ctx, x + 118 + col * 18 - 1, y + 208 - 1);
-        }
+        drawInventory(ctx, x, y, this.font);
         //? if >=26.1 {
         /*super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
@@ -213,6 +211,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (MailTabs.click(this.leftPos, this.topPos, MailTabs.OUTBOX, mx, my)) return true;
             for (int i = 0; i < VISIBLE && i + scroll < shown.size(); i++) {
                 if (over(mx, my, this.leftPos + LIST_X + 2, rowY(i), LIST_W - 4, ROW_H - 2)) {
                     NotchWidgets.click();
@@ -268,5 +267,26 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         *///?} else {
         renderTooltip(ctx, mouseX, mouseY);
         //?}
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        MailTabs.screenClosed();
+    }
+
+    /** The player's own inventory, drawn the same on both tabs so nothing shifts on a swap. */
+    static void drawInventory(GuiGraphics ctx, int x, int y, net.minecraft.client.gui.Font font) {
+        ctx.drawString(font, "Inventory", x + MailLayout.INV_X, y + MailLayout.INV_LABEL_Y,
+                NotchTheme.TEXT_DARK, false);
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                NotchWidgets.slot(ctx, x + MailLayout.INV_X + col * 18 - 1,
+                        y + MailLayout.INV_Y + row * 18 - 1);
+            }
+        }
+        for (int col = 0; col < 9; col++) {
+            NotchWidgets.slot(ctx, x + MailLayout.INV_X + col * 18 - 1, y + MailLayout.HOTBAR_Y - 1);
+        }
     }
 }

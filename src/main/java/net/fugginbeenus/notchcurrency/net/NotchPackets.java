@@ -140,6 +140,9 @@ public final class NotchPackets {
     public static final ResourceLocation MAIL_OPEN = NotchCurrency.id("mail_open");
     // Server -> client: who has a mailbox, for the send screen's list (each: uuid, name, online)
     public static final ResourceLocation MAIL_RECIPIENTS = NotchCurrency.id("mail_recipients");
+    // Client -> server: switch tab, 0 inbox / 1 outbox. Two menus behind one tabbed look, because
+    // slots cannot be moved between tabs without fighting every version's screen code.
+    public static final ResourceLocation MAIL_TAB = NotchCurrency.id("mail_tab");
     // Client -> server: swap from reading the mail to posting a parcel
     public static final ResourceLocation MAIL_POST_OPEN = NotchCurrency.id("mail_post_open");
     // Server -> client: which recipient the post screen should open with already chosen

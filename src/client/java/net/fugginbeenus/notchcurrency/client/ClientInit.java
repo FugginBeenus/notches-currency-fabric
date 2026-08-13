@@ -122,6 +122,7 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
         MenuScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
         MenuScreens.register(ModScreenHandlers.MAIL_POST, MailPostScreen::new);
+        MenuScreens.register(ModScreenHandlers.MAIL_INBOX, MailInboxScreen::new);
 
         //? if >=1.21.11 {
         /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(

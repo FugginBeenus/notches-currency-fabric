@@ -380,6 +380,20 @@ public final class ServerPacketHandlers {
             });
         });
 
+        // Switching tabs. The aim comes back with it so the Outbox does not forget who the parcel
+        // was for, and it is only ever used to preselect a name the sender still has to send to.
+        Net.registerServerReceiver(NotchPackets.MAIL_TAB, (server, player, buf) -> {
+            int tab = buf.readVarInt();
+            UUID aim = buf.readBoolean() ? buf.readUUID() : null;
+            server.execute(() -> {
+                if (tab == 0) {
+                    net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(player);
+                } else {
+                    net.fugginbeenus.notchcurrency.mail.MailManager.openPost(player, aim);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.MAIL_POST_OPEN, (server, player, buf) ->
                 server.execute(() ->
                         net.fugginbeenus.notchcurrency.mail.MailManager.openPost(player, null)));
@@ -397,17 +411,17 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Taking mail. The all-zero id means "everything", so one packet covers both buttons.
+        // Taking mail. The all-zero id means "the money", which is all the inbox has a button for.
         Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
             UUID entryId = buf.readUUID();
             server.execute(() -> {
                 if (entryId.getMostSignificantBits() == 0L && entryId.getLeastSignificantBits() == 0L) {
-                    net.fugginbeenus.notchcurrency.mail.MailManager.collectAll(player);
+                    net.fugginbeenus.notchcurrency.mail.MailManager.collectCoins(player);
                 } else {
                     net.fugginbeenus.notchcurrency.mail.MailManager.collect(player, entryId);
                 }
-                // Straight back with what is left, so the list reflects a full inventory honestly.
-                net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(player, "");
+                // Refresh the money line; the slots keep themselves right.
+                net.fugginbeenus.notchcurrency.mail.MailManager.sendSummary(player);
             });
         });
 

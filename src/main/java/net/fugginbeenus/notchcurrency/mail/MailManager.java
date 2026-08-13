@@ -106,54 +106,86 @@ public final class MailManager {
     }
 
     /**
-     * Sends a player their inbox so the client can show it.
+     * Sends what a slot cannot carry: the money owed, and who each parcel is from.
      *
-     * <p>Items travel as an id and a count rather than a serialised stack: the wire shape of a stack
-     * has changed twice across the versions this mod builds for, and the screen only needs enough to
-     * draw an icon and a name.
+     * <p>The labels are in the same order the slots are filled in, so slot n and label n are the
+     * same entry. Both walk the inbox skipping entries with no item, so they cannot drift apart.
      */
-    public static void openInbox(ServerPlayer player, String boxOwner) {
-        MailSweep.run(player.level().getServer());
-        List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());
+    public static void sendSummary(ServerPlayer player) {
+        MailState state = MailState.get(player.level().getServer());
+        List<MailItem> waiting = state.inbox(player.getUUID());
+        long coins = 0L;
+        int parcels = 0;
+        for (MailItem item : waiting) {
+            coins += item.coins();
+            if (!item.stack().isEmpty()) parcels++;
+        }
+
+        // Straight from the open menu rather than from inbox order: the slots keep their positions
+        // as things are taken, so anything rebuilt from the list would soon name the wrong parcel.
+        MailItem[] shown = player.containerMenu instanceof MailInboxMenu inbox
+                ? inbox.shownEntries(state, player.getUUID())
+                : new MailItem[0];
 
         var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
-        buf.writeUtf(boxOwner == null ? "" : boxOwner, 32);
-        buf.writeVarInt(waiting.size());
-        for (MailItem item : waiting) {
-            buf.writeUUID(item.id());
-            buf.writeUtf(item.sender(), 64);
-            buf.writeUtf(item.note(), 128);
-            ItemStack stack = item.stack();
-            if (stack.isEmpty()) {
-                buf.writeUtf("", 128);
-                buf.writeVarInt(0);
-                buf.writeUtf("", 128);
-            } else {
-                buf.writeUtf(String.valueOf(
-                        net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem())), 128);
-                buf.writeVarInt(stack.getCount());
-                buf.writeUtf(stack.getHoverName().getString(), 128);
-            }
-            buf.writeLong(item.coins());
+        buf.writeLong(coins);
+        buf.writeVarInt(parcels);
+        buf.writeVarInt(shown.length);
+        for (MailItem item : shown) {
+            buf.writeUtf(item == null ? "" : item.sender(), 64);
+            buf.writeUtf(item == null ? "" : item.note(), 128);
         }
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player, NotchPackets.MAIL_OPEN, buf);
     }
 
     /**
-     * Opens the parcel screen.
+     * Hands over the money only.
      *
-     * <p>The list and the pre-selection go first: the menu opens a screen built by Minecraft, which
-     * cannot be handed constructor arguments, so both arrive as packets just before it.
+     * <p>The parcels are sitting in slots the player can drag out themselves, so a button that also
+     * emptied those would be taking a decision that is not its to take.
      */
-    public static void openPost(ServerPlayer sender, java.util.UUID aimedAt) {
+    public static long collectCoins(ServerPlayer player) {
+        MailState state = MailState.get(player.level().getServer());
+        long total = 0L;
+        for (MailItem item : state.inbox(player.getUUID())) {
+            if (item.coins() <= 0L) continue;
+            MailItem taken = state.take(player.getUUID(), item.id());
+            if (taken == null) continue;
+            total += taken.coins();
+            if (!taken.stack().isEmpty()) state.putBack(player.getUUID(), taken.without(false, true));
+        }
+        if (total <= 0L) return 0L;
+
+        BalanceStore.add(player, total, TransactionReason.AUCTION, "collected from mail");
+        NotchPackets.sendBalance(player, BalanceStore.get(player));
+        Msg.chat(player, Component.literal("Collected ")
+                .append(Component.literal(total + " ").withStyle(ChatFormatting.GOLD))
+                .append(NotchCurrency.coinIcon())
+                .append(Component.literal(" from the mail.").withStyle(ChatFormatting.GREEN)));
+        player.playSound(SoundEvents.ITEM_PICKUP, 0.8F, 1.0F);
+        return total;
+    }
+
+    /**
+     * Opens the Outbox tab.
+     *
+     * <p>The recipient list and any pre-selection go first: a menu opens a screen built by
+     * Minecraft, which cannot be handed arguments of ours, so both arrive as packets just before it.
+     */
+    public static void openPost(ServerPlayer sender, UUID aimedAt) {
         sendRecipients(sender);
         if (aimedAt != null) {
             var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
             buf.writeUUID(aimedAt);
-            net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
-                    sender, NotchPackets.MAIL_AIM, buf);
+            net.fugginbeenus.notchcurrency.compat.Net.sendToClient(sender, NotchPackets.MAIL_AIM, buf);
         }
         MailPostScreenHandler.open(sender);
+    }
+
+    /** Opens the Inbox tab, with the summary the slots cannot carry. */
+    public static void openInbox(ServerPlayer player) {
+        MailInboxMenu.open(player);
+        sendSummary(player);
     }
 
     /** Everyone with a mailbox, so the sender has a list to choose from rather than typing a name. */

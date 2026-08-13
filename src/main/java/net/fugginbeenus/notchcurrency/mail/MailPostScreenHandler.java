@@ -22,8 +22,9 @@ import net.minecraft.world.item.ItemStack;
 public class MailPostScreenHandler extends AbstractContainerMenu {
 
     public static final int PARCEL_SLOTS = 6;
-    private static final int PARCEL_X = 200, PARCEL_Y = 40;
-    private static final int INV_X = 118, INV_Y = 150, HOTBAR_Y = 208;
+    public static final int PARCEL_X = 200, PARCEL_Y = MailLayout.SLOTS_Y;
+    private static final int INV_X = MailLayout.INV_X, INV_Y = MailLayout.INV_Y,
+            HOTBAR_Y = MailLayout.HOTBAR_Y;
 
     private final SimpleContainer parcel = new SimpleContainer(PARCEL_SLOTS);
 
@@ -46,7 +47,7 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
     public static void open(ServerPlayer sp) {
         sp.openMenu(new SimpleMenuProvider(
                 (containerId, inv, p) -> new MailPostScreenHandler(containerId, inv),
-                Component.literal("Post a parcel")));
+                Component.literal("Mailbox")));
     }
 
     public boolean isEmpty() {

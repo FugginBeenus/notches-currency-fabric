@@ -471,6 +471,14 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.MAIL_TAKE, buf);
     }
 
+    public static void sendMailTab(int tab, UUID aim) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeVarInt(tab);
+        buf.writeBoolean(aim != null);
+        if (aim != null) buf.writeUUID(aim);
+        NetClient.sendToServer(NotchPackets.MAIL_TAB, buf);
+    }
+
     public static void sendMailPostOpen() {
         NetClient.sendToServer(NotchPackets.MAIL_POST_OPEN,
                 net.fugginbeenus.notchcurrency.compat.Net.buf());
@@ -486,8 +494,10 @@ public final class NotchPacketsClient {
     public static void registerMailAimReceiver() {
         NetClient.registerClientReceiver(NotchPackets.MAIL_AIM, (client, buf) -> {
             UUID recipient = buf.readUUID();
-            client.execute(() ->
-                    net.fugginbeenus.notchcurrency.client.MailPostScreen.preselect(recipient));
+            client.execute(() -> {
+                net.fugginbeenus.notchcurrency.client.MailTabs.aimAt(recipient);
+                net.fugginbeenus.notchcurrency.client.MailPostScreen.preselect(recipient);
+            });
         });
     }
 
@@ -508,32 +518,18 @@ public final class NotchPacketsClient {
 
     public static void registerMailReceiver() {
         NetClient.registerClientReceiver(NotchPackets.MAIL_OPEN, (client, buf) -> {
-            String owner = buf.readUtf(32);
-            int count = buf.readVarInt();
-            java.util.List<net.fugginbeenus.notchcurrency.client.MailboxScreen.Entry> entries =
+            long coins = buf.readLong();
+            int parcels = buf.readVarInt();
+            int labelCount = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.MailInboxScreen.Label> labels =
                     new java.util.ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                UUID id = buf.readUUID();
+            for (int i = 0; i < labelCount; i++) {
                 String sender = buf.readUtf(64);
                 String note = buf.readUtf(128);
-                String itemId = buf.readUtf(128);
-                int stackCount = buf.readVarInt();
-                String itemName = buf.readUtf(128);
-                long coins = buf.readLong();
-                entries.add(new net.fugginbeenus.notchcurrency.client.MailboxScreen.Entry(
-                        id, sender, note, itemId, stackCount, itemName, coins));
+                labels.add(new net.fugginbeenus.notchcurrency.client.MailInboxScreen.Label(sender, note));
             }
-            client.execute(() -> {
-                // Taking something reopens the list, so refresh in place rather than stacking screens.
-                if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen()
-                        instanceof net.fugginbeenus.notchcurrency.client.MailboxScreen open) {
-                    Minecraft.getInstance().setScreen(
-                            new net.fugginbeenus.notchcurrency.client.MailboxScreen(open.owner(), entries));
-                } else {
-                    Minecraft.getInstance().setScreen(
-                            new net.fugginbeenus.notchcurrency.client.MailboxScreen(owner, entries));
-                }
-            });
+            client.execute(() ->
+                    net.fugginbeenus.notchcurrency.client.MailInboxScreen.setSummary(coins, parcels, labels));
         });
     }
 
