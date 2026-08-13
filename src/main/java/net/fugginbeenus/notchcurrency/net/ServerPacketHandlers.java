@@ -534,6 +534,17 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SET_CLIP, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String clip = buf.readUtf(128);
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setCustomClip(player, npc, clip);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_TRANSFORM, (server, player, buf) -> {
             UUID id = buf.readUUID();
             double dx = buf.readDouble();

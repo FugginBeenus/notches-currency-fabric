@@ -181,6 +181,18 @@ public final class NotchNpcManager {
         npc.setPoseAnim(anim);
     }
 
+    /**
+     * Which clip this NPC plays instead of its idle, or empty to work it out automatically.
+     *
+     * <p>The name is not checked against anything here. The server has no resource packs, so it
+     * cannot know what clips exist; the client that plays it does the checking, and falls back to
+     * the built-in idle for a name it cannot find.
+     */
+    public static void setCustomClip(ServerPlayer sp, NotchNpcEntity npc, String clip) {
+        if (!guard(sp, npc)) return;
+        npc.setCustomClip(clip);
+    }
+
     public static void transform(ServerPlayer sp, NotchNpcEntity npc, double dx, double dy, double dz,
                                  float yawDeg, boolean applyYaw) {
         if (!guard(sp, npc)) return;

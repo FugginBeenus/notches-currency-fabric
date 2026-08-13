@@ -118,6 +118,13 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_POSE_PART, buf);
     }
 
+    public static void sendNpcSetClip(UUID npcId, String clip) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(clip == null ? "" : clip, 128);
+        NetClient.sendToServer(NotchPackets.NPC_SET_CLIP, buf);
+    }
+
     public static void sendNpcSetAnim(UUID npcId, int anim) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);

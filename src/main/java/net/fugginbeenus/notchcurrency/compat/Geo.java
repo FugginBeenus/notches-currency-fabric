@@ -56,4 +56,75 @@ public final class Geo {
     }
 
     private static final java.util.Map<String, RawAnimation> LOOPS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Where GeckoLib filed the NPC's animations.
+     *
+     * <p>5.x scans geckolib/animations and keys what it finds by the bare name. 4.x wanted the full
+     * path. Kept here rather than in the model so the entity can ask what clips exist without
+     * reaching into client code.
+     */
+    public static final String MODEL_NAME = "notch_npc";
+
+    //? if >=1.21.11 {
+    /*public static final net.minecraft.resources.ResourceLocation NPC_ANIMATIONS =
+            net.fugginbeenus.notchcurrency.core.NotchCurrency.id("notch_npc");
+    *///?} else {
+    public static final net.minecraft.resources.ResourceLocation NPC_ANIMATIONS =
+            net.fugginbeenus.notchcurrency.core.NotchCurrency.id("animations/notch_npc.animation.json");
+    //?}
+
+    /**
+     * Every clip GeckoLib has loaded for the NPC, whatever provided it.
+     *
+     * <p>Read from the live cache rather than from a list in the code, so a resource pack that adds
+     * clips to the animation file has them turn up in the editor without the mod knowing their
+     * names in advance. That is the whole of the custom animation feature: the pack supplies the
+     * motion, this supplies the list to pick it from.
+     *
+     * <p>Client-side only in practice. The cache is filled from resource packs, so on a dedicated
+     * server it is simply empty, and callers treat that the same as "no custom clips".
+     */
+    public static java.util.List<String> clipNames() {
+        try {
+            // Three shapes, not two. 5.x replaced the flat map with a cache record, and 5.5 moved
+            // the whole library from software.bernie to com.geckolib on the way to 26.
+            //? if >=26.1 {
+            /*var cache = com.geckolib.cache.GeckoLibResources.getBakedAnimations();
+            var map = cache == null ? null : cache.cache();
+            *///?} elif >=1.21.11 {
+            /*var cache = software.bernie.geckolib.cache.GeckoLibResources.getBakedAnimations();
+            var map = cache == null ? null : cache.cache();
+            *///?} else {
+            var map = software.bernie.geckolib.cache.GeckoLibCache.getBakedAnimations();
+            //?}
+            if (map == null || map.isEmpty()) return java.util.List.of();
+
+            var file = map.get(NPC_ANIMATIONS);
+            if (file == null) {
+                // GeckoLib has changed how it keys this file more than once, and a miss here would
+                // quietly leave the picker empty. Rather than trust one spelling, take the entry
+                // that names our model.
+                for (var entry : map.entrySet()) {
+                    if (String.valueOf(entry.getKey()).contains(MODEL_NAME)) {
+                        file = entry.getValue();
+                        break;
+                    }
+                }
+            }
+            if (file == null) return java.util.List.of();
+
+            var names = new java.util.ArrayList<>(file.animations().keySet());
+            java.util.Collections.sort(names);
+            return names;
+        } catch (Throwable notLoadedYet) {
+            // Asked before the packs finished loading, or on a side that has no packs at all.
+            return java.util.List.of();
+        }
+    }
+
+    /** Whether a clip is actually there, so a pack being removed does not leave an NPC stuck. */
+    public static boolean hasClip(String name) {
+        return name != null && !name.isEmpty() && clipNames().contains(name);
+    }
 }

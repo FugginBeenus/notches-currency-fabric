@@ -783,6 +783,9 @@ public class NotchNpcEditorScreen extends Screen {
     private static final String[] POSE_NAMES = {"Standing", "Sitting", "Sneaking", "Sleeping", "Chilling", "Prone", "Waving", "Custom"};
     private static final String[] ANIM_NAMES = {"Statue (frozen)", "Breathe (default)", "Lively"};
 
+    /** The clip picked by hand, or empty for whatever the NPC works out for itself. */
+    private String customClip = null; // null until read off the NPC standing in the world
+
     private int poseX(int i) { return (i % 2 == 0) ? px + 30 : px + 155; }
     private int poseY(int i) { return py + 50 + (i / 2) * 19; }
 
@@ -800,14 +803,20 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 128, 170, 16,
                 ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
                 over(mx, my, px + 80, py + 128, 170, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 148, 200, 18, "Open Pose Editor",
-                over(mx, my, px + 50, py + 148, 200, 18));
+        // Whatever clips GeckoLib actually has, so a resource pack that adds motions shows them
+        // here without the mod being told their names.
+        ctx.drawString(this.font, "Clip:", px + 50, py + 152, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 148, 170, 16, clipLabel(),
+                over(mx, my, px + 80, py + 148, 170, 16));
+
+        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 170, 200, 18, "Open Pose Editor",
+                over(mx, my, px + 50, py + 170, 200, 18));
         // Position, rotation and size all live behind this. It's a floating panel, so you watch the
         // NPC change out in the world instead of guessing from a tab with no preview.
-        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 170, 200, 18, "Move, Rotate & Size",
-                over(mx, my, px + 50, py + 170, 200, 18));
+        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 192, 200, 18, "Move, Rotate & Size",
+                over(mx, my, px + 50, py + 192, 200, 18));
         NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
-                px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
+                px + W / 2, py + 216, NotchTheme.TEXT_MUTED, false);
     }
 
     private boolean clickPose(int mx, int my) {
@@ -823,17 +832,66 @@ public class NotchNpcEditorScreen extends Screen {
             NotchPacketsClient.sendNpcSetAnim(npcId, poseAnim);
             return true;
         }
-        if (over(mx, my, px + 50, py + 148, 200, 18)) {
+        if (over(mx, my, px + 80, py + 148, 170, 16)) {
+            cycleClip();
+            return true;
+        }
+        if (over(mx, my, px + 50, py + 170, 200, 18)) {
             poseId = 7; // custom: the editor's edits show immediately
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
             Minecraft.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
-        if (over(mx, my, px + 50, py + 170, 200, 18)) {
+        if (over(mx, my, px + 50, py + 192, 200, 18)) {
             Minecraft.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
         }
         return false;
+    }
+
+    /** The clips on offer: automatic first, then whatever is loaded. */
+    private java.util.List<String> clipChoices() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        out.add(""); // automatic
+        out.addAll(net.fugginbeenus.notchcurrency.compat.Geo.clipNames());
+        return out;
+    }
+
+    private String currentClip() {
+        if (customClip == null) {
+            net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc = findNpc();
+            customClip = npc == null ? "" : npc.getCustomClip();
+        }
+        return customClip;
+    }
+
+    private String clipLabel() {
+        String clip = currentClip();
+        if (clip.isEmpty()) return "Automatic";
+        // "animation.notch_npc.special_idle1" reads as "special_idle1" once the file's own naming
+        // is stripped off. Pack authors name theirs whatever they like, so only the tail is kept.
+        int dot = clip.lastIndexOf('.');
+        String shown = dot >= 0 && dot < clip.length() - 1 ? clip.substring(dot + 1) : clip;
+        return net.fugginbeenus.notchcurrency.compat.Geo.hasClip(clip) ? shown : shown + " (missing)";
+    }
+
+    private void cycleClip() {
+        java.util.List<String> choices = clipChoices();
+        int at = choices.indexOf(currentClip());
+        customClip = choices.get((at + 1) % choices.size());
+        NotchPacketsClient.sendNpcSetClip(npcId, customClip);
+    }
+
+    private net.fugginbeenus.notchcurrency.entity.NotchNpcEntity findNpc() {
+        Minecraft c = Minecraft.getInstance();
+        if (c.level == null) return null;
+        for (net.minecraft.world.entity.Entity e : c.level.entitiesForRendering()) {
+            if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity n
+                    && n.getUUID().equals(npcId)) {
+                return n;
+            }
+        }
+        return null;
     }
 
     // ---- manage tab ----

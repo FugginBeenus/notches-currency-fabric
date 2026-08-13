@@ -118,6 +118,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private static final EntityDataAccessor<Integer> POSE_ANIM =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
+    /**
+     * A clip name to play instead of the built-in idle, or empty to work it out automatically.
+     *
+     * <p>A name rather than a number, because the whole point is that the mod does not know what a
+     * resource pack will call the motions it adds.
+     */
+    private static final EntityDataAccessor<String> CUSTOM_CLIP =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+
     private static final EntityDataAccessor<Integer> ATTACK_PULSE =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
@@ -238,6 +247,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(NPC_POSE, POSE_STANDING);
         builder.define(CUSTOM_POSE, new CompoundTag());
         builder.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        builder.define(CUSTOM_CLIP, "");
         builder.define(ATTACK_PULSE, 0);
     }
     *///?} else {
@@ -257,6 +267,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(NPC_POSE, POSE_STANDING);
         this.entityData.define(CUSTOM_POSE, new CompoundTag());
         this.entityData.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        this.entityData.define(CUSTOM_CLIP, "");
         this.entityData.define(ATTACK_PULSE, 0);
     }
     //?}
@@ -277,6 +288,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             this.entityData.set(ATTACK_PULSE, this.entityData.get(ATTACK_PULSE) + 1);
         }
         return hit;
+    }
+
+    public String getCustomClip() { return this.entityData.get(CUSTOM_CLIP); }
+    public void setCustomClip(String clip) {
+        this.entityData.set(CUSTOM_CLIP, clip == null ? "" : clip.strip());
     }
 
     public int getPoseAnim() { return this.entityData.get(POSE_ANIM); }
@@ -1416,6 +1432,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putInt("NpcPose", getNpcPose());
         nbt.put("CustomPose", this.entityData.get(CUSTOM_POSE).copy());
         nbt.putInt("PoseAnim", getPoseAnim());
+        if (!getCustomClip().isEmpty()) nbt.putString("CustomClip", getCustomClip());
         nbt.putString("Behavior", behavior.name());
         nbt.putInt("WanderRadius", wanderRadius);
         nbt.putFloat("PatrolSpeed", patrolSpeed);
@@ -1499,6 +1516,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
+        if (nbt.contains("CustomClip")) setCustomClip(nbt.getString("CustomClip"));
         if (nbt.contains("CustomPose")) {
             CompoundTag pose = nbt.getCompound("CustomPose");
             this.entityData.set(CUSTOM_POSE, pose);
@@ -1650,6 +1668,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
         // Walking wins over anything it might have been doing standing still.
         if (this.walkAnimation.speed() > 0.02f) return WALK_ANIM;
+
+        // A clip chosen by hand stands in for the idle, flourishes and all. It is checked against
+        // what is actually loaded, so pulling the resource pack out leaves the NPC on the built-in
+        // idle rather than stuck on a clip that no longer exists.
+        String chosen = getCustomClip();
+        if (!chosen.isEmpty() && net.fugginbeenus.notchcurrency.compat.Geo.hasClip(chosen)) {
+            return chosen;
+        }
+
         if (mode != ANIM_LIVELY) return IDLE_ANIM;
 
         int stagger = Math.floorMod(getUUID().hashCode(), FLOURISH_EVERY);
