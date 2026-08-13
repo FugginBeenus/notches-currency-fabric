@@ -219,7 +219,21 @@ public final class NotchConfig {
     public static final class Cache {
         // super-rare cache knobs
         public boolean announce = true;
-        public int     cooldownMinutes = 60; // global cooldown suggestion
+        public int     cooldownMinutes = 60; // shortest gap between two natural spawns
+
+        /** Whether caches turn up on their own under oak trees. */
+        public boolean naturalSpawns = true;
+        /**
+         * The roll, per player, each time the check runs: one in this many.
+         *
+         * <p>Written as odds rather than a percentage because the interesting values are all far
+         * below one percent, and "1 in 2000" says that better than "0.05".
+         */
+        public int     naturalOneIn = 100;
+        /** How often that roll happens, in seconds. */
+        public int     naturalIntervalSeconds = 300;
+        /** How far from a player a cache may appear. Far enough to find, near enough to load. */
+        public int     naturalRadius = 72;
         // Loot tuning examples (only used if your manager supports them)
         public int currencyStacksMin = 1;
         public int currencyStacksMax = 3;

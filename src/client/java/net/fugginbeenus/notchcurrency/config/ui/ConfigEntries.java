@@ -341,10 +341,27 @@ final class ConfigEntries {
 
         // ===== Golden Cache =====
         c = "Golden Cache";
+        e.add(new BoolEntry(c, "Spawn under oaks", cfg.cache.naturalSpawns, true,
+                v -> cfg.cache.naturalSpawns = v,
+                "Caches turn up on their own, hidden under oak trees near players.",
+                "Off means they only appear where an admin puts one."));
+        e.add(new NumberEntry(c, "Odds (1 in N)", cfg.cache.naturalOneIn, 100, 1, 1_000_000,
+                v -> cfg.cache.naturalOneIn = v.intValue(),
+                "Each player's roll, every check. 100 is a one percent chance.",
+                "Higher is rarer. This is meant to be a once-in-a-while thing."));
+        e.add(new NumberEntry(c, "Check every (seconds)", cfg.cache.naturalIntervalSeconds, 300, 10, 86_400,
+                v -> cfg.cache.naturalIntervalSeconds = v.intValue(),
+                "How often each player gets that roll."));
+        e.add(new NumberEntry(c, "Spawn radius", cfg.cache.naturalRadius, 72, 16, 256,
+                v -> cfg.cache.naturalRadius = v.intValue(),
+                "How far from a player one may appear."));
         e.add(new BoolEntry(c, "Announce spawns", cfg.cache.announce, true,
-                v -> cfg.cache.announce = v));
+                v -> cfg.cache.announce = v,
+                "Admin-placed caches only. Ones that spawn under oaks are never announced."));
         e.add(new NumberEntry(c, "Cooldown (minutes)", cfg.cache.cooldownMinutes, 60, 0, 100_000,
-                v -> cfg.cache.cooldownMinutes = v.intValue()));
+                v -> cfg.cache.cooldownMinutes = v.intValue(),
+                "Shortest gap between two caches spawning on their own,",
+                "however many players are online."));
         e.add(new NumberEntry(c, "Currency stacks (min)", cfg.cache.currencyStacksMin, 1, 0, 27,
                 v -> cfg.cache.currencyStacksMin = v.intValue()));
         e.add(new NumberEntry(c, "Currency stacks (max)", cfg.cache.currencyStacksMax, 3, 0, 27,
