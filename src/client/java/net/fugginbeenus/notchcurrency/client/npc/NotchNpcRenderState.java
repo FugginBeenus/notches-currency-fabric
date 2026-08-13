@@ -33,6 +33,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
         ((NotchNpcStateHolder) state).notchcurrency$setNpcState(npc);
     }
 
+    public String modelId = "";
     public int poseAnim;
     public int npcPose;
     public float[] customPoseAngles;

@@ -81,6 +81,12 @@ public class NotchNpcModelPickerScreen extends Screen {
         // The model, its animation and all five skins ship in this mod and only need GeckoLib, which
         // is a hard dependency, so there is nothing to gate this on.
         all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
+        // Anything dropped in config/notchcurrency/npc_models. Listed next to the built-in model
+        // rather than down with the mobs, because they are the same kind of thing.
+        for (var bundle : net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.all()) {
+            String modelId = net.fugginbeenus.notchcurrency.npcmodel.NpcModelBundle.modelIdFor(bundle.id());
+            all.add(new Entry(modelId, bundle.displayName(), null, modelId, "default"));
+        }
         List<Entry> mobs = new ArrayList<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);

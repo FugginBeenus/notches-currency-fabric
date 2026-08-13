@@ -505,6 +505,12 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.MAIL_SEND, buf);
     }
 
+    public static void registerModelReloadReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_MODELS_RELOAD, (client, buf) ->
+                client.execute(() ->
+                        net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelPacks.reload(client, true)));
+    }
+
     /** Temporary: see NpcModelSpike. Remove with it. */
     public static void registerModelSpikeReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_MODEL_SPIKE, (client, buf) ->

@@ -2,9 +2,18 @@ package net.fugginbeenus.notchcurrency.client.npc;
 
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
+import net.fugginbeenus.notchcurrency.npcmodel.NpcModelBundle;
+import net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.GeoModel;
 
+/**
+ * Which geometry, texture and animations an NPC wears.
+ *
+ * <p>Was three constants when there was one model. Now it answers per NPC, because a custom bundle
+ * writes its files under its own name and the NPC's model id says which one to reach for. An NPC on
+ * the built-in model, or on a bundle that has since been deleted, falls back to the built-in files.
+ */
 public class NotchNpcGeoModel extends GeoModel<NotchNpcEntity> {
 
     // GeckoLib 5 scans geckolib/models and geckolib/animations, and keys what it finds by the path
@@ -20,34 +29,67 @@ public class NotchNpcGeoModel extends GeoModel<NotchNpcEntity> {
     private static final ResourceLocation ANIMATION =
             net.fugginbeenus.notchcurrency.compat.Geo.NPC_ANIMATIONS;
 
+    private static ResourceLocation modelFor(String modelId) {
+        NpcModelBundle bundle = NpcModelRegistry.forModelId(modelId);
+        if (bundle == null) return MODEL;
+        //? if >=1.21.11 {
+        /*return NotchCurrency.id(bundle.assetName());
+        *///?} else {
+        return NotchCurrency.id("geo/" + bundle.assetName() + ".geo.json");
+        //?}
+    }
+
+    private static ResourceLocation animationFor(String modelId) {
+        NpcModelBundle bundle = NpcModelRegistry.forModelId(modelId);
+        if (bundle == null) return ANIMATION;
+        //? if >=1.21.11 {
+        /*return NotchCurrency.id(bundle.assetName());
+        *///?} else {
+        return NotchCurrency.id("animations/" + bundle.assetName() + ".animation.json");
+        //?}
+    }
+
+    private static ResourceLocation textureFor(String modelId, String skinValue) {
+        NpcModelBundle bundle = NpcModelRegistry.forModelId(modelId);
+        if (bundle == null) return NpcAppearances.texture(skinValue);
+        return NotchCurrency.id("textures/entity/" + bundle.assetName() + ".png");
+    }
+
     // 5.x asks the model about the render state rather than the animatable, so the themed variant
     // is read off the NPC data riding on that state.
     //? if >=1.21.11 {
     /*@Override
     public ResourceLocation getModelResource(software.bernie.geckolib.renderer.base.GeoRenderState state) {
-        return MODEL;
+        return modelFor(NotchNpcRenderState.of(
+                (net.minecraft.client.renderer.entity.state.EntityRenderState) state).modelId);
     }
 
     @Override
     public ResourceLocation getTextureResource(software.bernie.geckolib.renderer.base.GeoRenderState state) {
-        return NpcAppearances.texture(NotchNpcRenderState.of(
-                (net.minecraft.client.renderer.entity.state.EntityRenderState) state).skinValue);
+        NotchNpcRenderState npc = NotchNpcRenderState.of(
+                (net.minecraft.client.renderer.entity.state.EntityRenderState) state);
+        return textureFor(npc.modelId, npc.skinValue);
+    }
+
+    @Override
+    public ResourceLocation getAnimationResource(NotchNpcEntity animatable) {
+        return animationFor(animatable.getModelId());
     }
     *///?} else {
     @Override
     public ResourceLocation getModelResource(NotchNpcEntity animatable) {
-        return MODEL;
+        return modelFor(animatable.getModelId());
     }
 
     @Override
     public ResourceLocation getTextureResource(NotchNpcEntity animatable) {
         // For the APP.ly model, the skin value is the themed variant id.
-        return NpcAppearances.texture(animatable.getSkinValue());
+        return textureFor(animatable.getModelId(), animatable.getSkinValue());
     }
-    //?}
 
     @Override
     public ResourceLocation getAnimationResource(NotchNpcEntity animatable) {
-        return ANIMATION;
+        return animationFor(animatable.getModelId());
     }
+    //?}
 }

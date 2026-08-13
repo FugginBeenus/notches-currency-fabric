@@ -104,6 +104,7 @@ public final class NotchPackets {
     // Client -> server: move/rotate the whole NPC (npc uuid, dx, dy, dz, yawDeg, applyYaw)
     public static final ResourceLocation NPC_TRANSFORM = NotchCurrency.id("npc_transform");
     // Client -> server: set the idle animation layered on the pose (npc uuid, anim id)
+    public static final ResourceLocation NPC_MODELS_RELOAD = NotchCurrency.id("npc_models_reload");
     public static final ResourceLocation NPC_MODEL_SPIKE = NotchCurrency.id("npc_model_spike");
     public static final ResourceLocation NPC_SET_CLIP = NotchCurrency.id("npc_set_clip");
     public static final ResourceLocation NPC_SET_ANIM = NotchCurrency.id("npc_set_anim");

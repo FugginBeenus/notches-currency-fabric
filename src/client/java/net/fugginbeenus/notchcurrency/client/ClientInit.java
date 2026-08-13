@@ -171,6 +171,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerMailRecipientsReceiver();
         NotchPacketsClient.registerModelSpikeReceiver();
+        NotchPacketsClient.registerModelReloadReceiver();
         NotchPacketsClient.registerMailAimReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
         NotchPacketsClient.registerNpcScheduleReceiver();
@@ -193,6 +194,12 @@ public final class ClientInit implements ClientModInitializer {
                 if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof TradeScreen) client.setScreen(null);
             });
         });
+
+        // Custom NPC models are read once, quietly, when a world opens. Doing it here rather than
+        // at client start means the reload lands while a screen is already up.
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register(
+                (handler, sender, client) -> client.execute(() ->
+                        net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelPacks.reload(client, false)));
 
         // On world join (SP/MP), request our balance
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

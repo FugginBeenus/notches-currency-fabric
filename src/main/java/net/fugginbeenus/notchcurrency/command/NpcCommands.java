@@ -33,6 +33,16 @@ public final class NpcCommands {
                 .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                 // Temporary: answers whether a model written at runtime gets baked by a reload.
                 // See docs/custom-npc-models.md, Stage 0. Remove once that is settled.
+                .then(Commands.literal("models")
+                        .then(Commands.literal("reload")
+                                .executes(ctx -> {
+                                    net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) return 0;
+                                    net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
+                                            p, net.fugginbeenus.notchcurrency.net.NotchPackets.NPC_MODELS_RELOAD,
+                                            net.fugginbeenus.notchcurrency.compat.Net.buf());
+                                    return 1;
+                                })))
                 .then(Commands.literal("modelspike")
                         .executes(ctx -> {
                             net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();

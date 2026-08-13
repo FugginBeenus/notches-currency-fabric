@@ -46,7 +46,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         NotchNpcRenderState state = NotchNpcRenderState.of(vanilla);
         String model = entity.getModelId();
         state.invisible = entity.isInvisible();
-        state.useGeo = NotchNpcEntity.MODEL_APPLY.equals(model);
+        state.modelId = model == null ? "" : model;
+        state.useGeo = NotchNpcEntity.MODEL_APPLY.equals(model)
+                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null;
         state.displayName = entity.getDisplayName();
         if (state.useGeo) {
             state.showLabel = labelShows(entity);
@@ -86,7 +88,8 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             return;
         }
         if (entity.showsTalkBubble()) renderTalkBubble(entity, matrices, vertexConsumers);
-        if (NotchNpcEntity.MODEL_APPLY.equals(model)) {
+        if (NotchNpcEntity.MODEL_APPLY.equals(model)
+                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null) {
             geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
             // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
             // are ours to draw, exactly as on the disguise path.

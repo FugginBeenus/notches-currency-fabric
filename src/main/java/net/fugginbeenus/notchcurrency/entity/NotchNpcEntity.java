@@ -66,6 +66,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private static final int[] SPECIAL_TICKS = {215, 341, 234};
     /** How often a lively NPC considers doing something other than standing there. */
     private static final int FLOURISH_EVERY = 600;
+    /** How long a custom flourish is held, since a bundle does not say how long its clips run. */
+    private static final int BUNDLE_SPECIAL_TICKS = 200;
     private final AnimatableInstanceCache geoCache = net.fugginbeenus.notchcurrency.compat.Geo.cache(this);
 
     // Model + skin identifiers.
@@ -1666,8 +1668,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         int mode = getPoseAnim();
         if (mode == ANIM_STATUE) return null;
 
-        // Walking wins over anything it might have been doing standing still.
-        if (this.walkAnimation.speed() > 0.02f) return WALK_ANIM;
+        // A custom model brings its own clip names, so the roles are filled from its bundle. The
+        // built-in names are what a bundle-less NPC falls back to.
+        var bundle = net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(getModelId());
+        String idle = bundle != null && !bundle.idle().isEmpty() ? bundle.idle() : IDLE_ANIM;
+
+        // Walking wins over anything it might have been doing standing still. A bundle with no walk
+        // clip keeps playing its idle rather than snapping to nothing.
+        if (this.walkAnimation.speed() > 0.02f) {
+            if (bundle == null) return WALK_ANIM;
+            return bundle.walk().isEmpty() ? idle : bundle.walk();
+        }
 
         // A clip chosen by hand stands in for the idle, flourishes and all. It is checked against
         // what is actually loaded, so pulling the resource pack out leaves the NPC on the built-in
@@ -1677,15 +1688,22 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             return chosen;
         }
 
-        if (mode != ANIM_LIVELY) return IDLE_ANIM;
+        if (mode != ANIM_LIVELY) return idle;
+
+        java.util.List<String> specials = bundle != null && !bundle.special().isEmpty()
+                ? bundle.special() : java.util.Arrays.asList(SPECIAL_ANIMS);
+        if (specials.isEmpty()) return idle;
 
         int stagger = Math.floorMod(getUUID().hashCode(), FLOURISH_EVERY);
         int spot = Math.floorMod(this.tickCount + stagger, FLOURISH_EVERY);
         long window = Math.floorDiv((long) this.tickCount + stagger, FLOURISH_EVERY);
 
         // Stable for the whole window, so the choice does not change part way through a flourish.
-        int roll = Math.floorMod(Long.hashCode(window * 31L + getUUID().hashCode()), SPECIAL_ANIMS.length);
-        return spot < SPECIAL_TICKS[roll] ? SPECIAL_ANIMS[roll] : IDLE_ANIM;
+        int roll = Math.floorMod(Long.hashCode(window * 31L + getUUID().hashCode()), specials.size());
+        // The built-in clips have known lengths. A bundle's are anyone's guess, so they get a
+        // sensible window and are cut off at the end of it.
+        int holdFor = bundle == null ? SPECIAL_TICKS[roll] : BUNDLE_SPECIAL_TICKS;
+        return spot < holdFor ? specials.get(roll) : idle;
     }
 
     @Override
