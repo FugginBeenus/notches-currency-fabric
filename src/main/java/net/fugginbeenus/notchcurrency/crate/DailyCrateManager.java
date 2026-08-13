@@ -176,19 +176,38 @@ public final class DailyCrateManager {
         }
     }
 
-    /** One balloon, above and a little to the side, clear of whatever the player is standing under. */
+    /**
+     * One balloon, above the player and a little to the side.
+     *
+     * <p>Measured from where the player actually is rather than from the ground under them, so the
+     * height setting means the same thing whether they are on a mountain or in a valley.
+     *
+     * <p>Somebody underground gets nothing, and that falls out of the same check rather than needing
+     * its own: forty blocks above a mineshaft is solid stone, the balloon does not fit, and nothing
+     * is spawned. A big enough cavern is space, and it does.
+     */
     private static void spawnNear(ServerLevel world, ServerPlayer player, BalloonConfigState cfg) {
+        int up = Math.max(5, cfg.playerHeight);
         int spread = Math.max(1, cfg.playerSpread);
+        int y = Math.min((int) player.getY() + up, world.getMaxBuildHeight() - 2);
+
         int x = (int) player.getX() + world.random.nextInt(spread * 2 + 1) - spread;
         int z = (int) player.getZ() + world.random.nextInt(spread * 2 + 1) - spread;
+        if (tryPlace(world, player, x, y, z)) return;
 
-        int ground = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
-        // Above the player and above the ground, so it is not left inside a roof or a hillside.
-        int y = Math.max((int) player.getY(), ground) + Math.max(5, cfg.playerHeight);
-        y = Math.min(y, world.getMaxBuildHeight() - 2);
+        // The spot off to the side can be inside a hillside while the player stands in the open, so
+        // straight overhead gets one try before giving up on them.
+        tryPlace(world, player, (int) player.getX(), y, (int) player.getZ());
+    }
 
-        world.addFreshEntity(new BalloonEntity(world, x + 0.5, y + 0.5, z + 0.5));
+    /** @return true if the balloon fitted and was spawned */
+    private static boolean tryPlace(ServerLevel world, ServerPlayer player, int x, int y, int z) {
+        BalloonEntity balloon = new BalloonEntity(world, x + 0.5, y + 0.5, z + 0.5);
+        // Asking the world whether the balloon fits, rather than guessing from the block at its feet.
+        if (!world.noCollision(balloon)) return false;
+        world.addFreshEntity(balloon);
         LOGGER.debug("Gave {} a balloon at {} {} {}", player.getName().getString(), x, y, z);
+        return true;
     }
 
     // ----- Admin helpers (write to persistent state) -----
