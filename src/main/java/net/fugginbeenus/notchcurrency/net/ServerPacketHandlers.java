@@ -413,6 +413,23 @@ public final class ServerPacketHandlers {
             });
         });
 
+        // Starting a live trade from the mailbox. It goes through the same invite as /trade, so
+        // the other player still has to agree before either inventory is on the table.
+        Net.registerServerReceiver(NotchPackets.MAIL_TRADE, (server, player, buf) -> {
+            UUID target = buf.readUUID();
+            server.execute(() -> {
+                net.minecraft.server.level.ServerPlayer other = server.getPlayerList().getPlayer(target);
+                if (other == null) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
+                            net.minecraft.network.chat.Component.literal("They are not online to trade.")
+                                    .withStyle(net.minecraft.ChatFormatting.RED));
+                    return;
+                }
+                player.closeContainer();
+                net.fugginbeenus.notchcurrency.trade.TradeManager.invite(player, other);
+            });
+        });
+
         // Take all: hands over the parcels on screen, as many as the player can hold.
         Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
             buf.readUUID(); // kept so older clients still parse; the inbox has one button

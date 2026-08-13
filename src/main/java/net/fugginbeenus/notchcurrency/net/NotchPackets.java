@@ -147,6 +147,7 @@ public final class NotchPackets {
     // Server -> client: which recipient the post screen should open with already chosen
     public static final ResourceLocation MAIL_AIM = NotchCurrency.id("mail_aim");
     // Client -> server: post the parcel slots to this player, with an optional note
+    public static final ResourceLocation MAIL_TRADE = NotchCurrency.id("mail_trade");
     public static final ResourceLocation MAIL_SEND = NotchCurrency.id("mail_send");
     // Client -> server: take one entry by its id, or every entry when the id is all zeroes
     public static final ResourceLocation MAIL_TAKE = NotchCurrency.id("mail_take");

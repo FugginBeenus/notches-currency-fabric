@@ -35,6 +35,8 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private static final int COINS_Y = 84, FIELD_H = 14;
     private static final int NOTE_Y = 102;
     private static final int SEND_Y = 120, SEND_H = 16;
+    /** Split off the Send button when the recipient is here to trade with. */
+    private static final int TRADE_W = 48, SPLIT_GAP = 4;
 
     // The drop-down.
     private static final int DROP_Y = 36, DROP_H = MailLayout.CONTENT_BOTTOM - DROP_Y;
@@ -152,6 +154,18 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private int toY() { return this.topPos + TO_Y; }
     private int sendY() { return this.topPos + SEND_Y; }
 
+    /** Whether the chosen recipient is online, which is the only time a live trade is possible. */
+    private boolean canTrade() {
+        if (chosen == null) return false;
+        for (Recipient r : knownRecipients) {
+            if (r.id().equals(chosen)) return r.online();
+        }
+        return false;
+    }
+
+    private int sendW() { return canTrade() ? INNER_W - TRADE_W - SPLIT_GAP : INNER_W; }
+    private int tradeX() { return this.leftPos + MailLayout.W - EDGE - TRADE_W; }
+
     //? if >=26.1 {
     /*@Override
     public void extractContents(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
@@ -204,13 +218,18 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         NotchWidgets.inset(ctx, x + EDGE, y + COINS_Y, INNER_W, FIELD_H, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, x + EDGE, y + NOTE_Y, INNER_W, FIELD_H, NotchTheme.DEEP);
 
-        boolean sendHover = !picking && over(mouseX, mouseY, x + EDGE, sendY(), INNER_W, SEND_H);
+        int sendW = sendW();
+        boolean sendHover = !picking && over(mouseX, mouseY, x + EDGE, sendY(), sendW, SEND_H);
         if (chosen == null) {
             NotchWidgets.neutralButton(ctx, this.font, x + EDGE, sendY(), INNER_W, SEND_H,
                     "Pick a mailbox first", false);
         } else {
-            NotchWidgets.primaryButton(ctx, this.font, x + EDGE, sendY(), INNER_W, SEND_H,
-                    "Send to " + nameOf(chosen), sendHover);
+            NotchWidgets.primaryButton(ctx, this.font, x + EDGE, sendY(), sendW, SEND_H,
+                    fit("Send to " + nameOf(chosen), sendW - 8), sendHover);
+        }
+        if (canTrade()) {
+            NotchWidgets.goldButton(ctx, this.font, tradeX(), sendY(), TRADE_W, SEND_H, "Trade",
+                    !picking && over(mouseX, mouseY, tradeX(), sendY(), TRADE_W, SEND_H));
         }
     }
 
@@ -327,7 +346,12 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                     search.setFocused(true);
                     return true;
                 }
-                if (chosen != null && over(mx, my, this.leftPos + EDGE, sendY(), INNER_W, SEND_H)) {
+                if (canTrade() && over(mx, my, tradeX(), sendY(), TRADE_W, SEND_H)) {
+                    NotchWidgets.click();
+                    NotchPacketsClient.sendMailTrade(chosen);
+                    return true;
+                }
+                if (chosen != null && over(mx, my, this.leftPos + EDGE, sendY(), sendW(), SEND_H)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendMailPost(chosen, note == null ? "" : note.getValue(),
                             coinsTyped());
@@ -377,6 +401,24 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         /*extractTooltip(ctx, mouseX, mouseY);
         *///?} else {
         renderTooltip(ctx, mouseX, mouseY);
+        //?}
+    }
+
+
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key(), scanCode = event.scancode(), modifiers = event.modifiers();
+    *///?} else {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
+        // Keep the window from closing while typing: the inventory key is a letter like any other.
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, note, coins, search)) return true;
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
+        return super.keyPressed(keyCode, scanCode, modifiers);
         //?}
     }
 

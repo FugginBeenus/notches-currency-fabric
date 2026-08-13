@@ -116,24 +116,60 @@ public class MailInboxMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Hands over every parcel on screen that the player has room for.
+     * Opens everything on screen straight into the player's inventory.
      *
-     * <p>Only what is on screen. Taking those frees the slots, which are then refilled from the rest
-     * of the box, so a very full mailbox empties in a few goes rather than dumping two hundred
-     * parcels on a player who cannot hold them.
+     * <p>Unwrapped rather than handed over sealed: a button that gave back thirty parcels still to
+     * be right-clicked one at a time is not much of a shortcut. Dragging a single parcel out still
+     * gives you the sealed thing, for when you want to carry it somewhere or pass it on.
+     *
+     * <p>It stops at the first parcel that will not fit, leaving that one and everything after it
+     * in the mail. What could not be handed over stays wrapped, so nothing is lost to a full
+     * inventory.
      */
     public void takeAll(ServerPlayer player) {
+        MailState state = MailState.get(player.level().getServer());
+        int parcels = 0, items = 0;
+        long coins = 0L;
+        boolean ranOutOfRoom = false;
+
         for (int i = 0; i < INBOX_SLOTS; i++) {
-            ItemStack parcel = view.getItem(i);
-            if (parcel.isEmpty()) continue;
-            ItemStack giving = parcel.copy();
-            player.getInventory().add(giving);
-            if (!giving.isEmpty()) break; // out of room, so the rest stay where they are
+            UUID entryId = backing[i];
+            if (entryId == null) continue;
+
+            MailItem before = find(state, player.getUUID(), entryId);
+            if (before == null) {
+                view.setItem(i, ItemStack.EMPTY);
+                backing[i] = null;
+                continue;
+            }
+
+            // Quietly: the tally below says it once instead of twice per parcel.
+            MailManager.collect(player, entryId, false);
+            if (find(state, player.getUUID(), entryId) != null) {
+                // The inventory filled up. Show what is still in there and stop.
+                view.setItem(i, ParcelItem.of(find(state, player.getUUID(), entryId)));
+                ranOutOfRoom = true;
+                break;
+            }
+
+            parcels++;
+            coins += before.coins();
+            for (ItemStack stack : before.contents()) items += stack.getCount();
             view.setItem(i, ItemStack.EMPTY);
-            collected(player, i);
+            backing[i] = null;
         }
+
+        MailManager.announceCollected(player, parcels, items, coins, ranOutOfRoom);
         refill(player);
         broadcastChanges();
+    }
+
+    /** The entry still in the box under this id, or null once it has been handed over in full. */
+    private static MailItem find(MailState state, UUID owner, UUID entryId) {
+        for (MailItem item : state.inbox(owner)) {
+            if (item.id().equals(entryId)) return item;
+        }
+        return null;
     }
 
     /** Puts the next waiting entries into whatever slots have come free. */

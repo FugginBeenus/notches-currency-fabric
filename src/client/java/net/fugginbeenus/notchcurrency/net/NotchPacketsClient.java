@@ -484,6 +484,12 @@ public final class NotchPacketsClient {
                 net.fugginbeenus.notchcurrency.compat.Net.buf());
     }
 
+    public static void sendMailTrade(UUID recipient) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(recipient);
+        NetClient.sendToServer(NotchPackets.MAIL_TRADE, buf);
+    }
+
     public static void sendMailPost(UUID recipient, String note, long coins) {
         var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(recipient);
