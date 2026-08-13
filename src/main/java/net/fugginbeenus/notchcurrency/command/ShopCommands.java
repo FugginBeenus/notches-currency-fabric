@@ -65,9 +65,12 @@ public final class ShopCommands {
 
                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Your Shops:").withStyle(ChatFormatting.GOLD));
                                     for (var shop : shops) {
-                                        String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
+                                        Component status = shop.isOpen()
+                                                ? Component.literal("OPEN").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                                : Component.literal("CLOSED").withStyle(net.minecraft.ChatFormatting.RED);
                                         int listings = shop.getListings().size();
-                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" - " + shop.getShopName() + " [" + status + "§r] (" + listings + " items)")
+                                        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" - " + shop.getShopName() + " [").append(status)
+                                                .append(Component.literal("] (" + listings + " items)"))
                                                 .append(Component.literal(" [" + shop.getShopId().toString().substring(0, 8) + "...]")
                                                         .withStyle(ChatFormatting.GRAY)));
                                     }
@@ -214,7 +217,9 @@ public final class ShopCommands {
                                             shop.setOpen(!shop.isOpen());
                                             state.markDirtyAndSave();
 
-                                            String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
+                                            Component status = shop.isOpen()
+                                                ? Component.literal("OPEN").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                                : Component.literal("CLOSED").withStyle(net.minecraft.ChatFormatting.RED);
                                             net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop is now: " + status));
                                             return 1;
                                         })
@@ -241,13 +246,17 @@ public final class ShopCommands {
 
                                             net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("=== All Shops (" + shops.size() + ") ===").withStyle(ChatFormatting.GOLD));
                                             for (var shop : shops) {
-                                                String status = shop.isOpen() ? "§aOPEN" : "§cCLOSED";
-                                                String npcStatus = shop.getLinkedNpcId() != null ? "§aLinked" : "§7No NPC";
+                                                Component status = shop.isOpen()
+                                                ? Component.literal("OPEN").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                                : Component.literal("CLOSED").withStyle(net.minecraft.ChatFormatting.RED);
+                                                Component npcStatus = shop.getLinkedNpcId() != null
+                                                ? Component.literal("Linked").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                                : Component.literal("No NPC").withStyle(net.minecraft.ChatFormatting.GRAY);
                                                 // Line 1: Shop name and status
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" • " + shop.getShopName())
                                                         .withStyle(ChatFormatting.WHITE)
-                                                        .append(Component.literal(" [" + status + "§r] "))
-                                                        .append(Component.literal("[" + npcStatus + "§r]")));
+                                                        .append(Component.literal(" [")).append(status).append(Component.literal("] "))
+                                                        .append(Component.literal("[")).append(npcStatus).append(Component.literal("]")));
                                                 // Line 2: Owner and ID (clickable to copy)
                                                 String fullId = shop.getShopId().toString();
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("   Owner: ").withStyle(ChatFormatting.GRAY)
@@ -321,7 +330,9 @@ public final class ShopCommands {
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Name: " + shop.getShopName()));
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Owner: " + shop.getOwnerName() + " (" + shop.getOwnerId() + ")"));
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Shop ID: " + shop.getShopId()));
-                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Status: " + (shop.isOpen() ? "§aOPEN" : "§cCLOSED")));
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Status: ").append(shop.isOpen()
+                                                            ? Component.literal("OPEN").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                                            : Component.literal("CLOSED").withStyle(net.minecraft.ChatFormatting.RED)));
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("NPC: " + (shop.getLinkedNpcId() != null ? shop.getLinkedNpcId().toString() : "None")));
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Listings: " + shop.getListings().size()));
                                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Pending Balance: " + shop.getPendingBalance() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));

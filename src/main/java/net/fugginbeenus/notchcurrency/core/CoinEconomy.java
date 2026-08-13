@@ -43,7 +43,8 @@ public final class CoinEconomy {
         boolean ok = CurrencyApi.withdraw(player, amount);
         if (!ok) {
             if (!silent) {
-                net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§cYou don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
+                net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
             }
             LOGGER.info("[CoinEconomy] tryCharge FAILED for {} (need {}, has {})",
                     player.getName().getString(), amount, CurrencyApi.getBalance(player));
@@ -75,7 +76,12 @@ public final class CoinEconomy {
         }
 
         if (!silent) {
-            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("You received ")
+                    .withStyle(net.minecraft.ChatFormatting.GREEN)
+                    .append(Component.literal(String.valueOf(amount))
+                            .withStyle(net.minecraft.ChatFormatting.YELLOW))
+                    .append(Component.literal(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                            .withStyle(net.minecraft.ChatFormatting.GREEN)));
         }
         LOGGER.info("[CoinEconomy] give {} physical coins to {}", amount, player.getName().getString());
     }
@@ -85,7 +91,12 @@ public final class CoinEconomy {
 
         CurrencyApi.deposit(player, amount);
         if (!silent) {
-            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("§aYou received §e" + amount + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance."));
+            net.fugginbeenus.notchcurrency.compat.Msg.actionBar(player, Component.literal("You received ")
+                    .withStyle(net.minecraft.ChatFormatting.GREEN)
+                    .append(Component.literal(String.valueOf(amount))
+                            .withStyle(net.minecraft.ChatFormatting.YELLOW))
+                    .append(Component.literal(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to your balance.")
+                            .withStyle(net.minecraft.ChatFormatting.GREEN)));
         }
         LOGGER.info("[CoinEconomy] giveToBalance {} coins to {}", amount, player.getName().getString());
     }

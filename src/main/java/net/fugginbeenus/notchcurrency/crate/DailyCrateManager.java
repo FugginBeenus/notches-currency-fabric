@@ -42,6 +42,9 @@ public final class DailyCrateManager {
 
     public static void setPerDay(int n) { BALLOONS_PER_WAVE = Math.max(0, n); }
 
+    /** Said once per run, not once a week. */
+    private static boolean warnedUnconfigured = false;
+
     private static void tick(MinecraftServer server) {
         ServerLevel world = server.overworld();
         if (world == null) return;
@@ -55,6 +58,16 @@ public final class DailyCrateManager {
         // Spawn at the start of each week (during the morning window of day 1)
         if (week != lastSpawnWeek && timeInWeek >= WINDOW_START && timeInWeek <= WINDOW_END) {
             lastSpawnWeek = week;
+
+            // Nowhere has been chosen for them, so there is nowhere to put them. Silently, because
+            // a server that has never set this up does not want weekly news about it.
+            if (!cfg.configured) {
+                if (!warnedUnconfigured) {
+                    warnedUnconfigured = true;
+                    LOGGER.info("Balloon crates are idle: no area set. Use /balloon setArea to pick one.");
+                }
+                return;
+            }
 
             // Clear existing balloons first to prevent stacking
             int cleared = clearExistingBalloons(world, cfg);
@@ -144,6 +157,7 @@ public final class DailyCrateManager {
     public static void setArea(ServerLevel world, BlockPos center, int radius) {
         var cfg = BalloonConfigState.get(world);
         cfg.center = center;
+        cfg.configured = true;
         cfg.radius = Math.max(1, radius);
         cfg.setDirty();
     }

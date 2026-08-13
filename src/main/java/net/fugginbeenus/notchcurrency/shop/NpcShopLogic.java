@@ -46,8 +46,16 @@ public final class NpcShopLogic {
 
         // 3) Feedback: ding + actionbar
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
-        net.fugginbeenus.notchcurrency.compat.Msg.actionBar(buyer, Component.literal("§aYou bought §e" + quantity + "x §f" + item.getHoverName().getString()
-                        + " §afor §e" + totalCost + "§a " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "."));
+        net.fugginbeenus.notchcurrency.compat.Msg.actionBar(buyer, Component.literal("You bought ")
+                .withStyle(net.minecraft.ChatFormatting.GREEN)
+                .append(Component.literal(quantity + "x ").withStyle(net.minecraft.ChatFormatting.YELLOW))
+                .append(Component.literal(item.getHoverName().getString())
+                        .withStyle(net.minecraft.ChatFormatting.WHITE))
+                .append(Component.literal(" for ").withStyle(net.minecraft.ChatFormatting.GREEN))
+                .append(Component.literal(String.valueOf(totalCost))
+                        .withStyle(net.minecraft.ChatFormatting.YELLOW))
+                .append(Component.literal(" " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN)));
 
         return true;
     }
@@ -57,7 +65,8 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("§cShop not found!"));
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop not found!")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
             return;
         }
 
@@ -83,12 +92,14 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("§cShop not found!"));
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Shop not found!")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
             return;
         }
 
         if (!shop.getOwnerId().equals(owner.getUUID())) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("§cYou don't own this shop!"));
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
             return;
         }
 
@@ -109,7 +120,8 @@ public final class NpcShopLogic {
         PlayerShop shop = state.getShop(shopId);
 
         if (shop == null) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("§cShop not found!"));
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Shop not found!")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
             return;
         }
 

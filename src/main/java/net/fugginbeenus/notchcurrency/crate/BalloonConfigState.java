@@ -9,6 +9,15 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 
 public final class BalloonConfigState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
     public BlockPos center = new BlockPos(0, 80, 0);
+
+    /**
+     * Whether anybody has actually chosen where balloons go.
+     *
+     * <p>The centre above is a placeholder, not a choice, and without this there is no way to tell
+     * the two apart. A world nobody has set up would drop balloons on its origin every week and
+     * announce it, which reads as a bug because it is one.
+     */
+    public boolean configured = false;
     public int radius = 25;
     public int minY = 110;
     public int maxY = 150;
@@ -28,6 +37,7 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
         int cy = nbt.getInt("cy");
         int cz = nbt.getInt("cz");
         s.center = new BlockPos(cx, cy, cz);
+        s.configured = nbt.getBoolean("configured");
         s.radius = nbt.getInt("radius");
         s.minY = nbt.getInt("minY");
         s.maxY = nbt.getInt("maxY");
@@ -62,6 +72,7 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
         nbt.putInt("maxY", maxY);
         nbt.putInt("perDay", perDay);
         nbt.putBoolean("announce", announce);
+        nbt.putBoolean("configured", configured);
         return nbt;
     }
 }
