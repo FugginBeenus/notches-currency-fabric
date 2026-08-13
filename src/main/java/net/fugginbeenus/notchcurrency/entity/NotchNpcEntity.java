@@ -1671,7 +1671,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         // A custom model brings its own clip names, so the roles are filled from its bundle. The
         // built-in names are what a bundle-less NPC falls back to.
         var bundle = net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(getModelId());
-        String idle = bundle != null && !bundle.idle().isEmpty() ? bundle.idle() : IDLE_ANIM;
+        // A custom model with no animation file of its own holds still rather than being asked for a
+        // clip out of the built-in file, which is a different model and does not have its bones.
+        if (bundle != null && bundle.idle().isEmpty()) return null;
+        String idle = bundle != null ? bundle.idle() : IDLE_ANIM;
 
         // Walking wins over anything it might have been doing standing still. A bundle with no walk
         // clip keeps playing its idle rather than snapping to nothing.

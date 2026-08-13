@@ -157,6 +157,37 @@ public final class Geo {
         }
     }
 
+    /**
+     * Whether GeckoLib has this animation file loaded right now.
+     *
+     * <p>Asked every frame before an NPC is drawn through GeckoLib, because during a resource reload
+     * the answer is briefly no. Handing GeckoLib a model whose animations it cannot find is not a
+     * missing texture: its controller takes the last keyframe of an empty list and the game stops.
+     *
+     * <p>Kept to a map lookup for that reason. It runs once per visible NPC per frame.
+     */
+    public static boolean hasBakedAnimations(net.minecraft.resources.ResourceLocation id) {
+        try {
+            //? if >=26.1 {
+            /*var cache = com.geckolib.cache.GeckoLibResources.getBakedAnimations();
+            var map = cache == null ? null : cache.cache();
+            *///?} elif >=1.21.11 {
+            /*var cache = software.bernie.geckolib.cache.GeckoLibResources.getBakedAnimations();
+            var map = cache == null ? null : cache.cache();
+            *///?} else {
+            var map = software.bernie.geckolib.cache.GeckoLibCache.getBakedAnimations();
+            //?}
+            if (map == null) return false;
+            if (map.containsKey(id)) return true;
+            for (var key : map.keySet()) {
+                if (String.valueOf(key).contains(id.getPath())) return true;
+            }
+            return false;
+        } catch (Throwable notLoadedYet) {
+            return false;
+        }
+    }
+
     /** Whether a clip is actually there, so a pack being removed does not leave an NPC stuck. */
     public static boolean hasClip(String name) {
         return name != null && !name.isEmpty() && clipNames().contains(name);

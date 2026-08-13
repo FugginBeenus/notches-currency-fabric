@@ -41,12 +41,26 @@ public class NotchNpcGeoModel extends GeoModel<NotchNpcEntity> {
 
     private static ResourceLocation animationFor(String modelId) {
         NpcModelBundle bundle = NpcModelRegistry.forModelId(modelId);
-        if (bundle == null) return ANIMATION;
+        // A model with no animations of its own still has to name a file GeckoLib can find, or it
+        // never draws at all. The built-in one is pointed at and simply never played from.
+        if (bundle == null || bundle.idle().isEmpty()) return ANIMATION;
         //? if >=1.21.11 {
         /*return NotchCurrency.id(bundle.assetName());
         *///?} else {
         return NotchCurrency.id("animations/" + bundle.assetName() + ".animation.json");
         //?}
+    }
+
+    /**
+     * Whether GeckoLib actually has what this NPC needs, right now.
+     *
+     * <p>False for a moment during a resource reload, and for a bundle that has been deleted. The
+     * caller draws the NPC some other way until this comes back true, because asking GeckoLib for a
+     * model whose animations are not loaded crashes the game rather than drawing nothing.
+     */
+    public static boolean ready(String modelId) {
+        return net.fugginbeenus.notchcurrency.compat.Geo.hasBakedModel(modelFor(modelId))
+                && net.fugginbeenus.notchcurrency.compat.Geo.hasBakedAnimations(animationFor(modelId));
     }
 
     private static ResourceLocation textureFor(String modelId, String skinValue) {

@@ -47,8 +47,11 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         String model = entity.getModelId();
         state.invisible = entity.isInvisible();
         state.modelId = model == null ? "" : model;
-        state.useGeo = NotchNpcEntity.MODEL_APPLY.equals(model)
-                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null;
+        // A bundle that has been removed, or one whose files are still being reloaded, is not
+        // something GeckoLib can draw. Asking it to anyway is a crash, not a missing texture.
+        state.useGeo = (NotchNpcEntity.MODEL_APPLY.equals(model)
+                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null)
+                && NotchNpcGeoModel.ready(model);
         state.displayName = entity.getDisplayName();
         if (state.useGeo) {
             state.showLabel = labelShows(entity);
@@ -96,8 +99,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             return;
         }
         if (entity.showsTalkBubble()) renderTalkBubble(entity, matrices, vertexConsumers);
-        if (NotchNpcEntity.MODEL_APPLY.equals(model)
-                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null) {
+        if ((NotchNpcEntity.MODEL_APPLY.equals(model)
+                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null)
+                && NotchNpcGeoModel.ready(model)) {
             geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
             // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
             // are ours to draw, exactly as on the disguise path.
