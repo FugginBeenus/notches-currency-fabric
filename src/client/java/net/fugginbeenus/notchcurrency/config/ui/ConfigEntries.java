@@ -304,11 +304,28 @@ final class ConfigEntries {
 
         // ===== Balloon Crates =====
         c = "Balloon Crates";
+        e.add(new BoolEntry(c, "Weekly waves", cfg.balloon.enabled, false,
+                v -> cfg.balloon.enabled = v,
+                "Off means no balloons at all, which is how a world starts.",
+                "Set the area below before turning this on."));
         e.add(new BoolEntry(c, "Announce spawns", cfg.balloon.announce, true,
                 v -> cfg.balloon.announce = v));
         e.add(new NumberEntry(c, "Spawn count per wave", cfg.balloon.perDay, 3, 0, 100,
                 v -> cfg.balloon.perDay = v.intValue(),
                 "How many balloon crates spawn each wave."));
+        e.add(new BoolEntry(c, "One per player too", cfg.balloon.perPlayer, false,
+                v -> cfg.balloon.perPlayer = v,
+                "When a wave fires, everybody online also gets one above them.",
+                "Nothing spawns for a player with no room overhead."));
+        e.add(new BoolEntry(c, "Only inside the area", cfg.balloon.playerInAreaOnly, false,
+                v -> cfg.balloon.playerInAreaOnly = v,
+                "On: only players standing in the balloon area get their own."));
+        e.add(new NumberEntry(c, "Player balloon height", cfg.balloon.playerHeight, 40, 5, 200,
+                v -> cfg.balloon.playerHeight = v.intValue(),
+                "How far above a player their own balloon appears."));
+        e.add(new NumberEntry(c, "Player balloon spread", cfg.balloon.playerSpread, 12, 1, 64,
+                v -> cfg.balloon.playerSpread = v.intValue(),
+                "How far to the side it can drift from directly overhead."));
         e.add(new NumberEntry(c, "Center X", cfg.balloon.centerX, 0, -30_000_000, 30_000_000,
                 v -> cfg.balloon.centerX = v.intValue()));
         e.add(new NumberEntry(c, "Center Y", cfg.balloon.centerY, 80, -64, 320,

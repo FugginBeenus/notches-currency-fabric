@@ -106,6 +106,10 @@ public final class NotchPackets {
     // Client -> server: set the idle animation layered on the pose (npc uuid, anim id)
     // Sharing custom NPC models with a server. LIST and SEND go out to players, WANT and PUSH come
     // back from them.
+    /** Balloon settings from an operator's config screen, and the server's own back again. */
+    public static final ResourceLocation BALLOON_CONFIG = NotchCurrency.id("balloon_config");
+    public static final ResourceLocation BALLOON_CONFIG_SYNC = NotchCurrency.id("balloon_config_sync");
+
     public static final ResourceLocation NPC_MODEL_LIST = NotchCurrency.id("npc_model_list");
     public static final ResourceLocation NPC_MODEL_SEND = NotchCurrency.id("npc_model_send");
     public static final ResourceLocation NPC_MODEL_WANT = NotchCurrency.id("npc_model_want");

@@ -25,14 +25,8 @@ public final class DailyCrateManager {
     }
 
     // Admin-tweakable defaults (also persisted via BalloonConfigState)
-    private static BlockPos CENTER = new BlockPos(0, 80, 0);
-    private static int RADIUS = 25;
 
-    public static int MIN_Y = 110;
-    public static int MAX_Y = 150;
 
-    private static int BALLOONS_PER_WAVE = 3;
-    public static boolean ANNOUNCE = true;
 
     // Spawn window (morning of first day of week)
     private static final long WINDOW_START = 1000;
@@ -41,7 +35,6 @@ public final class DailyCrateManager {
     // Minecraft week = 7 days
     private static final long TICKS_PER_WEEK = 24000L * 7L;
 
-    public static void setPerDay(int n) { BALLOONS_PER_WAVE = Math.max(0, n); }
 
     /** Said once per run, not once a week. */
     private static boolean warnedUnconfigured = false;
@@ -113,27 +106,73 @@ public final class DailyCrateManager {
     }
 
     // apply config from file
-    public static void applyConfig(net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
+    /**
+     * Puts the config screen's balloon settings into the world save.
+     *
+     * <p>The world save is what the spawner reads, and for a long time this method wrote to a set of
+     * static fields instead, which nothing read at all. Everything in the screen's Balloon Crates
+     * section did nothing as a result.
+     *
+     * <p>Takes the server rather than reaching for one, because it is called from a client screen
+     * and there may not be a world open.
+     */
+    public static void applyToWorld(net.minecraft.server.MinecraftServer server,
+                                    net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
+        if (server == null) return;
+        ServerLevel world = server.overworld();
+        if (world == null) return;
+
         var b = cfg.balloon;
-        CENTER = new BlockPos(b.centerX, b.centerY, b.centerZ);
-        RADIUS = Math.max(1, b.radius);
-        MIN_Y  = b.minY;
-        MAX_Y  = b.maxY;
-        setPerDay(b.perDay);
-        ANNOUNCE = b.announce;
+        BalloonConfigState state = BalloonConfigState.get(world);
+        state.configured = b.enabled;
+        state.center = new BlockPos(b.centerX, b.centerY, b.centerZ);
+        state.radius = Math.max(1, b.radius);
+        state.minY = b.minY;
+        state.maxY = Math.max(b.minY, b.maxY);
+        state.perDay = Math.max(0, b.perDay);
+        state.announce = b.announce;
+        state.perPlayer = b.perPlayer;
+        state.playerInAreaOnly = b.playerInAreaOnly;
+        state.playerHeight = Math.max(5, b.playerHeight);
+        state.playerSpread = Math.max(1, b.playerSpread);
+        state.setDirty();
     }
 
-    // push current runtime values back into cfg (so command changes can be saved)
-    public static void exportConfig(net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
+    /** Tells one player what this world's balloon settings actually are. */
+    public static void sendTo(net.minecraft.server.level.ServerPlayer player) {
+        var server = player.level().getServer();
+        if (server == null) return;
+        var cfg = new net.fugginbeenus.notchcurrency.config.NotchConfig();
+        readFromWorld(server, cfg);
+
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        BalloonConfigWire.write(buf, cfg);
+        net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
+                player, net.fugginbeenus.notchcurrency.net.NotchPackets.BALLOON_CONFIG_SYNC, buf);
+    }
+
+    /** Fills the config object from the world save, so a screen shows what is really set. */
+    public static void readFromWorld(net.minecraft.server.MinecraftServer server,
+                                     net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
+        if (server == null) return;
+        ServerLevel world = server.overworld();
+        if (world == null) return;
+
+        BalloonConfigState state = BalloonConfigState.get(world);
         var b = cfg.balloon;
-        b.centerX = CENTER.getX();
-        b.centerY = CENTER.getY();
-        b.centerZ = CENTER.getZ();
-        b.radius  = RADIUS;
-        b.minY    = MIN_Y;
-        b.maxY    = MAX_Y;
-        b.perDay  = BALLOONS_PER_WAVE;
-        b.announce = ANNOUNCE;
+        b.enabled = state.configured;
+        b.centerX = state.center.getX();
+        b.centerY = state.center.getY();
+        b.centerZ = state.center.getZ();
+        b.radius = state.radius;
+        b.minY = state.minY;
+        b.maxY = state.maxY;
+        b.perDay = state.perDay;
+        b.announce = state.announce;
+        b.perPlayer = state.perPlayer;
+        b.playerInAreaOnly = state.playerInAreaOnly;
+        b.playerHeight = state.playerHeight;
+        b.playerSpread = state.playerSpread;
     }
 
     private static void spawnBalloons(ServerLevel world, BalloonConfigState cfg) {

@@ -533,7 +533,11 @@ public final class NotchConfigScreen extends Screen {
 
         NotchConfigIO.save(cfg);
         AuctionConfig.apply(cfg);
-        DailyCrateManager.applyConfig(cfg);
+        // Balloons live in the world save, not in this file, so they go to the server to be
+        // applied. Ignored there unless this player is an operator.
+        if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
+            net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendBalloonConfig(cfg);
+        }
         GoldenCacheManager.applyConfig(cfg);
         WealthTax.applyConfig(cfg);
         ShopRent.applyConfig(cfg);

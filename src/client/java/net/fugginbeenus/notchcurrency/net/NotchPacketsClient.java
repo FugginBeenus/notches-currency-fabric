@@ -525,6 +525,19 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_MODEL_PUSH, buf);
     }
 
+    public static void sendBalloonConfig(net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        net.fugginbeenus.notchcurrency.crate.BalloonConfigWire.write(buf, cfg);
+        NetClient.sendToServer(NotchPackets.BALLOON_CONFIG, buf);
+    }
+
+    public static void registerBalloonConfigReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.BALLOON_CONFIG_SYNC, (client, buf) -> {
+            var cfg = net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
+            net.fugginbeenus.notchcurrency.crate.BalloonConfigWire.read(buf, cfg);
+        });
+    }
+
     public static void registerNpcModelReceivers() {
         NetClient.registerClientReceiver(NotchPackets.NPC_MODEL_LIST, (client, buf) -> {
             boolean mayShare = buf.readBoolean();

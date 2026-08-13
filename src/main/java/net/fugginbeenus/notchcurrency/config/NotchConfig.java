@@ -186,6 +186,14 @@ public final class NotchConfig {
     }
 
     public static final class Balloon {
+        /**
+         * Whether weekly waves happen at all.
+         *
+         * <p>Off until somebody says otherwise, so a world nobody has set up does not get balloons
+         * dropped on its origin. This is the same switch /balloon setArea throws.
+         */
+        public boolean enabled = false;
+
         public int centerX = 0;
         public int centerY = 80;
         public int centerZ = 0;
@@ -196,6 +204,12 @@ public final class NotchConfig {
 
         public int perDay = 3;
         public boolean announce = true;
+
+        /** One each for everybody online when a wave fires, on top of the wave over the area. */
+        public boolean perPlayer = false;
+        public boolean playerInAreaOnly = false;
+        public int playerHeight = 40;
+        public int playerSpread = 12;
 
         // Optional spawn window (ticks-of-day) if you want to use it
         public long windowStart = 1000;

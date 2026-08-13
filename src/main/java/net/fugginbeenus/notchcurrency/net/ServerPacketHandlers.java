@@ -535,6 +535,21 @@ public final class ServerPacketHandlers {
         });
 
         // A player asking for a model this server has that they do not.
+        // Balloon settings from a config screen. Operators only: these are the world's, not the
+        // client's, and everybody's game reads them.
+        Net.registerServerReceiver(NotchPackets.BALLOON_CONFIG, (server, player, buf) -> {
+            var incoming = new net.fugginbeenus.notchcurrency.config.NotchConfig();
+            net.fugginbeenus.notchcurrency.crate.BalloonConfigWire.read(buf, incoming);
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                net.fugginbeenus.notchcurrency.crate.DailyCrateManager.applyToWorld(server, incoming);
+                // Straight back to everyone, so any screen that is open stops showing the old values.
+                for (net.minecraft.server.level.ServerPlayer other : server.getPlayerList().getPlayers()) {
+                    net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(other);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_MODEL_WANT, (server, player, buf) -> {
             String id = buf.readUtf(64);
             server.execute(() -> net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare

@@ -116,7 +116,6 @@ public class NotchCurrency implements ModInitializer {
 
         // Load config (applies defaults on missing)
         NotchConfig cfg = NotchConfigIO.load();
-        DailyCrateManager.applyConfig(cfg);
         GoldenCacheManager.applyConfig(cfg);
         AuctionConfig.apply(cfg);
         WealthTax.applyConfig(cfg);
@@ -208,6 +207,10 @@ public class NotchCurrency implements ModInitializer {
             // Seed the on-screen bounty tracker with their taken bounties.
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
 
+            // This world's balloon settings, so the config screen shows the truth rather than
+            // whatever is in the player's own file.
+            net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(sp);
+
             // What custom NPC models this server holds. Only names and fingerprints: the client
             // asks for whatever it does not already have, so a regular is charged nothing.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
@@ -234,6 +237,11 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
             // Read the world's custom NPC models once, so joining players can be told about them.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
+
+            // The world save is the authority for balloons. Read it back into the config object so
+            // anything showing those values shows what is actually set, rather than a stale file.
+            net.fugginbeenus.notchcurrency.crate.DailyCrateManager.readFromWorld(
+                    server, net.fugginbeenus.notchcurrency.config.NotchConfigIO.get());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
