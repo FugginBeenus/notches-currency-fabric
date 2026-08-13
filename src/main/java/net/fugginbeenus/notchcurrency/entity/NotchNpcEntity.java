@@ -56,6 +56,16 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public enum DialogueMode { WINDOW, CHAT }
 
     private static final String IDLE_ANIM = "animation.notch_npc.idle";
+    private static final String WALK_ANIM = "animation.notch_npc.walk";
+    /** The flourishes, with how long one pass of each takes in ticks. */
+    private static final String[] SPECIAL_ANIMS = {
+            "animation.notch_npc.special_idle1",
+            "animation.notch_npc.special_idle2",
+            "animation.notch_npc.special_idle3",
+    };
+    private static final int[] SPECIAL_TICKS = {215, 341, 234};
+    /** How often a lively NPC considers doing something other than standing there. */
+    private static final int FLOURISH_EVERY = 600;
     private final AnimatableInstanceCache geoCache = net.fugginbeenus.notchcurrency.compat.Geo.cache(this);
 
     // Model + skin identifiers.
@@ -1617,8 +1627,38 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     *///?} else {
     private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationState<E> state) {
     //?}
-        state.setAndContinue(net.fugginbeenus.notchcurrency.compat.Geo.loop(IDLE_ANIM));
+        String clip = chooseAnimation();
+        if (clip == null) return PlayState.STOP; // a statue holds still, including its hands
+        state.setAndContinue(net.fugginbeenus.notchcurrency.compat.Geo.loop(clip));
         return PlayState.CONTINUE;
+    }
+
+    /**
+     * Which clip suits what the NPC is doing, or null to stand perfectly still.
+     *
+     * <p>Driven by the same Statue / Breathe / Lively setting that drives the vanilla models, so one
+     * choice in the editor means the same thing whichever model an NPC is wearing.
+     *
+     * <p>The flourishes are worked out from the tick count and the NPC's own id rather than kept in
+     * a field. That way nothing has to be stored or sent, and two NPCs standing side by side do not
+     * move in lockstep, which is what gives away that they are the same thing twice.
+     */
+    @Nullable
+    private String chooseAnimation() {
+        int mode = getPoseAnim();
+        if (mode == ANIM_STATUE) return null;
+
+        // Walking wins over anything it might have been doing standing still.
+        if (this.walkAnimation.speed() > 0.02f) return WALK_ANIM;
+        if (mode != ANIM_LIVELY) return IDLE_ANIM;
+
+        int stagger = Math.floorMod(getUUID().hashCode(), FLOURISH_EVERY);
+        int spot = Math.floorMod(this.tickCount + stagger, FLOURISH_EVERY);
+        long window = Math.floorDiv((long) this.tickCount + stagger, FLOURISH_EVERY);
+
+        // Stable for the whole window, so the choice does not change part way through a flourish.
+        int roll = Math.floorMod(Long.hashCode(window * 31L + getUUID().hashCode()), SPECIAL_ANIMS.length);
+        return spot < SPECIAL_TICKS[roll] ? SPECIAL_ANIMS[roll] : IDLE_ANIM;
     }
 
     @Override
