@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,wall=false,flag=false": {
+      "model": "notchcurrency:block/mailbox"
+    },
+    "facing=east,wall=false,flag=false": {
+      "model": "notchcurrency:block/mailbox",
+      "y": 90
+    },
+    "facing=south,wall=false,flag=false": {
+      "model": "notchcurrency:block/mailbox",
+      "y": 180
+    },
+    "facing=west,wall=false,flag=false": {
+      "model": "notchcurrency:block/mailbox",
+      "y": 270
+    },
+    "facing=north,wall=false,flag=true": {
+      "model": "notchcurrency:block/mailbox_flag"
+    },
+    "facing=east,wall=false,flag=true": {
+      "model": "notchcurrency:block/mailbox_flag",
+      "y": 90
+    },
+    "facing=south,wall=false,flag=true": {
+      "model": "notchcurrency:block/mailbox_flag",
+      "y": 180
+    },
+    "facing=west,wall=false,flag=true": {
+      "model": "notchcurrency:block/mailbox_flag",
+      "y": 270
+    },
+    "facing=north,wall=true,flag=false": {
+      "model": "notchcurrency:block/mailbox_wall"
+    },
+    "facing=east,wall=true,flag=false": {
+      "model": "notchcurrency:block/mailbox_wall",
+      "y": 90
+    },
+    "facing=south,wall=true,flag=false": {
+      "model": "notchcurrency:block/mailbox_wall",
+      "y": 180
+    },
+    "facing=west,wall=true,flag=false": {
+      "model": "notchcurrency:block/mailbox_wall",
+      "y": 270
+    },
+    "facing=north,wall=true,flag=true": {
+      "model": "notchcurrency:block/mailbox_wall_flag"
+    },
+    "facing=east,wall=true,flag=true": {
+      "model": "notchcurrency:block/mailbox_wall_flag",
+      "y": 90
+    },
+    "facing=south,wall=true,flag=true": {
+      "model": "notchcurrency:block/mailbox_wall_flag",
+      "y": 180
+    },
+    "facing=west,wall=true,flag=true": {
+      "model": "notchcurrency:block/mailbox_wall_flag",
+      "y": 270
+    }
+  }
+}

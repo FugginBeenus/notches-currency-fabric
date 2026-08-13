@@ -10,6 +10,12 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public final class ModBlockEntities {
 
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.MailboxBlockEntity> MAILBOX =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("mailbox"),
+                    FabricBlockEntityTypeBuilder.create(
+                            net.fugginbeenus.notchcurrency.block.entity.MailboxBlockEntity::new,
+                            ModBlocks.MAILBOX).build());
+
     public static final BlockEntityType<LedgerBoardBlockEntity> LEDGER_BOARD =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("ledger_board"),
                     FabricBlockEntityTypeBuilder.create(LedgerBoardBlockEntity::new, ModBlocks.LEDGER_BOARD).build());

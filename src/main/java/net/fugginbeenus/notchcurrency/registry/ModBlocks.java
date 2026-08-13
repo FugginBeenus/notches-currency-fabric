@@ -50,6 +50,23 @@ public final class ModBlocks {
             new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache"))
     );
 
+    // Mailbox: stands on the ground or hangs on a wall, depending where it is placed. Placeholder
+    // model and texture for now.
+    public static final Block MAILBOX = Registry.register(
+            BuiltInRegistries.BLOCK,
+            NotchCurrency.id("mailbox"),
+            new net.fugginbeenus.notchcurrency.block.MailboxBlock(
+                    net.fugginbeenus.notchcurrency.compat.Reg.blockProps("mailbox")
+                            .strength(1.5f)
+                            .noOcclusion())
+    );
+
+    public static final Item MAILBOX_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("mailbox"),
+            new BlockItem(MAILBOX, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("mailbox"))
+    );
+
     // Ledger Board: shows the balance leaderboard on use. Placeholder model/texture for now.
     public static final Block LEDGER_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,
