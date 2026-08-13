@@ -380,6 +380,20 @@ public final class ServerPacketHandlers {
             });
         });
 
+        // Taking mail. The all-zero id means "everything", so one packet covers both buttons.
+        Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
+            UUID entryId = buf.readUUID();
+            server.execute(() -> {
+                if (entryId.getMostSignificantBits() == 0L && entryId.getLeastSignificantBits() == 0L) {
+                    net.fugginbeenus.notchcurrency.mail.MailManager.collectAll(player);
+                } else {
+                    net.fugginbeenus.notchcurrency.mail.MailManager.collect(player, entryId);
+                }
+                // Straight back with what is left, so the list reflects a full inventory honestly.
+                net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(player, "");
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_FACTION_PICK, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int action = buf.readVarInt();

@@ -128,12 +128,7 @@ public class MailboxBlock extends Block implements EntityBlock {
         }
 
         if (box.isOwner(sp.getUUID())) {
-            net.fugginbeenus.notchcurrency.mail.MailSweep.run(sp.level().getServer());
-            int taken = net.fugginbeenus.notchcurrency.mail.MailManager.collectAll(sp);
-            if (taken == 0) {
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp,
-                        Component.literal("Your mailbox is empty.").withStyle(ChatFormatting.GRAY));
-            }
+            net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(sp, box.ownerName());
             return InteractionResult.CONSUME;
         }
 

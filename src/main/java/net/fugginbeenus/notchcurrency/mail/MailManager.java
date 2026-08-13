@@ -105,6 +105,40 @@ public final class MailManager {
         return true;
     }
 
+    /**
+     * Sends a player their inbox so the client can show it.
+     *
+     * <p>Items travel as an id and a count rather than a serialised stack: the wire shape of a stack
+     * has changed twice across the versions this mod builds for, and the screen only needs enough to
+     * draw an icon and a name.
+     */
+    public static void openInbox(ServerPlayer player, String boxOwner) {
+        MailSweep.run(player.level().getServer());
+        List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());
+
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(boxOwner == null ? "" : boxOwner, 32);
+        buf.writeVarInt(waiting.size());
+        for (MailItem item : waiting) {
+            buf.writeUUID(item.id());
+            buf.writeUtf(item.sender(), 64);
+            buf.writeUtf(item.note(), 128);
+            ItemStack stack = item.stack();
+            if (stack.isEmpty()) {
+                buf.writeUtf("", 128);
+                buf.writeVarInt(0);
+                buf.writeUtf("", 128);
+            } else {
+                buf.writeUtf(String.valueOf(
+                        net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem())), 128);
+                buf.writeVarInt(stack.getCount());
+                buf.writeUtf(stack.getHoverName().getString(), 128);
+            }
+            buf.writeLong(item.coins());
+        }
+        net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player, NotchPackets.MAIL_OPEN, buf);
+    }
+
     /** Empties the box as far as the player's inventory allows. */
     public static int collectAll(ServerPlayer player) {
         List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());

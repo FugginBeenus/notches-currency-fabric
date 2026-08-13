@@ -465,6 +465,43 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_FACTION_PICK, buf);
     }
 
+    public static void sendMailTake(UUID entryId) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(entryId);
+        NetClient.sendToServer(NotchPackets.MAIL_TAKE, buf);
+    }
+
+    public static void registerMailReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.MAIL_OPEN, (client, buf) -> {
+            String owner = buf.readUtf(32);
+            int count = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.MailboxScreen.Entry> entries =
+                    new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                UUID id = buf.readUUID();
+                String sender = buf.readUtf(64);
+                String note = buf.readUtf(128);
+                String itemId = buf.readUtf(128);
+                int stackCount = buf.readVarInt();
+                String itemName = buf.readUtf(128);
+                long coins = buf.readLong();
+                entries.add(new net.fugginbeenus.notchcurrency.client.MailboxScreen.Entry(
+                        id, sender, note, itemId, stackCount, itemName, coins));
+            }
+            client.execute(() -> {
+                // Taking something reopens the list, so refresh in place rather than stacking screens.
+                if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen()
+                        instanceof net.fugginbeenus.notchcurrency.client.MailboxScreen open) {
+                    Minecraft.getInstance().setScreen(
+                            new net.fugginbeenus.notchcurrency.client.MailboxScreen(open.owner(), entries));
+                } else {
+                    Minecraft.getInstance().setScreen(
+                            new net.fugginbeenus.notchcurrency.client.MailboxScreen(owner, entries));
+                }
+            });
+        });
+    }
+
     public static void registerFactionListReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_FACTION_LIST, (client, buf) -> {
             UUID npcId = buf.readUUID();

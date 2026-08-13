@@ -136,6 +136,11 @@ public final class NotchPackets {
     // Server -> client: the factions this NPC could belong to (npc uuid, current id, then each entry)
     public static final ResourceLocation NPC_FACTION_LIST = NotchCurrency.id("npc_faction_list");
 
+    // Server -> client: open the mailbox screen (owner name, then each waiting entry)
+    public static final ResourceLocation MAIL_OPEN = NotchCurrency.id("mail_open");
+    // Client -> server: take one entry by its id, or every entry when the id is all zeroes
+    public static final ResourceLocation MAIL_TAKE = NotchCurrency.id("mail_take");
+
     // Server -> client: open the recruiter screen (npc uuid, faction id/name/colour, members,
     // whether the viewer is already in it, and whether they may set this NPC's faction)
     public static final ResourceLocation NPC_RECRUITER_OPEN = NotchCurrency.id("npc_recruiter_open");
