@@ -32,9 +32,9 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
 
     private static final int EDGE = 8, INNER_W = MailLayout.W - EDGE * 2;
     private static final int TO_Y = 42, TO_H = 16;
-    private static final int PARCEL_LABEL_Y = 62;
-    private static final int NOTE_Y = 94, NOTE_H = 14;
-    private static final int SEND_Y = 110, SEND_H = 16;
+    private static final int COINS_Y = 84, FIELD_H = 14;
+    private static final int NOTE_Y = 102;
+    private static final int SEND_Y = 120, SEND_H = 16;
 
     // The drop-down.
     private static final int DROP_Y = 36, DROP_H = MailLayout.CONTENT_BOTTOM - DROP_Y;
@@ -52,6 +52,8 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
 
     private EditBox search;
     private EditBox note;
+    private EditBox coins;
+    private long hintedBalance = -1;
 
     public MailPostScreen(MailPostScreenHandler handler, Inventory inv, Component title) {
         //? if >=26.1 {
@@ -93,6 +95,25 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         search.setResponder(value -> refilter());
         addRenderableWidget(search);
 
+        String oldCoins = coins == null ? "" : coins.getValue();
+        coins = new EditBox(this.font, this.leftPos + EDGE + 4, this.topPos + COINS_Y + 3,
+                INNER_W - 8, 10, Component.literal("Coins"));
+        coins.setMaxLength(12);
+        coins.setBordered(false);
+
+        // Digits only, so there is nothing to reject at the far end. Done by putting the value
+        // back rather than with setFilter, which 26.2 no longer has. Setting it fires the responder
+        // a second time, and that pass finds nothing to strip, so it stops there.
+        coins.setResponder(value -> {
+            StringBuilder digits = new StringBuilder();
+            for (char c : value.toCharArray()) {
+                if (Character.isDigit(c)) digits.append(c);
+            }
+            if (digits.length() != value.length()) coins.setValue(digits.toString());
+        });
+        coins.setValue(oldCoins);
+        addRenderableWidget(coins);
+
         String oldNote = note == null ? "" : note.getValue();
         note = new EditBox(this.font, this.leftPos + EDGE + 4, this.topPos + NOTE_Y + 3,
                 INNER_W - 8, 10, Component.literal("Note"));
@@ -111,6 +132,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private void showRightFields() {
         if (search != null) search.visible = picking;
         if (note != null) note.visible = !picking;
+        if (coins != null) coins.visible = !picking;
     }
 
     private void refilter() {
@@ -142,12 +164,22 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         NotchWidgets.title(ctx, this.font, this.title.getString(), x + MailLayout.W / 2, y + 6);
         MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, mouseX, mouseY);
 
+        refreshCoinsHint();
         drawParcelSide(ctx, x, y, mouseX, mouseY);
         MailPostScreen.drawInventory(ctx, x, y, this.font);
         if (picking) drawPicker(ctx, x, y, mouseX, mouseY);
         //? if >=26.1 {
         /*super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
+    }
+
+    /** Keeps the "you have" in the coins box true, since posting a parcel changes it. */
+    private void refreshCoinsHint() {
+        long balance = NotchHud.getBalance();
+        if (coins == null || balance == hintedBalance) return;
+        hintedBalance = balance;
+        coins.setHint(Component.literal("coins to send (you have "
+                + NotchWidgets.compactCount(balance) + ")").withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private void drawParcelSide(GuiGraphics ctx, int x, int y, int mouseX, int mouseY) {
@@ -164,13 +196,13 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         NotchWidgets.triangle(ctx, x + MailLayout.W - EDGE - 8, toY() + TO_H / 2, false,
                 NotchTheme.TEXT_DARK);
 
-        ctx.drawString(this.font, "Parcel", x + EDGE, y + PARCEL_LABEL_Y, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < MailPostScreenHandler.PARCEL_SLOTS; i++) {
             NotchWidgets.slot(ctx, x + MailPostScreenHandler.PARCEL_X + i * 18 - 1,
                     y + MailPostScreenHandler.PARCEL_Y - 1);
         }
 
-        NotchWidgets.inset(ctx, x + EDGE, y + NOTE_Y, INNER_W, NOTE_H, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, x + EDGE, y + COINS_Y, INNER_W, FIELD_H, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, x + EDGE, y + NOTE_Y, INNER_W, FIELD_H, NotchTheme.DEEP);
 
         boolean sendHover = !picking && over(mouseX, mouseY, x + EDGE, sendY(), INNER_W, SEND_H);
         if (chosen == null) {
@@ -232,6 +264,17 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         }
     }
 
+    /** What is in the coins box, or nothing. The box only accepts digits, so this cannot throw. */
+    private long coinsTyped() {
+        String typed = coins == null ? "" : coins.getValue().strip();
+        if (typed.isEmpty()) return 0L;
+        try {
+            return Long.parseLong(typed);
+        } catch (NumberFormatException tooBig) {
+            return 0L;
+        }
+    }
+
     private String nameOf(UUID id) {
         if (id == null) return "";
         for (Recipient r : knownRecipients) {
@@ -286,7 +329,8 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                 }
                 if (chosen != null && over(mx, my, this.leftPos + EDGE, sendY(), INNER_W, SEND_H)) {
                     NotchWidgets.click();
-                    NotchPacketsClient.sendMailPost(chosen, note == null ? "" : note.getValue());
+                    NotchPacketsClient.sendMailPost(chosen, note == null ? "" : note.getValue(),
+                            coinsTyped());
                     return true;
                 }
             }

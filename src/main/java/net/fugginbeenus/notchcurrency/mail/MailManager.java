@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.mail;
 
 import net.fugginbeenus.notchcurrency.compat.Msg;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
+import net.fugginbeenus.notchcurrency.core.CurrencyText;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
@@ -157,7 +158,7 @@ public final class MailManager {
      * stays with the sender rather than disappearing, which is the only honest thing to do with
      * someone else's goods.
      */
-    public static void send(ServerPlayer sender, UUID recipient, String note,
+    public static void send(ServerPlayer sender, UUID recipient, String note, long coins,
                             MailPostScreenHandler parcel) {
         if (recipient == null) return;
         if (recipient.equals(sender.getUUID())) {
@@ -165,7 +166,15 @@ public final class MailManager {
                     .withStyle(ChatFormatting.RED));
             return;
         }
-        if (parcel.isEmpty()) {
+
+        // Never trust the amount off the wire: it decides how much money moves.
+        long money = Math.max(0L, coins);
+        if (money > 0L && BalanceStore.get(sender) < money) {
+            Msg.chat(sender, Component.literal("You do not have that much to send.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
+        if (parcel.isEmpty() && money <= 0L) {
             Msg.chat(sender, Component.literal("Put something in the parcel first.")
                     .withStyle(ChatFormatting.RED));
             return;
@@ -176,22 +185,35 @@ public final class MailManager {
         String trimmed = note == null ? "" : note.strip();
 
         List<ItemStack> goods = parcel.takeContents();
-        if (!post(server, recipient, MailItem.parcel(from, trimmed, goods))) {
+        if (money > 0L) {
+            BalanceStore.subtract(sender, money, TransactionReason.PAY, "posted a parcel");
+            NotchPackets.sendBalance(sender, BalanceStore.get(sender));
+        }
+
+        if (!post(server, recipient, MailItem.parcel(from, trimmed, goods, money))) {
             Msg.chat(sender, Component.literal("Their mailbox is full. Nothing was sent.")
                     .withStyle(ChatFormatting.RED));
+            // Everything goes back, money included: it left the sender only a moment ago.
             for (ItemStack stack : goods) {
                 if (!sender.getInventory().add(stack)) sender.drop(stack, false);
+            }
+            if (money > 0L) {
+                BalanceStore.add(sender, money, TransactionReason.PAY, "parcel came back");
+                NotchPackets.sendBalance(sender, BalanceStore.get(sender));
             }
             return;
         }
 
         String to = MailState.get(server).knownMailboxes().getOrDefault(recipient, "them");
-        Msg.chat(sender, Component.literal("Posted a parcel to " + to + ".")
-                .withStyle(ChatFormatting.GREEN));
+        Component what = money > 0L
+                ? Component.literal("a parcel with " + money + " " + CurrencyText.word() + " in it")
+                : Component.literal("a parcel");
+        Msg.chat(sender, Component.literal("Posted ").append(what)
+                .append(Component.literal(" to " + to + ".")).withStyle(ChatFormatting.GREEN));
         sender.playSound(net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, 0.8F, 1.0F);
     }
 
-    /** Empties the box as far as the player's inventory allows. */
+    /** Empties the box as far as the player's inventory allows, unwrapped. */
     public static int collectAll(ServerPlayer player) {
         List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());
         int taken = 0;

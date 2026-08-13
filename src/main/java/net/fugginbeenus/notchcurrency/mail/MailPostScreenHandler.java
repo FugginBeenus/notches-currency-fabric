@@ -23,7 +23,7 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
 
     public static final int PARCEL_SLOTS = MailItem.MAX_CONTENTS;
     /** One row, centred under the recipient button. */
-    public static final int PARCEL_X = 34, PARCEL_Y = 64;
+    public static final int PARCEL_X = 34, PARCEL_Y = 62;
     private static final int INV_X = MailLayout.INV_X, INV_Y = MailLayout.INV_Y,
             HOTBAR_Y = MailLayout.HOTBAR_Y;
 

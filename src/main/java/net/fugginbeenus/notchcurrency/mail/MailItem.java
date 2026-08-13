@@ -40,11 +40,15 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
     }
 
     public static MailItem parcel(String sender, String note, List<ItemStack> stacks) {
+        return parcel(sender, note, stacks, 0L);
+    }
+
+    public static MailItem parcel(String sender, String note, List<ItemStack> stacks, long coins) {
         List<ItemStack> copies = new ArrayList<>();
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty() && copies.size() < MAX_CONTENTS) copies.add(stack.copy());
         }
-        return new MailItem(UUID.randomUUID(), sender, note, copies, 0L, 0L);
+        return new MailItem(UUID.randomUUID(), sender, note, copies, Math.max(0L, coins), 0L);
     }
 
     public static MailItem payout(String sender, String note, long coins) {

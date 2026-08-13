@@ -34,7 +34,7 @@ public class MailInboxScreen extends AbstractContainerScreen<MailInboxMenu> {
     }
 
     private int takeX() { return this.leftPos + MailLayout.W - 8 - TAKE_W; }
-    private int takeY() { return this.topPos + 100; }
+    private int takeY() { return this.topPos + 118; }
 
     //? if >=26.1 {
     /*@Override
@@ -57,7 +57,7 @@ public class MailInboxScreen extends AbstractContainerScreen<MailInboxMenu> {
         // Under the grid rather than across it. Written over the slots it was unreadable, and it
         // made an empty mailbox look broken rather than empty.
         int waiting = this.menu.waiting();
-        ctx.drawString(this.font, summary(waiting), x + 8, y + 104,
+        ctx.drawString(this.font, summary(waiting), x + 8, y + 122,
                 waiting == 0 ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK, false);
         if (waiting > 0) {
             NotchWidgets.primaryButton(ctx, this.font, takeX(), takeY(), TAKE_W, TAKE_H, "Take all",

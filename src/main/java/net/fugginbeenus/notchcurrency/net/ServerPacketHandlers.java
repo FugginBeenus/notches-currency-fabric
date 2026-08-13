@@ -403,10 +403,12 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.MAIL_SEND, (server, player, buf) -> {
             UUID recipient = buf.readUUID();
             String note = buf.readUtf(128);
+            long coins = buf.readVarLong();
             server.execute(() -> {
                 if (player.containerMenu instanceof
                         net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler parcel) {
-                    net.fugginbeenus.notchcurrency.mail.MailManager.send(player, recipient, note, parcel);
+                    net.fugginbeenus.notchcurrency.mail.MailManager.send(
+                            player, recipient, note, coins, parcel);
                 }
             });
         });

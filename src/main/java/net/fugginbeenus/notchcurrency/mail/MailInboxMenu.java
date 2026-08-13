@@ -31,7 +31,7 @@ import java.util.UUID;
  */
 public class MailInboxMenu extends AbstractContainerMenu {
 
-    public static final int COLS = 9, ROWS = 3;
+    public static final int COLS = 9, ROWS = 4;
     public static final int INBOX_SLOTS = COLS * ROWS;
 
     private final SimpleContainer view = new SimpleContainer(INBOX_SLOTS);
