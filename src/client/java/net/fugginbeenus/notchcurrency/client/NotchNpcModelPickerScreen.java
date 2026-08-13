@@ -44,6 +44,13 @@ public class NotchNpcModelPickerScreen extends Screen {
     private static final int COLS = 5, TILE_W = 60, TILE_H = 56;
     private static final int GRID_TOP = 48, VISIBLE_ROWS = 3;
 
+    /** Set when a model is created, so the next open rebuilds rather than showing a stale list. */
+    private static boolean stale = false;
+
+    public static void markStale() {
+        stale = true;
+    }
+
     private final NotchNpcEditorScreen editor;
     private final List<Entry> all = new ArrayList<>();
     private List<Entry> filtered = new ArrayList<>();
@@ -65,7 +72,11 @@ public class NotchNpcModelPickerScreen extends Screen {
         gridX = px + 10;
         gridY = py + GRID_TOP;
 
-        if (all.isEmpty()) buildEntries();
+        if (all.isEmpty() || stale) {
+            all.clear();
+            buildEntries();
+            stale = false;
+        }
         filtered = new ArrayList<>(all);
 
         search = new EditBox(this.font, px + 60, py + 29, W - 100, 12, Component.literal("Search"));
@@ -198,8 +209,10 @@ public class NotchNpcModelPickerScreen extends Screen {
             NotchWidgets.button(ctx, sbX, thumbY, sbW, thumbH, over(mouseX, mouseY, sbX, gridY, sbW, gridH), false);
         }
 
-        NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 40, py + H - 22, 80, 16, "Back",
-                over(mouseX, mouseY, px + W / 2 - 40, py + H - 22, 80, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 + 4, py + H - 22, 90, 16, "New model...",
+                over(mouseX, mouseY, px + W / 2 + 4, py + H - 22, 90, 16));
+        NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 94, py + H - 22, 90, 16, "Back",
+                over(mouseX, mouseY, px + W / 2 - 94, py + H - 22, 90, 16));
 
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -243,7 +256,13 @@ public class NotchNpcModelPickerScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, px + W / 2 - 40, py + H - 22, 80, 16)) {
+            if (over(mx, my, px + W / 2 + 4, py + H - 22, 90, 16)) {
+                NotchWidgets.click();
+                Minecraft.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelCreateScreen(this));
+                return true;
+            }
+            if (over(mx, my, px + W / 2 - 94, py + H - 22, 90, 16)) {
                 NotchWidgets.click();
                 Minecraft.getInstance().setScreen(editor);
                 return true;

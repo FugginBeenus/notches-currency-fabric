@@ -196,31 +196,9 @@ public final class NpcModelLoader {
                 }
             }
 
+            String problem = problemWith(geoFile, texFile);
+            if (problem != null) return skip(id, problem);
             String geoText = Files.readString(geoFile, StandardCharsets.UTF_8);
-            JsonObject geo = JsonParser.parseString(geoText).getAsJsonObject();
-            if (!geo.has("minecraft:geometry")) {
-                return skip(id, "that is not a GeckoLib model. In Blockbench use File, Export, "
-                        + "GeckoLib Animated Model");
-            }
-
-            // A texture of the wrong size is the most common reason a model looks scrambled, and
-            // nothing in game says so. Better to refuse it here with the numbers.
-            int[] wanted = declaredTextureSize(geo);
-            // The game's own reader rather than ImageIO: touching AWT on macOS fights GLFW for
-            // the main thread, and this runs on a client that is already up.
-            int texW, texH;
-            try (InputStream in = Files.newInputStream(texFile);
-                 com.mojang.blaze3d.platform.NativeImage image =
-                         com.mojang.blaze3d.platform.NativeImage.read(in)) {
-                texW = image.getWidth();
-                texH = image.getHeight();
-            } catch (Exception notAnImage) {
-                return skip(id, "texture.png could not be read as a PNG");
-            }
-            if (wanted != null && (texW != wanted[0] || texH != wanted[1])) {
-                return skip(id, "this model expects a " + wanted[0] + " by " + wanted[1]
-                        + " texture, but that image is " + texW + " by " + texH);
-            }
 
             List<String> clips = animFile == null ? List.of() : clipsIn(animFile);
             JsonObject manifest = readManifest(folder);
@@ -238,6 +216,47 @@ public final class NpcModelLoader {
         } catch (Exception e) {
             return skip(id, "could not be read: " + e.getMessage());
         }
+    }
+
+    /**
+     * What is wrong with a model and texture pair, or null if nothing is.
+     *
+     * <p>Public because the creation screen runs the same checks before it writes anything. Being
+     * told the texture is the wrong size while choosing it beats finding out after the fact.
+     */
+    public static String problemWith(Path geoFile, Path texFile) {
+        JsonObject geo;
+        try {
+            geo = JsonParser.parseString(
+                    Files.readString(geoFile, StandardCharsets.UTF_8)).getAsJsonObject();
+        } catch (Exception unreadable) {
+            return "that model file could not be read as JSON";
+        }
+        if (!geo.has("minecraft:geometry")) {
+            return "that is not a GeckoLib model. In Blockbench use File, Export, "
+                    + "GeckoLib Animated Model";
+        }
+
+        // The game's own reader rather than ImageIO: touching AWT on macOS fights GLFW for the main
+        // thread, and this runs on a client that is already up.
+        int texW, texH;
+        try (InputStream in = Files.newInputStream(texFile);
+             com.mojang.blaze3d.platform.NativeImage image =
+                     com.mojang.blaze3d.platform.NativeImage.read(in)) {
+            texW = image.getWidth();
+            texH = image.getHeight();
+        } catch (Exception notAnImage) {
+            return "that texture could not be read as a PNG";
+        }
+
+        // A texture of the wrong size is the most common reason a model looks scrambled, and
+        // nothing in game says so. Better to refuse it here, with the numbers.
+        int[] wanted = declaredTextureSize(geo);
+        if (wanted != null && (texW != wanted[0] || texH != wanted[1])) {
+            return "this model expects a " + wanted[0] + " by " + wanted[1]
+                    + " texture, but that image is " + texW + " by " + texH;
+        }
+        return null;
     }
 
     /** The clip names in an animation file, read from the file rather than from GeckoLib. */
