@@ -511,12 +511,6 @@ public final class NotchPacketsClient {
                         net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelPacks.reload(client, true)));
     }
 
-    /** Temporary: see NpcModelSpike. Remove with it. */
-    public static void registerModelSpikeReceiver() {
-        NetClient.registerClientReceiver(NotchPackets.NPC_MODEL_SPIKE, (client, buf) ->
-                client.execute(() -> net.fugginbeenus.notchcurrency.client.NpcModelSpike.run(client)));
-    }
-
     public static void registerMailAimReceiver() {
         NetClient.registerClientReceiver(NotchPackets.MAIL_AIM, (client, buf) -> {
             UUID recipient = buf.readUUID();
