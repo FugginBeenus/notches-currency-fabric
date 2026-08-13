@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
@@ -153,6 +154,54 @@ public final class DailyCrateManager {
         }
     }
 
+    /**
+     * Gives a joining player a balloon of their own, if they are due one.
+     *
+     * <p>The weekly wave lands over one place, so it belongs to whoever lives near it. This is the
+     * part everybody gets: one balloon in the sky above you when you log in, no more often than the
+     * cooldown allows. Off until a server turns it on, because loot arriving for logging in is a
+     * change to how a server pays out rather than a decoration.
+     */
+    public static void onPlayerJoin(ServerPlayer player) {
+        ServerLevel world = player.serverLevel();
+        if (world != player.level().getServer().overworld()) return;
+
+        BalloonConfigState cfg = BalloonConfigState.get(world);
+        if (!cfg.onJoin || cfg.perDay <= 0) return;
+
+        if (cfg.joinInAreaOnly) {
+            if (!cfg.configured) return;
+            double dx = player.getX() - cfg.center.getX();
+            double dz = player.getZ() - cfg.center.getZ();
+            if (dx * dx + dz * dz > (double) cfg.radius * cfg.radius) return;
+        }
+
+        long now = world.getGameTime();
+        long cooldown = Math.max(0L, (long) cfg.joinCooldownMinutes) * 60L * 20L;
+        Long last = cfg.lastJoinBalloon.get(player.getUUID());
+        // Also covers a world whose time has gone backwards, which a restored backup can do.
+        if (last != null && now >= last && now - last < cooldown) return;
+
+        cfg.lastJoinBalloon.put(player.getUUID(), now);
+        cfg.setDirty();
+        spawnNear(world, player, cfg);
+    }
+
+    /** One balloon, above and a little to the side, clear of whatever the player is standing under. */
+    private static void spawnNear(ServerLevel world, ServerPlayer player, BalloonConfigState cfg) {
+        int spread = Math.max(1, cfg.joinSpread);
+        int x = (int) player.getX() + world.random.nextInt(spread * 2 + 1) - spread;
+        int z = (int) player.getZ() + world.random.nextInt(spread * 2 + 1) - spread;
+
+        int ground = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+        // Above the player and above the ground, so it is not left inside a roof or a hillside.
+        int y = Math.max((int) player.getY(), ground) + Math.max(5, cfg.joinHeight);
+        y = Math.min(y, world.getMaxBuildHeight() - 2);
+
+        world.addFreshEntity(new BalloonEntity(world, x + 0.5, y + 0.5, z + 0.5));
+        LOGGER.debug("Gave {} a balloon at {} {} {}", player.getName().getString(), x, y, z);
+    }
+
     // ----- Admin helpers (write to persistent state) -----
     public static void setArea(ServerLevel world, BlockPos center, int radius) {
         var cfg = BalloonConfigState.get(world);
@@ -172,6 +221,28 @@ public final class DailyCrateManager {
         cfg.perDay = Math.max(0, perWave);
         cfg.setDirty();
     }
+    public static void setOnJoin(ServerLevel world, boolean enabled) {
+        var cfg = BalloonConfigState.get(world);
+        cfg.onJoin = enabled;
+        cfg.setDirty();
+    }
+    public static void setJoinCooldown(ServerLevel world, int minutes) {
+        var cfg = BalloonConfigState.get(world);
+        cfg.joinCooldownMinutes = Math.max(0, minutes);
+        cfg.setDirty();
+    }
+    public static void setJoinInAreaOnly(ServerLevel world, boolean areaOnly) {
+        var cfg = BalloonConfigState.get(world);
+        cfg.joinInAreaOnly = areaOnly;
+        cfg.setDirty();
+    }
+    public static void setJoinHeight(ServerLevel world, int height, int spread) {
+        var cfg = BalloonConfigState.get(world);
+        cfg.joinHeight = Math.max(5, height);
+        cfg.joinSpread = Math.max(1, spread);
+        cfg.setDirty();
+    }
+
     public static void setAnnouncements(ServerLevel world, boolean enabled) {
         var cfg = BalloonConfigState.get(world);
         cfg.announce = enabled;

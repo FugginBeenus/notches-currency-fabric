@@ -140,6 +140,52 @@ public final class CrateCommands {
                                 )
                         )
 
+                        // /balloon onjoin on|off  - a balloon each when players log in
+                        .then(Commands.literal("onjoin")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(ctx -> {
+                                            boolean on = BoolArgumentType.getBool(ctx, "enabled");
+                                            DailyCrateManager.setOnJoin(ctx.getSource().getLevel(), on);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(on
+                                                    ? "Players now get a balloon when they log in."
+                                                    : "Balloons on login are off."), true);
+                                            return 1;
+                                        })))
+                        // /balloon joincooldown <minutes>
+                        .then(Commands.literal("joincooldown")
+                                .then(Commands.argument("minutes", IntegerArgumentType.integer(0, 100000))
+                                        .executes(ctx -> {
+                                            int mins = IntegerArgumentType.getInteger(ctx, "minutes");
+                                            DailyCrateManager.setJoinCooldown(ctx.getSource().getLevel(), mins);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                                    "A player can get another balloon every " + mins
+                                                            + " minute(s)."), true);
+                                            return 1;
+                                        })))
+                        // /balloon joinarea on|off  - only inside the balloon area, or anywhere
+                        .then(Commands.literal("joinarea")
+                                .then(Commands.argument("areaOnly", BoolArgumentType.bool())
+                                        .executes(ctx -> {
+                                            boolean areaOnly = BoolArgumentType.getBool(ctx, "areaOnly");
+                                            DailyCrateManager.setJoinInAreaOnly(ctx.getSource().getLevel(), areaOnly);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(areaOnly
+                                                    ? "Only players inside the balloon area get one."
+                                                    : "Players anywhere get one."), true);
+                                            return 1;
+                                        })))
+                        // /balloon joinheight <blocksUp> <spread>
+                        .then(Commands.literal("joinheight")
+                                .then(Commands.argument("up", IntegerArgumentType.integer(5, 200))
+                                        .then(Commands.argument("spread", IntegerArgumentType.integer(1, 64))
+                                                .executes(ctx -> {
+                                                    int up = IntegerArgumentType.getInteger(ctx, "up");
+                                                    int spread = IntegerArgumentType.getInteger(ctx, "spread");
+                                                    DailyCrateManager.setJoinHeight(ctx.getSource().getLevel(), up, spread);
+                                                    ctx.getSource().sendSuccess(() -> Component.literal(
+                                                            "Login balloons appear " + up + " up and within "
+                                                                    + spread + " blocks."), true);
+                                                    return 1;
+                                                }))))
                         // /balloon announce on|off
                         .then(Commands.literal("announce")
                                 .then(Commands.literal("on").executes(ctx -> {

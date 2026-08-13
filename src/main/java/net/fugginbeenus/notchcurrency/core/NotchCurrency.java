@@ -208,6 +208,9 @@ public class NotchCurrency implements ModInitializer {
             // Seed the on-screen bounty tracker with their taken bounties.
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
 
+            // A balloon of their own, if the server has that turned on and they are due one.
+            net.fugginbeenus.notchcurrency.crate.DailyCrateManager.onPlayerJoin(sp);
+
             // What custom NPC models this server holds. Only names and fingerprints: the client
             // asks for whatever it does not already have, so a regular is charged nothing.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
