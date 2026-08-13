@@ -122,6 +122,8 @@ public class MailboxBlock extends Block implements EntityBlock {
         // An unclaimed box belongs to whoever opens it first, which is how a player gets one at all.
         if (!box.isClaimed()) {
             box.claim(sp.getUUID(), sp.getName().getString());
+            net.fugginbeenus.notchcurrency.mail.MailState.get(sp.level().getServer())
+                    .noteMailbox(sp.getUUID(), sp.getName().getString());
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp,
                     Component.literal("This mailbox is yours now.").withStyle(ChatFormatting.GREEN));
             return InteractionResult.CONSUME;
@@ -132,11 +134,9 @@ public class MailboxBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        // Someone else's box. Posting to it is what the screen will offer; for now say whose it is.
-        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp,
-                Component.literal(box.ownerName().isEmpty() ? "This mailbox belongs to someone else."
-                                : "This mailbox belongs to " + box.ownerName() + ".")
-                        .withStyle(ChatFormatting.YELLOW));
+        // Someone else's box: walking up to it and using it means posting them something, with them
+        // already picked out on the other side.
+        net.fugginbeenus.notchcurrency.mail.MailManager.openPost(sp, box.owner());
         return InteractionResult.CONSUME;
     }
 

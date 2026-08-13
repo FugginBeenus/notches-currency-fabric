@@ -380,6 +380,23 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.MAIL_POST_OPEN, (server, player, buf) ->
+                server.execute(() ->
+                        net.fugginbeenus.notchcurrency.mail.MailManager.openPost(player, null)));
+
+        // Posting a parcel. The items come from the open screen, never from the packet, so a
+        // crafted packet cannot conjure anything the sender did not actually put in.
+        Net.registerServerReceiver(NotchPackets.MAIL_SEND, (server, player, buf) -> {
+            UUID recipient = buf.readUUID();
+            String note = buf.readUtf(128);
+            server.execute(() -> {
+                if (player.containerMenu instanceof
+                        net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler parcel) {
+                    net.fugginbeenus.notchcurrency.mail.MailManager.send(player, recipient, note, parcel);
+                }
+            });
+        });
+
         // Taking mail. The all-zero id means "everything", so one packet covers both buttons.
         Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
             UUID entryId = buf.readUUID();

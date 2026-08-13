@@ -60,6 +60,7 @@ public final class ModScreenHandlers {
     public static MenuType<net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler> COSMETIC_SHOP;
 
     // Offline trade offers: create + board
+    public static MenuType<net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler> MAIL_POST;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler> TRADE_OFFER_CREATE;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler> TRADE_OFFERS;
 
@@ -186,6 +187,11 @@ public final class ModScreenHandlers {
                 *///?} else {
                 new ExtendedScreenHandlerType<>(net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler::new)
                 //?}
+        );
+
+        MAIL_POST = simple(
+                NotchCurrency.id("mail_post"),
+                net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler::new
         );
 
         // Offline trade offers

@@ -139,6 +139,86 @@ public final class MailManager {
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player, NotchPackets.MAIL_OPEN, buf);
     }
 
+    /**
+     * Opens the parcel screen.
+     *
+     * <p>The list and the pre-selection go first: the menu opens a screen built by Minecraft, which
+     * cannot be handed constructor arguments, so both arrive as packets just before it.
+     */
+    public static void openPost(ServerPlayer sender, java.util.UUID aimedAt) {
+        sendRecipients(sender);
+        if (aimedAt != null) {
+            var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+            buf.writeUUID(aimedAt);
+            net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
+                    sender, NotchPackets.MAIL_AIM, buf);
+        }
+        MailPostScreenHandler.open(sender);
+    }
+
+    /** Everyone with a mailbox, so the sender has a list to choose from rather than typing a name. */
+    public static void sendRecipients(ServerPlayer player) {
+        var server = player.level().getServer();
+        var known = MailState.get(server).knownMailboxes();
+
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeVarInt(known.size());
+        for (var entry : known.entrySet()) {
+            buf.writeUUID(entry.getKey());
+            buf.writeUtf(entry.getValue(), 32);
+            buf.writeBoolean(server.getPlayerList().getPlayer(entry.getKey()) != null);
+        }
+        net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
+                player, NotchPackets.MAIL_RECIPIENTS, buf);
+    }
+
+    /**
+     * Posts what is in the parcel slots to another player.
+     *
+     * <p>Each stack becomes its own entry, so the recipient can take a full inventory's worth one at
+     * a time. Anything the recipient's box will not hold stays with the sender rather than
+     * disappearing, which is the only honest thing to do with someone else's goods.
+     */
+    public static void send(ServerPlayer sender, UUID recipient, String note,
+                            MailPostScreenHandler parcel) {
+        if (recipient == null) return;
+        if (recipient.equals(sender.getUUID())) {
+            Msg.chat(sender, Component.literal("You cannot post a parcel to yourself.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
+        if (parcel.isEmpty()) {
+            Msg.chat(sender, Component.literal("Put something in the parcel first.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
+
+        var server = sender.level().getServer();
+        String from = sender.getName().getString();
+        String trimmed = note == null ? "" : note.strip();
+
+        int posted = 0;
+        for (ItemStack stack : parcel.takeContents()) {
+            MailItem item = MailItem.parcel(from, trimmed, stack);
+            if (post(server, recipient, item)) {
+                posted++;
+            } else {
+                // Their box is full. Hand it back rather than eating it.
+                if (!sender.getInventory().add(stack)) sender.drop(stack, false);
+            }
+        }
+
+        if (posted == 0) {
+            Msg.chat(sender, Component.literal("Their mailbox is full. Nothing was sent.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
+        String to = MailState.get(server).knownMailboxes().getOrDefault(recipient, "them");
+        Msg.chat(sender, Component.literal("Posted " + posted + (posted == 1 ? " parcel" : " parcels")
+                + " to " + to + ".").withStyle(ChatFormatting.GREEN));
+        sender.playSound(net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, 0.8F, 1.0F);
+    }
+
     /** Empties the box as far as the player's inventory allows. */
     public static int collectAll(ServerPlayer player) {
         List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());

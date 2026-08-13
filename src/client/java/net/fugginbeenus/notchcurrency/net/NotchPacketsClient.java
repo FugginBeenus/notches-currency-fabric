@@ -471,6 +471,41 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.MAIL_TAKE, buf);
     }
 
+    public static void sendMailPostOpen() {
+        NetClient.sendToServer(NotchPackets.MAIL_POST_OPEN,
+                net.fugginbeenus.notchcurrency.compat.Net.buf());
+    }
+
+    public static void sendMailPost(UUID recipient, String note) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(recipient);
+        buf.writeUtf(note == null ? "" : note, 128);
+        NetClient.sendToServer(NotchPackets.MAIL_SEND, buf);
+    }
+
+    public static void registerMailAimReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.MAIL_AIM, (client, buf) -> {
+            UUID recipient = buf.readUUID();
+            client.execute(() ->
+                    net.fugginbeenus.notchcurrency.client.MailPostScreen.preselect(recipient));
+        });
+    }
+
+    public static void registerMailRecipientsReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.MAIL_RECIPIENTS, (client, buf) -> {
+            int count = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.MailPostScreen.Recipient> list =
+                    new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                UUID id = buf.readUUID();
+                String name = buf.readUtf(32);
+                boolean online = buf.readBoolean();
+                list.add(new net.fugginbeenus.notchcurrency.client.MailPostScreen.Recipient(id, name, online));
+            }
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.MailPostScreen.setRecipients(list));
+        });
+    }
+
     public static void registerMailReceiver() {
         NetClient.registerClientReceiver(NotchPackets.MAIL_OPEN, (client, buf) -> {
             String owner = buf.readUtf(32);

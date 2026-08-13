@@ -121,6 +121,7 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.SHOP_LISTING_EDIT, ShopListingEditScreen::new);
         MenuScreens.register(ModScreenHandlers.COIN_FLIP, CoinFlipScreen::new);
         MenuScreens.register(ModScreenHandlers.NPC_EQUIP, NpcEquipScreen::new);
+        MenuScreens.register(ModScreenHandlers.MAIL_POST, MailPostScreen::new);
 
         //? if >=1.21.11 {
         /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
@@ -168,6 +169,8 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerRecruiterReceiver();
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerMailReceiver();
+        NotchPacketsClient.registerMailRecipientsReceiver();
+        NotchPacketsClient.registerMailAimReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
         NotchPacketsClient.registerNpcScheduleReceiver();
 

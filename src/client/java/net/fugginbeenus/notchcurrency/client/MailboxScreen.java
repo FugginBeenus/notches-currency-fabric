@@ -113,9 +113,11 @@ public class MailboxScreen extends Screen {
 
         boolean anything = !entries.isEmpty();
         if (anything) {
-            NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + H - 26, 120, 16, "Take all",
-                    over(mouseX, mouseY, px + LIST_X, py + H - 26, 120, 16));
+            NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + H - 26, 90, 16, "Take all",
+                    over(mouseX, mouseY, px + LIST_X, py + H - 26, 90, 16));
         }
+        NotchWidgets.neutralButton(ctx, this.font, px + LIST_X + 96, py + H - 26, 100, 16, "Post a parcel",
+                over(mouseX, mouseY, px + LIST_X + 96, py + H - 26, 100, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + W - LIST_X - 90, py + H - 26, 90, 16, "Close",
                 over(mouseX, mouseY, px + W - LIST_X - 90, py + H - 26, 90, 16));
 
@@ -186,9 +188,14 @@ public class MailboxScreen extends Screen {
                     return true;
                 }
             }
-            if (!entries.isEmpty() && over(mx, my, px + LIST_X, py + H - 26, 120, 16)) {
+            if (!entries.isEmpty() && over(mx, my, px + LIST_X, py + H - 26, 90, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendMailTake(TAKE_EVERYTHING);
+                return true;
+            }
+            if (over(mx, my, px + LIST_X + 96, py + H - 26, 100, 16)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendMailPostOpen();
                 return true;
             }
             if (over(mx, my, px + W - LIST_X - 90, py + H - 26, 90, 16)) {

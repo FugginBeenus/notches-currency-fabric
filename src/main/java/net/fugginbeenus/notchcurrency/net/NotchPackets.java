@@ -138,6 +138,14 @@ public final class NotchPackets {
 
     // Server -> client: open the mailbox screen (owner name, then each waiting entry)
     public static final ResourceLocation MAIL_OPEN = NotchCurrency.id("mail_open");
+    // Server -> client: who has a mailbox, for the send screen's list (each: uuid, name, online)
+    public static final ResourceLocation MAIL_RECIPIENTS = NotchCurrency.id("mail_recipients");
+    // Client -> server: swap from reading the mail to posting a parcel
+    public static final ResourceLocation MAIL_POST_OPEN = NotchCurrency.id("mail_post_open");
+    // Server -> client: which recipient the post screen should open with already chosen
+    public static final ResourceLocation MAIL_AIM = NotchCurrency.id("mail_aim");
+    // Client -> server: post the parcel slots to this player, with an optional note
+    public static final ResourceLocation MAIL_SEND = NotchCurrency.id("mail_send");
     // Client -> server: take one entry by its id, or every entry when the id is all zeroes
     public static final ResourceLocation MAIL_TAKE = NotchCurrency.id("mail_take");
 

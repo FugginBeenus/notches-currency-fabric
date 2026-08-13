@@ -32,6 +32,10 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
     public static final int MAX_PER_PLAYER = 200;
 
     private final Map<UUID, List<MailItem>> boxes = new LinkedHashMap<>();
+    // Everyone who has ever claimed a mailbox, so the send screen has a list to pick from. Kept here
+    // rather than gathered from the world: block entities are scattered across chunks that are
+    // mostly not loaded, and a name is all the screen needs.
+    private final Map<UUID, String> knownBoxes = new LinkedHashMap<>();
 
     public static MailState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
@@ -49,6 +53,18 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         box.add(item.at(gameTime));
         setDirty();
         return true;
+    }
+
+    /** Remembers that this player has a mailbox somewhere, for the send screen's list. */
+    public void noteMailbox(UUID owner, String name) {
+        if (owner == null || name == null || name.isEmpty()) return;
+        if (name.equals(knownBoxes.get(owner))) return;
+        knownBoxes.put(owner, name);
+        setDirty();
+    }
+
+    public Map<UUID, String> knownMailboxes() {
+        return Map.copyOf(knownBoxes);
     }
 
     // ---- reading ----
@@ -111,6 +127,13 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
             }
             if (!box.isEmpty()) state.boxes.put(player, box);
         }
+        ListTag known = nbt.getList("Known", Tag.TAG_COMPOUND);
+        for (int i = 0; i < known.size(); i++) {
+            CompoundTag entry = known.getCompound(i);
+            if (Nbt.hasUuid(entry, "Player")) {
+                state.knownBoxes.put(Nbt.getUuid(entry, "Player"), entry.getString("Name"));
+            }
+        }
         return state;
     }
 
@@ -126,6 +149,15 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
             list.add(box);
         }
         nbt.put("Boxes", list);
+
+        ListTag known = new ListTag();
+        for (Map.Entry<UUID, String> entry : knownBoxes.entrySet()) {
+            CompoundTag one = new CompoundTag();
+            Nbt.putUuid(one, "Player", entry.getKey());
+            one.putString("Name", entry.getValue());
+            known.add(one);
+        }
+        nbt.put("Known", known);
         return nbt;
     }
 
