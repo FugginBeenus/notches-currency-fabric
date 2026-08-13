@@ -88,23 +88,28 @@ public final class GoldenCacheManager {
      * a tree rather than under it.
      */
     private static BlockPos findSpotUnderOak(ServerLevel world, BlockPos near, int radius) {
-        for (int attempt = 0; attempt < 24; attempt++) {
+        for (int attempt = 0; attempt < 12; attempt++) {
             int x = near.getX() + RNG.nextInt(radius * 2 + 1) - radius;
             int z = near.getZ() + RNG.nextInt(radius * 2 + 1) - radius;
+
+            // Before anything else. Asking a world about a block in a chunk it does not have loaded
+            // is what would make this expensive, and it is the one cost here worth avoiding.
+            if (!world.hasChunkAt(new BlockPos(x, 64, z))) continue;
 
             // The heightmap that ignores leaves, so this is the ground under a canopy rather than
             // the top of the tree.
             int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
             BlockPos ground = new BlockPos(x, y, z);
             if (!world.getBlockState(ground).isAir()) continue;
-            if (!world.hasChunkAt(ground)) continue;
 
             // Standing on the floor, not on top of the trunk we are looking for.
             var below = world.getBlockState(ground.below());
-            if (below.is(net.minecraft.world.level.block.Blocks.OAK_LOG)
+            if (below.isAir()
+                    || below.is(net.minecraft.world.level.block.Blocks.OAK_LOG)
                     || below.is(net.minecraft.world.level.block.Blocks.OAK_LEAVES)) continue;
-            if (below.isAir()) continue;
 
+            // Leaves first: it is sixteen lookups and it rules out everywhere that is not under a
+            // tree, which is nearly everywhere. The trunk check only runs on what survives it.
             if (hasOakAbove(world, ground) && hasOakTrunkNear(world, ground)) return ground;
         }
         return null;
@@ -119,10 +124,17 @@ public final class GoldenCacheManager {
         return false;
     }
 
+    /**
+     * A trunk within arm's reach of the spot.
+     *
+     * <p>Three by three by six rather than anything wider. An oak's trunk is directly under its
+     * canopy, so a wider search buys nothing but lookups, and this one runs only where leaves were
+     * already found overhead.
+     */
     private static boolean hasOakTrunkNear(ServerLevel world, BlockPos ground) {
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dz = -3; dz <= 3; dz++) {
-                for (int dy = 0; dy <= 8; dy++) {
+        for (int dy = 0; dy <= 5; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
                     if (world.getBlockState(ground.offset(dx, dy, dz))
                             .is(net.minecraft.world.level.block.Blocks.OAK_LOG)) {
                         return true;
