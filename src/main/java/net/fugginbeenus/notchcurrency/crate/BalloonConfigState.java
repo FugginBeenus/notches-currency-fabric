@@ -24,38 +24,29 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
     public int perDay = 3;
     public boolean announce = true;
 
-    // ---- A balloon of your own, on joining ----
+    // ---- One each, alongside the wave ----
 
     /**
-     * Whether each player gets one in the sky when they log in.
+     * Whether each player online also gets one in the sky above them when a wave fires.
      *
-     * <p>Off by default. A weekly wave over spawn is a thing a server puts on; loot arriving because
-     * somebody logged in is a change to how the server pays out, and that should be chosen.
+     * <p>The wave itself lands over one place, so it belongs to whoever lives near it. This is the
+     * part everybody gets. Off until a server turns it on: loot reaching every player is a change to
+     * how a server pays out rather than a decoration.
      */
-    public boolean onJoin = false;
+    public boolean perPlayer = false;
 
-    /**
-     * How long before a player can be given another, in minutes.
-     *
-     * <p>The whole point of the timer. Without it, logging out and back in is a loot button.
-     */
-    public int joinCooldownMinutes = 720;
-
-    /** How far up, and how far off to the side, a joining player's balloon appears. */
-    public int joinHeight = 40;
-    public int joinSpread = 12;
+    /** How far up, and how far off to the side, a player's own balloon appears. */
+    public int playerHeight = 40;
+    public int playerSpread = 12;
 
     /**
      * Whether a player has to be inside the balloon area to get one.
      *
-     * <p>Off means anybody anywhere gets theirs, which is the reading that gives everyone on the
-     * server a chance rather than only the people who live near spawn. On ties it to the area, for
-     * a server that wants balloons to be a spawn-town thing.
+     * <p>Off means everybody online gets theirs wherever they are, which is what gives the whole
+     * server a chance rather than only the people who live near spawn. On keeps balloons a
+     * spawn-town thing.
      */
-    public boolean joinInAreaOnly = false;
-
-    /** When each player was last given one, so the cooldown survives a restart. */
-    public final java.util.Map<java.util.UUID, Long> lastJoinBalloon = new java.util.HashMap<>();
+    public boolean playerInAreaOnly = false;
 
     public static BalloonConfigState get(ServerLevel world) {
         DimensionDataStorage mgr = world.getDataStorage();
@@ -76,22 +67,10 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
         s.maxY = nbt.getInt("maxY");
         s.perDay = nbt.getInt("perDay");
         s.announce = nbt.getBoolean("announce");
-        s.onJoin = nbt.getBoolean("onJoin");
-        s.joinInAreaOnly = nbt.getBoolean("joinInAreaOnly");
-        s.joinCooldownMinutes = nbt.contains("joinCooldown") ? nbt.getInt("joinCooldown") : 720;
-        s.joinHeight = nbt.contains("joinHeight") ? nbt.getInt("joinHeight") : 40;
-        s.joinSpread = nbt.contains("joinSpread") ? nbt.getInt("joinSpread") : 12;
-
-        // Numbered keys rather than a list tag, the same way the mail stores its parcels: reading a
-        // list changed shape more than once across the versions this mod covers.
-        int seen = nbt.getInt("joinSeenCount");
-        for (int i = 0; i < seen; i++) {
-            if (!nbt.contains("joinSeen" + i)) continue;
-            CompoundTag entry = nbt.getCompound("joinSeen" + i);
-            if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(entry, "id")) continue;
-            s.lastJoinBalloon.put(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(entry, "id"),
-                    entry.getLong("at"));
-        }
+        s.perPlayer = nbt.getBoolean("perPlayer");
+        s.playerInAreaOnly = nbt.getBoolean("playerInAreaOnly");
+        s.playerHeight = nbt.contains("playerHeight") ? nbt.getInt("playerHeight") : 40;
+        s.playerSpread = nbt.contains("playerSpread") ? nbt.getInt("playerSpread") : 12;
         return s;
     }
 
@@ -122,20 +101,10 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
         nbt.putInt("perDay", perDay);
         nbt.putBoolean("announce", announce);
         nbt.putBoolean("configured", configured);
-        nbt.putBoolean("onJoin", onJoin);
-        nbt.putBoolean("joinInAreaOnly", joinInAreaOnly);
-        nbt.putInt("joinCooldown", joinCooldownMinutes);
-        nbt.putInt("joinHeight", joinHeight);
-        nbt.putInt("joinSpread", joinSpread);
-
-        nbt.putInt("joinSeenCount", lastJoinBalloon.size());
-        int i = 0;
-        for (var seen : lastJoinBalloon.entrySet()) {
-            CompoundTag entry = new CompoundTag();
-            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(entry, "id", seen.getKey());
-            entry.putLong("at", seen.getValue());
-            nbt.put("joinSeen" + i++, entry);
-        }
+        nbt.putBoolean("perPlayer", perPlayer);
+        nbt.putBoolean("playerInAreaOnly", playerInAreaOnly);
+        nbt.putInt("playerHeight", playerHeight);
+        nbt.putInt("playerSpread", playerSpread);
         return nbt;
     }
 }
