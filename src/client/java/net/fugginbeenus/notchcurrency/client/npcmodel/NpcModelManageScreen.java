@@ -23,7 +23,7 @@ public class NpcModelManageScreen extends Screen {
 
     private static final int W = 300, H = 186;
     private static final int LIST_X = 12, LIST_Y = 34, ROW_H = 18, VISIBLE = 6;
-    private static final int REMOVE_W = 60;
+    private static final int REMOVE_W = 60, SHARE_W = 52;
 
     private final Screen parent;
 
@@ -57,6 +57,20 @@ public class NpcModelManageScreen extends Screen {
         return px + W - LIST_X - REMOVE_W;
     }
 
+    private int shareX() {
+        return removeX() - SHARE_W - 4;
+    }
+
+    /**
+     * Whether to offer Share at all: on a server, and only to somebody who can run commands.
+     *
+     * <p>Only decides the button. The server checks again on every packet, since a button that is
+     * not drawn is not a permission.
+     */
+    private boolean canShare() {
+        return NpcModelDownloads.mayShare();
+    }
+
     //? if >=26.1 {
     /*@Override
     public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
@@ -88,11 +102,16 @@ public class NpcModelManageScreen extends Screen {
             int y = rowY(i);
             boolean asking = bundle.id().equals(confirming);
 
-            ctx.drawString(this.font, fit(bundle.displayName(), W - LIST_X * 2 - REMOVE_W - 12),
+            int room = W - LIST_X * 2 - REMOVE_W - (canShare() ? SHARE_W + 4 : 0) - 12;
+            ctx.drawString(this.font, fit(bundle.displayName(), room),
                     px + LIST_X + 4, y + 1, NotchTheme.TEXT_DARK, false);
             ctx.drawString(this.font, detail(bundle), px + LIST_X + 4, y + 10,
                     NotchTheme.TEXT_MUTED, false);
 
+            if (canShare()) {
+                NotchWidgets.neutralButton(ctx, this.font, shareX(), y, SHARE_W, 14, "Share",
+                        over(mouseX, mouseY, shareX(), y, SHARE_W, 14));
+            }
             NotchWidgets.dangerButton(ctx, this.font, removeX(), y, REMOVE_W, 14,
                     asking ? "Sure?" : "Remove",
                     over(mouseX, mouseY, removeX(), y, REMOVE_W, 14));
@@ -153,6 +172,15 @@ public class NpcModelManageScreen extends Screen {
             for (int i = 0; i < VISIBLE && i + scroll < models.size(); i++) {
                 if (over(mx, my, removeX(), rowY(i), REMOVE_W, 14)) {
                     remove(models.get(i + scroll));
+                    NotchWidgets.click();
+                    return true;
+                }
+                if (canShare() && over(mx, my, shareX(), rowY(i), SHARE_W, 14)) {
+                    NpcModelBundle bundle = models.get(i + scroll);
+                    String problem = NpcModelPacks.share(bundle.id());
+                    setStatus(problem == null
+                            ? "Sending " + bundle.displayName() + " to the server..."
+                            : "Could not share it: " + problem, problem != null);
                     NotchWidgets.click();
                     return true;
                 }

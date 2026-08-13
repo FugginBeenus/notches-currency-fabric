@@ -3,8 +3,7 @@
 A design for letting a player build a model in Blockbench, animate it, and have it walk around
 in game as a real NPC.
 
-Status: **Stages 0 to 3 are built and working in game.** Stage 4, sharing models with a server,
-is not. Written and built 2026-08-13.
+Status: **built.** All five stages. Written and built 2026-08-13.
 
 ---
 
@@ -336,12 +335,19 @@ until it is written and resources reload, so it is previewed in the picker after
 
 Built as `NpcModelCreateScreen` and `NpcModelManageScreen`.
 
-### Stage 4: server sharing — NOT BUILT
+### Stage 4: server sharing — DONE
 
-Upload on create, bundle list on join, chunked transfer, sandboxed write, batched reload, op gate.
-The stage that makes it feel like magic, and the one carrying the security weight.
+Share button per model, bundle list on join, chunked transfer, sandboxed write, batched reload,
+op gate.
 
-Touches: `NotchPackets`, `ServerPacketHandlers`, `CurrencyPackGenerator`, a new transfer class.
+The defence against a hostile server ended up simpler than the design assumed. Rather than checking
+a filename from the wire for `..` and separators, **only four filenames are accepted at all**, and a
+name is never joined onto a path. There is no arrangement of characters that escapes the folder,
+because the name never builds the destination.
+
+Built as `NpcModelBlob` (the format and the whitelist), `NpcModelStream` (reassembly, bounded),
+`NpcModelServerStore` (the world folder copy), `NpcModelShare` (the server side) and
+`NpcModelDownloads` (the client side).
 
 ---
 

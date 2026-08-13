@@ -505,6 +505,53 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.MAIL_SEND, buf);
     }
 
+    public static void sendNpcModelWant(String id) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(id, 64);
+        NetClient.sendToServer(NotchPackets.NPC_MODEL_WANT, buf);
+    }
+
+    /** One piece of a model on its way up to the server. */
+    public static void sendNpcModelPush(int phase, String id, byte[] part, int announcedBytes) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeByte(phase);
+        buf.writeUtf(id, 64);
+        if (phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_CHUNK) {
+            buf.writeByteArray(part);
+        }
+        if (phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_BEGIN) {
+            buf.writeVarInt(announcedBytes);
+        }
+        NetClient.sendToServer(NotchPackets.NPC_MODEL_PUSH, buf);
+    }
+
+    public static void registerNpcModelReceivers() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_MODEL_LIST, (client, buf) -> {
+            boolean mayShare = buf.readBoolean();
+            int count = buf.readVarInt();
+            java.util.Map<String, String> offered = new java.util.LinkedHashMap<>();
+            for (int i = 0; i < count; i++) {
+                String id = buf.readUtf(64);
+                offered.put(id, buf.readUtf(32));
+            }
+            client.execute(() ->
+                    net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelDownloads
+                            .onList(offered, mayShare));
+        });
+
+        NetClient.registerClientReceiver(NotchPackets.NPC_MODEL_SEND, (client, buf) -> {
+            int phase = buf.readByte();
+            String id = buf.readUtf(64);
+            byte[] part = phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelDownloads
+                    .onPiece(phase, id, part, announced));
+        });
+    }
+
     public static void registerModelReloadReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_MODELS_RELOAD, (client, buf) ->
                 client.execute(() ->

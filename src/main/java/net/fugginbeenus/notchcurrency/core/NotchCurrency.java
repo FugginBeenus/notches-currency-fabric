@@ -207,7 +207,15 @@ public class NotchCurrency implements ModInitializer {
 
             // Seed the on-screen bounty tracker with their taken bounties.
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
+
+            // What custom NPC models this server holds. Only names and fingerprints: the client
+            // asks for whatever it does not already have, so a regular is charged nothing.
+            net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
         });
+
+        // Half-received uploads do not outlive the connection that was sending them.
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.forget(handler.player));
 
         // HUD balance sync on respawn
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
@@ -224,6 +232,8 @@ public class NotchCurrency implements ModInitializer {
             // One pass over a world that predates the mail, so nothing owed is stranded in the old
             // stores. A no-op on every start after the first.
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
+            // Read the world's custom NPC models once, so joining players can be told about them.
+            net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));

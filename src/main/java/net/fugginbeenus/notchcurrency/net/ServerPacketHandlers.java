@@ -534,6 +534,27 @@ public final class ServerPacketHandlers {
             });
         });
 
+        // A player asking for a model this server has that they do not.
+        Net.registerServerReceiver(NotchPackets.NPC_MODEL_WANT, (server, player, buf) -> {
+            String id = buf.readUtf(64);
+            server.execute(() -> net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare
+                    .sendModelTo(player, id));
+        });
+
+        // A player uploading one. Operators only: this writes to the server and is then handed to
+        // everybody who joins, which is not something any player should be able to do unprompted.
+        Net.registerServerReceiver(NotchPackets.NPC_MODEL_PUSH, (server, player, buf) -> {
+            int phase = buf.readByte();
+            String id = buf.readUtf(64);
+            byte[] payload = phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            server.execute(() -> net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare
+                    .receiveUpload(player, phase, id, payload, announced));
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SET_CLIP, (server, player, buf) -> {
             UUID id = buf.readUUID();
             String clip = buf.readUtf(128);

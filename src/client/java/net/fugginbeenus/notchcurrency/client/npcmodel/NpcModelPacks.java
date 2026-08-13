@@ -82,6 +82,38 @@ public final class NpcModelPacks {
         }
     }
 
+    /**
+     * Sends a model up to the server, so everyone else gets it when they join.
+     *
+     * <p>Chunked, because a model is a megabyte or so and a packet is not. The server checks the
+     * permission again on every piece; this only decides whether to offer the button.
+     *
+     * @return null once it is on its way, or why it is not
+     */
+    public static String share(String id) {
+        java.nio.file.Path folder = NpcModelLoader.modelsDir().resolve(id);
+        byte[] blob;
+        try {
+            blob = net.fugginbeenus.notchcurrency.npcmodel.NpcModelBlob.pack(folder);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+
+        int chunkSize = net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.CHUNK_BYTES;
+        net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendNpcModelPush(
+                net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_BEGIN, id, null, blob.length);
+        for (int at = 0; at < blob.length; at += chunkSize) {
+            int size = Math.min(chunkSize, blob.length - at);
+            byte[] part = new byte[size];
+            System.arraycopy(blob, at, part, 0, size);
+            net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendNpcModelPush(
+                    net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_CHUNK, id, part, 0);
+        }
+        net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendNpcModelPush(
+                net.fugginbeenus.notchcurrency.npcmodel.NpcModelStream.PHASE_END, id, null, 0);
+        return null;
+    }
+
     private static void say(Minecraft client, String line, ChatFormatting color) {
         if (client.player == null) {
             LOGGER.info(line);

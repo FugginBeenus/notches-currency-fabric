@@ -171,6 +171,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerMailRecipientsReceiver();
         NotchPacketsClient.registerModelReloadReceiver();
+        NotchPacketsClient.registerNpcModelReceivers();
         NotchPacketsClient.registerMailAimReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
         NotchPacketsClient.registerNpcScheduleReceiver();
@@ -199,6 +200,11 @@ public final class ClientInit implements ClientModInitializer {
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register(
                 (handler, sender, client) -> client.execute(() ->
                         net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelPacks.reload(client, false)));
+
+        // Leaving a server abandons anything half downloaded rather than carrying it to the next.
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register(
+                (handler, client) ->
+                        net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelDownloads.reset());
 
         // On world join (SP/MP), request our balance
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
