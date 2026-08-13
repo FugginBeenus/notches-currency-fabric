@@ -130,6 +130,33 @@ public final class NpcModelLoader {
         return true;
     }
 
+    /**
+     * Deletes a model's folder, so it stops being offered.
+     *
+     * <p>Only the bundle goes. Whatever was dropped in the import folder is left alone, so a model
+     * removed by mistake can be made again without re-exporting it from Blockbench.
+     *
+     * <p>NPCs already wearing it are not touched. They fall back to the built-in model on their own,
+     * which is the same thing that happens to a bundle that was never installed.
+     *
+     * @return null on success, or why it could not be done
+     */
+    public static String delete(String id) {
+        if (id == null || !id.matches("[a-z0-9_]+")) return "that is not a model id";
+        Path folder = modelsDir().resolve(id);
+        if (!Files.isDirectory(folder)) return "there is no model called " + id;
+        try {
+            // Belt and braces against a caller ever handing this something clever.
+            if (!folder.toAbsolutePath().normalize().startsWith(modelsDir().toAbsolutePath().normalize())) {
+                return "that is not inside the models folder";
+            }
+            deleteRecursively(folder);
+            return Files.isDirectory(folder) ? "some files could not be removed" : null;
+        } catch (Exception e) {
+            return "could not remove it: " + e.getMessage();
+        }
+    }
+
     /** What the source folders look like right now, so an unchanged set can be spotted. */
     private static String stampOf(List<Path> folders) {
         StringBuilder sig = new StringBuilder();

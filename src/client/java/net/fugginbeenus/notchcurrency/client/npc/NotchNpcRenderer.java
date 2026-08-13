@@ -56,6 +56,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             // and no entity, so there is nothing there to read a tick count or a walk speed from.
             // Without this the model draws in its bind pose and never moves.
             geo.extractRenderState(entity, vanilla, partialTick);
+            // That extract inherits the living renderer's, which fills in the vanilla nameplate.
+            // This path draws its own label a line higher, so leaving that set would show the name
+            // twice, once in each place.
+            vanilla.nameTag = null;
         }
         if (!state.invisible && !state.useGeo && model != null && model.startsWith("entity:")) {
             extractDisguise(entity, state, model.substring("entity:".length()), partialTick);

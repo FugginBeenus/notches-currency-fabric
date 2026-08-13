@@ -209,7 +209,7 @@ public class NotchNpcModelPickerScreen extends Screen {
             NotchWidgets.button(ctx, sbX, thumbY, sbW, thumbH, over(mouseX, mouseY, sbX, gridY, sbW, gridH), false);
         }
 
-        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 + 4, py + H - 22, 90, 16, "New model...",
+        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 + 4, py + H - 22, 90, 16, "Manage models",
                 over(mouseX, mouseY, px + W / 2 + 4, py + H - 22, 90, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 94, py + H - 22, 90, 16, "Back",
                 over(mouseX, mouseY, px + W / 2 - 94, py + H - 22, 90, 16));
