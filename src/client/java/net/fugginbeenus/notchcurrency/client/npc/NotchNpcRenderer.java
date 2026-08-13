@@ -52,6 +52,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         state.displayName = entity.getDisplayName();
         if (state.useGeo) {
             state.showLabel = labelShows(entity);
+            // GeckoLib ticks its animations here, not in submit: submit is handed a render state
+            // and no entity, so there is nothing there to read a tick count or a walk speed from.
+            // Without this the model draws in its bind pose and never moves.
+            geo.extractRenderState(entity, vanilla, partialTick);
         }
         if (!state.invisible && !state.useGeo && model != null && model.startsWith("entity:")) {
             extractDisguise(entity, state, model.substring("entity:".length()), partialTick);
