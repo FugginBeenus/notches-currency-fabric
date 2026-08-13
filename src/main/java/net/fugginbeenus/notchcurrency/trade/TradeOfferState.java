@@ -69,29 +69,29 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
         return n;
     }
 
-    // ---- mailbox ----
+    // ---- mailbox: drained into the mail, kept only so an old save can be read ----
 
-    public void addMail(UUID player, ItemStack stack) {
-        if (stack.isEmpty()) return;
-        mailbox.computeIfAbsent(player, k -> new ArrayList<>()).add(stack.copy());
-        setDirty();
-    }
-
-    public boolean hasMail(UUID player) {
-        List<ItemStack> m = mailbox.get(player);
-        return m != null && !m.isEmpty();
-    }
-
-    public List<ItemStack> claimMail(UUID player) {
-        List<ItemStack> m = mailbox.remove(player);
-        if (m != null) setDirty();
-        return m == null ? List.of() : m;
-    }
-
-    public void returnMail(UUID player, List<ItemStack> leftover) {
-        if (leftover.isEmpty()) return;
-        mailbox.computeIfAbsent(player, k -> new ArrayList<>()).addAll(leftover);
-        setDirty();
+    /** Moves every parcel waiting here into the mail, so there is one place to collect from. */
+    public int drainIntoMail(MinecraftServer server) {
+        if (mailbox.isEmpty()) return 0;
+        int posted = 0;
+        var boxes = new ArrayList<>(mailbox.entrySet());
+        for (var entry : boxes) {
+            List<ItemStack> keep = new ArrayList<>();
+            for (ItemStack stack : entry.getValue()) {
+                var parcel = net.fugginbeenus.notchcurrency.mail.MailItem.parcel(
+                        "Trade offer", "From a completed offer", stack);
+                if (net.fugginbeenus.notchcurrency.mail.MailManager.post(server, entry.getKey(), parcel)) {
+                    posted++;
+                } else {
+                    keep.add(stack); // box full, leave it here for next time
+                }
+            }
+            if (keep.isEmpty()) mailbox.remove(entry.getKey());
+            else mailbox.put(entry.getKey(), keep);
+        }
+        if (posted > 0) setDirty();
+        return posted;
     }
 
     // ---- NBT ----

@@ -808,68 +808,59 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         }
     }
 
-    public void claimAll(ServerLevel world, ServerPlayer player) {
-        if (pendingWinnings.isEmpty()) {
-            Msg.chat(player, Component.literal("You have no pending auction rewards.")
-                            .withStyle(ChatFormatting.GRAY));
-            return;
-        }
-
-        UUID uuid = player.getUUID();
-        boolean claimedSomething = false;
-
+    /**
+     * Moves every outstanding obligation into the mail and forgets it.
+     *
+     * <p>A pending entry owes two different people two different things off one sale, so it becomes
+     * up to two pieces of mail: the money to the seller, the goods to the winner.
+     */
+    public int drainIntoMail(net.minecraft.server.MinecraftServer server) {
+        if (pendingWinnings.isEmpty()) return 0;
+        int posted = 0;
         Iterator<PendingWinnings> it = pendingWinnings.values().iterator();
         while (it.hasNext()) {
             PendingWinnings pw = it.next();
+            boolean allPosted = true;
 
-            // Claim coins as seller
-            if (pw.sellerUuid.equals(uuid) && pw.finalPrice > 0L) {
-                long amt = pw.finalPrice;
-                BalanceStore.add(player, amt, TransactionReason.AUCTION, "claimed auction winnings");
-                NotchPackets.sendBalance(player, BalanceStore.get(player));
-
-                Msg.chat(player, Component.literal("Claimed ")
-                                .append(Component.literal(String.valueOf(amt) + " ").withStyle(ChatFormatting.GOLD))
-                                .append(NotchCurrency.coinIcon())
-                                .append(Component.literal(" from auction winnings.").withStyle(ChatFormatting.GREEN)));
-                player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
-
-                pw.finalPrice = 0L;
-                claimedSomething = true;
-            }
-
-            // Claim item as winner (or seller in no-bid return)
-            if (pw.winnerUuid.equals(uuid) && !pw.stack.isEmpty()) {
-                ItemStack toGive = pw.stack.copy();
-                stripAuctionTags(toGive); // Safety strip in case of old pending data
-                boolean inserted = player.getInventory().add(toGive);
-
-                if (!inserted && !toGive.isEmpty()) {
-                    // Still no room; keep in mailbox
-                    Msg.chat(player, Component.literal("Your inventory is full. "
-                                            + "Free up space and run /ah claim again.")
-                                    .withStyle(ChatFormatting.RED));
+            if (pw.finalPrice > 0L) {
+                var coins = net.fugginbeenus.notchcurrency.mail.MailItem.payout(
+                        "Auction House", "Sale of " + pw.stack.getHoverName().getString(), pw.finalPrice);
+                if (net.fugginbeenus.notchcurrency.mail.MailManager.post(server, pw.sellerUuid, coins)) {
+                    pw.finalPrice = 0L;
+                    posted++;
                 } else {
-                    Msg.chat(player, Component.literal("Claimed auction item: ")
-                                    .append(pw.stack.getHoverName().copy())
-                                    .withStyle(ChatFormatting.GREEN));
-                    player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
-
-                    pw.stack = ItemStack.EMPTY;
-                    claimedSomething = true;
+                    allPosted = false;
                 }
             }
-
-            if (pw.isFullyClaimed()) {
-                it.remove();
+            if (!pw.stack.isEmpty()) {
+                var parcel = net.fugginbeenus.notchcurrency.mail.MailItem.parcel(
+                        "Auction House", "You won this listing", pw.stack);
+                if (net.fugginbeenus.notchcurrency.mail.MailManager.post(server, pw.winnerUuid, parcel)) {
+                    pw.stack = ItemStack.EMPTY;
+                    posted++;
+                } else {
+                    allPosted = false;
+                }
             }
+            // A full box keeps the obligation here rather than dropping it on the floor.
+            if (allPosted) it.remove();
         }
-
-        if (!claimedSomething) {
-            Msg.chat(player, Component.literal("You have no claimable " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " or items right now.")
-                            .withStyle(ChatFormatting.GRAY));
-        }
-
-        setDirty();
+        if (posted > 0) setDirty();
+        return posted;
     }
+
+    /**
+     * Kept as the entry point for /ah claim, but the mail owns the obligations now, so this sweeps
+     * anything still in the old pile and then empties the player's box.
+     */
+    public void claimAll(ServerLevel world, ServerPlayer player) {
+        var server = world.getServer();
+        net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
+        int taken = net.fugginbeenus.notchcurrency.mail.MailManager.collectAll(player);
+        if (taken == 0) {
+            Msg.chat(player, Component.literal("You have nothing waiting to collect.")
+                    .withStyle(ChatFormatting.GRAY));
+        }
+    }
+
 }

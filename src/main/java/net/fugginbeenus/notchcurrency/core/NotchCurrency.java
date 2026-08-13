@@ -197,8 +197,10 @@ public class NotchCurrency implements ModInitializer {
             // Resolve raffle ticket statuses & remind the player of any unclaimed prize.
             RaffleManager.remindOnJoin(sp);
 
-            // Hand over any items owed from trade offers resolved while they were offline.
-            net.fugginbeenus.notchcurrency.trade.TradeOfferManager.deliverMail(sp);
+            // Anything owed from before the mail existed is moved across, then they are told what is
+            // waiting. Nothing is handed over on login: mail is collected at a mailbox on purpose.
+            net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
+            net.fugginbeenus.notchcurrency.mail.MailManager.greet(sp);
 
             // Push the server's custom coin skin (art + name) so every player sees it.
             net.fugginbeenus.notchcurrency.currency.CurrencyServerSync.send(sp);
@@ -217,8 +219,12 @@ public class NotchCurrency implements ModInitializer {
         ServerPacketHandlers.register();
 
         // StackData/Ench need a registry lookup to (de)serialize on 1.21+.
-        ServerLifecycleEvents.SERVER_STARTED.register(
-                server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.registryAccess()));
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.registryAccess());
+            // One pass over a world that predates the mail, so nothing owed is stranded in the old
+            // stores. A no-op on every start after the first.
+            net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
+        });
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
 

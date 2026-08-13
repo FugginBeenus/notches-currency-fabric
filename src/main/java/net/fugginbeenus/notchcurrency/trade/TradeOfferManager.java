@@ -21,24 +21,6 @@ public final class TradeOfferManager {
 
     private TradeOfferManager() {}
 
-    public static void deliverMail(ServerPlayer sp) {
-        TradeOfferState state = TradeOfferState.get(sp.level().getServer());
-        if (!state.hasMail(sp.getUUID())) return;
-        List<ItemStack> items = state.claimMail(sp.getUUID());
-        java.util.List<ItemStack> leftover = new java.util.ArrayList<>();
-        for (ItemStack st : items) {
-            if (!sp.getInventory().add(st)) leftover.add(st);
-        }
-        if (!leftover.isEmpty()) {
-            state.returnMail(sp.getUUID(), leftover); // no room; keep for next time
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You have trade items waiting - free up inventory space to receive them.")
-                    .withStyle(ChatFormatting.YELLOW));
-        }
-        if (items.size() != leftover.size()) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Received items from a completed trade offer.").withStyle(ChatFormatting.GREEN));
-        }
-    }
-
     public static boolean createOffer(ServerPlayer creator, List<ItemStack> offered, long offeredCoins,
                                       long price, List<ItemStack> requested, String targetName) {
         TradeOfferState state = TradeOfferState.get(creator.level().getServer());
@@ -192,7 +174,9 @@ public final class TradeOfferManager {
         if (creator != null) {
             giveOrDrop(creator, stack);
         } else {
-            TradeOfferState.get(server).addMail(offer.creatorUuid(), stack);
+            net.fugginbeenus.notchcurrency.mail.MailManager.post(server, offer.creatorUuid(),
+                    net.fugginbeenus.notchcurrency.mail.MailItem.parcel(
+                            "Trade offer", "From a completed offer", stack));
         }
     }
 

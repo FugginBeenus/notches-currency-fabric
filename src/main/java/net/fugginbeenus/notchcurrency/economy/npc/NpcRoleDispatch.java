@@ -50,8 +50,14 @@ public final class NpcRoleDispatch {
             case BANKER -> openAtm(sp);
             case AUCTIONEER -> openAuction(sp);
             case MAILBOX -> {
-                ServerLevel w = sp.serverLevel();
-                AuctionState.get(w).claimAll(w, sp);
+                // Everything owed, from every source, rather than only the auction house.
+                net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
+                int taken = net.fugginbeenus.notchcurrency.mail.MailManager.collectAll(sp);
+                if (taken == 0) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp,
+                            net.minecraft.network.chat.Component.literal("Your mail is empty.")
+                                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+                }
             }
             case RAFFLE -> RaffleManager.openScreen(sp);
             case BOUNTY -> BountyManager.openScreen(sp);
