@@ -86,6 +86,12 @@ public final class Geo {
      * server it is simply empty, and callers treat that the same as "no custom clips".
      */
     public static java.util.List<String> clipNames() {
+        return clipNames(NPC_ANIMATIONS, MODEL_NAME);
+    }
+
+    /** The clips in one animation file, by id, falling back to a name match. */
+    public static java.util.List<String> clipNames(net.minecraft.resources.ResourceLocation file,
+                                                   String nameHint) {
         try {
             // Three shapes, not two. 5.x replaced the flat map with a cache record, and 5.5 moved
             // the whole library from software.bernie to com.geckolib on the way to 26.
@@ -100,26 +106,54 @@ public final class Geo {
             //?}
             if (map == null || map.isEmpty()) return java.util.List.of();
 
-            var file = map.get(NPC_ANIMATIONS);
-            if (file == null) {
+            var found = map.get(file);
+            if (found == null) {
                 // GeckoLib has changed how it keys this file more than once, and a miss here would
                 // quietly leave the picker empty. Rather than trust one spelling, take the entry
                 // that names our model.
                 for (var entry : map.entrySet()) {
-                    if (String.valueOf(entry.getKey()).contains(MODEL_NAME)) {
-                        file = entry.getValue();
+                    if (String.valueOf(entry.getKey()).contains(nameHint)) {
+                        found = entry.getValue();
                         break;
                     }
                 }
             }
-            if (file == null) return java.util.List.of();
+            if (found == null) return java.util.List.of();
 
-            var names = new java.util.ArrayList<>(file.animations().keySet());
+            var names = new java.util.ArrayList<>(found.animations().keySet());
             java.util.Collections.sort(names);
             return names;
         } catch (Throwable notLoadedYet) {
             // Asked before the packs finished loading, or on a side that has no packs at all.
             return java.util.List.of();
+        }
+    }
+
+    /**
+     * Whether GeckoLib has a baked model under this id.
+     *
+     * <p>Only used to check whether a model written at runtime was picked up. The whole custom model
+     * design rests on that working, so it is worth being able to ask rather than guess.
+     */
+    public static boolean hasBakedModel(net.minecraft.resources.ResourceLocation id) {
+        try {
+            //? if >=26.1 {
+            /*var cache = com.geckolib.cache.GeckoLibResources.getBakedModels();
+            var map = cache == null ? null : cache.cache();
+            *///?} elif >=1.21.11 {
+            /*var cache = software.bernie.geckolib.cache.GeckoLibResources.getBakedModels();
+            var map = cache == null ? null : cache.cache();
+            *///?} else {
+            var map = software.bernie.geckolib.cache.GeckoLibCache.getBakedModels();
+            //?}
+            if (map == null) return false;
+            if (map.containsKey(id)) return true;
+            for (var key : map.keySet()) {
+                if (String.valueOf(key).contains(id.getPath())) return true;
+            }
+            return false;
+        } catch (Throwable notLoadedYet) {
+            return false;
         }
     }
 

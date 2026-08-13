@@ -170,6 +170,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerRecruiterReceiver();
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerMailRecipientsReceiver();
+        NotchPacketsClient.registerModelSpikeReceiver();
         NotchPacketsClient.registerMailAimReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
         NotchPacketsClient.registerNpcScheduleReceiver();
