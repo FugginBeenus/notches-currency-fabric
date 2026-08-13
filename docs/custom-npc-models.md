@@ -249,11 +249,28 @@ editable and re-assignable, never a crash and never an invisible entity.
 
 The step that makes a model made by one player work for everybody.
 
-1. On Create, the client writes the bundle locally and offers to upload it.
+1. On Create, the client writes the bundle locally. Share sends it up.
 2. The server stores it in the world folder and holds the hash.
 3. On join, the server sends its bundle list as id plus hash. The client compares against what it
    has and asks for anything missing or stale.
 4. Transfers arrive chunked, are written to the cache, and trigger **one** reload at the end.
+
+### Nothing is pushed at a player who is already playing
+
+Applying a model means reloading resources, and that is a visible hitch in somebody's game. An
+operator pressing Share must not be able to reach into everyone else's session and cause one,
+because a thing you can do once you can do repeatedly, and that is a way to make a server unplayable
+from inside the rules.
+
+So a shared model reaches other players at one of three moments, all of them theirs:
+
+- their next join, where a reload is expected anyway
+- `/npcmodels sync`, which fetches for whoever ran it and nobody else
+- clicking **[Get it now]** on the line they are shown when they talk to an NPC wearing a model they
+  do not have
+
+Until then the NPC falls back to its ordinary look, which is correct rather than broken. The hint
+exists because silently looking wrong is worse than saying so.
 
 `CurrencyPackGenerator` already does the write, enable and reload half of this for currency
 textures, so the risky part has a working precedent in the codebase.

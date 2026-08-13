@@ -29,6 +29,22 @@ public final class NpcCommands {
     private NpcCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Fetching models for yourself is nobody else's business, so it sits outside /npc, which
+        // is operator gated as a whole.
+        dispatcher.register(
+                Commands.literal("npcmodels")
+                        .then(Commands.literal("sync")
+                                .executes(ctx -> {
+                                    net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) return 0;
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p,
+                                            net.minecraft.network.chat.Component
+                                                    .literal("Checking for NPC models...")
+                                                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+                                    net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(p);
+                                    return 1;
+                                })));
+
         dispatcher.register(Commands.literal("npc")
                 .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                 .then(Commands.literal("setrole")
