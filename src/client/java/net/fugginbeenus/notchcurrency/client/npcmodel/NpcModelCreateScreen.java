@@ -2,7 +2,6 @@ package net.fugginbeenus.notchcurrency.client.npcmodel;
 
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
-import net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,7 +31,7 @@ import java.util.stream.Stream;
  */
 public class NpcModelCreateScreen extends Screen {
 
-    private static final int W = 300, H = 224;
+    private static final int W = 300, H = 240;
     private static final int LABEL_X = 12, CTRL_X = 96, CTRL_W = 192, ROW_H = 16;
     private static final String NONE = "(none)";
 
@@ -48,12 +47,9 @@ public class NpcModelCreateScreen extends Screen {
     private String status = "";
     private boolean statusIsError;
 
-    /** Which installed model the Remove side is pointed at, and whether it has been confirmed. */
-    private int removeAt;
-    private boolean confirmingRemove;
 
     public NpcModelCreateScreen(Screen parent) {
-        super(Component.literal("NPC Models"));
+        super(Component.literal("New NPC Model"));
         this.parent = parent;
     }
 
@@ -167,7 +163,7 @@ public class NpcModelCreateScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "NPC Models", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "New NPC Model", px + W / 2, py + 8);
 
         row(ctx, 0, "Name", null, mouseX, mouseY);
         NotchWidgets.inset(ctx, px + CTRL_X, py + rowY(0), CTRL_W, 14, NotchTheme.DEEP);
@@ -185,12 +181,13 @@ public class NpcModelCreateScreen extends Screen {
 
         if (!status.isEmpty()) {
             for (String line : wrap(status, W - 24)) {
-                ctx.drawString(this.font, line, px + LABEL_X, py + 156,
+                ctx.drawString(this.font, line, px + LABEL_X, py + 182,
                         statusIsError ? 0xFFD05A5A : 0xFF6AC46A, false);
                 break; // one line, the rest is in the log
             }
         }
-        drawRemoveRow(ctx, mouseX, mouseY);
+        ctx.drawString(this.font, "Put Blockbench exports in the import folder, then Refresh.",
+                px + LABEL_X, py + 194, NotchTheme.TEXT_MUTED, false);
 
         int by = py + H - 26;
         NotchWidgets.neutralButton(ctx, this.font, px + 12, by, 76, 16, "Import folder",
@@ -207,25 +204,6 @@ public class NpcModelCreateScreen extends Screen {
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
-    }
-
-    /** Removing an installed model, kept on the same screen because it is the same subject. */
-    private void drawRemoveRow(GuiGraphics ctx, int mouseX, int mouseY) {
-        var installed = NpcModelRegistry.all();
-        if (installed.isEmpty()) {
-            ctx.drawString(this.font, "Put Blockbench exports in the import folder, then Refresh.",
-                    px + LABEL_X, py + 172, NotchTheme.TEXT_MUTED, false);
-            return;
-        }
-
-        var bundle = installed.get(Math.floorMod(removeAt, installed.size()));
-        ctx.drawString(this.font, "Installed", px + LABEL_X, py + 172, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + CTRL_X, py + 168, CTRL_W - 62, 14,
-                fit(bundle.displayName(), CTRL_W - 70),
-                over(mouseX, mouseY, px + CTRL_X, py + 168, CTRL_W - 62, 14));
-        int rx = px + CTRL_X + CTRL_W - 58;
-        NotchWidgets.dangerButton(ctx, this.font, rx, py + 168, 58, 14,
-                confirmingRemove ? "Sure?" : "Remove", over(mouseX, mouseY, rx, py + 168, 58, 14));
     }
 
     private void row(GuiGraphics ctx, int index, String label, String value, int mouseX, int mouseY) {
@@ -269,19 +247,6 @@ public class NpcModelCreateScreen extends Screen {
             if (rowHit(mx, my, 4)) { idleAt += step; return click(); }
             if (rowHit(mx, my, 5)) { walkAt += step; return click(); }
             if (rowHit(mx, my, 6)) { specialAt += step; return click(); }
-        }
-
-        var installed = NpcModelRegistry.all();
-        if ((button == 0 || button == 1) && !installed.isEmpty()
-                && over(mx, my, px + CTRL_X, py + 168, CTRL_W - 62, 14)) {
-            removeAt += step;
-            confirmingRemove = false;
-            return click();
-        }
-        if (button == 0 && !installed.isEmpty()
-                && over(mx, my, px + CTRL_X + CTRL_W - 58, py + 168, 58, 14)) {
-            removeSelected(installed);
-            return click();
         }
 
         if (button == 0) {
@@ -347,8 +312,7 @@ public class NpcModelCreateScreen extends Screen {
             setStatus("Give it a name first.", true);
             return;
         }
-        if (NpcModelRegistry.forModelId("npc:" + id) != null
-                || Files.isDirectory(NpcModelLoader.modelsDir().resolve(id))) {
+        if (Files.isDirectory(NpcModelLoader.modelsDir().resolve(id))) {
             setStatus("A model called " + id + " already exists.", true);
             return;
         }
@@ -388,32 +352,6 @@ public class NpcModelCreateScreen extends Screen {
         NpcModelPacks.reload(Minecraft.getInstance(), true);
         net.fugginbeenus.notchcurrency.client.NotchNpcModelPickerScreen.markStale();
         Minecraft.getInstance().setScreen(parent);
-    }
-
-    /**
-     * Takes a model out, on the second click.
-     *
-     * <p>Two clicks because there is no undo: the folder goes, and a model somebody spent an evening
-     * on should not be one misplaced click away from gone.
-     */
-    private void removeSelected(java.util.List<net.fugginbeenus.notchcurrency.npcmodel.NpcModelBundle> installed) {
-        var bundle = installed.get(Math.floorMod(removeAt, installed.size()));
-        if (!confirmingRemove) {
-            confirmingRemove = true;
-            setStatus("Click Remove again to delete " + bundle.displayName() + ".", false);
-            return;
-        }
-        confirmingRemove = false;
-
-        String problem = NpcModelLoader.delete(bundle.id());
-        if (problem != null) {
-            setStatus("Could not remove it: " + problem, true);
-            return;
-        }
-        NpcModelPacks.reload(Minecraft.getInstance(), false);
-        net.fugginbeenus.notchcurrency.client.NotchNpcModelPickerScreen.markStale();
-        removeAt = 0;
-        setStatus("Removed " + bundle.displayName() + ". Any NPC wearing it falls back.", false);
     }
 
     private static String manifest(String name, String idle, String walk, String special) {

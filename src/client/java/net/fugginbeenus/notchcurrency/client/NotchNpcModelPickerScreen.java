@@ -259,7 +259,7 @@ public class NotchNpcModelPickerScreen extends Screen {
             if (over(mx, my, px + W / 2 + 4, py + H - 22, 90, 16)) {
                 NotchWidgets.click();
                 Minecraft.getInstance().setScreen(
-                        new net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelCreateScreen(this));
+                        new net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelManageScreen(this));
                 return true;
             }
             if (over(mx, my, px + W / 2 - 94, py + H - 22, 90, 16)) {
