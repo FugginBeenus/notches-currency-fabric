@@ -3,7 +3,8 @@
 A design for letting a player build a model in Blockbench, animate it, and have it walk around
 in game as a real NPC.
 
-Status: **proposal**. Nothing here is built. Written 2026-08-13.
+Status: **Stages 0 to 3 are built and working in game.** Stage 4, sharing models with a server,
+is not. Written and built 2026-08-13.
 
 ---
 
@@ -90,30 +91,44 @@ The point of the screen is that nobody hand-writes JSON. Every field is a picker
 exists, so there is nothing to mistype.
 
 ```
-  Create NPC Model
-  
-  Name     [ Town Guard                    ]
-  Id       [ town_guard                    ]   (from the name, editable)
-  
-  Model    [ guard.geo.json            v ]     <- files found in _import
-  Texture  [ guard.png                 v ]
-  Anims    [ guard.animation.json      v ]
-  
-  Idle     [ animation.guard.idle      v ]     <- clips found in that file
-  Walk     [ animation.guard.walk      v ]
-  Special  [ animation.guard.wave      v ]     (optional)
-  
-  Scale    [ 1.0 ]    Height [ 1.95 ]  Width [ 0.6 ]
-  
-  [ Open Folder ]  [ Refresh ]        [ Preview ]  [ Create ]
+  New NPC Model
+
+  Name        [ Town Guard                ]
+              saves as: town_guard
+  Model       [ solmannen.geo.json        ]   <- files found in _import
+  Texture     [ solmannen.png             ]
+  Animations  [ solmannen.animation.json  ]
+  Idle        [ animation.solmannen.idle  ]   <- clips found in that file
+  Walk        [ animation.solmannen.walk  ]
+  Flourish    [ (none)                    ]
+
+  [ Import folder ] [ Refresh ]   [ Cancel ] [ Create ]
 ```
 
 The three clip fields come straight from the roles the animation system already uses. The mod parses
 the chosen animation file and lists its `animations` keys, so the player picks from what their file
-genuinely contains rather than typing a name that has to match exactly.
+genuinely contains rather than typing a name that has to match exactly. Clips named `...idle` and
+`...walk` are picked out on their own, so a tidily named export needs a name typed and Create
+pressed.
 
-**Preview** uses the existing `NpcPreviewWidget` so the model can be turned around and checked before
-it is saved anywhere.
+No separate id field: the folder name comes from the model name and is shown under it. Every picker
+walks backwards on a right click, for a long list.
+
+**No preview before Create.** A model cannot render until it has been written and the resources
+reloaded, so there is nothing to preview yet. It is previewed in the model picker afterwards, where
+that already works.
+
+Scale and hitbox are not on the screen either. Per-NPC scale is already in the editor's Move, Rotate
+and Size panel, and `npc.json` still accepts a hitbox for anyone who wants one.
+
+### The manage screen
+
+A second screen lists what is installed, one row per model with its name, author and clip count, and
+a Remove on each. It scrolls past six. New model and Import folder live there too, so everything to
+do with models is in one place.
+
+Remove asks twice. The folder goes and there is no getting it back. An NPC still wearing a removed
+model falls back to the built-in one, the same as a model that was never installed.
 
 ### Validation, in plain English
 
@@ -127,7 +142,7 @@ what to fix:
 | PNG size matches the geo's `texture_width` / `texture_height` | "This model expects a 64 by 64 texture, but that image is 128 by 128." |
 | Chosen clips exist in the animation file | "That animation file has no clip called ..." |
 | Id is unique and filename-safe | "A model called town_guard already exists." |
-| Bundle within size limits | "That model is larger than the 2 MB limit." |
+| Bundle within size limits | "That model is larger than 4 MB." |
 
 The texture size check is worth the effort on its own. A mismatched texture is the most common
 reason a Blockbench model looks scrambled in game, and the error is otherwise baffling.
@@ -260,21 +275,31 @@ This writes server-supplied files to a player's disk, so it carries all the secu
 
 ---
 
-## What needs proving
+## What was proved, and what bit
 
-Honest list of what cannot be verified without running the game:
+**A mid-session reload does re-bake GeckoLib's caches.** Confirmed by `/npc modelspike` on 26.2
+(GeckoLib 5.5) and on 1.20.1 (GeckoLib 4), so it holds on both generations. This was the assumption
+the whole design rested on.
 
-1. **Does a mid-session reload re-bake GeckoLib's caches?** `CurrencyPackGenerator` proves textures
-   and lang reload fine. GeckoLib registers its own reload listener, so it should re-scan, but this
-   is the assumption the whole design rests on.
-2. **Reload cost.** A resource reload causes a visible hitch. Fine on join, annoying if frequent.
-   Needs measuring with a realistic bundle count.
-3. **Memory with many bundles.** Each baked model is held for the session. Ten is certainly fine, a
-   hundred needs checking.
-4. **Hitbox from the manifest.** Per-NPC scale already drives the hitbox, but an arbitrary
-   width/height pair is a separate mechanism and may need an attribute rather than a scale.
+Three things bit on the way, all now fixed:
 
-Item 1 is a half-hour spike and it decides whether the rest is worth designing further.
+1. **Animations never ticked on 1.21.11 and up.** The renderer called GeckoLib's submit pass but
+   never its extract pass, and extract is where animations are ticked: submit is handed a render
+   state and no entity, so there is nothing in it to read a tick count or a walk speed from. The
+   model drew fine and simply held still. This was true of the built-in model too, and predated
+   custom models entirely.
+2. **Two nameplates.** Running GeckoLib's extract also runs the living renderer's, which fills in
+   the vanilla nameplate, and this path already draws its own. The vanilla one is cleared after.
+3. **Three GeckoLib package layouts, not two.** See the table above.
+
+Still unmeasured:
+
+- **Reload cost** with a realistic bundle count. The loader stamps the source folders and skips the
+  reload when nothing moved, so the common case costs nothing, but a big first load is untested.
+- **Memory with many bundles.** Each baked model is held for the session. Ten is fine. A hundred
+  needs checking.
+- **Hitbox from the manifest.** Per-NPC scale already drives the hitbox, but an arbitrary
+  width/height pair is a separate mechanism and may need an attribute rather than a scale.
 
 ---
 
@@ -282,19 +307,20 @@ Item 1 is a half-hour spike and it decides whether the rest is worth designing f
 
 Each stage is useful on its own and leaves the mod shippable.
 
-### Stage 0: the spike
+### Stage 0: the spike — DONE
 
 Hand-write a second GeckoLib model into the generated pack, reload mid-session, confirm GeckoLib
-picks it up. No format, no UI. Answers the question the design rests on.
+picks it up. Answered yes on both GeckoLib generations. `/npc modelspike` is still in the tree and
+can be deleted.
 
-### Stage 1: format and loading
+### Stage 1: format and loading — DONE
 
 Bundle format, scanner, validator, pack writer. Bundles placed by hand appear in the model picker.
 Works in singleplayer. Proves the concept end to end with no UI work.
 
 Touches: a new loader class, `CurrencyPackGenerator`, `NotchNpcModelPickerScreen`.
 
-### Stage 2: per-NPC resolution
+### Stage 2: per-NPC resolution — DONE
 
 `NotchNpcGeoModel` resolves from the bundle id. `npc:` prefix routing. `modelId` on the render state.
 Clip roles read from the manifest. Manifest scale and hitbox applied. The stage where custom NPCs
@@ -302,14 +328,15 @@ actually look different from each other.
 
 Touches: `NotchNpcGeoModel`, `NotchNpcRenderState`, `NotchNpcRenderer`, `NotchNpcEntity`.
 
-### Stage 3: the creation screen
+### Stage 3: the creation screen — DONE
 
-Drop folder, Open Folder button, file and clip pickers, validation, preview, Create. This is the
-stage that turns it from a modder feature into a player feature.
+Drop folder, Open Folder button, file and clip pickers, validation, Create. Plus a manage screen
+listing what is installed, with Remove on each row. No preview before Create: a model cannot render
+until it is written and resources reload, so it is previewed in the picker afterwards instead.
 
-Touches: a new screen, the loader.
+Built as `NpcModelCreateScreen` and `NpcModelManageScreen`.
 
-### Stage 4: server sharing
+### Stage 4: server sharing — NOT BUILT
 
 Upload on create, bundle list on join, chunked transfer, sandboxed write, batched reload, op gate.
 The stage that makes it feel like magic, and the one carrying the security weight.
