@@ -6,6 +6,9 @@ world: is the silhouette right, does the roof meet the body, is the raised flag 
 the roofline, is anything floating.
 
     python3 devtools/model_preview.py mailbox mailbox_flag mailbox_wall mailbox_wall_flag
+
+Pass --side for a flat view from +x with north on the left, which is the view a flag pose is
+argued about in. Isometric hides which end of a rod a stub is on; this does not.
 """
 import json
 import math
@@ -96,10 +99,34 @@ def draw(name):
     return img
 
 
-names = sys.argv[1:] or ["mailbox"]
+def draw_side(name):
+    """Straight on from +x: north to the left, up is up. Nearer parts drawn last."""
+    data = json.loads((MODELS / f"{name}.json").read_text())
+    img = Image.new("RGB", (SIZE, SIZE), (238, 238, 242))
+    d = ImageDraw.Draw(img)
+    pad, s = 90, (SIZE - 180) / 22.0
+
+    def pt(z, y):
+        return pad + z * s, SIZE - pad - y * s
+
+    d.rectangle([pt(0, 16), pt(16, 0)], outline=(202, 202, 210))
+    d.text((pad - 34, SIZE - pad - 8), "N", fill=(140, 140, 150))
+    for el in sorted(data["elements"], key=lambda e: e["to"][0]):
+        z0, z1 = el["from"][2], el["to"][2]
+        y0, y1 = el["from"][1], el["to"][1]
+        face = el["faces"].get("east") or next(iter(el["faces"].values()))
+        colour = TINT.get(face.get("texture"), FALLBACK)
+        d.rectangle([pt(z0, y1), pt(z1, y0)], fill=colour, outline=shade(colour, 0.6))
+
+    d.text((14, 14), name + "  (from +x)", fill=(40, 40, 48))
+    return img
+
+
+side = "--side" in sys.argv
+names = [a for a in sys.argv[1:] if not a.startswith("--")] or ["mailbox"]
 sheet = Image.new("RGB", (SIZE * len(names), SIZE), (238, 238, 242))
 for i, n in enumerate(names):
-    sheet.paste(draw(n), (SIZE * i, 0))
+    sheet.paste((draw_side if side else draw)(n), (SIZE * i, 0))
 out = ("/private/tmp/claude-503/-Users-bjpelicano-Desktop-NEW-MODS-Notch-Currency---Test-2/"
        "e4a58a35-d84d-488a-84c8-80b25e3d5795/scratchpad/mailbox_preview.png")
 sheet.resize((min(1600, SIZE * len(names)), int(SIZE * min(1600, SIZE * len(names)) / (SIZE * len(names)))),
