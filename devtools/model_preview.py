@@ -18,21 +18,9 @@ MODELS = pathlib.Path("src/main/resources/assets/notchcurrency/models/block")
 SCALE = 26
 SIZE = 720
 
-# Rough colours per texture cell, only so the parts can be told apart.
-TINT = {
-    (0, 0, 4, 4):    (108, 116, 124),   # roof
-    (4, 0, 8, 4):    (150, 114, 76),    # gable end
-    (8, 0, 12, 4):   (178, 58, 50),     # flag
-    (12, 0, 16, 4):  (72, 66, 62),      # pole
-    (0, 4, 4, 8):    (168, 130, 88),    # front, lighter so it can be spotted
-    (4, 4, 8, 8):    (150, 114, 76),    # side
-    (8, 4, 12, 8):   (140, 106, 70),    # back
-    (12, 4, 16, 8):  (150, 114, 76),    # body top
-    (0, 8, 4, 12):   (150, 114, 76),    # post
-    (4, 8, 8, 12):   (176, 138, 96),    # post top
-    (8, 8, 12, 12):  (118, 88, 58),     # base
-    (12, 8, 16, 12): (118, 88, 58),     # body underside
-}
+# Colour by which texture a face uses, so parts can be told apart without reading the atlas.
+TINT = {"#0": (150, 152, 156), "#1": (188, 48, 44)}
+FALLBACK = (150, 114, 76)
 
 
 def project(x, y, z):
@@ -95,7 +83,7 @@ def draw(name):
             if face is None:
                 continue
             pts = rotate(pts, rot)
-            colour = shade(TINT.get(tuple(face["uv"]), (200, 60, 200)), lighting[side])
+            colour = shade(TINT.get(face.get("texture"), FALLBACK), lighting[side])
             # Painter order for this camera: bigger x + y + z is nearer. Height counts as
             # much as the other two, or a roof sorts behind the body it sits on.
             depth = sum(p[0] + p[1] + p[2] for p in pts) / len(pts)

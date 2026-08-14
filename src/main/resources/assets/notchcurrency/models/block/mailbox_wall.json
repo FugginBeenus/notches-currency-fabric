@@ -2,8 +2,8 @@
   "parent": "block/block",
   "textures": {
     "0": "notchcurrency:block/mailbox",
-    "1": "notchcurrency:block/mailbox_wall_flag",
-    "particle": "notchcurrency:block/mailbox"
+    "particle": "notchcurrency:block/mailbox",
+    "1": "notchcurrency:block/mailbox_wall_flag"
   },
   "elements": [
     {
@@ -17,15 +17,6 @@
         11.5,
         16
       ],
-      "rotation": {
-        "angle": 0,
-        "axis": "y",
-        "origin": [
-          5,
-          5.75,
-          14
-        ]
-      },
       "faces": {
         "north": {
           "uv": [
@@ -94,15 +85,6 @@
         11.95,
         15.5
       ],
-      "rotation": {
-        "angle": 0,
-        "axis": "y",
-        "origin": [
-          5,
-          10.95,
-          14
-        ]
-      },
       "faces": {
         "north": {
           "uv": [
@@ -171,15 +153,6 @@
         6.25,
         15.5
       ],
-      "rotation": {
-        "angle": 0,
-        "axis": "y",
-        "origin": [
-          5,
-          5.25,
-          14
-        ]
-      },
       "faces": {
         "north": {
           "uv": [
@@ -239,27 +212,17 @@
     },
     {
       "from": [
-        11,
-        8.6,
-        12.25
+        11.0,
+        6.1,
+        10.75
       ],
       "to": [
         11.3,
-        9.6,
-        16.25
+        7.1,
+        14.75
       ],
-      "rotation": {
-        "x": -90,
-        "y": 0,
-        "z": 0,
-        "origin": [
-          9.3,
-          8.6,
-          14.25
-        ]
-      },
       "faces": {
-        "north": {
+        "south": {
           "uv": [
             2,
             2,
@@ -277,7 +240,7 @@
           ],
           "texture": "#1"
         },
-        "south": {
+        "north": {
           "uv": [
             2,
             3,
@@ -295,7 +258,7 @@
           ],
           "texture": "#1"
         },
-        "up": {
+        "down": {
           "uv": [
             1,
             6,
@@ -304,7 +267,7 @@
           ],
           "texture": "#1"
         },
-        "down": {
+        "up": {
           "uv": [
             2,
             2,
@@ -317,27 +280,17 @@
     },
     {
       "from": [
-        11,
-        8.6,
-        13.25
+        11.0,
+        7.1,
+        13.75
       ],
       "to": [
         11.3,
-        9.6,
-        14.25
+        8.1,
+        14.75
       ],
-      "rotation": {
-        "x": -90,
-        "y": 0,
-        "z": 0,
-        "origin": [
-          9.3,
-          8.6,
-          15.25
-        ]
-      },
       "faces": {
-        "north": {
+        "south": {
           "uv": [
             3,
             2,
@@ -355,7 +308,7 @@
           ],
           "texture": "#1"
         },
-        "south": {
+        "north": {
           "uv": [
             4,
             0,
@@ -373,7 +326,7 @@
           ],
           "texture": "#1"
         },
-        "up": {
+        "down": {
           "uv": [
             3,
             5,
@@ -382,7 +335,7 @@
           ],
           "texture": "#1"
         },
-        "down": {
+        "up": {
           "uv": [
             5,
             2,

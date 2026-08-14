@@ -48,14 +48,20 @@ public class MailboxBlock extends Block implements EntityBlock {
 
     // These follow the model rather than approximating it: a post you can walk through, or a
     // roof you cannot click, is the kind of thing that reads as the block being broken.
-    private static final VoxelShape SHAPE_FLOOR = Shapes.or(
-            Block.box(5.0, 0.0, 5.0, 11.0, 7.0, 11.0),      // foot and post
-            Block.box(3.6, 7.0, 5.0, 12.4, 14.6, 11.0));    // body, gable and roof
+    //
+    // The box is deeper than it is wide, so unlike the old placeholder it has to turn with the
+    // block. It is also taller than one block and the top is simply not covered, which is the
+    // usual bargain for a model that leans into the space above it.
+    private static final VoxelShape POST = Block.box(6.5, 0.0, 6.5, 9.5, 11.0, 9.5);
+    private static final VoxelShape FLOOR_NS = Shapes.or(POST,
+            Block.box(4.7, 10.5, 2.5, 11.3, 16.0, 13.5));
+    private static final VoxelShape FLOOR_EW = Shapes.or(POST,
+            Block.box(2.5, 10.5, 4.7, 13.5, 16.0, 11.3));
 
-    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(3.6, 5.0, 8.5, 12.4, 13.1, 16.0);
-    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(3.6, 5.0, 0.0, 12.4, 13.1, 7.5);
-    private static final VoxelShape SHAPE_WALL_WEST = Block.box(8.5, 5.0, 3.6, 16.0, 13.1, 12.4);
-    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 5.0, 3.6, 7.5, 13.1, 12.4);
+    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(4.7, 5.0, 12.0, 11.3, 12.0, 16.0);
+    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(4.7, 5.0, 0.0, 11.3, 12.0, 4.0);
+    private static final VoxelShape SHAPE_WALL_WEST = Block.box(12.0, 5.0, 4.7, 16.0, 12.0, 11.3);
+    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 5.0, 4.7, 4.0, 12.0, 11.3);
 
     public MailboxBlock(Properties properties) {
         super(properties);
@@ -87,7 +93,9 @@ public class MailboxBlock extends Block implements EntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        if (!state.getValue(WALL)) return SHAPE_FLOOR;
+        if (!state.getValue(WALL)) {
+            return state.getValue(FACING).getAxis() == Direction.Axis.X ? FLOOR_EW : FLOOR_NS;
+        }
         return switch (state.getValue(FACING)) {
             case SOUTH -> SHAPE_WALL_SOUTH;
             case WEST -> SHAPE_WALL_WEST;
