@@ -23,6 +23,14 @@ public final class GoldenCacheSpawnState extends SavedData
 
     private final Set<Long> placed = new HashSet<>();
 
+    /**
+     * Caches that are out there and have not been opened yet.
+     *
+     * <p>Kept so the world can be held to a fixed number waiting at once. Without it, covering new
+     * ground quickly is a way to make more of them exist, which is the opposite of rare.
+     */
+    private final Set<Long> outstanding = new HashSet<>();
+
     public static GoldenCacheSpawnState get(ServerLevel world) {
         return StateData.getOrCreate(world.getDataStorage(), GoldenCacheSpawnState::new,
                 GoldenCacheSpawnState::load, "notchcurrency_cache_spawns");
@@ -37,6 +45,25 @@ public final class GoldenCacheSpawnState extends SavedData
         return true;
     }
 
+    public int outstandingCount() {
+        return outstanding.size();
+    }
+
+    public java.util.List<Long> outstandingPositions() {
+        return java.util.List.copyOf(outstanding);
+    }
+
+    public void addOutstanding(long posKey) {
+        if (outstanding.add(posKey)) setDirty();
+    }
+
+    /** @return true if that position was one of ours */
+    public boolean clearOutstanding(long posKey) {
+        if (!outstanding.remove(posKey)) return false;
+        setDirty();
+        return true;
+    }
+
     public static GoldenCacheSpawnState load(CompoundTag nbt) {
         GoldenCacheSpawnState s = new GoldenCacheSpawnState();
         // Numbered keys rather than a long array: getLongArray started returning an Optional at
@@ -44,6 +71,10 @@ public final class GoldenCacheSpawnState extends SavedData
         int count = nbt.getInt("count");
         for (int i = 0; i < count; i++) {
             if (nbt.contains("c" + i)) s.placed.add(nbt.getLong("c" + i));
+        }
+        int waiting = nbt.getInt("waitingCount");
+        for (int i = 0; i < waiting; i++) {
+            if (nbt.contains("w" + i)) s.outstanding.add(nbt.getLong("w" + i));
         }
         return s;
     }
@@ -69,6 +100,10 @@ public final class GoldenCacheSpawnState extends SavedData
         nbt.putInt("count", placed.size());
         int i = 0;
         for (long key : placed) nbt.putLong("c" + i++, key);
+
+        nbt.putInt("waitingCount", outstanding.size());
+        int w = 0;
+        for (long key : outstanding) nbt.putLong("w" + w++, key);
         return nbt;
     }
 }

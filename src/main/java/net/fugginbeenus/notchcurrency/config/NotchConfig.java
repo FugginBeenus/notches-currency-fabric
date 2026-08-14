@@ -231,6 +231,15 @@ public final class NotchConfig {
          * is lower than this suggests.
          */
         public int     naturalOneIn = 3000;
+
+        /**
+         * How many caches may be out there unopened at once, across the whole world.
+         *
+         * <p>One is the point of the feature. A chunk that wins its roll while one is already out
+         * there keeps its win for later rather than spending it, so covering ground quickly finds
+         * the one that exists sooner instead of creating more of them.
+         */
+        public int     maxOutstanding = 1;
         // Loot tuning examples (only used if your manager supports them)
         public int currencyStacksMin = 1;
         public int currencyStacksMax = 3;

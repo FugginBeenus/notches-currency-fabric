@@ -345,6 +345,11 @@ final class ConfigEntries {
                 v -> cfg.cache.naturalSpawns = v,
                 "Caches are hidden under oaks as the world is explored.",
                 "Off means they only appear where an admin puts one."));
+        e.add(new NumberEntry(c, "Waiting at once", cfg.cache.maxOutstanding, 1, 1, 64,
+                v -> cfg.cache.maxOutstanding = v.intValue(),
+                "How many unopened caches may exist in the world at a time.",
+                "At one, exploring faster finds the one that exists sooner",
+                "rather than creating more."));
         e.add(new NumberEntry(c, "Odds (1 in N chunks)", cfg.cache.naturalOneIn, 3000, 2, 1_000_000,
                 v -> cfg.cache.naturalOneIn = v.intValue(),
                 "One chunk in this many hides a cache. Higher is rarer.",

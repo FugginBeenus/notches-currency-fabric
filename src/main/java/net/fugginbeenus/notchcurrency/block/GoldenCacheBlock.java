@@ -107,6 +107,11 @@ public class GoldenCacheBlock extends Block {
             }
         }
 
+        // One fewer waiting to be found, so somewhere else may hide the next.
+        if (world instanceof net.minecraft.server.level.ServerLevel serverWorld) {
+            GoldenCacheManager.noteOpened(serverWorld, pos);
+        }
+
         // Let vanilla handle actually removing the block, etc.
         //? if >=1.21 {
         /*return super.playerWillDestroy(world, pos, state, player);

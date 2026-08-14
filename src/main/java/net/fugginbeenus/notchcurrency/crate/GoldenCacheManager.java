@@ -25,6 +25,7 @@ public final class GoldenCacheManager {
     public static int GLOBAL_COOLDOWN_MIN = 60;
     public static boolean NATURAL_SPAWNS = true;
     public static int NATURAL_ONE_IN = 3000;
+    public static int MAX_OUTSTANDING = 1;
 
 
     public static int CURRENCY_STACKS_MIN = 1, CURRENCY_STACKS_MAX = 3;
@@ -78,17 +79,53 @@ public final class GoldenCacheManager {
         int cx = chunkX(chunk.getPos()), cz = chunkZ(chunk.getPos());
         if (!isCacheChunk(world.getSeed(), cx, cz)) return;
 
-        long key = chunkKey(chunk.getPos());
         GoldenCacheSpawnState state = GoldenCacheSpawnState.get(world);
-        // Claimed first: a chunk that turns out to have no oak in it should not be searched again
-        // every time somebody walks past it.
+
+        // Already one waiting to be found, so this chunk keeps its win rather than spending it. Not
+        // claimed, so it comes up again once the one that is out there has been opened. This is what
+        // stops covering ground quickly from being a way to make more caches exist.
+        forgetCachesThatAreGone(world, state);
+        if (state.outstandingCount() >= MAX_OUTSTANDING) return;
+
+        long key = chunkKey(chunk.getPos());
+        // Claimed only once we are actually going to try: a chunk with no oak in it should not be
+        // searched again every time somebody walks past, but a chunk we never looked at should not
+        // be spent either.
         if (!state.claim(key)) return;
 
         BlockPos spot = findSpotUnderOak(world, chunk);
         if (spot == null) return;
         if (placeCacheBlock(world, spot)) {
+            state.addOutstanding(spot.asLong());
             // Never announced. Walking into one is the whole point.
             LOGGER.debug("A golden cache is hidden at {} {} {}", spot.getX(), spot.getY(), spot.getZ());
+        }
+    }
+
+    /**
+     * Told that one has been opened, so the next chunk to win may place another.
+     *
+     * <p>Called by the block itself when it is broken, which is how a cache is opened.
+     */
+    public static void noteOpened(ServerLevel world, BlockPos pos) {
+        GoldenCacheSpawnState.get(world).clearOutstanding(pos.asLong());
+    }
+
+    /**
+     * Drops any cache we are still counting that is no longer actually there.
+     *
+     * <p>A cache can go without anybody breaking it: an explosion, a world edit, a chunk restored
+     * from a backup. Without this the count would stay full and no cache would ever appear again,
+     * which is a quiet way for the feature to stop working forever.
+     *
+     * <p>Only positions in loaded chunks are checked, so this costs nothing and simply catches up as
+     * the world is played.
+     */
+    private static void forgetCachesThatAreGone(ServerLevel world, GoldenCacheSpawnState state) {
+        for (long key : state.outstandingPositions()) {
+            BlockPos pos = BlockPos.of(key);
+            if (!world.hasChunkAt(pos)) continue;
+            if (!world.getBlockState(pos).is(ModBlocks.GOLDEN_CACHE)) state.clearOutstanding(key);
         }
     }
 
@@ -188,6 +225,7 @@ public final class GoldenCacheManager {
         GLOBAL_COOLDOWN_MIN = Math.max(0, c.cooldownMinutes);
         NATURAL_SPAWNS = c.naturalSpawns;
         NATURAL_ONE_IN = Math.max(1, c.naturalOneIn);
+        MAX_OUTSTANDING = Math.max(1, c.maxOutstanding);
         CURRENCY_STACKS_MIN = Math.max(0, c.currencyStacksMin);
         CURRENCY_STACKS_MAX = Math.max(CURRENCY_STACKS_MIN, c.currencyStacksMax);
         CURRENCY_PER_STACK_MIN = Math.max(1, c.currencyPerStackMin);
@@ -200,6 +238,7 @@ public final class GoldenCacheManager {
         c.cooldownMinutes     = GLOBAL_COOLDOWN_MIN;
         c.naturalSpawns          = NATURAL_SPAWNS;
         c.naturalOneIn           = NATURAL_ONE_IN;
+        c.maxOutstanding         = MAX_OUTSTANDING;
         c.currencyStacksMin   = CURRENCY_STACKS_MIN;
         c.currencyStacksMax   = CURRENCY_STACKS_MAX;
         c.currencyPerStackMin = CURRENCY_PER_STACK_MIN;
