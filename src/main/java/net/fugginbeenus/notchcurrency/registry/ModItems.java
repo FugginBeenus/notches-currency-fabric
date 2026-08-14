@@ -59,6 +59,13 @@ public final class ModItems {
             new net.fugginbeenus.notchcurrency.item.RoutePlannerItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("route_planner"))
     );
 
+    public static final Item HEART_CRYSTAL = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("heart_crystal"),
+            new net.fugginbeenus.notchcurrency.item.HeartCrystalItem(
+                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("heart_crystal"))
+    );
+
     public static final Item GOLDEN_CACHE = ModBlocks.GOLDEN_CACHE_ITEM;
 
     private ModItems() {}

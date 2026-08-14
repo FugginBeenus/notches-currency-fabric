@@ -2,10 +2,45 @@
   "name": "Rare Crate",
   "keys_required": 2,
   "loot": [
-    { "type": "item", "item": "minecraft:diamond",                "min": 2, "max": 5, "weight": 20 },
-    { "type": "item", "item": "minecraft:emerald",                "min": 3, "max": 8, "weight": 15 },
-    { "type": "coins", "amount": 200, "weight": 15 },
-    { "type": "item", "item": "minecraft:enchanted_golden_apple", "min": 1, "max": 1, "weight": 4 },
-    { "type": "item", "item": "minecraft:netherite_scrap",        "min": 1, "max": 2, "weight": 3 }
+    {
+      "type": "item",
+      "item": "minecraft:diamond",
+      "min": 2,
+      "max": 5,
+      "weight": 2000
+    },
+    {
+      "type": "item",
+      "item": "minecraft:emerald",
+      "min": 3,
+      "max": 8,
+      "weight": 1500
+    },
+    {
+      "type": "coins",
+      "amount": 200,
+      "weight": 1500
+    },
+    {
+      "type": "item",
+      "item": "minecraft:enchanted_golden_apple",
+      "min": 1,
+      "max": 1,
+      "weight": 400
+    },
+    {
+      "type": "item",
+      "item": "minecraft:netherite_scrap",
+      "min": 1,
+      "max": 2,
+      "weight": 300
+    },
+    {
+      "type": "item",
+      "item": "notchcurrency:heart_crystal",
+      "min": 1,
+      "max": 1,
+      "weight": 5
+    }
   ]
 }

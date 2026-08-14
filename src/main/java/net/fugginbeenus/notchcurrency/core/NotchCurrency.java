@@ -182,6 +182,7 @@ public class NotchCurrency implements ModInitializer {
             CrateKeyCommands.register(dispatcher);
             LoanCommands.register(dispatcher);
             net.fugginbeenus.notchcurrency.command.GamblingCommands.register(dispatcher);
+            net.fugginbeenus.notchcurrency.command.HeartCommands.register(dispatcher);
         });
 
         // HUD balance sync on join + schedule auction mailbox reminder
@@ -214,6 +215,10 @@ public class NotchCurrency implements ModInitializer {
             // What custom NPC models this server holds. Only names and fingerprints: the client
             // asks for whatever it does not already have, so a regular is charged nothing.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
+
+            // Extra hearts are rebuilt from the world save rather than trusted to whatever the
+            // player file happens to say, so a rolled back or hand edited profile cannot mint them.
+            HeartState.applyTo(sp);
         });
 
         // Half-received uploads do not outlive the connection that was sending them.
@@ -224,6 +229,25 @@ public class NotchCurrency implements ModInitializer {
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
             ServerPlayer sp = newP;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
+        });
+
+        // Dying costs a heart crystal, down to none, when the server has that turned on. Done after
+        // the respawn rather than in COPY_FROM: the new player is in the world by then, so it can be
+        // told what it lost and its health can be filled to whatever ceiling is left.
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldP, newP, alive) -> {
+            if (!alive) {
+                int left = HeartState.onDeath(newP);
+                if (left >= 0) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(newP, net.minecraft.network.chat.Component
+                            .literal(left == 0
+                                    ? "Your last heart crystal shattered."
+                                    : "A heart crystal shattered. " + left
+                                            + (left == 1 ? " extra heart left." : " extra hearts left."))
+                            .withStyle(net.minecraft.ChatFormatting.RED));
+                }
+            }
+            HeartState.applyTo(newP);
+            if (!alive) newP.setHealth(newP.getMaxHealth());
         });
 
         // Server-bound packet receivers (balance request, bids, ATM withdraw, shop ops)

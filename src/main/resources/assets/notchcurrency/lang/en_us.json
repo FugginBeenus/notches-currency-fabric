@@ -23,5 +23,6 @@
   "itemGroup.notchcurrency.notch_currency_tab": "Notch Currency",
   "key.notchcurrency.bounty_tracker": "Toggle Bounty Tracker",
   "key.categories.notchcurrency": "Notch Currency",
-  "item.notchcurrency.parcel": "Parcel"
+  "item.notchcurrency.parcel": "Parcel",
+  "item.notchcurrency.heart_crystal": "Heart Crystal"
 }

@@ -2,10 +2,45 @@
   "name": "Epic Crate",
   "keys_required": 3,
   "loot": [
-    { "type": "item", "item": "minecraft:diamond_block",   "min": 1, "max": 2, "weight": 20 },
-    { "type": "item", "item": "minecraft:netherite_ingot", "min": 1, "max": 1, "weight": 10 },
-    { "type": "coins", "amount": 500, "weight": 15 },
-    { "type": "item", "item": "minecraft:elytra",          "min": 1, "max": 1, "weight": 3 },
-    { "type": "item", "item": "minecraft:nether_star",     "min": 1, "max": 1, "weight": 2 }
+    {
+      "type": "item",
+      "item": "minecraft:diamond_block",
+      "min": 1,
+      "max": 2,
+      "weight": 2000
+    },
+    {
+      "type": "item",
+      "item": "minecraft:netherite_ingot",
+      "min": 1,
+      "max": 1,
+      "weight": 1000
+    },
+    {
+      "type": "coins",
+      "amount": 500,
+      "weight": 1500
+    },
+    {
+      "type": "item",
+      "item": "minecraft:elytra",
+      "min": 1,
+      "max": 1,
+      "weight": 300
+    },
+    {
+      "type": "item",
+      "item": "minecraft:nether_star",
+      "min": 1,
+      "max": 1,
+      "weight": 200
+    },
+    {
+      "type": "item",
+      "item": "notchcurrency:heart_crystal",
+      "min": 1,
+      "max": 1,
+      "weight": 10
+    }
   ]
 }
