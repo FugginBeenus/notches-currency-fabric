@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,11 +46,16 @@ public class MailboxBlock extends Block implements EntityBlock {
     /** The flag, up when the owner has mail. */
     public static final BooleanProperty FLAG = BooleanProperty.create("flag");
 
-    private static final VoxelShape SHAPE_FLOOR = Block.box(4.0, 0.0, 4.0, 12.0, 14.0, 12.0);
-    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(4.0, 2.0, 8.0, 12.0, 13.0, 16.0);
-    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(4.0, 2.0, 0.0, 12.0, 13.0, 8.0);
-    private static final VoxelShape SHAPE_WALL_WEST = Block.box(8.0, 2.0, 4.0, 16.0, 13.0, 12.0);
-    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 2.0, 4.0, 8.0, 13.0, 12.0);
+    // These follow the model rather than approximating it: a post you can walk through, or a
+    // roof you cannot click, is the kind of thing that reads as the block being broken.
+    private static final VoxelShape SHAPE_FLOOR = Shapes.or(
+            Block.box(5.0, 0.0, 5.0, 11.0, 7.0, 11.0),      // foot and post
+            Block.box(3.6, 7.0, 5.0, 12.4, 14.6, 11.0));    // body, gable and roof
+
+    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(3.6, 5.0, 8.5, 12.4, 13.1, 16.0);
+    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(3.6, 5.0, 0.0, 12.4, 13.1, 7.5);
+    private static final VoxelShape SHAPE_WALL_WEST = Block.box(8.5, 5.0, 3.6, 16.0, 13.1, 12.4);
+    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 5.0, 3.6, 7.5, 13.1, 12.4);
 
     public MailboxBlock(Properties properties) {
         super(properties);
