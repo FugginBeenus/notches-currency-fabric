@@ -633,6 +633,44 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
+    // Vanilla's ground navigation is written for something standing on a floor, and an NPC with
+    // gravity turned off never is. It refuses to build a path at all unless the mob is on the
+    // ground, so createPath returned null before it even read the destination: no wandering, no
+    // patrol, no following anybody. And it advances along a path by comparing the mob's own Y
+    // against the waypoint's, so even handed a path, a floating NPC stalls at the first corner as
+    // soon as it is more than a block up. The transform control allows sixteen.
+    //
+    // So a floating NPC gets the navigation vanilla gives its own floating mobs. Bees, allays and
+    // parrots all path through the air this way, which is the point: the models people turn
+    // gravity off for are the flying ones.
+    private boolean flyingMovement;
+
+    private void applyMovementMode() {
+        boolean floating = this.isNoGravity();
+        if (floating == flyingMovement) return;
+        flyingMovement = floating;
+        if (floating) {
+            // hoversInPlace, or the control switches gravity back on the moment it runs out of
+            // path and drops the NPC out of the sky.
+            this.moveControl = new net.minecraft.world.entity.ai.control.FlyingMoveControl(this, 20, true);
+            this.navigation = new net.minecraft.world.entity.ai.navigation.FlyingPathNavigation(this, this.level());
+        } else {
+            this.moveControl = new net.minecraft.world.entity.ai.control.MoveControl(this);
+            this.navigation = this.createNavigation(this.level());
+        }
+        applyDoorCapability();
+    }
+
+    // Every route into the gravity flag comes through here: the editor, the share codec, loading
+    // from disk, and FlyingMoveControl itself, which sets it every tick it moves. Hooking the
+    // setter rather than the call sites means none of them can be missed, and the guard above
+    // makes the repeat calls free.
+    @Override
+    public void setNoGravity(boolean noGravity) {
+        super.setNoGravity(noGravity);
+        applyMovementMode();
+    }
+
     public boolean isLeashable() { return leashable; }
     public void setLeashable(boolean l) { this.leashable = l; }
 
@@ -817,7 +855,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 // in at 30).
                 .add(Attributes.FOLLOW_RANGE, 48.0)
                 // Needed by MeleeAttackGoal (GUARD mode). Weapon bonuses stack on top.
-                .add(Attributes.ATTACK_DAMAGE, 4.0);
+                .add(Attributes.ATTACK_DAMAGE, 4.0)
+                // What an NPC moves at once it is off the ground: FlyingMoveControl reads this
+                // instead of MOVEMENT_SPEED there. Missing, it is not a slow NPC, it is a crash,
+                // because getAttributeValue on an attribute the entity does not have throws.
+                .add(Attributes.FLYING_SPEED, 0.3);
     }
 
     @Override
