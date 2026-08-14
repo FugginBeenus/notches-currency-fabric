@@ -1,9 +1,11 @@
 {
+  "format_version": "1.21.11",
+  "credit": "Made with Blockbench by FugginBeenus",
   "parent": "block/block",
   "textures": {
     "0": "notchcurrency:block/mailbox",
-    "particle": "notchcurrency:block/mailbox",
-    "1": "notchcurrency:block/mailbox_wall_flag"
+    "1": "notchcurrency:block/mailbox_wall_flag",
+    "particle": "notchcurrency:block/mailbox"
   },
   "elements": [
     {
@@ -213,16 +215,25 @@
     {
       "from": [
         11.0,
-        9.6,
-        10.75
+        6.25,
+        13.4
       ],
       "to": [
         11.3,
-        10.6,
-        14.75
+        10.25,
+        14.4
       ],
       "faces": {
-        "south": {
+        "up": {
+          "uv": [
+            2,
+            3,
+            3,
+            4
+          ],
+          "texture": "#1"
+        },
+        "down": {
           "uv": [
             2,
             2,
@@ -234,6 +245,15 @@
         "east": {
           "uv": [
             0,
+            1,
+            4,
+            2
+          ],
+          "texture": "#1"
+        },
+        "west": {
+          "uv": [
+            0,
             0,
             4,
             1
@@ -243,36 +263,18 @@
         "north": {
           "uv": [
             2,
-            3,
-            3,
-            4
-          ],
-          "texture": "#1"
-        },
-        "west": {
-          "uv": [
-            0,
+            2,
             1,
-            4,
-            2
+            6
           ],
           "texture": "#1"
         },
-        "down": {
+        "south": {
           "uv": [
             1,
             6,
             0,
             2
-          ],
-          "texture": "#1"
-        },
-        "up": {
-          "uv": [
-            2,
-            2,
-            1,
-            6
           ],
           "texture": "#1"
         }
@@ -281,16 +283,25 @@
     {
       "from": [
         11.0,
-        10.6,
-        13.75
+        6.25,
+        12.4
       ],
       "to": [
         11.3,
-        11.6,
-        14.75
+        7.25,
+        13.4
       ],
       "faces": {
-        "south": {
+        "up": {
+          "uv": [
+            4,
+            0,
+            5,
+            1
+          ],
+          "texture": "#1"
+        },
+        "down": {
           "uv": [
             3,
             2,
@@ -301,6 +312,15 @@
         },
         "east": {
           "uv": [
+            4,
+            1,
+            5,
+            2
+          ],
+          "texture": "#1"
+        },
+        "west": {
+          "uv": [
             3,
             3,
             4,
@@ -310,37 +330,19 @@
         },
         "north": {
           "uv": [
-            4,
-            0,
             5,
-            1
+            2,
+            4,
+            3
           ],
           "texture": "#1"
         },
-        "west": {
-          "uv": [
-            4,
-            1,
-            5,
-            2
-          ],
-          "texture": "#1"
-        },
-        "down": {
+        "south": {
           "uv": [
             3,
             5,
             2,
             4
-          ],
-          "texture": "#1"
-        },
-        "up": {
-          "uv": [
-            5,
-            2,
-            4,
-            3
           ],
           "texture": "#1"
         }
