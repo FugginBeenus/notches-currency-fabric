@@ -224,16 +224,13 @@ public final class NotchConfig {
         /** Whether caches turn up on their own under oak trees. */
         public boolean naturalSpawns = true;
         /**
-         * The roll, per player, each time the check runs: one in this many.
+         * The roll, once per chunk: one chunk in this many holds a cache.
          *
-         * <p>Written as odds rather than a percentage because the interesting values are all far
-         * below one percent, and "1 in 2000" says that better than "0.05".
+         * <p>Odds rather than a percentage, because every interesting value here is far below one
+         * percent. Only chunks with an oak in them can win, so the number of caches actually placed
+         * is lower than this suggests.
          */
-        public int     naturalOneIn = 100;
-        /** How often that roll happens, in seconds. */
-        public int     naturalIntervalSeconds = 300;
-        /** How far from a player a cache may appear. Far enough to find, near enough to load. */
-        public int     naturalRadius = 72;
+        public int     naturalOneIn = 3000;
         // Loot tuning examples (only used if your manager supports them)
         public int currencyStacksMin = 1;
         public int currencyStacksMax = 3;

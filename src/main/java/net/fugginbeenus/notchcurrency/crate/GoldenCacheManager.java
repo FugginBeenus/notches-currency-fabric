@@ -24,77 +24,100 @@ public final class GoldenCacheManager {
     // Config knobs (persisted)
     public static int GLOBAL_COOLDOWN_MIN = 60;
     public static boolean NATURAL_SPAWNS = true;
-    public static int NATURAL_ONE_IN = 100;
-    public static int NATURAL_INTERVAL_SECONDS = 300;
-    public static int NATURAL_RADIUS = 72;
+    public static int NATURAL_ONE_IN = 3000;
 
-    /** Game time of the last one that turned up on its own, so the cooldown means something. */
-    private static long lastNatural = Long.MIN_VALUE;
+
     public static int CURRENCY_STACKS_MIN = 1, CURRENCY_STACKS_MAX = 3;
     public static int CURRENCY_PER_STACK_MIN = 100, CURRENCY_PER_STACK_MAX = 250;
 
     private GoldenCacheManager() {}
 
     public static void init() {
-        ServerTickEvents.END_SERVER_TICK.register(GoldenCacheManager::tickNatural);
+        // 26 added a third argument saying whether the chunk is new. It is not needed here, since
+        // the roll is worked out from the seed rather than from when the chunk appeared.
+        //? if >=26.1 {
+        /*net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents.CHUNK_LOAD.register(
+                (world, chunk, newlyGenerated) -> onChunkLoad(world, chunk));
+        *///?} else {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents.CHUNK_LOAD.register(
+                GoldenCacheManager::onChunkLoad);
+        //?}
     }
 
+    // ChunkPos became a record at 26, so its coordinates are methods there and fields before it.
+    //? if >=26.1 {
+    /*private static int chunkX(net.minecraft.world.level.ChunkPos pos) { return pos.x(); }
+    private static int chunkZ(net.minecraft.world.level.ChunkPos pos) { return pos.z(); }
+    private static long chunkKey(net.minecraft.world.level.ChunkPos pos) { return pos.pack(); }
+    *///?} else {
+    private static int chunkX(net.minecraft.world.level.ChunkPos pos) { return pos.x; }
+    private static int chunkZ(net.minecraft.world.level.ChunkPos pos) { return pos.z; }
+    private static long chunkKey(net.minecraft.world.level.ChunkPos pos) { return pos.toLong(); }
+    //?}
+
     /**
-     * The only way a cache turns up without an admin putting it there.
+     * Decides, once and for all, whether a chunk holds a cache.
      *
-     * <p>Every so often, each player gets one roll. Win it and a cache is tucked under an oak
-     * somewhere near them, out of sight, for somebody to walk into later. The odds are meant to be
-     * poor: this is a thing you find twice a year and remember, not a thing you farm.
+     * <p>The answer comes from the world seed and the chunk's own coordinates, so it is the same
+     * every time it is asked and never has to be written down. A given chunk in a given world either
+     * is a cache chunk or is not, and always was.
      *
-     * <p>Near a player rather than sprinkled through the world at generation, because a server that
-     * has been running for months has all its terrain already, and a worldgen feature would never
-     * put a single one in any of it.
+     * <p>That is what makes this cheap. Nearly every chunk fails the roll on one multiply and a
+     * modulo and nothing else happens. Only the rare winner looks at any blocks, and only the rare
+     * winner is written to the world save, so that taking the cache and coming back does not hand
+     * out another.
+     *
+     * <p>Deliberately on load rather than on generation. Generation only ever covers new ground, and
+     * a world that has been played for months has all of its terrain already: a cache would never
+     * appear in any of the places people actually live.
      */
-    private static void tickNatural(MinecraftServer server) {
-        if (!NATURAL_SPAWNS || NATURAL_ONE_IN <= 0) return;
+    private static void onChunkLoad(ServerLevel world, net.minecraft.world.level.chunk.LevelChunk chunk) {
+        if (!NATURAL_SPAWNS || NATURAL_ONE_IN <= 1) return;
+        if (world != world.getServer().overworld()) return;
 
-        ServerLevel overworld = server.overworld();
-        if (overworld == null) return;
+        int cx = chunkX(chunk.getPos()), cz = chunkZ(chunk.getPos());
+        if (!isCacheChunk(world.getSeed(), cx, cz)) return;
 
-        long now = overworld.getGameTime();
-        int everyTicks = Math.max(20, NATURAL_INTERVAL_SECONDS * 20);
-        if (now % everyTicks != 0) return;
+        long key = chunkKey(chunk.getPos());
+        GoldenCacheSpawnState state = GoldenCacheSpawnState.get(world);
+        // Claimed first: a chunk that turns out to have no oak in it should not be searched again
+        // every time somebody walks past it.
+        if (!state.claim(key)) return;
 
-        // One anywhere on the server per cooldown, however many people are online. Otherwise a busy
-        // server would find them at a completely different rate to a quiet one.
-        long cooldown = (long) Math.max(0, GLOBAL_COOLDOWN_MIN) * 60L * 20L;
-        if (lastNatural != Long.MIN_VALUE && now >= lastNatural && now - lastNatural < cooldown) return;
-
-        for (var player : server.getPlayerList().getPlayers()) {
-            if (player.serverLevel() != overworld) continue;
-            if (RNG.nextInt(NATURAL_ONE_IN) != 0) continue;
-
-            BlockPos spot = findSpotUnderOak(overworld, player.blockPosition(), Math.max(16, NATURAL_RADIUS));
-            if (spot == null) continue;
-            if (!placeCacheBlock(overworld, spot)) continue;
-
-            lastNatural = now;
-            // Nothing is announced. The whole point is walking into one.
-            LOGGER.debug("A golden cache appeared at {} {} {}", spot.getX(), spot.getY(), spot.getZ());
-            return;
+        BlockPos spot = findSpotUnderOak(world, chunk);
+        if (spot == null) return;
+        if (placeCacheBlock(world, spot)) {
+            // Never announced. Walking into one is the whole point.
+            LOGGER.debug("A golden cache is hidden at {} {} {}", spot.getX(), spot.getY(), spot.getZ());
         }
     }
 
     /**
-     * A patch of forest floor with an oak over it, or null if none was found nearby.
+     * Whether this chunk of this world is one of the rare ones.
      *
-     * <p>Both parts are checked: leaves overhead and a trunk within a few blocks. Leaves alone would
-     * accept a lone block somebody placed on a roof, and a trunk alone would accept standing beside
-     * a tree rather than under it.
+     * <p>Mixed rather than added, so neighbouring chunks are not neighbouring answers and the caches
+     * do not come out in rows.
      */
-    private static BlockPos findSpotUnderOak(ServerLevel world, BlockPos near, int radius) {
-        for (int attempt = 0; attempt < 12; attempt++) {
-            int x = near.getX() + RNG.nextInt(radius * 2 + 1) - radius;
-            int z = near.getZ() + RNG.nextInt(radius * 2 + 1) - radius;
+    private static boolean isCacheChunk(long worldSeed, int cx, int cz) {
+        long h = worldSeed ^ (cx * 341873128712L) ^ (cz * 132897987541L);
+        h *= 0x9E3779B97F4A7C15L;
+        h ^= (h >>> 29);
+        return Math.floorMod(h, NATURAL_ONE_IN) == 0;
+    }
 
-            // Before anything else. Asking a world about a block in a chunk it does not have loaded
-            // is what would make this expensive, and it is the one cost here worth avoiding.
-            if (!world.hasChunkAt(new BlockPos(x, 64, z))) continue;
+    /**
+     * A patch of forest floor with an oak over it, somewhere in this chunk.
+     *
+     * <p>Walks the chunk's own columns, so nothing outside it is touched and no chunk is ever pulled
+     * in to answer. Runs only for a chunk that has already won the roll.
+     */
+    private static BlockPos findSpotUnderOak(ServerLevel world, net.minecraft.world.level.chunk.LevelChunk chunk) {
+        // Shifted rather than asked for, since the accessor moved too.
+        int baseX = chunkX(chunk.getPos()) << 4, baseZ = chunkZ(chunk.getPos()) << 4;
+
+        for (int attempt = 0; attempt < 24; attempt++) {
+            int x = baseX + RNG.nextInt(16);
+            int z = baseZ + RNG.nextInt(16);
 
             // The heightmap that ignores leaves, so this is the ground under a canopy rather than
             // the top of the tree.
@@ -108,8 +131,7 @@ public final class GoldenCacheManager {
                     || below.is(net.minecraft.world.level.block.Blocks.OAK_LOG)
                     || below.is(net.minecraft.world.level.block.Blocks.OAK_LEAVES)) continue;
 
-            // Leaves first: it is sixteen lookups and it rules out everywhere that is not under a
-            // tree, which is nearly everywhere. The trunk check only runs on what survives it.
+            // Leaves first: sixteen lookups, and it rules out everywhere that is not under a tree.
             if (hasOakAbove(world, ground) && hasOakTrunkNear(world, ground)) return ground;
         }
         return null;
@@ -166,8 +188,6 @@ public final class GoldenCacheManager {
         GLOBAL_COOLDOWN_MIN = Math.max(0, c.cooldownMinutes);
         NATURAL_SPAWNS = c.naturalSpawns;
         NATURAL_ONE_IN = Math.max(1, c.naturalOneIn);
-        NATURAL_INTERVAL_SECONDS = Math.max(1, c.naturalIntervalSeconds);
-        NATURAL_RADIUS = Math.max(16, c.naturalRadius);
         CURRENCY_STACKS_MIN = Math.max(0, c.currencyStacksMin);
         CURRENCY_STACKS_MAX = Math.max(CURRENCY_STACKS_MIN, c.currencyStacksMax);
         CURRENCY_PER_STACK_MIN = Math.max(1, c.currencyPerStackMin);
@@ -180,8 +200,6 @@ public final class GoldenCacheManager {
         c.cooldownMinutes     = GLOBAL_COOLDOWN_MIN;
         c.naturalSpawns          = NATURAL_SPAWNS;
         c.naturalOneIn           = NATURAL_ONE_IN;
-        c.naturalIntervalSeconds = NATURAL_INTERVAL_SECONDS;
-        c.naturalRadius          = NATURAL_RADIUS;
         c.currencyStacksMin   = CURRENCY_STACKS_MIN;
         c.currencyStacksMax   = CURRENCY_STACKS_MAX;
         c.currencyPerStackMin = CURRENCY_PER_STACK_MIN;
