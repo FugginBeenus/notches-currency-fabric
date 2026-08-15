@@ -94,6 +94,18 @@ public final class ShopCommands {
                                 )
                         )
 
+                        // /shop relink <id> - put the NPC you are looking at behind a shop of yours
+                        // that lost its shopkeeper. See relink() for why this is not automatic.
+                        .then(Commands.literal("relink")
+                                .then(Commands.argument("id", StringArgumentType.word())
+                                        .executes(ctx -> {
+                                            ServerPlayer p = ctx.getSource().getPlayer();
+                                            if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
+                                            return relink(p, StringArgumentType.getString(ctx, "id"));
+                                        })
+                                )
+                        )
+
                         // /shop browse - Browse all open shops
                         .then(Commands.literal("browse")
                                 .executes(ctx -> {
@@ -408,6 +420,51 @@ public final class ShopCommands {
                                 )
                         )
         );
+    }
+
+    /**
+     * Points a shop the player already owns at the NPC they are looking at.
+     *
+     * <p>A shop outlives its shopkeeper: the shop and everything in it is saved separately from the
+     * NPC. When an NPC was lost there was no way back to it, and placing a replacement built a
+     * second, empty shop, so the stock and takings read as deleted when they were only stranded.
+     *
+     * <p>Owner driven on purpose. An NPC standing in a chunk nobody has loaded cannot be told apart
+     * from a deleted one, so doing this automatically would sometimes take a shop off a shopkeeper
+     * that was merely asleep. The player knows which of theirs is gone. The server does not.
+     */
+    private static int relink(ServerPlayer p, String input) {
+        var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
+        UUID shopId = findShopByIdOrName(p, input);
+        if (shopId == null) return 0;
+
+        var shop = state.getShop(shopId);
+        if (shop == null || !p.getUUID().equals(shop.getOwnerId())) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("That isn't your shop.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        net.minecraft.world.entity.Entity target = NpcCommands.lookedAt(p);
+        if (!(target instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Look at the NPC you want running this shop, then run it again.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        if (!npc.canEdit(p)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("That isn't your NPC.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        var already = state.getShopByNpc(npc.getUUID());
+        if (already != null && !already.getShopId().equals(shopId)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("That NPC already runs \"" + already.getShopName() + "\". Use a different NPC.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        npc.setRole(net.fugginbeenus.notchcurrency.economy.npc.NpcRole.SHOP);
+        state.linkNpcToShop(npc.getUUID(), shopId);
+        state.markDirtyAndSave();
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("\"" + shop.getShopName() + "\" is now run by this NPC. Everything in it is exactly where you left it.").withStyle(ChatFormatting.GREEN));
+        return 1;
     }
 
     private static UUID findShopByIdOrName(ServerPlayer player, String input) {

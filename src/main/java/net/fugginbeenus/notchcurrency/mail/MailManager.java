@@ -16,23 +16,10 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Posting things to players and handing them over again.
- *
- * <p>Everything that owes a player something goes through here rather than dropping it in their lap,
- * because the player is usually not standing there when the debt is created. Auction sales, offline
- * trade offers and parcels from other players all post the same way.
- */
 public final class MailManager {
 
     private MailManager() {}
 
-    /**
-     * Puts something in a player's box.
-     *
-     * @return false if the box is full, in which case nothing was posted and the caller still owns
-     *         whatever it was trying to send
-     */
     public static boolean post(MinecraftServer server, UUID recipient, MailItem item) {
         MailState state = MailState.get(server);
         long now = server.overworld().getGameTime();
@@ -50,7 +37,6 @@ public final class MailManager {
         return true;
     }
 
-    /** Told once on login, so nothing sits forgotten in a box for a month. */
     public static void greet(ServerPlayer player) {
         int waiting = MailState.get(player.level().getServer()).count(player.getUUID());
         if (waiting <= 0) return;
@@ -59,23 +45,10 @@ public final class MailManager {
                 .append(Component.literal(" waiting in the mail.").withStyle(ChatFormatting.GRAY)));
     }
 
-    /**
-     * Hands over one entry, unwrapped.
-     *
-     * <p>This is the delivered-to-your-hands path, used by the mailman and by the commands. The
-     * mailbox does not come through here: it gives out sealed parcels the player opens themselves.
-     *
-     * <p>The coins and the goods are taken separately: money always fits, an item might not, and a
-     * player with one free slot should get the money and keep the goods rather than neither.
-     */
     public static boolean collect(ServerPlayer player, UUID itemId) {
         return collect(player, itemId, true);
     }
 
-    /**
-     * @param announce false when the caller is emptying the whole box and will sum it up itself.
-     *                 Thirty parcels announcing themselves one at a time is a wall of chat.
-     */
     public static boolean collect(ServerPlayer player, UUID itemId, boolean announce) {
         MailState state = MailState.get(player.level().getServer());
         MailItem item = state.take(player.getUUID(), itemId);
@@ -124,12 +97,6 @@ public final class MailManager {
         return true;
     }
 
-    /**
-     * Opens the Outbox tab.
-     *
-     * <p>The recipient list and any pre-selection go first: a menu opens a screen built by
-     * Minecraft, which cannot be handed arguments of ours, so both arrive as packets just before it.
-     */
     public static void openPost(ServerPlayer sender, UUID aimedAt) {
         sendRecipients(sender);
         if (aimedAt != null) {
@@ -140,12 +107,10 @@ public final class MailManager {
         MailPostScreenHandler.open(sender);
     }
 
-    /** Opens the Inbox tab. */
     public static void openInbox(ServerPlayer player) {
         MailInboxMenu.open(player);
     }
 
-    /** Everyone with a mailbox, so the sender has a list to choose from rather than typing a name. */
     public static void sendRecipients(ServerPlayer player) {
         var server = player.level().getServer();
         var known = MailState.get(server).knownMailboxes();
@@ -161,14 +126,6 @@ public final class MailManager {
                 player, NotchPackets.MAIL_RECIPIENTS, buf);
     }
 
-    /**
-     * Posts what is in the parcel slots to another player.
-     *
-     * <p>Everything in the slots goes into one parcel, so the recipient opens one thing rather than
-     * finding four entries with the same note on each. Anything the recipient's box will not hold
-     * stays with the sender rather than disappearing, which is the only honest thing to do with
-     * someone else's goods.
-     */
     public static void send(ServerPlayer sender, UUID recipient, String note, long coins,
                             MailPostScreenHandler parcel) {
         if (recipient == null) return;
@@ -224,7 +181,6 @@ public final class MailManager {
         sender.playSound(net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, 0.8F, 1.0F);
     }
 
-    /** One line for a whole box, rather than two per parcel. */
     public static void announceCollected(ServerPlayer player, int parcels, int items, long coins,
                                          boolean ranOutOfRoom) {
         if (parcels <= 0) {
@@ -257,7 +213,6 @@ public final class MailManager {
         }
     }
 
-    /** Empties the box as far as the player's inventory allows, unwrapped. */
     public static int collectAll(ServerPlayer player) {
         List<MailItem> waiting = MailState.get(player.level().getServer()).inbox(player.getUUID());
         int taken = 0;

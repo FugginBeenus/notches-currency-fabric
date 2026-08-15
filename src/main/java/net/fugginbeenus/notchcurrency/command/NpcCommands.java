@@ -152,7 +152,7 @@ public final class NpcCommands {
     }
 
     @Nullable
-    private static Entity lookedAt(ServerPlayer p) {
+    static Entity lookedAt(ServerPlayer p) {
         Vec3 start = p.getEyePosition();
         Vec3 dir = p.getViewVector(1.0f);
         Vec3 end = start.add(dir.scale(REACH));

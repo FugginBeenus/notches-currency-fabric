@@ -276,6 +276,27 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         setDirty();
     }
 
+    /**
+     * Shops this player owns that no living NPC is attached to.
+     *
+     * <p>Used to offer the owner a way back to a shop whose shopkeeper was lost. Same caveat as the
+     * sweep: an NPC in an unloaded chunk cannot be told from a deleted one, so this is a list to
+     * show somebody, not a list to act on.
+     */
+    public List<PlayerShop> shopsWithoutNpc(MinecraftServer server, UUID ownerId) {
+        List<PlayerShop> out = new java.util.ArrayList<>();
+        for (PlayerShop shop : getShopsByOwner(ownerId)) {
+            UUID npcId = shop.getLinkedNpcId();
+            if (npcId == null) { out.add(shop); continue; }
+            boolean found = false;
+            for (net.minecraft.server.level.ServerLevel level : server.getAllLevels()) {
+                if (level.getEntity(npcId) != null) { found = true; break; }
+            }
+            if (!found) out.add(shop);
+        }
+        return out;
+    }
+
     /** What a sweep found. Nothing is changed unless {@code apply} was set. */
     public record OrphanSweep(int missing, int unlinked) {}
 

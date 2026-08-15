@@ -712,6 +712,24 @@ public final class NotchNpcManager {
         ShopState state = ShopState.get(world);
         if (state.getShopByNpc(npc.getUUID()) != null) return;
         UUID ownerId = npc.getOwner() != null ? npc.getOwner() : fallbackOwner.getUUID();
+
+        // A shop outlives its shopkeeper. Somebody replacing an NPC they lost used to get a second,
+        // empty shop while the first sat there holding their stock and takings with nothing able to
+        // reach it, which reads exactly like the money having been deleted. Say so instead. It is
+        // only offered, not done: an NPC in an unloaded chunk looks the same as a deleted one from
+        // here, and the owner knows which of theirs is gone.
+        var stranded = state.shopsWithoutNpc(world.getServer(), ownerId);
+        if (!stranded.isEmpty()) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(fallbackOwner, Component.literal(
+                    "You have " + stranded.size() + " shop(s) with no shopkeeper. To put this NPC "
+                            + "behind one instead of opening an empty shop:").withStyle(ChatFormatting.YELLOW));
+            for (var s : stranded) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(fallbackOwner, Component.literal(
+                        "  /shop relink " + s.getShopId().toString().substring(0, 8)
+                                + "   (" + s.getShopName() + ")").withStyle(ChatFormatting.GRAY));
+            }
+        }
+
         String ownerName = npc.getOwnerName().isEmpty() ? fallbackOwner.getName().getString() : npc.getOwnerName();
         PlayerShop shop = new PlayerShop(ownerId, ownerName, ownerName + "'s Shop");
         shop.setLinkedNpcId(npc.getUUID());
