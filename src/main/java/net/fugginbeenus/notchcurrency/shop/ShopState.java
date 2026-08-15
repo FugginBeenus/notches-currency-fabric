@@ -276,39 +276,46 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         setDirty();
     }
 
-    public int cleanupOrphans(net.minecraft.server.level.ServerLevel world) {
-        int cleaned = 0;
-        List<UUID> orphanedNpcs = new java.util.ArrayList<>();
+    /** What a sweep found. Nothing is changed unless {@code apply} was set. */
+    public record OrphanSweep(int missing, int unlinked) {}
 
-        // Find NPC links where the NPC no longer exists
+    /**
+     * Finds shops whose linked NPC could not be located, and optionally unlinks them.
+     *
+     * <p>Two things this deliberately does not do. It does not look in one dimension: an NPC in the
+     * nether is not a missing NPC. And it does not unlink on its own, because a missing NPC and an
+     * NPC standing in an unloaded chunk are the same thing from here. There is no way to tell them
+     * apart without loading the whole world, so the sweep reports and the operator decides.
+     *
+     * <p>Unlinking is not reversible from in game. Getting it wrong on a market district that
+     * happened to be unloaded would cut every shop loose from its shopkeeper at once.
+     */
+    public OrphanSweep cleanupOrphans(MinecraftServer server, boolean apply) {
+        List<UUID> missing = new java.util.ArrayList<>();
+
         for (var entry : npcToShop.entrySet()) {
             UUID npcId = entry.getKey();
-            UUID shopId = entry.getValue();
-
-            // Check if NPC exists in world
-            if (world.getEntity(npcId) == null) {
-                orphanedNpcs.add(npcId);
-
-                // Mark the shop as unlinked
-                PlayerShop shop = shops.get(shopId);
-                if (shop != null && npcId.equals(shop.getLinkedNpcId())) {
-                    shop.setLinkedNpcId(null);
-                    LOGGER.info("Unlinked orphaned NPC {} from shop '{}'", npcId, shop.getShopName());
-                }
-                cleaned++;
+            boolean found = false;
+            for (net.minecraft.server.level.ServerLevel level : server.getAllLevels()) {
+                if (level.getEntity(npcId) != null) { found = true; break; }
             }
+            if (!found) missing.add(npcId);
         }
 
-        // Remove orphaned NPC mappings
-        for (UUID npcId : orphanedNpcs) {
+        if (!apply) return new OrphanSweep(missing.size(), 0);
+
+        int unlinked = 0;
+        for (UUID npcId : missing) {
+            UUID shopId = npcToShop.get(npcId);
+            PlayerShop shop = shopId == null ? null : shops.get(shopId);
+            if (shop != null && npcId.equals(shop.getLinkedNpcId())) {
+                shop.setLinkedNpcId(null);
+                LOGGER.info("Unlinked NPC {} from shop '{}' (operator confirmed)", npcId, shop.getShopName());
+            }
             npcToShop.remove(npcId);
+            unlinked++;
         }
-
-        if (cleaned > 0) {
-            setDirty();
-            LOGGER.info("Cleaned up {} orphaned NPC links", cleaned);
-        }
-
-        return cleaned;
+        if (unlinked > 0) setDirty();
+        return new OrphanSweep(missing.size(), unlinked);
     }
 }

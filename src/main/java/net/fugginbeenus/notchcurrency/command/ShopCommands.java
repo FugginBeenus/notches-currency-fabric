@@ -373,24 +373,38 @@ public final class ShopCommands {
                                         )
                                 )
 
-                                // /shop admin cleanup - Clean up orphaned NPC links (use with caution)
+                                // /shop admin cleanup reports. /shop admin cleanup confirm acts.
+                                //
+                                // It used to act straight away, and it decided an NPC was gone by
+                                // failing to find it in the one dimension the operator was standing
+                                // in. An NPC in an unloaded chunk looks exactly like a deleted one
+                                // from there, so running this while a market district happened to be
+                                // unloaded would cut every shop loose from its shopkeeper at once,
+                                // with no way back in game.
                                 .then(Commands.literal("cleanup")
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
                                             var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
+                                            var sweep = state.cleanupOrphans(ctx.getSource().getServer(), false);
 
-                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("⚠ Running orphan cleanup...").withStyle(ChatFormatting.YELLOW));
-                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Note: Only NPCs in loaded chunks will be detected!").withStyle(ChatFormatting.GRAY));
-
-                                            int cleaned = state.cleanupOrphans(p.serverLevel());
-
-                                            if (cleaned > 0) {
-                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Cleaned up " + cleaned + " orphaned NPC links.").withStyle(ChatFormatting.GREEN));
-                                            } else {
-                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("No orphaned links found.").withStyle(ChatFormatting.GREEN));
+                                            if (sweep.missing() == 0) {
+                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Every shop's NPC was found. Nothing to do.").withStyle(ChatFormatting.GREEN));
+                                                return 1;
                                             }
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(sweep.missing() + " shop(s) have an NPC I could not find.").withStyle(ChatFormatting.YELLOW));
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("That includes NPCs standing in chunks nobody has loaded, which are fine. Load the area and run this again before you act on it.").withStyle(ChatFormatting.GRAY));
+                                            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("If you are sure: /shop admin cleanup confirm. This cannot be undone in game.").withStyle(ChatFormatting.GRAY));
                                             return 1;
                                         })
+                                        .then(Commands.literal("confirm")
+                                                .executes(ctx -> {
+                                                    ServerPlayer p = ctx.getSource().getPlayer();
+                                                    var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
+                                                    var sweep = state.cleanupOrphans(ctx.getSource().getServer(), true);
+                                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Unlinked " + sweep.unlinked() + " shop(s) from a missing NPC. The shops and everything in them are untouched.").withStyle(ChatFormatting.GREEN));
+                                                    return 1;
+                                                })
+                                        )
                                 )
                         )
         );

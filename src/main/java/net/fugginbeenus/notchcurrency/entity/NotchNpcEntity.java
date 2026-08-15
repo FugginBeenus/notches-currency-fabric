@@ -1440,6 +1440,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
         super.readAdditionalSaveData(in);
+        // Re-assert it every load. Vanilla reads PersistenceRequired straight out of the tag, so an
+        // NPC saved by a version of this mod that never set the flag comes back with it false and
+        // quietly loses the thing that marks it as never-cull. Setting it in the constructor is not
+        // enough: loading happens after.
+        this.setPersistenceRequired();
         readConfig(net.fugginbeenus.notchcurrency.compat.Nbt.readAll(in));
     }
     *///?} else {
@@ -1452,6 +1457,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
+        // Re-assert it every load. Vanilla reads PersistenceRequired straight out of the tag, so an
+        // NPC saved by a version of this mod that never set the flag comes back with it false and
+        // quietly loses the thing that marks it as never-cull. Setting it in the constructor is not
+        // enough: loading happens after.
+        this.setPersistenceRequired();
         readConfig(nbt);
     }
     //?}
