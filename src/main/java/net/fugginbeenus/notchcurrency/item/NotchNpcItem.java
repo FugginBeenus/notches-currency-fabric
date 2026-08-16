@@ -46,21 +46,15 @@ public class NotchNpcItem extends Item {
 
         ItemStack stack = context.getItemInHand();
         if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
-            // Restore a packed NPC (from "Pick up").
             npc.readFromItem(StackData.getCompound(stack, NotchNpcManager.ITEM_TAG));
         } else if (player != null) {
-            // Fresh blank NPC: the placer owns it.
             npc.setOwner(player.getUUID(), player.getName().getString());
             npc.setCustomName(Component.literal("NPC"));
             npc.setCustomNameVisible(true);
         }
-
-        // Home (the wander leash point) is wherever the NPC is placed.
         npc.setHome(pos);
-
         sw.addFreshEntity(npc);
 
-        // Re-establish the shop link if this NPC carries the SHOP role.
         if (npc.getRole() == NpcRole.SHOP && player instanceof ServerPlayer sp) {
             NotchNpcManager.ensureShopForNpc(sw, npc, sp);
         }
@@ -77,8 +71,6 @@ public class NotchNpcItem extends Item {
     }
 
     @Override
-    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
-    // a list, which is handed over in one go, ahead of whatever the superclass adds.
     //? if >=1.21.11 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
                                 net.minecraft.world.item.component.TooltipDisplay display,

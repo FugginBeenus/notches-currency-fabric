@@ -29,13 +29,10 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     private static final int STATUS_Y = 78, BAL_Y = 90;
     private static final int FIELD_X = 46, FIELD_Y = 108, FIELD_W = 140, FIELD_H = 14;
     private static final int SPIN_X = 14, SPIN_Y = 126, SPIN_W = 172, SPIN_H = 18;
-
     private static final long MIN_SPIN_MS = 900L;
     private static final long REEL_STAGGER_MS = 240L;
     private static final long MAX_WAIT_MS = 5000L;
-
     private EditBox betField;
-
     private boolean spinning;
     private long spinStartMs;
     private int lastSpinIdSeen;
@@ -44,7 +41,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     private boolean hasShown;
     private long shownWin;
     private long frozenBalance;
-
     private String errorMsg;
     private long errorUntilMs;
 
@@ -100,7 +96,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         }
         if (!spinning && hasShown && shownWin > 0) drawWinGlow(ctx, x, y, now, jackpotShown);
 
-        // Status line: error > result.
         if (errorMsg != null && now < errorUntilMs) {
             NotchWidgets.centerText(ctx, this.font, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, false);
         } else if (!spinning && hasShown) {
@@ -128,8 +123,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         } else {
             NotchWidgets.primaryButton(ctx, this.font, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "SPIN", spinHover);
         }
-
-        // Paytable: 3-of-a-kind payouts.
         NotchWidgets.divider(ctx, x + 8, y + 148, W - 16);
         NotchWidgets.centerText(ctx, this.font, "3-in-a-row pays:", x + W / 2, y + 152, NotchTheme.TEXT_MUTED, false);
         SlotSymbol[] syms = SlotSymbol.values();
@@ -141,14 +134,10 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
             NotchWidgets.centerText(ctx, this.font, mult, cx, y + 180, NotchTheme.TEXT_DARK, false);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
-
-    // ---- reel state / animation ----
 
     private int[] computeReels() {
         int count = SlotSymbol.values().length;
@@ -214,8 +203,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
-    // ---- cabinet decoration ----
-
     private void drawFrame(GuiGraphics ctx, int x, int y) {
         int x1 = x + FRAME_X1, y1 = y + FRAME_Y1, x2 = x + FRAME_X2, y2 = y + FRAME_Y2;
         ctx.fill(x1 - 1, y1 - 1, x2 + 1, y2 + 1, NotchTheme.OUTLINE);
@@ -269,8 +256,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         }
     }
 
-    // ---- input ----
-
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
@@ -286,7 +271,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // no default labels
     }
 
     //? if >=1.21.11 {
@@ -320,7 +304,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
                 playSnd(SoundEvents.NOTE_BLOCK_BASS.value(), 0.6f);
                 return true;
             }
-            // Valid bet: start the spin.
             spinning = true;
             spinStartMs = System.currentTimeMillis();
             lastSpinIdSeen = menu.prop(SlotMachineScreenHandler.P_SPINID);
@@ -358,7 +341,6 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, betField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -367,16 +349,13 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

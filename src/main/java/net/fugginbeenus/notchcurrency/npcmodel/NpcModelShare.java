@@ -12,31 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-/**
- * The server's side of handing custom models out and taking them in.
- *
- * <p>On join a player is told what this server has, as a name and a fingerprint each. They ask for
- * whatever they are missing, and it comes back in chunks. A client that already has a model says
- * nothing and downloads nothing, which is what keeps joining a server you play on every day free of
- * charge.
- *
- * <p><b>Nothing is ever pushed at a player already in the world.</b> Applying a model means
- * reloading resources, and that is a visible hitch in somebody else's game. Doing it because an
- * operator pressed a button makes their game interruptible on demand, which is not a thing to hand
- * out. Models land at the next join, where a reload is expected, or when a player asks for them.
- */
 public final class NpcModelShare {
 
     private NpcModelShare() {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcModels");
 
-    /**
-     * Tells a joining player what is on offer, and whether they may add to it.
-     *
-     * <p>Sent even when the list is empty, because the permission travels with it and somebody has
-     * to be able to share the first model. It is a handful of bytes.
-     */
     public static void greet(ServerPlayer player) {
         Map<String, String> hashes = NpcModelServerStore.hashes();
 
@@ -50,10 +31,9 @@ public final class NpcModelShare {
         Net.sendToClient(player, NotchPackets.NPC_MODEL_LIST, buf);
     }
 
-    /** Sends one model to the player who asked for it, in pieces. */
     public static void sendModelTo(ServerPlayer player, String id) {
         byte[] blob = NpcModelServerStore.blob(id);
-        if (blob == null) return; // asked for something this server does not have
+        if (blob == null) return;
 
         var begin = Net.buf();
         begin.writeByte(NpcModelStream.PHASE_BEGIN);
@@ -79,12 +59,6 @@ public final class NpcModelShare {
         Net.sendToClient(player, NotchPackets.NPC_MODEL_SEND, end);
     }
 
-    /**
-     * Takes a model an operator is uploading.
-     *
-     * <p>The permission is checked on every packet rather than once at the start, because the start
-     * is the easy one to skip.
-     */
     public static void receiveUpload(ServerPlayer player, int phase, String id, byte[] part,
                                      int announcedBytes) {
         if (!Perms.isOperator(player)) return;
@@ -115,17 +89,11 @@ public final class NpcModelShare {
                 LOGGER.info("{} uploaded NPC model {}", player.getName().getString(), id);
                 say(player, "Shared " + id + " with this server. Players get it when they next join.",
                         false);
-
-                // Deliberately nobody else. Handing it to players who are already in the world means
-                // reloading their resources, and a reload is a hitch in somebody's game that they
-                // did not ask for. Worse, it is a thing an operator could do over and over. It waits
-                // for their next join, where a reload is expected, or for them to ask for it.
             }
             default -> { }
         }
     }
 
-    /** A disconnecting player leaves nothing half received behind. */
     public static void forget(ServerPlayer player) {
         NpcModelStream.forget(player.getUUID().toString());
     }

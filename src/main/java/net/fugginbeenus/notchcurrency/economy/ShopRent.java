@@ -61,7 +61,7 @@ public final class ShopRent {
         boolean dirty = false;
 
         for (PlayerShop shop : state.getAllShops()) {
-            if (!shop.isOpen()) continue; // closed shops owe nothing
+            if (!shop.isOpen()) continue;
 
             long rent = baseRent + perListing * shop.getListings().size();
             if (rent <= 0) continue;

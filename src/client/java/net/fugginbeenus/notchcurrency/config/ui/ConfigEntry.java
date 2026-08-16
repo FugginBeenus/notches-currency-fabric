@@ -24,8 +24,6 @@ public abstract class ConfigEntry {
         return label.toLowerCase().contains(query) || category.toLowerCase().contains(query);
     }
 
-    /*types*/
-
     public static final class BoolEntry extends ConfigEntry {
         public boolean value;
         private final boolean def;

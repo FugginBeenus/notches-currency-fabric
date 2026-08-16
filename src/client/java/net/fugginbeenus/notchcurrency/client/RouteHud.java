@@ -64,7 +64,7 @@ public final class RouteHud implements HudRenderCallback {
         int x = (ctx.guiWidth() - w) / 2;
         int y = 6;
 
-        ctx.fill(x, y, x + w, y + h, 0x90101010); // translucent: the world stays visible
+        ctx.fill(x, y, x + w, y + h, 0x90101010);
         ctx.fill(x, y, x + w, y + 1, 0x60FFFFFF);
         ctx.fill(x, y + h - 1, x + w, y + h, 0x60000000);
 

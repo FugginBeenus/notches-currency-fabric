@@ -5,15 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * What bundles this game knows about, by id.
- *
- * <p>Filled by the client loader, which is where the files and the resource manager are. It lives on
- * the common side because the entity's animation choice needs to read it, and that code is shared.
- * On a dedicated server it simply stays empty, which callers treat the same as "no bundles".
- *
- * <p>Read from the render thread every frame, so a concurrent map rather than a plain one.
- */
 public final class NpcModelRegistry {
 
     private NpcModelRegistry() {}
@@ -25,7 +16,6 @@ public final class NpcModelRegistry {
         for (NpcModelBundle bundle : bundles) LOADED.put(bundle.id(), bundle);
     }
 
-    /** The bundle an NPC model id points at, or null for a built-in model or a missing bundle. */
     public static NpcModelBundle forModelId(String modelId) {
         String id = NpcModelBundle.bundleIdOf(modelId);
         return id == null ? null : LOADED.get(id);

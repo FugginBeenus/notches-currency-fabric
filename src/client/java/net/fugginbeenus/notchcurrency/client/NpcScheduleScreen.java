@@ -97,7 +97,6 @@ public class NpcScheduleScreen extends Screen {
             return;
         }
 
-        // Top row: the two switches that decide how much the schedule is allowed to do.
         toggleRow(ctx, px + 12, py + 22, 96, 40, "Schedule running", enabled, mouseX, mouseY);
         toggleRow(ctx, px + 172, py + 22, 106, 40, "Keep opening hours", enforceHours, mouseX, mouseY);
 
@@ -196,7 +195,6 @@ public class NpcScheduleScreen extends Screen {
                     Component.literal("Click to cycle.").withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        // The spot, and the repair prompt when there isn't one.
         String problem = e.problem();
         ctx.drawString(this.font, e.stance() == NpcStance.SLEEP ? "Bed" : "Spot",
                 x, py + 104, NotchTheme.TEXT_DARK, false);
@@ -222,7 +220,6 @@ public class NpcScheduleScreen extends Screen {
         }
 
         if (e.stance() == NpcStance.STAND) {
-            // Same slot the radius uses for Wander: only one of them is ever relevant at a time.
             ctx.drawString(this.font, "Faces", x, py + 138, NotchTheme.TEXT_DARK, false);
             boolean ccw = over(mouseX, mouseY, x + 60, py + 135, 18, 14);
             boolean cw = over(mouseX, mouseY, x + 158, py + 135, 18, 14);
@@ -340,7 +337,6 @@ public class NpcScheduleScreen extends Screen {
                 return true;
             }
             NotchWidgets.click();
-            // A new entry lands an hour after the last one, which is usually near where it's wanted.
             int start = entries.isEmpty() ? ScheduleEntry.ticksForClock(8, 0)
                     : (entries.get(entries.size() - 1).time() + 1000) % ScheduleEntry.DAY_LENGTH;
             entries.add(ScheduleEntry.of(start, NpcStance.STAND));
@@ -441,8 +437,6 @@ public class NpcScheduleScreen extends Screen {
         }
         if (over(mx, my, x, py + 178, 146, 14)) {
             NotchWidgets.click();
-            // Hands the edited list straight back to this screen. The schedule is saved in one
-            // piece, so an entry's actions have no business making their own trip to the server.
             final int editing = selected;
             if (this.minecraft != null) {
                 this.minecraft.setScreen(new NpcScheduleActionsScreen(this, e.clock(), e.onBegin(),
@@ -497,24 +491,19 @@ public class NpcScheduleScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

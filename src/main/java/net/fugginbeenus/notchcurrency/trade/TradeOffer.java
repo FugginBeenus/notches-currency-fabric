@@ -14,11 +14,11 @@ public class TradeOffer {
     private final UUID id;
     private final UUID creatorUuid;
     private final String creatorName;
-    private final String targetName;   // lowercase; "" = open to anyone
-    private final List<ItemStack> offeredItems; // escrowed stacks handed to the accepter
-    private final long offeredCoins;   // escrowed coins handed to the accepter
-    private final long priceCoins;     // coins the accepter pays the creator
-    private final List<ItemStack> requestedItems; // items the accepter pays (samples; count = required)
+    private final String targetName;
+    private final List<ItemStack> offeredItems;
+    private final long offeredCoins;
+    private final long priceCoins;
+    private final List<ItemStack> requestedItems;
     private final long createdTime;
 
     public TradeOffer(UUID id, UUID creatorUuid, String creatorName, String targetName,
@@ -102,7 +102,6 @@ public class TradeOffer {
     public static TradeOffer fromNbt(CompoundTag t) {
         List<ItemStack> items = readStacks(t, "OfferedList");
         if (items.isEmpty() && t.contains("Offered")) {
-            // Pre-grid offers stored a single stack.
             ItemStack st = StackData.readStack(t.getCompound("Offered"));
             if (!st.isEmpty()) items.add(st);
         }

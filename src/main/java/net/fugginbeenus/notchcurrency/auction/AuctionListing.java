@@ -11,15 +11,13 @@ public final class AuctionListing {
     public final UUID sellerUuid;
     public final String sellerName;
     public final ItemStack stack;
-    public final long price;          // starting / buyout price in Notch currency
+    public final long price;
     public final long createdGameTime;
     public final long expiresGameTime;
-    public final String category;     // e.g. "blocks", "gear", etc.
-
-    // --- bidding state ---
-    public long   highestBid;          // 0 if no bids
-    public UUID   highestBidderUuid;   // null if no bids
-    public String highestBidderName;   // null or empty if no bids
+    public final String category;
+    public long   highestBid;
+    public UUID   highestBidderUuid;
+    public String highestBidderName;
 
     public AuctionListing(UUID id,
                           UUID sellerUuid,
@@ -37,8 +35,6 @@ public final class AuctionListing {
         this.createdGameTime = createdGameTime;
         this.expiresGameTime = expiresGameTime;
         this.category = category;
-
-        // default: no bids yet
         this.highestBid = 0L;
         this.highestBidderUuid = null;
         this.highestBidderName = null;
@@ -60,8 +56,6 @@ public final class AuctionListing {
         tag.putLong("Expires", expiresGameTime);
         tag.putString("Category", category);
         tag.put("Stack", StackData.writeStack(stack));
-
-        // bidding fields
         tag.putLong("HighestBid", highestBid);
         if (highestBidderUuid != null) {
             net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(tag, "HighestBidderUuid", highestBidderUuid);
@@ -86,7 +80,6 @@ public final class AuctionListing {
                 id, seller, sellerName, stack, price, created, expires, category
         );
 
-        // bidding fields (backwards-compatible if absent)
         if (tag.contains("HighestBid", Tag.TAG_LONG)) {
             listing.highestBid = tag.getLong("HighestBid");
         }

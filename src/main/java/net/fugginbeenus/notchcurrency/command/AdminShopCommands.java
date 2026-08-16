@@ -27,7 +27,6 @@ public final class AdminShopCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("adminshop")
-                // ---- admin setup ----
                 .then(Commands.literal("create")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("name", StringArgumentType.greedyString())
@@ -106,7 +105,6 @@ public final class AdminShopCommands {
                                             return 0;
                                         }))))
 
-                // ---- player-facing ----
                 .then(Commands.literal("open")
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> {

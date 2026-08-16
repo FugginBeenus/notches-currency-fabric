@@ -12,24 +12,14 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-/**
- * Everything installed, one per row, with a way to get rid of each.
- *
- * <p>A list rather than a control that cycles through them: with a handful of models installed,
- * clicking through them one at a time to find the one to remove is worse the more you have, which
- * is exactly backwards.
- */
 public class NpcModelManageScreen extends Screen {
 
     private static final int W = 300, H = 186;
     private static final int LIST_X = 12, LIST_Y = 34, ROW_H = 18, VISIBLE = 6;
     private static final int REMOVE_W = 60, SHARE_W = 52;
-
     private final Screen parent;
-
     private int px, py;
     private int scroll;
-    /** Which row has been asked about, since there is no undo and one click is too few. */
     private String confirming = "";
     private String status = "";
     private boolean statusIsError;
@@ -48,25 +38,15 @@ public class NpcModelManageScreen extends Screen {
     private List<NpcModelBundle> installed() {
         return NpcModelRegistry.all();
     }
-
     private int rowY(int i) {
         return py + LIST_Y + i * ROW_H;
     }
-
     private int removeX() {
         return px + W - LIST_X - REMOVE_W;
     }
-
     private int shareX() {
         return removeX() - SHARE_W - 4;
     }
-
-    /**
-     * Whether to offer Share at all: on a server, and only to somebody who can run commands.
-     *
-     * <p>Only decides the button. The server checks again on every packet, since a button that is
-     * not drawn is not a permission.
-     */
     private boolean canShare() {
         return NpcModelDownloads.mayShare();
     }
@@ -143,7 +123,6 @@ public class NpcModelManageScreen extends Screen {
         //?}
     }
 
-    /** The line under the name: who made it, and whether it moves. */
     private String detail(NpcModelBundle bundle) {
         StringBuilder line = new StringBuilder();
         if (!bundle.author().isBlank()) line.append("by ").append(bundle.author()).append("  ");
@@ -210,7 +189,6 @@ public class NpcModelManageScreen extends Screen {
         //?}
     }
 
-    /** Asks first, then does it. The folder goes and there is no getting it back. */
     private void remove(NpcModelBundle bundle) {
         if (!bundle.id().equals(confirming)) {
             confirming = bundle.id();
@@ -233,7 +211,6 @@ public class NpcModelManageScreen extends Screen {
     private void openImportFolder() {
         try {
             java.nio.file.Files.createDirectories(NpcModelLoader.importDir());
-            // Util moved package at 1.21.11, not at 26 like most of the rest.
             //? if >=1.21.11 {
             /*net.minecraft.util.Util.getPlatform().openPath(NpcModelLoader.importDir());
             *///?} else {

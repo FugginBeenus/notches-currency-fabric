@@ -23,15 +23,11 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     private static final int IN_Y = 34, MINE_Y = 152, ROW_STEP = 21;
 
     private static ItemStack coin;
-
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
 
-    // Action ids (mirror the packet).
     private static final int ACTION_ACCEPT = 0, ACTION_CANCEL = 1;
 
     public TradeOffersScreen(TradeOffersScreenHandler handler, Inventory inv, Component title) {
@@ -76,7 +72,6 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         boolean hover = over(mouseX, mouseY, x + ROW_X, ry, ROW_W, ROW_H);
         NotchWidgets.button(ctx, x + ROW_X, ry, ROW_W, ROW_H, hover, false);
 
-        // The give side: attached coins, then up to two item stacks, then a "+N" for the rest.
         int gx = x + ROW_X + 4;
         if (r.giveCoins() > 0) {
             ctx.renderItem(coin(), gx, ry + 2);
@@ -98,7 +93,6 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
 
         NotchWidgets.arrowRight(ctx, x + ROW_X + 86, ry + 6, NotchTheme.TEXT_MUTED);
 
-        // What they want back: coins, then up to two item stacks, then a "+N" for the rest.
         int ix = x + ROW_X + 106;
         if (r.price() > 0) {
             ctx.renderItem(coin(), ix, ry + 2);
@@ -142,7 +136,6 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8);
 
-        // Incoming header + pager.
         ctx.drawString(this.font, "OFFERS FOR YOU", x + 10, y + 24, NotchTheme.TEXT_DARK, false);
         int pageCount = menu.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
         if (pageCount > 1) {
@@ -180,9 +173,7 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
                     x + W / 2, y + MINE_Y + 14, NotchTheme.TEXT_MUTED, false);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -213,7 +204,6 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     }
 
     private boolean tooltipFor(GuiGraphics ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
-        // Only over the row body: the Accept/Cancel button explains itself.
         if (r == null || !over(mouseX, mouseY, leftPos + ROW_X, ry, ROW_W - 58, ROW_H)) return false;
         List<Component> lines = new ArrayList<>();
         lines.add(Component.literal(mine ? "They receive:" : "You receive:").withStyle(ChatFormatting.GRAY));
@@ -290,16 +280,14 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
+
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

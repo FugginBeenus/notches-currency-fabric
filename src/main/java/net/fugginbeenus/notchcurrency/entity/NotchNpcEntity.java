@@ -50,27 +50,20 @@ import java.util.UUID;
 public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public enum OwnerType { PLAYER, SERVER }
-
     public enum Behavior { STATIONARY, WANDER, FOLLOW_OWNER, PATROL, GUARD }
-
     public enum DialogueMode { WINDOW, CHAT }
 
     private static final String IDLE_ANIM = "animation.notch_npc.idle";
     private static final String WALK_ANIM = "animation.notch_npc.walk";
-    /** The flourishes, with how long one pass of each takes in ticks. */
     private static final String[] SPECIAL_ANIMS = {
             "animation.notch_npc.special_idle1",
             "animation.notch_npc.special_idle2",
             "animation.notch_npc.special_idle3",
     };
     private static final int[] SPECIAL_TICKS = {215, 341, 234};
-    /** How often a lively NPC considers doing something other than standing there. */
     private static final int FLOURISH_EVERY = 600;
-    /** How long a custom flourish is held, since a bundle does not say how long its clips run. */
     private static final int BUNDLE_SPECIAL_TICKS = 200;
     private final AnimatableInstanceCache geoCache = net.fugginbeenus.notchcurrency.compat.Geo.cache(this);
-
-    // Model + skin identifiers.
     public static final String MODEL_HUMANOID = "humanoid";
     public static final String MODEL_APPLY = "apply";
     public static final String SKIN_PRESET = "preset";
@@ -78,7 +71,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public static final String SKIN_URL = "url";
     public static final String SKIN_VARIANT = "variant";
 
-    // Synced appearance (so the client renderer reflects edits live).
     private static final EntityDataAccessor<String> MODEL =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> SKIN_TYPE =
@@ -108,10 +100,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public static final int POSE_SITTING = 1;
     public static final int POSE_SNEAKING = 2;
     public static final int POSE_SLEEPING = 3;
-    public static final int POSE_CHILLING = 4; // reclined sit
-    public static final int POSE_PRONE = 5;    // lying face-down (vanilla swim pose)
-    public static final int POSE_WAVING = 6;   // arm raised in greeting
-    public static final int POSE_CUSTOM = 7;   // per-part rotations from the pose editor
+    public static final int POSE_CHILLING = 4;
+    public static final int POSE_PRONE = 5;
+    public static final int POSE_WAVING = 6;
+    public static final int POSE_CUSTOM = 7;
 
     private static final EntityDataAccessor<CompoundTag> CUSTOM_POSE =
             SynchedEntityData.defineId(NotchNpcEntity.class,
@@ -120,12 +112,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private static final EntityDataAccessor<Integer> POSE_ANIM =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
 
-    /**
-     * A clip name to play instead of the built-in idle, or empty to work it out automatically.
-     *
-     * <p>A name rather than a number, because the whole point is that the mod does not know what a
-     * resource pack will call the motions it adds.
-     */
     private static final EntityDataAccessor<String> CUSTOM_CLIP =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
 
@@ -135,31 +121,28 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public float clientSwingStartAge = -1000f;
     private int lastSeenAttackPulse = -1;
 
-    public static final int ANIM_STATUE = 0;  // truly frozen (vanilla's idle arm bob removed too)
-    public static final int ANIM_BREATHE = 1; // the normal vanilla idle look (default)
-    public static final int ANIM_LIVELY = 2;  // breathing chest + body sway + slow head glances
+    public static final int ANIM_STATUE = 0;
+    public static final int ANIM_BREATHE = 1;
+    public static final int ANIM_LIVELY = 2;
     public static final int ANIM_COUNT = 3;
 
     @Nullable private float[] customPoseCache = null;
 
-    // Config (persisted in NBT; also packed into the NPC item on pick-up).
     private NpcRole role = NpcRole.NONE;
     @Nullable private UUID roleTarget = null;
     private OwnerType ownerType = OwnerType.PLAYER;
     @Nullable private UUID owner = null;
     private String ownerName = "";
 
-    // Behavior (movement preset + home leash). Home is set where the NPC is placed.
     private Behavior behavior = Behavior.STATIONARY;
     private int wanderRadius = 8;
-    private float patrolSpeed = 0.9f; // stroll 0.6 / walk 0.9 / jog 1.2
-    private int patrolWaitTicks = 0;  // pause at each waypoint (game ticks, 0 = none)
+    private float patrolSpeed = 0.9f;
+    private int patrolWaitTicks = 0;
     @Nullable private net.minecraft.core.BlockPos homePos = null;
     private final java.util.List<net.minecraft.core.BlockPos> waypoints = new java.util.ArrayList<>();
     private final java.util.List<net.minecraft.world.entity.ai.goal.Goal> behaviorGoals = new java.util.ArrayList<>();
     private final java.util.List<net.minecraft.world.entity.ai.goal.Goal> behaviorTargetGoals = new java.util.ArrayList<>();
 
-    // Branching dialogue. Empty = interaction goes straight to the role.
     private net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree dialogue =
             new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
     private DialogueMode dialogueMode = DialogueMode.WINDOW;
@@ -167,16 +150,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             new net.fugginbeenus.notchcurrency.npc.action.NpcActions();
     private String farewellText = "";
 
-    // Stats: protection toggle (silent/glowing/gravity/nameplate ride on vanilla entity flags).
     private boolean protectedNpc = true;
     private boolean opensDoors = false;
     private boolean leashable = false;
-    private boolean pushable = false; // NPCs hold their ground by default (not shoved around)
-    private boolean hostileToPlayers = false; // actively hunts non-owner players
-    private boolean fightsBack = false;       // revenge-targets whatever hurts it
-    private boolean protectOwner = false;     // fights whoever its owner is fighting
-    private boolean attackMonsters = false;   // hunts hostiles without needing the Guard behavior
-    private boolean fightRivalFactions = false; // takes on anyone flying a different faction's colours
+    private boolean pushable = false;
+    private boolean hostileToPlayers = false;
+    private boolean fightsBack = false;
+    private boolean protectOwner = false;
+    private boolean attackMonsters = false;
+    private boolean fightRivalFactions = false;
     private String factionId = "";
     private int actionSweepVersion = 0;
     private String voiceSound = "";
@@ -186,44 +168,31 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule();
     private int scheduleActive = -1;
 
-    // A running schedule steers the NPC through these rather than through the configured behaviour,
-    // home and radius. Driving the saved fields directly would have the schedule quietly rewriting
-    // what the owner set on the Moves tab, and switching the schedule off would leave that damage
-    // behind. Kept out of NBT on purpose: they are derived, and they rebuild themselves on load.
     @Nullable private Behavior scheduleBehavior = null;
     private int poseBeforeSchedule = -1;
     @Nullable private net.minecraft.core.BlockPos scheduleHome = null;
     private int scheduleRadius = 8;
-    private int regen = 0; // half-hearts healed every 5 seconds
+    private int regen = 0;
     @Nullable private net.minecraft.world.entity.ai.goal.Goal doorGoal = null;
 
-    // While a player is interacting, the NPC holds still and faces them (see TalkGoal). Refreshed on
-    // each interaction; expires so it resumes wandering once the player leaves or a few seconds pass.
     @Nullable private java.util.UUID talkingTo = null;
     private int talkingTicks = 0;
 
-    // Proximity bookkeeping. Both are created only for NPCs that actually use the trigger, so the
-    // ordinary NPC carries two null references and nothing else.
     @Nullable private java.util.Set<java.util.UUID> proximityInside = null;
     @Nullable private java.util.Map<java.util.UUID, Integer> proximityFired = null;
     @Nullable private int[] lastFiredAge = null;
     private static final int PROXIMITY_SCAN_TICKS = 10;
     private static final int PROXIMITY_RECHARGE_TICKS = 200;
 
-    // Moves-tab granularity.
-    private String followPlayerName = ""; // blank = follow the owner
+    private String followPlayerName = "";
     private boolean avoidMonsters = false;
-    private boolean watchPlayers = true; // the look-at-passers-by goal
-    // No initializer: initGoals() runs from the super constructor and sets this before
-    // field initializers would run (an "= null" here would wipe the reference).
+    private boolean watchPlayers = true;
     @Nullable private LookAtPlayerGoal lookGoal;
 
-    // Display rule: when the NPC exists to be seen. Hidden = invisible + non-interactive.
     public static final int VIS_ALWAYS = 0, VIS_DAY = 1, VIS_NIGHT = 2;
     private int visibility = VIS_ALWAYS;
-    private boolean manualInvisible = false; // the stats-screen Invisible toggle
+    private boolean manualInvisible = false;
 
-    // Handler id for the CUSTOM role (registered by other mods via NotchNpcApi).
     private String customRoleId = "";
 
     public NotchNpcEntity(EntityType<? extends NotchNpcEntity> type, Level world) {
@@ -248,7 +217,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SUBTITLE, "");
         builder.define(NPC_POSE, POSE_STANDING);
         builder.define(CUSTOM_POSE, new CompoundTag());
-        builder.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        builder.define(POSE_ANIM, ANIM_BREATHE);
         builder.define(CUSTOM_CLIP, "");
         builder.define(ATTACK_PULSE, 0);
     }
@@ -268,13 +237,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SUBTITLE, "");
         this.entityData.define(NPC_POSE, POSE_STANDING);
         this.entityData.define(CUSTOM_POSE, new CompoundTag());
-        this.entityData.define(POSE_ANIM, ANIM_BREATHE); // alive-by-default
+        this.entityData.define(POSE_ANIM, ANIM_BREATHE);
         this.entityData.define(CUSTOM_CLIP, "");
         this.entityData.define(ATTACK_PULSE, 0);
     }
     //?}
-
-    // 1.21.11 handed the server level to every combat hook rather than making them dig it back out.
     //? if >=1.21.11 {
     /*@Override
     public boolean doHurtTarget(net.minecraft.server.level.ServerLevel level,
@@ -286,7 +253,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         boolean hit = super.doHurtTarget(target);
     //?}
         if (hit && !this.level().isClientSide) {
-            // Pulse the swing to clients (wraps safely: the client only watches for CHANGE).
             this.entityData.set(ATTACK_PULSE, this.entityData.get(ATTACK_PULSE) + 1);
         }
         return hit;
@@ -310,7 +276,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
         if (ATTACK_PULSE.equals(data)) {
             int pulse = this.entityData.get(ATTACK_PULSE);
-            // First sync just sets the baseline; a CHANGE afterwards means a fresh melee hit.
             if (lastSeenAttackPulse >= 0 && pulse != lastSeenAttackPulse) {
                 clientSwingStartAge = this.tickCount;
             }
@@ -346,7 +311,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             pose.putIntArray(Integer.toString(part), new int[]{clampDeg(x), clampDeg(y), clampDeg(z)});
         }
         this.entityData.set(CUSTOM_POSE, pose);
-        customPoseCache = unpackCustomPose(pose); // keep the server-side copy fresh too
+        customPoseCache = unpackCustomPose(pose);
     }
 
     private static int clampDeg(int deg) {
@@ -366,7 +331,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             case POSE_SNEAKING -> net.minecraft.world.entity.Pose.CROUCHING;
             case POSE_SLEEPING -> net.minecraft.world.entity.Pose.SLEEPING;
             case POSE_PRONE -> net.minecraft.world.entity.Pose.SWIMMING;
-            default -> net.minecraft.world.entity.Pose.STANDING; // sitting/chilling are model-level
+            default -> net.minecraft.world.entity.Pose.STANDING;
         };
     }
 
@@ -379,7 +344,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             case POSE_SITTING, POSE_CHILLING -> 1.35f;
             default -> 1.95f;
         };
-        return base * getScaleY() + 0.4f; // height follows the vertical axis, not the width
+        return base * getScaleY() + 0.4f;
     }
     //?}
 
@@ -395,16 +360,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public boolean isSlim() { return this.entityData.get(SLIM); }
     public void setSlim(boolean slim) { this.entityData.set(SLIM, slim); }
 
-    /** A bubble hanging over the NPC's head, to mark it as worth talking to. */
     public boolean showsTalkBubble() { return this.entityData.get(TALK_BUBBLE); }
     public void setTalkBubble(boolean show) { this.entityData.set(TALK_BUBBLE, show); }
 
     private static float clampNpcScale(float s) { return Math.max(0.3f, Math.min(3.0f, s)); }
 
-    // The X axis of our own per-axis scale, which the renderers apply themselves. It doubles as
-    // vanilla's entity scale, which is what makes a tall NPC's hitbox tall too. 1.21.11 made
-    // getScale final and had it read the scale attribute, so there the value is pushed into that
-    // attribute instead of overriding, and the hitbox still follows.
     public float npcScale() { return this.entityData.get(SCALE); }
 
     //? if <1.21.11 {
@@ -500,8 +460,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         setNameOffset(nameOffset);
     }
 
-    // ---- behavior ----
-
     public Behavior getBehavior() { return behavior; }
 
     public void setBehavior(Behavior b) {
@@ -545,8 +503,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public int getPatrolWaitTicks() { return patrolWaitTicks; }
     public void setPatrolWaitTicks(int ticks) { this.patrolWaitTicks = Math.max(0, Math.min(600, ticks)); }
 
-    // ---- dialogue ----
-
     public net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree getDialogue() { return dialogue; }
 
     public void setDialogue(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree tree) {
@@ -566,7 +522,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public void setSchedule(net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule s) {
         this.schedule = s == null ? new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule() : s;
-        this.scheduleActive = -1; // re-derive on the next check rather than trusting the old index
+        this.scheduleActive = -1;
     }
 
     public boolean isRoleOpenNow() {
@@ -588,7 +544,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (cooldown > 0) {
             if (lastFiredAge == null) {
                 lastFiredAge = new int[net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values().length];
-                // Far enough back that the first firing always passes, without underflowing the subtraction.
                 java.util.Arrays.fill(lastFiredAge, -100000);
             }
             int slot = trigger.ordinal();
@@ -600,8 +555,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public String getFarewellText() { return farewellText; }
     public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
-
-    // ---- stats ----
 
     public boolean isProtectedNpc() { return protectedNpc; }
     public void setProtectedNpc(boolean p) { this.protectedNpc = p; }
@@ -616,7 +569,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private void applyDoorCapability() {
         if (this.getNavigation() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation nav) {
             nav.setCanOpenDoors(opensDoors);
-            // Pass-through moved off the navigation and onto the evaluator that does the pathing.
             //? if >=1.21.11 {
             /*if (nav.getNodeEvaluator() != null) nav.getNodeEvaluator().setCanPassDoors(true);
             *///?} else {
@@ -633,16 +585,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
-    // Vanilla's ground navigation is written for something standing on a floor, and an NPC with
-    // gravity turned off never is. It refuses to build a path at all unless the mob is on the
-    // ground, so createPath returned null before it even read the destination: no wandering, no
-    // patrol, no following anybody. And it advances along a path by comparing the mob's own Y
-    // against the waypoint's, so even handed a path, a floating NPC stalls at the first corner as
-    // soon as it is more than a block up. The transform control allows sixteen.
-    //
-    // So a floating NPC gets the navigation vanilla gives its own floating mobs. Bees, allays and
-    // parrots all path through the air this way, which is the point: the models people turn
-    // gravity off for are the flying ones.
     private boolean flyingMovement;
 
     private void applyMovementMode() {
@@ -650,8 +592,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (floating == flyingMovement) return;
         flyingMovement = floating;
         if (floating) {
-            // hoversInPlace, or the control switches gravity back on the moment it runs out of
-            // path and drops the NPC out of the sky.
             this.moveControl = new net.minecraft.world.entity.ai.control.FlyingMoveControl(this, 20, true);
             this.navigation = new net.minecraft.world.entity.ai.navigation.FlyingPathNavigation(this, this.level());
         } else {
@@ -661,10 +601,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         applyDoorCapability();
     }
 
-    // Every route into the gravity flag comes through here: the editor, the share codec, loading
-    // from disk, and FlyingMoveControl itself, which sets it every tick it moves. Hooking the
-    // setter rather than the call sites means none of them can be missed, and the guard above
-    // makes the repeat calls free.
     @Override
     public void setNoGravity(boolean noGravity) {
         super.setNoGravity(noGravity);
@@ -681,7 +617,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public void setHostileToPlayers(boolean h) {
         if (this.hostileToPlayers != h) {
             this.hostileToPlayers = h;
-            applyBehaviorGoals(); // combat goals ride the behavior goal lists
+            applyBehaviorGoals();
         }
     }
 
@@ -712,7 +648,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         return owner != null ? this.level().getPlayerByUUID(owner) : null;
     }
 
-    // False for everyone until a faction is set, which is what keeps factions inert by default.
     public boolean isAlly(@Nullable net.minecraft.world.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
         if (other instanceof NotchNpcEntity npc) return factionId.equals(npc.getFactionId());
@@ -743,7 +678,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         String next = id == null ? "" : id;
         if (!this.factionId.equals(next)) {
             this.factionId = next;
-            applyBehaviorGoals(); // targeting rules change with allegiance
+            applyBehaviorGoals();
         }
     }
 
@@ -850,23 +785,14 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
-                // Follow range doubles as the pathfinding distance limit; the default 16 made a
-                // following NPC freeze whenever its owner got 16-30 blocks away (teleport kicks
-                // in at 30).
                 .add(Attributes.FOLLOW_RANGE, 48.0)
-                // Needed by MeleeAttackGoal (GUARD mode). Weapon bonuses stack on top.
                 .add(Attributes.ATTACK_DAMAGE, 4.0)
-                // What an NPC moves at once it is off the ground: FlyingMoveControl reads this
-                // instead of MOVEMENT_SPEED there. Missing, it is not a slow NPC, it is a crash,
-                // because getAttributeValue on an attribute the entity does not have throws.
                 .add(Attributes.FLYING_SPEED, 0.3);
     }
 
     @Override
     protected void registerGoals() {
-        // Base goals every NPC has; movement goals are swapped in by applyBehaviorGoals().
         this.goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
-        // Top priority: while a player is interacting, hold still and face them (see startTalking).
         this.goalSelector.addGoal(0, new TalkGoal());
         this.lookGoal = new LookAtPlayerGoal(this, Player.class, 8.0f);
         this.goalSelector.addGoal(6, lookGoal);
@@ -874,7 +800,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public void startTalking(Player player) {
         this.talkingTo = player.getUUID();
-        this.talkingTicks = 160; // ~8s; TalkGoal counts this down and releases when it (or the player) runs out
+        this.talkingTicks = 160;
     }
 
     private class TalkGoal extends net.minecraft.world.entity.ai.goal.Goal {
@@ -886,7 +812,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         private Player partner() {
             if (talkingTo == null || talkingTicks <= 0) return null;
             Player p = level().getPlayerByUUID(talkingTo);
-            if (p == null || p.isRemoved() || distanceToSqr(p) > 100.0) return null; // ~10 blocks
+            if (p == null || p.isRemoved() || distanceToSqr(p) > 100.0) return null;
             return p;
         }
 
@@ -931,10 +857,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             this.targetSelector.removeGoal(g);
         }
         behaviorTargetGoals.clear();
-        this.setTarget(null); // drop any combat target when leaving GUARD
+        this.setTarget(null);
 
         if (avoidMonsters) {
-            // Runs alongside any behavior: back away from hostiles that get close.
             net.minecraft.world.entity.ai.goal.Goal flee = new net.minecraft.world.entity.ai.goal.AvoidEntityGoal<>(
                     this, net.minecraft.world.entity.monster.Monster.class, 8.0f, 1.0, 1.25);
             this.goalSelector.addGoal(1, flee);
@@ -943,8 +868,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
         switch (movementBehavior()) {
             case WANDER -> {
-                // Short-range strolls every ~2s: livelier than the vanilla far-wander cadence and a
-                // better fit for the home leash. canDespawn=false skips the despawn-counter gate.
                 net.minecraft.world.entity.ai.goal.Goal wander =
                         new net.minecraft.world.entity.ai.goal.RandomStrollGoal(this, 0.8, 40, false);
                 this.goalSelector.addGoal(2, wander);
@@ -955,17 +878,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 net.minecraft.world.entity.ai.goal.Goal follow = new NpcFollowOwnerGoal(this, 1.15);
                 this.goalSelector.addGoal(2, follow);
                 behaviorGoals.add(follow);
-                this.clearRestriction(); // no leash
+                this.clearRestriction();
             }
             case PATROL -> {
                 net.minecraft.world.entity.ai.goal.Goal patrol = new NpcPatrolGoal(this);
                 this.goalSelector.addGoal(2, patrol);
                 behaviorGoals.add(patrol);
-                this.clearRestriction(); // waypoints may be far from home
+                this.clearRestriction();
             }
             case GUARD -> {
-                // Stroll the post while idle and stay leashed to home; the fighting itself is set up
-                // below, since Guard is only one of the reasons an NPC might swing at something.
                 net.minecraft.world.entity.ai.goal.Goal stroll =
                         new net.minecraft.world.entity.ai.goal.RandomStrollGoal(this, 0.6, 80, false);
                 this.goalSelector.addGoal(5, stroll);
@@ -975,8 +896,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             case STATIONARY -> this.clearRestriction();
         }
 
-        // One melee goal, however many reasons there are to fight: a second would fight itself for
-        // the movement control.
         boolean fights = behavior == Behavior.GUARD || hostileToPlayers || fightsBack
                 || attackMonsters || protectOwner || fightRivalFactions;
         if (fights) {
@@ -986,7 +905,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             behaviorGoals.add(melee);
         }
         if (behavior == Behavior.GUARD || attackMonsters) {
-            // Hostile mobs, but never creepers (iron-golem rule: don't walk a blast into the shop).
             net.minecraft.world.entity.ai.goal.Goal targets = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.monster.Monster.class, 10, true, false,
                     //? if >=1.21.11 {
@@ -1003,9 +921,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             behaviorTargetGoals.add(protect);
         }
         if (hostileToPlayers) {
-            // Hunt ANY player in range, including the owner (hostile means hostile). Vanilla
-            // targeting already skips creative/spectator players. Its own faction is still spared:
-            // a guard that turns on its own people is nobody's idea of a guard.
             net.minecraft.world.entity.ai.goal.Goal huntPlayers = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.player.Player.class, 10, true, false,
                     //? if >=1.21.11 {
@@ -1017,8 +932,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             behaviorTargetGoals.add(huntPlayers);
         }
         if (fightRivalFactions && !factionId.isEmpty()) {
-            // Only people actually flying another faction's colours: bystanders with no faction are
-            // left alone, so a faction war doesn't sweep up everyone who never joined.
             net.minecraft.world.entity.ai.goal.Goal rivals = new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
                     this, net.minecraft.world.entity.LivingEntity.class, 10, true, false,
                     //? if >=1.21.11 {
@@ -1034,10 +947,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             this.targetSelector.addGoal(1, revenge);
             behaviorTargetGoals.add(revenge);
         }
-        applyDoorCapability(); // re-assert door pathing/goal after the goal list is rebuilt
+        applyDoorCapability();
     }
 
-    // Combat deliberately still reads the configured behaviour: a guard on a scheduled post is a guard.
     private Behavior movementBehavior() {
         return scheduleBehavior != null ? scheduleBehavior : behavior;
     }
@@ -1063,15 +975,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         super.aiStep();
         if (!this.level().isClientSide) {
             if (movementBehavior() == Behavior.STATIONARY) {
-                // Reading the leash point rather than the configured home is what gives a scheduled
-                // NPC its commute: the same walk-back that returns a guard to its post after a fight
-                // is what carries a shopkeeper to the counter at opening time, and to bed at night.
                 net.minecraft.core.BlockPos post = leashHome();
                 if (this.getTarget() != null && this.getTarget().isAlive()) {
-                    // In combat (hostile/fights-back): let the attack goal chase.
                 } else if (post != null && this.distanceToSqr(
                         post.getX() + 0.5, post.getY(), post.getZ() + 0.5) > 2.25) {
-                    // Combat over (or shoved): walk back to the post before locking down again.
                     this.getNavigation().moveTo(
                             post.getX() + 0.5, post.getY(), post.getZ() + 0.5, 1.0);
                 } else {
@@ -1080,16 +987,13 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                     holdScheduleFacing();
                 }
             }
-            // Re-assert the configured pose in case vanilla logic reset it.
             net.minecraft.world.entity.Pose want = entityPoseFor(getNpcPose());
             if (this.getPose() != want) {
                 this.setPose(want);
             }
-            // Health regeneration (half-hearts per 5 seconds).
             if (regen > 0 && this.tickCount % 100 == 0 && this.getHealth() < this.getMaxHealth()) {
                 this.heal(regen * 0.5f);
             }
-            // Keep the vanilla invisible flag in step with the toggle + day/night rule.
             if (this.tickCount % 20 == 0) {
                 boolean hidden = manualInvisible || isRuleHidden();
                 if (this.isInvisible() != hidden) this.setInvisible(hidden);
@@ -1105,8 +1009,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         boolean runnable = schedule.isActive()
                 && net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.level());
         if (!runnable) {
-            // Switched off, emptied, or carried somewhere with no day: hand the NPC back to whatever
-            // the Moves tab says instead of leaving it frozen in the last stance it was given.
             if (scheduleBehavior != null) releaseSchedule();
             return;
         }
@@ -1115,14 +1017,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         int idx = schedule.indexAt(this.level().getDayTime());
         if (idx == scheduleActive) return;
 
-        // A first application after loading is not a transition. Firing entry actions here would mean
-        // a shopkeeper announcing opening hours every time somebody walks into the chunk.
         boolean transition = scheduleActive != -1;
         scheduleActive = idx;
         applyScheduleEntry(schedule.get(idx), transition);
     }
 
-    // Fields set together and goals rebuilt once. The public setters would overwrite the owner's own settings.
     private void applyScheduleEntry(@Nullable net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry entry,
                                     boolean fireActions) {
         if (entry == null) {
@@ -1137,10 +1036,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             }
             case PATROL -> {
                 scheduleBehavior = Behavior.PATROL;
-                scheduleHome = null; // waypoints may run well outside any leash
+                scheduleHome = null;
             }
-            // Both mean "be at that block". The stationary walk-back in tickMovement does the
-            // travelling, so there is no second pathing system to keep in step with the first.
+
             case STAND, SLEEP -> {
                 scheduleBehavior = Behavior.STATIONARY;
                 scheduleRadius = 2;
@@ -1155,7 +1053,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
-    // Posing it asleep is not sleeping: vanilla sleep() is what claims the bed and snaps it on.
     private void tickScheduleSleep() {
         var entry = currentScheduleEntry();
         boolean wantsBed = entry != null
@@ -1172,7 +1069,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
         net.minecraft.core.BlockPos bed = bedHead(entry.anchor());
         if (this.isSleeping()) {
-            // Somebody mined the bed out from under it: stand up rather than float there.
             if (!(this.level().getBlockState(bed).getBlock() instanceof net.minecraft.world.level.block.BedBlock)) {
                 this.stopSleeping();
                 restoreLookGoal();
@@ -1182,7 +1078,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             return;
         }
 
-        // Still walking over. Climb in once close enough to reach it.
         if (!(this.level().getBlockState(bed).getBlock() instanceof net.minecraft.world.level.block.BedBlock)) return;
         double dx = bed.getX() + 0.5 - this.getX();
         double dz = bed.getZ() + 0.5 - this.getZ();
@@ -1193,7 +1088,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (lookGoal != null) this.goalSelector.removeGoal(lookGoal);
     }
 
-    // Head half of the bed, or the body lies a block down it and hangs off the end.
     private net.minecraft.core.BlockPos bedHead(net.minecraft.core.BlockPos pos) {
         net.minecraft.world.level.block.state.BlockState state = this.level().getBlockState(pos);
         if (state.getBlock() instanceof net.minecraft.world.level.block.BedBlock
@@ -1203,14 +1097,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         return pos;
     }
 
-    // Remove before adding, or a nap leaves a second copy of the goal running.
     private void restoreLookGoal() {
         if (lookGoal == null) return;
         this.goalSelector.removeGoal(lookGoal);
         if (watchPlayers) this.goalSelector.addGoal(6, lookGoal);
     }
 
-    // Runs before the goals, so talking, watching and combat all still win. This is the resting angle.
     private void holdScheduleFacing() {
         if (talkingTo != null || this.getTarget() != null || this.isSleeping()) return;
         var entry = currentScheduleEntry();
@@ -1249,7 +1141,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private void tickProximity() {
         if (!actions.has(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_PROXIMITY)) return;
         if (this.tickCount % PROXIMITY_SCAN_TICKS != 0) return;
-        if (manualInvisible || isRuleHidden()) return; // a hidden NPC shouldn't greet anyone
+        if (manualInvisible || isRuleHidden()) return;
 
         if (proximityInside == null) {
             proximityInside = new java.util.HashSet<>();
@@ -1277,8 +1169,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             }
         }
 
-        // Anyone who logged out or changed world counts as gone, and spent cooldowns are dropped so
-        // neither collection grows with everyone who ever walked past.
         proximityInside.removeIf(id -> this.level().getPlayerByUUID(id) == null);
         proximityFired.entrySet().removeIf(e ->
                 !proximityInside.contains(e.getKey()) && this.tickCount - e.getValue() > PROXIMITY_RECHARGE_TICKS);
@@ -1286,18 +1176,13 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     protected void doPush(net.minecraft.world.entity.Entity entity) {
-        if (pushable) super.doPush(entity); // hold ground unless the Pushable ability is on
+        if (pushable) super.doPush(entity);
     }
 
     @Override
     public void checkDespawn() {
-        // Never despawn. These are placed, persistent NPCs. Also keep the despawn counter at zero:
-        // vanilla increments it every AI tick and only resets it here, and WanderAroundGoal refuses
-        // to start once it passes 100 (which froze wandering ~5s after placement).
         this.noActionTime = 0;
     }
-
-    // ---- config accessors ----
 
     public NpcRole getRole() { return role; }
     public void setRole(NpcRole role) { this.role = role == null ? NpcRole.NONE : role; }
@@ -1325,8 +1210,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         return isOwnedBy(player) || net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
     }
 
-    // ---- interaction ----
-
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND) {
@@ -1336,28 +1219,21 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             return InteractionResult.SUCCESS;
         }
         if (player instanceof ServerPlayer sp) {
-            // Off duty per the day/night rule: only the owner/op can still reach it (to edit).
             if (isRuleHidden() && !canEdit(sp)) {
                 return InteractionResult.PASS;
             }
-            startTalking(player); // pause + face the player while they're dealing with us
-            playVoice();           // a grunt as it turns to you, the way a villager answers
-            // Before dialogue or the role screen takes over, so a greeting is read first.
+            startTalking(player);
+            playVoice();
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
             if (sp.isShiftKeyDown() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
             } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
-                // No dialogue: go straight to the role.
                 NotchNpcManager.dispatchRole(sp, this);
             }
         }
         return InteractionResult.SUCCESS;
     }
 
-    // ---- damage protection (owned NPCs are protected, like the old shopkeeper) ----
-
-    // hurt() became final in 1.21.11 and split: the server side of it is hurtServer, which is only
-    // ever called on the server and so drops the client guard below.
     //? if >=1.21.11 {
     /*@Override
     public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
@@ -1367,15 +1243,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public boolean hurt(DamageSource source, float amount) {
         if (this.level().isClientSide()) return false;
     //?}
-        // Fires on being HIT, not on damage getting through. Protection is on by default, so an
-        // "if it takes damage" reading would never run for an ordinary shopkeeper, and a shopkeeper
-        // snapping at someone who punched it is the whole point.
+
         if (!this.isDeadOrDying() && amount > 0) {
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_HURT,
                     source.getEntity() instanceof ServerPlayer p ? p : null);
         }
         if (protectedNpc && (owner != null || ownerType == OwnerType.SERVER)) {
-            // Only the void or /kill can remove a protected NPC.
             if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
                 //? if >=1.21.11 {
                 /*return super.hurtServer(level, source, amount);
@@ -1383,8 +1256,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 return super.hurt(source, amount);
                 //?}
             }
-            // The hit is cancelled, but Fights Back still needs to know who swung: record the
-            // attacker so the RevengeGoal can retaliate even while the NPC itself is unhurtable.
             if (fightsBack && source.getEntity() instanceof net.minecraft.world.entity.LivingEntity attacker) {
                 this.setLastHurtByMob(attacker);
             }
@@ -1399,8 +1270,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     public void die(DamageSource source) {
-        // Before super, while the NPC is still in the world and its actions can still reference it.
-        // The killer may be nobody at all: lava and fall damage count.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_DEATH,
                 source.getEntity() instanceof ServerPlayer p ? p : null);
         super.die(source);
@@ -1418,16 +1287,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                                  net.minecraft.world.entity.LivingEntity other) {
         boolean result = super.killedEntity(world, other);
     //?}
-        // A player only comes along when the NPC killed a player, otherwise there's no one to talk to.
         fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_KILL,
                 other instanceof ServerPlayer p ? p : null);
         return result;
     }
 
-    // ---- NBT ----
-
-    // writeConfig and readConfig stay tag-based on every version: presets, share codes and the
-    // pick-up item all go through them too. Nbt bridges the tag across 1.21.11's view API.
     //? if >=1.21.11 {
     /*@Override
     public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
@@ -1440,10 +1304,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
         super.readAdditionalSaveData(in);
-        // Re-assert it every load. Vanilla reads PersistenceRequired straight out of the tag, so an
-        // NPC saved by a version of this mod that never set the flag comes back with it false and
-        // quietly loses the thing that marks it as never-cull. Setting it in the constructor is not
-        // enough: loading happens after.
         this.setPersistenceRequired();
         readConfig(net.fugginbeenus.notchcurrency.compat.Nbt.readAll(in));
     }
@@ -1457,16 +1317,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
-        // Re-assert it every load. Vanilla reads PersistenceRequired straight out of the tag, so an
-        // NPC saved by a version of this mod that never set the flag comes back with it false and
-        // quietly loses the thing that marks it as never-cull. Setting it in the constructor is not
-        // enough: loading happens after.
         this.setPersistenceRequired();
         readConfig(nbt);
     }
     //?}
 
-    // Excludes the custom name; the caller handles that.
     public void writeConfig(CompoundTag nbt) {
         nbt.putString("Role", role.name());
         if (roleTarget != null) net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "RoleTarget", roleTarget);
@@ -1508,7 +1363,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (!getSubtitle().isEmpty()) nbt.putString("Subtitle", getSubtitle());
         if (!voiceSound.isEmpty()) nbt.putString("Voice", voiceSound);
         if (voicePitch != 100) nbt.putInt("VoicePitch", voicePitch);
-        // Stats: the vanilla flags are re-recorded here so they survive the pick-up item too.
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
         nbt.putBoolean("StatGlowing", this.isCurrentlyGlowing());
@@ -1531,10 +1385,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putString("Faction", factionId);
         nbt.putInt("ActionSweep", actionSweepVersion);
         nbt.putBoolean("FightRivalFactions", fightRivalFactions);
-        // Attribute bases: recorded so they survive the pick-up item (entity NBT has them anyway).
         nbt.putInt("StatMaxHealth", (int) Math.round(this.getAttributeValue(Attributes.MAX_HEALTH)));
         nbt.putInt("StatSpeedPct", (int) Math.round(this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100));
-        // Equipment: re-recorded so it survives the pick-up item too.
         CompoundTag equip = new CompoundTag();
         for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
             net.minecraft.world.item.ItemStack st = this.getItemBySlot(slot);
@@ -1563,7 +1415,6 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Slim")) setSlim(nbt.getBoolean("Slim"));
         setTalkBubble(nbt.getBoolean("TalkBubble"));
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
-        // Older NPCs only stored one scale: fall back to it so they stay the shape they were.
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : npcScale());
         setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : npcScale());
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
@@ -1638,14 +1489,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("ProtectOwner")) protectOwner = nbt.getBoolean("ProtectOwner");
         if (nbt.contains("AttackMonsters")) attackMonsters = nbt.getBoolean("AttackMonsters");
         if (nbt.contains("Faction")) factionId = nbt.getString("Faction");
-        actionSweepVersion = nbt.getInt("ActionSweep"); // absent = 0 = never swept
+        actionSweepVersion = nbt.getInt("ActionSweep");
         if (nbt.contains("FightRivalFactions")) fightRivalFactions = nbt.getBoolean("FightRivalFactions");
         if (nbt.contains("WatchPlayers")) setWatchPlayers(nbt.getBoolean("WatchPlayers"));
         if (nbt.contains("StatMaxHealth")) {
             int hp = nbt.getInt("StatMaxHealth");
             int speedPct = nbt.contains("StatSpeedPct") ? nbt.getInt("StatSpeedPct") : 30;
-            // Skip when they already match (world reload path: vanilla restored the attributes
-            // before us, and re-applying would heal a damaged NPC to full).
             if (hp != (int) Math.round(this.getAttributeValue(Attributes.MAX_HEALTH))
                     || speedPct != (int) Math.round(this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100)) {
                 setBaseStats(hp, speedPct);
@@ -1657,7 +1506,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 String slotKey = slot.getName();
                 if (equip.contains(slotKey)) {
                     this.setItemSlot(slot, net.fugginbeenus.notchcurrency.compat.StackData.readPortableStack(equip.getCompound(slotKey)));
-                    this.setDropChance(slot, 1.0f); // owner's items always drop if it dies
+                    this.setDropChance(slot, 1.0f);
                 }
             }
         }
@@ -1681,12 +1530,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
-    // ---- GeckoLib ----
-
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // 5.x dropped the animatable argument: the controller is handed to the animatable, not the
-        // other way round.
+
         //? if >=1.21.5 {
         /*controllers.add(new AnimationController<NotchNpcEntity>("main", 4, this::idlePredicate));
         *///?} else {
@@ -1700,44 +1546,26 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private <E extends NotchNpcEntity> PlayState idlePredicate(AnimationState<E> state) {
     //?}
         String clip = chooseAnimation();
-        if (clip == null) return PlayState.STOP; // a statue holds still, including its hands
+        if (clip == null) return PlayState.STOP;
         state.setAndContinue(net.fugginbeenus.notchcurrency.compat.Geo.loop(clip));
         return PlayState.CONTINUE;
     }
 
-    /**
-     * Which clip suits what the NPC is doing, or null to stand perfectly still.
-     *
-     * <p>Driven by the same Statue / Breathe / Lively setting that drives the vanilla models, so one
-     * choice in the editor means the same thing whichever model an NPC is wearing.
-     *
-     * <p>The flourishes are worked out from the tick count and the NPC's own id rather than kept in
-     * a field. That way nothing has to be stored or sent, and two NPCs standing side by side do not
-     * move in lockstep, which is what gives away that they are the same thing twice.
-     */
     @Nullable
     private String chooseAnimation() {
         int mode = getPoseAnim();
         if (mode == ANIM_STATUE) return null;
 
-        // A custom model brings its own clip names, so the roles are filled from its bundle. The
-        // built-in names are what a bundle-less NPC falls back to.
         var bundle = net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(getModelId());
-        // A custom model with no animation file of its own holds still rather than being asked for a
-        // clip out of the built-in file, which is a different model and does not have its bones.
+
         if (bundle != null && bundle.idle().isEmpty()) return null;
         String idle = bundle != null ? bundle.idle() : IDLE_ANIM;
 
-        // Walking wins over anything it might have been doing standing still. A bundle with no walk
-        // clip keeps playing its idle rather than snapping to nothing.
         if (this.walkAnimation.speed() > 0.02f) {
             if (bundle == null) return WALK_ANIM;
             return bundle.walk().isEmpty() ? idle : bundle.walk();
         }
 
-        // A clip chosen by hand stands in for the idle, flourishes and all. It is checked against
-        // what is actually loaded, so pulling the resource pack out leaves the NPC on the built-in
-        // idle rather than stuck on a clip that no longer exists.
         String chosen = getCustomClip();
         if (!chosen.isEmpty() && net.fugginbeenus.notchcurrency.compat.Geo.hasClip(chosen)) {
             return chosen;
@@ -1752,11 +1580,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         int stagger = Math.floorMod(getUUID().hashCode(), FLOURISH_EVERY);
         int spot = Math.floorMod(this.tickCount + stagger, FLOURISH_EVERY);
         long window = Math.floorDiv((long) this.tickCount + stagger, FLOURISH_EVERY);
-
-        // Stable for the whole window, so the choice does not change part way through a flourish.
         int roll = Math.floorMod(Long.hashCode(window * 31L + getUUID().hashCode()), specials.size());
-        // The built-in clips have known lengths. A bundle's are anyone's guess, so they get a
-        // sensible window and are cut off at the end of it.
         int holdFor = bundle == null ? SPECIAL_TICKS[roll] : BUNDLE_SPECIAL_TICKS;
         return spot < holdFor ? specials.get(roll) : idle;
     }

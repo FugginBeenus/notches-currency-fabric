@@ -17,8 +17,6 @@ import java.util.UUID;
 public class NpcPresetScreen extends Screen {
 
     private static final int W = 300, H = 252;
-
-    // Share row. Presets stay on this server; these four move an NPC off it entirely.
     private static final int SHARE_Y = 204, SHARE_H = 15;
     private static final int COPY_X = 16, COPY_W = 78;
     private static final int PASTE_X = 98, PASTE_W = 78;
@@ -27,7 +25,6 @@ public class NpcPresetScreen extends Screen {
     private static final int BACK_Y = 226;
     private static final int LIST_X = 14, LIST_Y = 22, LIST_W = 272, LIST_H = 116;
     private static final int ROW_H = 16, VISIBLE_ROWS = 7;
-
     private final UUID npcId;
     private List<String> presets;
     private int selected = -1;
@@ -179,28 +176,23 @@ public class NpcPresetScreen extends Screen {
             }
             if (over(mx, my, px + COPY_X, py + SHARE_Y, COPY_W, SHARE_H)) {
                 NotchWidgets.click();
-                // The server builds the code and sends it back; the clipboard write happens there.
                 NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_COPY, "");
                 return true;
             }
             if (over(mx, my, px + PASTE_X, py + SHARE_Y, PASTE_W, SHARE_H)) {
                 NotchWidgets.click();
                 String code = this.minecraft == null ? "" : this.minecraft.keyboardHandler.getClipboard();
-                // Checked here too so an unrelated clipboard says so instantly instead of after a
-                // round trip. The server still validates: this is convenience, not the gate.
                 if (!NpcShareCodec.looksLikeCode(code)) {
                     say("There's no NPC share code on your clipboard.", ChatFormatting.RED);
                     return true;
                 }
-                // Writing an over-long string to the buffer throws, and the packet itself would be
-                // refused by the connection. Say so instead, and point at the route that has room.
                 if (code.strip().length() > NpcShareCodec.MAX_WIRE_CHARS) {
                     say("That code is too big to paste. Save it as a .npc file and use 'From file'.",
                             ChatFormatting.RED);
                     return true;
                 }
                 NotchPacketsClient.sendNpcShare(npcId, NpcShareManager.ACTION_PASTE, code);
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // back to the editor, preview updated
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
             }
             if (over(mx, my, px + TOFILE_X, py + SHARE_Y, TOFILE_W, SHARE_H)) {
@@ -226,7 +218,7 @@ public class NpcPresetScreen extends Screen {
             }
             if (over(mx, my, px + 70, py + BACK_Y, 160, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // return to the NPC editor
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
             }
         }
@@ -256,7 +248,6 @@ public class NpcPresetScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Plain characters insert via charTyped only (guards against the select-all wipe).
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -280,24 +271,19 @@ public class NpcPresetScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

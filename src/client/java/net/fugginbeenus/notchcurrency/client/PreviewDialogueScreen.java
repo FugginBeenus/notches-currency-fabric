@@ -19,8 +19,6 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
         this.tree = tree;
     }
 
-    // ---- snapshot builders (run before super(), so they're static) ----
-
     private static String textOf(DialogueTree tree, String nodeId) {
         DialogueNode n = tree.get(nodeId);
         return n == null ? "" : n.text();
@@ -61,8 +59,6 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
                 .replace('&', '§');
     }
 
-    // ---- local navigation ----
-
     @Override
     protected void onChoice(int i) {
         DialogueNode n = tree.get(nodeId);
@@ -87,7 +83,6 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
 
     @Override
     public void onClose() {
-        // Back into the live studio instance (unsaved edits intact).
         Minecraft.getInstance().setScreen(studio);
     }
 }

@@ -31,7 +31,7 @@ public final class NotchConfigIO {
         try {
             if (Files.notExists(FILE)) {
                 NotchConfig def = new NotchConfig();
-                save(def); // write defaults
+                save(def);
                 return def;
             }
             try (Reader r = Files.newBufferedReader(FILE)) {

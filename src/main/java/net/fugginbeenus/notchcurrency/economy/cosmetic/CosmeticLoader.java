@@ -28,7 +28,7 @@ public class CosmeticLoader implements SimpleSynchronousResourceReloadListener {
         CosmeticRegistry.clear();
         for (Map.Entry<ResourceLocation, Resource> e : manager
                 .listResources("cosmetics", id -> id.getPath().endsWith(".json")).entrySet()) {
-            String path = e.getKey().getPath();               // "cosmetics/halo.json"
+            String path = e.getKey().getPath();
             String offerId = path.substring("cosmetics/".length(), path.length() - ".json".length());
             try (InputStream is = e.getValue().open();
                  InputStreamReader reader = new InputStreamReader(is)) {

@@ -19,13 +19,10 @@ public final class NpcActionSweep {
     public static void sweep(NotchNpcEntity npc) {
         if (npc.getActionSweepVersion() >= CURRENT_VERSION) return;
         MinecraftServer server = npc.level().getServer();
-        if (server == null) return; // not ready yet; try again next tick
-
-        // Stamp first. Whatever happens below, this NPC has now been looked at: a fault here must
-        // not leave it re-sweeping on every tick forever.
+        if (server == null) return;
         npc.setActionSweepVersion(CURRENT_VERSION);
 
-        if (NpcActionRunner.ownerMayRunCommands(npc, server)) return; // owner is trusted, leave it alone
+        if (NpcActionRunner.ownerMayRunCommands(npc, server)) return;
 
         int removed = 0;
         for (DialogueNode node : npc.getDialogue().nodes().values()) {

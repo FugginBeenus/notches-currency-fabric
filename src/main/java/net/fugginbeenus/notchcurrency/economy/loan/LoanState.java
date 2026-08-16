@@ -73,8 +73,6 @@ public class LoanState extends SavedData implements net.fugginbeenus.notchcurren
         return new HashMap<>(loans);
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -114,7 +112,6 @@ public class LoanState extends SavedData implements net.fugginbeenus.notchcurren
                 if (debt > 0) state.loans.put(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Player"),
                         new Loan(debt, o.getLong("Due"), o.getBoolean("Late")));
             } catch (IllegalArgumentException ignored) {
-                // skip
             }
         }
         return state;

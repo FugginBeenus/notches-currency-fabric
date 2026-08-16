@@ -15,13 +15,6 @@ public final class Net {
 
     private Net() {}
 
-    /**
-     * A fresh packet buffer.
-     *
-     * <p>Fabric's PacketByteBufs went away in the 26.x API. It only ever wrapped a new netty buffer,
-     * which is what the newer branch does directly, so this is the same buffer either way. It lives
-     * here because the mod asks for one in 89 places and none of them should have to know that.
-     */
     public static FriendlyByteBuf buf() {
         //? if >=26.1 {
         /*return new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
@@ -30,7 +23,6 @@ public final class Net {
         //?}
     }
 
-    /** A buffer with nothing in it, for packets that are pure signal. */
     public static FriendlyByteBuf emptyBuf() {
         //? if >=26.1 {
         /*return new FriendlyByteBuf(io.netty.buffer.Unpooled.EMPTY_BUFFER);

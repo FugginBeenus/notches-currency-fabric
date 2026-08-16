@@ -71,6 +71,5 @@ public final class ModItems {
     private ModItems() {}
 
     public static void register() {
-        // NO-OP. Do not register anything here.
     }
 }

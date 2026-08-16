@@ -22,19 +22,9 @@ import java.util.List;
 //? if <1.21.11 {
 import net.minecraft.world.InteractionResultHolder;
 //?}
-
-/**
- * Eat one, gain a heart. Lose one when you die, unless the server has turned that off.
- *
- * <p>Consumed on right click rather than through the food system. Food is the one part of an item
- * that has been rebuilt at nearly every version in this range, from properties to components, and
- * none of that buys anything here: there is no hunger to restore and no eating animation worth a
- * five way branch.
- */
 public class HeartCrystalItem extends Item {
 
     public HeartCrystalItem(Properties settings) {
-        // Stackable, but not deeply. These are meant to be counted on one hand.
         super(settings.stacksTo(16));
     }
 
@@ -65,8 +55,6 @@ public class HeartCrystalItem extends Item {
             return;
         }
 
-        // Raise the ceiling first, then fill what it opened up. The other order hands out an empty
-        // heart, which reads as the crystal not having worked.
         HeartState.applyTo(sp);
         sp.heal(HeartState.HEALTH_PER_CRYSTAL);
 
@@ -102,9 +90,6 @@ public class HeartCrystalItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
     //?}
-        // Deliberately does not promise the heart is permanent. Whether death takes one back is
-        // the server's setting, and a tooltip is drawn on the client, which does not know it.
-        // /hearts answers that question honestly; this line must not answer it dishonestly.
         tooltip.add(Component.literal("Use to gain a heart.")
                 .withStyle(ChatFormatting.LIGHT_PURPLE));
         tooltip.add(Component.literal("Up to " + (HeartState.MAX_CRYSTALS / 10) + " extra rows. See /hearts.")

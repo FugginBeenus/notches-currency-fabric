@@ -35,24 +35,19 @@ public final class NpcPreviewWidget {
         int size;
         int feetY;
         if (bust && NotchNpcEntity.MODEL_HUMANOID.equals(npc.getModelId())) {
-            // Waist-up: scale so head-top→waist (~60% of the height) fills the box, then drop the
-            // figure ~a quarter of the box for headroom; the legs clip below via the scissor.
             size = (int) Math.max(6, (h - 10) / (0.61f * mh));
             feetY = y + 5 + h / 4 + (int) (mh * size);
         } else {
-            // Fit the whole figure to the box, feet near the bottom, head with a small top margin.
             size = (int) Math.max(6, Math.min((h - 14) / mh, (w - 12) / mw));
             feetY = y + h - 8;
         }
 
-        // Face the viewer; unhide for the preview; restore afterwards.
         float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot, oldHead = npc.yHeadRot;
         boolean wasInvisible = npc.isInvisible();
         npc.setYRot(180f);
         npc.yBodyRot = 180f;
         npc.yHeadRot = 180f;
         npc.setInvisible(false);
-        // Hide the nametag while rendering the portrait.
         net.minecraft.network.chat.Component oldName = npc.getCustomName();
         boolean oldNameVisible = npc.isCustomNameVisible();
         npc.setCustomName(null);

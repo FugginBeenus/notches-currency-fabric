@@ -36,14 +36,10 @@ public final class CrateCommands {
     private CrateCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /balloon (spawn + admin settings) =====
         dispatcher.register(
                 Commands.literal("balloon")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
-
-                        // /balloon spawn [pos]
                         .then(Commands.literal("spawn")
-                                // no args -> at player
                                 .executes(ctx -> {
                                     var src = ctx.getSource();
                                     var world = src.getLevel();
@@ -62,7 +58,6 @@ public final class CrateCommands {
                                     ), false);
                                     return 1;
                                 })
-                                // with explicit block pos
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .executes(ctx -> {
                                             var src = ctx.getSource();
@@ -79,7 +74,6 @@ public final class CrateCommands {
                                 )
                         )
 
-                        // /balloon setArea <x> <y> <z> <radius>
                         .then(Commands.literal("setArea")
                                 .then(Commands.argument("x", IntegerArgumentType.integer())
                                         .then(Commands.argument("y", IntegerArgumentType.integer())
@@ -105,7 +99,6 @@ public final class CrateCommands {
                                 )
                         )
 
-                        // /balloon setYRange <minY> <maxY>
                         .then(Commands.literal("setYRange")
                                 .then(Commands.argument("minY", IntegerArgumentType.integer(5))
                                         .then(Commands.argument("maxY", IntegerArgumentType.integer(6))
@@ -124,7 +117,6 @@ public final class CrateCommands {
                                 )
                         )
 
-                        // /balloon setCount <perDay>
                         .then(Commands.literal("setCount")
                                 .then(Commands.argument("perDay", IntegerArgumentType.integer(0))
                                         .executes(ctx -> {
@@ -140,7 +132,6 @@ public final class CrateCommands {
                                 )
                         )
 
-                        // /balloon perplayer on|off  - one each, alongside the wave
                         .then(Commands.literal("perplayer")
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(ctx -> {
@@ -151,7 +142,6 @@ public final class CrateCommands {
                                                     : "Waves spawn over the area only."), true);
                                             return 1;
                                         })))
-                        // /balloon playerarea on|off  - only inside the balloon area, or anywhere
                         .then(Commands.literal("playerarea")
                                 .then(Commands.argument("areaOnly", BoolArgumentType.bool())
                                         .executes(ctx -> {
@@ -162,7 +152,6 @@ public final class CrateCommands {
                                                     : "Players anywhere get one."), true);
                                             return 1;
                                         })))
-                        // /balloon playerheight <blocksUp> <spread>
                         .then(Commands.literal("playerheight")
                                 .then(Commands.argument("up", IntegerArgumentType.integer(5, 200))
                                         .then(Commands.argument("spread", IntegerArgumentType.integer(1, 64))
@@ -175,7 +164,6 @@ public final class CrateCommands {
                                                                     + spread + " blocks."), true);
                                                     return 1;
                                                 }))))
-                        // /balloon announce on|off
                         .then(Commands.literal("announce")
                                 .then(Commands.literal("on").executes(ctx -> {
                                     var src = ctx.getSource();
@@ -192,11 +180,9 @@ public final class CrateCommands {
                         )
         );
 
-        // ===== /cache =====
         dispatcher.register(
                 Commands.literal("cache")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
-                        // /cache spawn [radius]
                         .then(Commands.literal("spawn")
                                 .then(Commands.argument("radius", IntegerArgumentType.integer(8, 256))
                                         .executes(ctx -> {
@@ -216,7 +202,6 @@ public final class CrateCommands {
                                         })
                                 )
                                 .executes(ctx -> {
-                                    // default radius 64
                                     ServerPlayer p = ctx.getSource().getPlayer();
                                     var world = p.serverLevel();
                                     var placed = GoldenCacheManager.spawnNear(world, p.blockPosition(), 64);
@@ -230,7 +215,6 @@ public final class CrateCommands {
                                     }
                                 })
                         )
-                        // /cache spawn_at <x> <y> <z>
                         .then(Commands.literal("spawn_at")
                                 .then(Commands.argument("x", IntegerArgumentType.integer())
                                         .then(Commands.argument("y", IntegerArgumentType.integer())
@@ -258,7 +242,6 @@ public final class CrateCommands {
                                         )
                                 )
                         )
-                        // /cache announce <true|false>
                         .then(Commands.literal("announce")
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(ctx -> {

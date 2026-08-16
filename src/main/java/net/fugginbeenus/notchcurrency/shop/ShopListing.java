@@ -9,13 +9,13 @@ import java.util.UUID;
 public class ShopListing {
 
     private final UUID id;
-    private ItemStack itemForSale;      // The item being sold (template)
-    private int stockQuantity;          // How many are in stock
-    private int coinPrice;              // Price in coins (0 = not for coin sale)
-    private ItemStack itemPrice;        // Item required for barter (EMPTY = not for barter)
-    private int itemPriceCount;         // How many of itemPrice needed per purchase
-    private int totalSold;              // Statistics: total units sold
-    private long totalEarned;           // Statistics: total coins earned
+    private ItemStack itemForSale;
+    private int stockQuantity;
+    private int coinPrice;
+    private ItemStack itemPrice;
+    private int itemPriceCount;
+    private int totalSold;
+    private long totalEarned;
 
     public ShopListing(ItemStack itemForSale, int stockQuantity, int coinPrice) {
         this.id = UUID.randomUUID();
@@ -51,57 +51,42 @@ public class ShopListing {
         this.totalEarned = 0;
     }
 
-    // --- Getters ---
-
     public UUID getId() {
         return id;
     }
-
     public ItemStack getItemForSale() {
         return itemForSale;
     }
-
     public void setItemForSale(ItemStack item) {
         this.itemForSale = item.copy();
     }
-
     public int getStockQuantity() {
         return stockQuantity;
     }
-
     public int getCoinPrice() {
         return coinPrice;
     }
-
     public boolean acceptsCoins() {
         return coinPrice > 0;
     }
-
     public ItemStack getItemPrice() {
         return itemPrice;
     }
-
     public int getItemPriceCount() {
         return itemPriceCount;
     }
-
     public boolean acceptsBarter() {
         return !itemPrice.isEmpty() && itemPriceCount > 0;
     }
-
     public int getTotalSold() {
         return totalSold;
     }
-
     public long getTotalEarned() {
         return totalEarned;
     }
-
     public boolean isInStock() {
         return stockQuantity > 0;
     }
-
-    // --- Setters ---
 
     public void setCoinPrice(int price) {
         this.coinPrice = Math.max(0, price);
@@ -150,13 +135,11 @@ public class ShopListing {
 
     public synchronized void recordSale(int quantity, int coinsEarned) {
         if (quantity <= 0 || coinsEarned < 0) {
-            return; // Invalid sale
+            return;
         }
         this.totalSold += quantity;
         this.totalEarned += coinsEarned;
     }
-
-    // --- NBT Serialization ---
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();

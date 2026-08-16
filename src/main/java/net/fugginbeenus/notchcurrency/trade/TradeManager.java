@@ -17,8 +17,8 @@ import java.util.*;
 public final class TradeManager {
 
     private static final Map<UUID, TradeSession> sessions = new HashMap<>();
-    private static final int TIMEOUT_TICKS = 20 * 60 * 5; // 5 minutes
-    private static final double MAX_DISTANCE = 10.0;      // blocks
+    private static final int TIMEOUT_TICKS = 20 * 60 * 5;
+    private static final double MAX_DISTANCE = 10.0;
     private static boolean INITIALIZED = false;
 
     private TradeManager() {}
@@ -27,10 +27,8 @@ public final class TradeManager {
         if (INITIALIZED) return;
         INITIALIZED = true;
 
-        // Tick life-cycle (timeout / distance cancel)
         ServerTickEvents.START_SERVER_TICK.register(s -> tickSessions());
 
-        // Client -> server: money + ready toggle
         Net.registerServerReceiver(NotchPackets.TRADE_UPDATE, (srv, player, buf) -> {
             int money = buf.readVarInt();
             boolean ready = buf.readBoolean();
@@ -45,7 +43,6 @@ public final class TradeManager {
             });
         });
 
-        // Client -> server: cancel (ESC/close)
         Net.registerServerReceiver(NotchPackets.TRADE_CANCEL, (srv, player, buf) -> {
             String reason = buf.readUtf(64);
             srv.execute(() -> {
@@ -122,8 +119,6 @@ public final class TradeManager {
         sessions.remove(s.b.getUUID());
     }
 
-    /* ---------------- Trade Session ---------------- */
-
     public static final class TradeSession {
         final ServerPlayer a, b;
         int aMoney = 0, bMoney = 0;
@@ -147,14 +142,12 @@ public final class TradeManager {
         double distance() { return a.position().distanceTo(b.position()); }
 
         void openScreens() {
-            // A’s view (self on left)
             a.openMenu(new SimpleMenuProvider((containerId, inv, p) -> {
                 TradeScreenHandler h = new TradeScreenHandler(containerId, inv, p, this, true);
                 this.aHandler = h;
                 return h;
             }, Component.literal("Trade")));
 
-            // B’s view (their self is left on their screen)
             b.openMenu(new SimpleMenuProvider((containerId, inv, p) -> {
                 TradeScreenHandler h = new TradeScreenHandler(containerId, inv, p, this, false);
                 this.bHandler = h;
@@ -197,31 +190,23 @@ public final class TradeManager {
                 return;
             }
 
-            // Swap items
             var aItems = aHandler.takeItemsForCompletion();
             var bItems = bHandler.takeItemsForCompletion();
             for (ItemStack s : aItems) if (!s.isEmpty()) b.getInventory().placeItemBackInInventory(s.copy());
             for (ItemStack s : bItems) if (!s.isEmpty()) a.getInventory().placeItemBackInInventory(s.copy());
 
-            // Money transfers
             BalanceStore.subtract(a, aMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
             BalanceStore.add(b, aMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());
             BalanceStore.subtract(b, bMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());
             BalanceStore.add(a, bMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
-
-            // Push fresh balances to HUD immediately
             NotchPackets.sendBalance(a, BalanceStore.get(a));
             NotchPackets.sendBalance(b, BalanceStore.get(b));
-
-            // Notify both clients trade is complete
             sendDone(a);
             sendDone(b);
 
             closed = true;
             TradeManager.remove(this);
         }
-
-        /* ---------- helpers ---------- */
 
         private void sendCancel(ServerPlayer p, String reason) {
             var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();

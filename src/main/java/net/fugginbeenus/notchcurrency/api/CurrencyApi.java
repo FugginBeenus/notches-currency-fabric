@@ -61,7 +61,6 @@ public final class CurrencyApi {
         if (server == null || playerId == null || amount <= 0) return;
         BalanceStore.add(server, playerId, amount, reason, detail);
 
-        // If player is online, sync their balance
         ServerPlayer online = server.getPlayerList().getPlayer(playerId);
         if (online != null) {
             syncToClient(online);

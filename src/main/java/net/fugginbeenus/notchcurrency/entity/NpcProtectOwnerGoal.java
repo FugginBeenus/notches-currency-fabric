@@ -26,7 +26,6 @@ public class NpcProtectOwnerGoal extends TargetGoal {
         Player owner = npc.resolveFollowTarget();
         if (owner == null) return false;
 
-        // Someone hitting the owner is the urgent case, so it wins.
         LivingEntity pick = owner.getLastHurtByMob();
         if (!worthAttacking(pick, owner)) {
             LivingEntity target = owner.getLastHurtMob();

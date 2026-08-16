@@ -19,26 +19,16 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-ShopState");
     private static final String DATA_KEY = "notchcurrency_shops";
-
-    // shopId -> PlayerShop
     private final Map<UUID, PlayerShop> shops = new HashMap<>();
-
-    // ownerId -> list of shopIds (for quick lookup)
     private final Map<UUID, Set<UUID>> ownerShops = new HashMap<>();
-
-    // npcId -> shopId (for NPC interaction lookup)
     private final Map<UUID, UUID> npcToShop = new HashMap<>();
 
     public ShopState() {
         super();
     }
-
-    // --- Static Accessors ---
-
     public static ShopState get(ServerLevel world) {
         return get(world.getServer());
     }
-
     public static ShopState get(MinecraftServer server) {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) {
@@ -48,8 +38,6 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         DimensionDataStorage manager = overworld.getDataStorage();
         return StateData.getOrCreate(manager, ShopState::new, ShopState::fromNbt, DATA_KEY);
     }
-
-    // --- Shop Management ---
 
     @Nullable
     public PlayerShop createShop(UUID ownerId, String ownerName, String shopName, int maxShopsPerPlayer) {
@@ -130,7 +118,6 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
 
         UUID oldOwnerId = shop.getOwnerId();
 
-        // Remove from old owner's list
         Set<UUID> oldOwned = ownerShops.get(oldOwnerId);
         if (oldOwned != null) {
             oldOwned.remove(shopId);
@@ -138,11 +125,8 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
                 ownerShops.remove(oldOwnerId);
             }
         }
-
-        // Transfer ownership in shop
         shop.transferOwnership(newOwnerId, newOwnerName);
 
-        // Add to new owner's list
         ownerShops.computeIfAbsent(newOwnerId, k -> new HashSet<>()).add(shopId);
 
         LOGGER.info("Transferred shop '{}' from {} to {}", shop.getShopName(), oldOwnerId, newOwnerId);
@@ -181,13 +165,10 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         return Collections.unmodifiableCollection(shops.values());
     }
 
-    // --- NPC Linking ---
-
     public void linkNpcToShop(UUID npcId, UUID shopId) {
         PlayerShop shop = shops.get(shopId);
         if (shop == null) return;
 
-        // Unlink from previous shop if any
         UUID previousShop = npcToShop.get(npcId);
         if (previousShop != null && !previousShop.equals(shopId)) {
             PlayerShop prev = shops.get(previousShop);
@@ -196,7 +177,6 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
             }
         }
 
-        // Unlink shop's previous NPC if any
         UUID previousNpc = shop.getLinkedNpcId();
         if (previousNpc != null && !previousNpc.equals(npcId)) {
             npcToShop.remove(previousNpc);
@@ -220,10 +200,6 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         }
     }
 
-    // --- NBT Serialization ---
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -270,19 +246,10 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         return state;
     }
 
-    // --- Utility ---
-
     public void markDirtyAndSave() {
         setDirty();
     }
 
-    /**
-     * Shops this player owns that no living NPC is attached to.
-     *
-     * <p>Used to offer the owner a way back to a shop whose shopkeeper was lost. Same caveat as the
-     * sweep: an NPC in an unloaded chunk cannot be told from a deleted one, so this is a list to
-     * show somebody, not a list to act on.
-     */
     public List<PlayerShop> shopsWithoutNpc(MinecraftServer server, UUID ownerId) {
         List<PlayerShop> out = new java.util.ArrayList<>();
         for (PlayerShop shop : getShopsByOwner(ownerId)) {
@@ -297,20 +264,8 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         return out;
     }
 
-    /** What a sweep found. Nothing is changed unless {@code apply} was set. */
     public record OrphanSweep(int missing, int unlinked) {}
 
-    /**
-     * Finds shops whose linked NPC could not be located, and optionally unlinks them.
-     *
-     * <p>Two things this deliberately does not do. It does not look in one dimension: an NPC in the
-     * nether is not a missing NPC. And it does not unlink on its own, because a missing NPC and an
-     * NPC standing in an unloaded chunk are the same thing from here. There is no way to tell them
-     * apart without loading the whole world, so the sweep reports and the operator decides.
-     *
-     * <p>Unlinking is not reversible from in game. Getting it wrong on a market district that
-     * happened to be unloaded would cut every shop loose from its shopkeeper at once.
-     */
     public OrphanSweep cleanupOrphans(MinecraftServer server, boolean apply) {
         List<UUID> missing = new java.util.ArrayList<>();
 

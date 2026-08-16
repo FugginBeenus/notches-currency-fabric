@@ -24,9 +24,9 @@ public class NotchNpcModelPickerScreen extends Screen {
 
     private static final class Entry {
         final String id, label;
-        @Nullable final EntityType<?> type;      // null => an NPC model (humanoid / APP.ly)
+        @Nullable final EntityType<?> type;
         @Nullable final String npcModel, npcSkin;
-        @Nullable LivingEntity preview;          // cached once created
+        @Nullable LivingEntity preview;
 
         Entry(String id, String label, @Nullable EntityType<?> type, @Nullable String npcModel, @Nullable String npcSkin) {
             this.id = id;
@@ -43,18 +43,13 @@ public class NotchNpcModelPickerScreen extends Screen {
     private static final int W = 320, H = 250;
     private static final int COLS = 5, TILE_W = 60, TILE_H = 56;
     private static final int GRID_TOP = 48, VISIBLE_ROWS = 3;
-
-    /** Set when a model is created, so the next open rebuilds rather than showing a stale list. */
     private static boolean stale = false;
-
     public static void markStale() {
         stale = true;
     }
-
     private final NotchNpcEditorScreen editor;
     private final List<Entry> all = new ArrayList<>();
     private List<Entry> filtered = new ArrayList<>();
-
     private int px, py, gridX, gridY;
     private EditBox search;
     private int scrollRow = 0;
@@ -87,13 +82,8 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private void buildEntries() {
-        // No entities are created here: just the list. Previews are built lazily as tiles are drawn.
         all.add(new Entry(NotchNpcEntity.MODEL_HUMANOID, "Humanoid", null, NotchNpcEntity.MODEL_HUMANOID, "1"));
-        // The model, its animation and all five skins ship in this mod and only need GeckoLib, which
-        // is a hard dependency, so there is nothing to gate this on.
         all.add(new Entry(NotchNpcEntity.MODEL_APPLY, "APP.ly", null, NotchNpcEntity.MODEL_APPLY, "default"));
-        // Anything dropped in config/notchcurrency/npc_models. Listed next to the built-in model
-        // rather than down with the mobs, because they are the same kind of thing.
         for (var bundle : net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.all()) {
             String modelId = net.fugginbeenus.notchcurrency.npcmodel.NpcModelBundle.modelIdFor(bundle.id());
             all.add(new Entry(modelId, bundle.displayName(), null, modelId, "default"));
@@ -130,7 +120,6 @@ public class NotchNpcModelPickerScreen extends Screen {
                 e.preview = makeNpc(world, e.npcModel, e.npcSkin);
             }
         } catch (Exception ignored) {
-            // A type that can't be built on the client stays without a preview (drawn as "?").
         }
         return e.preview;
     }
@@ -145,9 +134,6 @@ public class NotchNpcModelPickerScreen extends Screen {
     }
 
     private static void faceForward(LivingEntity le) {
-        // A preview entity is never added to the level, so nothing ever gives it a network id. From
-        // 26.1 getId throws on an unassigned one rather than returning zero, and the renderer asks
-        // for it while extracting held items, which took out every tile in this list.
         le.setId(-1);
         le.setYRot(180);
         le.yRotO = 180;
@@ -200,7 +186,6 @@ public class NotchNpcModelPickerScreen extends Screen {
         }
         ctx.disableScissor();
 
-        // Scrollbar on the right of the grid.
         if (maxScroll > 0) {
             int sbX = gridX + COLS * TILE_W + 1, sbW = 6;
             NotchWidgets.inset(ctx, sbX, gridY, sbW, gridH, NotchTheme.DEEP);
@@ -227,11 +212,6 @@ public class NotchNpcModelPickerScreen extends Screen {
         LivingEntity model = preview(e);
         try {
             if (model == null) throw new IllegalStateException("no preview");
-            // Fit each preview inside its tile using BOTH dimensions (so wide/tall mobs don't bleed
-            // into neighbouring tiles), leaving room for the label under it.
-            // Fit on the larger of the two dimensions rather than each one separately. A flat mob
-            // like an axolotl has a short collision box and a long model, so fitting on height
-            // alone scaled it up until it covered its neighbours.
             float extent = Math.max(0.5f, Math.max(model.getBbHeight(), model.getBbWidth()));
             int size = (int) Math.max(3, Math.min((TILE_H - 22) / extent, (TILE_W - 12) / extent));
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, cx, ty + TILE_H - 16, size, 0f, 0f, model);
@@ -267,7 +247,6 @@ public class NotchNpcModelPickerScreen extends Screen {
                 Minecraft.getInstance().setScreen(editor);
                 return true;
             }
-            // Scrollbar drag.
             int gridH = VISIBLE_ROWS * TILE_H, sbX = gridX + COLS * TILE_W + 1;
             if (mx >= sbX && mx < sbX + 6 && my >= gridY && my < gridY + gridH) {
                 draggingScroll = true;
@@ -359,24 +338,19 @@ public class NotchNpcModelPickerScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

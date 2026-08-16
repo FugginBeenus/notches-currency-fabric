@@ -50,8 +50,6 @@ public class AdminShop {
         for (AdminShopEntry e : entries) e.decay();
     }
 
-    // ---- NBT ----
-
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "Id", id);

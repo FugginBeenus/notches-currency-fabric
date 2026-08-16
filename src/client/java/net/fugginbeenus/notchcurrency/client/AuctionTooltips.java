@@ -37,28 +37,20 @@ public final class AuctionTooltips {
         long price = tag.getLong("nc_price");
         String seller = tag.contains("nc_seller") ? tag.getString("nc_seller") : "Unknown";
 
-        // Keep the first line as name if present; otherwise use stack name
         Component name = lines.isEmpty() ? stack.getHoverName() : lines.get(0);
         lines.clear();
-
-        // Name line
         lines.add(name.copy().withStyle(ChatFormatting.WHITE));
 
-        // Price line: "Price: 45 ⛁"
         Component priceLine = Component.empty()
                 .append(Component.literal("Price: ").withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(String.valueOf(price) + " ").withStyle(ChatFormatting.YELLOW))
                 .append(NotchCurrency.coinIcon());
 
         lines.add(priceLine);
-
-        // Seller line
         lines.add(
                 Component.literal("Seller: " + seller)
                         .withStyle(ChatFormatting.GRAY)
         );
-
-        // Hint line
         lines.add(
                 Component.literal("Click to buy")
                         .withStyle(ChatFormatting.YELLOW)

@@ -1,6 +1,6 @@
 {
 	"format_version": "1.21.11",
-	"credit": "Notch Currency - coin flip gambling table (furniture-scale, spills the block).",
+	"credit": "Made by FugginBeenus).",
 	"textures": {
 		"0": "notchcurrency:block/coin_flip",
 		"particle": "notchcurrency:block/coin_flip"

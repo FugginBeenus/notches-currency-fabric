@@ -114,9 +114,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
                     y + BountyAdminScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -132,7 +130,6 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // No default labels.
     }
 
     //? if >=1.21.11 {
@@ -194,16 +191,13 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

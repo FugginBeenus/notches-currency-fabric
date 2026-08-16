@@ -22,7 +22,6 @@ public final class ServerPacketHandlers {
     private ServerPacketHandlers() {}
 
     public static void register() {
-        // Server handles client's explicit balance request
         Net.registerServerReceiver(
                 NotchPackets.BALANCE_REQUEST,
                 (server, player, buf) ->
@@ -30,7 +29,6 @@ public final class ServerPacketHandlers {
                                 NotchPackets.sendBalance(player, BalanceStore.get(player)))
         );
 
-        // Server handles client's bid request (from right-click GUI)
         Net.registerServerReceiver(
                 NotchPackets.BID_REQUEST,
                 (server, player, buf) -> {
@@ -38,7 +36,6 @@ public final class ServerPacketHandlers {
                     long bidAmount = buf.readVarLong();
 
                     server.execute(() -> {
-                        // player is already a ServerPlayer here
                         ServerPlayer sp = player;
                         ServerLevel world = sp.serverLevel();
                         AuctionState state = AuctionState.get(world);
@@ -47,7 +44,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles cancel-listing requests from the AH "My Listings" popup
         Net.registerServerReceiver(
                 NotchPackets.AUCTION_CANCEL,
                 (server, player, buf) -> {
@@ -67,7 +63,6 @@ public final class ServerPacketHandlers {
                             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the seller can cancel this listing.").withStyle(ChatFormatting.RED));
                             return;
                         }
-                        // Refund any standing bid before removing: bids escrow coins.
                         long refunded = state.refundHighestBid(world, l);
                         state.removeListing(listingId);
                         if (refunded > 0) {
@@ -96,7 +91,6 @@ public final class ServerPacketHandlers {
                                 .append(l.stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
                                 .append(Component.literal(" - item returned.").withStyle(ChatFormatting.GREEN)));
 
-                        // Refresh the open Auction House so the popup updates live.
                         if (sp.containerMenu instanceof net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler ah) {
                             ah.reload();
                             ah.broadcastChanges();
@@ -105,7 +99,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles create-listing from the "List an Item" screen
         Net.registerServerReceiver(
                 NotchPackets.AUCTION_LIST,
                 (server, player, buf) -> {
@@ -120,7 +113,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles raffle admin GUI "Save & Apply" (op-only)
         Net.registerServerReceiver(
                 NotchPackets.RAFFLE_ADMIN_SAVE,
                 (server, player, buf) -> {
@@ -136,7 +128,7 @@ public final class ServerPacketHandlers {
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
                         cfg.raffle.ticketPrice = Math.max(1L, price);
                         cfg.raffle.houseCutPercent = Math.max(0, Math.min(100, cut));
-                        cfg.raffle.drawIntervalMinutes = Math.max(0, intervalDays) * 1440; // days → minutes
+                        cfg.raffle.drawIntervalMinutes = Math.max(0, intervalDays) * 1440;
                         cfg.raffle.enabled = enabled;
                         net.fugginbeenus.notchcurrency.config.NotchConfigIO.save(cfg);
                         net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.applyConfig(cfg);
@@ -145,16 +137,12 @@ public final class ServerPacketHandlers {
                                 net.fugginbeenus.notchcurrency.economy.raffle.RaffleState.get(server);
 
                         if (wasEnabled && !enabled) {
-                            // Turning it off cancels the raffle: wipe entries/pot/prize, void tickets,
-                            // and hand the escrowed prize back to the admin.
                             net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.resetAndReturn(player);
                             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Raffle cancelled - entries & pot cleared, prize returned, tickets voided.")
                                     .withStyle(ChatFormatting.YELLOW));
                             return;
                         }
 
-                        // Starting a raffle with leftover ticket state → clear the old pot/entries
-                        // (keeps the prize you're configuring) so it doesn't begin with a stale pot.
                         if (!wasEnabled && enabled && (state.getPot() > 0 || state.getTotalTickets() > 0)) {
                             state.clearEntries();
                         }
@@ -170,7 +158,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles bounty board actions (take / claim / turn in) from the GUI
         Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ACTION,
                 (server, player, buf) -> {
@@ -187,7 +174,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles bounty admin GUI "Save & Apply" (op-only)
         Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ADMIN_SAVE,
                 (server, player, buf) -> {
@@ -214,7 +200,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles loan GUI borrow/repay
         Net.registerServerReceiver(
                 NotchPackets.LOAN_ACTION,
                 (server, player, buf) -> {
@@ -227,7 +212,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles slot-machine spins (bet typed in the GUI)
         Net.registerServerReceiver(
                 NotchPackets.SLOTS_SPIN,
                 (server, player, buf) -> {
@@ -241,7 +225,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Server handles coin-flip bets (side + bet from the GUI; block does the reveal)
         Net.registerServerReceiver(
                 NotchPackets.COINFLIP_FLIP,
                 (server, player, buf) -> {
@@ -252,7 +235,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // ---- Notch NPC editor (owner/op re-checked inside NotchNpcManager) ----
         Net.registerServerReceiver(NotchPackets.NPC_SET_ROLE, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int ord = buf.readVarInt();
@@ -269,7 +251,7 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_NAME, (server, player, buf) -> {
             UUID id = buf.readUUID();
-            String name = buf.readUtf(64); // editor field caps at 48; wire cap is belt-and-suspenders
+            String name = buf.readUtf(64);
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
@@ -311,7 +293,7 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, buf) -> {
             UUID id = buf.readUUID();
-            String nodeId = buf.readUtf(64); // page ids are <=24 chars of [a-z0-9_]
+            String nodeId = buf.readUtf(64);
             int choice = buf.readVarInt();
             server.execute(() ->
                     net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.choose(player, id, nodeId, choice));
@@ -380,8 +362,6 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Switching tabs. The aim comes back with it so the Outbox does not forget who the parcel
-        // was for, and it is only ever used to preselect a name the sender still has to send to.
         Net.registerServerReceiver(NotchPackets.MAIL_TAB, (server, player, buf) -> {
             int tab = buf.readVarInt();
             UUID aim = buf.readBoolean() ? buf.readUUID() : null;
@@ -398,8 +378,6 @@ public final class ServerPacketHandlers {
                 server.execute(() ->
                         net.fugginbeenus.notchcurrency.mail.MailManager.openPost(player, null)));
 
-        // Posting a parcel. The items come from the open screen, never from the packet, so a
-        // crafted packet cannot conjure anything the sender did not actually put in.
         Net.registerServerReceiver(NotchPackets.MAIL_SEND, (server, player, buf) -> {
             UUID recipient = buf.readUUID();
             String note = buf.readUtf(128);
@@ -413,8 +391,6 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Starting a live trade from the mailbox. It goes through the same invite as /trade, so
-        // the other player still has to agree before either inventory is on the table.
         Net.registerServerReceiver(NotchPackets.MAIL_TRADE, (server, player, buf) -> {
             UUID target = buf.readUUID();
             server.execute(() -> {
@@ -430,9 +406,8 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Take all: hands over the parcels on screen, as many as the player can hold.
         Net.registerServerReceiver(NotchPackets.MAIL_TAKE, (server, player, buf) -> {
-            buf.readUUID(); // kept so older clients still parse; the inbox has one button
+            buf.readUUID();
             server.execute(() -> {
                 if (player.containerMenu instanceof
                         net.fugginbeenus.notchcurrency.mail.MailInboxMenu inbox) {
@@ -467,7 +442,7 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                        && player.distanceToSqr(npc) <= 64.0) { // same 8-block reach as dialogue
+                        && player.distanceToSqr(npc) <= 64.0) {
                     net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.act(player, npc, action,
                             name, color, fee, open);
                 }
@@ -534,16 +509,12 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // A player asking for a model this server has that they do not.
-        // Balloon settings from a config screen. Operators only: these are the world's, not the
-        // client's, and everybody's game reads them.
         Net.registerServerReceiver(NotchPackets.BALLOON_CONFIG, (server, player, buf) -> {
             var incoming = new net.fugginbeenus.notchcurrency.config.NotchConfig();
             net.fugginbeenus.notchcurrency.crate.BalloonConfigWire.read(buf, incoming);
             server.execute(() -> {
                 if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
                 net.fugginbeenus.notchcurrency.crate.DailyCrateManager.applyToWorld(server, incoming);
-                // Straight back to everyone, so any screen that is open stops showing the old values.
                 for (net.minecraft.server.level.ServerPlayer other : server.getPlayerList().getPlayers()) {
                     net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(other);
                 }
@@ -556,8 +527,6 @@ public final class ServerPacketHandlers {
                     .sendModelTo(player, id));
         });
 
-        // A player uploading one. Operators only: this writes to the server and is then handed to
-        // everybody who joins, which is not something any player should be able to do unprompted.
         Net.registerServerReceiver(NotchPackets.NPC_MODEL_PUSH, (server, player, buf) -> {
             int phase = buf.readByte();
             String id = buf.readUtf(64);
@@ -783,8 +752,6 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_SHARE, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            // Read the payload on the network thread, but cap it here: this is the one packet whose
-            // contents come from another player's clipboard.
             String payload = buf.readUtf(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
@@ -798,7 +765,7 @@ public final class ServerPacketHandlers {
             UUID id = buf.readUUID();
             String model = buf.readUtf(64);
             String skinType = buf.readUtf(16);
-            String skinValue = buf.readUtf(256); // player name or skin URL (client field caps at 256)
+            String skinValue = buf.readUtf(256);
             boolean slim = buf.readBoolean();
             float scaleX = buf.readFloat();
             float scaleY = buf.readFloat();
@@ -813,7 +780,6 @@ public final class ServerPacketHandlers {
             });
         });
 
-        // Server handles ATM withdraw requests (client -> server)
         Net.registerServerReceiver(
                 NotchPackets.ATM_WITHDRAW,
                 (server, player, buf) -> {
@@ -825,7 +791,6 @@ public final class ServerPacketHandlers {
                         if (requested <= 0) return;
 
                         long currentBal = BalanceStore.get(sp);
-                        // requested is a count of physical coin items, so it fits in int.
                         int toWithdraw = (int) Math.min(currentBal, requested);
                         if (toWithdraw <= 0) {
                             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have that many " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " in your account.")
@@ -833,12 +798,8 @@ public final class ServerPacketHandlers {
                             return;
                         }
 
-                        // Subtract from virtual balance and push the new balance to the
-                        // client (HUD + ATM screen read it from there).
                         BalanceStore.subtract(sp, toWithdraw, net.fugginbeenus.notchcurrency.economy.TransactionReason.ATM_WITHDRAW, "ATM withdraw");
                         NotchPackets.sendBalance(sp, BalanceStore.get(sp));
-
-                        // Give physical coins (prefer physical stacks)
                         CoinEconomy.give(sp, toWithdraw, false);
 
                         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Withdrew " + toWithdraw + " ")
@@ -847,19 +808,16 @@ public final class ServerPacketHandlers {
                     });
                 }
         );
-        // Handle shop purchase requests
         Net.registerServerReceiver(
                 NotchPackets.SHOP_PURCHASE,
                 (server, player, buf) -> {
                     UUID shopId = buf.readUUID();
                     UUID listingId = buf.readUUID();
                     int quantity = buf.readVarInt();
-                    // Note: useCoins boolean is still read for backwards compatibility but ignored
                     buf.readBoolean();
 
                     server.execute(() -> {
                         ServerPlayer sp = player;
-                        // Use unified purchase method that handles both coin AND barter
                         net.fugginbeenus.notchcurrency.shop.PlayerShopManager.PurchaseResult result =
                                 net.fugginbeenus.notchcurrency.shop.PlayerShopManager.purchase(sp, shopId, listingId, quantity);
 
@@ -883,7 +841,6 @@ public final class ServerPacketHandlers {
                 }
         );
 
-        // Handle shop balance withdrawal
         Net.registerServerReceiver(
                 NotchPackets.SHOP_WITHDRAW,
                 (server, player, buf) -> {
@@ -916,7 +873,6 @@ public final class ServerPacketHandlers {
                                     net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_PAYOUT, "shop withdrawal");
                         }
 
-                        // Give barter items
                         for (ItemStack item : barterItems) {
                             if (!item.isEmpty()) {
                                 int remaining = item.getCount();
@@ -953,10 +909,6 @@ public final class ServerPacketHandlers {
                     });
                 }
         );
-        // NOTE: SHOP_REMOVE_LISTING is registered once above (it routes through
-        // PlayerShopManager.removeListing, which returns leftover stock to the owner).
-        // A second, duplicate registration used to live here; Fabric silently ignores
-        // duplicate receivers, so it was dead code and has been removed.
     }
 
 }

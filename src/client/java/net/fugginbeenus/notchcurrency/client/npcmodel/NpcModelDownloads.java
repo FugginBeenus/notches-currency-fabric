@@ -15,38 +15,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Collecting the models a server has that this game does not.
- *
- * <p>The server sends a list of names and fingerprints. Anything already on disk with a matching
- * fingerprint is skipped, so joining a server you play on daily downloads nothing at all. The rest
- * are asked for, and when the last one lands the resources are reloaded once, not once each.
- */
 public final class NpcModelDownloads {
 
     private NpcModelDownloads() {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcModels");
     private static final String SERVER = "server";
-
-    /** What is still on its way, so the reload waits for the last one. */
     private static final Set<String> waiting = new HashSet<>();
     private static int arrived;
-
-    /**
-     * Whether this server said we may share models with it.
-     *
-     * <p>Told to us rather than worked out here. A client cannot know its own permission level
-     * reliably, and even if it could, the answer would be a hint rather than an authority: the
-     * server checks again on every packet it receives.
-     */
     private static boolean mayShare;
-
     public static boolean mayShare() {
         return mayShare;
     }
-
-    /** The server's list. Works out what is missing and asks for exactly that. */
     public static void onList(Map<String, String> offered, boolean allowedToShare) {
         mayShare = allowedToShare;
         waiting.clear();
@@ -66,12 +46,6 @@ public final class NpcModelDownloads {
         }
     }
 
-    /**
-     * Whether this game already has that exact model.
-     *
-     * <p>Packed and fingerprinted the same way the server does it, so the two are comparing the same
-     * thing rather than trusting a stamp somebody could have edited.
-     */
     private static boolean haveMatching(String id, String hash) {
         try {
             var folder = NpcModelLoader.modelsDir().resolve(id);
@@ -82,7 +56,6 @@ public final class NpcModelDownloads {
         }
     }
 
-    /** One packet of an incoming model. */
     public static void onPiece(int phase, String id, byte[] part, int announcedBytes) {
         switch (phase) {
             case NpcModelStream.PHASE_BEGIN -> NpcModelStream.begin(SERVER, id, announcedBytes);
@@ -104,7 +77,6 @@ public final class NpcModelDownloads {
             else arrived++;
         }
 
-        // Wait for the last one. Reloading resources per model would be a hitch each time.
         if (!waiting.isEmpty()) return;
         if (arrived == 0) return;
 
@@ -119,7 +91,6 @@ public final class NpcModelDownloads {
         }
     }
 
-    /** Leaving a server abandons anything half received rather than carrying it to the next one. */
     public static void reset() {
         NpcModelStream.forget(SERVER);
         waiting.clear();

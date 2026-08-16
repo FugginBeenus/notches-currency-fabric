@@ -1,7 +1,7 @@
 {
   "render_type": "minecraft:cutout",
   "format_version": "1.21.11",
-  "credit": "Notch Currency - wide leaderboard display board (spills ~1.75 wide, 2 tall).",
+  "credit": "Made by FugginBeenus",
   "textures": {
     "0": "notchcurrency:block/ledger_board",
     "particle": "notchcurrency:block/ledger_board",

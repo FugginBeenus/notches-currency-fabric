@@ -27,29 +27,20 @@ import java.util.Locale;
 import java.util.UUID;
 
 public class AuctionHouseScreenHandler extends AbstractContainerMenu {
-
-    // layout: 9 columns × 4 rows of listing slots
     public static final int LISTING_COLUMNS = 9;
     public static final int LISTING_ROWS    = 4;
-    public static final int LISTING_SIZE    = LISTING_COLUMNS * LISTING_ROWS; // 36
-
-    // Slot positions inside the 256×256 texture (relative to GUI top-left)
+    public static final int LISTING_SIZE    = LISTING_COLUMNS * LISTING_ROWS;
     private static final int SLOT_SIZE        = 18;
-    private static final int LISTING_START_X  = 9;   // left margin under “MY LISTINGS”
-    private static final int LISTING_START_Y  = 28;  // just below the green header bar
-
+    private static final int LISTING_START_X  = 9;
+    private static final int LISTING_START_Y  = 28;
     private static final int PLAYER_INV_START_X = 9;
-    private static final int PLAYER_INV_START_Y = 127; // top of the lower grey inventory area
-
+    private static final int PLAYER_INV_START_Y = 127;
     private static final int HOTBAR_START_X = 9;
-    private static final int HOTBAR_START_Y = PLAYER_INV_START_Y + 58; // standard 58-pixel offset
-
-    // Popup inventory (My Listings overlay): 5 × 2 grid
+    private static final int HOTBAR_START_Y = PLAYER_INV_START_Y + 58;
     public static final int POPUP_COLUMNS = 5;
     public static final int POPUP_ROWS    = 2;
     public static final int POPUP_SIZE    = POPUP_COLUMNS * POPUP_ROWS;
 
-    // --- READ-ONLY SLOT FOR AH GRID ---
     private static class ReadOnlySlot extends Slot {
         public ReadOnlySlot(Container inv, int index, int x, int y) {
             super(inv, index, x, y);
@@ -66,19 +57,13 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         }
     }
 
-    // Inventories
     private final SimpleContainer listingsInv   = new SimpleContainer(LISTING_SIZE);
     private final SimpleContainer userPopupInv  = new SimpleContainer(POPUP_SIZE);
-
-    // For click-to-buy: which listing UUID is in each AH slot?
     private final UUID[] listingIds = new UUID[LISTING_SIZE];
-
     private final Inventory playerInv;
     private final Level world;
-
-    // --- UI / paging / filter state used by AuctionHouseScreen ---
     private int page       = 0;
-    private int totalPages = 1; // computed from auction data
+    private int totalPages = 1;
 
     private boolean showMyListings = false;
 
@@ -95,17 +80,15 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
     }
 
     public enum SortMode {
-        NEWEST,        // "Most recent"
-        ENDING_SOON,   // "Ending soon"
-        PRICE_DESC,    // "Highest price"
-        PRICE_ASC,     // "Lowest price"
-        NAME           // "Item name"
+        NEWEST,
+        ENDING_SOON,
+        PRICE_DESC,
+        PRICE_ASC,
+        NAME
     }
 
     private FilterMode filter   = FilterMode.ALL;
     private SortMode  sortMode  = SortMode.NEWEST;
-
-    // ---- property sync indices ----
     private static final int PROP_PAGE        = 0;
     private static final int PROP_TOTAL_PAGES = 1;
     private static final int PROP_FILTER      = 2;
@@ -120,7 +103,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
 
         this.addDataSlots(properties);
 
-        // --- Listing slots (top grid) – READ ONLY ---
         int index = 0;
         for (int row = 0; row < LISTING_ROWS; row++) {
             for (int col = 0; col < LISTING_COLUMNS; col++) {
@@ -130,7 +112,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             }
         }
 
-        // --- Player inventory (3×9) ---
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int x = PLAYER_INV_START_X + col * SLOT_SIZE;
@@ -139,25 +120,20 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             }
         }
 
-        // --- Hotbar (1×9) ---
         for (int col = 0; col < 9; col++) {
             int x = HOTBAR_START_X + col * SLOT_SIZE;
             int y = HOTBAR_START_Y;
             this.addSlot(new Slot(playerInv, col, x, y));
         }
 
-        // --- Hidden popup slots (for syncing userPopupInv to client) ---
         for (int i = 0; i < POPUP_SIZE; i++) {
             this.addSlot(new ReadOnlySlot(userPopupInv, i, -10000, -10000));
         }
 
-        // Initial load for page 0
         reload();
     }
 
-    // Sync small bits of state to the client
     private void syncProperties() {
-        // Only meaningful on the server side; client will receive these via packets.
         if (world != null && !world.isClientSide) {
             properties.set(PROP_PAGE, page);
             properties.set(PROP_TOTAL_PAGES, totalPages);
@@ -167,12 +143,10 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
     }
 
     private boolean matchesFilter(AuctionListing listing) {
-        // ALL shows everything
         if (filter == FilterMode.ALL) {
             return true;
         }
 
-        // Re-derive category if missing or "other"
         String cat = listing.category;
         if (cat == null || cat.isEmpty() || cat.equalsIgnoreCase("other")) {
             cat = AuctionCategories.classify(listing.stack);
@@ -202,8 +176,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             case ALL       -> true;
         };
     }
-
-    // ======== PUBLIC API FOR THE SCREEN ========
 
     public int getPage() {
         if (world != null && world.isClientSide) {
@@ -244,7 +216,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
     }
 
     public void reload() {
-        // Only the server actually rebuilds from AuctionState.
         if (!(world instanceof ServerLevel)) {
             return;
         }
@@ -338,8 +309,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         return listingIds[slotIndex];
     }
 
-    // ======== INTERNAL RELOAD LOGIC ========
-
     private void clearInventoriesClientSide() {
         for (int i = 0; i < listingsInv.getContainerSize(); i++) {
             listingsInv.setItem(i, ItemStack.EMPTY);
@@ -357,11 +326,7 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         }
 
         AuctionState state = AuctionState.get(serverWorld);
-
-        // Pull the persistent list from AuctionState
         List<AuctionListing> allListings = new ArrayList<>(state.getListings());
-
-        // Apply category filter
         List<AuctionListing> categoryFiltered = new ArrayList<>();
         for (AuctionListing l : allListings) {
             if (matchesFilter(l)) {
@@ -369,8 +334,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             }
         }
         allListings = categoryFiltered;
-
-        // If showMyListings is meant to change the main grid, filter by seller here
         List<AuctionListing> mainList = allListings;
         if (showMyListings) {
             UUID me = playerInv.player.getUUID();
@@ -382,7 +345,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             }
         }
 
-        // Sort according to sortMode
         Comparator<AuctionListing> cmp = switch (sortMode) {
             case PRICE_ASC   -> Comparator.comparingLong(l -> l.price);
             case PRICE_DESC  -> Comparator.comparingLong((AuctionListing l) -> l.price).reversed();
@@ -392,17 +354,14 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         };
         mainList.sort(cmp);
 
-        // Compute total pages based on mainList
         int total = (mainList.size() + LISTING_SIZE - 1) / LISTING_SIZE;
         setTotalPages(total == 0 ? 1 : total);
 
-        // Clamp page
         if (page >= totalPages) {
             page = totalPages - 1;
         }
         if (page < 0) page = 0;
 
-        // Fill listing grid for current page + UUID mapping
         for (int i = 0; i < listingsInv.getContainerSize(); i++) {
             listingsInv.setItem(i, ItemStack.EMPTY);
             listingIds[i] = null;
@@ -412,12 +371,11 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             int start = page * LISTING_SIZE;
             for (int i = 0; i < LISTING_SIZE && (start + i) < mainList.size(); i++) {
                 AuctionListing listing = mainList.get(start + i);
-                listingsInv.setItem(i, makeDisplayStack(listing)); // decorated tooltip stack
+                listingsInv.setItem(i, makeDisplayStack(listing));
                 listingIds[i] = listing.id;
             }
         }
 
-        // Fill popup with *this player's* listings (first POPUP_SIZE entries)
         UUID me = playerInv.player.getUUID();
         List<AuctionListing> mine = new ArrayList<>();
         for (AuctionListing l : allListings) {
@@ -435,7 +393,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             userPopupInv.setItem(i, mine.get(i).stack.copy());
         }
 
-        // push page / total / filter / sort to client
         syncProperties();
     }
 
@@ -443,12 +400,9 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         reload();
     }
 
-    // Build the display-only stack used in the AH grid (adds tooltip lore + NBT for client UI).
     private ItemStack makeDisplayStack(AuctionListing listing) {
         ItemStack base = listing.stack.copy();
         base.setCount(listing.stack.getCount());
-
-        // Core NBT used by the client-side tooltip
         CompoundTag tag = StackData.editData(base);
         tag.putLong("nc_price", listing.price);
         tag.putString("nc_seller", listing.sellerName);
@@ -468,8 +422,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
 
         StackData.commitData(base, tag);
 
-        // Lore for vanilla hover. The lines are the same on both versions; only how they attach
-        // differs: the display NBT tag on 1.20.1, the LORE component on 1.21.
         java.util.List<Component> loreLines = new java.util.ArrayList<>();
         loreLines.add(Component.literal("Price: " + listing.price + " ").withStyle(ChatFormatting.GOLD));
         if (listing.highestBid > 0) {
@@ -490,11 +442,8 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
         return base;
     }
 
-    // ======== AbstractContainerMenu boilerplate + click-to-buy ========
-
     @Override
     public boolean stillValid(Player player) {
-        // It’s a virtual UI, no proximity checks needed
         return true;
     }
 
@@ -521,7 +470,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        // Prevent any quick-move into / out of the listing grid
         if (index < LISTING_SIZE) {
             return ItemStack.EMPTY;
         }
@@ -532,18 +480,15 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             newStack = stackInSlot.copy();
 
-            int ahEnd      = LISTING_SIZE;         // 0..(LISTING_SIZE-1) = AH listings
-            int invEnd     = ahEnd + 27;           // 27 = 3×9 inventory
-            int hotbarEnd  = invEnd + 9;           // +9 = hotbar
+            int ahEnd      = LISTING_SIZE;
+            int invEnd     = ahEnd + 27;
+            int hotbarEnd  = invEnd + 9;
 
-            // Only move between player inventory and hotbar, not into AH slots
             if (index < invEnd) {
-                // from main inv → hotbar
                 if (!this.moveItemStackTo(stackInSlot, ahEnd + 27, hotbarEnd, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // from hotbar → main inv
                 if (!this.moveItemStackTo(stackInSlot, ahEnd, invEnd, false)) {
                     return ItemStack.EMPTY;
                 }
@@ -560,7 +505,6 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-        // Click on a listing slot (top grid)
         if (slotIndex >= 0 && slotIndex < LISTING_SIZE) {
             if (!(player instanceof ServerPlayer serverPlayer)) {
                 super.clicked(slotIndex, button, actionType, player);
@@ -576,15 +520,13 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
                 AuctionState state = AuctionState.get(serverWorld);
                 AuctionListing listing = state.getListing(id);
                 if (listing != null) {
-                    // Buy-now listing: no expiry => click to buy immediately
                     if (listing.expiresGameTime <= 0L) {
                         state.buyListing(serverPlayer, id);
                         rebuildFromAuctionState();
                     }
-                    // Timed auction: DO NOT auto-buy → bid via /ah bid instead
                 }
             }
-            return; // don't allow normal item click behavior on AH slots
+            return;
         }
 
         super.clicked(slotIndex, button, actionType, player);

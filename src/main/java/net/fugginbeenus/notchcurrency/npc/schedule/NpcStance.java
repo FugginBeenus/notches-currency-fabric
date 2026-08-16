@@ -25,15 +25,12 @@ public enum NpcStance {
     public String label() {
         return label;
     }
-
     public String hint() {
         return hint;
     }
-
     public Behavior behavior() {
         return behavior;
     }
-
     public boolean needsSpot() {
         return needsSpot;
     }

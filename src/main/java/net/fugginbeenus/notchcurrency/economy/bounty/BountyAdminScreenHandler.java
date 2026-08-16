@@ -51,7 +51,6 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
         this.world = inv.player.level();
         this.addDataSlots(props);
 
-        // Prefill decree slots from the saved board decrees.
         if (inv.player instanceof ServerPlayer sp && sp.level().getServer() != null) {
             List<ItemStack> saved = BountyState.get(sp.level().getServer()).getDecrees();
             for (int i = 0; i < DECREE_SLOTS && i < saved.size(); i++) decreeInv.setItem(i, saved.get(i));
@@ -107,7 +106,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer sp) || !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) return false;
-        if (id == 0) { // regenerate now
+        if (id == 0) {
             persistDecrees(sp);
             BountyManager.regenerate(sp.level().getServer());
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Bounties regenerated."));
@@ -126,7 +125,6 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        // Only move between the decree slots and the player inventory.
         ItemStack result = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot != null && slot.hasItem()) {

@@ -7,12 +7,12 @@ import net.minecraft.world.entity.ai.goal.Goal;
 
 public class NpcPatrolGoal extends Goal {
 
-    private static final double ARRIVE_DIST_SQ = 6.25; // within 2.5 blocks = arrived
+    private static final double ARRIVE_DIST_SQ = 6.25;
 
     private final NotchNpcEntity npc;
     private int index;
     private int repathCountdown;
-    private int waitCountdown; // linger at a reached waypoint before moving on
+    private int waitCountdown;
 
     public NpcPatrolGoal(NotchNpcEntity npc) {
         this.npc = npc;
@@ -31,7 +31,6 @@ public class NpcPatrolGoal extends Goal {
 
     @Override
     public void start() {
-        // Begin at the nearest waypoint so a fresh patrol doesn't sprint across the whole route.
         List<BlockPos> route = npc.getWaypoints();
         int nearest = 0;
         double best = Double.MAX_VALUE;
@@ -52,8 +51,6 @@ public class NpcPatrolGoal extends Goal {
         List<BlockPos> route = npc.getWaypoints();
         if (route.isEmpty()) return;
         if (index >= route.size()) index = 0;
-
-        // Lingering at a waypoint: stand still until the dwell timer runs out.
         if (waitCountdown > 0) {
             waitCountdown--;
             return;
@@ -64,7 +61,6 @@ public class NpcPatrolGoal extends Goal {
             index = (index + 1) % route.size();
             target = route.get(index);
             repathCountdown = 0;
-            // Dwell time is read live so the editor's setting applies mid-patrol.
             if (npc.getPatrolWaitTicks() > 0) {
                 waitCountdown = this.adjustedTickDelay(npc.getPatrolWaitTicks());
                 npc.getNavigation().stop();
@@ -73,7 +69,6 @@ public class NpcPatrolGoal extends Goal {
         }
         if (--repathCountdown <= 0) {
             repathCountdown = this.adjustedTickDelay(20);
-            // Speed is read live so the editor's setting applies mid-patrol.
             npc.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5,
                     npc.getPatrolSpeed());
         }

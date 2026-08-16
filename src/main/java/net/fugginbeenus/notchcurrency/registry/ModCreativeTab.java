@@ -24,10 +24,7 @@ public class ModCreativeTab {
             .icon(() -> new ItemStack(ModItems.NOTCH_COIN))
             .title(Component.translatable("itemGroup.notchcurrency.notch_currency_tab"))
             .displayItems((context, entries) -> {
-                // Currency
                 entries.accept(ModItems.NOTCH_COIN);
-
-                // Blocks
                 entries.accept(ModBlocks.ATM_ITEM);
                 entries.accept(ModBlocks.GOLDEN_CACHE_ITEM);
                 entries.accept(ModBlocks.LEDGER_BOARD_ITEM);
@@ -41,37 +38,22 @@ public class ModCreativeTab {
                 entries.accept(ModItems.PARCEL);
                 entries.accept(ModBlocks.SLOT_MACHINE_ITEM);
                 entries.accept(ModBlocks.COIN_FLIP_ITEM);
-
-                // Shop items
                 entries.accept(ModItems.NOTCH_NPC_ITEM);
-
-                // Misc
                 entries.accept(ModItems.BALLOON);
             })
             .build();
 
     public static void register() {
-        // Register our custom creative tab
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, NOTCH_CURRENCY_TAB_KEY, NOTCH_CURRENCY_TAB);
-
-        // Also add items to relevant vanilla tabs for discoverability
-
-        // Add ATM and Golden Cache to Functional Blocks tab
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(entries -> {
             entries.accept(ModBlocks.ATM_ITEM);
             entries.accept(ModBlocks.GOLDEN_CACHE_ITEM);
         });
-
-        // Add Notch Coin to Ingredients tab
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(entries -> {
             entries.accept(ModItems.NOTCH_COIN);
         });
-
-        // Add spawn egg to Spawn Eggs tab
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
         });
-
-        // Add Merchant License and Balloon to Tools tab
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(entries -> {
             entries.accept(ModItems.BALLOON);
         });

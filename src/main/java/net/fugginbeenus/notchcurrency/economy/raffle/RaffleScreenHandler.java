@@ -27,7 +27,7 @@ public class RaffleScreenHandler extends AbstractContainerMenu {
     public static final int P_HAS_CLAIM   = 8;
     public static final int P_ROUND       = 9;
     public static final int P_CAN_REDEEM  = 10;
-    public static final int P_COINS_POOL  = 11; // admin guaranteed coins
+    public static final int P_COINS_POOL  = 11;
     private static final int PROP_COUNT    = 12;
 
     private final Inventory playerInv;
@@ -80,7 +80,7 @@ public class RaffleScreenHandler extends AbstractContainerMenu {
 
     @Override
     public void broadcastChanges() {
-        refreshFromState(); // keep pot / odds / claim status live
+        refreshFromState();
         super.broadcastChanges();
     }
 

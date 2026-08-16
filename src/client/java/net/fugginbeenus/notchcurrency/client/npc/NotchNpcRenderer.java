@@ -74,14 +74,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
                        net.minecraft.client.renderer.SubmitNodeCollector collector,
                        net.minecraft.client.renderer.state.CameraRenderState camera) {
         NotchNpcRenderState state = NotchNpcRenderState.of(vanilla);
-        // Invisible (stats toggle or day/night rule): draw nothing, label included. The biped
-        // path would hide the body on its own, but the geo/disguise paths would not.
         if (state.invisible) return;
         if (state.talkBubble) submitTalkBubble(state, matrices, collector, camera);
         if (state.useGeo) {
             geo.submit(vanilla, matrices, collector, camera);
-            // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
-            // are ours to draw, exactly as on the disguise path.
             submitLabels(state, vanilla, matrices, collector, camera);
             return;
         }
@@ -94,8 +90,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
                        MultiBufferSource vertexConsumers, int light) {
         String model = entity.getModelId();
         if (entity.isInvisible()) {
-            // Invisible (stats toggle or day/night rule): draw nothing, label included. The biped
-            // path would hide the body on its own, but the geo/disguise paths would not.
             return;
         }
         if (entity.showsTalkBubble()) renderTalkBubble(entity, matrices, vertexConsumers);
@@ -103,8 +97,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
                 || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(model) != null)
                 && NotchNpcGeoModel.ready(model)) {
             geo.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
-            // GeckoLib's renderer draws the model and nothing else, so the nameplate and the sign
-            // are ours to draw, exactly as on the disguise path.
             renderLabels(entity, matrices, vertexConsumers, light, tickDelta);
             return;
         }
@@ -135,7 +127,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         state.showLabel = labelShows(npc);
     }
 
-    // Same range cap the biped path uses, so crowds do not pay for unreadable text.
     private boolean labelShows(NotchNpcEntity npc) {
         boolean inRange = !NotchNpcBipedRenderer.lodApplies()
                 || this.entityRenderDispatcher.distanceToSqr(npc) < 32.0 * 32.0;
@@ -161,16 +152,9 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             return false;
         }
         if (scaled) matrices.popPose();
-
-        // Anchored to the NPC's own state, not the proxy's: the borrowed entity has no custom name,
-        // so its state carries no name-tag attachment and the label came out nowhere.
         submitLabels(state, anchor, matrices, collector, camera);
         return true;
     }
-
-    // The nameplate and the floating sign, for the two paths that borrow someone else's renderer.
-    // Neither the disguise proxy nor GeckoLib knows anything about them, and both are drawn
-    // unscaled so the text sits at a consistent height whatever the NPC's size.
     private void submitLabels(NotchNpcRenderState state,
                               net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
                               PoseStack matrices, net.minecraft.client.renderer.SubmitNodeCollector collector,
@@ -238,10 +222,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         return true;
     }
 
-    // The nameplate and the floating sign, for the two paths that borrow someone else's renderer.
-    // Neither the disguise proxy nor GeckoLib knows anything about them, and both are drawn
-    // unscaled so the text sits at a consistent height whatever the NPC's size. The range cap is
-    // the one the biped path uses, so crowds do not pay for unreadable text.
     private void renderLabels(NotchNpcEntity npc, PoseStack matrices, MultiBufferSource vcp,
                               int light, float tickDelta) {
         boolean labelInRange = !NotchNpcBipedRenderer.lodApplies()
@@ -275,7 +255,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
     }
     //?}
 
-    // Everything the borrowed renderer needs to believe it is drawing the NPC.
+    // tells other renderers how to render an npc - geckolib only rn
     private static void poseProxy(NotchNpcEntity npc, LivingEntity le) {
         le.setYRot(npc.getYRot());
         le.setYBodyRot(npc.yBodyRot);
@@ -291,7 +271,6 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.walkAnimation.setSpeed(npc.walkAnimation.speed());
         ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.walkAnimation)
                 .notchcurrency$setPos(npc.walkAnimation.position());
-        // Both ends of the interpolation, or the limbs stutter between frames.
         ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.walkAnimation)
                 .notchcurrency$setPrevSpeed(npc.walkAnimation.speed(0.0f));
 
@@ -301,34 +280,14 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         le.oAttackAnim = npc.oAttackAnim;
     }
 
-    // ---- talk bubble ----
-
-    // A bitmap glyph in the mod's font rather than geometry of its own. Text already has a way
-    // through both drawing pipelines here, so the bubble gets billboarding, depth and version
-    // compatibility for free. Drawn as plain text rather than a name tag, because a name tag brings
-    // a dark plate with it and the sprite is meant to sit on its own.
     private static final String BUBBLE_GLYPH = "\uE001";
-    // Always lit. It is a marker, and a marker in a dark corner is no use.
     private static final int BUBBLE_LIGHT = 0xF000F0;
-    // Vanilla shrinks world-space text by 0.025. The bubble is a marker rather than a label and reads
-    // better a touch larger, so it gets a fifth more.
     private static final float BUBBLE_SCALE = 0.03f;
-
-    /**
-     * Clear of the nameplate and any sign lines, with a slow bob so it reads as alive.
-     *
-     * <p>Measured from the NPC's feet, because this is drawn straight onto the pose stack. The sign
-     * lines look like they use small numbers only because a name tag is positioned by its own
-     * attachment, already up at head height, and the offset is added to that. There is no attachment
-     * here, so the height of the body has to be part of the sum or the bubble ends up inside it.
-     */
     private static float bubbleHeight(float bodyHeight, float nameOffset, int signLines, float ageInTicks) {
         float stack = bodyHeight + NAMEPLATE_GAP + nameOffset + (float) NpcBillboard.BASE_GAP
                 + (float) NpcBillboard.LINE_HEIGHT * signLines + 0.35f;
         return stack + net.minecraft.util.Mth.sin(ageInTicks * 0.12f) * 0.045f;
     }
-
-    // Where vanilla floats a name tag above the top of the bounding box.
     private static final float NAMEPLATE_GAP = 0.5f;
 
     private static int usedLines(String[] lines) {
@@ -382,7 +341,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
                 proxy = net.fugginbeenus.notchcurrency.compat.Render.createDetached(world, type);
             }
         } catch (Exception ignored) {}
-        proxies.put(typeId, proxy); // caches null too, so we don't retry a bad type every frame
+        proxies.put(typeId, proxy);
         return proxy;
     }
 

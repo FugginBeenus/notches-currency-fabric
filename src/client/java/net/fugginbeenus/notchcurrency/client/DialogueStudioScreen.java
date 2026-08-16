@@ -21,25 +21,20 @@ import java.util.UUID;
 public class DialogueStudioScreen extends Screen {
 
     private static final int W = 400, H = 260;
-    // Left pane: page list.
     private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
-    // Right pane.
     private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
-
     private final UUID npcId;
     private final DialogueTree tree;
-
     private int px, py;
     private String selectedId = "";
-    private int choiceIdx = -1;  // -1 = editing the page; >=0 = editing that choice
-    private int actionIdx = 0;   // which of the choice's two action slots is being edited
-    private int condIdx = 0;     // which of the two condition slots
+    private int choiceIdx = -1;
+    private int actionIdx = 0;
+    private int condIdx = 0;
     private int listScroll = 0;
     private String statusMsg = "";
     private long statusUntil = 0;
-
-    private net.minecraft.client.gui.components.MultiLineEditBox nodeTextBox; // multiline "Says" editor
+    private net.minecraft.client.gui.components.MultiLineEditBox nodeTextBox;
     private EditBox renameField;
     private EditBox choiceLabelField;
     private EditBox actionValueField, actionAmountField;
@@ -55,14 +50,11 @@ public class DialogueStudioScreen extends Screen {
         }
     }
 
-    // ---- setup ----
-
     @Override
     protected void init() {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
 
-        // Multiline "Says" editor: type freely, it wraps and scrolls (finally).
         //? if >=1.21.11 {
         /*nodeTextBox = net.minecraft.client.gui.components.MultiLineEditBox.builder()
                 .setX(px + ED_X)
@@ -125,7 +117,7 @@ public class DialogueStudioScreen extends Screen {
     public void tick() {
         super.tick();
         //? if <1.21 {
-        if (nodeTextBox != null) nodeTextBox.tick(); // cursor blink
+        if (nodeTextBox != null) nodeTextBox.tick();
         //?}
     }
 
@@ -144,8 +136,6 @@ public class DialogueStudioScreen extends Screen {
             return 0L;
         }
     }
-
-    // ---- model accessors ----
 
     private DialogueNode node() {
         return tree.get(selectedId);
@@ -230,8 +220,6 @@ public class DialogueStudioScreen extends Screen {
         if (caVisible) condAmountField.setValue(cd.amount() > 0 ? Long.toString(cd.amount()) : "");
     }
 
-    // ---- rendering ----
-
     //? if >=26.1 {
     /*@Override
     public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
@@ -256,7 +244,6 @@ public class DialogueStudioScreen extends Screen {
             drawChoiceEditor(ctx, mouseX, mouseY);
         }
 
-        // Bottom bar.
         NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 24, 104, 16, "Save & Back",
                 over(mouseX, mouseY, px + ED_X, py + H - 24, 104, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 108, py + H - 24, 78, 16, "Preview",
@@ -311,7 +298,6 @@ public class DialogueStudioScreen extends Screen {
         }
         boolean isStart = n.id().equals(tree.startId());
 
-        // Header row: editable page id + rename, start marker, delete.
         ctx.drawString(this.font, "Id:", px + ED_X, py + 30,
                 isStart ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + ED_X + 26, py + 26, 94, 13, NotchTheme.DEEP);
@@ -327,7 +313,6 @@ public class DialogueStudioScreen extends Screen {
         NotchWidgets.dangerButton(ctx, this.font, px + ED_X + 234, py + 26, 40, 13, "Del",
                 over(mx, my, px + ED_X + 234, py + 26, 40, 13));
 
-        // Says (the EditBoxWidget draws itself at py+54, h=56) + status/hint line.
         ctx.drawString(this.font, "Says:", px + ED_X, py + 44, NotchTheme.TEXT_DARK, false);
         if (!statusMsg.isEmpty() && System.currentTimeMillis() < statusUntil) {
             ctx.drawString(this.font, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
@@ -476,8 +461,6 @@ public class DialogueStudioScreen extends Screen {
         }
     }
 
-    // ---- input ----
-
     //? if >=1.21.11 {
     /*@Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
@@ -490,7 +473,6 @@ public class DialogueStudioScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
 
-            // Bottom bar.
             if (over(mx, my, px + ED_X, py + H - 24, 104, 16)) {
                 NotchWidgets.click();
                 normalize();
@@ -500,7 +482,6 @@ public class DialogueStudioScreen extends Screen {
             }
             if (!tree.isEmpty() && over(mx, my, px + ED_X + 108, py + H - 24, 78, 16)) {
                 NotchWidgets.click();
-                // Play the local (possibly unsaved) tree from its start page; ESC returns here.
                 net.minecraft.client.Minecraft.getInstance().setScreen(
                         new PreviewDialogueScreen(this, npcId, npcDisplayName(), tree, tree.startId()));
                 return true;
@@ -511,7 +492,6 @@ public class DialogueStudioScreen extends Screen {
                 return true;
             }
 
-            // Page list.
             List<String> ids = new ArrayList<>(tree.nodes().keySet());
             for (int i = 0; i < LIST_ROWS; i++) {
                 int idx = listScroll + i;
@@ -571,7 +551,6 @@ public class DialogueStudioScreen extends Screen {
                 actionIdx = 0;
                 condIdx = 0;
                 refreshFields();
-                // Hand focus straight to the label so it's immediately editable.
                 this.setFocused(choiceLabelField);
                 //? if >=1.21 {
             /*choiceLabelField.moveCursorToEnd(false);
@@ -611,8 +590,7 @@ public class DialogueStudioScreen extends Screen {
             refreshFields();
             return true;
         }
-        // Clicking anywhere in the label box focuses the field (its own strip is thinner than
-        // the drawn inset, which made label editing feel broken).
+
         if (over(mx, my, px + ED_X + 36, py + 54, ED_W - 36, 14)) {
             this.setFocused(choiceLabelField);
             //? if >=1.21 {
@@ -626,7 +604,7 @@ public class DialogueStudioScreen extends Screen {
             cycleNext(c);
             return true;
         }
-        // Action slot tabs [1][2].
+
         for (int i = 0; i < 2; i++) {
             if (over(mx, my, px + ED_X + 40 + i * 19, py + 90, 17, 14)) {
                 actionIdx = i;
@@ -634,18 +612,18 @@ public class DialogueStudioScreen extends Screen {
                 return true;
             }
         }
-        if (over(mx, my, px + ED_X + 80, py + 90, 138, 14)) { // Action (cycle)
+        if (over(mx, my, px + ED_X + 80, py + 90, 138, 14)) {
             cycleAction();
             refreshFields();
             return true;
         }
         DialogueAction a = action(actionIdx, false);
         if (a != null && a.type() == DialogueAction.Type.OPEN_SCREEN
-                && over(mx, my, px + ED_X + 58, py + 108, 160, 14)) { // Screen (cycle)
+                && over(mx, my, px + ED_X + 58, py + 108, 160, 14)) {
             a.setValue(nextScreen(a.value()));
             return true;
         }
-        // Condition slot tabs [1][2].
+
         for (int i = 0; i < 2; i++) {
             if (over(mx, my, px + ED_X + 52 + i * 19, py + 144, 17, 14)) {
                 condIdx = i;
@@ -653,7 +631,7 @@ public class DialogueStudioScreen extends Screen {
                 return true;
             }
         }
-        if (over(mx, my, px + ED_X + 92, py + 144, 126, 14)) { // Requires (cycle)
+        if (over(mx, my, px + ED_X + 92, py + 144, 126, 14)) {
             cycleCondition();
             refreshFields();
             return true;
@@ -666,8 +644,6 @@ public class DialogueStudioScreen extends Screen {
         }
         return false;
     }
-
-    // ---- edit operations ----
 
     private String npcDisplayName() {
         var c = net.minecraft.client.Minecraft.getInstance();
@@ -705,7 +681,6 @@ public class DialogueStudioScreen extends Screen {
 
     private void deletePage(String id) {
         tree.remove(id);
-        // De-link any choices that pointed at the deleted page.
         for (DialogueNode n : tree.nodes().values()) {
             for (DialogueChoice c : n.choices()) {
                 if (c.next().equals(id)) c.setNext("");
@@ -720,7 +695,7 @@ public class DialogueStudioScreen extends Screen {
 
     private void cycleNext(DialogueChoice c) {
         List<String> options = new ArrayList<>();
-        options.add(""); // end conversation
+        options.add("");
         options.addAll(tree.nodes().keySet());
         int idx = options.indexOf(c.next());
         c.setNext(options.get((idx + 1) % options.size()));
@@ -740,8 +715,7 @@ public class DialogueStudioScreen extends Screen {
             next = types[(next.ordinal() + 1) % types.length];
         }
         DialogueAction updated = action(actionIdx, true);
-        updated.setType(next); // NONE = an empty slot; stripped when saving
-        // Entering OPEN_SCREEN: seed a valid screen id so the cycle starts somewhere real.
+        updated.setType(next);
         if (next == DialogueAction.Type.OPEN_SCREEN && !isKnownScreen(updated.value())) {
             updated.setValue(SCREEN_IDS[0]);
         }
@@ -757,7 +731,7 @@ public class DialogueStudioScreen extends Screen {
     private void cycleCondition() {
         DialogueCondition cd = condition(condIdx, true);
         DialogueCondition.Type[] types = DialogueCondition.Type.values();
-        cd.setType(types[(cd.type().ordinal() + 1) % types.length]); // NONE = empty slot, stripped on save
+        cd.setType(types[(cd.type().ordinal() + 1) % types.length]);
     }
 
     @Override
@@ -790,8 +764,6 @@ public class DialogueStudioScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Plain characters insert via charTyped only: forwarding them trips select-all (the
-        // "typing 'a' wipes the line" bug). Edit/nav keys are forwarded by the guards.
         if (NotchWidgets.typingInEditBox(keyCode, scanCode, modifiers, nodeTextBox)) return true;
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, renameField, choiceLabelField,
                 actionValueField, actionAmountField, condValueField, condAmountField)) return true;
@@ -807,24 +779,19 @@ public class DialogueStudioScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

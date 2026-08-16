@@ -68,7 +68,6 @@ public final class BountyCommands {
                                     return 1;
                                 })))
 
-                // ---- admin ----
                 .then(Commands.literal("admin")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .executes(ctx -> {
@@ -149,7 +148,7 @@ public final class BountyCommands {
             src.sendFailure(Component.literal("Unknown " + (type == BountyType.KILL ? "entity" : "item") + ": " + target));
             return 0;
         }
-        // Manual admin bounties are permanent (no expiry), coins-only, common rarity.
+
         Bounty b = new Bounty(UUID.randomUUID(), type, target, count, reward, ItemStack.EMPTY,
                 BountyRarity.COMMON, repeatable, 0L, desc);
         BountyState.get(src.getServer()).addOffer(b);

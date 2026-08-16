@@ -17,7 +17,6 @@ final class ConfigEntries {
     static List<ConfigEntry> build(NotchConfig cfg) {
         List<ConfigEntry> e = new ArrayList<>();
 
-        // ===== Economy =====
         String c = "Economy";
         e.add(new NumberEntry(c, "Auction listing fee - flat", cfg.auctionListingFeeFlat, 0, 0, 1_000_000,
                 v -> cfg.auctionListingFeeFlat = v.intValue(),
@@ -37,7 +36,6 @@ final class ConfigEntries {
                 v -> cfg.auctionSaleTaxMax = v.intValue(),
                 "Cap on the sale tax per sale. 0 = uncapped."));
 
-        // ===== Currency =====
         c = "Currency";
         e.add(new StringEntry(c, "Coin name", cfg.currency.itemName, "", 64,
                 v -> cfg.currency.itemName = v,
@@ -46,7 +44,6 @@ final class ConfigEntries {
                 "Drop coin.png in config/notchcurrency/currency/ to reskin the art.",
                 "A resource pack is generated on save; servers push it to every player."));
 
-        // ===== Villager Trades =====
         c = "Villager Trades";
         e.add(new BoolEntry(c, "Coin-priced villager trades", cfg.villagerTrades.enabled, true,
                 v -> cfg.villagerTrades.enabled = v,
@@ -60,7 +57,6 @@ final class ConfigEntries {
                 "Coin price for each emerald of the original trade.",
                 "Trades too pricey to fit the two buy slots stay emerald-priced."));
 
-        // ===== HUD =====
         c = "HUD";
         e.add(new SelectEntry(c, "Bounty tracker position",
                 new String[]{"TOP_LEFT", "TOP_CENTER", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"},
@@ -81,7 +77,6 @@ final class ConfigEntries {
                 v -> cfg.hud.bountyTrackerOpacity = v,
                 "Background darkness of the pills."));
 
-        // ===== Bounty Board =====
         c = "Bounty Board";
         e.add(new BoolEntry(c, "Bounties enabled", cfg.bounty.enabled, true,
                 v -> cfg.bounty.enabled = v,
@@ -103,7 +98,6 @@ final class ConfigEntries {
                 v -> cfg.bounty.maxCoinReward = v,
                 "Hard cap on the coins one bounty can pay (after scaling). 0 = no cap."));
 
-        // ===== Enchanter =====
         c = "Enchanter";
         e.add(new BoolEntry(c, "Enchanter enabled", cfg.enchanter.enabled, true,
                 v -> cfg.enchanter.enabled = v,
@@ -143,7 +137,6 @@ final class ConfigEntries {
                 v -> cfg.enchanter.uncraftCost = v.intValue(),
                 "Coins to break an undamaged item back into its crafting parts."));
 
-        // ===== Gambling =====
         c = "Gambling";
         e.add(new BoolEntry(c, "Gambling enabled", cfg.gambling.enabled, true,
                 v -> cfg.gambling.enabled = v,
@@ -163,7 +156,6 @@ final class ConfigEntries {
                 v -> cfg.gambling.coinFlipRevealTicks = v.intValue(),
                 "How long the coin-flip block spins before the result shows. 20 ticks = 1 second."));
 
-        // ===== Raffle =====
         c = "Raffle";
         e.add(new BoolEntry(c, "Raffle enabled", cfg.raffle.enabled, false,
                 v -> cfg.raffle.enabled = v,
@@ -189,7 +181,6 @@ final class ConfigEntries {
                 "Let players turn in an old losing ticket for a few free entries.",
                 "<5 entries → 1, <10 → 5, else 10; once per player per round."));
 
-        // ===== Crates =====
         c = "Crates";
         e.add(new BoolEntry(c, "Crates enabled", cfg.crate.enabled, true,
                 v -> cfg.crate.enabled = v,
@@ -199,7 +190,6 @@ final class ConfigEntries {
                 v -> cfg.crate.keyPrice = v,
                 "Coin cost of one Crate Key. Higher-tier crates need more keys."));
 
-        // ===== Loans =====
         c = "Loans";
         e.add(new BoolEntry(c, "Loans enabled", cfg.loan.enabled, false,
                 v -> cfg.loan.enabled = v,
@@ -225,7 +215,6 @@ final class ConfigEntries {
                 v -> cfg.loan.overdueInterestPercent = v,
                 "Interest rate charged each cycle while a loan is past due (replaces the normal rate)."));
 
-        // ===== Shop Rent =====
         c = "Shop Rent";
         e.add(new BoolEntry(c, "Shop rent enabled", cfg.shopRent.enabled, false,
                 v -> cfg.shopRent.enabled = v,
@@ -245,7 +234,6 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Announce to owners", cfg.shopRent.announce, true,
                 v -> cfg.shopRent.announce = v));
 
-        // ===== Wealth Tax =====
         c = "Wealth Tax";
         e.add(new BoolEntry(c, "Wealth tax enabled", cfg.wealthTax.enabled, false,
                 v -> cfg.wealthTax.enabled = v,
@@ -263,14 +251,12 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Announce to taxed players", cfg.wealthTax.announce, true,
                 v -> cfg.wealthTax.announce = v));
 
-        // ===== Cosmetics =====
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,
                 v -> cfg.cosmetic.enabled = v,
                 "The cosmetics shop NPC. Offers are datapack-driven - see",
                 "data/notchcurrency/cosmetics/*.json. Buying is a coin SINK."));
 
-        // ===== Waystone Fee =====
         c = "Waystone Fee";
         e.add(new BoolEntry(c, "Waystone fee enabled", cfg.waystone.enabled, false,
                 v -> cfg.waystone.enabled = v,
@@ -285,7 +271,6 @@ final class ConfigEntries {
                 v -> cfg.waystone.announce = v,
                 "Tell the player how much they paid after each teleport."));
 
-        // ===== Audit Log =====
         c = "Audit Log";
         e.add(new BoolEntry(c, "Write audit file", cfg.ledger.fileLogEnabled, true,
                 v -> cfg.ledger.fileLogEnabled = v,
@@ -302,7 +287,6 @@ final class ConfigEntries {
                 "Transactions at or above this amount also post to the webhook.",
                 "0 = never post by size (admin actions still post)."));
 
-        // ===== Balloon Crates =====
         c = "Balloon Crates";
         e.add(new BoolEntry(c, "Weekly waves", cfg.balloon.enabled, false,
                 v -> cfg.balloon.enabled = v,
@@ -339,7 +323,6 @@ final class ConfigEntries {
         e.add(new NumberEntry(c, "Max Y", cfg.balloon.maxY, 150, -64, 320,
                 v -> cfg.balloon.maxY = v.intValue()));
 
-        // ===== Golden Cache =====
         c = "Golden Cache";
         e.add(new BoolEntry(c, "Spawn under oaks", cfg.cache.naturalSpawns, true,
                 v -> cfg.cache.naturalSpawns = v,

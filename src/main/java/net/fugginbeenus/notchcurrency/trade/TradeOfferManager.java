@@ -60,7 +60,6 @@ public final class TradeOfferManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("This offer isn't directed at you.").withStyle(ChatFormatting.RED));
             return false;
         }
-        // Verify the accepter can pay (coins + every requested stack, totals merged by item type).
         if (offer.priceCoins() > 0 && BalanceStore.get(accepter) < offer.priceCoins()) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(accepter, Component.literal("You need " + offer.priceCoins() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " for this trade.").withStyle(ChatFormatting.RED));
             return false;
@@ -76,7 +75,6 @@ public final class TradeOfferManager {
 
         MinecraftServer server = accepter.level().getServer();
 
-        // Take payment from the accepter → creator (coins by UUID, items to the mailbox if offline).
         if (offer.priceCoins() > 0) {
             BalanceStore.subtract(accepter, offer.priceCoins(), TransactionReason.TRADE, "trade offer payment");
             NotchPackets.sendBalance(accepter, BalanceStore.get(accepter));
@@ -87,7 +85,6 @@ public final class TradeOfferManager {
             deliverToCreator(server, offer, want.copy());
         }
 
-        // Hand the escrowed items and coins to the accepter.
         for (ItemStack st : offer.offeredItems()) {
             giveOrDrop(accepter, st.copy());
         }
@@ -100,7 +97,6 @@ public final class TradeOfferManager {
                 .append(Component.literal(offer.summary()).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(".").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GREEN));
 
-        // Notify the creator if online.
         ServerPlayer creator = server.getPlayerList().getPlayer(offer.creatorUuid());
         if (creator != null) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal(accepter.getName().getString() + " accepted your trade offer for ")
@@ -130,8 +126,6 @@ public final class TradeOfferManager {
         net.fugginbeenus.notchcurrency.compat.Msg.chat(creator, Component.literal("Offer cancelled - your items were returned.").withStyle(ChatFormatting.GREEN));
         return true;
     }
-
-    // ---- helpers ----
 
     private static List<ItemStack> copyAll(List<ItemStack> stacks) {
         java.util.List<ItemStack> copies = new java.util.ArrayList<>();

@@ -22,7 +22,6 @@ public final class RecruiterManager {
         String factionId = npc.getFactionId();
         Faction faction = state.get(factionId);
 
-        // An owner standing at an unassigned recruiter is the moment we offer to found one.
         boolean mayAssign = npc.canEdit(sp);
         boolean canFound = mayAssign && faction == null && FactionManager.canFound(sp);
 
@@ -38,7 +37,6 @@ public final class RecruiterManager {
         buf.writeUtf(faction == null ? "" : faction.motto());
         buf.writeVarInt(faction == null ? 0 : faction.joinFee());
         buf.writeBoolean(faction == null || faction.isOpenToJoin());
-        // Only whoever runs the faction gets the settings pane.
         buf.writeBoolean(faction != null && FactionManager.canManage(sp, faction));
         Net.sendToClient(sp, NotchPackets.NPC_RECRUITER_OPEN, buf);
     }
@@ -57,7 +55,7 @@ public final class RecruiterManager {
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No faction by that name.").withStyle(ChatFormatting.RED));
                 return;
             }
-            // Admins can point an NPC at anything; everyone else only at factions they founded.
+
             if (!FactionManager.canManage(sp, faction)) {
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
                 return;
@@ -109,7 +107,6 @@ public final class RecruiterManager {
             }
             case ACTION_LEAVE -> FactionManager.leave(sp);
             case ACTION_FOUND -> {
-                // Founding is an owner action on their own recruiter, and it re-checks the one-each rule.
                 if (!npc.canEdit(sp)) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This isn't your recruiter.").withStyle(ChatFormatting.RED));
                     return;
@@ -135,7 +132,7 @@ public final class RecruiterManager {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
                     return;
                 }
-                faction.setMotto(name); // the settings pane sends the motto in the name slot
+                faction.setMotto(name);
                 faction.setJoinFee(fee);
                 faction.setOpenToJoin(open);
                 ChatFormatting chosen = net.fugginbeenus.notchcurrency.compat.Colors.byName(color);
@@ -145,6 +142,6 @@ public final class RecruiterManager {
             }
             default -> { return; }
         }
-        open(sp, npc); // refresh the screen so it reflects what just happened
+        open(sp, npc);
     }
 }

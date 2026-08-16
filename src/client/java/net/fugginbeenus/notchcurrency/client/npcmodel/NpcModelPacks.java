@@ -8,26 +8,12 @@ import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Gets loaded bundles in front of GeckoLib, which means the generated pack has to be switched on
- * and the resources reloaded.
- *
- * <p>Split from the loader because the loader only touches files, and this touches the running
- * game. It is also the only place that reloads, so the "one reload, after everything is written"
- * rule has somewhere to live.
- */
 public final class NpcModelPacks {
 
     private NpcModelPacks() {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcModels");
 
-    /**
-     * Reads the folder, rewrites the pack, and reloads if anything is there to reload.
-     *
-     * @param announce whether to report the outcome in chat, which a hand-run reload wants and a
-     *                 quiet one at startup does not
-     */
     public static void reload(Minecraft client, boolean announce) {
         boolean changed = NpcModelLoader.loadAll();
         boolean packWanted = NpcModelRegistry.count() > 0;
@@ -37,9 +23,6 @@ public final class NpcModelPacks {
             mgr.reload();
             boolean on = mgr.getSelectedIds().contains(NpcModelLoader.PACK_PROFILE_NAME);
             boolean needsSwitchingOn = packWanted && !on;
-
-            // Nothing moved and the pack is already in the right state, so there is nothing worth
-            // charging a resource reload for.
             if (!changed && !needsSwitchingOn) {
                 if (announce) report(client);
                 return;
@@ -75,21 +58,11 @@ public final class NpcModelPacks {
                     ChatFormatting.GREEN);
         }
 
-        // Each skipped model says what is wrong with it, since a silent skip is the worst outcome:
-        // the model is simply missing and nothing says why.
         for (String problem : problems) {
             say(client, "Skipped " + problem, ChatFormatting.RED);
         }
     }
 
-    /**
-     * Sends a model up to the server, so everyone else gets it when they join.
-     *
-     * <p>Chunked, because a model is a megabyte or so and a packet is not. The server checks the
-     * permission again on every piece; this only decides whether to offer the button.
-     *
-     * @return null once it is on its way, or why it is not
-     */
     public static String share(String id) {
         java.nio.file.Path folder = NpcModelLoader.modelsDir().resolve(id);
         byte[] blob;

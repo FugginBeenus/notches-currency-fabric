@@ -71,9 +71,7 @@ public class NpcDialogueScreen extends Screen {
         //?}
         NotchNpcEntity npc = findNpc();
         NotchWidgets.panel(ctx, px, py, W, H);
-        // The heading is the NPC's own name where we can see it. The portrait below draws without a
-        // nameplate, since the plate sat at the very top of the box and came out clipped, so this
-        // is the only place the name appears.
+
         String heading = npc != null && npc.hasCustomName()
                 ? npc.getCustomName().getString()
                 : npcName;
@@ -83,14 +81,13 @@ public class NpcDialogueScreen extends Screen {
                     NotchTheme.TEXT_MUTED, false);
         }
 
-        // Portrait of the actual NPC (looks toward the cursor, like the editor preview).
         NotchWidgets.inset(ctx, px + PORTRAIT_X, py + PORTRAIT_Y, PORTRAIT_W, PORTRAIT_H, NotchTheme.DEEP);
         if (npc != null) {
             float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
             boolean showedName = npc.isCustomNameVisible();
             npc.setYRot(180);
             npc.yBodyRot = 180;
-            npc.setCustomNameVisible(false); // the heading above carries the name instead
+            npc.setCustomNameVisible(false);
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
                     (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 30f) - mouseY, npc);
             npc.setYRot(oldYaw);
@@ -98,15 +95,13 @@ public class NpcDialogueScreen extends Screen {
             npc.setCustomNameVisible(showedName);
         }
 
-        // Speech text.
         int ty = py + TEXT_Y;
         for (FormattedCharSequence line : wrapped) {
             ctx.drawString(this.font, line, px + TEXT_X, ty, NotchTheme.TEXT_DARK, false);
             ty += 10;
-            if (ty > choiceY(0) - 12) break; // don't run into the buttons
+            if (ty > choiceY(0) - 12) break;
         }
 
-        // Choices.
         for (int i = 0; i < labels.length; i++) {
             int cy = choiceY(i);
             boolean hover = enabled[i] && over(mouseX, mouseY, px + TEXT_X, cy, TEXT_W, CHOICE_H);
@@ -153,7 +148,7 @@ public class NpcDialogueScreen extends Screen {
     }
 
     protected void onChoice(int i) {
-        chose = true; // one click per page; the server sends the next page or closes
+        chose = true;
         NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, indices[i]);
     }
 
@@ -183,24 +178,19 @@ public class NpcDialogueScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

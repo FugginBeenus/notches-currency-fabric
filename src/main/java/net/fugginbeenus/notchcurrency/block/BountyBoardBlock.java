@@ -70,7 +70,7 @@ public class BountyBoardBlock extends Block {
         if (pos.getY() < world.getMaxBuildHeight() - 1 && world.getBlockState(pos.above()).canBeReplaced(ctx)) {
             return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
         }
-        return null; // no room for the upper half
+        return null;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class BountyBoardBlock extends Block {
         world.setBlock(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
         super.setPlacedBy(world, pos, state, placer, itemStack);
         if (!world.isClientSide && world instanceof ServerLevel sw) {
-            BountyManager.ensurePopulated(sw.getServer()); // start generating right away
+            BountyManager.ensurePopulated(sw.getServer());
         }
     }
 

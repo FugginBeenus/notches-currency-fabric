@@ -18,40 +18,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/**
- * The Outbox tab: who it goes to, what is in it, and a line to go with it.
- *
- * <p>The recipient is picked from a list rather than typed, because a mistyped name is a parcel
- * that goes nowhere and the sender has no way to tell. The list drops down over the tab instead of
- * living in a column beside it, which is what lets this tab be the same modest size as the Inbox.
- */
 public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandler> {
 
-    /** A player who has a mailbox, as the server described them. */
     public record Recipient(UUID id, String name, boolean online) {}
-
     private static final int EDGE = 8, INNER_W = MailLayout.W - EDGE * 2;
     private static final int TO_Y = 42, TO_H = 16;
     private static final int COINS_Y = 84, FIELD_H = 14;
     private static final int NOTE_Y = 102;
     private static final int SEND_Y = 120, SEND_H = 16;
-    /** Split off the Send button when the recipient is here to trade with. */
     private static final int TRADE_W = 48, SPLIT_GAP = 4;
-
-    // The drop-down.
     private static final int DROP_Y = 36, DROP_H = MailLayout.CONTENT_BOTTOM - DROP_Y;
     private static final int SEARCH_Y = 40, SEARCH_H = 12;
     private static final int ROW_Y = 56, ROW_H = 15, VISIBLE = 4;
-
-    // Filled by the recipients packet, which arrives just before the screen opens.
     private static List<Recipient> knownRecipients = List.of();
     private static UUID preselected;
-
     private List<Recipient> shown = new ArrayList<>();
     private UUID chosen;
     private int scroll;
     private boolean picking;
-
     private EditBox search;
     private EditBox note;
     private EditBox coins;
@@ -69,12 +53,9 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         this.inventoryLabelX = -1000;
     }
 
-    /** Handed over by the packet, since a menu screen is built by Minecraft rather than by us. */
     public static void setRecipients(List<Recipient> recipients) {
         knownRecipients = recipients;
     }
-
-    /** Opening someone else's mailbox aims the parcel at them without having to hunt the list. */
     public static void preselect(UUID recipient) {
         preselected = recipient;
     }
@@ -102,10 +83,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                 INNER_W - 8, 10, Component.literal("Coins"));
         coins.setMaxLength(12);
         coins.setBordered(false);
-
-        // Digits only, so there is nothing to reject at the far end. Done by putting the value
-        // back rather than with setFilter, which 26.2 no longer has. Setting it fires the responder
-        // a second time, and that pass finds nothing to strip, so it stops there.
         coins.setResponder(value -> {
             StringBuilder digits = new StringBuilder();
             for (char c : value.toCharArray()) {
@@ -130,7 +107,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         refilter();
     }
 
-    /** Only one of the two text fields belongs on screen at a time. */
     private void showRightFields() {
         if (search != null) search.visible = picking;
         if (note != null) note.visible = !picking;
@@ -144,7 +120,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
             if (query.isEmpty() || r.name().toLowerCase(Locale.ROOT).contains(query)) shown.add(r);
         }
         shown.sort((a, b) -> {
-            if (a.online() != b.online()) return a.online() ? -1 : 1; // people who are here, first
+            if (a.online() != b.online()) return a.online() ? -1 : 1;
             return a.name().compareToIgnoreCase(b.name());
         });
         scroll = 0;
@@ -153,8 +129,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private int rowY(int i) { return this.topPos + ROW_Y + i * ROW_H; }
     private int toY() { return this.topPos + TO_Y; }
     private int sendY() { return this.topPos + SEND_Y; }
-
-    /** Whether the chosen recipient is online, which is the only time a live trade is possible. */
     private boolean canTrade() {
         if (chosen == null) return false;
         for (Recipient r : knownRecipients) {
@@ -187,7 +161,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         *///?}
     }
 
-    /** Keeps the "you have" in the coins box true, since posting a parcel changes it. */
     private void refreshCoinsHint() {
         long balance = NotchHud.getBalance();
         if (coins == null || balance == hintedBalance) return;
@@ -197,7 +170,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     }
 
     private void drawParcelSide(GuiGraphics ctx, int x, int y, int mouseX, int mouseY) {
-        // Who it is going to, as a button that opens the list.
         boolean toHover = !picking && over(mouseX, mouseY, x + EDGE, toY(), INNER_W, TO_H);
         if (chosen == null) {
             NotchWidgets.neutralButton(ctx, this.font, x + EDGE, toY(), INNER_W, TO_H,
@@ -233,7 +205,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         }
     }
 
-    /** The recipient list, over the top of the tab rather than beside it. */
     private void drawPicker(GuiGraphics ctx, int x, int y, int mouseX, int mouseY) {
         NotchWidgets.panel(ctx, x + EDGE - 2, y + DROP_Y, INNER_W + 4, DROP_H);
         NotchWidgets.inset(ctx, x + EDGE, y + SEARCH_Y, INNER_W, SEARCH_H, NotchTheme.DEEP);
@@ -268,7 +239,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         }
     }
 
-    /** The player's own inventory, drawn the same on both tabs so nothing shifts on a swap. */
     static void drawInventory(GuiGraphics ctx, int x, int y, Font font) {
         ctx.drawString(font, "Inventory", x + MailLayout.INV_X, y + MailLayout.INV_LABEL_Y,
                 NotchTheme.TEXT_DARK, false);
@@ -283,7 +253,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         }
     }
 
-    /** What is in the coins box, or nothing. The box only accepts digits, so this cannot throw. */
     private long coinsTyped() {
         String typed = coins == null ? "" : coins.getValue().strip();
         if (typed.isEmpty()) return 0L;
@@ -332,7 +301,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                         return true;
                     }
                 }
-                // Anywhere off the drop-down puts it away, which is what a drop-down does.
+
                 if (!over(mx, my, this.leftPos + EDGE - 2, this.topPos + DROP_Y, INNER_W + 4, DROP_H)) {
                     setPicking(false);
                     return true;
@@ -413,7 +382,6 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the window from closing while typing: the inventory key is a letter like any other.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, note, coins, search)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);

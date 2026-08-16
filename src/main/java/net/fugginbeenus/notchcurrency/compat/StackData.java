@@ -11,8 +11,6 @@ public final class StackData {
 
     private StackData() {}
 
-    // ---- read helpers (internal) ----
-
     @Nullable
     private static CompoundTag read(ItemStack stack) {
         //? if >=1.21 {
@@ -37,8 +35,6 @@ public final class StackData {
         //?}
     }
 
-    // ---- presence ----
-
     public static boolean hasData(ItemStack stack) {
         //? if >=1.21 {
         /*return stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
@@ -61,8 +57,6 @@ public final class StackData {
         if (!hasData(stack)) return;
         mutate(stack, data -> data.remove(key));
     }
-
-    // ---- typed getters (vanilla defaults for a missing key) ----
 
     public static int getInt(ItemStack stack, String key) {
         CompoundTag nbt = read(stack);
@@ -100,8 +94,6 @@ public final class StackData {
         return nbt == null ? new CompoundTag() : nbt.getCompound(key).copy();
     }
 
-    // ---- typed setters (full read-modify-write; safe on copy-on-write component storage) ----
-
     public static void putInt(ItemStack stack, String key, int value) {
         mutate(stack, data -> data.putInt(key, value));
     }
@@ -138,14 +130,11 @@ public final class StackData {
         //?}
     }
 
-    // ---- bulk read (for carrier stacks whose readers do many typed lookups) ----
-
     public static CompoundTag getData(ItemStack stack) {
         CompoundTag nbt = read(stack);
         return nbt == null ? new CompoundTag() : nbt.copy();
     }
 
-    // ---- batch edit (for carrier stacks that set several keys at once) ----
 
     public static CompoundTag editData(ItemStack stack) {
         //? if >=1.21 {
@@ -174,8 +163,6 @@ public final class StackData {
         //?}
     }
 
-    // ---- whole-stack persistence (for world-save data classes) ----
-
     public static CompoundTag writeStack(ItemStack stack) {
         //? if >=1.21 {
         /*return (CompoundTag) ItemStack.OPTIONAL_CODEC
@@ -186,16 +173,6 @@ public final class StackData {
         //?}
     }
 
-    /**
-     * An item written so that a different Minecraft version can still read it, for share codes and
-     * presets.
-     *
-     * <p>Item stacks moved from tags to components at 1.21, and the two shapes do not read each
-     * other. Worse, they half read each other: an older stack handed to the newer codec keeps its id
-     * and silently loses its count, while a newer stack handed to the older reader comes back empty.
-     * Both go quiet about it. So the item and the count are written plainly alongside the native
-     * form, and the native form is only trusted when it agrees about which item this is.
-     */
     public static CompoundTag writePortableStack(ItemStack stack) {
         CompoundTag out = new CompoundTag();
         net.minecraft.resources.ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
@@ -203,9 +180,6 @@ public final class StackData {
         out.putInt("Num", stack.getCount());
         out.put("Native", writeStack(stack));
 
-        // Enchantments by name, because the component that holds them has its own shape per era and
-        // does not survive a crossing either: 1.20.1, 1.21.1 and 1.21.11 upwards all disagree. Names
-        // and levels are the part worth keeping, and they have not changed.
         java.util.Map<net.minecraft.world.item.enchantment.Enchantment, Integer> enchantments =
                 Ench.get(stack);
         if (!enchantments.isEmpty()) {
@@ -217,9 +191,6 @@ public final class StackData {
             out.put("Ench", levels);
         }
 
-        // The rest of what makes a piece of gear look like itself. Same reasoning as the
-        // enchantments: these live in components now and in tags before 1.21, so the native block
-        // carries them only between versions of the same era.
         if (stack.isDamaged()) out.putInt("Dmg", stack.getDamageValue());
         String name = customName(stack);
         if (!name.isEmpty()) out.putString("CustomName", name);
@@ -233,7 +204,6 @@ public final class StackData {
         return out;
     }
 
-    /** The trim's material and pattern ids, or null if the piece has no trim. */
     @Nullable
     private static String[] armourTrim(ItemStack stack) {
         try {
@@ -248,8 +218,6 @@ public final class StackData {
             if (trim == null) return null;
             return new String[]{holderId(trim.material()), holderId(trim.pattern())};
             *///?} else {
-            // Before components the trim was read back out of the tag, and it needs the registries
-            // to resolve what it finds there.
             java.util.Optional<net.minecraft.world.item.armortrim.ArmorTrim> trim =
                     net.minecraft.world.item.armortrim.ArmorTrim.getTrim(RegistryAccess.get(), stack);
             if (trim.isEmpty()) return null;
@@ -302,7 +270,7 @@ public final class StackData {
         /*stack.set(net.minecraft.core.component.DataComponents.DYED_COLOR,
                 new net.minecraft.world.item.component.DyedItemColor(rgb));
         *///?} elif >=1.21 {
-        /*// The tooltip flag was part of the component here and went away again later.
+        /*
         stack.set(net.minecraft.core.component.DataComponents.DYED_COLOR,
                 new net.minecraft.world.item.component.DyedItemColor(rgb, true));
         *///?} else {
@@ -312,19 +280,11 @@ public final class StackData {
         //?}
     }
 
-    /** Reverses {@link #writePortableStack}, and still reads a bare stack from before that existed. */
     public static ItemStack readPortableStack(CompoundTag nbt) {
         if (!nbt.contains("Item")) return readStack(nbt);
-
-        // One line: the lookup is rewritten by pattern on the newer versions, and the pattern wants
-        // the registry and the call together.
         net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.get(Reg.parse(nbt.getString("Item")));
         if (item == null || item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY;
         int count = Math.max(1, nbt.getInt("Num"));
-
-        // Enchantments and the rest ride in the native block, which is worth having whenever this
-        // version can actually read it. Anything it says about the count is not: that is the field
-        // the two shapes disagree on.
         ItemStack out = null;
         try {
             ItemStack full = readStack(nbt.getCompound("Native"));
@@ -333,7 +293,6 @@ public final class StackData {
                 out = full;
             }
         } catch (Exception ignored) {
-            // Written by the other side of the 1.21 line. The plain fields below carry it instead.
         }
         if (out == null) out = new ItemStack(item, count);
         applyPortableEnchantments(nbt, out);
@@ -341,47 +300,34 @@ public final class StackData {
         return out;
     }
 
-    /**
-     * Puts back the look of a piece of gear: damage, custom name, dye.
-     *
-     * <p>Applied whether or not the native block was read, because it was recorded from the same
-     * stack and setting it again changes nothing. Each is guarded on its own: a version that cannot
-     * take one of them should not cost us the others.
-     */
     private static void applyPortableExtras(CompoundTag nbt, ItemStack stack) {
         if (nbt.contains("Dmg")) {
             try {
                 stack.setDamageValue(nbt.getInt("Dmg"));
             } catch (Exception ignored) {
-                // Not damageable here.
             }
         }
         if (nbt.contains("CustomName")) {
             try {
                 setCustomName(stack, nbt.getString("CustomName"));
             } catch (Exception ignored) {
-                // Leave it with the item's own name.
             }
         }
         if (nbt.contains("Dye")) {
             try {
                 setDyedColour(stack, nbt.getInt("Dye"));
             } catch (Exception ignored) {
-                // Not dyeable here.
             }
         }
         if (nbt.contains("TrimMat") && nbt.contains("TrimPat")) {
             try {
                 setArmourTrim(stack, nbt.getString("TrimMat"), nbt.getString("TrimPat"));
             } catch (Exception ignored) {
-                // A material or pattern this version does not have, or not trimmable.
             }
         }
     }
 
     private static void setArmourTrim(ItemStack stack, String material, String pattern) {
-        // var, because TrimMaterial and TrimPattern moved package at 1.21.11 and the registry key
-        // already knows which one it means.
         var mat = holderOf(net.minecraft.core.registries.Registries.TRIM_MATERIAL, material);
         var pat = holderOf(net.minecraft.core.registries.Registries.TRIM_PATTERN, pattern);
         if (mat == null || pat == null) return;
@@ -410,7 +356,6 @@ public final class StackData {
         //?}
     }
 
-    /** Puts back the enchantments recorded by name, for a stack whose native block did not carry them. */
     private static void applyPortableEnchantments(CompoundTag nbt, ItemStack stack) {
         if (!nbt.contains("Ench") || !Ench.get(stack).isEmpty()) return;
         CompoundTag levels = nbt.getCompound("Ench");
@@ -418,7 +363,6 @@ public final class StackData {
                 new java.util.LinkedHashMap<>();
         for (String key : levels.getAllKeys()) {
             net.minecraft.world.item.enchantment.Enchantment ench = Ench.byId(Reg.parse(key));
-            // An enchantment the reading version does not have is simply skipped.
             if (ench != null) found.put(ench, levels.getInt(key));
         }
         if (!found.isEmpty()) Ench.set(found, stack);

@@ -14,14 +14,14 @@ public class Bounty {
 
     private final UUID id;
     private final BountyType type;
-    private final ResourceLocation target;    // entity-type id (KILL) or item id (FETCH)
+    private final ResourceLocation target;
     private final int required;
     private final long rewardCoins;
-    private final ItemStack rewardItem; // empty = none
+    private final ItemStack rewardItem;
     private final BountyRarity rarity;
     private final boolean repeatable;
-    private final long expiresGameTime;  // 0 = never
-    private final String description;    // optional override; auto-generated when blank
+    private final long expiresGameTime;
+    private final String description;
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
@@ -76,8 +76,6 @@ public class Bounty {
         if (sb.length() == 0) sb.append("nothing");
         return sb.toString();
     }
-
-    // ---- NBT ----
 
     public CompoundTag toNbt() {
         CompoundTag o = new CompoundTag();

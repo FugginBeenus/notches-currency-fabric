@@ -73,7 +73,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         long bal = menu.prop(CoinFlipScreenHandler.P_BAL) & 0xFFFFFFFFL;
         NotchWidgets.centerText(ctx, this.font, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
 
-        // The coin: soft glow + sparkles behind the scaled Notch Coin.
         int ccx = x + W / 2, ccy = y + COIN_CY;
         drawGlow(ctx, ccx, ccy, now);
         drawSparkles(ctx, ccx, ccy, now);
@@ -83,7 +82,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         ctx.renderItem(new ItemStack(selectedHeads ? ModItems.NOTCH_COIN : ModItems.COIN_TAILS), 0, 0);
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
 
-        // Side pickers: selected = green, other = neutral grey.
         boolean hHover = over(mouseX, mouseY, x + HEADS_X, y + SIDE_Y, SIDE_W, SIDE_H);
         boolean tHover = over(mouseX, mouseY, x + TAILS_X, y + SIDE_Y, SIDE_W, SIDE_H);
         if (selectedHeads) {
@@ -94,7 +92,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
             NotchWidgets.primaryButton(ctx, this.font, x + TAILS_X, y + SIDE_Y, SIDE_W, SIDE_H, "Tails", tHover);
         }
 
-        // Error > projection.
         int payout = menu.prop(CoinFlipScreenHandler.P_PAYOUT);
         long bet = betValue();
         if (errorMsg != null && now < errorUntilMs) {
@@ -121,14 +118,10 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         NotchWidgets.centerText(ctx, this.font, "A true 50/50. Win pays " + payout + "%.",
                 x + W / 2, y + 182, NotchTheme.TEXT_MUTED, false);
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
-
-    // ---- coin flair ----
 
     private void drawGlow(GuiGraphics ctx, int cx, int cy, long now) {
         double s = 0.5 + 0.5 * Math.sin(now / 300.0);
@@ -156,8 +149,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         }
     }
 
-    // ---- input ----
-
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
@@ -174,7 +165,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // no default labels
     }
 
     //? if >=1.21.11 {
@@ -229,7 +219,6 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, betField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -238,16 +227,13 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

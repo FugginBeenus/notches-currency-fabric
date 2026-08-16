@@ -29,22 +29,17 @@ public final class NpcShopLogic {
 
         int totalCost = price * quantity;
 
-        // 1) Charge the buyer
         if (!CoinEconomy.tryCharge(buyer, totalCost, false)) {
-            // tryCharge already sent a "not enough coins" message
             return false;
         }
 
-        // 2) Give items
         ItemStack toGive = item.copy();
         toGive.setCount(quantity);
 
         if (!buyer.getInventory().add(toGive)) {
-            // Inventory full → drop at feet
             buyer.drop(toGive, false);
         }
 
-        // 3) Feedback: ding + actionbar
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         net.fugginbeenus.notchcurrency.compat.Msg.actionBar(buyer, Component.literal("You bought ")
                 .withStyle(net.minecraft.ChatFormatting.GREEN)
@@ -70,7 +65,6 @@ public final class NpcShopLogic {
             return;
         }
 
-        // Listings sync live through the handler's data-carrier slots; the buf only carries identity.
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Component.literal(shop.getShopName()),
                 (containerId, playerInventory, p) -> new ShopBrowseScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
@@ -103,7 +97,6 @@ public final class NpcShopLogic {
             return;
         }
 
-        // Listings/earnings sync live through the handler; the buf only carries identity.
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Component.literal("Manage: " + shop.getShopName()),
                 (containerId, playerInventory, p) -> new ShopManageScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),

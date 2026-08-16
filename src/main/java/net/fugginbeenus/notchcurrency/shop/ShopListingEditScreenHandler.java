@@ -26,27 +26,20 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
     public static final int BARTER_X = 12, BARTER_Y = 72;
     public static final int STOCK_X = 12, STOCK_Y = 110;
     public static final int INV_X = 24, INV_Y = 158, HOTBAR_Y = 216;
-
-    // Sample/intake slot indices.
     public static final int SLOT_SALE = 0, SLOT_BARTER = 1, SLOT_STOCK = 2, SLOT_COUNT = 3;
-
     public static final int P_STOCK = 0, P_PRICE = 1, P_HAS_LISTING = 2;
     private static final int PROP_COUNT = 3;
-
-    // SHOP_EDIT_ACTION ids.
     public static final int ACTION_SAVE = 0, ACTION_DEPOSIT = 1, ACTION_RETURN_STOCK = 2,
             ACTION_DELETE = 3, ACTION_BACK = 4, ACTION_CLEAR_BARTER = 5;
 
     private final Inventory playerInv;
     private final SimpleContainer samples = new SimpleContainer(SLOT_COUNT);
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
-
-    // Initial display seed (from the opening buf on the client).
     private final String currentSaleDesc;
     private final String currentBarterDesc;
 
-    @Nullable private final PlayerShop shop; // server side only
-    @Nullable private UUID listingId;        // null until first save on a new listing
+    @Nullable private final PlayerShop shop;
+    @Nullable private UUID listingId;
 
     public ShopListingEditScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
         this(containerId, inv, buf.readBoolean(), buf.readUtf(64), buf.readUtf(64),
@@ -117,8 +110,6 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         return (shop != null && listingId != null) ? shop.getListing(listingId) : null;
     }
 
-    // ---- actions (server side, from the SHOP_EDIT_ACTION packet) ----
-
     public void handleAction(ServerPlayer sp, int action, int price) {
         if (shop == null) return;
         if (!shop.getOwnerId().equals(sp.getUUID())) return;
@@ -157,7 +148,6 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         ShopListing l = listing();
 
         if (l == null) {
-            // Creating: need a sale sample and at least one pricing mode.
             if (sale.isEmpty()) {
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Put a sample of the item you're selling in the top slot.")
                         .withStyle(ChatFormatting.RED));
@@ -181,9 +171,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             return;
         }
 
-        // Editing an existing listing.
         if (!sale.isEmpty() && !StackData.canCombine(sale, l.getItemForSale())) {
-            // Swapping the sale item: hand back the old item's stock first so nothing strands.
             int old = l.getStockQuantitySafe();
             if (old > 0) {
                 give(sp, l.getItemForSale(), old);
@@ -253,7 +241,6 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         ShopListing l = listing();
-        // Pull any matching stack sitting in the stock bin into the listing's stock, then clear it.
         if (l != null && playerInv.player instanceof ServerPlayer sp && !sp.level().isClientSide) {
             ItemStack intake = samples.getItem(SLOT_STOCK);
             if (!intake.isEmpty() && StackData.canCombine(intake, l.getItemForSale())) {
@@ -273,7 +260,6 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Samples always go back. They were never part of the listing.
         if (!player.level().isClientSide) {
             for (int i = 0; i < samples.getContainerSize(); i++) {
                 ItemStack st = samples.removeItemNoUpdate(i);
@@ -292,10 +278,8 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             ItemStack stack = slot.getItem();
             result = stack.copy();
             if (index < SLOT_COUNT) {
-                // A sample/intake slot → back to the player inventory.
                 if (!this.moveItemStackTo(stack, SLOT_COUNT, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                // Player inventory → the stock bin (shift-click deposits stock).
                 if (!this.moveItemStackTo(stack, SLOT_STOCK, SLOT_STOCK + 1, false)) return ItemStack.EMPTY;
             }
             if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);

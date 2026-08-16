@@ -16,8 +16,6 @@ import java.util.Map;
 public final class EnchanterManager {
 
     private EnchanterManager() {}
-
-    // Config (see NotchConfig.Enchanter; applyConfig re-reads on save).
     public static boolean enabled = true;
     public static int repairFullCost = 60;
     public static int costMultiplierPercent = 100;
@@ -77,7 +75,7 @@ public final class EnchanterManager {
             default -> p.veryRare();
         };
         long cost = (long) base * level;
-        if (Ench.isTreasure(ench)) cost = cost * p.treasurePct() / 100; // mending & friends carry a premium
+        if (Ench.isTreasure(ench)) cost = cost * p.treasurePct() / 100;
         return Math.max(1, cost * p.globalPct() / 100);
     }
 
@@ -88,10 +86,7 @@ public final class EnchanterManager {
     @org.jetbrains.annotations.Nullable
     public static UncraftPlan uncraftPlan(ItemStack stack, net.minecraft.world.level.Level world) {
         if (stack.isEmpty() || stack.isDamaged()) return null;
-        // 1.21.11 took the by-type lookup and the plain result accessor off recipes. What is left is
-        // the full list plus assemble(), which for an ordinary crafting recipe just hands back its
-        // fixed result whatever the input. A recipe that computes its output instead returns something
-        // that will not match the stack below, so it is simply skipped rather than offered wrongly.
+
         //? if >=26.1 {
         /*if (!(world instanceof net.minecraft.server.level.ServerLevel serverLevel)) return null;
         for (net.minecraft.world.item.crafting.RecipeHolder<?> recipeEntry
@@ -118,8 +113,7 @@ public final class EnchanterManager {
             if (out.isEmpty() || !out.is(stack.getItem())) continue;
             if (stack.getCount() < out.getCount()) continue;
             List<ItemStack> returns = new ArrayList<>();
-            // The ingredient list moved onto the placement info, and an ingredient now reports the
-            // items it accepts as holders rather than as ready-made stacks.
+
             //? if >=1.21.11 {
             /*net.minecraft.world.item.crafting.PlacementInfo placement = recipe.placementInfo();
             if (placement.isImpossibleToPlace()) continue;
@@ -146,7 +140,7 @@ public final class EnchanterManager {
                     returns.add(one);
                 }
             }
-            if (returns.isEmpty()) continue; // special recipes (fireworks etc.) expose no ingredients
+            if (returns.isEmpty()) continue;
             return new UncraftPlan(out.getCount(), returns);
         }
         return null;

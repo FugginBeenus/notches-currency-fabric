@@ -21,8 +21,6 @@ public final class WaystoneFeeOverlay {
     private static ItemStack coin;
 
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -77,7 +75,7 @@ public final class WaystoneFeeOverlay {
         int x = Math.max(2, Math.min(mouseX + 12, screen.width - boxW - 2));
         int y = Math.max(2, Math.min(mouseY - 12, screen.height - boxH - 2));
 
-        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx); // drawn last, so it sits above the menu like a vanilla tooltip
+        net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
         ctx.fill(x - 1, y - 1, x + boxW + 1, y + boxH + 1, 0xFF000000);
         ctx.fill(x, y, x + boxW, y + boxH, 0xF01B1B22);
         ctx.drawString(tr, label, x + pad, y + pad, 0xFFB8B8B8, true);
@@ -90,7 +88,7 @@ public final class WaystoneFeeOverlay {
     @Nullable
     private static Object hoveredWaystone(Screen screen, int mouseX, int mouseY) {
         //? if >=1.21.11 {
-        /*// Back to top-level buttons, as on 1.20.1: the list widgets are gone again.
+        /*
         for (AbstractWidget widget : Screens.getButtons(screen)) {
             if (widget instanceof net.blay09.mods.waystones.client.gui.widget.WaystoneButton button
                     && button.visible && button.isMouseOver(mouseX, mouseY)) {
@@ -99,7 +97,7 @@ public final class WaystoneFeeOverlay {
         }
         return null;
         *///?} elif >=1.21 {
-        /*// 1.21: destinations are rows in a scrolling list; each entry's own isMouseOver is scroll-correct.
+        /*
         for (net.minecraft.client.gui.components.events.GuiEventListener element : screen.children()) {
             if (element instanceof net.blay09.mods.waystones.client.gui.widget.AbstractWaystoneList<?> list
                     && list.isMouseOver(mouseX, mouseY)) {
@@ -113,7 +111,6 @@ public final class WaystoneFeeOverlay {
         }
         return null;
         *///?} else {
-        // 1.20.1: destinations are top-level buttons on the screen.
         for (AbstractWidget widget : Screens.getButtons(screen)) {
             if (widget instanceof net.blay09.mods.waystones.client.gui.widget.WaystoneButton button
                     && button.visible && button.isMouseOver(mouseX, mouseY)) {
@@ -125,7 +122,7 @@ public final class WaystoneFeeOverlay {
     }
 
     //? if >=1.21 && <1.21.11 {
-    /*// The waystone button nested inside a 1.21 list entry, found by type (the entry's field is private).
+    /*
     @Nullable
     private static Object buttonOf(Object entry) {
         for (Field field : entry.getClass().getDeclaredFields()) {

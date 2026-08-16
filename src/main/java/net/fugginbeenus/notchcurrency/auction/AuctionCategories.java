@@ -43,7 +43,6 @@ public final class AuctionCategories {
         String path = id.getPath().toLowerCase(Locale.ROOT);
         String namespace = id.getNamespace().toLowerCase(Locale.ROOT);
 
-        // ===== BOOKS =====
         if (
                 //? if <1.21.11 {
                 item instanceof EnchantedBookItem ||
@@ -54,16 +53,10 @@ public final class AuctionCategories {
             return "books";
         }
 
-        // ===== MOBS =====
         if (item instanceof SpawnEggItem || path.contains("spawn_egg")) {
             return "mobs";
         }
 
-        // ===== GEAR =====
-        // 1.21.11 deleted the item subclasses this used to ask about (ArmorItem, SwordItem,
-        // TieredItem and the rest) and moved what they meant into data components. So from there the
-        // question changes from what an item IS to what it DOES, which is the better question anyway:
-        // a modded sword that never extended SwordItem was always miscategorised before.
         //? if >=1.21.11 {
         /*net.minecraft.world.item.ItemStack probe = item.getDefaultInstance();
         if (probe.has(net.minecraft.core.component.DataComponents.TOOL)
@@ -87,7 +80,6 @@ public final class AuctionCategories {
         }
         //?}
 
-        // ===== VALUABLES (ore/gem/ingot style stuff) =====
         if (path.contains("diamond") || path.contains("emerald") ||
                 path.contains("netherite") || path.contains("ancient_debris") ||
                 path.contains("ore") || path.contains("raw_") ||
@@ -98,7 +90,6 @@ public final class AuctionCategories {
             return "valuables";
         }
 
-        // ===== SEASONAL =====
         if (
                 namespace.contains("holiday") ||
                         (namespace.contains("mcw") && (path.contains("halloween") || path.contains("xmas") || path.contains("christmas"))) ||
@@ -112,8 +103,6 @@ public final class AuctionCategories {
             return "seasonal";
         }
 
-        // ===== BASE CATEGORY FOR BUILDING STUFF: BLOCKS =====
-        // Anything that's a BlockItem or looks very block-like in name.
         if (item instanceof BlockItem ||
                 path.contains("block") || path.contains("log") ||
                 path.contains("planks") || path.contains("wood") ||
@@ -124,12 +113,9 @@ public final class AuctionCategories {
                 path.contains("glass") || path.contains("pane") ||
                 path.contains("lamp") || path.contains("lantern") ||
                 path.contains("torch")) {
-            // You might later special-case some of these into other cats,
-            // but for now treating them all as "blocks" is safe.
             return "blocks";
         }
 
-        // ===== FURNITURE (non-block items that sound like furniture) =====
         if (
                 path.contains("chair") || path.contains("table") ||
                         path.contains("sofa") || path.contains("couch") ||
@@ -145,13 +131,9 @@ public final class AuctionCategories {
         ) {
             return "furniture";
         }
-
-        // ===== EXTRA MOBS: villager-related =====
         if (path.contains("villager")) {
             return "mobs";
         }
-
-        // ===== FALLBACK =====
         return "other";
     }
 }

@@ -13,11 +13,9 @@ public final class RegistryAccess {
     public static void setClientThreadCheck(java.util.function.BooleanSupplier check) {
         clientThreadCheck = check;
     }
-
     public static void setServer(@Nullable net.minecraft.core.RegistryAccess manager) {
         serverRegistries = manager;
     }
-
     public static void setClient(@Nullable net.minecraft.core.RegistryAccess manager) {
         clientRegistries = manager;
     }

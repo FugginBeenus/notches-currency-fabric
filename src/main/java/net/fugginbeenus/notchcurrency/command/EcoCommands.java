@@ -29,7 +29,6 @@ public final class EcoCommands {
     private EcoCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /baltop (everyone) =====
         dispatcher.register(
                 Commands.literal("baltop")
                         .executes(ctx -> {
@@ -41,7 +40,6 @@ public final class EcoCommands {
                         })
         );
 
-        // ===== /receipts (everyone). Your recent transaction history =====
         dispatcher.register(
                 Commands.literal("receipts")
                         .executes(ctx -> {
@@ -51,7 +49,6 @@ public final class EcoCommands {
                         })
         );
 
-        // ===== /eco (admin) =====
         dispatcher.register(
                 Commands.literal("eco")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)

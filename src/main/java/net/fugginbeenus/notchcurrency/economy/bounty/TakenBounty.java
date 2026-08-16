@@ -4,9 +4,9 @@ import net.minecraft.nbt.CompoundTag;
 
 public class TakenBounty {
 
-    private final Bounty bounty;         // copy of the offer (its id identifies this taken bounty)
-    private final long expiresGameTime;  // personal deadline
-    private int progress;                // KILL progress
+    private final Bounty bounty;
+    private final long expiresGameTime;
+    private int progress;
 
     public TakenBounty(Bounty bounty, long expiresGameTime, int progress) {
         this.bounty = bounty;

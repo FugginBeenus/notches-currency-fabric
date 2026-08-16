@@ -73,7 +73,7 @@ public final class RaffleCommands {
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p != null) {
-                                RaffleManager.resetAndReturn(p); // wipe + return escrowed prize to the admin
+                                RaffleManager.resetAndReturn(p);
                             } else {
                                 RaffleState.get(ctx.getSource().getServer()).resetRound();
                                 RaffleManager.refreshAllOnline(ctx.getSource().getServer());

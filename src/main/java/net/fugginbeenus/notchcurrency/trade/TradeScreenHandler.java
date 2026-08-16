@@ -24,8 +24,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
 
     private final SimpleContainer selfInv  = new SimpleContainer(9);
     private final SimpleContainer otherInv = new SimpleContainer(9);
-
-    // [0]=selfMoney, [1]=otherMoney, [2]=selfReady(0/1), [3]=otherReady(0/1), [4]=stage (unused)
     private final ContainerData props = new SimpleContainerData(5);
 
     private static final int SELF_GRID_X  = 34;
@@ -50,13 +48,12 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     //? if <26.1 {
     private final ContainerListener selfListener = inv -> {
         if (session != null && inv == selfInv) {
-            unreadySelfAndSync();   // <-- NEW
+            unreadySelfAndSync();
             mirrorSelfToPartner();
         }
     };
     //?}
 
-    // ---------- CLIENT constructor ----------
     public TradeScreenHandler(int containerId, Inventory inv) {
         super(ModScreenHandlers.TRADE, containerId);
         this.player = inv.player;
@@ -66,7 +63,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         this.addDataSlots(props);
     }
 
-    // ---------- SERVER constructor ----------
     public TradeScreenHandler(int containerId, Inventory inv, Player player,
                               TradeManager.TradeSession session, boolean selfOnLeft) {
         super(ModScreenHandlers.TRADE, containerId);
@@ -80,15 +76,12 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     }
 
     private void hookInventories() {
-        // 26.1 dropped container listeners. slotsChanged below already fires for this same container
-        // and runs the same two steps, so there it is simply the only path in.
         //? if <26.1 {
         selfInv.addListener(selfListener);
         //?}
     }
 
     private void buildSlots() {
-        // --- Self 3x3 offer grid (locked when ready) ---
         int leftX = SELF_GRID_X, leftY = SELF_GRID_Y;
         selfStart = this.slots.size();
         for (int r = 0; r < 3; r++) {
@@ -97,7 +90,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
                 this.addSlot(new Slot(selfInv, index, leftX + c * 18, leftY + r * 18) {
                     @Override
                     public boolean mayPlace(ItemStack stack) {
-                        // Disable when player has clicked "ready"
                         return TradeScreenHandler.this.getProperties().get(2) == 0;
                     }
                     @Override
@@ -109,7 +101,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         }
         selfEnd = selfStart + SELF_SIZE;
 
-        // --- Other (read-only) 3x3 grid ---
         int rightX = OTHER_GRID_X, rightY = OTHER_GRID_Y;
         otherStart = this.slots.size();
         for (int r = 0; r < 3; r++) {
@@ -122,7 +113,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         }
         otherEnd = otherStart + OTHER_SIZE;
 
-        // --- Player inventory ---
         invStart = this.slots.size();
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
@@ -133,7 +123,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         }
         invEnd = invStart + INV_SIZE;
 
-        // --- Hotbar ---
         hotbarStart = this.slots.size();
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(this.player.getInventory(), col,
@@ -143,14 +132,12 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         hotbarEnd = hotbarStart + HOTBAR_SIZE;
     }
 
-    // ======================== MIRRORING LOGIC ========================
-
     @Override
     public void slotsChanged(Container inv) {
         super.slotsChanged(inv);
         if (session == null) return;
         if (inv == selfInv) {
-            unreadySelfAndSync();   // <-- NEW
+            unreadySelfAndSync();
             mirrorSelfToPartner();
         }
     }
@@ -174,7 +161,7 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     }
 
     private void unreadySelfAndSync() {
-        if (session == null) return; // client stub
+        if (session == null) return;
         boolean changed = false;
 
         if (player == session.a) {
@@ -184,13 +171,10 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         }
 
         if (changed) {
-            // Refresh both handlers' property delegates so buttons/labels update
             if (session.aHandler != null) session.aHandler.sendAllDataToRemote();
             if (session.bHandler != null) session.bHandler.sendAllDataToRemote();
         }
     }
-
-    // ======================== MONEY / STATE SYNC ========================
 
     public void sendAllDataToRemote() {
         if (session == null) return;
@@ -210,8 +194,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
     }
 
     public ContainerData getProperties() { return props; }
-
-    // ======================== COMPLETE / CANCEL ========================
 
     void returnItems() { dump(selfInv, player); }
 
@@ -238,8 +220,6 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         }
         inv.setChanged();
     }
-
-    // ======================== VANILLA PLUMBING ========================
 
     @Override public boolean stillValid(Player player) { return true; }
 

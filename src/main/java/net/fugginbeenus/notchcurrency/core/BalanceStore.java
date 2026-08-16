@@ -27,8 +27,6 @@ public final class BalanceStore {
         return after;
     }
 
-    /* --------- Reads --------- */
-
     public static long get(ServerPlayer sp) {
         return state(sp.level().getServer()).get(sp.getUUID());
     }
@@ -36,8 +34,6 @@ public final class BalanceStore {
     public static long get(MinecraftServer server, UUID id) {
         return state(server).get(id);
     }
-
-    /* --------- Mutations by player --------- */
 
     public static long set(ServerPlayer sp, long value) {
         return set(sp, value, TransactionReason.UNSPECIFIED, null);
@@ -70,8 +66,6 @@ public final class BalanceStore {
     public static long subtract(ServerPlayer sp, long delta, TransactionReason reason, String detail) {
         return mutate(sp.level().getServer(), sp.getUUID(), st -> st.subtract(sp.getUUID(), delta), reason, detail);
     }
-
-    /* --------- Mutations by UUID (e.g. offline players) --------- */
 
     public static long set(MinecraftServer server, UUID id, long value) {
         return mutate(server, id, st -> st.set(id, value), TransactionReason.UNSPECIFIED, null);

@@ -33,7 +33,6 @@ public final class TradeCommands {
     private TradeCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /trade =====
         dispatcher.register(
                 Commands.literal("trade")
                         .then(Commands.argument("player", EntityArgument.player())
@@ -64,7 +63,6 @@ public final class TradeCommands {
                                         })
                                 )
                         )
-                        // /trade offer: open the create-an-offline-offer screen
                         .then(Commands.literal("offer")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
@@ -72,7 +70,6 @@ public final class TradeCommands {
                                     return 1;
                                 })
                         )
-                        // /trade offers: open the board of offers for you + your open offers
                         .then(Commands.literal("offers")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();

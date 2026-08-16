@@ -63,7 +63,6 @@ public final class WealthTax {
             long tax = excess * ratePercent / 100L;
             if (tax <= 0) continue;
 
-            // subtract = add a negative delta, tagged as a sink so it counts as destroyed
             BalanceStore.add(server, e.getKey(), -tax, TransactionReason.SINK, "wealth tax");
             totalTaxed += tax;
             affected++;

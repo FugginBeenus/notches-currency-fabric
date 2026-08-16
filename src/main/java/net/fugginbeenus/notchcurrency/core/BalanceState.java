@@ -13,14 +13,9 @@ import java.util.UUID;
 public class BalanceState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String KEY_ROOT = "balances";
-
-    // UUID -> balance
     private final Map<UUID, Long> balances = new HashMap<>();
 
     public BalanceState() {}
-
-    /* ---------- API ---------- */
-
     public long get(UUID id) {
         return balances.getOrDefault(id, 0L);
     }
@@ -42,7 +37,6 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
     public long subtract(UUID id, long delta) {
         return add(id, -Math.max(0L, delta));
     }
-
     public java.util.Map<UUID, Long> snapshot() {
         return java.util.Map.copyOf(balances);
     }
@@ -59,10 +53,6 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
         return n;
     }
 
-    /* ---------- Persistence ---------- */
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -94,22 +84,17 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
             for (String key : map.getAllKeys()) {
                 try {
                     UUID id = UUID.fromString(key);
-                    // getLong tolerates older int-typed entries, so this still reads legacy data.
                     state.balances.put(id, map.getLong(key));
                 } catch (IllegalArgumentException ignored) {
-                    // skip malformed keys
                 }
             }
         }
         return state;
     }
 
-    /* ---------- Loader ---------- */
-
     public static BalanceState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         DimensionDataStorage mgr = overworld.getDataStorage();
-        // 1.20.1 signature: (reader, factory, name)
         return StateData.getOrCreate(mgr, BalanceState::new, BalanceState::load, "notchcurrency_balances");
     }
 }

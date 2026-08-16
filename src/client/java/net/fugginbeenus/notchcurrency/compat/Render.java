@@ -24,8 +24,6 @@ public final class Render {
 
     private Render() {}
 
-    // Both of these speak the pre-1.21.11 world-drawing API. Their callers submit instead there,
-    // so they simply do not exist from that version on.
     //? if <1.21.11 {
     public static void renderFixedItem(ItemRenderer itemRenderer, ItemStack stack, int light, int overlay,
                                        PoseStack matrices, MultiBufferSource vcp, Level world, int seed) {
@@ -41,7 +39,7 @@ public final class Render {
     //?}
 
     //? if >=1.21.11 {
-    /*// Text in the world is submitted for the drawing pass now rather than batched on the spot.
+    /*
     public static void submitText(Font text, Component str, float x, float y, int color,
                                   PoseStack matrices,
                                   net.minecraft.client.renderer.SubmitNodeCollector collector, int light) {
@@ -82,13 +80,6 @@ public final class Render {
         //?}
     }
 
-    /**
-     * Restricts what a text field will accept, and optionally watches it change.
-     *
-     * <p>EditBox.setFilter went away in 26.1. The stand-in is a responder that puts back the last
-     * good value, which means it occupies the one responder slot a field has, so anything that also
-     * wanted to watch the field has to come through here rather than set its own afterwards.
-     */
     public static void setFilter(net.minecraft.client.gui.components.EditBox box,
                                  java.util.function.Predicate<String> allowed) {
         setFilter(box, allowed, null);
@@ -113,8 +104,6 @@ public final class Render {
         //?}
     }
 
-    // One line of floating text above an entity. Flat rather than nested because its caller already
-    // sits inside a version block, and 26.2 dropped the distance argument.
     //? if >=26.2 {
     /*public static void submitNameLine(net.minecraft.client.renderer.entity.state.EntityRenderState anchor,
                                       net.minecraft.network.chat.Component text,
@@ -135,9 +124,7 @@ public final class Render {
     }
     *///?}
 
-    // Which way the camera is looking, for anything billboarded into the world. 1.21.11 hands over a
-    // ready-made orientation; 26.2 replaced it with the two angles and expects them assembled here.
-    // Flat rather than nested, because a directive inside an already-commented branch is only text.
+
     //? if >=26.2 {
     /*public static org.joml.Quaternionf cameraFacing(
             net.minecraft.client.renderer.state.level.CameraRenderState camera) {
@@ -151,15 +138,6 @@ public final class Render {
     }
     *///?}
 
-    /**
-     * Builds an entity to look at rather than to put in the world: a picker preview or the body a
-     * disguised NPC borrows.
-     *
-     * <p>From 26.2 the plain create runs a spawn check first and returns null for anything that
-     * fails it, which on a peaceful world is every single monster. A preview is not a spawn, so the
-     * check is skipped. The entity is never added to a level either, so nothing hands it a network
-     * id, and getId throws on an unassigned one from 26.1 on.
-     */
     @org.jetbrains.annotations.Nullable
     public static net.minecraft.world.entity.Entity createDetached(
             net.minecraft.world.level.Level level, net.minecraft.world.entity.EntityType<?> type) {
@@ -180,28 +158,14 @@ public final class Render {
     public static void drawEntityAt(net.minecraft.client.gui.GuiGraphics ctx, int x, int y, int size,
                                     float mouseX, float mouseY, net.minecraft.world.entity.LivingEntity entity) {
         //? if >=1.21.11 {
-        /*// Every caller here means "stand the entity on (x, y) at this scale", which is what the
-        // old anchored call did. This one takes a rectangle instead and centres the entity inside
-        // it, so the rectangle has to be built around where the entity will actually end up.
-        // Deriving it from the scale, as this once did, put the centre a whole tile too high.
-        //
-        // Rendered pixels are the scale times the entity's size in blocks. Sit the box so the feet
-        // land on y, and pad it, because plenty of mobs draw outside their collision box (wings,
-        // tails, ears) and the rectangle crops whatever leaves it.
+        /*
         float bbHeight = Math.max(0.1f, entity.getBbHeight());
         float bbWidth = Math.max(0.1f, entity.getBbWidth());
         int drawnHeight = Math.max(2, Math.round(size * bbHeight));
         int drawnWidth = Math.max(2, Math.round(size * bbWidth));
-        // A square box on the larger dimension, because models routinely reach past their collision
-        // box in whichever direction is the short one, and anything outside the box is cropped.
         int extent = Math.max(drawnWidth, drawnHeight);
         int half = extent / 2 + Math.max(3, extent / 4);
         int centreY = y - drawnHeight / 2;
-        // Callers hand in the look offset already worked out, the way every earlier version wanted
-        // it. This one wants the raw pointer position and subtracts the centre itself, so give it
-        // back something it can subtract from. Passing the offset straight through subtracted twice,
-        // which spun every preview off to one side, and a caller asking for no rotation at all with
-        // a plain zero got the whole distance from the screen corner instead.
         net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
                 ctx, x - half, centreY - half, x + half, centreY + half,
                 size, 0.0625f, x - mouseX, centreY - mouseY, entity);
@@ -233,13 +197,6 @@ public final class Render {
         //?}
     }
 
-    /**
-     * Whether either shift key is held.
-     *
-     * <p>Screen.hasShiftDown went away in 1.21.11, where modifier state rides on the input event.
-     * Several callers here are plain helpers with no event in scope, so this asks the window instead,
-     * which reads the same on every version.
-     */
     public static boolean shiftDown() {
         //? if >=1.21.11 {
         /*com.mojang.blaze3d.platform.Window window = net.minecraft.client.Minecraft.getInstance().getWindow();
@@ -250,9 +207,6 @@ public final class Render {
                 || com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 
-    // 26.1 stopped exposing the open screen on Minecraft: it only takes one, it does not hand one
-    // back. Two places here need to know what is open, so the mod keeps its own note of it, kept in
-    // step by the screen lifecycle events. Older versions just read the field.
     //? if >=26.1 {
     /*private static net.minecraft.client.gui.screens.Screen openScreen;
 

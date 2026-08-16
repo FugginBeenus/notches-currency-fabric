@@ -26,8 +26,6 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     private static ItemStack coin;
 
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -72,13 +70,8 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7);
-
-        // Recessed container boxes: the cosmetics list, and the portrait.
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
-
-        // Cosmetic rows, vanilla trade style: coin cost (or "Owned") → arrow → the cosmetic.
-        // The name lives in the hover tooltip.
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c == null) continue;
@@ -90,7 +83,6 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
                 ctx.drawString(this.font, Component.literal("Owned").withStyle(ChatFormatting.DARK_GREEN),
                         x + LIST_X + 6, ry + 6, NotchTheme.TEXT_DARK, false);
             } else {
-                // Coin cost with the vanilla stack-count renderer, like emeralds in villager trades.
                 ctx.renderItem(coin(), x + LIST_X + 4, ry + 2);
                 ctx.renderItemDecorations(this.font, coin(), x + LIST_X + 4, ry + 2,
                         NotchWidgets.compactCount(c.price()));
@@ -99,16 +91,12 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
             ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
-        // Scrollbar.
         NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
         if (pages() > 1) {
             NotchWidgets.button(ctx, x + SB_X + 1, thumbY(), SB_W - 2, thumbH(), false, false);
         }
-
-        // Framed NPC portrait.
         preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
 
-        // Divider + player inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -119,9 +107,7 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
             NotchWidgets.slot(ctx, x + 43 + col * 18 - 1, y + 158 + 58 - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -271,16 +257,13 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

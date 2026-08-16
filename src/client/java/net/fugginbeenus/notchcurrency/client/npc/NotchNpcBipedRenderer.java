@@ -26,12 +26,6 @@ import net.minecraft.resources.ResourceLocation;
 *///?} else {
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerModel<NotchNpcEntity>> {
 //?}
-
-    // Two copies of the model. "live" rides the vanilla player layer, so CEM animation packs (Fresh
-    // Animations / Fresh Moves via OptiFine or EMF) animate it: the life we want on nearby NPCs.
-    // "frozen" rides our private layer (NpcModelLayers), which those packs don't replace; render() sends
-    // an NPC there when a pack must not touch it, either because it's posed as a Statue or because it's
-    // too far away to be worth animating. Without a pack installed the two layers are identical.
     private final NpcPlayerModel live;
     private final NpcPlayerModel liveSlim;
     private final NpcPlayerModel frozen;
@@ -65,8 +59,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         //?}
     }
 
-    // Nothing is drawn on the spot from 1.21.11: work is submitted and drawn later in one pass.
-    // The entity is gone by then, so everything this needs was copied into the state beforehand.
     //? if >=1.21.11 {
     /*@Override
     public void submit(net.minecraft.client.renderer.entity.state.AvatarRenderState state, PoseStack matrices,
@@ -78,14 +70,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     public void render(NotchNpcEntity entity, float yaw, float tickDelta, PoseStack matrices,
                        MultiBufferSource vertexConsumers, int light) {
-        // Negative means "close enough to skip every cut". That's how previews opt out (see lodApplies).
         double distSq = lodApplies() ? distanceToCameraSq(entity) : -1.0;
     //?}
-
-        // The private layer is for anything an animation pack must not touch: Statue always, and any NPC
-        // far enough that its animation can't be read. Nearby non-statue NPCs stay on the vanilla player
-        // layer so packs keep bringing them to life. With no pack installed the two layers are built from
-        // identical model data, so this switch is invisible and costs nothing either way.
         boolean packFree = entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE
                 || (distSq >= 0 && distSq >= ANIM_RANGE_SQ);
         boolean slim = entity.isSlim();
@@ -94,16 +80,12 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
                 : (slim ? this.liveSlim : this.live);
         m.setOverlaysVisible(distSq < 0 || distSq < DETAIL_RANGE_SQ);
         this.model = m;
-        // Sitting/Chilling are applied inside NpcPlayerModel.setupAnim (they need pivot drops, and
-        // the renderer overwrites model.riding). Sneaking here; sleeping/prone via EntityPose.
         //? if >=1.21.11 {
         /*super.submit(state, matrices, collector, camera);
         *///?} else {
         this.model.crouching = entity.isCrouching();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
         //?}
-
-        // After the body, so the sign shows even on an NPC with its nameplate turned off.
         //? if >=1.21.11 {
         /*String[] sign = entity.billboard;
         *///?} else {
@@ -135,7 +117,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         }
     }
 
-    // Everything the drawing pass will need, read off the entity while it is still in hand.
     //? if >=1.21.11 {
     /*@Override
     public net.minecraft.client.renderer.entity.state.AvatarRenderState createRenderState() {
@@ -170,11 +151,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
                            : net.minecraft.world.entity.player.PlayerModelType.WIDE,
                 false);
         vanilla.isCrouching = entity.isCrouching();
-        // The second skin layer is driven off these flags now: PlayerModel.setupAnim assigns each
-        // overlay part's visibility from the state every frame, so anything set on the model itself
-        // is overwritten. Left unset they default to false and the whole outer layer disappears.
-        // Same distance rule setOverlaysVisible uses, so near NPCs keep their jackets and far ones
-        // do not pay for them.
         boolean overlays = !lodApplies() || vanilla.distanceToCameraSq < DETAIL_RANGE_SQ;
         vanilla.showHat = overlays;
         vanilla.showJacket = overlays;
@@ -200,7 +176,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
                                    float yBodyRot, float tickDelta) {
     //?}
         if (entity.getNpcPose() == NotchNpcEntity.POSE_PRONE) {
-            // Replicate vanilla's swimming/crawling transform (face-down, flat on the ground).
             matrices.mulPose(Axis.YN.rotationDegrees(yBodyRot));
             matrices.mulPose(Axis.XP.rotationDegrees(-90.0f));
             matrices.translate(0.0f, -1.0f, 0.3f); // vanilla swim offset: sits the crawl on the ground
@@ -265,8 +240,6 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         //?}
         matrices.popPose();
 
-        // The subtitle hangs below the name, where a job title belongs. Drawn through the same label
-        // routine so it billboards, fades and backgrounds exactly like the name above it.
         String subtitle = entity.getSubtitle();
         if (!subtitle.isEmpty()) {
             matrices.pushPose();

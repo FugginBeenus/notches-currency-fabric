@@ -15,13 +15,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class NpcEquipScreenHandler extends AbstractContainerMenu {
 
-    // Slot coordinates (client draws insets at these -1). Gear lives in the left container box;
-    // the right box is the live preview; the player inventory sits below the divider. Trinket slots
-    // (when the Trinkets mod is present) fill a 2-wide grid beside the armor column.
-    public static final int ARMOR_X = 14, ARMOR_Y = 28;              // 4 slots, 18 apart
-    public static final int HAND_X = 14, OFF_X = 86, MAIN_Y = 112, OFF_Y = 112; // side by side
+    public static final int ARMOR_X = 14, ARMOR_Y = 28;
+    public static final int HAND_X = 14, OFF_X = 86, MAIN_Y = 112, OFF_Y = 112;
     public static final int INV_X = 43, INV_Y = 158, HOTBAR_Y = 216;
-    public static final int TRINKET_X = 116, TRINKET_Y = 28;         // 2 cols × up to 4 rows
+    public static final int TRINKET_X = 116, TRINKET_Y = 28;
     public static final int MAX_TRINKETS = 8;
 
     private final Container equip;
@@ -31,7 +28,6 @@ public class NpcEquipScreenHandler extends AbstractContainerMenu {
     private final String[] trinketLabels;
 
     private static EquipmentSlot preferredSlot(ItemStack stack) {
-        // Equipable went away in 1.21.11; what a stack can wear is a data component now.
         //? if >=1.21.11 {
         /*net.minecraft.world.item.equipment.Equippable eq =
                 stack.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
@@ -70,15 +66,13 @@ public class NpcEquipScreenHandler extends AbstractContainerMenu {
         this.npc = npc;
         this.npcId = npcId;
 
-        // 0-3: armor (helmet, chest, legs, boots).
         for (int i = 0; i < 4; i++) {
             this.addSlot(new EquipSlot(equip, i, ARMOR_X, ARMOR_Y + i * 18, NpcEquipmentInventory.ORDER[i]));
         }
-        // 4: main hand, 5: off hand.
+
         this.addSlot(new EquipSlot(equip, 4, HAND_X, MAIN_Y, EquipmentSlot.MAINHAND));
         this.addSlot(new EquipSlot(equip, 5, OFF_X, OFF_Y, EquipmentSlot.OFFHAND));
 
-        // 6-32: player inventory; 33-41: hotbar.
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInv, col + row * 9 + 9, INV_X + col * 18, INV_Y + row * 18));
@@ -88,9 +82,6 @@ public class NpcEquipScreenHandler extends AbstractContainerMenu {
             this.addSlot(new Slot(playerInv, col, INV_X + col * 18, HOTBAR_Y));
         }
 
-        // 42+: trinket slots, appended last so the fixed index ranges above stay put. The specs come
-        // from Trinkets' synced data, so client and server build identical slot lists; server slots
-        // back straight onto the NPC's trinket inventories (persistence and sync ride the component).
         int count = 0;
         String[] labels = new String[0];
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("trinkets")) {
@@ -133,15 +124,14 @@ public class NpcEquipScreenHandler extends AbstractContainerMenu {
         ItemStack original = stack.copy();
 
         if (index < 6 || index >= 42) {
-            // NPC gear or trinket slot -> player inventory.
             if (!this.moveItemStackTo(stack, 6, 42, true)) return ItemStack.EMPTY;
         } else {
-            // Player inventory -> the item's preferred slot (armor to its piece, else the hands).
+
             EquipmentSlot preferred = preferredSlot(stack);
             int target = indexOf(preferred);
             boolean moved = target >= 0 && this.moveItemStackTo(stack, target, target + 1, false);
             if (!moved && !isArmor(preferred)) {
-                moved = this.moveItemStackTo(stack, 4, 6, false); // either hand
+                moved = this.moveItemStackTo(stack, 4, 6, false);
             }
             if (!moved) return ItemStack.EMPTY;
         }

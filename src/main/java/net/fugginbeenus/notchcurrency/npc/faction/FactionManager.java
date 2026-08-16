@@ -51,7 +51,7 @@ public final class FactionManager {
             msg(sp, "Couldn't create that faction.", ChatFormatting.RED);
             return null;
         }
-        // The founder is in it from the start; standing outside your own faction reads as a bug.
+
         state.join(sp.getUUID(), id);
         msg(sp, "Founded " + faction.displayName() + ".", ChatFormatting.GREEN);
         return faction;
@@ -85,7 +85,7 @@ public final class FactionManager {
             msg(sp, "You're already with " + faction.displayName() + ".", ChatFormatting.YELLOW);
             return;
         }
-        // The founder and admins get in regardless: a closed faction shouldn't lock out its own.
+
         if (!faction.isOpenToJoin() && !canManage(sp, faction)) {
             msg(sp, faction.displayName() + " isn't taking new members.", ChatFormatting.RED);
             return;
@@ -113,7 +113,7 @@ public final class FactionManager {
             msg(sp, "You aren't with a faction.", ChatFormatting.YELLOW);
             return;
         }
-        // A founder leaving would orphan the faction, so send them to disband instead.
+
         if (faction.isFoundedBy(sp.getUUID()) && !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
             msg(sp, "You founded " + faction.displayName() + " - disband it rather than walking out.",
                     ChatFormatting.RED);

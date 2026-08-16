@@ -54,7 +54,6 @@ public final class CoinFlipManager {
 
     public static int getPayoutPercent() { return payoutPercent; }
 
-    // ---- entry points ----
 
     public static void openScreen(ServerPlayer sp, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
@@ -80,8 +79,6 @@ public final class CoinFlipManager {
         resolve(sp, guessHeads, bet, null);
     }
 
-    // ---- core ----
-
     private static void resolve(ServerPlayer sp, boolean guessHeads, long bet, BlockPos pos) {
         if (!GamblingManager.isEnabled()) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Gambling is disabled on this server.").withStyle(ChatFormatting.RED));
@@ -96,7 +93,7 @@ public final class CoinFlipManager {
         if (pos != null) {
             BlockState st = world.getBlockState(pos);
             if (!(st.getBlock() instanceof CoinFlipBlock)) {
-                pos = null; // block gone: fall back to an instant, block-less flip
+                pos = null;
             } else if (st.getValue(CoinFlipBlock.FLIPPING)) {
                 notifyBusy(sp);
                 return;
@@ -111,11 +108,10 @@ public final class CoinFlipManager {
         boolean won = (guessHeads == landedHeads);
 
         if (pos != null && revealTicks > 0) {
-            // Start the spin, close the screen so the player watches the block, reveal on delay.
             BlockState st = world.getBlockState(pos);
             world.setBlock(pos, st.setValue(CoinFlipBlock.FLIPPING, true), Block.UPDATE_CLIENTS);
             if (world.getBlockEntity(pos) instanceof net.fugginbeenus.notchcurrency.block.entity.CoinFlipBlockEntity be) {
-                be.startFlip(world.getGameTime(), revealTicks); // drives the pop + spin animation
+                be.startFlip(world.getGameTime(), revealTicks);
             }
             world.playSound(null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.BLOCKS, 0.8f, 1.4f);
             sp.closeContainer();

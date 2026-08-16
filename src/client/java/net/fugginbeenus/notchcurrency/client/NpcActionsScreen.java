@@ -74,7 +74,6 @@ public class NpcActionsScreen extends Screen {
             try {
                 a.setAmount(s.isBlank() ? 0 : Long.parseLong(s.trim()));
             } catch (NumberFormatException ignored) {
-                // half-typed number: leave the last good value alone
             }
         });
         addRenderableWidget(amountField);
@@ -112,7 +111,6 @@ public class NpcActionsScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, "What this NPC does when something happens.",
                 px + W / 2, py + 20, NotchTheme.TEXT_MUTED, false);
 
-        // Left: the moments.
         NpcTrigger[] triggers = NpcTrigger.values();
         for (int i = 0; i < triggers.length; i++) {
             NpcTrigger t = triggers[i];
@@ -128,7 +126,6 @@ public class NpcActionsScreen extends Screen {
             }
         }
 
-        // Right: what happens.
         ctx.drawString(this.font, trigger.label(), px + ED_X, py + 42, NotchTheme.TEXT_DARK, false);
         ctx.drawString(this.font,
                 this.font.plainSubstrByWidth(trigger.hint(), ED_W), px + ED_X, py + 54,
@@ -156,7 +153,6 @@ public class NpcActionsScreen extends Screen {
                     over(mouseX, mouseY, px + ED_X, ay, ED_W, ROW_H));
         }
 
-        // Selected action's details.
         DialogueAction a = current();
         if (a != null) {
             NotchWidgets.divider(ctx, px + ED_X, py + 144, ED_W);
@@ -179,7 +175,6 @@ public class NpcActionsScreen extends Screen {
             }
         }
 
-        // Proximity gets one extra control.
         if (trigger == NpcTrigger.ON_PROXIMITY) {
             ctx.drawString(this.font, "Range: " + proximityRadius + " blocks",
                     px + TRIG_X, py + H - 52, NotchTheme.TEXT_DARK, false);
@@ -236,7 +231,7 @@ public class NpcActionsScreen extends Screen {
                 if (over(mx, my, px + ED_X, rowY(i), ED_W - 20, ROW_H)) {
                     NotchWidgets.click();
                     if (i == selected) {
-                        NpcActionEditing.cycleType(list.get(i)); // clicking the selected row again cycles what it does
+                        NpcActionEditing.cycleType(list.get(i));
                     } else {
                         selected = i;
                     }
@@ -289,7 +284,6 @@ public class NpcActionsScreen extends Screen {
         for (NpcTrigger t : NpcTrigger.values()) {
             List<DialogueAction> kept = new ArrayList<>();
             for (DialogueAction a : working.get(t)) {
-                // Drop half-finished rows rather than storing something that silently does nothing.
                 if (NpcActionEditing.needsValue(a.type()) && a.value().isBlank()) continue;
                 kept.add(a);
             }
@@ -323,24 +317,19 @@ public class NpcActionsScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

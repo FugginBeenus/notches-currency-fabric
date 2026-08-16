@@ -39,7 +39,6 @@ public final class NpcShareCodec {
         if (rawText == null || rawText.isBlank()) {
             throw new BadCode("There's no share code on your clipboard.");
         }
-        // Codes get pasted out of chat and Discord, so whitespace and line breaks are expected.
         String text = rawText.strip().replaceAll("\\s", "");
         if (!text.startsWith(PREFIX)) {
             throw new BadCode("That doesn't look like an NPC share code.");
@@ -58,8 +57,6 @@ public final class NpcShareCodec {
             throw new BadCode("That share code is empty.");
         }
 
-        // Expand once through a ceiling before handing anything to the NBT reader. Doing it in this
-        // order is the point: the reader would otherwise be the thing discovering the size.
         expandCheck(compressed);
 
         try (ByteArrayInputStream in = new ByteArrayInputStream(compressed)) {

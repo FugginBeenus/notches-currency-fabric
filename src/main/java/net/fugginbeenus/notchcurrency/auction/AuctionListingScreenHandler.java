@@ -22,10 +22,8 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
 
     public static final int INPUT_X = 80, INPUT_Y = 24;
     public static final int INV_X = 8, INV_Y = 140, HOTBAR_Y = 198;
-
     private final SimpleContainer input = new SimpleContainer(1);
     private final Inventory playerInv;
-    // Listing fee is price-scaled, so the client is sent the knobs and computes the live fee itself.
     public static final int P_FEE_FLAT = 0, P_FEE_PERCENT = 1, P_FEE_MAX = 2;
     private final ContainerData props = new SimpleContainerData(3);
 
@@ -112,7 +110,6 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Return whatever is still in the input slot so items are never lost.
         if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
             ItemStack leftover = input.removeItemNoUpdate(0);
             if (!player.getInventory().add(leftover)) {
@@ -129,10 +126,8 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
             ItemStack stack = slot.getItem();
             result = stack.copy();
             if (index == 0) {
-                // input slot → inventory
                 if (!this.moveItemStackTo(stack, 1, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                // inventory → input slot (one item type at a time)
                 if (!this.moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
             }
             if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);

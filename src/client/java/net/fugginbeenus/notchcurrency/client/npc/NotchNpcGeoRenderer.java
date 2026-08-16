@@ -29,8 +29,6 @@ public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
         this.shadowRadius = 0.4f;
     }
 
-    // 5.x replaced preRender with a scaling hook that is handed the whole pass, so the NPC's own
-    // scale is read off the render state there instead of poking the pose stack directly.
     //? if >=1.21.11 {
     /*@Override
     public void scaleModelForRender(

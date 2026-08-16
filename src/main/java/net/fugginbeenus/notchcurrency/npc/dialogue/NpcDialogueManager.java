@@ -32,7 +32,6 @@ public final class NpcDialogueManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
                     .withStyle(ChatFormatting.WHITE));
             if (hasRoleScreen(npc)) {
-                // Give the greeting a beat to be read before the GUI covers it.
                 pendingOpens.add(new PendingOpen(sp.getUUID(), npc.getUUID(), GREETING_DELAY_TICKS));
             }
             return true;
@@ -50,14 +49,14 @@ public final class NpcDialogueManager {
         DialogueNode node = npc.getDialogue().get(nodeId);
         if (node == null || choiceIndex < 0 || choiceIndex >= node.choices().size()) return;
         DialogueChoice choice = node.choices().get(choiceIndex);
-        if (!choice.isAvailable(sp, npc)) return; // locked/hidden: client shouldn't send, but re-check
+        if (!choice.isAvailable(sp, npc)) return;
 
         var outcome = NpcActionRunner.run(sp, npc, choice.actions());
         if (outcome == NpcActionRunner.Outcome.ABORTED) {
-            sendNode(sp, npc, node); // couldn't pay: stay on this page
+            sendNode(sp, npc, node);
             return;
         }
-        if (outcome == NpcActionRunner.Outcome.OPENED_SCREEN) return; // a screen replaced the dialogue
+        if (outcome == NpcActionRunner.Outcome.OPENED_SCREEN) return;
 
         DialogueNode next = npc.getDialogue().get(choice.next());
         if (next != null) {
@@ -67,23 +66,17 @@ public final class NpcDialogueManager {
         }
     }
 
-    // ---- helpers ----
-
     public static void sendNode(ServerPlayer sp, NotchNpcEntity npc, DialogueNode node) {
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
 
-        // Only visible choices go over the wire, each with its ORIGINAL index so clicks map back.
-        List<int[]> visible = new ArrayList<>(); // {originalIndex, enabled}
+        List<int[]> visible = new ArrayList<>();
         for (int i = 0; i < node.choices().size(); i++) {
             DialogueChoice c = node.choices().get(i);
             boolean ok = c.isAvailable(sp, npc);
             if (!ok && c.hideWhenLocked()) continue;
             visible.add(new int[]{i, ok ? 1 : 0});
         }
-
-        // Reaching the role screen is a REAL choice with an OPEN_ROLE action (seeded by default for
-        // role NPCs, but the author can edit or remove it), not a synthetic appended here.
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeUtf(npcName);
@@ -98,10 +91,8 @@ public final class NpcDialogueManager {
         Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);
     }
 
-    // ---- role hand-off: delayed opens (chat greetings) + farewell lines on screen close ----
-
-    private static final int GREETING_DELAY_TICKS = 25;   // ~1.25s to read the greeting
-    private static final int FAREWELL_TTL_TICKS = 20 * 60 * 5; // give up after 5 minutes
+    private static final int GREETING_DELAY_TICKS = 25;
+    private static final int FAREWELL_TTL_TICKS = 20 * 60 * 5;
 
     private static final class PendingOpen {
         final UUID player, npc;
@@ -177,7 +168,7 @@ public final class NpcDialogueManager {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(UUID.randomUUID());
         buf.writeUtf("");
-        buf.writeUtf(""); // empty node id = close
+        buf.writeUtf("");
         buf.writeUtf("");
         buf.writeVarInt(0);
         Net.sendToClient(sp, NotchPackets.NPC_DIALOGUE_OPEN, buf);

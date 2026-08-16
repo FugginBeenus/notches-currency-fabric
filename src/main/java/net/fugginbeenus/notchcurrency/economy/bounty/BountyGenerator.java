@@ -20,7 +20,6 @@ public final class BountyGenerator {
         BountyRarity rarity = pickRarity(rng);
         BountyPools.ObjectiveEntry obj = BountyPools.pickObjective(rarity, categories, rng);
         if (obj == null) return null;
-        // Match the reward to the objective's actual rarity (it may have fallen back to another tier).
         BountyPools.RewardEntry rew = BountyPools.pickReward(obj.rarity(), rng);
         if (rew == null) return null;
 
@@ -32,8 +31,8 @@ public final class BountyGenerator {
         if (rew.item()) {
             item = new ItemStack(BuiltInRegistries.ITEM.get(rew.itemId()), Math.max(1, amount));
         } else {
-            coins = (long) amount * rewardMultPercent / 100;   // global scale
-            if (maxCoinReward > 0) coins = Math.min(coins, maxCoinReward); // hard cap
+            coins = (long) amount * rewardMultPercent / 100;
+            if (maxCoinReward > 0) coins = Math.min(coins, maxCoinReward);
         }
 
         long expires = durationTicks <= 0 ? 0 : now + durationTicks;

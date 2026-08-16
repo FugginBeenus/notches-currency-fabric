@@ -16,14 +16,12 @@ import java.util.List;
 
 public class TradeOfferCreateScreenHandler extends AbstractContainerMenu {
 
-    // Two-column layout (matches the live-trade screen): a 3×3 grid per side.
     public static final int GIVE_COUNT = 9, WANT_COUNT = 9;
-    public static final int GIVE_X = 29, GIVE_Y = 34;   // give grid origin (real items, escrowed)
-    public static final int WANT_X = 145, WANT_Y = 34;  // want grid origin (samples, always returned)
+    public static final int GIVE_X = 29, GIVE_Y = 34;
+    public static final int WANT_X = 145, WANT_Y = 34;
     public static final int INV_X = 32, INV_Y = 174, HOTBAR_Y = 232;
 
     private final Inventory playerInv;
-    // 0..8 = the give grid (real items), 9..17 = the want grid (samples).
     private final SimpleContainer samples = new SimpleContainer(GIVE_COUNT + WANT_COUNT);
 
     public TradeOfferCreateScreenHandler(int containerId, Inventory inv) {
@@ -75,9 +73,9 @@ public class TradeOfferCreateScreenHandler extends AbstractContainerMenu {
         boolean created = TradeOfferManager.createOffer(sp, given, giveCoins, price, wanted, targetName);
         if (created) {
             for (int i = 0; i < GIVE_COUNT; i++) {
-                samples.setItem(i, ItemStack.EMPTY); // escrowed into the offer
+                samples.setItem(i, ItemStack.EMPTY);
             }
-            sp.closeContainer(); // the want-grid samples come back via onClosed
+            sp.closeContainer();
         }
     }
 
@@ -105,7 +103,6 @@ public class TradeOfferCreateScreenHandler extends AbstractContainerMenu {
             if (index < sampleSlots) {
                 if (!this.moveItemStackTo(stack, sampleSlots, this.slots.size(), true)) return ItemStack.EMPTY;
             } else {
-                // Shift-click from the inventory fills the give grid.
                 if (!this.moveItemStackTo(stack, 0, GIVE_COUNT, false)) return ItemStack.EMPTY;
             }
             if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);

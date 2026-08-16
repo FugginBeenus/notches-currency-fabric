@@ -36,8 +36,6 @@ public class CosmeticState extends SavedData implements net.fugginbeenus.notchcu
         setDirty();
     }
 
-    // ---- NBT ----
-
     private static CosmeticState fromNbt(CompoundTag nbt) {
         CosmeticState state = new CosmeticState();
         ListTag players = nbt.getList("Players", Tag.TAG_COMPOUND);
@@ -54,8 +52,6 @@ public class CosmeticState extends SavedData implements net.fugginbeenus.notchcu
         return state;
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {

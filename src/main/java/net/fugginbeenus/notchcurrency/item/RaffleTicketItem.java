@@ -18,7 +18,6 @@ public class RaffleTicketItem extends Item {
     public static final String STATUS_ACTIVE = "ACTIVE";
     public static final String STATUS_WINNER = "WINNER";
     public static final String STATUS_LOSER  = "LOSER";
-
     private static final String K_ROUND = "Round";
     private static final String K_ENTRIES = "Entries";
     private static final String K_OWNER = "Owner";
@@ -27,10 +26,8 @@ public class RaffleTicketItem extends Item {
     private static final String K_PRIZE = "Prize";
 
     public RaffleTicketItem(Properties settings) {
-        super(settings.stacksTo(1)); // one item per purchase; never merge entry counts
+        super(settings.stacksTo(1));
     }
-
-    // ---- factory & accessors (server-side helpers) ----
 
     public static ItemStack create(long round, int entries, UUID owner, String ownerName) {
         ItemStack stack = new ItemStack(ModItems.RAFFLE_TICKET);
@@ -72,8 +69,6 @@ public class RaffleTicketItem extends Item {
         if (STATUS_WINNER.equals(status)) StackData.putLong(stack, K_PRIZE, prize);
     }
 
-    // ---- display ----
-
     @Override
     public Component getName(ItemStack stack) {
         return switch (status(stack)) {
@@ -84,8 +79,6 @@ public class RaffleTicketItem extends Item {
     }
 
     @Override
-    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
-    // a list, which is handed over in one go, ahead of whatever the superclass adds.
     //? if >=1.21.11 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
                                 net.minecraft.world.item.component.TooltipDisplay display,

@@ -61,7 +61,6 @@ public final class CosmeticManager {
             String cmd = offer.command()
                     .replace("%player%", sp.getName().getString())
                     .replace("%uuid%", sp.getUUID().toString());
-            // Run as the server (console) so unlock commands don't need the player to be an op.
             sp.level().getServer().getCommands().performPrefixedCommand(sp.level().getServer().createCommandSourceStack(), cmd);
         } else if (!offer.itemReward().isEmpty()) {
             ItemStack reward = offer.itemReward().copy();

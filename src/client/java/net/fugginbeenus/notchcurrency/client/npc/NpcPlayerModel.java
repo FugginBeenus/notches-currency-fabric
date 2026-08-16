@@ -16,9 +16,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
 //?}
 
     private final boolean thinArms;
-
-    // Both used to be inherited from HumanoidModel and are on the render state now. Keeping the
-    // names as fields means the animation code below reads the same on every version.
     //? if >=1.21.11 {
     /*private float attackTime;
     private boolean crouching;
@@ -30,9 +27,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
     }
 
     private static final float DEG = (float) (Math.PI / 180.0);
-
-    // A model is handed a render state rather than the entity from 1.21.11. Unpacking it under the
-    // old names keeps everything below this line identical across versions.
     //? if >=1.21.11 {
     /*@Override
     public void setupAnim(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
@@ -47,9 +41,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
                           float animationProgress, float yHeadRot, float headPitch) {
         super.setupAnim(entity, limbAngle, limbDistance, animationProgress, yHeadRot, headPitch);
     //?}
-
-        // Mid attack swing (the model field is the render-time value the swing animates with):
-        // vanilla just animated the main arm: poses must not stomp it.
         boolean swinging = this.attackTime > 0f;
 
         if (entity.getPoseAnim() == NotchNpcEntity.ANIM_STATUE) {
@@ -111,8 +102,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         resetPivots();
         int pose = entity.getNpcPose();
         if (pose == NotchNpcEntity.POSE_WAVING) {
-            // Raise the right arm UP AND OUT to the side (POSITIVE roll swings it away from the body so
-            // it clears the head; negative rolled it across the chest). Gentle wave via sway.
             this.body.yRot = 0.12f;
             if (!swinging) {
                 float sway = (float) Math.sin(animationProgress * 0.18f) * 0.22f;
@@ -135,8 +124,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
             return;
         }
         if (pose == NotchNpcEntity.POSE_PRONE) {
-            // The renderer tips the body face-down; keep limbs straight (arms a touch forward) so it
-            // reads as a clean crawl instead of an idle-swaying flat body.
             this.head.xRot = 0f; this.head.yRot = 0f; this.head.zRot = 0f;
             this.body.xRot = 0f; this.body.yRot = 0f; this.body.zRot = 0f;
             if (!swinging) {
@@ -152,8 +139,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         }
         boolean chilling = (pose == NotchNpcEntity.POSE_CHILLING);
         float drop = chilling ? 12.5f : 10.5f;
-
-        // Absolute pivots (not +=) so nothing accumulates across frames.
         this.head.y = drop;
         this.head.z = chilling ? 2.0f : 0.0f;
         this.body.y = drop;
@@ -161,7 +146,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.leftArm.y = 2.0f + drop;
         this.rightLeg.y = 12.0f + 10.0f;
         this.leftLeg.y = 12.0f + 10.0f;
-
         this.rightLeg.xRot = -1.5708f;
         this.leftLeg.xRot = -1.5708f;
         this.rightLeg.yRot = 0.26f;
@@ -187,18 +171,12 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
     private void applyIdleAnim(NotchNpcEntity entity, float t, boolean swinging) {
     //?}
         if (entity.getPoseAnim() < NotchNpcEntity.ANIM_LIVELY) return;
-
-        // Breathing chest with the arms drifting slightly out and back in.
         float breathe = Mth.sin(t * 0.045f);
         this.body.xRot += breathe * 0.012f;
         if (!swinging) this.rightArm.zRot += 0.02f + breathe * 0.018f;
         this.leftArm.zRot -= 0.02f + breathe * 0.018f;
-
-        // A gentle weight shift.
         this.body.yRot += Mth.sin(t * 0.02f) * 0.035f;
         this.body.zRot += Mth.sin(t * 0.02f + 0.4f) * 0.012f;
-
-        // Slow head glances around, like it's people-watching.
         this.head.yRot += Mth.sin(t * 0.007f) * 0.3f;
         this.head.xRot += Mth.sin(t * 0.011f) * 0.06f;
         this.leftArm.xRot += Mth.sin(t * 0.013f) * 0.03f;
@@ -219,11 +197,6 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.leftPants.visible = visible;
     }
 
-    // The second skin layer used to be six loose parts that had to be walked in step with the body.
-    // From 1.21.11 each one is a child of the part it covers (left_sleeve under leftArm, jacket
-    // under body, and so on), so it inherits the pose for free. Copying the parent's transform onto
-    // it there applies that transform twice and throws the sleeves out sideways, so on those
-    // versions this does nothing at all.
     private void syncOverlays() {
         //? if <1.21.11 {
         this.hat.copyFrom(this.head);

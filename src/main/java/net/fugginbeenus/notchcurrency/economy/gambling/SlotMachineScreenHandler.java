@@ -23,7 +23,6 @@ public class SlotMachineScreenHandler extends AbstractContainerMenu {
     public static final int P_REEL2   = 6;
     public static final int P_LASTWIN = 7;
     public static final int P_SPINID  = 8;
-    // Normalised 3-of-a-kind payout (×10) per symbol, for the paytable.
     public static final int P_MULT_BASE = 9;
     private static final int PROP_COUNT = P_MULT_BASE + 5;
 
@@ -32,7 +31,7 @@ public class SlotMachineScreenHandler extends AbstractContainerMenu {
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
     private int reel0, reel1, reel2;
-    private long lastWin = -1; // -1 = no spin yet
+    private long lastWin = -1;
     private int spinId;
 
     public SlotMachineScreenHandler(int containerId, Inventory inv) {

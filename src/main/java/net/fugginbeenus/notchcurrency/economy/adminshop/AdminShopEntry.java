@@ -7,18 +7,16 @@ import java.util.UUID;
 
 public class AdminShopEntry {
 
-    // ---- Global dynamic-pricing tuning (overridable via config later) ----
-    public static double ELASTICITY = 0.004;  // price move per net unit of stock index
-    public static double MIN_MULT = 0.25;      // price never below 25% of base
-    public static double MAX_MULT = 4.0;       // price never above 400% of base
-    public static double DECAY = 0.02;         // fraction of the index that recovers per decay tick
-
+    public static double ELASTICITY = 0.004;
+    public static double MIN_MULT = 0.25;
+    public static double MAX_MULT = 4.0;
+    public static double DECAY = 0.02;
     private final UUID id;
-    private ItemStack item;       // template; item.getCount() = units per transaction
-    private long baseBuyPrice;    // coins to buy one unit FROM the shop (0 = not buyable)
-    private long baseSellPrice;   // coins paid for selling one unit TO the shop (0 = not sellable)
-    private boolean dynamic;      // whether prices float with the stock index
-    private double stockIndex;    // net supply pressure (sell raises, buy lowers)
+    private ItemStack item;
+    private long baseBuyPrice;
+    private long baseSellPrice;
+    private boolean dynamic;
+    private double stockIndex;
 
     public AdminShopEntry(ItemStack item, long baseBuyPrice, long baseSellPrice, boolean dynamic) {
         this.id = UUID.randomUUID();
@@ -74,8 +72,6 @@ public class AdminShopEntry {
         stockIndex *= (1.0 - DECAY);
         if (Math.abs(stockIndex) < 0.01) stockIndex = 0.0;
     }
-
-    // ---- NBT ----
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();

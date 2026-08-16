@@ -3,12 +3,6 @@ package net.fugginbeenus.notchcurrency.crate;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.minecraft.network.FriendlyByteBuf;
 
-/**
- * The balloon settings, on the wire.
- *
- * <p>Written once and read once, in the same order, so the two ends cannot drift the way two
- * hand-written copies of thirteen fields would.
- */
 public final class BalloonConfigWire {
 
     private BalloonConfigWire() {}

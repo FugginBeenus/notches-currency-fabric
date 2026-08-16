@@ -12,14 +12,12 @@ public class UserListingsScreenHandler extends AbstractContainerMenu {
 
     public static final int COLUMNS = 4;
     public static final int ROWS    = 2;
-    public static final int SIZE    = COLUMNS * ROWS; // 8
-
-    // Slot layout inside the popup texture (relative to popup top-left)
+    public static final int SIZE    = COLUMNS * ROWS;
     private static final int SLOT_SIZE     = 18;
-    private static final int START_X       = 18;   // you’ll tweak these
-    private static final int START_Y       = 36;   // to line up with the plus icons
-    private static final int SLOT_OFFSET_X = 4;    // extra nudge right
-    private static final int SLOT_OFFSET_Y = 16;   // extra nudge down
+    private static final int START_X       = 18;
+    private static final int START_Y       = 36;
+    private static final int SLOT_OFFSET_X = 4;
+    private static final int SLOT_OFFSET_Y = 16;
 
     private final SimpleContainer inv = new SimpleContainer(SIZE);
 
@@ -38,12 +36,11 @@ public class UserListingsScreenHandler extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return true; // virtual popup, no proximity checks
+        return true;
     }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        // For now: no shift-click moving in/out, just visual.
         return ItemStack.EMPTY;
     }
 }

@@ -98,9 +98,7 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
                     NotchTheme.TEXT_MUTED, false);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -147,16 +145,13 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

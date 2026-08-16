@@ -17,17 +17,13 @@ import java.util.function.Consumer;
 public class NpcScheduleActionsScreen extends Screen {
 
     private static final int W = 300, H = 216;
-    // Rows, kept as constants because they used to be scattered literals and the value row ended
-    // up drawn straight over the buttons.
     private static final int BTN_Y = 128, VALUE_Y = 150, AMOUNT_Y = 170, SAVE_Y = 192;
     private static final int LIST_X = 12, LIST_Y = 40, LIST_W = W - 24, LIST_H = 84;
     private static final int ROW_H = 16;
-
     private final Screen parent;
     private final String entryLabel;
     private final List<DialogueAction> working = new ArrayList<>();
     private final Consumer<List<DialogueAction>> onSave;
-
     private int selected = -1;
     private int px, py;
     private EditBox valueField;
@@ -40,7 +36,7 @@ public class NpcScheduleActionsScreen extends Screen {
         this.entryLabel = entryLabel;
         this.onSave = onSave;
         for (DialogueAction a : actions) {
-            working.add(DialogueAction.fromNbt(a.toNbt())); // edit a copy: Back must really mean back
+            working.add(DialogueAction.fromNbt(a.toNbt()));
         }
         if (!working.isEmpty()) selected = 0;
     }
@@ -68,7 +64,6 @@ public class NpcScheduleActionsScreen extends Screen {
             try {
                 a.setAmount(s.isBlank() ? 0 : Long.parseLong(s));
             } catch (NumberFormatException ignored) {
-                // half-typed number: leave the last good value alone
             }
         });
         addRenderableWidget(amountField);
@@ -266,24 +261,19 @@ public class NpcScheduleActionsScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

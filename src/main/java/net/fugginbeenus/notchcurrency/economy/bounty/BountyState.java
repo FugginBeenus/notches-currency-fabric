@@ -29,17 +29,15 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
     private static final String DATA_KEY = "notchcurrency_bounties";
 
     private final Map<UUID, Bounty> offers = new LinkedHashMap<>();
-    private final Map<UUID, Map<UUID, TakenBounty>> taken = new HashMap<>(); // player -> (offerId -> taken)
-    private final Map<UUID, Set<UUID>> completed = new HashMap<>();          // player -> finished offer ids (hidden until rotated)
-    private final List<ItemStack> decrees = new ArrayList<>(); // placed decree items (gate categories)
+    private final Map<UUID, Map<UUID, TakenBounty>> taken = new HashMap<>();
+    private final Map<UUID, Set<UUID>> completed = new HashMap<>();
+    private final List<ItemStack> decrees = new ArrayList<>();
 
     public static BountyState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, BountyState::new, BountyState::fromNbt, DATA_KEY);
     }
-
-    // ---- offers ----
 
     public void addOffer(Bounty b) {
         offers.put(b.getId(), b);
@@ -49,7 +47,7 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
     public boolean removeOffer(UUID id) {
         boolean removed = offers.remove(id) != null;
         if (removed) {
-            for (Set<UUID> s : completed.values()) s.remove(id); // clear completion once the offer rotates out
+            for (Set<UUID> s : completed.values()) s.remove(id);
             setDirty();
         }
         return removed;
@@ -61,7 +59,7 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
     }
 
     public void markOfferCompleted(UUID player, UUID offerId) {
-        if (offers.containsKey(offerId)) { // only worth tracking while the offer still exists
+        if (offers.containsKey(offerId)) {
             completed.computeIfAbsent(player, k -> new HashSet<>()).add(offerId);
             setDirty();
         }
@@ -75,8 +73,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
     public Collection<Bounty> allOffers() {
         return offers.values();
     }
-
-    // ---- taken ----
 
     public boolean hasTaken(UUID player, UUID offerId) {
         Map<UUID, TakenBounty> m = taken.get(player);
@@ -119,8 +115,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         return dropped;
     }
 
-    // ---- decrees ----
-
     public List<ItemStack> getDecrees() {
         return new ArrayList<>(decrees);
     }
@@ -142,10 +136,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         return cats.isEmpty() ? null : cats;
     }
 
-    // ---- NBT ----
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -208,7 +198,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
                 Bounty b = Bounty.fromNbt(offerList.getCompound(i));
                 state.offers.put(b.getId(), b);
             } catch (IllegalArgumentException ignored) {
-                // skip malformed / unknown target
             }
         }
 
@@ -225,7 +214,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
                 }
                 state.taken.put(player, m);
             } catch (IllegalArgumentException ignored) {
-                // skip
             }
         }
 
@@ -239,7 +227,6 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
                 for (int j = 0; j < ids.size(); j++) s.add(Nbt.getUuid(ids.getCompound(j), "Id"));
                 state.completed.put(player, s);
             } catch (IllegalArgumentException ignored) {
-                // skip
             }
         }
 

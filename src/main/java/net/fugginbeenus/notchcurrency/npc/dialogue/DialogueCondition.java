@@ -54,7 +54,7 @@ public class DialogueCondition {
 
     private boolean matchesFaction(ServerPlayer sp, NotchNpcEntity npc) {
         String wanted = value == null || value.isBlank() ? npc.getFactionId() : value.trim();
-        if (wanted.isEmpty()) return false; // no faction to be in
+        if (wanted.isEmpty()) return false;
         String theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
                 .get(sp.serverLevel()).factionIdOf(sp.getUUID());
         return wanted.equals(theirs);

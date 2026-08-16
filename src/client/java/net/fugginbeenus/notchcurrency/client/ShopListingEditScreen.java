@@ -73,8 +73,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         boolean editing = menu.hasListing();
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, editing ? "Edit Listing" : "New Listing", x + W / 2, y + 8);
-
-        // SALE sample slot.
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.SALE_X - 1, y + ShopListingEditScreenHandler.SALE_Y - 1);
         ItemStack sale = menu.saleSample();
         if (sale.isEmpty()) {
@@ -87,13 +85,10 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             ctx.drawString(this.font, "Each sale gives " + sale.getCount(), x + 34, y + 25, NotchTheme.TEXT_DARK, false);
             ctx.drawString(this.font, "(sample returns on close)", x + 34, y + 35, NotchTheme.TEXT_MUTED, false);
         }
-
-        // PRICE row (coin glyph after the field).
         ctx.drawString(this.font, "Price", x + 12, y + 50, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + 46, y + 47, 100, 14, NotchTheme.DEEP);
         ctx.drawString(this.font, NotchCurrency.coinIcon(), x + 150, y + 50, NotchTheme.TEXT_GOLD, false);
 
-        // BARTER sample slot.
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.BARTER_X - 1, y + ShopListingEditScreenHandler.BARTER_Y - 1);
         ItemStack barter = menu.barterSample();
         if (barter.isEmpty()) {
@@ -110,7 +105,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                     over(mouseX, mouseY, x + 150, y + 70, 48, 13));
         }
 
-        // Live "buyer pays" summary (left-aligned so it can't overflow the panel edges).
         MutableComponent pays = Component.empty();
         boolean anyPrice = false;
         int p = price();
@@ -130,7 +124,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                 : Component.literal("Set a coin price and/or a barter item.");
         ctx.drawString(this.font, summary, x + 12, y + 98, anyPrice ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
 
-        // STOCK bin slot.
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.STOCK_X - 1, y + ShopListingEditScreenHandler.STOCK_Y - 1);
         ctx.drawString(this.font, "Stock: " + menu.stockProp(), x + 34, y + 112, NotchTheme.TEXT_DARK, false);
         if (editing) {
@@ -142,7 +135,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             ctx.drawString(this.font, "save first to add stock", x + 34, y + 122, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Action row.
         NotchWidgets.primaryButton(ctx, this.font, x + 12, y + 134, 70, 16,
                 editing ? "Save" : "Create", over(mouseX, mouseY, x + 12, y + 134, 70, 16));
         if (editing) {
@@ -164,9 +156,7 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                     y + ShopListingEditScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -187,7 +177,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         super.render(ctx, mouseX, mouseY, delta);
         //?}
         this.renderTooltip(ctx, mouseX, mouseY);
-        // Guidance tooltip for the empty stock bin.
         if (menu.stockSample().isEmpty()
                 && over(mouseX, mouseY, leftPos + ShopListingEditScreenHandler.STOCK_X, topPos + ShopListingEditScreenHandler.STOCK_Y, 16, 16)) {
             List<Component> lines = new ArrayList<>();
@@ -255,7 +244,6 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, priceField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -264,16 +252,13 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

@@ -27,8 +27,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private static ItemStack coin;
 
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -75,17 +73,12 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        // Owners can color the title with &-codes in the shop name ("&6Golden Goods").
         NotchWidgets.title(ctx, this.font, NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7);
 
         boolean canBuy = open();
-
-        // Recessed containers that visually separate the parts: the trade list, and the portrait.
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
 
-        // Trade rows, vanilla villager style: cost icons (with counts) → arrow → the item for sale.
-        // Names and stock live in the hover tooltip, so the row itself stays clean.
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c == null) continue;
@@ -95,7 +88,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
 
             int ix = x + LIST_X + 4;
             if (c.price() > 0) {
-                // Coin cost with the vanilla stack-count renderer, like emeralds in villager trades.
                 ctx.renderItem(coin(), ix, ry + 2);
                 ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(c.price()));
                 ix += 28;
@@ -105,14 +97,12 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                 ctx.renderItemDecorations(this.font, c.barterStack(), ix, ry + 2);
             }
 
-            // Arrow (crossed out in red when sold out), then the sale item with its stack count.
             arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
             if (c.stock() <= 0) cross(ctx, x + LIST_X + ROW_W - 38, ry + 5);
             ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
             ctx.renderItemDecorations(this.font, c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
-        // Scrollbar (page-based).
         NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
         int tp = pages();
         if (tp > 1) {
@@ -120,13 +110,9 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             NotchWidgets.button(ctx, x + SB_X + 1, ty, SB_W - 2, th, false, false);
         }
 
-        // Framed NPC portrait: waist-up bust for the humanoid model.
         preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
-
-        // Divider separating the shop from the player's inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
 
-        // Player inventory slots.
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + 43 + col * 18 - 1, y + 158 + row * 18 - 1);
@@ -143,9 +129,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             NotchWidgets.centerText(ctx, this.font, msg, x + 82, y + 80, NotchTheme.TEXT_RED, true);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -186,7 +170,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
-        // Trade-row tooltip.
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
@@ -202,7 +185,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                 return;
             }
         }
-        // Greeting tooltip on the portrait.
         String greeting = menu.greeting();
         if (!greeting.isEmpty() && over(mouseX, mouseY, leftPos + PV_X, topPos + PV_Y, PV_W, PV_H)) {
             ctx.renderTooltip(this.font, Component.literal(greeting), mouseX, mouseY);
@@ -220,15 +202,12 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            // Buy a trade.
             if (open()) {
                 for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
                     Cell c = cell(i);
                     // One buy = one of the stacks shown on the row, so stock has to cover a whole one.
                     int bundle = c == null ? 1 : Math.max(1, c.icon().getCount());
                     if (c != null && c.stock() >= bundle && over(mx, my, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
-                        // Shift still means "grab a lot", measured in bundles so it tops out around a
-                        // stack of items the way it did when every listing sold singles.
                         int qty = net.fugginbeenus.notchcurrency.compat.Render.shiftDown()
                                 ? Math.max(1, Math.min(c.stock() / bundle, Math.max(1, 64 / bundle)))
                                 : 1;
@@ -238,7 +217,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                     }
                 }
             }
-            // Scrollbar.
             if (pages() > 1 && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
                 if (my < thumbY()) { NotchWidgets.tick(); clickButton(0); return true; }
                 if (my >= thumbY() + thumbH()) { NotchWidgets.tick(); clickButton(1); return true; }
@@ -322,16 +300,13 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

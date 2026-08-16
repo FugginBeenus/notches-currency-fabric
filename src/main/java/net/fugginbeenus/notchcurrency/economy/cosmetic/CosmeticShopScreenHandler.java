@@ -23,7 +23,6 @@ import java.util.UUID;
 
 public class CosmeticShopScreenHandler extends AbstractContainerMenu {
 
-    // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
     public static final int VIS_ROWS = 6, PER_PAGE = VIS_ROWS;
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2;
     private static final int PROP_COUNT = 3;
@@ -52,7 +51,6 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
-        // Player inventory (matches the code-drawn CosmeticShopScreen / ShopBrowseScreen layout).
         final int invX = 43, invY = 158;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -126,7 +124,7 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
-        else if (id == 1) page = page + 1; // clamped in refresh()
+        else if (id == 1) page = page + 1;
         else return false;
         refresh();
         broadcastChanges();

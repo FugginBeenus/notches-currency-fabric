@@ -29,7 +29,6 @@ import net.minecraft.resources.ResourceLocation;
 //? if >=1.21.11 {
 /*public class BalloonRenderer extends EntityRenderer<BalloonEntity, BalloonRenderer.State> {
 
-    // The balloon is drawn from its item model, so its state is one item plus the spin.
     public static class State extends net.minecraft.client.renderer.entity.state.EntityRenderState {
         public final net.minecraft.client.renderer.item.ItemStackRenderState item =
                 new net.minecraft.client.renderer.item.ItemStackRenderState();
@@ -40,7 +39,6 @@ public class BalloonRenderer extends EntityRenderer<BalloonEntity> {
 //?}
 
     //? if <1.21.11 {
-    // Point at the item model: assets/notchcurrency/models/item/balloon.json
     private static final ModelResourceLocation BALLOON_MODEL_ID =
             new ModelResourceLocation(NotchCurrency.id("balloon"), "inventory");
     //?}
@@ -56,8 +54,6 @@ public class BalloonRenderer extends EntityRenderer<BalloonEntity> {
         *///?}
     }
 
-    // Nothing is drawn on the spot from 1.21.11. The balloon's model is resolved into an item
-    // render state while the entity is here, and submitted for the drawing pass.
     //? if >=1.21.11 {
     /*@Override
     public State createRenderState() {
@@ -79,8 +75,6 @@ public class BalloonRenderer extends EntityRenderer<BalloonEntity> {
                        net.minecraft.client.renderer.SubmitNodeCollector collector,
                        net.minecraft.client.renderer.state.CameraRenderState camera) {
         matrices.pushPose();
-        // Centre on the entity position, then the gentle spin. The model is already in block-space
-        // units, so it is deliberately not scaled down the way an inventory item would be.
         matrices.translate(0.5, 0.0, 0.5);
         matrices.mulPose(Axis.YP.rotationDegrees(state.spin));
         state.item.submit(matrices, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
@@ -97,16 +91,9 @@ public class BalloonRenderer extends EntityRenderer<BalloonEntity> {
         BakedModel model = mc.getModelManager().getModel(BALLOON_MODEL_ID);
 
         matrices.pushPose();
-
-        // Center on entity position
         matrices.translate(0.5, 0.0, 0.5);
-
-        // Gentle spin
         float rotation = (entity.tickCount + tickDelta) * 2.0f;
         matrices.mulPose(Axis.YP.rotationDegrees(rotation));
-
-        // IMPORTANT: no 1/16 scaling – your model is already in block-space units
-
         VertexConsumer vc = consumers.getBuffer(RenderType.cutout());
         brm.getModelRenderer().renderModel(
                 matrices.last(),
@@ -128,7 +115,6 @@ public class BalloonRenderer extends EntityRenderer<BalloonEntity> {
     //? if <1.21.11 {
     @Override
     public ResourceLocation getTextureLocation(BalloonEntity entity) {
-        // Using the block atlas because the model pulls from notchcurrency:block/balloon
         return net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS;
     }
     //?}

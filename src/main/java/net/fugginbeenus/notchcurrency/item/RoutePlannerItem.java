@@ -30,7 +30,7 @@ public class RoutePlannerItem extends Item {
 
     public static final String NPC_KEY = "RouteNpc";
     public static final String NPC_NAME_KEY = "RouteNpcName";
-    public static final String COUNT_KEY = "RouteCount"; // synced for the HUD overlay
+    public static final String COUNT_KEY = "RouteCount";
     public static final String ENTRY_KEY = "ScheduleEntry";
 
     public RoutePlannerItem(Properties settings) {
@@ -51,8 +51,6 @@ public class RoutePlannerItem extends Item {
         if (npc == null) return InteractionResult.CONSUME;
 
         BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
-        // Spot marking never arrives here: UseBlockCallback takes it first, because some blocks
-        // (beds above all) swallow the click before an item is ever asked about it.
         if (sp.isShiftKeyDown()) {
             NotchNpcManager.removeLastWaypoint(sp, npc);
         } else {
@@ -71,7 +69,6 @@ public class RoutePlannerItem extends Item {
         ItemStack stack = user.getItemInHand(hand);
         if (!world.isClientSide() && user instanceof ServerPlayer sp) {
             if (StackData.has(stack, ENTRY_KEY)) {
-                // Nothing to confirm when marking a single spot: this is the way to back out.
                 consume(sp, stack);
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Spot unchanged.").withStyle(ChatFormatting.GRAY));
                 NotchNpcManager.reopenScheduleFor(sp, stack);
@@ -89,8 +86,6 @@ public class RoutePlannerItem extends Item {
         //?}
     }
 
-    // 1.21.11 only ticks this on the server and says which slot the stack sits in, rather than
-    // handing over a raw index and a "selected" flag.
     //? if >=1.21.11 {
     /*@Override
     public void inventoryTick(ItemStack stack, ServerLevel world, Entity entity,
@@ -106,7 +101,7 @@ public class RoutePlannerItem extends Item {
     //?}
         if (!held || world.getGameTime() % 10 != 0) return;
 
-        if (StackData.has(stack, ENTRY_KEY)) return; // nothing to beacon: no route being built
+        if (StackData.has(stack, ENTRY_KEY)) return;
         UUID npcId = StackData.getUuid(stack, NPC_KEY);
         if (npcId == null) return;
         if (!(((ServerLevel) world).getEntity(npcId) instanceof NotchNpcEntity npc)) return;
@@ -134,26 +129,18 @@ public class RoutePlannerItem extends Item {
         ServerLevel world = sp.serverLevel();
         NotchNpcEntity npc = boundNpc(stack, world, sp);
         if (npc == null) {
-            consume(sp, stack); // bound to nothing reachable: don't leave a dead tool behind
+            consume(sp, stack);
             return;
         }
         net.minecraft.world.level.block.state.BlockState state = world.getBlockState(clicked);
         BlockPos target;
         if (state.getBlock() instanceof net.minecraft.world.level.block.BedBlock) {
-            // A bed is two blocks and the sleeper belongs in the head half: that is the end vanilla
-            // lies a player at, and the end the renderer measures its offset from. Storing the foot
-            // instead leaves the body shifted a block down the bed, hanging off the end of it.
             target = state.getValue(net.minecraft.world.level.block.BedBlock.PART) == net.minecraft.world.level.block.state.properties.BedPart.FOOT
                     ? clicked.relative(state.getValue(net.minecraft.world.level.block.BedBlock.FACING))
                     : clicked;
         } else {
-            // Step off the face that was clicked rather than always upward, so clicking the side of a
-            // wall puts the spot in front of it instead of inside it.
             target = clicked.relative(side);
         }
-        // Face back the way you came from. You mark a spot by looking at it, so storing your own
-        // yaw would point the NPC further away from you; turned around, it stands there looking at
-        // where you were, which is what marking a counter from the customer's side should mean.
         NotchNpcManager.setScheduleAnchor(sp, npc, StackData.getInt(stack, ENTRY_KEY), target,
                 sp.getYRot() + 180f);
         consume(sp, stack);
@@ -181,8 +168,6 @@ public class RoutePlannerItem extends Item {
     }
 
     @Override
-    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
-    // a list, which is handed over in one go, ahead of whatever the superclass adds.
     //? if >=1.21.11 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
                                 net.minecraft.world.item.component.TooltipDisplay display,

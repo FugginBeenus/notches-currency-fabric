@@ -58,10 +58,8 @@ public class NotchCurrency implements ModInitializer {
     }
 
     public static Component coinIcon() {
-        MutableComponent t = Component.literal("\uE000");  // Character mapped in minecraft:default font
+        MutableComponent t = Component.literal("\uE000");
 
-        // Force white so the coin glyph renders at full brightness (untinted) no matter what colour
-        // the surrounding price text is drawn in, otherwise dark price text darkens the coin.
         return t.withStyle(style -> style
                 .withColor(net.minecraft.network.chat.TextColor.fromRgb(0xFFFFFF))
                 .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showItem(
@@ -74,15 +72,8 @@ public class NotchCurrency implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Packet channels must be declared before ANYTHING registers a receiver or sends.
-        // TradeManager.init() below registers receivers, so this has to be the first thing that runs.
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
-
-        // GeckoLib must be up before entities register. Whether that needs a call at all depends on
-        // the version, which is Geo's problem rather than this file's.
         net.fugginbeenus.notchcurrency.compat.Geo.init();
-
-        // Registries
         ModBlocks.register();
         net.fugginbeenus.notchcurrency.registry.ModBlockEntities.register();
         ModItems.register();
@@ -90,14 +81,11 @@ public class NotchCurrency implements ModInitializer {
         ModCreativeTab.register();
         TradeManager.init();
         ModEntities.register();
-
-        // Register entity attributes
         net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry.register(
                 net.fugginbeenus.notchcurrency.registry.ModEntities.NOTCH_NPC,
                 net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.createAttributes()
         );
 
-        // Managers
         CrateDropManager.init();
         GoldenCacheManager.init();
         DailyCrateManager.init();
@@ -108,13 +96,7 @@ public class NotchCurrency implements ModInitializer {
         BountyManager.init();
         net.fugginbeenus.notchcurrency.economy.loan.LoanManager.init();
         net.fugginbeenus.notchcurrency.economy.gambling.GamblingManager.init();
-
-        // (The legacy ShopkeeperEntity system was retired: the Notch NPC SHOP role replaced it.)
-
-        // Economy NPC roles (admin shop / banker / auctioneer / mailbox on any NPC)
         NpcRoleInteractionHandler.register();
-
-        // Load config (applies defaults on missing)
         NotchConfig cfg = NotchConfigIO.load();
         GoldenCacheManager.applyConfig(cfg);
         AuctionConfig.apply(cfg);
@@ -130,12 +112,10 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
 
-        // Waystone fee, soft integration; only hook the event when the Waystones mod is present.
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
             net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.register();
         }
 
-        // Bounty pools & crate definitions load from datapacks (mod ships defaults).
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
                 .get(net.minecraft.server.packs.PackType.SERVER_DATA)
                 .registerReloadListener(new net.fugginbeenus.notchcurrency.economy.bounty.BountyPoolLoader());
@@ -146,27 +126,16 @@ public class NotchCurrency implements ModInitializer {
                 .get(net.minecraft.server.packs.PackType.SERVER_DATA)
                 .registerReloadListener(new net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticLoader());
 
-        // Auction expiration / cleanup & payouts + login reminders.
-        // Auctions are global (overworld-stored), so tick the single state once per
-        // server tick rather than once per dimension.
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             ServerLevel overworld = server.overworld();
             if (overworld == null) return;
             AuctionState state = AuctionState.get(overworld);
             state.tick(overworld);
             state.checkLoginReminders(overworld);
-
-            // Recover admin-shop dynamic prices toward baseline.
             AdminShopState.get(server).tickDecay();
-
-            // NPC dialogue hand-offs: delayed greeting→GUI opens + goodbye lines on screen close.
             net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.tick(server);
         });
 
-        // NOTE: Orphan cleanup is NOT run automatically on startup because entities
-        // may not be loaded yet (chunks not loaded). Use /shop admin cleanup instead.
-
-        // Commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, env) -> {
             CurrencyCommands.register(dispatcher);
             TradeCommands.register(dispatcher);
@@ -185,55 +154,30 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.command.HeartCommands.register(dispatcher);
         });
 
-        // HUD balance sync on join + schedule auction mailbox reminder
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer sp = handler.player;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
-
             ServerLevel world = sp.serverLevel();
             AuctionState state = AuctionState.get(world);
             state.onPlayerJoin(sp);
-
-            // Resolve raffle ticket statuses & remind the player of any unclaimed prize.
             RaffleManager.remindOnJoin(sp);
-
-            // Anything owed from before the mail existed is moved across, then they are told what is
-            // waiting. Nothing is handed over on login: mail is collected at a mailbox on purpose.
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
             net.fugginbeenus.notchcurrency.mail.MailManager.greet(sp);
-
-            // Push the server's custom coin skin (art + name) so every player sees it.
             net.fugginbeenus.notchcurrency.currency.CurrencyServerSync.send(sp);
-
-            // Seed the on-screen bounty tracker with their taken bounties.
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
-
-            // This world's balloon settings, so the config screen shows the truth rather than
-            // whatever is in the player's own file.
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(sp);
-
-            // What custom NPC models this server holds. Only names and fingerprints: the client
-            // asks for whatever it does not already have, so a regular is charged nothing.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
-
-            // Extra hearts are rebuilt from the world save rather than trusted to whatever the
-            // player file happens to say, so a rolled back or hand edited profile cannot mint them.
             HeartState.applyTo(sp);
         });
 
-        // Half-received uploads do not outlive the connection that was sending them.
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.forget(handler.player));
 
-        // HUD balance sync on respawn
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
             ServerPlayer sp = newP;
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
         });
 
-        // Dying costs a heart crystal, down to none, when the server has that turned on. Done after
-        // the respawn rather than in COPY_FROM: the new player is in the world by then, so it can be
-        // told what it lost and its health can be filled to whatever ceiling is left.
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, newP, alive) -> {
             if (!alive) {
                 int left = HeartState.onDeath(newP);
@@ -250,30 +194,17 @@ public class NotchCurrency implements ModInitializer {
             if (!alive) newP.setHealth(newP.getMaxHealth());
         });
 
-        // Server-bound packet receivers (balance request, bids, ATM withdraw, shop ops)
         ServerPacketHandlers.register();
-
-        // StackData/Ench need a registry lookup to (de)serialize on 1.21+.
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.registryAccess());
-            // One pass over a world that predates the mail, so nothing owed is stranded in the old
-            // stores. A no-op on every start after the first.
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
-            // Read the world's custom NPC models once, so joining players can be told about them.
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
-
-            // The world save is the authority for balloons. Read it back into the config object so
-            // anything showing those values shows what is actually set, rather than a stale file.
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.readFromWorld(
                     server, net.fugginbeenus.notchcurrency.config.NotchConfigIO.get());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));
 
-        // A block gets first refusal on a right-click, before the held item is consulted. That is
-        // fine everywhere except when marking a schedule spot: clicking a bed would try to put the
-        // player to sleep and the tool would never see the click at all. Intercepting here is the
-        // only way the tool gets told about the one block it most needs to be pointed at.
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
             if (world.isClientSide() || !(player instanceof net.minecraft.server.level.ServerPlayer sp)) {
                 return net.minecraft.world.InteractionResult.PASS;
@@ -288,7 +219,6 @@ public class NotchCurrency implements ModInitializer {
             return net.minecraft.world.InteractionResult.SUCCESS;
         });
 
-        // Flush & close the economy audit log when the server stops.
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> EconomyLedger.close());
     }
 

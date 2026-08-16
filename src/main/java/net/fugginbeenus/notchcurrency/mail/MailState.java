@@ -16,25 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Everything waiting to be collected, for every player.
- *
- * <p>The one inbox. Auction payouts and the item half of an offline trade offer each used to keep
- * their own pile, in their own class, claimed by their own command, which is why a player could be
- * owed three things and find only one of them. They all post here now.
- */
 public class MailState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
     private static final String DATA_KEY = "notchcurrency_mail";
-
-    // A cap per player, so a griefer cannot fill someone's box faster than they can empty it, and so
-    // the save file cannot be grown without bound by anyone with an item duplicator.
     public static final int MAX_PER_PLAYER = 200;
 
     private final Map<UUID, List<MailItem>> boxes = new LinkedHashMap<>();
-    // Everyone who has ever claimed a mailbox, so the send screen has a list to pick from. Kept here
-    // rather than gathered from the world: block entities are scattered across chunks that are
-    // mostly not loaded, and a name is all the screen needs.
     private final Map<UUID, String> knownBoxes = new LinkedHashMap<>();
 
     public static MailState get(MinecraftServer server) {
@@ -43,9 +30,6 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         return StateData.getOrCreate(storage, MailState::new, MailState::fromNbt, DATA_KEY);
     }
 
-    // ---- posting ----
-
-    /** @return false when the recipient's box is full, so the caller can keep hold of the goods. */
     public boolean post(UUID recipient, MailItem item, long gameTime) {
         if (item.isEmpty()) return true;
         List<MailItem> box = boxes.computeIfAbsent(recipient, key -> new ArrayList<>());
@@ -55,7 +39,6 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         return true;
     }
 
-    /** Remembers that this player has a mailbox somewhere, for the send screen's list. */
     public void noteMailbox(UUID owner, String name) {
         if (owner == null || name == null || name.isEmpty()) return;
         if (name.equals(knownBoxes.get(owner))) return;
@@ -66,8 +49,6 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
     public Map<UUID, String> knownMailboxes() {
         return Map.copyOf(knownBoxes);
     }
-
-    // ---- reading ----
 
     public List<MailItem> inbox(UUID player) {
         List<MailItem> box = boxes.get(player);
@@ -83,9 +64,6 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         return count(player) >= MAX_PER_PLAYER;
     }
 
-    // ---- taking ----
-
-    /** Removes and returns one entry, or null if it is already gone. */
     public MailItem take(UUID player, UUID itemId) {
         List<MailItem> box = boxes.get(player);
         if (box == null) return null;
@@ -100,17 +78,12 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         return null;
     }
 
-    /**
-     * Puts back what would not fit, keeping its original id and posting time so it does not jump to
-     * the bottom of the pile after a half-successful collection.
-     */
     public void putBack(UUID player, MailItem item) {
         if (item.isEmpty()) return;
         boxes.computeIfAbsent(player, key -> new ArrayList<>()).add(item);
         setDirty();
     }
 
-    // ---- NBT ----
 
     private static MailState fromNbt(CompoundTag nbt) {
         MailState state = new MailState();
@@ -161,8 +134,6 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
         return nbt;
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {

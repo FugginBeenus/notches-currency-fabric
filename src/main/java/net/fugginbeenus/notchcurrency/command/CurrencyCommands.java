@@ -36,7 +36,6 @@ public final class CurrencyCommands {
     private CurrencyCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /givnotches <amount> (admin only) =====
         dispatcher.register(
                 Commands.literal("givnotches")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
@@ -50,7 +49,6 @@ public final class CurrencyCommands {
                                 }))
         );
 
-        // ===== /balance + /bal =====
         dispatcher.register(
                 Commands.literal("balance")
                         .executes(ctx -> {
@@ -65,14 +63,12 @@ public final class CurrencyCommands {
         dispatcher.register(
                 Commands.literal("bal")
                         .executes(ctx -> {
-                            // Block form: executeWithPrefix stopped returning an int in 1.21.
                             ctx.getSource().getServer().getCommands()
                                     .performPrefixedCommand(ctx.getSource(), "balance");
                             return 1;
                         })
         );
 
-        // ===== /pay <player> <amount> =====
         dispatcher.register(
                 Commands.literal("pay")
                         .then(Commands.argument("target", EntityArgument.player())

@@ -79,9 +79,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             drawRow(ctx, x, y + TAKEN_Y + 8 + i * ROW_H, menu.takenStack(i), mouseX, mouseY);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -97,8 +95,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     private static ItemStack coin;
 
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -113,12 +109,9 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         int prog = t.getInt("prog"), req = t.getInt("req");
         int btnX = x + W - 8 - BTN_W;
 
-        // Raised row with hover feedback + a rarity accent bar down the left edge.
         boolean rowHover = over(mouseX, mouseY, x + 6, y, W - 12, ROW_H - 2);
         NotchWidgets.button(ctx, x + 6, y, W - 12, ROW_H - 2, rowHover, false);
         ctx.fill(x + 8, y + 2, x + 10, y + ROW_H - 4, rarity.accentArgb());
-
-        // Reward icons, right-aligned before the button: coins first, then the reward item.
         long rewCoins = t.getLong("rewc");
         ItemStack rewItem = t.contains("rews") ? StackData.readStack(t.getCompound("rews")) : ItemStack.EMPTY;
         int rewX = btnX - 6;
@@ -133,7 +126,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             ctx.renderItemDecorations(this.font, coin(), rewX, y + 2, NotchWidgets.compactCount(rewCoins));
         }
 
-        // Task text (with a live progress bar on kill bounties you've taken).
         String task = t.getString("desc");
         if (mine && kill) task += "  " + prog + "/" + req;
         int textX = x + 14;
@@ -146,7 +138,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             ctx.fill(textX, y + 16, textX + fill, y + 18, rarity.accentArgb());
         }
 
-        // Action button (or the time left while a kill bounty is in progress).
         boolean hov = over(mouseX, mouseY, btnX, y + 3, BTN_W, BTN_H);
         if (!mine) {
             NotchWidgets.primaryButton(ctx, this.font, btnX, y + 3, BTN_W, BTN_H, "Take", hov);
@@ -170,7 +161,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // No default labels.
     }
 
     //? if >=26.1 {
@@ -237,8 +227,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int btnX = this.leftPos + W - 8 - BTN_W;
-
-            // Page nav.
             if (menu.prop(BountyBoardScreenHandler.P_TOTAL_PAGES) > 1 && this.minecraft != null && this.minecraft.gameMode != null) {
                 if (over(mx, my, this.leftPos + W - 74, this.topPos + 22, 13, 12)) {
                     NotchWidgets.tick();
@@ -251,8 +239,6 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                     return true;
                 }
             }
-
-            // Offers → Take.
             for (int i = 0; i < BountyBoardScreenHandler.OFFER_SLOTS; i++) {
                 int ry = this.topPos + OFFERS_Y + i * ROW_H;
                 ItemStack s = menu.offerStack(i);
@@ -261,7 +247,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                     return true;
                 }
             }
-            // Taken → Collect / Turn in.
+
             for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
                 int ry = this.topPos + TAKEN_Y + 8 + i * ROW_H;
                 ItemStack s = menu.takenStack(i);
@@ -292,16 +278,13 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         NetClient.sendToServer(NotchPackets.BOUNTY_ACTION, buf);
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

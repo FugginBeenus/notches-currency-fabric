@@ -40,11 +40,9 @@ public final class AuctionCommands {
     private AuctionCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /ah (Auction House) =====
         dispatcher.register(
                 Commands.literal("ah")
 
-                        // /ah -> open GUI
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayer();
                             player.openMenu(new SimpleMenuProvider(
@@ -54,7 +52,6 @@ public final class AuctionCommands {
                             return 1;
                         })
 
-                        // /ah browse  -> simple text listing
                         .then(Commands.literal("browse")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
@@ -81,9 +78,7 @@ public final class AuctionCommands {
                                 })
                         )
 
-                        // /ah list <price> [days]
                         .then(Commands.literal("list")
-                                // /ah list  (no args) -> open the visual listing screen
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
                                     if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
@@ -91,17 +86,14 @@ public final class AuctionCommands {
                                     return 1;
                                 })
                                 .then(Commands.argument("price", IntegerArgumentType.integer(1))
-                                        // /ah list <price>  -> regular, NO time limit (instant buy)
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
                                             ServerLevel world = (ServerLevel) ctx.getSource().getLevel();
                                             AuctionState state = AuctionState.get(world);
 
                                             int price = IntegerArgumentType.getInteger(ctx, "price");
-                                            // days = 0 => no timer
                                             return handleListCommand(p, world, state, price, 0, false);
                                         })
-                                        // /ah list <price> <days> -> TIMED AUCTION
                                         .then(Commands.argument("days", IntegerArgumentType.integer(1, 7))
                                                 .executes(ctx -> {
                                                     ServerPlayer p = ctx.getSource().getPlayer();
@@ -116,7 +108,6 @@ public final class AuctionCommands {
                                 )
                         )
 
-                        // /ah buy <id>
                         .then(Commands.literal("buy")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -141,9 +132,7 @@ public final class AuctionCommands {
                                 )
                         )
 
-                        // /ah claim <id> – winner-only, pulls from pending winnings
                         .then(Commands.literal("claim")
-                                // /ah claim
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
                                     ServerLevel world = (ServerLevel) ctx.getSource().getLevel();
@@ -151,7 +140,6 @@ public final class AuctionCommands {
                                     state.claimAll(world, p);
                                     return 1;
                                 })
-                                // /ah claim <id>
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
@@ -176,8 +164,6 @@ public final class AuctionCommands {
                                             }
 
                                             boolean claimedSomething = false;
-
-                                            // Claim coins if you are the seller
                                             if (p.getUUID().equals(pw.sellerUuid) && pw.finalPrice > 0L) {
                                                 long amt = pw.finalPrice;
                                                 BalanceStore.add(p, amt);
@@ -191,10 +177,8 @@ public final class AuctionCommands {
                                                 claimedSomething = true;
                                             }
 
-                                            // Claim item if you are the winner (or owner of returned item)
                                             if (p.getUUID().equals(pw.winnerUuid) && !pw.stack.isEmpty()) {
                                                 ItemStack toGive = pw.stack.copy();
-                                                // Strip auction NBT tags so the item's normal tooltip returns
                                                 if (StackData.hasData(toGive)) {
                                                     CompoundTag tag = StackData.editData(toGive);
                                                     tag.remove("nc_price");
@@ -212,7 +196,6 @@ public final class AuctionCommands {
                                                 }
                                                 boolean inserted = p.getInventory().add(toGive);
                                                 if (!inserted && !toGive.isEmpty()) {
-                                                    // Explicit claim: worst case drop near them
                                                     p.drop(toGive, false);
                                                 }
 
@@ -223,7 +206,6 @@ public final class AuctionCommands {
                                                 claimedSomething = true;
                                             }
 
-                                            // If you don't match either role
                                             if (!claimedSomething) {
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("You have nothing to claim for that listing.")
                                                                 .withStyle(ChatFormatting.RED));
@@ -233,7 +215,7 @@ public final class AuctionCommands {
                                             if (pw.isFullyClaimed()) {
                                                 state.removePending(id);
                                             } else {
-                                                state.addPending(pw); // markDirty is inside
+                                                state.addPending(pw);
                                             }
 
                                             return 1;
@@ -241,7 +223,6 @@ public final class AuctionCommands {
                                 )
                         )
 
-                        // /ah bid <id> <amount>
                         .then(Commands.literal("bid")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
@@ -270,9 +251,7 @@ public final class AuctionCommands {
                                 )
                         )
 
-                        // /ah cancel <id> (seller only; returns item)
                         .then(Commands.literal("cancel")
-                                // /ah cancel (no args) - show your listings with clickable cancel buttons
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
                                     var world = ctx.getSource().getLevel();
@@ -301,7 +280,6 @@ public final class AuctionCommands {
                                         String itemName = l.stack.getHoverName().getString();
                                         long price = l.price;
 
-                                        // Build the listing line
                                         MutableComponent line = Component.literal(" • ")
                                                 .withStyle(ChatFormatting.GRAY)
                                                 .append(Component.literal(count + "x ")
@@ -315,7 +293,6 @@ public final class AuctionCommands {
                                                 .append(coinIcon())
                                                 .append(Component.literal(" "));
 
-                                        // Add clickable [Cancel] button
                                         MutableComponent cancelBtn = Component.literal("[Cancel]")
                                                 .withStyle(ChatFormatting.RED)
                                                 .withStyle(style -> style
@@ -362,8 +339,6 @@ public final class AuctionCommands {
                                                 return 0;
                                             }
 
-                                            // Refund any standing bid before removing: bids escrow
-                                            // coins, so cancelling without this destroys them.
                                             long refunded = state.refundHighestBid((ServerLevel) world, l);
                                             state.removeListing(id);
                                             if (refunded > 0) {
@@ -372,7 +347,6 @@ public final class AuctionCommands {
                                             }
 
                                             ItemStack toReturn = l.stack.copy();
-                                            // Strip auction NBT tags so the item's normal tooltip returns
                                             if (StackData.hasData(toReturn)) {
                                                 CompoundTag tag = StackData.editData(toReturn);
                                                 tag.remove("nc_price");
@@ -421,7 +395,6 @@ public final class AuctionCommands {
             return 0;
         }
 
-        // --- Auction listing fee (optional, scales with price) ---
         long fee = AuctionConfig.listingFee(price);
         if (fee > 0) {
             long bal = BalanceStore.get(p);
@@ -443,9 +416,7 @@ public final class AuctionCommands {
                             .append(Component.literal(" as auction listing fee.")
                                     .withStyle(ChatFormatting.GRAY)));
         }
-        // --- end listing fee ---
 
-        // Copy stack, remove from player
         ItemStack listingStack = hand.copy();
         hand.shrink(listingStack.getCount());
 
@@ -454,8 +425,6 @@ public final class AuctionCommands {
 
         if (timed) {
             clampedDays = Math.max(1, Math.min(7, days));
-
-            // real-time days: 24h * 60m * 60s * 20 ticks/s
             durationTicks = clampedDays * 24L * 60L * 60L * 20L;
         }
 
@@ -464,7 +433,6 @@ public final class AuctionCommands {
         AuctionListing listing = state.addListing(
                 world, p, listingStack, price, category, durationTicks);
 
-        // Common part of the message
         MutableComponent listedMsg = Component.literal("Listed ")
                 .append(Component.literal("x" + listingStack.getCount() + " ")
                         .withStyle(ChatFormatting.GREEN))

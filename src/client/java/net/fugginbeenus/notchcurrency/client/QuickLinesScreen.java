@@ -17,20 +17,16 @@ import java.util.UUID;
 public class QuickLinesScreen extends Screen {
 
     private static final int W = 340, H = 232;
-    // 8 lines × 15px ends at y+160, safely above the edit row at y+169.
     private static final int LIST_X = 10, LIST_Y = 40, ROW_H = 15, MAX_LINES = 8;
-
     private final UUID npcId;
     private final List<String> lines = new ArrayList<>();
     private int selected = -1;
-
     private int px, py;
     private EditBox editField;
 
     public QuickLinesScreen(UUID npcId, DialogueTree tree) {
         super(Component.literal("Quick Lines"));
         this.npcId = npcId;
-        // Seed from an existing FLAT tree only: a branching tree must not be flattened here.
         if (tree != null && tree.isFlat()) {
             for (DialogueNode n : tree.nodes().values()) {
                 if (!n.text().isBlank() && lines.size() < MAX_LINES) lines.add(n.text());
@@ -72,7 +68,6 @@ public class QuickLinesScreen extends Screen {
                 "The NPC says one of these at random when talked to.",
                 px + W / 2, py + 20, NotchTheme.TEXT_MUTED, false);
 
-        // Line list.
         NotchWidgets.inset(ctx, px + LIST_X - 2, py + LIST_Y - 4, W - 16, MAX_LINES * ROW_H + 8, NotchTheme.PANEL_MID);
         for (int i = 0; i < lines.size(); i++) {
             int ry = rowY(i);
@@ -93,7 +88,6 @@ public class QuickLinesScreen extends Screen {
                     px + W / 2, py + LIST_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Edit row: field + Apply (updates the selected line, or adds a new one).
         NotchWidgets.inset(ctx, px + LIST_X, py + 169, W - 92, 15, NotchTheme.DEEP);
         String applyLabel = selected >= 0 ? "Apply" : "+ Add";
         boolean canApply = !editField.getValue().isBlank() && (selected >= 0 || lines.size() < MAX_LINES);
@@ -104,7 +98,6 @@ public class QuickLinesScreen extends Screen {
                         : lines.size() + "/" + MAX_LINES + " lines",
                 px + W / 2, py + 189, NotchTheme.TEXT_MUTED, false);
 
-        // Bottom bar.
         NotchWidgets.primaryButton(ctx, this.font, px + 10, py + H - 26, 150, 16, "Save & Back",
                 over(mouseX, mouseY, px + 10, py + H - 26, 150, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + 168, py + H - 26, 90, 16, "Discard",
@@ -189,7 +182,7 @@ public class QuickLinesScreen extends Screen {
         }
         NotchPacketsClient.sendNpcStudioSave(npcId, tree.toNbt());
         if (!lines.isEmpty()) {
-            NotchPacketsClient.sendNpcDialogueMode(npcId, 1); // CHAT. That's the point of quick lines
+            NotchPacketsClient.sendNpcDialogueMode(npcId, 1);
         }
         NotchPacketsClient.sendNpcEditorReopen(npcId, 3);
     }
@@ -206,7 +199,6 @@ public class QuickLinesScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Enter applies the current line, like clicking Apply.
         if ((keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER)
                 && editField.isFocused() && !editField.getValue().isBlank()) {
             String text = editField.getValue().trim();
@@ -220,7 +212,6 @@ public class QuickLinesScreen extends Screen {
             NotchWidgets.tick();
             return true;
         }
-        // Plain characters insert via charTyped only (guards against the select-all wipe).
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, editField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -234,24 +225,19 @@ public class QuickLinesScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

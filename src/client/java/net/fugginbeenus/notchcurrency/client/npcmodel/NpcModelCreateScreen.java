@@ -18,17 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-/**
- * Turns a Blockbench export into a model an NPC can wear, without anybody writing JSON.
- *
- * <p>Every field is a picker over what is actually in the import folder, or over the clips actually
- * in the animation file that was picked. There is nothing here to spell correctly: the failure this
- * design is built to avoid is typing a clip name that has to match exactly and getting no
- * explanation when it does not.
- *
- * <p>The checks run when Create is pressed, not when the files are loaded later, so a wrong export
- * mode or a mismatched texture is caught while the person who can fix it is still looking at it.
- */
 public class NpcModelCreateScreen extends Screen {
 
     private static final int W = 300, H = 240;
@@ -73,8 +62,6 @@ public class NpcModelCreateScreen extends Screen {
     private int rowY(int row) {
         return 30 + row * (ROW_H + 6);
     }
-
-    /** Reads the import folder again, keeping the current picks where the files still exist. */
     private void rescan() {
         String model = pick(models, modelAt), texture = pick(textures, textureAt);
         String anim = pick(anims, animAt);
@@ -94,7 +81,6 @@ public class NpcModelCreateScreen extends Screen {
         reloadClips();
     }
 
-    /** The clips inside whichever animation file is currently picked. */
     private void reloadClips() {
         String anim = pick(anims, animAt);
         List<String> found = new ArrayList<>();
@@ -106,8 +92,6 @@ public class NpcModelCreateScreen extends Screen {
         idleAt = Math.min(idleAt, clips.size() - 1);
         walkAt = Math.min(walkAt, clips.size() - 1);
         specialAt = Math.min(specialAt, clips.size() - 1);
-
-        // A file with clips named the obvious way should not need three more clicks.
         if (idleAt == 0) idleAt = Math.max(0, indexEndingWith(clips, "idle"));
         if (walkAt == 0) walkAt = Math.max(0, indexEndingWith(clips, "walk"));
     }
@@ -129,7 +113,7 @@ public class NpcModelCreateScreen extends Screen {
                     .sorted(Comparator.naturalOrder())
                     .forEach(out::add);
         } catch (Exception noFolder) {
-            // Nothing dropped in yet, which is not an error.
+            // folder path gets put here, pls ignore
         }
         return out;
     }
@@ -138,7 +122,6 @@ public class NpcModelCreateScreen extends Screen {
         return list.isEmpty() ? null : list.get(Math.floorMod(at, list.size()));
     }
 
-    /** What the folder will be called, worked out from the name so there is no second field. */
     private String derivedId() {
         String name = nameBox == null ? "" : nameBox.getValue().strip().toLowerCase(Locale.ROOT);
         StringBuilder id = new StringBuilder();
@@ -285,7 +268,6 @@ public class NpcModelCreateScreen extends Screen {
         return true;
     }
 
-    /** Opens the folder in the desktop's own file browser, as vanilla does for resource packs. */
     private void openImportFolder() {
         try {
             Files.createDirectories(NpcModelLoader.importDir());

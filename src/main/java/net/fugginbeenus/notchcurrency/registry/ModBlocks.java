@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public final class ModBlocks {
 
-    // ATM
     public static final Block ATM = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("atm"),
@@ -32,7 +31,6 @@ public final class ModBlocks {
             new BlockItem(ATM, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("atm"))
     );
 
-    // Golden Cache (crate)
     public static final Block GOLDEN_CACHE = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("golden_cache"),
@@ -50,8 +48,6 @@ public final class ModBlocks {
             new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache"))
     );
 
-    // Mailbox: stands on the ground or hangs on a wall, depending where it is placed. Placeholder
-    // model and texture for now.
     public static final Block MAILBOX = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("mailbox"),
@@ -67,7 +63,6 @@ public final class ModBlocks {
             new BlockItem(MAILBOX, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("mailbox"))
     );
 
-    // Ledger Board: shows the balance leaderboard on use. Placeholder model/texture for now.
     public static final Block LEDGER_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("ledger_board"),
@@ -83,7 +78,6 @@ public final class ModBlocks {
             new BlockItem(LEDGER_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("ledger_board"))
     );
 
-    // Bounty Board: shows the auto-generated bounties on use. Placeholder model/texture for now.
     public static final Block BOUNTY_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("bounty_board"),
@@ -99,8 +93,6 @@ public final class ModBlocks {
             new BlockItem(BOUNTY_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("bounty_board"))
     );
 
-    // Slot Machine: right-click to play the slots. Non-full model, so nonOpaque keeps
-    // neighbouring blocks from culling their touching faces (the see-through-world bug).
     public static final Block SLOT_MACHINE = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("slot_machine"),
@@ -116,7 +108,6 @@ public final class ModBlocks {
             new BlockItem(SLOT_MACHINE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("slot_machine"))
     );
 
-    // Coin Flip block: right-click to bet, it "flips" then reveals. Placeholder model/texture.
     public static final Block COIN_FLIP = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("coin_flip"),
@@ -132,7 +123,6 @@ public final class ModBlocks {
             new BlockItem(COIN_FLIP, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("coin_flip"))
     );
 
-    // Crates (opened with keys). Each block is bound to a datapack crate type id.
     public static final Block COMMON_CRATE = registerCrate("common_crate", "common");
     public static final Block RARE_CRATE = registerCrate("rare_crate", "rare");
     public static final Block EPIC_CRATE = registerCrate("epic_crate", "epic");
@@ -151,6 +141,5 @@ public final class ModBlocks {
     private ModBlocks() {}
 
     public static void register() {
-        // NO-OP; static initializers above already did all the registering.
     }
 }

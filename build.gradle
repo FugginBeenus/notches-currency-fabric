@@ -5,19 +5,7 @@ plugins {
     id "com.modrinth.minotaur" version "2.+"
 }
 
-// Minecraft is obfuscated up to 1.21.11 and unobfuscated from 26.1, and Loom ships a separate entry
-// point for each: -remap does the obf/intermediary dance, the plain one does not because there is
-// nothing left to remap. Both publish in lockstep, so they are one Loom behind two front doors.
-// Declared apply-false above and picked per version here, since a Stonecutter tree runs this one
-// script for every target. Version ids went calendar-style at 26.1, so a leading two-digit year is
-// what tells the two eras apart.
 def unobfuscated = property('minecraft_version').toString() ==~ /^\d\d\..*/
-
-// Mojang renamed ResourceLocation to Identifier between 1.21.1 and 1.21.11, adopting the name Yarn
-// had used all along. It is a pure rename in the same package, but the simple name differs and Java
-// has no type aliases, so 88 references cannot each carry a version branch. Stonecutter rewrites the
-// token while it processes sources instead: the tree is written in the older name and the newer
-// targets get the newer one. One line here in place of a branch per reference.
 def mcParts = property('minecraft_version').toString().tokenize('.').collect { it.toInteger() }
 def atLeast = { List want ->
     for (int i = 0; i < want.size(); i++) {
@@ -26,11 +14,9 @@ def atLeast = { List want ->
     }
     return true
 }
-// Calendar versions (26.x) are always newer than any 1.x, and they carry the rename too.
 def usesIdentifier = unobfuscated || atLeast([1, 21, 11])
 apply plugin: unobfuscated ? "net.fabricmc.fabric-loom" : "net.fabricmc.fabric-loom-remap"
 
-// ===== Project Info =====
 group = findProperty("group") ?: "net.fugginbeenus.notchcurrency"
 version = findProperty("version") ?: "0.1.0"
 
@@ -38,8 +24,6 @@ base {
     archivesName = (findProperty("archives_base_name") ?: "notchcurrency").toString()
 }
 
-// ===== Java Configuration =====
-// Per-version: Minecraft is Java 17 through 1.20.4 and Java 21 from 1.20.5 on.
 def javaVersion = Integer.parseInt(property('java_version').toString())
 
 java {
@@ -47,84 +31,41 @@ java {
     withSourcesJar()
 }
 
-// ===== Repositories =====
 repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
-    maven { url = "https://maven.terraformersmc.com/releases/" } // ModMenu
-    maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" } // GeckoLib (both groups)
-    maven { url = "https://maven.ladysnake.org/releases" } // Trinkets + Cardinal Components
+    maven { url = "https://maven.terraformersmc.com/releases/" }
+    maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
+    maven { url = "https://maven.ladysnake.org/releases" }
 }
 
-// ===== Dependencies =====
 dependencies {
-    // Minecraft & Fabric
     minecraft "com.mojang:minecraft:${property('minecraft_version')}"
-    // Mojang's own names everywhere. Yarn stops at 1.21.11, so official mappings are the only
-    // vocabulary spanning the whole range, and they reach back to 1.14. That is what lets 1.20.1
-    // speak the same language as 26.2 and keeps this a single source tree.
-    //
-    // Only the obfuscated versions get a mappings declaration. From 26.1 the game ships with its
-    // real names already on it, and asking Loom to map to Mojang names there is asking it to
-    // translate something into itself: it refuses outright.
     if (!unobfuscated) {
-        // migrateMappings reads the project's current mappings as its SOURCE, so the tree has to be
-        // on Yarn while the migration runs. Flip -PmigrateFrom=yarn off once the source is converted.
         if (findProperty('migrateFrom') == 'yarn') {
             mappings "net.fabricmc:yarn:${property('yarn_mappings')}:v2"
         } else {
             mappings loom.officialMojangMappings()
         }
     }
-    // The mod* configurations exist to remap a dependency's names into ours. On an unobfuscated
-    // version there is nothing to remap, so the non-remapping plugin does not create them and a mod
-    // is just an ordinary dependency. Same coordinates either way, different configuration name.
     add(unobfuscated ? "implementation" : "modImplementation",
             "net.fabricmc:fabric-loader:${property('loader_version')}")
     add(unobfuscated ? "implementation" : "modImplementation",
             "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}")
-
-    // Local mod dependencies (place jars in /libs folder)
-    // Using runtimeOnly to avoid remapping issues with pre-compiled mods
-    // rootProject-relative: under Stonecutter this script runs from versions/<mc>/, not the repo root.
     fileTree(dir: rootProject.file('libs'), include: '*.jar').each { file ->
         runtimeOnly files(file)
     }
-
-    // Config GUI entrypoint: ModMenu (the settings screen itself is code-drawn, no Cloth Config)
     add(unobfuscated ? "implementation" : "modImplementation",
             "com.terraformersmc:modmenu:${property('modmenu_version')}") { transitive = false }
 
-    // GeckoLib: animation/model framework for the Notch NPC entity (hard dependency). The group
-    // moved from software.bernie.geckolib to com.geckolib at the 26.x builds, so it is a per-version
-    // property rather than a constant. Same repo, same artifact name, different group.
     add(unobfuscated ? "implementation" : "modImplementation",
             "${property('geckolib_group')}:geckolib-fabric-${property('minecraft_version')}:${property('geckolib_version')}")
-
-    // Waystones fee: SOFT integration. Compiled against the Waystones + Balm APIs only; they are NOT
-    // shipped and NOT required at runtime (gated by isModLoaded). Jars are per-version: drop each
-    // Minecraft version's Waystones + Balm into api-libs/<mc>/.
     add(unobfuscated ? "compileOnly" : "modCompileOnly",
             fileTree(dir: rootProject.file("api-libs/${property('minecraft_version')}"), include: '*.jar'))
-
-    // Trinkets on NPCs: SOFT integration, same deal. Upstream stops at 1.21.1 and its successor
-    // stops at 1.21.8, so newer targets simply have no accessory mod to integrate with. The feature
-    // already hides itself when one is absent, so those versions just declare nothing.
     if (project.hasProperty('trinkets_version')) {
         modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
-        // Compile-only, deliberately. Trinkets used to be on the dev runtime so the accessory slots
-        // could be exercised in the dev client, and that now crashes the client on startup: its
-        // mixin shadows a field called `hovered`, which is the Yarn name, and this project builds
-        // against Mojang names where the same field is `isHovered`. Its refmap cannot bridge that,
-        // so the mixin fails to apply and takes the game down before our code runs.
-        //
-        // Players are unaffected. A published jar carries intermediary names, which is what every
-        // mod agrees on at runtime, so Trinkets and this mod still meet correctly in a real install.
-        // The cost is only that the dev client shows no accessory slots.
     }
 }
-
-// ===== Loom Configuration =====
 loom {
     splitEnvironmentSourceSets()
 
@@ -153,16 +94,6 @@ loom {
         }
     }
 }
-
-// Token rewrites for Mojang's renames between 1.21.1 and 1.21.11. Each is a pure rename or package
-// move with no behaviour attached, which is what makes rewriting the token safe; anything that
-// actually changed shape gets a real version branch instead.
-//
-// Registered inside an if rather than passed a boolean, because that boolean is the replacement's
-// DIRECTION, not a condition. Passing false does not skip the rule, it runs it backwards, which
-// happily rewrote every legitimate EnumProperty into DirectionProperty on the older versions.
-// 26.2 moved the entity type constants into their own holder. 26.1.2 still has them on EntityType,
-// so this cannot ride along with the rest of the 26.x rewrites.
 if (atLeast([26, 2])) {
     stonecutter {
         replacements {
@@ -172,33 +103,19 @@ if (atLeast([26, 2])) {
         }
     }
 }
-
-// 26.x renames that do not apply to any 1.x target. Keyed on the same flag that picks the Loom
-// plugin, since "unobfuscated" and "26.1 or newer" are the same set.
 if (unobfuscated) {
     stonecutter {
         replacements {
             string(true) {
-                // The saved-data store lost its dimension framing.
                 replace("DimensionDataStorage", "SavedDataStorage")
-                // Time of day is asked of the overworld clock now. Schedules only run there anyway:
-                // the Nether and the End already refuse, so this is the same number they always read.
                 replace(".getDayTime()", ".getOverworldClockTime()")
-                // GeckoLib's maven group moved and took its package with it.
                 replace("software.bernie.geckolib", "com.geckolib")
-                // Fabric renamed its creative-tab and menu APIs to match Mojang's own names.
                 replace("net.fabricmc.fabric.api.itemgroup.v1", "net.fabricmc.fabric.api.creativetab.v1")
                 replace("ItemGroupEvents", "CreativeModeTabEvents")
                 replace("net.fabricmc.fabric.api.screenhandler.v1", "net.fabricmc.fabric.api.menu.v1")
                 replace("ExtendedScreenHandlerFactory", "ExtendedMenuProvider")
                 replace("ExtendedScreenHandlerType", "ExtendedMenuType")
-                // Fabric's view helpers renamed their key enumeration, which keeps the entity NBT
-                // flat rather than nested and so keeps an upgraded world readable.
                 replace(".keys()", ".keySet()")
-                // GUI drawing became state extraction in 26.x. The handle kept its whole surface but
-                // not its name, and the drawing calls were shortened to say what they draw. These are
-                // the pure renames; the overrides whose parameters were also reordered are branched
-                // in the screens themselves.
                 replace("GuiGraphics", "GuiGraphicsExtractor")
                 replace(".drawString(", ".text(")
                 replace(".drawCenteredString(", ".centeredText(")
@@ -216,32 +133,23 @@ if (unobfuscated) {
                         "net.minecraft.client.renderer.state.level.CameraRenderState")
                 replace("renderBlurredBackground", "extractBlurredBackground")
                 replace("renderBackground", "extractBackground")
-                // Screen.renderTransparentBackground went away with the render/extract split. This is
-                // exactly what it drew, so the dimming behind a panel looks the same as before.
                 replace("renderTransparentBackground(ctx)",
                         "ctx.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)")
-                // Fabric's loot events moved a version on.
                 replace("net.fabricmc.fabric.api.loot.v2", "net.fabricmc.fabric.api.loot.v3")
-                // The creative-tab builder and its per-tab event were renamed with the package.
                 replace("FabricItemGroup", "FabricCreativeModeTab")
                 replace("modifyEntriesEvent", "modifyOutputEvent")
-                // Payload registries name the direction in full now.
                 replace("PayloadTypeRegistry.playC2S()", "PayloadTypeRegistry.serverboundPlay()")
                 replace("PayloadTypeRegistry.playS2C()", "PayloadTypeRegistry.clientboundPlay()")
-                // A slot click carries a richer object than the old enum.
                 replace("net.minecraft.world.inventory.ClickType", "net.minecraft.world.inventory.ContainerInput")
                 replace("ClickType", "ContainerInput")
             }
             regex(true) {
-                // AbstractContainerScreen's own tooltip hook, renamed with the extract split. Three
-                // arguments, so it cannot collide with the Font overloads handled elsewhere.
                 fromPattern = '\\.renderTooltip\\((\\w+), (\\w+), (\\w+)\\)'
                 toValue = '.extractTooltip($1, $2, $3)'
                 reversePattern = '\\.extractTooltip\\((\\w+), (\\w+), (\\w+)\\)'
                 reverseValue = '.renderTooltip($1, $2, $3)'
             }
             regex(true) {
-                // Level.random went protected; the accessor was always there.
                 fromPattern = '\\.random\\.next'
                 toValue = '.getRandom().next'
                 reversePattern = '\\.getRandom\\(\\)\\.next'
@@ -256,87 +164,55 @@ if (usesIdentifier) {
         replacements {
             string(true) {
                 replace("ResourceLocation", "Identifier")
-                // Villager moved one package deeper; the simple name is unchanged.
                 replace("net.minecraft.world.entity.npc.Villager", "net.minecraft.world.entity.npc.villager.Villager")
-                // DirectionProperty collapsed into EnumProperty<Direction>. The import must lose the
-                // generic while usages gain it, so the import line is rewritten first: after that it
-                // no longer holds the old token for the second rule to catch.
                 replace("properties.DirectionProperty;", "properties.EnumProperty;")
                 replace("DirectionProperty", "EnumProperty<Direction>")
-                // ServerPlayer.level() became covariant and serverLevel() went away with it. The
-                // call sites want a ServerLevel either way, so the name is all that changes.
                 replace(".serverLevel()", ".level()")
-                // RegistryAccess grew a separate lookup vocabulary and the old name went away.
                 replace(".registryOrThrow(", ".lookupOrThrow(")
-                // Level.isDay said nothing about weather; the new name is about the light level.
                 replace(".isDay()", ".isBrightOutside()")
                 replace(".getAllKeys()", ".keySet()")
-                // GuiGraphics.pose() is a 2D matrix stack from here on, with its own push and pop.
-                // Scoped to that receiver: the entity renderers' PoseStack keeps the old names.
                 replace(".pose().pushPose()", ".pose().pushMatrix()")
                 replace(".pose().popPose()", ".pose().popMatrix()")
-                // Tooltips are queued for the next frame now instead of drawn on the spot.
                 replace(".renderComponentTooltip(", ".setComponentTooltipForNextFrame(")
-                // Two client classes moved package without changing shape.
                 replace("net.minecraft.client.model.PlayerModel", "net.minecraft.client.model.player.PlayerModel")
                 replace("net.minecraft.client.renderer.RenderType", "net.minecraft.client.renderer.rendertype.RenderType")
-                // World height stopped being about where you may build.
                 replace(".getMinBuildHeight()", ".getMinY()")
                 replace(".getMaxBuildHeight()", ".getMaxY()")
-                // A mob's leash-to-a-spot is called its home now.
                 replace(".restrictTo(", ".setHomeTo(")
                 replace(".clearRestriction()", ".clearHome()")
-                // ResourceKey followed ResourceLocation into the Identifier naming.
                 replace(".location()", ".identifier()")
             }
             regex(true) {
-                // Only the GuiGraphics overloads moved, and those all take a Font first.
-                // AbstractContainerScreen.renderTooltip(GuiGraphics, int, int) is untouched and must
-                // keep its name, so this cannot be a plain string swap.
                 fromPattern = '\\.renderTooltip\\((this\\.)?font, '
                 toValue = '.setTooltipForNextFrame($1font, '
                 reversePattern = '\\.setTooltipForNextFrame\\((this\\.)?font, '
                 reverseValue = '.renderTooltip($1font, '
             }
             regex(true) {
-                // 1.21.11 turned the NBT getters into Optionals and added *OrEmpty variants that keep
-                // the old semantics exactly. One argument only: our own StackData.getCompound takes a
-                // stack and a key, and a plain string swap renamed that unrelated method too.
                 fromPattern = '\\.getCompound\\(([^,()]+)\\)'
                 toValue = '.getCompoundOrEmpty($1)'
                 reversePattern = '\\.getCompoundOrEmpty\\(([^,()]+)\\)'
                 reverseValue = '.getCompound($1)'
             }
             regex(true) {
-                // getList also lost its type argument, so this one needs the capture.
-                // Single-quoted: \$1 is a group reference, and Groovy would read it as a placeholder.
                 fromPattern = '\\.getList\\(([^,()]+), *[A-Za-z0-9_.]+\\)'
                 toValue = '.getListOrEmpty($1)'
-                // A regex rule has to declare both directions even when only one is ever applied.
-                // This one is never run backwards: direction is fixed true above.
                 reversePattern = '\\.getListOrEmpty\\(([^,()]+)\\)'
                 reverseValue = '.getList($1, net.minecraft.nbt.Tag.TAG_COMPOUND)'
             }
             regex(true) {
-                // Level.isClientSide went private; the accessor is the method of the same name. The
-                // lookahead keeps it off call sites that already say isClientSide().
                 fromPattern = '\\.isClientSide(?![(A-Za-z])'
                 toValue = '.isClientSide()'
                 reversePattern = '\\.isClientSide\\(\\)'
                 reverseValue = '.isClientSide'
             }
             regex(true) {
-                // CompoundTag.contains lost its type argument; presence is all it reports now.
                 fromPattern = '\\.contains\\(([^,()]+), *[A-Za-z0-9_.]+\\)'
                 toValue = '.contains($1)'
                 reversePattern = '\\.contains\\(([^,()]+)\\)'
                 reverseValue = '.contains($1, net.minecraft.nbt.Tag.TAG_COMPOUND)'
             }
             regex(true) {
-                // Entity.moveTo became snapTo, to say plainly that it teleports rather than walks.
-                // PathNavigation.moveTo really does walk and kept its name, so the one case that
-                // must not change is excluded by looking at what precedes the call. Replacements are
-                // merged rather than applied in order, so a placeholder round trip is not an option.
                 fromPattern = '(?<!getNavigation\\(\\))\\.moveTo\\('
                 toValue = '.snapTo('
                 reversePattern = '\\.snapTo\\('
@@ -399,12 +275,9 @@ if (usesIdentifier) {
         }
     }
 }
-
-// ===== Build Tasks =====
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = javaVersion
-    // javac stops listing after 100 by default, which makes a big port look like it has stalled.
     options.compilerArgs << "-Xmaxerrs" << "2000"
 }
 
@@ -419,14 +292,9 @@ tasks.processResources {
     filesMatching("fabric.mod.json") {
         expand("version": project.version, "minecraft_dep": minecraftDep)
     }
-    // The render-state mixin only exists from 1.21.11, so it is only listed there. Mixin refuses to
-    // start if a config names a class that is not in the jar, and on older versions that file
-    // compiles to nothing.
     if (atLeast([1, 21, 11])) {
         filesMatching("notchcurrency.mixins.json") {
             filter { line ->
-                // Under "client", not "mixins": it targets a client-only class, and a dedicated
-                // server would fail to load it.
                 line.contains('"mixins": [')
                         ? '  "client": [\n    "EntityRenderStateMixin",\n    "EntityRenderDispatcherMixin"\n  ],\n' + line
                         : line
@@ -437,10 +305,6 @@ tasks.processResources {
     filesMatching("pack.mcmeta") {
         expand("pack_format": packFormat)
     }
-    // 1.21.2 flattened recipe ingredients: a key is the item id itself rather than an object, and a
-    // result names its item with "id". The tree keeps the 1.20 shape, so it is converted after the
-    // copy for the versions that want the newer one. Whole-file, because the JSON is pretty-printed
-    // and a key and its closing brace land on different lines.
     if (atLeast([1, 21, 2])) {
         doLast {
             def dir = new File(destinationDir, "data/notchcurrency/recipe")
@@ -460,8 +324,6 @@ tasks.processResources {
             }
         }
     }
-
-    // 1.21 renamed the datapack folders to singular; the source tree keeps the 1.20 names.
     if (packFormat.toInteger() >= 34) {
         eachFile { f ->
             f.path = f.path
@@ -471,12 +333,8 @@ tasks.processResources {
         includeEmptyDirs = false
     }
 }
-
-// The task that produces the finished mod jar. Remapping versions hand off to remapJar; on an
-// unobfuscated version there is no remap step at all, so plain jar is already the output.
 def modJar = unobfuscated ? tasks.named("jar") : tasks.named("remapJar")
 
-// Jars are named notchcurrency-<version>+<minecraft>.jar so the per-version builds don't collide.
 modJar.configure {
     archiveVersion = "${project.version}+${mcVersion}"
 }
@@ -491,9 +349,6 @@ tasks.jar {
         )
     }
 }
-
-// ===== Modrinth Publishing =====
-// Creates a unique build stamp to prevent "duplicate file" errors
 def stampFile = layout.buildDirectory.file("tmp/modrinth-stamp.txt")
 
 tasks.register("generateModrinthStamp") {
@@ -528,21 +383,13 @@ tasks.register("stampedJar", Jar) {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
 }
-
-// stampedJar is the file Modrinth actually receives, but `build` never made it, so chiseledBuild
-// would leave last publish's -modrinth.jar sitting in build/libs next to a freshly built ordinary
-// jar. Both look current; only one is. Nearly shipped 0.7.1 twice over that. A green build now
-// means every jar in build/libs is current, the uploaded one included.
 tasks.named("assemble") {
     dependsOn("stampedJar")
 }
 
 modrinth {
-    // Store the token as `modrinthToken` in ~/.gradle/gradle.properties (never the project one, which
-    // gets committed). The env var still works as a fallback for one-off publishes.
     token = findProperty("modrinthToken") ?: System.getenv("MODRINTH_TOKEN")
     projectId = findProperty("modrinth_project") ?: "gGHT7Irr"
-    // Each Minecraft version publishes as its own Modrinth version (0.5.0+1.20.1, 0.5.0+1.21.1).
     versionNumber = "${version}+${mcVersion}"
     versionName = "Notch Currency ${version} for ${mcVersion}"
     versionType = findProperty("modrinth_release_type") ?: "release"
@@ -550,9 +397,6 @@ modrinth {
     gameVersions = [property("minecraft_version").toString()]
     loaders = ["fabric"]
 
-    // rootProject, not file(): every publish runs inside a per-version subproject (versions/1.20.1,
-    // …), so a relative path looks for the changelog beside that subproject and never finds it,
-    // which is how every release so far went out saying "See commits for changes".
     def changelogFile = rootProject.file("changelogs/${version}.md")
     if (!changelogFile.exists()) {
         logger.warn("Notch Currency: no changelogs/${version}.md, so Modrinth would get a placeholder.")

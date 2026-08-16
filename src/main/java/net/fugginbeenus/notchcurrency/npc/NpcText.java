@@ -18,7 +18,7 @@ public final class NpcText {
 
     public static void say(ServerPlayer sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
-        npc.playVoice(); // every line it speaks gets its voice, not just the first hello
+        npc.playVoice();
         sendLine(sp, npc, line);
     }
 

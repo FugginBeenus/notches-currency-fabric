@@ -32,7 +32,7 @@ public class CrateLoader implements SimpleSynchronousResourceReloadListener {
         CrateRegistry.clear();
         for (Map.Entry<ResourceLocation, Resource> e : manager
                 .listResources("crates", id -> id.getPath().endsWith(".json")).entrySet()) {
-            String path = e.getKey().getPath();               // "crates/common.json"
+            String path = e.getKey().getPath();
             String crateId = path.substring("crates/".length(), path.length() - ".json".length());
             try (InputStream is = e.getValue().open();
                  InputStreamReader reader = new InputStreamReader(is)) {
@@ -61,7 +61,6 @@ public class CrateLoader implements SimpleSynchronousResourceReloadListener {
                 int max = l.has("max") ? l.get("max").getAsInt() : min;
                 ResourceLocation itemId = net.fugginbeenus.notchcurrency.compat.Reg.parse(l.get("item").getAsString());
                 if (!net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(itemId)) {
-                    // A misconfigured entry would silently pay out "Air": name the culprit instead.
                     LOGGER.warn("Crate '{}': unknown item '{}' - loot entry skipped", id, itemId);
                     continue;
                 }

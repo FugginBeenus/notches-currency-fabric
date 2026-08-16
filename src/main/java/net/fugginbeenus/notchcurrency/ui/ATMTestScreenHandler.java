@@ -18,17 +18,11 @@ import net.minecraft.world.item.ItemStack;
 
 public class ATMTestScreenHandler extends AbstractContainerMenu {
 
-    // ===== Top 5 slots baseline (relative to 176x166 panel) =====
-    // Vanilla-like baseline puts rows at (8, 17). Keep spacing = 18px.
     private static final int BANK_BASE_X = 8;
     private static final int BANK_BASE_Y = 17;
     private static final int BANK_SPACING = 18;
-
-    // Pixel nudges to line up with your painted frames (adjust these!)
-    public static int BANK_NUDGE_X = 38; // +right / -left
-    public static int BANK_NUDGE_Y = 1;  // +down  / -up
-
-    // ===== Player inv / hotbar (leave these unless your texture differs) =====
+    public static int BANK_NUDGE_X = 38;
+    public static int BANK_NUDGE_Y = 1;
     private static final int PLAYER_X = 8;
     private static final int PLAYER_Y = 113;
     private static final int HOTBAR_Y = PLAYER_Y + 58;
@@ -48,15 +42,11 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
     public ATMTestScreenHandler(int containerId, Inventory playerInv) {
         super(ModScreenHandlers.ATM, containerId);
         this.playerInv = playerInv;
-
-        // ----- Top 5 slots (with nudges) -----
         final int rowY = BANK_BASE_Y + BANK_NUDGE_Y;
         for (int i = 0; i < 5; i++) {
             int x = BANK_BASE_X + BANK_NUDGE_X + (i * BANK_SPACING);
             this.addSlot(new CurrencySlot(bankInv, i, x, rowY));
         }
-
-        // ----- Player inventory -----
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
                 this.addSlot(new Slot(playerInv, col + row * 9 + 9,
@@ -64,8 +54,6 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
                         PLAYER_Y + row * 18));
             }
         }
-
-        // ----- Hotbar -----
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(playerInv, col, PLAYER_X + col * 18, HOTBAR_Y));
         }
@@ -127,7 +115,6 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
             long withdrawn = CoinEconomy.withdrawFromBalanceToInventory(sp, amount);
 
             if (withdrawn <= 0) {
-                // optional feedback if they don't have enough balance
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have enough balance to withdraw that many Notch Coins.")
                                 .withStyle(ChatFormatting.RED));
             }

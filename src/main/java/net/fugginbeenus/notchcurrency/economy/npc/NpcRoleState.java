@@ -43,10 +43,6 @@ public class NpcRoleState extends SavedData implements net.fugginbeenus.notchcur
         return roles.get(npcId);
     }
 
-    // ---- NBT ----
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -86,7 +82,6 @@ public class NpcRoleState extends SavedData implements net.fugginbeenus.notchcur
                 UUID shop = net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(o, "Shop") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Shop") : null;
                 state.roles.put(npc, new Assignment(role, shop));
             } catch (IllegalArgumentException ignored) {
-                // skip unknown role names
             }
         }
         return state;

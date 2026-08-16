@@ -22,16 +22,12 @@ import java.util.UUID;
 public final class PlayerShopManager {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-PlayerShopManager");
-
-    // Configuration
     public static int MAX_SHOPS_PER_PLAYER = 3;
-    public static double SALES_TAX_PERCENT = 0.0;  // Tax on sales (goes nowhere, just removed)
-    public static int MIN_PRICE = 0;  // 0 allowed for barter-only listings
+    public static double SALES_TAX_PERCENT = 0.0;
+    public static int MIN_PRICE = 0;
     public static int MAX_PRICE = 1_000_000;
 
     private PlayerShopManager() {}
-
-    // --- Shop Creation ---
 
     @Nullable
     public static PlayerShop createShop(ServerPlayer player, String shopName) {
@@ -71,7 +67,6 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Return all stock, pending coins, and barter items via the single canonical path
         returnAllShopContents(player.level().getServer(), shop, player);
 
         state.deleteShop(shopId, player.getUUID());
@@ -80,8 +75,6 @@ public final class PlayerShopManager {
 
         return true;
     }
-
-    // --- Listing Management ---
 
     public static boolean addListing(ServerPlayer owner, UUID shopId, ItemStack item, int coinPrice) {
         ShopState state = ShopState.get(owner.serverLevel());
@@ -109,7 +102,6 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Create template (1 item) and track stock from the provided count
         ItemStack template = item.copy();
         int stockAmount = template.getCount();
         template.setCount(1);
@@ -143,7 +135,6 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Verify item matches
         if (!StackData.canCombine(listing.getItemForSale(), items)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Item doesn't match the listing!").withStyle(ChatFormatting.RED));
             return false;
@@ -232,7 +223,6 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Return stock
         if (listing.getStockQuantity() > 0) {
             ItemStack toReturn = listing.createSaleStack(listing.getStockQuantity());
             giveItemsToPlayer(owner, toReturn);
@@ -244,8 +234,6 @@ public final class PlayerShopManager {
         net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("Listing removed. Stock returned.").withStyle(ChatFormatting.YELLOW));
         return true;
     }
-
-    // --- Purchasing ---
 
     public static PurchaseResult purchase(ServerPlayer buyer, UUID shopId, UUID listingId, int quantity) {
         MinecraftServer server = buyer.level().getServer();
@@ -260,19 +248,13 @@ public final class PlayerShopManager {
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
         if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
 
-        // A listing sells the whole stack the owner put up: 32 sculk sensors for 15 coins sells all
-        // 32 for 15, so `quantity` counts those bundles. Prices are per bundle; stock is in items.
         int totalItems = listing.getBundleSize() * quantity;
-
-        // Quick check (actual atomic check happens later)
         int available = listing.getStockQuantity();
         if (available < totalItems) return PurchaseResult.INSUFFICIENT_STOCK;
 
-        // Check what payment is required
         boolean needsCoins = listing.acceptsCoins() && listing.getCoinPrice() > 0;
         boolean needsBarter = listing.acceptsBarter();
 
-        // Validate buyer has required resources
         int totalCoinCost = 0;
         int totalBarterCost = 0;
         ItemStack barterItem = ItemStack.EMPTY;
@@ -294,12 +276,10 @@ public final class PlayerShopManager {
             }
         }
 
-        // ATOMIC: Try to remove stock first (prevents race condition with two buyers)
         if (!listing.tryRemoveStock(totalItems)) {
             return PurchaseResult.INSUFFICIENT_STOCK;
         }
 
-        // Stock removed successfully, now take payment
         if (needsCoins) {
             CurrencyApi.withdraw(buyer, totalCoinCost,
                     net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE, "shop purchase");
@@ -308,30 +288,23 @@ public final class PlayerShopManager {
             removeItemsFromInventory(buyer, barterItem, totalBarterCost);
         }
 
-        // Give items to buyer
         ItemStack purchased = listing.createSaleStack(totalItems);
         giveItemsToPlayer(buyer, purchased);
-
-        // Handle earnings - add to shop's pending balance (NOT directly to seller)
         ServerPlayer seller = server.getPlayerList().getPlayer(shop.getOwnerId());
 
-        // Coin earnings (with tax) - added to shop's pending balance via recordSale
         int sellerEarnings = 0;
         if (needsCoins && totalCoinCost > 0) {
             int tax = (int) Math.floor(totalCoinCost * SALES_TAX_PERCENT / 100.0);
             sellerEarnings = totalCoinCost - tax;
-            // recordSale adds to pendingBalance - owner must withdraw manually
             shop.recordSale(sellerEarnings);
         }
 
-        // Barter items - always store for later withdrawal (better UX)
         if (needsBarter && totalBarterCost > 0) {
             ItemStack barterPayment = barterItem.copy();
             barterPayment.setCount(totalBarterCost);
             shop.addPendingBarterItem(barterPayment);
         }
 
-        // Notify seller
         if (seller != null) {
             MutableComponent message = Component.literal("")
                     .append(Component.literal(buyer.getName().getString()).withStyle(ChatFormatting.AQUA))
@@ -354,14 +327,10 @@ public final class PlayerShopManager {
 
             net.fugginbeenus.notchcurrency.compat.Msg.chat(seller, message);
         }
-        // (Offline owners: coins are already held in the shop's pending balance via
-        //  recordSale() above, and are paid out when the owner withdraws or the shop closes.)
 
-        // Update statistics
-        listing.recordSale(totalItems, totalCoinCost); // totalSold counts units, matching stock
+        listing.recordSale(totalItems, totalCoinCost);
         state.markDirtyAndSave();
 
-        // Feedback to buyer
         //? if >=1.21 {
         /*buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
         *///?} else {
@@ -394,12 +363,8 @@ public final class PlayerShopManager {
         return PurchaseResult.SUCCESS;
     }
 
-    // --- Utility Methods ---
-
     private static void giveItemsToPlayer(ServerPlayer player, ItemStack items) {
         if (items.isEmpty()) return;
-
-        // Split into max stack sizes
         int remaining = items.getCount();
         while (remaining > 0) {
             int giveCount = Math.min(remaining, items.getMaxStackSize());
@@ -437,13 +402,8 @@ public final class PlayerShopManager {
     }
 
     public static void returnAllShopContents(MinecraftServer server, PlayerShop shop, @Nullable ServerPlayer owner) {
-        // Pending coin balance is the single source of truth for shop earnings.
         long totalCurrency = shop.withdrawBalance();
-
-        // Pending barter items.
         List<ItemStack> itemsToReturn = new java.util.ArrayList<>(shop.collectPendingBarterItems());
-
-        // All remaining listing stock (cleared so it can never be returned twice).
         for (ShopListing listing : shop.getListings()) {
             int stock = listing.getStockQuantitySafe();
             if (stock > 0) {
@@ -460,13 +420,11 @@ public final class PlayerShopManager {
             }
         }
 
-        // Pay coins to the owner's account (by UUID so it works while offline).
         if (totalCurrency > 0) {
             CurrencyApi.deposit(server, shop.getOwnerId(), totalCurrency,
                     net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_PAYOUT, "shop closed/returned");
         }
 
-        // Hand items to the owner if they're online.
         if (owner != null) {
             for (ItemStack item : itemsToReturn) {
                 giveItemsToPlayer(owner, item);
@@ -491,20 +449,15 @@ public final class PlayerShopManager {
             return false;
         }
 
-        // Update ownership
         UUID oldOwnerId = shop.getOwnerId();
         String oldOwnerName = shop.getOwnerName();
 
-        // Use reflection or add a setter - for now we'll recreate the ownership tracking
-        // This is a bit hacky but works
         state.updateShopOwnership(shopId, newOwnerId, newOwnerName);
         state.markDirtyAndSave();
 
         LOGGER.info("Transferred shop {} from {} to {}", shopId, oldOwnerName, newOwnerName);
         return true;
     }
-
-    // --- Result Enum ---
 
     public enum PurchaseResult {
         SUCCESS,

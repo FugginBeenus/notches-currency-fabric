@@ -21,10 +21,7 @@ import java.util.UUID;
 
 public class NotchNpcEditorScreen extends Screen {
 
-    // Taller than it needs to be for most tabs: Moves carries three rows of toggles now, and every
-    // tab draws from the top down, so the extra height is just breathing room everywhere else.
     private static final int W = 300, H = 282;
-    // GREETER retired: NONE + dialogue does the same job now (any NPC can talk).
     private static final NpcRole[] SELECTABLE = {
             NpcRole.NONE, NpcRole.SHOP, NpcRole.BANKER, NpcRole.AUCTIONEER,
             NpcRole.MAILBOX, NpcRole.RAFFLE, NpcRole.BOUNTY, NpcRole.DEALER, NpcRole.ENCHANTER,
@@ -36,9 +33,8 @@ public class NotchNpcEditorScreen extends Screen {
     private final String ownerName;
     private final boolean canEdit;
     private final boolean applyInstalled = FabricLoader.getInstance().isModLoaded("apply");
-
     private NpcRole currentRole;
-    private NpcRole pendingRole = null; // set while confirming a switch away from the SHOP role
+    private NpcRole pendingRole = null;
     private String currentName;
     private String currentModel, currentSkinType, currentSkinValue;
     private boolean currentSlim;
@@ -46,19 +42,18 @@ public class NotchNpcEditorScreen extends Screen {
     private NotchNpcEntity.Behavior currentBehavior;
     private int currentRadius;
     private int dialogueNodes;
-    private boolean dialogueFlat; // flat = Quick Lines shape; branching = Studio territory
-    private int statsBits; // toggle bitmask, see NotchPackets.NPC_SET_STATS
-    private int maxHealth, speedPct, regen; // slider attributes for the stats screen
-    private String followName; // blank = follow the owner
-    private int movesBits; // 1=avoid monsters 2=watch players
-    private int dialogueMode; // 0=window 1=chat
+    private boolean dialogueFlat;
+    private int statsBits;
+    private int maxHealth, speedPct, regen;
+    private String followName;
+    private int movesBits;
+    private int dialogueMode;
     private int waypointCount;
-    private int patrolSpeedIdx; // 0 stroll / 1 walk / 2 jog
-    private int patrolWaitIdx;  // dwell at each waypoint: 0 none / 1 2s / 2 5s / 3 10s / 4 20s
-    private int poseId; // 0 stand / 1 sit / 2 sneak / 3 sleep
-    private int poseAnim; // idle animation: 0 statue / 1 breathe (vanilla default) / 2 lively
-    private int tab = 0; // 0 Look, 1 Behavior, 2 Role, 3 Talk, 4 Manage
-
+    private int patrolSpeedIdx;
+    private int patrolWaitIdx;
+    private int poseId;
+    private int poseAnim;
+    private int tab = 0;
     private int px, py;
     private EditBox nameField;
     private String currentSubtitle = "";
@@ -209,8 +204,6 @@ public class NotchNpcEditorScreen extends Screen {
         }
     }
 
-    // ---- tabs ----
-
     private static final int TAB_Y = 22, TAB_H = 16, TAB_W = 44;
     private int tabX(int i) { return px + 9 + i * 47; }
 
@@ -225,14 +218,11 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
     }
 
-    // ---- appearance tab ----
-
     private static final int PREV_X = 8, PREV_Y = 46, PREV_W = 100, PREV_H = 176;
     private static final int RX = 116;
     private boolean isApplyModel() { return NotchNpcEntity.MODEL_APPLY.equals(currentModel); }
 
     private void drawAppearance(GuiGraphics ctx, int mx, int my) {
-        // Live preview of the actual NPC.
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findPreview();
         if (npc != null) {
@@ -252,7 +242,6 @@ public class NotchNpcEditorScreen extends Screen {
             NotchWidgets.centerText(ctx, this.font, "Preview", px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H / 2, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Name
         ctx.drawString(this.font, "Name:", px + RX, py + 50, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 150, py + 46, 140, 14, NotchTheme.DEEP);
         NotchWidgets.primaryButton(ctx, this.font, px + 150, py + 64, 140, 14, "Save Name",
@@ -263,19 +252,11 @@ public class NotchNpcEditorScreen extends Screen {
                     Component.literal("Colour it with & codes: &6Carol").withStyle(ChatFormatting.GRAY),
                     Component.literal("Same codes as dialogue and signs.").withStyle(ChatFormatting.DARK_GRAY));
         }
-
-
-
-        // Where the floating name sits: models vary enough that one height never fits them all.
         drawNameOffsetRow(ctx, mx, my);
         drawSignButton(ctx, mx, my);
-
-        // Model: current name + Change button (opens the vanilla/modded model picker)
         ctx.drawString(this.font, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
         ctx.drawString(this.font, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + 224, py + 100, 66, 14, "Change...", over(mx, my, px + 224, py + 100, 66, 14));
-
-        // Skin controls per model
         if (isApplyModel()) {
             var variants = NpcAppearances.all();
             for (int i = 0; i < variants.size(); i++) {
@@ -293,10 +274,8 @@ public class NotchNpcEditorScreen extends Screen {
                     preset ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
             NotchWidgets.neutralButton(ctx, this.font, px + 118, py + 140, 174, 14,
                     currentSlim ? "Arms: Slim" : "Arms: Wide", over(mx, my, px + 118, py + 140, 174, 14));
-            // Player-name skin (checkbox enables)
             drawCheck(ctx, px + 118, py + 157, NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType));
             NotchWidgets.inset(ctx, px + 150, py + 156, 138, 13, NotchTheme.DEEP);
-            // Custom URL skin (checkbox enables)
             drawCheck(ctx, px + 118, py + 175, NotchNpcEntity.SKIN_URL.equals(currentSkinType));
             NotchWidgets.inset(ctx, px + 150, py + 174, 138, 13, NotchTheme.DEEP);
         } else {
@@ -305,14 +284,10 @@ public class NotchNpcEditorScreen extends Screen {
 
     }
 
-    // The nameplate nudge sits right under the name it moves. Size isn't here. It needs to be watched
-    // in the world, so it lives on the Move, Rotate & Size panel.
+
     private static final int NAME_Y_ROW = 82;
     private static final int STEP_W = 18, STEP_H = 14;
     private static final int NAME_Y_MINUS_X = 196, NAME_Y_PLUS_X = 272;
-
-    // The floating sign sits under the skin controls, in the right-hand column: the left side of
-    // the tab is the preview panel, and a full-width button would cut across it.
     private int signRow() { return py + 196; }
     private int signWidth() { return W - RX - 10; }
     private void drawSignButton(GuiGraphics ctx, int mx, int my) {
@@ -337,9 +312,6 @@ public class NotchNpcEditorScreen extends Screen {
     private boolean isHumanoid() { return NotchNpcEntity.MODEL_HUMANOID.equals(currentModel); }
 
     private int previewSize() {
-        // Fit the model to the preview box using both dimensions. In drawEntity, rendered pixels ≈
-        // size × blocks, so size = boxPixels / blocks; take the tighter of width/height so nothing
-        // clips, and leave a margin (esp. at the top for the nameplate).
         float h = 1.9f, w = 0.6f; // humanoid default
         if (currentModel != null && currentModel.startsWith("entity:")) {
             EntityType<?> t = BuiltInRegistries.ENTITY_TYPE.get(Reg.parse(currentModel.substring("entity:".length())));
@@ -355,7 +327,6 @@ public class NotchNpcEditorScreen extends Screen {
         }
         float fitH = (PREV_H - 34) / h;
         float fitW = (PREV_W - 20) / w;
-        // 0.75 = a touch smaller than a full fit, so the model sits comfortably inside the box.
         return (int) Math.max(8, Math.min(68, Math.min(fitH, fitW) * 0.75f));
     }
 
@@ -383,10 +354,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
     private int NpcSkinsPresetCount() { return 12; }
 
-    // ---- behavior tab ----
-
     private static final int BEH_X = 50, BEH_W = 200, BEH_H = 15;
-    // The two always-on toggle rows, clear of the patrol row that ends just above them.
     private static final int TOGGLE_W = 98, TOGGLE_H = 15;
     private int movesRow1() { return py + 190; }
     private int movesRow2() { return py + 207; }
@@ -416,8 +384,6 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
 
-        // Sixth in the list rather than a chip among the toggles: choosing a schedule is choosing
-        // how the NPC moves, which is what every other button in this column is for.
         boolean schedHover = over(mx, my, px + BEH_X, behY(5), BEH_W, BEH_H);
         NotchWidgets.goldButton(ctx, this.font, px + BEH_X, behY(5), BEH_W, BEH_H,
                 "Daily Schedule", schedHover);
@@ -449,7 +415,6 @@ public class NotchNpcEditorScreen extends Screen {
             NotchWidgets.dangerButton(ctx, this.font, px + BEH_X + 146, cy, 54, 16, "Clear",
                     over(mx, my, px + BEH_X + 146, cy, 54, 16));
 
-            // Speed + waypoint dwell time cycle buttons, then Done.
             int cy2 = cy + 18;
             String[] speeds = {"Stroll", "Walk", "Jog"};
             String[] waits = {"Wait: none", "Wait 2s", "Wait 5s", "Wait 10s", "Wait 20s"};
@@ -463,8 +428,6 @@ public class NotchNpcEditorScreen extends Screen {
                     over(mx, my, px + BEH_X + 146, cy2, 54, 16));
         }
 
-        // Extras that ride along with any behavior. Everything about who it fights is here together,
-        // rather than half of it hiding on the stats screen.
         drawToggle(ctx, mx, my, px + BEH_X, movesRow1(), "Avoid monsters", (movesBits & 1) != 0);
         drawToggle(ctx, mx, my, px + BEH_X + 102, movesRow1(), "Watch players", (movesBits & 2) != 0);
         drawToggle(ctx, mx, my, px + BEH_X, movesRow2(), "Protect owner", (movesBits & 4) != 0);
@@ -543,7 +506,7 @@ public class NotchNpcEditorScreen extends Screen {
     private boolean clickVoiceRow(int mx, int my) {
         if (over(mx, my, px + 75, py + 222, 90, 14)) {
             currentVoice = VOICES[(voiceIndex() + 1) % VOICES.length][0];
-            sendFlavor(); // the server plays it back, so cycling auditions the voices
+            sendFlavor();
             return true;
         }
         if (over(mx, my, px + 208, py + 222, 16, 14)) {
@@ -565,7 +528,7 @@ public class NotchNpcEditorScreen extends Screen {
             if (over(mx, my, px + BEH_X, behY(i), BEH_W, BEH_H)) {
                 currentBehavior = modes[i];
                 sendBehavior();
-                updateWidgetVisibility(); // the follow field only shows in FOLLOW mode
+                updateWidgetVisibility();
                 return true;
             }
         }
@@ -592,7 +555,7 @@ public class NotchNpcEditorScreen extends Screen {
         int cy = py + 152;
         if (currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER
                 && over(mx, my, px + BEH_X + 166, cy, 34, 14)) {
-            sendBehavior(); // picks up the field text
+            sendBehavior();
             return true;
         }
         if (usesRadius()) {
@@ -608,8 +571,8 @@ public class NotchNpcEditorScreen extends Screen {
             }
         } else if (currentBehavior == NotchNpcEntity.Behavior.PATROL) {
             if (over(mx, my, px + BEH_X + 56, cy, 84, 16)) {
-                NotchPacketsClient.sendNpcPatrol(npcId, 0, 0); // hands over the bound route tool
-                this.onClose(); // straight to walking the route
+                NotchPacketsClient.sendNpcPatrol(npcId, 0, 0);
+                this.onClose();
                 return true;
             }
             if (over(mx, my, px + BEH_X + 146, cy, 54, 16)) {
@@ -629,7 +592,7 @@ public class NotchNpcEditorScreen extends Screen {
                 return true;
             }
             if (over(mx, my, px + BEH_X + 146, cy2, 54, 16)) {
-                NotchPacketsClient.sendNpcPatrol(npcId, 2, 0); // finalize: take the route tool back
+                NotchPacketsClient.sendNpcPatrol(npcId, 2, 0);
                 return true;
             }
         }
@@ -640,8 +603,6 @@ public class NotchNpcEditorScreen extends Screen {
         if (followField != null) followName = followField.getValue().trim();
         NotchPacketsClient.sendNpcSetBehavior(npcId, currentBehavior.ordinal(), currentRadius, followName, movesBits);
     }
-
-    // ---- role tab ----
 
     private static final int ROLE_W = 98, ROLE_H = 16;
     private int roleX(int i) { return (i % 2 == 0) ? px + 40 : px + 164; }
@@ -655,7 +616,6 @@ public class NotchNpcEditorScreen extends Screen {
             if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
             else NotchWidgets.neutralButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
         }
-        // Allegiance sits with the role: it's who the NPC answers to, not how it looks or moves.
         NotchWidgets.divider(ctx, px + 8, py + 158, W - 16);
         NotchWidgets.primaryButton(ctx, this.font, px + 40, py + 164, 220, 16, "Faction...",
                 over(mx, my, px + 40, py + 164, 220, 16));
@@ -664,7 +624,6 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, "Guards use it to tell friend from foe.",
                 px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
 
-        // Confirmation before leaving the SHOP role (it closes the shop + returns its stock).
         if (pendingRole != null) {
             int by = py + H - 54;
             NotchWidgets.centerText(ctx, this.font, "Switch to " + roleLabel(pendingRole) + "?",
@@ -678,10 +637,7 @@ public class NotchNpcEditorScreen extends Screen {
         }
     }
 
-    // ---- talk (dialogue) tab ----
-
     private void drawTalk(GuiGraphics ctx, int mx, int my) {
-        // Header: what this NPC currently says.
         String header = dialogueNodes <= 0 ? "No dialogue yet."
                 : dialogueFlat ? "Quick lines: " + dialogueNodes
                 : "Dialogue: " + dialogueNodes + " page" + (dialogueNodes == 1 ? "" : "s") + " (branching)";
@@ -691,7 +647,6 @@ public class NotchNpcEditorScreen extends Screen {
                     px + W / 2, py + 58, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Two ways to author: quick random lines, or the full branching studio.
         boolean branching = dialogueNodes > 0 && !dialogueFlat;
         if (branching) {
             NotchWidgets.neutralButton(ctx, this.font, px + 50, py + 70, 200, 18, "Quick Lines", false);
@@ -713,7 +668,6 @@ public class NotchNpcEditorScreen extends Screen {
                     px + W / 2, py + 123, NotchTheme.TEXT_MUTED, false);
         }
 
-        // Style: full conversation window, or a quick chat line + straight to the role.
         NotchWidgets.divider(ctx, px + 8, py + 134, W - 16);
         ctx.drawString(this.font, "Style:", px + 50, py + 146, NotchTheme.TEXT_DARK, false);
         boolean winHover = over(mx, my, px + 90, py + 142, 76, 14);
@@ -730,7 +684,6 @@ public class NotchNpcEditorScreen extends Screen {
                 : "Chat: one random line, then opens its job.";
         NotchWidgets.centerText(ctx, this.font, styleHint, px + W / 2, py + 160, NotchTheme.TEXT_MUTED, false);
 
-        // Optional goodbye line, said in chat when a screen this NPC opened closes.
         drawVoiceRow(ctx, mx, my);
         ctx.drawString(this.font, "Goodbye:", px + 22, py + 175, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 75, py + 171, 164, 13, NotchTheme.PANEL_MID);
@@ -778,14 +731,9 @@ public class NotchNpcEditorScreen extends Screen {
         return false;
     }
 
-    // ---- pose tab ----
-
     private static final String[] POSE_NAMES = {"Standing", "Sitting", "Sneaking", "Sleeping", "Chilling", "Prone", "Waving", "Custom"};
     private static final String[] ANIM_NAMES = {"Statue (frozen)", "Breathe (default)", "Lively"};
-
-    /** The clip picked by hand, or empty for whatever the NPC works out for itself. */
     private String customClip = null; // null until read off the NPC standing in the world
-
     private int poseX(int i) { return (i % 2 == 0) ? px + 30 : px + 155; }
     private int poseY(int i) { return py + 50 + (i / 2) * 19; }
 
@@ -798,21 +746,16 @@ public class NotchNpcEditorScreen extends Screen {
                 NotchWidgets.neutralButton(ctx, this.font, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
             }
         }
-        // Idle animation layered on the pose (statue = frozen, the old behavior).
         ctx.drawString(this.font, "Idle:", px + 50, py + 132, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 128, 170, 16,
                 ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
                 over(mx, my, px + 80, py + 128, 170, 16));
-        // Whatever clips GeckoLib actually has, so a resource pack that adds motions shows them
-        // here without the mod being told their names.
         ctx.drawString(this.font, "Clip:", px + 50, py + 152, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 148, 170, 16, clipLabel(),
                 over(mx, my, px + 80, py + 148, 170, 16));
 
         NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 170, 200, 18, "Open Pose Editor",
                 over(mx, my, px + 50, py + 170, 200, 18));
-        // Position, rotation and size all live behind this. It's a floating panel, so you watch the
-        // NPC change out in the world instead of guessing from a tab with no preview.
         NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 192, 200, 18, "Move, Rotate & Size",
                 over(mx, my, px + 50, py + 192, 200, 18));
         NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
@@ -837,7 +780,7 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
         if (over(mx, my, px + 50, py + 170, 200, 18)) {
-            poseId = 7; // custom: the editor's edits show immediately
+            poseId = 7;
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
             Minecraft.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
@@ -849,10 +792,9 @@ public class NotchNpcEditorScreen extends Screen {
         return false;
     }
 
-    /** The clips on offer: automatic first, then whatever is loaded. */
     private java.util.List<String> clipChoices() {
         java.util.List<String> out = new java.util.ArrayList<>();
-        out.add(""); // automatic
+        out.add("");
         out.addAll(net.fugginbeenus.notchcurrency.compat.Geo.clipNames());
         return out;
     }
@@ -868,8 +810,6 @@ public class NotchNpcEditorScreen extends Screen {
     private String clipLabel() {
         String clip = currentClip();
         if (clip.isEmpty()) return "Automatic";
-        // "animation.notch_npc.special_idle1" reads as "special_idle1" once the file's own naming
-        // is stripped off. Pack authors name theirs whatever they like, so only the tail is kept.
         int dot = clip.lastIndexOf('.');
         String shown = dot >= 0 && dot < clip.length() - 1 ? clip.substring(dot + 1) : clip;
         return net.fugginbeenus.notchcurrency.compat.Geo.hasClip(clip) ? shown : shown + " (missing)";
@@ -894,8 +834,6 @@ public class NotchNpcEditorScreen extends Screen {
         return null;
     }
 
-    // ---- manage tab ----
-
     private void drawManage(GuiGraphics ctx, int mx, int my) {
         NotchWidgets.centerText(ctx, this.font, "Owner: " + (ownerName.isEmpty() ? "server" : ownerName),
                 px + W / 2, py + 50, NotchTheme.TEXT_DARK, false);
@@ -916,8 +854,6 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, "Reactions: what it does when things happen to it.",
                 px + W / 2, py + 206, NotchTheme.TEXT_MUTED, false);
     }
-
-    // ---- input ----
 
     //? if >=1.21.11 {
     /*@Override
@@ -944,12 +880,10 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 2) {
                 if (pendingRole == null && over(mx, my, px + 40, py + 164, 220, 16)) {
                     NotchWidgets.click();
-                    // The server replies with the factions this player may use, which opens the picker.
                     NotchPacketsClient.sendFactionPick(npcId,
                             net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_LIST, "");
                     return true;
                 }
-                // Handle the pending SHOP-change confirmation first.
                 if (pendingRole != null) {
                     int by = py + H - 54;
                     if (over(mx, my, px + 40, by + 24, 100, 16)) {
@@ -970,7 +904,6 @@ public class NotchNpcEditorScreen extends Screen {
                         NpcRole picked = SELECTABLE[i];
                         if (picked == currentRole) return true;
                         NotchWidgets.tick();
-                        // Leaving SHOP wipes the shop: require confirmation.
                         if (currentRole == NpcRole.SHOP) {
                             pendingRole = picked;
                         } else {
@@ -999,13 +932,11 @@ public class NotchNpcEditorScreen extends Screen {
                 }
                 if (over(mx, my, px + 70, py + 166, 160, 16)) {
                     NotchWidgets.click();
-                    // Server replies with this NPC's reactions, which opens the editor.
                     NotchPacketsClient.sendNpcActionsOpen(npcId);
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 186, 160, 16)) {
                     NotchWidgets.click();
-                    // Server replies with the preset list, which opens the preset screen.
                     NotchPacketsClient.sendNpcPreset(npcId,
                             net.fugginbeenus.notchcurrency.npc.NpcPresetManager.ACTION_OPEN, "");
                     return true;
@@ -1025,12 +956,12 @@ public class NotchNpcEditorScreen extends Screen {
             NotchPacketsClient.sendNpcSetName(npcId, currentName);
             return true;
         }
-        // Model: open the picker
+
         if (over(mx, my, px + 224, py + 100, 66, 14)) {
             Minecraft.getInstance().setScreen(new NotchNpcModelPickerScreen(this));
             return true;
         }
-        // Skins per model
+
         if (isApplyModel()) {
             var variants = NpcAppearances.all();
             for (int i = 0; i < variants.size(); i++) {
@@ -1053,7 +984,7 @@ public class NotchNpcEditorScreen extends Screen {
                     new NpcBillboardScreen(npcId, currentBillboard, currentSubtitle, currentVoice, currentVoicePitch));
             return true;
         }
-        // Nameplate nudge (size axes live on the Pose tab).
+
         if (over(mx, my, px + NAME_Y_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
             currentNameOffset = Math.max(-2.0f, round1(currentNameOffset - 0.1f)); sendAppearance(); return true;
         }
@@ -1072,7 +1003,6 @@ public class NotchNpcEditorScreen extends Screen {
             currentSkinType = NotchNpcEntity.SKIN_PRESET;
             if (currentSkinValue == null || !currentSkinValue.matches("\\d+")) currentSkinValue = "1";
         } else {
-            // Entity disguise: the mob provides its own appearance.
             currentSkinType = "entity";
             currentSkinValue = "";
         }
@@ -1122,7 +1052,6 @@ public class NotchNpcEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Enter re-applies the focused skin field (when its checkbox is on).
         if (keyCode == 257 || keyCode == 335) {
             if (playerField != null && playerField.isFocused() && NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
                 currentSkinValue = playerField.getValue().trim();
@@ -1135,7 +1064,6 @@ public class NotchNpcEditorScreen extends Screen {
                 return true;
             }
         }
-        // Plain characters insert via charTyped only (guards against the select-all wipe).
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, playerField, urlField, followField, farewellField)) {
             return true;
         }
@@ -1169,7 +1097,7 @@ public class NotchNpcEditorScreen extends Screen {
 
     private static String roleLabel(NpcRole role) {
         return switch (role) {
-            case NONE -> "Basic"; // not "no role". It's the plain NPC, and a perfectly good one
+            case NONE -> "Basic";
             case GREETER -> "Greeter";
             case SHOP -> "Shop";
             case ENCHANTER -> "Enchanter";
@@ -1191,24 +1119,19 @@ public class NotchNpcEditorScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

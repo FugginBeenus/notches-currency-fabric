@@ -18,18 +18,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Finds custom NPC models on disk, checks them over, and lays them out where GeckoLib will look.
- *
- * <p>The layout on disk is one folder per model, which is what a Blockbench export already looks
- * like once the files are together. Nothing is compiled or packed: a bundle stays readable and
- * hand-editable, and can be zipped up and sent to somebody as it is.
- *
- * <p>Everything is checked before it is written, and a bundle that fails is skipped with a reason
- * rather than taking the rest of the load down with it. The checks exist because the failures they
- * catch are otherwise baffling: a Java Block export renders nothing at all, and a texture of the
- * wrong size renders a scrambled mess, neither of which says what is wrong.
- */
 public final class NpcModelLoader {
 
     private NpcModelLoader() {}
@@ -38,10 +26,7 @@ public final class NpcModelLoader {
 
     public static final String PACK_DIR_NAME = "NotchCurrencyModels";
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
-
-    /** Room for a detailed model without letting a stray file fill somebody's disk. */
     private static final long MAX_FILE_BYTES = 4L * 1024 * 1024;
-
     private static final int PACK_FORMAT =
             //? if >=1.21 {
             /*34;
@@ -49,7 +34,6 @@ public final class NpcModelLoader {
             15;
             //?}
 
-    /** Problems found while loading, kept so a screen can show them rather than only the log. */
     private static final List<String> PROBLEMS = new ArrayList<>();
 
     public static Path modelsDir() {
@@ -67,19 +51,6 @@ public final class NpcModelLoader {
     public static List<String> problems() {
         return List.copyOf(PROBLEMS);
     }
-
-    /**
-     * Reads every bundle and, if anything has moved, rewrites the pack.
-     *
-     * <p>Does not reload resources. The caller decides when that happens, because a reload is a
-     * visible hitch and doing it once after everything is written is the whole point.
-     *
-     * <p>The stamp matters more than it looks. This runs on every world join, and a reload every
-     * time somebody opens a world would be a hitch charged to people who have no custom models at
-     * all. Unchanged folders mean the pack on disk is already right and nothing needs doing.
-     *
-     * @return true if the pack changed on disk, so a reload is worth its cost
-     */
     public static boolean loadAll() {
         PROBLEMS.clear();
         List<NpcModelBundle> found = new ArrayList<>();
@@ -97,8 +68,6 @@ public final class NpcModelLoader {
 
             String stamp = stampOf(folders);
             if (stamp.equals(writtenStamp())) {
-                // Same files as last time, so the pack on disk already says all this. Read the
-                // bundles back for the registry, write nothing, and let the caller skip its reload.
                 for (Path folder : folders) {
                     NpcModelBundle bundle = readOnly(folder);
                     if (bundle != null) found.add(bundle);
@@ -107,7 +76,6 @@ public final class NpcModelLoader {
                 return false;
             }
 
-            // Always start clean, so a deleted bundle actually disappears.
             deleteRecursively(packDir());
             if (folders.isEmpty()) {
                 NpcModelRegistry.replaceAll(List.of());
@@ -130,17 +98,6 @@ public final class NpcModelLoader {
         return true;
     }
 
-    /**
-     * Deletes a model's folder, so it stops being offered.
-     *
-     * <p>Only the bundle goes. Whatever was dropped in the import folder is left alone, so a model
-     * removed by mistake can be made again without re-exporting it from Blockbench.
-     *
-     * <p>NPCs already wearing it are not touched. They fall back to the built-in model on their own,
-     * which is the same thing that happens to a bundle that was never installed.
-     *
-     * @return null on success, or why it could not be done
-     */
     public static String delete(String id) {
         if (id == null || !id.matches("[a-z0-9_]+")) return "that is not a model id";
         Path folder = modelsDir().resolve(id);
@@ -157,7 +114,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /** What the source folders look like right now, so an unchanged set can be spotted. */
     private static String stampOf(List<Path> folders) {
         StringBuilder sig = new StringBuilder();
         for (Path folder : folders) {
@@ -189,7 +145,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /** The same read as a full load, minus the writing, for when the pack is already correct. */
     private static NpcModelBundle readOnly(Path folder) {
         String id = folder.getFileName().toString();
         try {
@@ -202,7 +157,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /** Reads one folder, checks it over, and lays its files out in the pack. */
     private static NpcModelBundle readAndWrite(Path folder) {
         String id = folder.getFileName().toString();
         try {
@@ -245,12 +199,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /**
-     * What is wrong with a model and texture pair, or null if nothing is.
-     *
-     * <p>Public because the creation screen runs the same checks before it writes anything. Being
-     * told the texture is the wrong size while choosing it beats finding out after the fact.
-     */
     public static String problemWith(Path geoFile, Path texFile) {
         JsonObject geo;
         try {
@@ -264,8 +212,6 @@ public final class NpcModelLoader {
                     + "GeckoLib Animated Model";
         }
 
-        // The game's own reader rather than ImageIO: touching AWT on macOS fights GLFW for the main
-        // thread, and this runs on a client that is already up.
         int texW, texH;
         try (InputStream in = Files.newInputStream(texFile);
              com.mojang.blaze3d.platform.NativeImage image =
@@ -276,8 +222,6 @@ public final class NpcModelLoader {
             return "that texture could not be read as a PNG";
         }
 
-        // A texture of the wrong size is the most common reason a model looks scrambled, and
-        // nothing in game says so. Better to refuse it here, with the numbers.
         int[] wanted = declaredTextureSize(geo);
         if (wanted != null && (texW != wanted[0] || texH != wanted[1])) {
             return "this model expects a " + wanted[0] + " by " + wanted[1]
@@ -286,7 +230,6 @@ public final class NpcModelLoader {
         return null;
     }
 
-    /** The clip names in an animation file, read from the file rather than from GeckoLib. */
     public static List<String> clipsIn(Path animFile) {
         try {
             JsonObject root = JsonParser.parseString(
@@ -300,11 +243,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /**
-     * What the model says its texture should be, which Blockbench writes into the geo.
-     *
-     * <p>Null when the model does not say, which is unusual but not worth refusing over.
-     */
     private static int[] declaredTextureSize(JsonObject geo) {
         try {
             JsonElement first = geo.getAsJsonArray("minecraft:geometry").get(0);
@@ -326,7 +264,6 @@ public final class NpcModelLoader {
         }
     }
 
-    /** Fills in from the manifest, falling back to whatever the animation file offers. */
     private static NpcModelBundle buildBundle(String id, JsonObject manifest, List<String> clips) {
         JsonObject clipsJson = manifest.has("clips") ? manifest.getAsJsonObject("clips") : new JsonObject();
         String idle = str(clipsJson, "idle", guess(clips, "idle"));
@@ -347,7 +284,6 @@ public final class NpcModelLoader {
                 idle, walk, special);
     }
 
-    /** A bundle with no manifest still works if its clips are named the obvious way. */
     private static String guess(List<String> clips, String role) {
         for (String clip : clips) {
             if (clip.equals(role) || clip.endsWith("." + role)) return clip;
@@ -362,7 +298,6 @@ public final class NpcModelLoader {
         return out;
     }
 
-    /** Both GeckoLib layouts, because the two generations scan different directories. */
     private static void writeAssets(NpcModelBundle bundle, String geoText, Path animFile, Path texFile)
             throws Exception {
         Path assets = packDir().resolve("assets").resolve("notchcurrency");
@@ -471,11 +406,9 @@ public final class NpcModelLoader {
                 try {
                     Files.deleteIfExists(path);
                 } catch (Exception ignored) {
-                    // A file held open by the game is not worth failing the whole load over.
                 }
             });
         } catch (Exception ignored) {
-            // Same.
         }
     }
 }

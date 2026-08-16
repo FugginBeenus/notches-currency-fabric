@@ -58,7 +58,6 @@ public class AdminShopState extends SavedData implements net.fugginbeenus.notchc
         return shops.values();
     }
 
-    // Throttle dynamic-price recovery to once every ~10 seconds.
     private int decayCounter = 0;
     private static final int DECAY_INTERVAL = 200;
 
@@ -70,10 +69,6 @@ public class AdminShopState extends SavedData implements net.fugginbeenus.notchc
         setDirty();
     }
 
-    // ---- NBT ----
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {

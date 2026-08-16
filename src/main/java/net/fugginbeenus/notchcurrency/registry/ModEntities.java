@@ -49,7 +49,6 @@ public final class ModEntities {
         NOTCH_NPC = Registry.register(
                 BuiltInRegistries.ENTITY_TYPE,
                 NotchCurrency.id("notch_npc"),
-                // 26.2 dropped Fabric's entity builder; vanilla's own does the same job by then.
                 //? if >=26.2 {
                 /*EntityType.Builder.of((EntityType.EntityFactory<NotchNpcEntity>) NotchNpcEntity::new, MobCategory.MISC)
                         .sized(0.6f, 1.95f)

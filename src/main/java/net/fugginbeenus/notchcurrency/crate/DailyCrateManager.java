@@ -17,26 +17,13 @@ import java.util.List;
 public final class DailyCrateManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
     private static long lastSpawnWeek = -1;
-
     private DailyCrateManager() {}
-
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(DailyCrateManager::tick);
     }
-
-    // Admin-tweakable defaults (also persisted via BalloonConfigState)
-
-
-
-    // Spawn window (morning of first day of week)
     private static final long WINDOW_START = 1000;
     private static final long WINDOW_END   = 2000;
-
-    // Minecraft week = 7 days
     private static final long TICKS_PER_WEEK = 24000L * 7L;
-
-
-    /** Said once per run, not once a week. */
     private static boolean warnedUnconfigured = false;
 
     private static void tick(MinecraftServer server) {
@@ -45,16 +32,13 @@ public final class DailyCrateManager {
 
         BalloonConfigState cfg = BalloonConfigState.get(world);
 
-        long totalTime = world.getGameTime(); // Total world time (doesn't reset)
+        long totalTime = world.getGameTime();
         long week = totalTime / TICKS_PER_WEEK;
         long timeInWeek = totalTime % TICKS_PER_WEEK;
 
-        // Spawn at the start of each week (during the morning window of day 1)
         if (week != lastSpawnWeek && timeInWeek >= WINDOW_START && timeInWeek <= WINDOW_END) {
             lastSpawnWeek = week;
 
-            // Nowhere has been chosen for them, so there is nowhere to put them. Silently, because
-            // a server that has never set this up does not want weekly news about it.
             if (!cfg.configured) {
                 if (!warnedUnconfigured) {
                     warnedUnconfigured = true;
@@ -63,7 +47,6 @@ public final class DailyCrateManager {
                 return;
             }
 
-            // Clear existing balloons first to prevent stacking
             int cleared = clearExistingBalloons(world, cfg);
             if (cleared > 0) {
                 LOGGER.info("Cleared {} old balloons before spawning new wave", cleared);
@@ -81,16 +64,12 @@ public final class DailyCrateManager {
 
     private static int clearExistingBalloons(ServerLevel world, BalloonConfigState cfg) {
         int cleared = 0;
-
-        // Create a large search box around the spawn area
-        // Search wider than spawn area in case balloons drifted
         int searchRadius = cfg.radius + 100;
         AABB searchBox = new AABB(
                 cfg.center.getX() - searchRadius, 0, cfg.center.getZ() - searchRadius,
                 cfg.center.getX() + searchRadius, 320, cfg.center.getZ() + searchRadius
         );
 
-        // Find and remove all balloon entities
         List<BalloonEntity> balloons = world.getEntities(
                 EntityTypeTest.forClass(BalloonEntity.class),
                 searchBox,
@@ -105,17 +84,6 @@ public final class DailyCrateManager {
         return cleared;
     }
 
-    // apply config from file
-    /**
-     * Puts the config screen's balloon settings into the world save.
-     *
-     * <p>The world save is what the spawner reads, and for a long time this method wrote to a set of
-     * static fields instead, which nothing read at all. Everything in the screen's Balloon Crates
-     * section did nothing as a result.
-     *
-     * <p>Takes the server rather than reaching for one, because it is called from a client screen
-     * and there may not be a world open.
-     */
     public static void applyToWorld(net.minecraft.server.MinecraftServer server,
                                     net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
         if (server == null) return;
@@ -138,7 +106,6 @@ public final class DailyCrateManager {
         state.setDirty();
     }
 
-    /** Tells one player what this world's balloon settings actually are. */
     public static void sendTo(net.minecraft.server.level.ServerPlayer player) {
         var server = player.level().getServer();
         if (server == null) return;
@@ -151,7 +118,6 @@ public final class DailyCrateManager {
                 player, net.fugginbeenus.notchcurrency.net.NotchPackets.BALLOON_CONFIG_SYNC, buf);
     }
 
-    /** Fills the config object from the world save, so a screen shows what is really set. */
     public static void readFromWorld(net.minecraft.server.MinecraftServer server,
                                      net.fugginbeenus.notchcurrency.config.NotchConfig cfg) {
         if (server == null) return;
@@ -194,17 +160,11 @@ public final class DailyCrateManager {
         }
     }
 
-    /**
-     * One balloon each for everybody online, alongside the wave over the area.
-     *
-     * <p>Part of the wave rather than a thing of its own, so it keeps the wave's timing and there is
-     * no second schedule to reason about or to stop somebody farming. Off until a server turns it on.
-     */
     private static void spawnForPlayers(ServerLevel world, BalloonConfigState cfg) {
         if (!cfg.perPlayer) return;
 
         for (ServerPlayer player : world.getServer().getPlayerList().getPlayers()) {
-            if (player.serverLevel() != world) continue; // the wave is an overworld thing
+            if (player.serverLevel() != world) continue;
 
             if (cfg.playerInAreaOnly) {
                 double dx = player.getX() - cfg.center.getX();
@@ -215,16 +175,6 @@ public final class DailyCrateManager {
         }
     }
 
-    /**
-     * One balloon, above the player and a little to the side.
-     *
-     * <p>Measured from where the player actually is rather than from the ground under them, so the
-     * height setting means the same thing whether they are on a mountain or in a valley.
-     *
-     * <p>Somebody underground gets nothing, and that falls out of the same check rather than needing
-     * its own: forty blocks above a mineshaft is solid stone, the balloon does not fit, and nothing
-     * is spawned. A big enough cavern is space, and it does.
-     */
     private static void spawnNear(ServerLevel world, ServerPlayer player, BalloonConfigState cfg) {
         int up = Math.max(5, cfg.playerHeight);
         int spread = Math.max(1, cfg.playerSpread);
@@ -233,23 +183,17 @@ public final class DailyCrateManager {
         int x = (int) player.getX() + world.random.nextInt(spread * 2 + 1) - spread;
         int z = (int) player.getZ() + world.random.nextInt(spread * 2 + 1) - spread;
         if (tryPlace(world, player, x, y, z)) return;
-
-        // The spot off to the side can be inside a hillside while the player stands in the open, so
-        // straight overhead gets one try before giving up on them.
         tryPlace(world, player, (int) player.getX(), y, (int) player.getZ());
     }
 
-    /** @return true if the balloon fitted and was spawned */
     private static boolean tryPlace(ServerLevel world, ServerPlayer player, int x, int y, int z) {
         BalloonEntity balloon = new BalloonEntity(world, x + 0.5, y + 0.5, z + 0.5);
-        // Asking the world whether the balloon fits, rather than guessing from the block at its feet.
         if (!world.noCollision(balloon)) return false;
         world.addFreshEntity(balloon);
         LOGGER.debug("Gave {} a balloon at {} {} {}", player.getName().getString(), x, y, z);
         return true;
     }
 
-    // ----- Admin helpers (write to persistent state) -----
     public static void setArea(ServerLevel world, BlockPos center, int radius) {
         var cfg = BalloonConfigState.get(world);
         cfg.center = center;

@@ -73,7 +73,6 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
         props.set(P_TAKE_LIMIT, BountyManager.getTakeLimit());
 
-        // Offers the player hasn't taken yet, paginated.
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
             if (b.isExpired(now) || state.hasTaken(sp.getUUID(), b.getId())
@@ -94,7 +93,6 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
                     : ItemStack.EMPTY);
         }
 
-        // The player's taken bounties.
         List<TakenBounty> mine = state.getTakenAll(sp.getUUID());
         int t = 0;
         for (TakenBounty tb : mine) {
@@ -112,7 +110,6 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         t.putString("rew", b.rewardSummary());
         t.putLong("rewc", b.getRewardCoins());
         if (!b.getRewardItem().isEmpty()) {
-            // The reward stack itself, so the row can draw its icon with the count.
             t.put("rews", StackData.writeStack(b.getRewardItem()));
         }
         t.putString("rar", b.getRarity().name());

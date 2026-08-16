@@ -23,7 +23,6 @@ import net.minecraft.world.level.Level;
 /*public class CoinFlipBlockEntityRenderer
         implements BlockEntityRenderer<CoinFlipBlockEntity, CoinFlipBlockEntityRenderer.State> {
 
-    // The coin's pose and which face it shows are worked out while the block entity is in hand.
     public static class State extends net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState {
         public boolean draw;
         public float spin;
@@ -35,11 +34,9 @@ import net.minecraft.world.level.Level;
 public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlipBlockEntity> {
 //?}
 
-    private static final float TABLE_Y = 0.96f;  // felt surface height (block units)
-    private static final float PEAK = 0.7f;      // arc peak height (blocks)
-    private static final float SIZE = 0.5f;      // coin scale
-    // 26.1 dropped LightTexture.FULL_BRIGHT; this is the value it always held, and it is the same
-    // on every version, so the constant lives here rather than behind a branch.
+    private static final float TABLE_Y = 0.96f;
+    private static final float PEAK = 0.7f;
+    private static final float SIZE = 0.5f;
     private static final int FULL_BRIGHT = 0xF000F0;
 
     //? if >=1.21.11 {
@@ -126,12 +123,9 @@ public class CoinFlipBlockEntityRenderer implements BlockEntityRenderer<CoinFlip
 
         matrices.pushPose();
         matrices.translate(0.5, TABLE_Y + arc, 0.5);
-        // Flat on the felt (90° from the item's upright card) + the flip spin, both around X so it
-        // tumbles toward the front rather than spinning edge-on.
         matrices.mulPose(Axis.XP.rotationDegrees(90f + spin));
         matrices.scale(SIZE, SIZE, SIZE);
 
-        // Full-bright: the coin floats above the block, so the block's baked light renders it black.
         Render.renderFixedItem(itemRenderer, coin,
                 FULL_BRIGHT, overlay,
                 matrices, vertexConsumers, world, 0);

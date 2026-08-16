@@ -35,10 +35,8 @@ public final class ShopCommands {
     private ShopCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // ===== /shop commands =====
         dispatcher.register(
                 Commands.literal("shop")
-                        // /shop create <name> - Create a new shop
                         .then(Commands.literal("create")
                                 .then(Commands.argument("name", StringArgumentType.greedyString())
                                         .executes(ctx -> {
@@ -50,7 +48,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop list - List your shops
                         .then(Commands.literal("list")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
@@ -78,7 +75,6 @@ public final class ShopCommands {
                                 })
                         )
 
-                        // /shop open <id> - Open your shop for editing
                         .then(Commands.literal("open")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -94,8 +90,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop relink <id> - put the NPC you are looking at behind a shop of yours
-                        // that lost its shopkeeper. See relink() for why this is not automatic.
                         .then(Commands.literal("relink")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -106,7 +100,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop browse - Browse all open shops
                         .then(Commands.literal("browse")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();
@@ -131,7 +124,6 @@ public final class ShopCommands {
                                 })
                         )
 
-                        // /shop visit <id> - Visit/browse another player's shop
                         .then(Commands.literal("visit")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -160,7 +152,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop delete <id> - Delete your shop
                         .then(Commands.literal("delete")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -176,7 +167,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop linknpc <shopId> - Link current target NPC to shop (admin)
                         .then(Commands.literal("linknpc")
                                 .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                                 .then(Commands.argument("shopId", StringArgumentType.word())
@@ -187,8 +177,6 @@ public final class ShopCommands {
                                             var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
                                             UUID shopId = findShopByIdOrNameAdmin(p, raw, state);
                                             if (shopId == null) return 0;
-
-                                            // Get the entity the player is looking at
                                             var hit = p.pick(5.0, 0.0f, false);
                                             if (hit.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
                                                 var entityHit = (net.minecraft.world.phys.EntityHitResult) hit;
@@ -208,7 +196,6 @@ public final class ShopCommands {
                                 )
                         )
 
-                        // /shop toggle <id> - Toggle shop open/closed
                         .then(Commands.literal("toggle")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .executes(ctx -> {
@@ -237,11 +224,6 @@ public final class ShopCommands {
                                         })
                                 )
                         )
-
-
-                        // ===== ADMIN COMMANDS =====
-
-                        // /shop admin list - List ALL shops (admin only)
                         .then(Commands.literal("admin")
                                 .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
 
@@ -264,12 +246,10 @@ public final class ShopCommands {
                                                 Component npcStatus = shop.getLinkedNpcId() != null
                                                 ? Component.literal("Linked").withStyle(net.minecraft.ChatFormatting.GREEN)
                                                 : Component.literal("No NPC").withStyle(net.minecraft.ChatFormatting.GRAY);
-                                                // Line 1: Shop name and status
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal(" • " + shop.getShopName())
                                                         .withStyle(ChatFormatting.WHITE)
                                                         .append(Component.literal(" [")).append(status).append(Component.literal("] "))
                                                         .append(Component.literal("[")).append(npcStatus).append(Component.literal("]")));
-                                                // Line 2: Owner and ID (clickable to copy)
                                                 String fullId = shop.getShopId().toString();
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("   Owner: ").withStyle(ChatFormatting.GRAY)
                                                         .append(Component.literal(shop.getOwnerName()).withStyle(ChatFormatting.AQUA))
@@ -283,7 +263,6 @@ public final class ShopCommands {
                                         })
                                 )
 
-                                // /shop admin delete <id> - Force delete any shop (returns items to owner)
                                 .then(Commands.literal("delete")
                                         .then(Commands.argument("id", StringArgumentType.word())
                                                 .executes(ctx -> {
@@ -300,17 +279,14 @@ public final class ShopCommands {
                                                         return 0;
                                                     }
 
-                                                    // Return items to owner if online
                                                     ServerPlayer owner = p.level().getServer().getPlayerList().getPlayer(shop.getOwnerId());
                                                     net.fugginbeenus.notchcurrency.shop.PlayerShopManager.returnAllShopContents(p.level().getServer(), shop, owner);
 
-                                                    // Remove NPC if linked
                                                     if (shop.getLinkedNpcId() != null) {
                                                         var npc = p.serverLevel().getEntity(shop.getLinkedNpcId());
                                                         if (npc != null) npc.discard();
                                                     }
 
-                                                    // Remove shop
                                                     state.removeShop(shopId);
                                                     state.markDirtyAndSave();
 
@@ -321,7 +297,6 @@ public final class ShopCommands {
                                         )
                                 )
 
-                                // /shop admin info <id> - Get detailed info about a shop
                                 .then(Commands.literal("info")
                                         .then(Commands.argument("id", StringArgumentType.word())
                                                 .executes(ctx -> {
@@ -355,7 +330,6 @@ public final class ShopCommands {
                                         )
                                 )
 
-                                // /shop admin transfer <id> <player> - Transfer shop ownership
                                 .then(Commands.literal("transfer")
                                         .then(Commands.argument("id", StringArgumentType.word())
                                                 .then(Commands.argument("newOwner", EntityArgument.player())
@@ -385,14 +359,6 @@ public final class ShopCommands {
                                         )
                                 )
 
-                                // /shop admin cleanup reports. /shop admin cleanup confirm acts.
-                                //
-                                // It used to act straight away, and it decided an NPC was gone by
-                                // failing to find it in the one dimension the operator was standing
-                                // in. An NPC in an unloaded chunk looks exactly like a deleted one
-                                // from there, so running this while a market district happened to be
-                                // unloaded would cut every shop loose from its shopkeeper at once,
-                                // with no way back in game.
                                 .then(Commands.literal("cleanup")
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
@@ -422,17 +388,6 @@ public final class ShopCommands {
         );
     }
 
-    /**
-     * Points a shop the player already owns at the NPC they are looking at.
-     *
-     * <p>A shop outlives its shopkeeper: the shop and everything in it is saved separately from the
-     * NPC. When an NPC was lost there was no way back to it, and placing a replacement built a
-     * second, empty shop, so the stock and takings read as deleted when they were only stranded.
-     *
-     * <p>Owner driven on purpose. An NPC standing in a chunk nobody has loaded cannot be told apart
-     * from a deleted one, so doing this automatically would sometimes take a shop off a shopkeeper
-     * that was merely asleep. The player knows which of theirs is gone. The server does not.
-     */
     private static int relink(ServerPlayer p, String input) {
         var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(p.serverLevel());
         UUID shopId = findShopByIdOrName(p, input);
@@ -460,10 +415,6 @@ public final class ShopCommands {
             return 0;
         }
 
-        // Only take over an NPC that is not already doing something else. Setting the role
-        // unconditionally would quietly turn somebody's banker into a shopkeeper because they were
-        // stood in the wrong place when they ran this, and the first they would know of it is the
-        // bank no longer opening.
         var role = npc.getRole();
         if (role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
                 && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.SHOP) {
@@ -482,7 +433,6 @@ public final class ShopCommands {
     private static UUID findShopByIdOrName(ServerPlayer player, String input) {
         var state = net.fugginbeenus.notchcurrency.shop.ShopState.get(player.serverLevel());
 
-        // Try as UUID first
         try {
             UUID id = UUID.fromString(input);
             if (state.getShop(id) != null) {
@@ -490,14 +440,12 @@ public final class ShopCommands {
             }
         } catch (IllegalArgumentException ignored) {}
 
-        // Try partial UUID match
         for (var shop : state.getAllShops()) {
             if (shop.getShopId().toString().startsWith(input)) {
                 return shop.getShopId();
             }
         }
 
-        // Try name match (owned shops first)
         var ownedShops = state.getShopsByOwner(player.getUUID());
         for (var shop : ownedShops) {
             if (shop.getShopName().equalsIgnoreCase(input)) {
@@ -505,7 +453,6 @@ public final class ShopCommands {
             }
         }
 
-        // Try name match (all shops)
         for (var shop : state.getAllShops()) {
             if (shop.getShopName().equalsIgnoreCase(input)) {
                 return shop.getShopId();
@@ -517,7 +464,7 @@ public final class ShopCommands {
     }
 
     private static UUID findShopByIdOrNameAdmin(ServerPlayer player, String input, net.fugginbeenus.notchcurrency.shop.ShopState state) {
-        // Try as UUID first
+
         try {
             UUID id = UUID.fromString(input);
             if (state.getShop(id) != null) {
@@ -525,14 +472,12 @@ public final class ShopCommands {
             }
         } catch (IllegalArgumentException ignored) {}
 
-        // Try partial UUID match
         for (var shop : state.getAllShops()) {
             if (shop.getShopId().toString().startsWith(input)) {
                 return shop.getShopId();
             }
         }
 
-        // Try name match (all shops)
         for (var shop : state.getAllShops()) {
             if (shop.getShopName().toLowerCase().contains(input.toLowerCase())) {
                 return shop.getShopId();

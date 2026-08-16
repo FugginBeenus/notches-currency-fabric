@@ -30,26 +30,17 @@ public final class EconomyLedger {
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-Ledger");
 
     private EconomyLedger() {}
-
-    // Running totals since server start (cheap, in-memory; total supply is computed live from BalanceState).
     private static final AtomicLong sessionCreated = new AtomicLong();
     private static final AtomicLong sessionDestroyed = new AtomicLong();
-
-    // Cached per-day writer.
     private static final Object FILE_LOCK = new Object();
     private static String currentDate;
     private static BufferedWriter writer;
-
-    // Shared async HTTP client for the webhook.
     private static volatile HttpClient httpClient;
 
     public static void record(MinecraftServer server, UUID playerId, long delta,
                               long newBalance, TransactionReason reason, @Nullable String detail) {
         if (server == null || playerId == null || delta == 0) return;
 
-        // Only true creation/destruction moves the supply counters. Transfers and
-        // conversions (PAY, TRADE, SHOP, AUCTION, ATM_*) net to zero across players,
-        // so they must NOT inflate created/destroyed.
         switch (reason) {
             case FAUCET -> { if (delta > 0) sessionCreated.addAndGet(delta); }
             case SINK -> { if (delta < 0) sessionDestroyed.addAndGet(-delta); }
@@ -77,17 +68,12 @@ public final class EconomyLedger {
     }
 
     public static long getSessionCreated() { return sessionCreated.get(); }
-
     public static long getSessionDestroyed() { return sessionDestroyed.get(); }
-
-    // ---- internals ----
-
     private static String resolveName(MinecraftServer server, UUID id) {
         try {
             var name = net.fugginbeenus.notchcurrency.compat.Profiles.nameOf(server, id);
             if (name.isPresent()) return name.get();
         } catch (Exception ignored) {
-            // fall through to UUID
         }
         return id.toString();
     }
@@ -122,7 +108,6 @@ public final class EconomyLedger {
         if (writer != null && today.equals(currentDate)) {
             return writer;
         }
-        // Date rolled over (or first use) - (re)open.
         if (writer != null) {
             try { writer.close(); } catch (IOException ignored) {}
             writer = null;

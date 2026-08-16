@@ -50,8 +50,6 @@ public final class LoanManager {
         overdueInterestPercent = Math.max(0, l.overdueInterestPercent);
     }
 
-    // ---- getters for the GUI ----
-
     public static boolean isEnabled() { return enabled; }
     public static long getMaxDebt() { return maxDebt; }
     public static int getInterestPercent() { return interestPercent; }
@@ -62,8 +60,6 @@ public final class LoanManager {
                 (containerId, inv, p) -> new LoanScreenHandler(containerId, inv),
                 Component.literal("Loans")));
     }
-
-    // ---- borrow / repay ----
 
     public static void borrow(ServerPlayer player, long amount) {
         MinecraftServer server = player.level().getServer();
@@ -118,8 +114,6 @@ public final class LoanManager {
                 .append(left > 0 ? NotchCurrency.coins(left) : Component.empty()));
     }
 
-    // ---- interest / auto-collection / overdue cycle ----
-
     private static void tick(MinecraftServer server) {
         if (!enabled) return;
         if (++tickAccum < intervalTicks) return;
@@ -132,7 +126,6 @@ public final class LoanManager {
             LoanState.Loan loan = e.getValue();
             if (loan.debt <= 0) continue;
 
-            // Pull spare balance toward the debt first.
             if (autoCollect) {
                 long bal = BalanceStore.get(server, id);
                 long collect = Math.min(bal, loan.debt);
@@ -172,8 +165,6 @@ public final class LoanManager {
             state.markDirtyPublic();
         }
     }
-
-    // ---- helpers ----
 
     public static long worldTime(MinecraftServer server) {
         ServerLevel ow = server.overworld();

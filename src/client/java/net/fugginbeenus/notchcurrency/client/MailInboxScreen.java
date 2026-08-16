@@ -10,13 +10,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
-/**
- * The Inbox tab: everything waiting for you, as parcels to drag out.
- *
- * <p>There is nothing here but a grid, a count and a button, because a parcel explains itself. Who
- * sent it, what is in it and anything they wrote is on its own tooltip, which is why this tab no
- * longer needs the column of text that used to sit beside the slots.
- */
 public class MailInboxScreen extends AbstractContainerScreen<MailInboxMenu> {
 
     private static final int TAKE_W = 56, TAKE_H = 16;
@@ -54,8 +47,6 @@ public class MailInboxScreen extends AbstractContainerScreen<MailInboxMenu> {
                     y + MailLayout.SLOTS_Y + (i / MailInboxMenu.COLS) * 18 - 1);
         }
 
-        // Under the grid rather than across it. Written over the slots it was unreadable, and it
-        // made an empty mailbox look broken rather than empty.
         int waiting = this.menu.waiting();
         ctx.drawString(this.font, summary(waiting), x + 8, y + 122,
                 waiting == 0 ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK, false);

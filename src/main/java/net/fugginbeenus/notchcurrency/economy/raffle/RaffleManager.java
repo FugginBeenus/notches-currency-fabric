@@ -29,7 +29,7 @@ public final class RaffleManager {
     private static long ticketPrice = 100L;
     private static int houseCutPercent = 20;
     private static int maxTicketsPerPlayer = 0;
-    private static long drawIntervalTicks = 1440L * 60L * 20L; // 0 = manual only
+    private static long drawIntervalTicks = 1440L * 60L * 20L;
     private static boolean announce = true;
     private static boolean redeemEnabled = true;
 
@@ -58,8 +58,6 @@ public final class RaffleManager {
         tickAccum = 0;
         draw(server, true);
     }
-
-    // ---- ticket sales ----
 
     public static void buyTicket(ServerPlayer player, int qty) {
         MinecraftServer server = player.level().getServer();
@@ -129,7 +127,6 @@ public final class RaffleManager {
             return;
         }
 
-        // Find one expired losing ticket.
         Inventory inv = player.getInventory();
         int loserSlot = -1;
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -147,9 +144,9 @@ public final class RaffleManager {
         int oldEntries = RaffleTicketItem.entries(inv.getItem(loserSlot));
         int free = redeemEntriesFor(oldEntries);
 
-        inv.setItem(loserSlot, ItemStack.EMPTY);     // consume the old ticket
-        state.markRedeemed(player.getUUID());          // one redemption per round
-        state.recordPurchase(player.getUUID(), player.getName().getString(), free, 0L); // free entries, no pot
+        inv.setItem(loserSlot, ItemStack.EMPTY);
+        state.markRedeemed(player.getUUID());
+        state.recordPurchase(player.getUUID(), player.getName().getString(), free, 0L);
         issueOrUpdateTicket(player, state);
 
         int have = state.getTickets(player.getUUID());
@@ -176,8 +173,6 @@ public final class RaffleManager {
                     player.getUUID(), player.getName().getString()));
         }
     }
-
-    // ---- drawing ----
 
     public static boolean draw(MinecraftServer server, boolean broadcast) {
         RaffleState state = RaffleState.get(server);
@@ -213,8 +208,6 @@ public final class RaffleManager {
         return true;
     }
 
-    // ---- claiming ----
-
     public static void claim(ServerPlayer player) {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
@@ -232,7 +225,6 @@ public final class RaffleManager {
         for (Result r : wins) {
             total += r.prize;
             rounds.add(r.round);
-            // Hand over any item prize attached to this win.
             if (!r.prizeItem.isEmpty()) {
                 ItemStack give = r.prizeItem.copy();
                 player.getInventory().placeItemBackInInventory(give);
@@ -248,8 +240,6 @@ public final class RaffleManager {
         msg.append(Component.literal(wins.size() == 1 ? " from your winning ticket!" : " from " + wins.size() + " winning tickets!").withStyle(ChatFormatting.GOLD));
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, msg);
     }
-
-    // ---- admin: prize item + opening the screen ----
 
     public static void setPrize(ServerPlayer admin) {
         MinecraftServer server = admin.level().getServer();
@@ -267,7 +257,7 @@ public final class RaffleManager {
         }
 
         ItemStack prize = held.copy();
-        held.shrink(held.getCount()); // escrow the held stack
+        held.shrink(held.getCount());
         state.setPrizeItem(prize);
         if (!previous.isEmpty()) admin.getInventory().placeItemBackInInventory(previous);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("Raffle prize set to ").withStyle(ChatFormatting.GREEN)
@@ -307,8 +297,6 @@ public final class RaffleManager {
                 Component.literal("Raffle")));
     }
 
-    // ---- ticket restamping ----
-
     public static void refreshTickets(ServerPlayer player) {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
@@ -324,19 +312,16 @@ public final class RaffleManager {
             long r = RaffleTicketItem.round(st);
             UUID o = RaffleTicketItem.owner(st);
 
-            // A win from a finished round is always claimable, even after the raffle closes.
             Result res = state.getResult(r);
             if (res != null && o != null && res.winner.equals(o)) {
                 RaffleTicketItem.setStatus(st, RaffleTicketItem.STATUS_WINNER, res.prize);
                 continue;
             }
 
-            // A ticket is only ACTIVE if it's for the current round AND the raffle is running.
-            // Anything else (a past round, or any ticket while the raffle is off) is a dead loser.
             if (enabled && r == current) {
                 RaffleTicketItem.setStatus(st, RaffleTicketItem.STATUS_ACTIVE, 0L);
                 if (o != null && o.equals(me)) {
-                    RaffleTicketItem.setEntries(st, state.getTickets(me)); // keep the count truthful
+                    RaffleTicketItem.setEntries(st, state.getTickets(me));
                 }
             } else {
                 RaffleTicketItem.setStatus(st, RaffleTicketItem.STATUS_LOSER, 0L);
@@ -363,8 +348,6 @@ public final class RaffleManager {
                 .append(NotchCurrency.coins(total))
                 .append(Component.literal("! Use /raffle claim.").withStyle(ChatFormatting.GOLD)));
     }
-
-    // ---- inventory helpers ----
 
     private static ItemStack findActiveTicket(ServerPlayer player, long round) {
         Inventory inv = player.getInventory();

@@ -21,7 +21,6 @@ import java.util.UUID;
 
 public class ShopBrowseScreenHandler extends AbstractContainerMenu {
 
-    // Carrier slots live OFF-screen (the row-list screen reads rowStack(i) and draws icons itself).
     public static final int VIS_ROWS = 6, PER_PAGE = VIS_ROWS;
 
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2, P_STATUS = 3;
@@ -30,8 +29,8 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
     private final UUID shopId;
     private final String shopName;
     private final String greeting;
-    @Nullable private final UUID npcId; // linked NPC, for the client-side preview
-    @Nullable private final PlayerShop shop; // server side only
+    @Nullable private final UUID npcId;
+    @Nullable private final PlayerShop shop;
     private final SimpleContainer rowInv = new SimpleContainer(PER_PAGE);
     private final ContainerData props = new SimpleContainerData(4);
     private int page = 0;
@@ -62,7 +61,6 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
-        // Player inventory (vanilla trade layout: coords match the code-drawn ShopBrowseScreen).
         final int invX = 43, invY = 158;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -83,7 +81,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
     public int prop(int i) { return props.get(i); }
 
     private void refresh() {
-        if (shop == null) return; // client side
+        if (shop == null) return;
         props.set(P_STATUS, !shop.isOpen() ? STATUS_CLOSED
                 : shop.isRentPaused() ? STATUS_RENT_PAUSED : STATUS_OPEN);
 
@@ -130,7 +128,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
-        else if (id == 1) page = page + 1; // clamped in refresh()
+        else if (id == 1) page = page + 1;
         else return false;
         refresh();
         broadcastChanges();

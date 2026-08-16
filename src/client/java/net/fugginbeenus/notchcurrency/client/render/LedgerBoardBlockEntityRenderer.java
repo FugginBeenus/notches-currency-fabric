@@ -23,8 +23,6 @@ import java.util.List;
 /*public class LedgerBoardBlockEntityRenderer
         implements BlockEntityRenderer<LedgerBoardBlockEntity, LedgerBoardBlockEntityRenderer.State> {
 
-    // The board reads its rows and its facing while the block entity is in hand; drawing works
-    // only from these.
     public static class State extends net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState {
         public boolean draw;
         public float angle;
@@ -34,16 +32,13 @@ import java.util.List;
 public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<LedgerBoardBlockEntity> {
 //?}
 
-    // --- tunables (block units unless noted) ---
-    private static final float PLATE_TOP = 1.5f;  // top of the screen (y), rows descend from here
-    private static final float FRONT_Z = 0.71f;   // screen front plane in the oriented frame (1 = block front)
-    private static final float SCALE = 0.0125f;   // text scale (smaller so full names fit)
-    private static final int LINE_H = 13;         // line spacing (text px)
-    private static final int LEFT_X = -55;        // left margin: rank + name start here (text px)
-    // 26.1 dropped LightTexture.FULL_BRIGHT; this is the value it always held, the same on every
-    // version, so the constant lives here rather than behind a branch.
+    private static final float PLATE_TOP = 1.5f;
+    private static final float FRONT_Z = 0.71f;
+    private static final float SCALE = 0.0125f;
+    private static final int LINE_H = 13;
+    private static final int LEFT_X = -55;
     private static final int FULL_BRIGHT = 0xF000F0;
-    private static final int RIGHT_X = 55;        // right margin: balance right-aligns here (text px)
+    private static final int RIGHT_X = 55;
 
     private final Font text;
 
@@ -55,7 +50,6 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         //?}
     }
 
-    /** Create's AngleHelper.horizontalAngle: facing yaw, negated on the X axis. */
     private static float horizontalAngle(Direction f) {
         float a = f.toYRot();
         return f.getAxis() == Direction.Axis.X ? -a : a;
@@ -88,7 +82,6 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         List<EconomyLeaderboard.Entry> rows = state.rows;
 
         matrices.pushPose();
-        // centre -> rotateY(facing) -> unCentre  (Create's FlapDisplayRenderer frame)
         matrices.translate(0.5, 0.5, 0.5);
         matrices.mulPose(Axis.YP.rotationDegrees(state.angle));
         matrices.translate(-0.5, -0.5, -0.5);
@@ -106,12 +99,10 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         List<EconomyLeaderboard.Entry> rows = be.rows();
 
         matrices.pushPose();
-        // centre -> rotateY(facing) -> unCentre  (Create's FlapDisplayRenderer frame)
         matrices.translate(0.5, 0.5, 0.5);
         matrices.mulPose(Axis.YP.rotationDegrees(horizontalAngle(facing)));
         matrices.translate(-0.5, -0.5, -0.5);
     //?}
-        // step to the screen top-centre, on the front plane
         matrices.translate(0.5, PLATE_TOP, FRONT_Z);
         matrices.scale(SCALE, -SCALE, SCALE);
         matrices.translate(0.0, 0.0, 0.5); // a texel off the surface, avoids z-fighting
@@ -121,7 +112,6 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
         var matrix = matrices.last().pose();
         //?}
 
-        // Header, centred.
         Component header = Component.literal("TOP BALANCES").withStyle(ChatFormatting.GOLD);
         //? if >=1.21.11 {
             /*Render.submitText(text, header, -text.width(header) / 2f, 0, 0xFFFFFFFF, matrices, collector, lb);
@@ -137,7 +127,7 @@ public class LedgerBoardBlockEntityRenderer implements BlockEntityRenderer<Ledge
             Render.drawText(text, none, -text.width(none) / 2f, LINE_H, 0xFFFFFFFF, matrix, vertexConsumers, lb);
             //?}
         }
-        // Rows: rank + name left-aligned, balance right-aligned (Create-style columns).
+
         for (int i = 0; i < rows.size(); i++) {
             EconomyLeaderboard.Entry e = rows.get(i);
             int y = (i + 1) * LINE_H;

@@ -25,7 +25,6 @@ public final class MailManager {
         long now = server.overworld().getGameTime();
         if (!state.post(recipient, item, now)) return false;
 
-        // A nudge only if they are here to read it. Anyone offline gets told when they log in.
         ServerPlayer online = server.getPlayerList().getPlayer(recipient);
         if (online != null) {
             Msg.chat(online, Component.literal("Mail from " + item.sender() + ". ")
@@ -85,7 +84,6 @@ public final class MailManager {
         }
 
         if (!left.isEmpty()) {
-            // Only what would not fit goes back in the box.
             state.putBack(player.getUUID(), item.withContents(left).without(false, true));
             Msg.chat(player, Component.literal("Your inventory is full. The rest is still in the mail.")
                     .withStyle(ChatFormatting.RED));
@@ -135,7 +133,6 @@ public final class MailManager {
             return;
         }
 
-        // Never trust the amount off the wire: it decides how much money moves.
         long money = Math.max(0L, coins);
         if (money > 0L && BalanceStore.get(sender) < money) {
             Msg.chat(sender, Component.literal("You do not have that much to send.")
@@ -161,7 +158,6 @@ public final class MailManager {
         if (!post(server, recipient, MailItem.parcel(from, trimmed, goods, money))) {
             Msg.chat(sender, Component.literal("Their mailbox is full. Nothing was sent.")
                     .withStyle(ChatFormatting.RED));
-            // Everything goes back, money included: it left the sender only a moment ago.
             for (ItemStack stack : goods) {
                 if (!sender.getInventory().add(stack)) sender.drop(stack, false);
             }

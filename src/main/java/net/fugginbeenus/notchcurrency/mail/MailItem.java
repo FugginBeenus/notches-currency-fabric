@@ -9,26 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * One thing waiting for one player: a parcel from another player, an auction payout, or the item
- * side of a trade offer.
- *
- * <p>An entry can carry several stacks, an amount of coins, or both. Several because one send is
- * one parcel however much went into it, and both because an auction sale owes the seller money and
- * the buyer goods off the same event.
- *
- * @param id       this entry, so a player can take one thing without taking the lot
- * @param sender   who to show it as being from. A name rather than a uuid: the sender may be
- *                 another player, or the auction house, and the label is all the reader needs
- * @param note     an optional line from the sender, shown with the parcel
- * @param contents the goods, or empty
- * @param coins    the money, or zero
- * @param sentAt   the game time it was posted, for sorting and for "how long has this sat here"
- */
 public record MailItem(UUID id, String sender, String note, List<ItemStack> contents, long coins,
                        long sentAt) {
 
-    /** As many stacks as fit in one parcel, which is what the Outbox offers to fill. */
     public static final int MAX_CONTENTS = 6;
 
     public MailItem {
@@ -59,12 +42,10 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
         return contents.isEmpty() && coins <= 0L;
     }
 
-    /** A copy stamped with when it was posted, since the clock is not this record's to know. */
     public MailItem at(long gameTime) {
         return new MailItem(id, sender, note, contents, coins, gameTime);
     }
 
-    /** What is left after handing over the goods but not the money, or the other way round. */
     public MailItem without(boolean tookGoods, boolean tookCoins) {
         return new MailItem(id, sender, note,
                 tookGoods ? List.of() : contents,
@@ -72,7 +53,6 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
                 sentAt);
     }
 
-    /** The same entry with only part of its goods left, for a delivery an inventory could not hold. */
     public MailItem withContents(List<ItemStack> left) {
         return new MailItem(id, sender, note, left, coins, sentAt);
     }
@@ -82,11 +62,6 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
         Nbt.putUuid(nbt, "Id", id);
         nbt.putString("Sender", sender);
         if (!note.isEmpty()) nbt.putString("Note", note);
-        // Portable rather than native, so a parcel survives a world moving between versions the same
-        // way an NPC's equipment does. See StackData.writePortableStack.
-        //
-        // Numbered keys rather than a list tag: reading a list changed shape more than once across
-        // the versions this mod covers, and a counted run of keys reads the same on all of them.
         nbt.putInt("N", contents.size());
         for (int i = 0; i < contents.size(); i++) {
             nbt.put("I" + i, StackData.writePortableStack(contents.get(i)));
@@ -98,7 +73,6 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
 
     public static MailItem fromNbt(CompoundTag nbt) {
         List<ItemStack> contents = new ArrayList<>();
-        // Mail written before a parcel could hold more than one thing.
         if (nbt.contains("Stack")) {
             ItemStack old = StackData.readPortableStack(nbt.getCompound("Stack"));
             if (!old.isEmpty()) contents.add(old);

@@ -27,12 +27,12 @@ import java.util.UUID;
 public final class BountyManager {
 
     private static final Random RNG = new Random();
-    private static final int REFRESH_CHECK_TICKS = 600; // expiry/top-up sweep every 30s
+    private static final int REFRESH_CHECK_TICKS = 600;
 
     private static boolean enabled = true;
     private static int activeCount = 5;
     private static int takeLimit = 3;
-    private static long durationTicks = 30L * 60L * 20L; // 30 min
+    private static long durationTicks = 30L * 60L * 20L;
     private static int rewardMultPercent = 100;
     private static long maxCoinReward = 250;
 
@@ -64,8 +64,6 @@ public final class BountyManager {
         return takeLimit;
     }
 
-    // ---- rotation + expired-taken cleanup ----
-
     private static void sweepTick(MinecraftServer server) {
         if (!enabled) return;
         if (++tickAccum < REFRESH_CHECK_TICKS) return;
@@ -76,12 +74,11 @@ public final class BountyManager {
         long now = overworld.getGameTime();
         BountyState state = BountyState.get(server);
 
-        // Rotate offers: drop expired generated ones, top up to activeCount.
         if (activeCount > 0) {
             List<UUID> expired = new ArrayList<>();
             int active = 0;
             for (Bounty b : state.allOffers()) {
-                if (b.getExpiresGameTime() <= 0) continue; // permanent
+                if (b.getExpiresGameTime() <= 0) continue;
                 if (b.isExpired(now)) expired.add(b.getId());
                 else active++;
             }
@@ -94,7 +91,6 @@ public final class BountyManager {
             }
         }
 
-        // Drop expired taken bounties and tell online players.
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             int dropped = state.cleanupExpired(p.getUUID(), now);
             if (dropped > 0) {
@@ -102,8 +98,6 @@ public final class BountyManager {
             }
         }
     }
-
-    // ---- taking ----
 
     public static void take(ServerPlayer player, UUID offerId) {
         MinecraftServer server = player.level().getServer();
@@ -135,8 +129,6 @@ public final class BountyManager {
         syncTracker(player);
     }
 
-    // ---- kill tracking (only toward taken bounties) ----
-
     private static void onKill(ServerPlayer player, ResourceLocation typeId) {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
@@ -159,8 +151,6 @@ public final class BountyManager {
         }
     }
 
-    // ---- collecting ----
-
     public static void claim(ServerPlayer player, @Nullable UUID only) {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
@@ -179,7 +169,7 @@ public final class BountyManager {
             totalCoins += b.getRewardCoins();
             count++;
             state.removeTaken(player.getUUID(), b.getId());
-            state.markOfferCompleted(player.getUUID(), b.getId()); // hide it from their board until it rotates
+            state.markOfferCompleted(player.getUUID(), b.getId());
         }
 
         if (count > 0) {
@@ -218,7 +208,7 @@ public final class BountyManager {
         removeItem(player, item, b.getRequired());
         giveReward(player, b);
         state.removeTaken(player.getUUID(), offerId);
-        state.markOfferCompleted(player.getUUID(), offerId); // hide it from their board until it rotates
+        state.markOfferCompleted(player.getUUID(), offerId);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Delivered " + b.getRequired() + " ").withStyle(ChatFormatting.GREEN)
                 .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(" - reward: " + b.rewardSummary() + "!").withStyle(ChatFormatting.GREEN)));
@@ -261,8 +251,6 @@ public final class BountyManager {
             player.getInventory().placeItemBackInInventory(b.getRewardItem().copy());
         }
     }
-
-    // ---- opening the board ----
 
     public static void openScreen(ServerPlayer sp) {
         if (sp.level().getServer() != null) ensurePopulated(sp.level().getServer());
@@ -314,8 +302,6 @@ public final class BountyManager {
             state.addOffer(b);
         }
     }
-
-    // ---- helpers ----
 
     static long worldTime(MinecraftServer server) {
         ServerLevel ow = server.overworld();

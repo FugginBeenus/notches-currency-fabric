@@ -11,31 +11,15 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-/**
- * The parcel being made up: a few slots to put things in, and the player's own inventory to take
- * them from.
- *
- * <p>Real slots rather than a list, because the whole point is dragging items in. What goes in here
- * is still the sender's until they press send: closing the screen hands it all straight back, the
- * same as any crafting grid, so nothing can be lost by wandering off.
- */
 public class MailPostScreenHandler extends AbstractContainerMenu {
 
     public static final int PARCEL_SLOTS = MailItem.MAX_CONTENTS;
-    /** One row, centred under the recipient button. */
     public static final int PARCEL_X = 34, PARCEL_Y = 62;
     private static final int INV_X = MailLayout.INV_X, INV_Y = MailLayout.INV_Y,
             HOTBAR_Y = MailLayout.HOTBAR_Y;
 
     private final SimpleContainer parcel = new SimpleContainer(PARCEL_SLOTS);
 
-    /**
-     * Set by the screen while the recipient list is dropped down over these slots.
-     *
-     * <p>An inactive slot is not drawn, hovered or clicked, which is the only way to stop the items
-     * in it painting straight through a panel laid over the top. Client side only: the menu the
-     * server holds is a different object and never hears about it.
-     */
     public boolean parcelSlotsHidden;
 
     public MailPostScreenHandler(int containerId, Inventory playerInv) {
@@ -69,7 +53,6 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
         return parcel.isEmpty();
     }
 
-    /** Takes everything out of the parcel slots, for posting. */
     public java.util.List<ItemStack> takeContents() {
         java.util.List<ItemStack> out = new java.util.ArrayList<>();
         for (int i = 0; i < parcel.getContainerSize(); i++) {
@@ -83,7 +66,6 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
     public void removed(Player player) {
         super.removed(player);
         if (player.level().isClientSide) return;
-        // Never posted, so it never stopped being theirs.
         for (int i = 0; i < parcel.getContainerSize(); i++) {
             ItemStack stack = parcel.removeItemNoUpdate(i);
             if (!stack.isEmpty() && !player.getInventory().add(stack)) {
@@ -100,7 +82,6 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
         ItemStack inSlot = slot.getItem();
         ItemStack original = inSlot.copy();
         if (index < PARCEL_SLOTS) {
-            // Out of the parcel, back to the player.
             if (!moveItemStackTo(inSlot, PARCEL_SLOTS, this.slots.size(), true)) return ItemStack.EMPTY;
         } else if (!moveItemStackTo(inSlot, 0, PARCEL_SLOTS, false)) {
             return ItemStack.EMPTY;

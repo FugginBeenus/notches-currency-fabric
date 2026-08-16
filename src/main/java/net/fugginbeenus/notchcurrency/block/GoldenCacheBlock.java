@@ -35,8 +35,6 @@ public class GoldenCacheBlock extends Block {
     //?}
         if (!world.isClientSide) {
             ServerLevel sw = (ServerLevel) world;
-
-            // --- 1) Magical sounds ---
             sw.playSound(
                     null, pos,
                     SoundEvents.AMETHYST_BLOCK_RESONATE,
@@ -50,7 +48,6 @@ public class GoldenCacheBlock extends Block {
                     0.8f, 1.6f
             );
 
-            // --- 2) Magical burst of particles ---
             for (int i = 0; i < 40; i++) {
                 double ox = pos.getX() + 0.5 + (sw.random.nextDouble() - 0.5) * 1.5;
                 double oy = pos.getY() + 0.5 + sw.random.nextDouble() * 1.5;
@@ -60,16 +57,13 @@ public class GoldenCacheBlock extends Block {
                 double vy = sw.random.nextDouble() * 0.2;
                 double vz = (sw.random.nextDouble() - 0.5) * 0.1;
 
-                // bright spark
                 sw.sendParticles(ParticleTypes.END_ROD, ox, oy, oz, 1, vx, vy, vz, 0.0);
 
-                // sprinkle a few enchant particles
                 if (i % 3 == 0) {
                     sw.sendParticles(ParticleTypes.ENCHANT, ox, oy, oz, 2, 0.0, 0.05, 0.0, 0.0);
                 }
             }
 
-            // --- 3) Loot from loot table (with fallback) ---
             //? if >=1.21 {
             /*LootTable table = sw.getServer().reloadableRegistries().getLootTable(
                     net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, GoldenCacheManager.LOOT));
@@ -83,7 +77,6 @@ public class GoldenCacheBlock extends Block {
 
             List<ItemStack> loot = table.getRandomItems(ctx);
 
-            // Fallback: just in case datapack is missing or empty
             if (loot.isEmpty()) {
                 loot.add(new ItemStack(ModItems.NOTCH_COIN, 10));
             }
@@ -107,12 +100,10 @@ public class GoldenCacheBlock extends Block {
             }
         }
 
-        // One fewer waiting to be found, so somewhere else may hide the next.
         if (world instanceof net.minecraft.server.level.ServerLevel serverWorld) {
             GoldenCacheManager.noteOpened(serverWorld, pos);
         }
 
-        // Let vanilla handle actually removing the block, etc.
         //? if >=1.21 {
         /*return super.playerWillDestroy(world, pos, state, player);
         *///?} else {
@@ -122,29 +113,20 @@ public class GoldenCacheBlock extends Block {
 
     @Override
     public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
-        // 10% chance each tick to spawn a "firefly"
         if (random.nextFloat() < 0.10f) {
-            // Spawn point around the top of the block
             double radius = 0.4;
             double angle = random.nextDouble() * Math.PI * 2.0;
-
             double x = pos.getX() + 0.5 + Math.cos(angle) * radius;
             double y = pos.getY() + 1.0 + random.nextDouble() * 0.3;
             double z = pos.getZ() + 0.5 + Math.sin(angle) * radius;
-
-            // Very gentle upward drift
             double vx = 0.0;
             double vy = 0.01 + random.nextDouble() * 0.01;
             double vz = 0.0;
-
-            // Main "firefly" glow
             world.addParticle(
                     net.minecraft.core.particles.ParticleTypes.END_ROD,
                     x, y, z,
                     vx, vy, vz
             );
-
-            // Tiny chance to add a second, dimmer one nearby for variety
             if (random.nextFloat() < 0.25f) {
                 double x2 = x + (random.nextDouble() - 0.5) * 0.2;
                 double y2 = y + (random.nextDouble() - 0.5) * 0.2;

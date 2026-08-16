@@ -42,7 +42,7 @@ public class NpcEquipmentInventory implements Container {
         ItemStack stack = npc.getItemBySlot(ORDER[index]);
         if (stack.isEmpty() || amount <= 0) return ItemStack.EMPTY;
         ItemStack split = stack.split(amount);
-        npc.setItemSlot(ORDER[index], stack); // re-equip the shrunken remainder so it syncs
+        npc.setItemSlot(ORDER[index], stack);
         return split;
     }
 
@@ -56,12 +56,11 @@ public class NpcEquipmentInventory implements Container {
     @Override
     public void setItem(int index, ItemStack stack) {
         npc.setItemSlot(ORDER[index], stack);
-        npc.setDropChance(ORDER[index], 1.0f); // owner's items always drop if it dies
+        npc.setDropChance(ORDER[index], 1.0f);
     }
 
     @Override
     public void setChanged() {
-        // Equipment lives on the entity; MobEntity syncs changes on its own.
     }
 
     @Override

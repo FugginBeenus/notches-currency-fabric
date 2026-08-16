@@ -18,7 +18,7 @@ public class CoinFlipScreenHandler extends AbstractContainerMenu {
     public static final int P_MIN     = 1;
     public static final int P_MAX     = 2;
     public static final int P_BAL     = 3;
-    public static final int P_PAYOUT  = 4; // payout percent on a win
+    public static final int P_PAYOUT  = 4;
     private static final int PROP_COUNT = 5;
 
     private final Inventory playerInv;

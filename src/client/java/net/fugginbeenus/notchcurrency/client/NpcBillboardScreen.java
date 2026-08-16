@@ -14,19 +14,14 @@ public class NpcBillboardScreen extends Screen {
 
     private static final int W = 300, H = 272;
     private static final int PAD = 14;
-    // Tall enough for the field plus the preview line under it, with air between rows.
     private static final int ROW_H = 30;
-
     private final UUID npcId;
     private final String[] lines = new String[NotchNpcEntity.MAX_BILLBOARD_LINES];
     private final EditBox[] fields = new EditBox[NotchNpcEntity.MAX_BILLBOARD_LINES];
     private EditBox titleField;
     private String title;
-    // Carried through untouched so the title can be saved on the one packet that owns it, without
-    // this screen needing to know or care what a voice is.
     private final String voice;
     private final int voicePitch;
-
     private int px, py;
 
     public NpcBillboardScreen(UUID npcId, String existing, String title, String voice, int voicePitch) {
@@ -92,7 +87,6 @@ public class NpcBillboardScreen extends Screen {
 
         for (int i = 0; i < fields.length; i++) {
             NotchWidgets.inset(ctx, px + PAD, rowY(i), W - PAD * 2, 15, NotchTheme.DEEP);
-            // How the line will actually read, colours and all, off to the right of the row.
             String preview = NotchWidgets.colorize(lines[i]);
             if (!preview.isBlank()) {
                 ctx.drawString(this.font, this.font.plainSubstrByWidth(preview, W - PAD * 2 - 8),
@@ -100,7 +94,6 @@ public class NpcBillboardScreen extends Screen {
             }
         }
 
-        // Both kinds of floating text live here: the sign above the head, the title under the name.
         NotchWidgets.divider(ctx, px + PAD, py + 166, W - PAD * 2);
         ctx.drawString(this.font, "Title, under the name", px + PAD, titleRow() - 10,
                 NotchTheme.TEXT_DARK, false);
@@ -184,24 +177,19 @@ public class NpcBillboardScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

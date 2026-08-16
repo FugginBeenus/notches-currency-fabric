@@ -34,7 +34,6 @@ public final class FactionCommands {
                                         .executes(ctx -> rename(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "faction"),
                                                 StringArgumentType.getString(ctx, "name"))))))
-                // Creating is offered here too, but the recruiter is the friendlier road in.
                 .then(Commands.literal("create")
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> create(ctx.getSource(),
@@ -91,7 +90,6 @@ public final class FactionCommands {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
             return 0;
         }
-        // The id never changes: NPCs point at it, so renaming is display-only on purpose.
         faction.setDisplayName(name);
         state.touch();
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Renamed to ")

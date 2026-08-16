@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.integration;
 
-// Balm dropped its api package and moved the entry point up a level for its 1.21.11 build.
 //? if <1.21.11 {
 import net.blay09.mods.balm.api.Balm;
 //?}
@@ -40,8 +39,6 @@ public final class WaystoneFeeHandler {
         Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, WaystoneFeeHandler::onPre);
         //?}
 
-        // Fees to each joining client, so the waystone selection menu can price its destinations.
-        // Join-only: fee changes mid-session reach players on their next login.
         net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register(
                 (handler, sender, server) -> sendFees(handler.getPlayer()));
     }

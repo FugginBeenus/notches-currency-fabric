@@ -14,19 +14,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-/**
- * Who a mailbox belongs to, and whether its flag should be up.
- *
- * <p>The flag follows the owner's inbox, which nothing here is told about: mail is posted from all
- * over, by code that has no idea a box exists. So the box checks for itself, slowly. Once every few
- * seconds is far below what anyone notices walking up to it, and it means posting mail never has to
- * go looking for blocks.
- */
 public class MailboxBlockEntity extends BlockEntity {
 
     private static final String OWNER_KEY = "Owner";
     private static final String OWNER_NAME_KEY = "OwnerName";
-    // Slow on purpose. The flag is scenery, not a readout.
     private static final int CHECK_EVERY_TICKS = 40;
 
     @Nullable
@@ -42,20 +33,16 @@ public class MailboxBlockEntity extends BlockEntity {
     public UUID owner() {
         return owner;
     }
-
     public String ownerName() {
         return ownerName;
     }
-
     public boolean isClaimed() {
         return owner != null;
     }
-
     public boolean isOwner(UUID player) {
         return owner != null && owner.equals(player);
     }
 
-    /** First player to use an unclaimed box takes it. */
     public void claim(UUID player, String name) {
         this.owner = player;
         this.ownerName = name == null ? "" : name;
@@ -74,10 +61,6 @@ public class MailboxBlockEntity extends BlockEntity {
         }
     }
 
-    // ---- persistence ----
-
-    // 1.21.11 swapped the tag for a write view. The body below still fills a tag, which Nbt then
-    // copies across key for key, so what lands on disk is the same either way.
     @Override
     //? if >=1.21.11 {
     /*protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput out) {

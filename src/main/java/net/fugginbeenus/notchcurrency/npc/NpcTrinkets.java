@@ -18,17 +18,6 @@ import java.util.Map;
 import java.util.TreeMap;
 //?}
 
-/**
- * Accessory slots on an NPC, where an accessory mod exists to provide them.
- *
- * <p>Trinkets stopped at 1.21.1 and its successor Accessories at 1.21.8, so from 1.21.11 there is
- * nothing to integrate with. That is not a choice made here: no such mod is published for those
- * versions, so there is no API to compile against, let alone slots to show.
- *
- * <p>The methods still exist there and simply answer "no slots", which is exactly what they already
- * answered on any world where the player had not installed Trinkets. The equipment screen needs no
- * knowledge of the difference, and neither does anything else.
- */
 public final class NpcTrinkets {
 
     public record Spec(String group, String slot, int index) {}

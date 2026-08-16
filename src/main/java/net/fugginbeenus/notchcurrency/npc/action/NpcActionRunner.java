@@ -39,8 +39,6 @@ public final class NpcActionRunner {
         try {
             return runAll(sp, npc, actions);
         } catch (Exception e) {
-            // These run from damage and death handlers as well as dialogue. A bad stored action must
-            // never take the entity down with it.
             LOGGER.error("NPC action list failed on {}", npc.getUUID(), e);
             return Outcome.COMPLETED;
         }
@@ -52,15 +50,10 @@ public final class NpcActionRunner {
             switch (a.type()) {
                 case NONE -> { }
                 case SAY_LINE -> {
-                    // Spoken to whoever set it off, the same way dialogue's chat mode does: private,
-                    // so a busy street of NPCs doesn't fill everyone's chat.
                     if (sp != null) {
                         NpcText.say(sp, npc, a.value());
                         break;
                     }
-                    // Nobody set it off: a schedule turning over, or a death with no killer. The line
-                    // still has an audience, it's just whoever is standing close enough to hear it.
-                    // Skipping these would quietly make "announce opening time" do nothing at all.
                     sayNearby(npc, a.value());
                 }
                 case OPEN_ROLE -> {
@@ -76,7 +69,6 @@ public final class NpcActionRunner {
                         NpcDialogueManager.watchForFarewell(sp, npc);
                         openedScreen = true;
                     } catch (IllegalArgumentException ignored) {
-                        // Unknown screen id: skip.
                     }
                 }
                 case PAY_COINS -> {
@@ -111,7 +103,7 @@ public final class NpcActionRunner {
         if (line == null || line.isBlank()) return;
         if (!(npc.level() instanceof net.minecraft.server.level.ServerLevel world)) return;
         double r2 = EARSHOT * EARSHOT;
-        npc.playVoice(); // once for the room, not once per person in it
+        npc.playVoice();
         for (ServerPlayer near : world.players()) {
             if (near.distanceToSqr(npc) <= r2) {
                 NpcText.sendLine(near, npc, line);
@@ -149,7 +141,6 @@ public final class NpcActionRunner {
         if (!ownerMayRunCommands(npc, server)) return;
         String cmd = NpcText.substitute(command, sp, NpcText.npcName(npc));
         if (cmd.startsWith("/")) cmd = cmd.substring(1);
-        // "As player" needs a player; without one the console source is the only sensible actor.
         var source = (asPlayer && sp != null) ? sp.createCommandSourceStack() : server.createCommandSourceStack();
         server.getCommands().performPrefixedCommand(source, cmd);
     }

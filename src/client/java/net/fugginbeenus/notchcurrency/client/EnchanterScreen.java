@@ -27,17 +27,13 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     private static ItemStack coin;
 
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
 
-    private int tab = 0; // 0 upgrades / 1 extract / 2 uncraft
+    private int tab = 0;
     private int scroll = 0;
     private boolean draggingScroll;
-
-    // Uncraft preview cache (recipe scans are not free: recompute only when the item changes).
     private ItemStack planFor = ItemStack.EMPTY;
     private EnchanterManager.UncraftPlan plan;
 
@@ -101,8 +97,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Enchanter", x + W / 2, y + 8);
-
-        // Input slot + item summary + repair.
         NotchWidgets.slot(ctx, x + EnchanterScreenHandler.INPUT_X - 1, y + EnchanterScreenHandler.INPUT_Y - 1);
         ItemStack stack = menu.inputStack();
         if (stack.isEmpty()) {
@@ -125,7 +119,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             NotchWidgets.neutralButton(ctx, this.font, x + 156, y + 21, 92, 18, repairLabel, false);
         }
 
-        // Service tabs.
         String[] tabs = {"Upgrades", "Extract", "Uncraft"};
         for (int i = 0; i < 3; i++) {
             int tx = x + 8 + i * 82;
@@ -134,7 +127,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             else NotchWidgets.neutralButton(ctx, this.font, tx, y + TAB_Y, 76, TAB_H, tabs[i], hover);
         }
 
-        // Recessed container for the service area.
         NotchWidgets.inset(ctx, x + 6, y + 63, 234, 86, NotchTheme.PANEL_MID);
 
         if (tab == 2) {
@@ -155,9 +147,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                     y + EnchanterScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -191,7 +181,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                     NotchWidgets.compactCount(c.cost()));
         }
 
-        // Scrollbar.
         NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
         if (cards.size() > VISIBLE) {
             int th = thumbH(cards.size());
@@ -260,7 +249,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         super.render(ctx, mouseX, mouseY, delta);
         //?}
         this.renderTooltip(ctx, mouseX, mouseY);
-        // Card tooltip: full name, description, price.
         if (tab != 2) {
             List<Card> cards = cards();
             for (int v = 0; v < VISIBLE; v++) {
@@ -268,7 +256,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                 if (i >= cards.size()) break;
                 if (over(mouseX, mouseY, leftPos + LIST_X, cardY(v), CARD_W, CARD_H)) {
                     Card c = cards.get(i);
-                    // The vanilla enchanted-book tooltip, plus the price and the click hint.
                     List<Component> lines = new ArrayList<>(getTooltipFromItem(
                             Minecraft.getInstance(), c.book()));
                     lines.add(NotchWidgets.priceText(c.cost(), "", 0));
@@ -412,16 +399,13 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

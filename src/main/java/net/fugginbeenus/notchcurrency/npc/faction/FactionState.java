@@ -36,8 +36,6 @@ public class FactionState extends SavedData implements net.fugginbeenus.notchcur
         return StateData.getOrCreate(manager, FactionState::new, FactionState::fromNbt, DATA_KEY);
     }
 
-    // ---- factions ----
-
     @Nullable
     public Faction get(@Nullable String id) {
         return id == null || id.isBlank() ? null : factions.get(id);
@@ -75,8 +73,6 @@ public class FactionState extends SavedData implements net.fugginbeenus.notchcur
 
     public void touch() { setDirty(); }
 
-    // ---- membership ----
-
     @Nullable
     public String factionIdOf(UUID player) { return membership.get(player); }
 
@@ -109,10 +105,6 @@ public class FactionState extends SavedData implements net.fugginbeenus.notchcur
         return n;
     }
 
-    // ---- NBT ----
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -155,7 +147,7 @@ public class FactionState extends SavedData implements net.fugginbeenus.notchcur
         for (int i = 0; i < members.size(); i++) {
             CompoundTag m = members.getCompound(i);
             String factionId = m.getString("Faction");
-            // Drop members of factions that no longer exist rather than carrying a dead pointer.
+
             if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(m, "Player") && state.factions.containsKey(factionId)) {
                 state.membership.put(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(m, "Player"), factionId);
             }

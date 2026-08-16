@@ -35,7 +35,6 @@ public class PoseEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        // Seed from the NPC's synced custom pose (the tracker already has it client-side).
         NotchNpcEntity npc = findNpc();
         if (npc != null && npc.getCustomPoseAngles() != null) {
             float[] current = npc.getCustomPoseAngles();
@@ -47,7 +46,6 @@ public class PoseEditorScreen extends Screen {
 
     private int px() { return (this.width - W) / 2; }
     private int py() { return (this.height - H) / 2; }
-
     private int partX(int i) { return px() + RX + (i % 2) * (PART_W + 6); }
     private int partY(int i) { return py() + 30 + (i / 2) * 18; }
     private int sliderY(int axis) { return py() + 96 + axis * 22; }
@@ -67,8 +65,6 @@ public class PoseEditorScreen extends Screen {
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.font, "Pose Editor", px + W / 2, py + 8);
-
-        // Live preview of the actual NPC.
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findNpc();
         if (npc != null) {
@@ -76,7 +72,7 @@ public class PoseEditorScreen extends Screen {
             boolean wasInvisible = npc.isInvisible();
             npc.setYRot(180);
             npc.yBodyRot = 180;
-            npc.setInvisible(false); // always show the NPC in its own editor preview
+            npc.setInvisible(false);
             net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H - 16, 46,
                     (px + PREV_X + PREV_W / 2f) - mouseX, (py + PREV_Y + 40f) - mouseY, npc);
             npc.setYRot(oldYaw);
@@ -84,7 +80,6 @@ public class PoseEditorScreen extends Screen {
             npc.setInvisible(wasInvisible);
         }
 
-        // Part picker.
         for (int i = 0; i < PART_NAMES.length; i++) {
             boolean hover = over(mouseX, mouseY, partX(i), partY(i), PART_W, PART_H);
             if (i == selectedPart) {
@@ -94,7 +89,6 @@ public class PoseEditorScreen extends Screen {
             }
         }
 
-        // Sliders for the selected part.
         for (int axis = 0; axis < 3; axis++) {
             int sy = sliderY(axis);
             int deg = angles[selectedPart * 3 + axis];
@@ -121,8 +115,6 @@ public class PoseEditorScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
     }
-
-    // ---- input ----
 
     //? if >=1.21.11 {
     /*@Override
@@ -165,7 +157,7 @@ public class PoseEditorScreen extends Screen {
             }
             if (over(mx, my, px + RX, py + 198, 208, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 4); // return to the NPC editor
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 4);
                 return true;
             }
         }
@@ -220,11 +212,10 @@ public class PoseEditorScreen extends Screen {
     private void updateFromMouse(double mouseX) {
         float t = (float) ((mouseX - (px() + SLIDER_X + 2)) / (SLIDER_W - 10));
         int deg = Math.round(-180 + Math.max(0f, Math.min(1f, t)) * 360);
-        if (Math.abs(deg) <= 3) deg = 0; // snap to neutral near the center tick
+        if (Math.abs(deg) <= 3) deg = 0;
         int idx = selectedPart * 3 + draggingAxis;
         if (angles[idx] != deg) {
             angles[idx] = deg;
-            // Throttle live updates: only ship when the value moved noticeably since the last send.
             if (Math.abs(deg - lastSent[draggingAxis]) >= 5) {
                 lastSent[draggingAxis] = deg;
                 sendPart();
@@ -265,24 +256,19 @@ public class PoseEditorScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

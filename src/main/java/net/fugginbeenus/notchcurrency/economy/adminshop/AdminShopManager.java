@@ -91,8 +91,6 @@ public final class AdminShopManager {
         return Result.SUCCESS;
     }
 
-    // ---- inventory helpers ----
-
     private static int countItems(ServerPlayer player, ItemStack template) {
         int count = 0;
         var inv = player.getInventory();

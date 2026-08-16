@@ -20,42 +20,30 @@ public final class NotchHud implements HudRenderCallback {
 //?}
 
     private static long BALANCE = 0;
-
-    // Nudges
-    private static final int X_NUDGE = 0;     // +right / -left
-    private static final int Y_NUDGE = -27;   // relative to hotbar top; ~-10 sits over hunger row
-
-    private static final int GAP = 4;         // between text and icon
-    private static final int ICON_PX = 9;     // 9px HUD sprite size (for texture mode)
-    private static final boolean USE_ITEM_ICON = false; // true = draw 16px item icon
-
-    // Only used if USE_ITEM_ICON == false
+    private static final int X_NUDGE = 0;
+    private static final int Y_NUDGE = -27;
+    private static final int GAP = 4;
+    private static final int ICON_PX = 9;
+    private static final boolean USE_ITEM_ICON = false;
     private static final ResourceLocation COIN_HUD_TEX =
             NotchCurrency.id("textures/item/coin.png");
-
-    // On 1.21 HUD callbacks draw AFTER chat, so the balance would sit on top of long chat lines.
-    // When a game message is wide enough to reach under the HUD, hide it for chat's fade-out.
     private static long chatClashUntil = 0;
-
     public static void noteChatMessage(net.minecraft.network.chat.Component message) {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
-        // Where the chat line ends, in screen pixels (chat draws at x=4, scaled by the chat option).
         double chatScale = mc.options.chatScale().get();
         int lineEnd = 4 + (int) Math.ceil(mc.font.width(message) * chatScale);
-        // The HUD's leftmost pixel: the icon, left of the right-aligned balance text.
         int anchorRight = mc.getWindow().getGuiScaledWidth() / 2 + 91 + X_NUDGE;
         int balanceW = mc.font.width(String.valueOf(BALANCE));
         int hudLeft = anchorRight - balanceW - GAP - (USE_ITEM_ICON ? 16 : ICON_PX);
         if (lineEnd >= hudLeft) {
-            chatClashUntil = System.currentTimeMillis() + 10_000; // vanilla chat fade
+            chatClashUntil = System.currentTimeMillis() + 10_000;
         }
     }
 
     public static void setBalance(long value) {
         BALANCE = value;
     }
-
     public static long getBalance() {
         return BALANCE;
     }
@@ -76,41 +64,27 @@ public final class NotchHud implements HudRenderCallback {
 
         final int sw = mc.getWindow().getGuiScaledWidth();
         final int sh = mc.getWindow().getGuiScaledHeight();
-
-        // Vanilla hotbar bounds
         final int hotbarW = 182, hotbarH = 22;
         final int hotbarX = (sw / 2) - (hotbarW / 2);
         final int hotbarY = sh - hotbarH - 1;
-
-        // Anchor: RIGHT edge of the hotbar (keep everything inside)
         final int anchorRight = hotbarX + hotbarW + X_NUDGE;
         final int rowY = hotbarY + Y_NUDGE;
-
-        // Component measures
         final String s = String.valueOf(BALANCE);
         final int textW = mc.font.width(s);
         final int textH = mc.font.lineHeight;
-
-        // Right-align the text to the anchor (so it never goes past the hotbar edge)
         final int textX = anchorRight - textW;
-        final int textY = rowY + (9 - textH) / 2; // align with hunger-row height (~9px)
-
-        // Icon sits to the LEFT of the text, and is pushed left as text grows
+        final int textY = rowY + (9 - textH) / 2;
         final int iconSize = USE_ITEM_ICON ? 16 : ICON_PX;
         final int iconX = textX - GAP - iconSize;
         final int iconY = rowY + (9 - iconSize) / 2;
 
         if (USE_ITEM_ICON) {
-            // Uses your Notch Coin item model/texture (most reliable)
             ItemStack stack = new ItemStack(ModItems.NOTCH_COIN);
             ctx.renderItem(stack, iconX, iconY);
             ctx.renderItemDecorations(mc.font, stack, iconX, iconY);
         } else {
-            // Uses a raw HUD sprite at assets/notchcurrency/textures/item/coin.png
             //? if >=1.21.11 {
-            /*// The old nine-argument blit still exists here but means something else entirely:
-            // (x, y, width, height, u0, v0, u1, v1). Passing the old arguments to it asks for a
-            // zero by zero icon, which draws nothing. This overload keeps the original meaning.
+            /*
             ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, COIN_HUD_TEX,
                     iconX, iconY, 0f, 0f, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
             *///?} else {
@@ -119,8 +93,6 @@ public final class NotchHud implements HudRenderCallback {
             //?}
         }
 
-        // Opaque white. Text colours are ARGB from 1.21.11, and a bare 0xFFFFFF has an alpha of
-        // zero, which the renderer drops on the floor without drawing anything.
         ctx.drawString(mc.font, s, textX, textY, 0xFFFFFFFF, true);
     }
 
@@ -136,16 +108,14 @@ public final class NotchHud implements HudRenderCallback {
         var player = mc.player;
         if (player == null) return true;
 
-        // Underwater bubbles: hide while air bar is visible
-        // (non-creative, non-spectator, actually losing air)
+        // hide under de water
         if (!player.getAbilities().instabuild
                 && !player.isSpectator()
                 && player.getAirSupply() < player.getMaxAirSupply()) {
             return true;
         }
 
-        // Hide when riding ANY vehicle (horses, boats, minecarts, modded aircraft, etc.)
-        // This prevents overlap with mount health bars, vehicle fuel/speed bars, etc.
+        // hide on mounts
         if (player.isPassenger()) {
             return true;
         }

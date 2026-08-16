@@ -31,8 +31,6 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
         return StateData.getOrCreate(mgr, TradeOfferState::new, TradeOfferState::fromNbt, DATA_KEY);
     }
 
-    // ---- offers ----
-
     public void add(TradeOffer offer) {
         offers.put(offer.id(), offer);
         setDirty();
@@ -69,9 +67,6 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
         return n;
     }
 
-    // ---- mailbox: drained into the mail, kept only so an old save can be read ----
-
-    /** Moves every parcel waiting here into the mail, so there is one place to collect from. */
     public int drainIntoMail(MinecraftServer server) {
         if (mailbox.isEmpty()) return 0;
         int posted = 0;
@@ -84,7 +79,7 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
                 if (net.fugginbeenus.notchcurrency.mail.MailManager.post(server, entry.getKey(), parcel)) {
                     posted++;
                 } else {
-                    keep.add(stack); // box full, leave it here for next time
+                    keep.add(stack);
                 }
             }
             if (keep.isEmpty()) mailbox.remove(entry.getKey());
@@ -93,8 +88,6 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
         if (posted > 0) setDirty();
         return posted;
     }
-
-    // ---- NBT ----
 
     private static TradeOfferState fromNbt(CompoundTag nbt) {
         TradeOfferState state = new TradeOfferState();
@@ -117,8 +110,6 @@ public class TradeOfferState extends SavedData implements net.fugginbeenus.notch
         return state;
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {

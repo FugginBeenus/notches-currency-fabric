@@ -12,25 +12,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * The models a server holds, which is the copy that counts.
- *
- * <p>They live in the world folder rather than in config, because an NPC pointing at a model is
- * world data: copy the world and the models come with it, restore a backup and they match the NPCs
- * that were in it.
- *
- * <p>Everything is kept as packed bytes with a fingerprint. The server never renders anything, so it
- * has no reason to read a model beyond passing it on and knowing whether a player already has it.
- */
 public final class NpcModelServerStore {
 
     private NpcModelServerStore() {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcModels");
-
-    /** A ceiling on what one server offers, so joining is never an unbounded download. */
     public static final int MAX_MODELS = 64;
-
     private static final Map<String, byte[]> BLOBS = new LinkedHashMap<>();
     private static final Map<String, String> HASHES = new LinkedHashMap<>();
 
@@ -38,7 +25,6 @@ public final class NpcModelServerStore {
         return server.getWorldPath(LevelResource.ROOT).resolve("notchcurrency").resolve("npc_models");
     }
 
-    /** Reads the world folder into memory. Called once when the server starts. */
     public static void load(MinecraftServer server) {
         BLOBS.clear();
         HASHES.clear();
@@ -67,7 +53,6 @@ public final class NpcModelServerStore {
         if (!BLOBS.isEmpty()) LOGGER.info("Holding {} NPC model(s) for players", BLOBS.size());
     }
 
-    /** Takes a model a player uploaded, keeping it for everyone else who joins. */
     public static String store(MinecraftServer server, String id, byte[] blob) {
         if (!NpcModelBlob.validId(id)) return "that is not a model id";
         if (!BLOBS.containsKey(id) && BLOBS.size() >= MAX_MODELS) {
@@ -92,7 +77,6 @@ public final class NpcModelServerStore {
                     try {
                         Files.deleteIfExists(path);
                     } catch (Exception ignored) {
-                        // A locked file is not worth failing the removal over.
                     }
                 });
             }
@@ -102,15 +86,12 @@ public final class NpcModelServerStore {
         return null;
     }
 
-    /** What this server has, as id to fingerprint, for a joining player to compare against. */
     public static Map<String, String> hashes() {
         return new LinkedHashMap<>(HASHES);
     }
-
     public static byte[] blob(String id) {
         return BLOBS.get(id);
     }
-
     public static boolean isEmpty() {
         return BLOBS.isEmpty();
     }

@@ -18,7 +18,6 @@ public final class NotchWidgets {
         final int r = 1;
         fillRound(ctx, x, y, w, h, r, NotchTheme.OUTLINE);
         fillRound(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, NotchTheme.PANEL_FACE);
-        // bevel on the straight edges (skipping the rounded corners)
         ctx.fill(x + r, y + 1, x + w - r, y + 2, NotchTheme.HIGHLIGHT);
         ctx.fill(x + 1, y + r, x + 2, y + h - r, NotchTheme.HIGHLIGHT);
         ctx.fill(x + r, y + h - 2, x + w - r, y + h - 1, NotchTheme.EDGE);
@@ -31,13 +30,10 @@ public final class NotchWidgets {
 
     public static void slot(GuiGraphics ctx, int x, int y, int w, int h) {
         ctx.fill(x, y, x + w, y + h, NotchTheme.INSET_SHADOW);
-        // dark top + left (inset)
         ctx.fill(x, y, x + w, y + 1, NotchTheme.EDGE);
         ctx.fill(x, y, x + 1, y + h, NotchTheme.EDGE);
-        // light bottom + right
         ctx.fill(x + 1, y + h - 1, x + w, y + h, NotchTheme.HIGHLIGHT);
         ctx.fill(x + w - 1, y + 1, x + w, y + h, NotchTheme.HIGHLIGHT);
-        // interior
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, NotchTheme.SLOT_FILL);
     }
 
@@ -61,7 +57,6 @@ public final class NotchWidgets {
         final int r = 1;
         fillRound(ctx, x, y, w, h, r, NotchTheme.OUTLINE);
         fillRound(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, fill);
-        // inset bevel: dark top/left, light bottom/right (on the straight edges)
         ctx.fill(x + r, y + 1, x + w - r, y + 2, NotchTheme.EDGE);
         ctx.fill(x + 1, y + r, x + 2, y + h - r, NotchTheme.EDGE);
         ctx.fill(x + r, y + h - 2, x + w - r, y + h - 1, NotchTheme.HIGHLIGHT);
@@ -74,10 +69,6 @@ public final class NotchWidgets {
         fillRound(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, NotchTheme.DEEP);
         ctx.fill(x + r, y + 1, x + w - r, y + 2, NotchTheme.OUTLINE);
     }
-
-    // ---- Labeled buttons (consistent semantics across screens) ----
-    // GOOD = green, BAD = red: white text + black shadow ("hero" text).
-    // NEUTRAL = grey: black text, no shadow.
 
     public static void primaryButton(GuiGraphics ctx, Font tr, int x, int y, int w, int h, String label, boolean hovered) {
         colorButton(ctx, x, y, w, h, NotchTheme.ACCENT_GREEN, NotchTheme.GREEN_HI, NotchTheme.GREEN_LO, hovered);
@@ -164,7 +155,7 @@ public final class NotchWidgets {
     public static void slider(GuiGraphics ctx, int x, int y, int w, int h, float t, boolean hovered) {
         inset(ctx, x, y, w, h, NotchTheme.DEEP);
         int cx = x + w / 2;
-        ctx.fill(cx, y + 2, cx + 1, y + h - 2, NotchTheme.INSET_SHADOW); // center tick
+        ctx.fill(cx, y + 2, cx + 1, y + h - 2, NotchTheme.INSET_SHADOW);
         float clamped = Math.max(0f, Math.min(1f, t));
         int hx = x + 2 + Math.round((w - 10) * clamped);
         button(ctx, hx, y + 1, 8, h - 2, hovered, false);
@@ -194,9 +185,9 @@ public final class NotchWidgets {
                                  boolean tl, boolean tr, boolean bl, boolean br) {
         final int r = 1;
         int face = hovered ? lighten(NotchTheme.PANEL_FACE) : NotchTheme.PANEL_FACE;
-        fillRoundSel(ctx, x, y, w, h, r, NotchTheme.OUTLINE, tl, tr, bl, br);                 // black
-        fillRoundSel(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, NotchTheme.HIGHLIGHT, tl, tr, bl, br); // white ring
-        fillRoundSel(ctx, x + 2, y + 2, w - 4, h - 4, r - 2, face, tl, tr, bl, br);            // grey face
+        fillRoundSel(ctx, x, y, w, h, r, NotchTheme.OUTLINE, tl, tr, bl, br);
+        fillRoundSel(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, NotchTheme.HIGHLIGHT, tl, tr, bl, br);
+        fillRoundSel(ctx, x + 2, y + 2, w - 4, h - 4, r - 2, face, tl, tr, bl, br);
     }
 
     private static int lighten(int argb) {
@@ -223,12 +214,9 @@ public final class NotchWidgets {
     }
 
     public static boolean typingInField(int keyCode, int scanCode, int modifiers, EditBox... fields) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false; // let the screen close on ESC
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false;
         for (EditBox f : fields) {
             if (f != null && f.isFocused() && f.isVisible()) {
-                // Forward only navigation/editing keys (and real Ctrl/Cmd combos) to the field.
-                // Plain letters/numbers are inserted via charTyped, so we must NOT forward them here:
-                // forwarding a bare 'a' trips the field's select-all and the next char wipes the line.
                 boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
                 boolean editKey = combo
                         || keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE
@@ -240,7 +228,7 @@ public final class NotchWidgets {
                 *///?} else {
                 if (editKey) f.keyPressed(keyCode, scanCode, modifiers);
                 //?}
-                return true; // swallow everything else so HandledScreen doesn't close/hotbar-swap
+                return true;
             }
         }
         return false;
@@ -248,7 +236,7 @@ public final class NotchWidgets {
 
     public static boolean typingInEditBox(int keyCode, int scanCode, int modifiers,
                                           net.minecraft.client.gui.components.MultiLineEditBox box) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false; // let the screen close on ESC
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false;
         if (box == null || !box.isFocused() || !box.visible) return false;
         boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
         boolean editKey = combo
@@ -263,6 +251,6 @@ public final class NotchWidgets {
         *///?} else {
         if (editKey) box.keyPressed(keyCode, scanCode, modifiers);
         //?}
-        return true; // swallow plain characters: charTyped inserts them
+        return true;
     }
 }

@@ -23,12 +23,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
     private static final int W = 256, H = 244;
     private static final int ROW_X = 8, ROW_W = 240, ROW_H = 18, ROW_STEP = 19, ROWS_Y = 110;
-
     private static ItemStack coin;
-
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -86,8 +82,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         super.init();
         String oldName = nameField == null ? menu.shopName() : nameField.getValue();
         nameField = new EditBox(this.font, this.leftPos + 45, this.topPos + 61, 160, 10, Component.literal("Name"));
-        nameField.setMaxLength(48); // room for &-color codes in the title ("&6Golden Goods")
-        nameField.setWidth(144);    // leaves room for the title-color swatch
+        nameField.setMaxLength(48);
+        nameField.setWidth(144);
         nameField.setBordered(false);
         nameField.setValue(oldName);
         addRenderableWidget(nameField);
@@ -125,7 +121,6 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Shop Manager", x + W / 2, y + 8);
 
-        // Open/closed toggle (shows the state) + status + rent.
         boolean open = menu.prop(ShopManageScreenHandler.P_OPEN) != 0;
         boolean rentPaused = menu.prop(ShopManageScreenHandler.P_RENT_PAUSED) != 0;
         if (open) {
@@ -145,7 +140,6 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     NotchTheme.TEXT_MUTED, false);
         }
 
-        // Earnings pill + collect.
         long pending = menu.pendingBalance();
         int barterItems = menu.prop(ShopManageScreenHandler.P_BARTER_COUNT);
         MutableComponent earnings = Component.literal("Earnings ").append(NotchCurrency.coins(pending));
@@ -160,10 +154,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
         }
 
-        // Name + greeting rows (fields draw on top of the insets).
         ctx.drawString(this.font, "Name", x + 10, y + 62, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + 42, y + 59, 150, 14, NotchTheme.DEEP);
-        // Title color swatch: cycles preset colors; shows the current &-code's color either way.
         NotchWidgets.slot(ctx, x + 195, y + 59, 14, 14);
         ctx.fill(x + 197, y + 61, x + 207, y + 71, swatchArgb());
         NotchWidgets.neutralButton(ctx, this.font, x + 212, y + 59, 36, 14, "Set",
@@ -175,7 +167,6 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
         NotchWidgets.divider(ctx, x + 8, y + 94, W - 16);
 
-        // Listings header + pager.
         int count = menu.prop(ShopManageScreenHandler.P_COUNT);
         ctx.drawString(this.font, "LISTINGS (" + count + "/27)", x + 10, y + 99, NotchTheme.TEXT_DARK, false);
         int pageCount = menu.prop(ShopManageScreenHandler.P_TOTAL_PAGES);
@@ -189,14 +180,12 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     over(mouseX, mouseY, x + 233, y + 97, 13, 11));
         }
 
-        // Listing rows.
         boolean any = false;
         for (int i = 0; i < ShopManageScreenHandler.ROWS; i++) {
             Row row = row(i);
             if (row == null) continue;
             any = true;
             int ry = rowY(i);
-            // Vanilla-trade card, same as the browse screen: price icons -> arrow -> item.
             NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
             if (row.price() > 0) {
                 ctx.renderItem(coin(), x + ROW_X + 3, ry + 1);
@@ -225,9 +214,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         NotchWidgets.primaryButton(ctx, this.font, x + 8, y + 224, 240, 15, "+ New Listing",
                 over(mouseX, mouseY, x + 8, y + 224, 240, 15));
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -253,7 +240,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     Component.literal("Typed &-codes show here too (\"&6Golden Goods\")").withStyle(ChatFormatting.GRAY),
                     Component.literal("Press Set to apply").withStyle(ChatFormatting.GRAY)), mouseX, mouseY);
         }
-        // Full price/stock tooltip when hovering a listing (left of the Edit button).
+
         for (int i = 0; i < ShopManageScreenHandler.ROWS; i++) {
             Row row = row(i);
             if (row == null) continue;
@@ -354,7 +341,6 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, greetField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -363,16 +349,13 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

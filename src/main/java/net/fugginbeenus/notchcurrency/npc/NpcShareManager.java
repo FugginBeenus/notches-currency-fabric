@@ -36,9 +36,6 @@ public final class NpcShareManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Couldn't package that NPC.").withStyle(ChatFormatting.RED));
             return;
         }
-        // A code longer than a packet allows could be sent out (server to client is far roomier) but
-        // never pasted back, so handing one over would just be a trap. The file route has no such
-        // limit and produces the same text.
         if (code.length() > NpcShareCodec.MAX_WIRE_CHARS) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This NPC is too detailed to copy as a code. Use 'To file' instead.")
                     .withStyle(ChatFormatting.RED));

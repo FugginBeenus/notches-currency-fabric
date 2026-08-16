@@ -31,18 +31,13 @@ import java.util.List;
 public class BalloonEntity extends Entity {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency");
-
-    // Loot table: data/notchcurrency/loot_tables/balloon_crate.json
     public static final ResourceLocation LOOT = NotchCurrency.id("balloon_crate");
-
-    // ---- Motion tuning ----
     private static final double BOB_AMPLITUDE = 0.30;
-    private static final double BOB_PERIOD_TICKS = 14.0; // bigger = slower
+    private static final double BOB_PERIOD_TICKS = 14.0;
     private static final double DRIFT_SPEED = 0.004;
-    private static final long DESPAWN_TICKS = 20L * 60L * 5L; // 5 minutes
-
-    private int animTicks = 0;  // For bobbing animation only
-    private long spawnWorldTime = -1;  // Level time when spawned (persists through chunk unloads)
+    private static final long DESPAWN_TICKS = 20L * 60L * 5L;
+    private int animTicks = 0;
+    private long spawnWorldTime = -1;
 
     public BalloonEntity(EntityType<? extends BalloonEntity> type, Level world) {
         super(type, world);
@@ -56,7 +51,6 @@ public class BalloonEntity extends Entity {
         this.setDeltaMovement(Vec3.ZERO);
     }
 
-    // NBT
     //? if >=1.21 {
     /*@Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {}
     *///?} else {
@@ -70,7 +64,6 @@ public class BalloonEntity extends Entity {
     *///?} else {
     protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag nbt) {
     //?}
-        // If SpawnWorldTime is missing (old balloon), it will be 0, and we'll re-init in tick()
         this.spawnWorldTime = nbt.contains("SpawnWorldTime") ? nbt.getLong("SpawnWorldTime") : -1;
         this.animTicks = nbt.getInt("AnimTicks");
     }
@@ -89,7 +82,6 @@ public class BalloonEntity extends Entity {
         *///?}
     }
 
-    // Targetable
     @Override public boolean isAttackable() { return true; }
     @Override public boolean isPushable()   { return false; }
     @Override public void    push(Entity entity) {} // keep public in 1.20.1
@@ -104,17 +96,11 @@ public class BalloonEntity extends Entity {
     public void tick() {
         super.tick();
         if (this.level().isClientSide) return;
-
-        // Initialize spawn time on first tick
         if (spawnWorldTime < 0) {
             spawnWorldTime = level().getGameTime();
         }
-
-        // Check despawn based on world time (works even if chunk was unloaded)
         long currentWorldTime = level().getGameTime();
         long age = currentWorldTime - spawnWorldTime;
-
-        // Debug logging every 30 seconds (600 ticks)
         if (animTicks % 600 == 0) {
             LOGGER.debug("[Balloon] ID={} age={}/{} ticks ({}/{} seconds)",
                     getId(), age, DESPAWN_TICKS, age / 20, DESPAWN_TICKS / 20);
@@ -128,7 +114,6 @@ public class BalloonEntity extends Entity {
 
         animTicks++;
 
-        // Bob + gentle drift (deterministic per id)
         double bob = Math.sin(animTicks / BOB_PERIOD_TICKS) * (BOB_AMPLITUDE / BOB_PERIOD_TICKS);
         double dx = ((getId() & 1) == 0 ? DRIFT_SPEED : -DRIFT_SPEED);
         double dz = ((getId() % 3) == 0 ? -DRIFT_SPEED : DRIFT_SPEED);
@@ -166,8 +151,6 @@ public class BalloonEntity extends Entity {
 
     private void popAndRainLoot() {
         ServerLevel sw = (ServerLevel) level();
-
-        // 1) Sounds + burst FX
         sw.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.AMBIENT, 0.9f, 1.5f);
         sw.playSound(null, blockPosition(), SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE, SoundSource.AMBIENT, 0.4f, 1.8f);
 
@@ -178,12 +161,9 @@ public class BalloonEntity extends Entity {
             double az = (sw.random.nextDouble() - 0.5) * spread;
             sw.sendParticles(ParticleTypes.POOF, getX(), getY(), getZ(), 1, ax, ay, az, 0.02);
         }
-
-        // Barrel "shatter" visual (block break event)
         sw.levelEvent(2001, blockPosition(), Block.getId(Blocks.BARREL.defaultBlockState()));
         sw.playSound(null, blockPosition(), SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.8f, 1.1f);
 
-        // 2) Roll loot table
         //? if >=1.21 {
         /*LootTable table = sw.getServer().reloadableRegistries().getLootTable(
                 net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, LOOT));
@@ -197,12 +177,10 @@ public class BalloonEntity extends Entity {
 
         java.util.List<ItemStack> loot = table.getRandomItems(ctx);
 
-        // Fallback so you SEE something if the table is empty/missing
         if (loot.isEmpty()) {
             loot.add(new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN, 5));
         }
 
-        // 3) "Loot rain" – spawn items with downward + slight outward velocity
         final double cx = getX();
         final double cy = getY();
         final double cz = getZ();
@@ -211,16 +189,15 @@ public class BalloonEntity extends Entity {
             if (s.isEmpty()) continue;
             var item = new ItemEntity(sw, cx, cy, cz, s.copy());
 
-            double vx = (sw.random.nextDouble() - 0.5) * 0.2; // small horizontal spread
-            double vy = -0.25 - sw.random.nextDouble() * 0.15; // falling down
+            double vx = (sw.random.nextDouble() - 0.5) * 0.2;
+            double vy = -0.25 - sw.random.nextDouble() * 0.15;
             double vz = (sw.random.nextDouble() - 0.5) * 0.2;
 
             item.setDeltaMovement(vx, vy, vz);
-            item.setPickUpDelay(20); // brief delay so it visibly falls before pickup
+            item.setPickUpDelay(20);
             sw.addFreshEntity(item);
         }
 
-        // 4) Remove the balloon entity
         discard();
     }
 

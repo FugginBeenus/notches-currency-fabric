@@ -18,7 +18,7 @@ public final class BountyPools {
 
     private static final List<ObjectiveEntry> OBJECTIVES = new ArrayList<>();
     private static final List<RewardEntry> REWARDS = new ArrayList<>();
-    private static final Map<ResourceLocation, String> DECREES = new HashMap<>(); // decree item -> category
+    private static final Map<ResourceLocation, String> DECREES = new HashMap<>();
 
     private BountyPools() {}
 
@@ -31,27 +31,21 @@ public final class BountyPools {
     public static void addDecree(ResourceLocation item, String category) {
         DECREES.put(item, category);
     }
-
     public static String decreeCategory(ResourceLocation item) {
         return DECREES.get(item);
     }
-
     public static void addObjective(ObjectiveEntry e) {
         OBJECTIVES.add(e);
     }
-
     public static void addReward(RewardEntry e) {
         REWARDS.add(e);
     }
-
     public static boolean isEmpty() {
         return OBJECTIVES.isEmpty() || REWARDS.isEmpty();
     }
-
     public static int objectiveCount() {
         return OBJECTIVES.size();
     }
-
     public static int rewardCount() {
         return REWARDS.size();
     }

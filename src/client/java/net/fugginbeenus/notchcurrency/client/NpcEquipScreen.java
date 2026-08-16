@@ -50,25 +50,20 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Equipment", x + W / 2, y + 7);
-
-        // Recessed containers: gear on the left, the live NPC on the right.
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
 
-        // Armor column.
         for (int i = 0; i < 4; i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.ARMOR_X - 1, y + NpcEquipScreenHandler.ARMOR_Y - 1 + i * 18);
             ctx.drawString(this.font, SLOT_LABELS[i], x + NpcEquipScreenHandler.ARMOR_X + 22,
                     y + NpcEquipScreenHandler.ARMOR_Y + 4 + i * 18, NotchTheme.TEXT_DARK, false);
         }
 
-        // Trinket grid beside the armor (only present with the Trinkets mod).
         for (int i = 0; i < menu.trinketCount(); i++) {
             NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.TRINKET_X - 1 + (i % 2) * 18,
                     y + NpcEquipScreenHandler.TRINKET_Y - 1 + (i / 2) * 18);
         }
 
-        // Hands, under a divider.
         NotchWidgets.divider(ctx, x + 12, y + NpcEquipScreenHandler.MAIN_Y - 8, 140);
         NotchWidgets.slot(ctx, x + NpcEquipScreenHandler.HAND_X - 1, y + NpcEquipScreenHandler.MAIN_Y - 1);
         ctx.drawString(this.font, SLOT_LABELS[4], x + NpcEquipScreenHandler.HAND_X + 22,
@@ -77,10 +72,8 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
         ctx.drawString(this.font, SLOT_LABELS[5], x + NpcEquipScreenHandler.OFF_X + 22,
                 y + NpcEquipScreenHandler.OFF_Y + 4, NotchTheme.TEXT_DARK, false);
 
-        // Live preview: the real NPC, so gear shows the instant it's equipped.
         preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
 
-        // Divider + player inventory.
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -93,9 +86,7 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
                     y + NpcEquipScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -134,16 +125,13 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
         }
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

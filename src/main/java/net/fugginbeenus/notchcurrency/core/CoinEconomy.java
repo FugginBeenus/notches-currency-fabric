@@ -31,7 +31,6 @@ public final class CoinEconomy {
             return 0;
         }
 
-        // TODO: [FUTURE] Give actual coin items when withdrawing from balance
         LOGGER.info("[CoinEconomy] withdrawFromBalanceToInventory {} -> {}",
                 player.getName().getString(), amount);
         return amount;
@@ -58,14 +57,11 @@ public final class CoinEconomy {
     public static void give(ServerPlayer player, int amount, boolean silent) {
         if (player == null || amount <= 0) return;
 
-        // Give physical coin items
         net.minecraft.world.item.ItemStack coins = new net.minecraft.world.item.ItemStack(
                 net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN,
                 amount
         );
 
-        // Insert what fits, then ALWAYS drop the remainder. (insertStack returns true when
-        // it places *some*, so a partial fit used to silently discard the overflow.)
         player.getInventory().add(coins);
         while (!coins.isEmpty()) {
             int n = Math.min(coins.getCount(), coins.getMaxStackSize());

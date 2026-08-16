@@ -31,8 +31,6 @@ public class CoinFlipBlockEntity extends BlockEntity {
         }
     }
 
-    // 1.21.11 swapped the tag for a write view. The body below still fills a tag, which Nbt then
-    // copies across key for key, so what lands on disk is the same either way.
     @Override
     //? if >=1.21.11 {
     /*protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput out) {

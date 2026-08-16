@@ -29,8 +29,6 @@ public final class NpcCommands {
     private NpcCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        // Fetching models for yourself is nobody else's business, so it sits outside /npc, which
-        // is operator gated as a whole.
         dispatcher.register(
                 Commands.literal("npcmodels")
                         .then(Commands.literal("sync")
@@ -125,7 +123,7 @@ public final class NpcCommands {
             src.sendFailure(Component.literal("Run as a player."));
             return 0;
         }
-        float yaw = p.getYRot() + 180f; // face the admin
+        float yaw = p.getYRot() + 180f;
         var npc = preset == null
                 ? NotchNpcApi.spawnNpc(p.serverLevel(), p.position(), yaw, p)
                 : NotchNpcApi.spawnNpcFromPreset(p.serverLevel(), p.position(), yaw, preset, p);

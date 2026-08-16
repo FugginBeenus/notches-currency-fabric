@@ -16,58 +16,39 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
 
     private static final ResourceLocation TEX = NotchCurrency.id("textures/gui/trade.png");
-
-    // === Panel (your texture) ===
     private static final int TEX_U = 2, TEX_V = 2;
     private static final int PANEL_W = 226, PANEL_H = 215;
     private static final int TEX_W = 256, TEX_H = 256;
-
-    // === Slot and UI layout (match handler/texture) ===
     private static final int SELF_GRID_X = 34;
     private static final int SELF_GRID_Y = 25;
     private static final int OTHER_GRID_X = 142;
     private static final int OTHER_GRID_Y = 25;
-
     private static final int PLAYER_INV_X = 34;
     private static final int PLAYER_INV_Y = 135;
     private static final int HOTBAR_Y     = PLAYER_INV_Y + 58;
-
-    // Confirm (Ready/Unready) click zone (over your green art)
     private static final int CONFIRM_W = 55, CONFIRM_H = 20;
     private static final int CONFIRM_X = (PANEL_W - CONFIRM_W) / 2;
     private static final int CONFIRM_Y = 110;
-
-    // Money pills (under each 3×3)
     private static final int PILL_W = 74, PILL_H = 16;
     private static final int LEFT_PILL_X  = SELF_GRID_X;
     private static final int LEFT_PILL_Y  = SELF_GRID_Y + 54 + 13;
     private static final int RIGHT_PILL_X = OTHER_GRID_X;
     private static final int RIGHT_PILL_Y = OTHER_GRID_Y + 54 + 13;
-
-    // ---- New tweak knobs (safe to edit) ----
-    // Nudge whole fields (relative to pill positions)
-    private static final int LEFT_PILL_DX  = 2;  // +right / -left
-    private static final int LEFT_PILL_DY  = -6;  // +down  / -up
+    private static final int LEFT_PILL_DX  = 2;
+    private static final int LEFT_PILL_DY  = -6;
     private static final int RIGHT_PILL_DX = 2;
     private static final int RIGHT_PILL_DY = -6;
-
-    // Component padding inside each pill
     private static final int FIELD_INSET_X = 5;
     private static final int FIELD_INSET_Y = 1;
-
-    // TextField size (kept narrower than pill)
     private static final int FIELD_W = 64, FIELD_H = 14;
-
-    // Nudge the drawn CONFIRM/READY label (hitbox stays the same)
     private static final int CONFIRM_LABEL_DX = 2;
     private static final int CONFIRM_LABEL_DY = 1;
 
-    // We keep the baked-in green button visible
     @SuppressWarnings("unused")
     private static final boolean HIDE_BUTTON_ART = false;
 
-    private EditBox selfMoneyField;   // editable
-    private EditBox otherMoneyField;  // read-only
+    private EditBox selfMoneyField;
+    private EditBox otherMoneyField;
     private boolean ready = false;
 
     public TradeScreen(TradeScreenHandler handler, Inventory inv, Component title) {
@@ -88,7 +69,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         final int x = (this.width - imageWidth) / 2;
         final int y = (this.height - imageHeight) / 2;
 
-        // --- Left (your offer) field ---
         selfMoneyField = new EditBox(
                 this.font,
                 x + LEFT_PILL_X + LEFT_PILL_DX + FIELD_INSET_X,
@@ -97,13 +77,12 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
                 Component.literal(""));
         selfMoneyField.setMaxLength(10);
         selfMoneyField.setValue("0");
-        selfMoneyField.setBordered(false); // transparent: show pill art
+        selfMoneyField.setBordered(false);
         selfMoneyField.setVisible(true);
         selfMoneyField.setEditable(true);
         selfMoneyField.setResponder(s -> sendUpdate());
         addRenderableWidget(selfMoneyField);
 
-        // --- Right (their offer) field (read-only mirror) ---
         otherMoneyField = new EditBox(
                 this.font,
                 x + RIGHT_PILL_X + RIGHT_PILL_DX + FIELD_INSET_X,
@@ -115,8 +94,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         otherMoneyField.setVisible(true);
         otherMoneyField.setFocused(false);
         addRenderableWidget(otherMoneyField);
-
-        // --- Invisible Confirm/Ready hitbox over the green button art ---
         addRenderableWidget(new InvisibleButton(
                 x + CONFIRM_X, y + CONFIRM_Y, CONFIRM_W, CONFIRM_H,
                 this::toggleReady));
@@ -147,7 +124,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
-        // Keep the other player's amount mirrored into the right field
         int other = this.menu.getProperties().get(1);
         String want = Integer.toString(other);
         if (!want.equals(otherMoneyField.getValue())) {
@@ -163,14 +139,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
 
-        // Draw "CONFIRM"/"READY" label (independent nudge from hitbox)
         int bx = (this.width - imageWidth) / 2 + CONFIRM_X + CONFIRM_LABEL_DX;
         int by = (this.height - imageHeight) / 2 + CONFIRM_Y + CONFIRM_LABEL_DY;
         String label = ready ? "READY" : "CONFIRM";
         int lw = this.font.width(label);
         int lx = bx + (CONFIRM_W - lw) / 2;
         int ly = by + (CONFIRM_H - this.font.lineHeight) / 2;
-        int color = ready ? 0xFF4CF06C : 0xFFFFFFFF; // green when ready
+        int color = ready ? 0xFF4CF06C : 0xFFFFFFFF;
         ctx.drawString(this.font, label, lx, ly, color, false);
 
         //? if >=26.1 {
@@ -190,24 +165,19 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         int x = (this.width - imageWidth) / 2;
         int y = (this.height - imageHeight) / 2;
 
-        // Draw full panel background (includes baked-in button)
         //? if >=1.21.11 {
-        /*// The nine-argument blit means (x, y, width, height, u0, v0, u1, v1) here, so the old
-        // arguments would ask for a two by two smear. This overload keeps the original meaning.
+        /*
         ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TEX,
                 x, y, (float) TEX_U, (float) TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
         *///?} else {
         ctx.blit(TEX, x, y, TEX_U, TEX_V, PANEL_W, PANEL_H, TEX_W, TEX_H);
         //?}
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
 
-    // ----- Invisible clickable widget (renders nothing) -----
     private static final class InvisibleButton extends AbstractButton {
         private final Runnable onClick;
 
@@ -241,7 +211,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, selfMoneyField, otherMoneyField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -250,16 +219,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

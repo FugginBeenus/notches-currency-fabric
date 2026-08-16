@@ -26,7 +26,6 @@ public final class NpcPresetManager {
 
     private NpcPresetManager() {}
 
-    // Action ids for the NPC_PRESET packet.
     public static final int ACTION_OPEN = 0, ACTION_SAVE = 1, ACTION_LOAD = 2, ACTION_DELETE = 3;
 
     public static void action(ServerPlayer sp, NotchNpcEntity npc, int action, String name) {
@@ -36,7 +35,6 @@ public final class NpcPresetManager {
             case ACTION_LOAD -> load(sp, npc, name);
             case ACTION_DELETE -> delete(sp, name);
         }
-        // Every action (including plain OPEN) ends with a fresh list, which opens/updates the screen.
         sendList(sp, npc);
     }
 
@@ -95,18 +93,16 @@ public final class NpcPresetManager {
     }
 
     public static void applyTag(NotchNpcEntity npc, CompoundTag tag, @Nullable ServerPlayer actor) {
-        stripWorldSpecific(tag); // belt & braces for hand-edited files and pasted codes
+        stripWorldSpecific(tag);
 
         NpcRole role = NpcRole.NONE;
         try {
             role = NpcRole.valueOf(tag.getString("Role"));
         } catch (IllegalArgumentException ignored) {
         }
-        // Unwind a linked shop before the config is overwritten so its stock isn't orphaned.
         if (npc.getRole() == NpcRole.SHOP && actor != null) {
             NotchNpcManager.removeLinkedShop(actor, npc.getUUID());
         }
-        // The target NPC keeps its own identity: owner, home and route survive the load.
         UUID owner = npc.getOwner();
         String ownerName = npc.getOwnerName();
         NotchNpcEntity.OwnerType ownerType = npc.getOwnerType();
@@ -180,9 +176,6 @@ public final class NpcPresetManager {
         tag.remove("Home");
         tag.remove("Waypoints");
         tag.remove("ActionSweep");
-        // The schedule itself is worth carrying (times, stances, what it says on arrival);
-        // its coordinates are not. They arrive flagged as needing a spot, which is what the
-        // editor's repair flow walks the new owner through.
         net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.stripAnchors(tag, "Schedule");
     }
 

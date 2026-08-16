@@ -19,62 +19,26 @@ public final class ModScreenHandlers {
 
     public static MenuType<ATMTestScreenHandler> ATM;
     public static MenuType<TradeScreenHandler> TRADE;
-
-    // main auction browser (the big "MY LISTINGS" screen)
     public static MenuType<AuctionHouseScreenHandler> AUCTION_HOUSE;
-
-    // popup "user auctions / my listings" window
     public static MenuType<UserListingsScreenHandler> USER_AUCTIONS;
-
-    // Raffle info/action panel
     public static MenuType<RaffleScreenHandler> RAFFLE;
-
-    // Raffle admin setup panel
     public static MenuType<RaffleAdminScreenHandler> RAFFLE_ADMIN;
-
-    // "List an item" creation screen
     public static MenuType<AuctionListingScreenHandler> AUCTION_LISTING;
-
-    // Bounty board panel
     public static MenuType<BountyBoardScreenHandler> BOUNTY_BOARD;
-
-    // Bounty admin setup panel
     public static MenuType<BountyAdminScreenHandler> BOUNTY_ADMIN;
-
-    // Loan application panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler> LOAN;
-
-    // Slot machine panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler> SLOT_MACHINE;
-
-    // Coin flip betting panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler> COIN_FLIP;
-
-    // NPC equipment panel
     public static MenuType<net.fugginbeenus.notchcurrency.npc.NpcEquipScreenHandler> NPC_EQUIP;
-
-    // Enchanter service panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler> ENCHANTER;
-
-    // Cosmetics shop panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticShopScreenHandler> COSMETIC_SHOP;
-
-    // Offline trade offers: create + board
     public static MenuType<net.fugginbeenus.notchcurrency.mail.MailInboxMenu> MAIL_INBOX;
     public static MenuType<net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler> MAIL_POST;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler> TRADE_OFFER_CREATE;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler> TRADE_OFFERS;
-
-    // Receipts (transaction history) panel
     public static MenuType<net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler> RECEIPTS;
-
-    // Shop browser (buyer side, extended: shop identity in the opening buf)
     public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler> SHOP_BROWSE;
-
-    // Shop manage hub (owner side)
     public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler> SHOP_MANAGE;
-
-    // Shop listing editor (owner side)
     public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopListingEditScreenHandler> SHOP_LISTING_EDIT;
 
     private ModScreenHandlers() {}
@@ -87,80 +51,66 @@ public final class ModScreenHandlers {
     }
 
     public static void register() {
-        // ATM
         ATM = simple(
                 NotchCurrency.id("atm"),
                 ATMTestScreenHandler::new
         );
 
-        // Player-to-player trade
         TRADE = simple(
                 NotchCurrency.id("trade"),
                 TradeScreenHandler::new
         );
 
-        // Main auction house browser
         AUCTION_HOUSE = simple(
                 NotchCurrency.id("auction_house"),
                 AuctionHouseScreenHandler::new
         );
 
-        // Popup "My Listings" / user auctions window
         USER_AUCTIONS = simple(
                 NotchCurrency.id("user_auctions"),
                 UserListingsScreenHandler::new
         );
 
-        // Raffle panel
         RAFFLE = simple(
                 NotchCurrency.id("raffle"),
                 RaffleScreenHandler::new
         );
 
-        // Raffle admin setup panel
         RAFFLE_ADMIN = simple(
                 NotchCurrency.id("raffle_admin"),
                 RaffleAdminScreenHandler::new
         );
 
-        // List-an-item screen
         AUCTION_LISTING = simple(
                 NotchCurrency.id("auction_listing"),
                 AuctionListingScreenHandler::new
         );
 
-        // Bounty board
         BOUNTY_BOARD = simple(
                 NotchCurrency.id("bounty_board"),
                 BountyBoardScreenHandler::new
         );
 
-        // Bounty admin setup
         BOUNTY_ADMIN = simple(
                 NotchCurrency.id("bounty_admin"),
                 BountyAdminScreenHandler::new
         );
 
-        // Loan application
         LOAN = simple(
                 NotchCurrency.id("loan"),
                 net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler::new
         );
 
-        // Slot machine
         SLOT_MACHINE = simple(
                 NotchCurrency.id("slot_machine"),
                 net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler::new
         );
 
-        // Coin flip
         COIN_FLIP = simple(
                 NotchCurrency.id("coin_flip"),
                 net.fugginbeenus.notchcurrency.economy.gambling.CoinFlipScreenHandler::new
         );
 
-        // NPC equipment
-        // NPC equipment (extended: the NPC uuid rides the opening buf for the live preview)
         NPC_EQUIP = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("npc_equip"),
@@ -172,13 +122,11 @@ public final class ModScreenHandlers {
                 //?}
         );
 
-        // Enchanter service
         ENCHANTER = simple(
                 NotchCurrency.id("enchanter"),
                 net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterScreenHandler::new
         );
 
-        // Cosmetics shop (extended: linked NPC uuid in the opening buf for the preview)
         COSMETIC_SHOP = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("cosmetic_shop"),
@@ -199,7 +147,6 @@ public final class ModScreenHandlers {
                 net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler::new
         );
 
-        // Offline trade offers
         TRADE_OFFER_CREATE = simple(
                 NotchCurrency.id("trade_offer_create"),
                 net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler::new
@@ -209,7 +156,6 @@ public final class ModScreenHandlers {
                 net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler::new
         );
 
-        // Receipts (extended: history snapshot in the opening buf)
         RECEIPTS = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("receipts"),
@@ -221,7 +167,6 @@ public final class ModScreenHandlers {
                 //?}
         );
 
-        // Shop browser (buyer side)
         SHOP_BROWSE = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_browse"),
@@ -233,7 +178,6 @@ public final class ModScreenHandlers {
                 //?}
         );
 
-        // Shop manage hub (owner side)
         SHOP_MANAGE = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_manage"),
@@ -245,7 +189,6 @@ public final class ModScreenHandlers {
                 //?}
         );
 
-        // Shop listing editor (owner side)
         SHOP_LISTING_EDIT = Registry.register(
                 BuiltInRegistries.MENU,
                 NotchCurrency.id("shop_listing_edit"),

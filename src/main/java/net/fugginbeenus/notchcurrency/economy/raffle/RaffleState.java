@@ -44,20 +44,18 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
 
     private long currentRound = 1L;
     private long pot = 0L;
-    private long coinsPool = 0L; // admin-set guaranteed coin prize for this round (a faucet)
+    private long coinsPool = 0L;
     private ItemStack prizeItem = ItemStack.EMPTY;
     private final Map<UUID, Integer> tickets = new LinkedHashMap<>();
     private final Map<UUID, String> names = new LinkedHashMap<>();
     private final Map<Long, Result> unclaimed = new LinkedHashMap<>();
-    private final Set<UUID> redeemedThisRound = new HashSet<>(); // one old-ticket redemption per player per round
+    private final Set<UUID> redeemedThisRound = new HashSet<>();
 
     public static RaffleState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         DimensionDataStorage mgr = overworld.getDataStorage();
         return StateData.getOrCreate(mgr, RaffleState::new, RaffleState::fromNbt, DATA_KEY);
     }
-
-    // ---- active round ----
 
     public long getCurrentRound() {
         return currentRound;
@@ -135,8 +133,8 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
         unclaimed.put(drawn, new Result(drawn, winner, winnerName, prize, prizeItem));
         currentRound++;
         pot = 0L;
-        coinsPool = 0L;             // one-off prize pool is consumed by the draw
-        prizeItem = ItemStack.EMPTY; // awarded into the Result; next round starts itemless
+        coinsPool = 0L;
+        prizeItem = ItemStack.EMPTY;
         tickets.clear();
         names.clear();
         redeemedThisRound.clear();
@@ -164,8 +162,6 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
         setDirty();
     }
 
-    // ---- unclaimed wins ----
-
     @Nullable
     public Result getResult(long round) {
         return unclaimed.get(round);
@@ -186,10 +182,6 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
         return won;
     }
 
-    // ---- NBT ----
-
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -260,7 +252,6 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
                 state.tickets.put(id, o.getInt("Count"));
                 state.names.put(id, o.getString("Name"));
             } catch (IllegalArgumentException ignored) {
-                // skip malformed entry
             }
         }
 
@@ -274,7 +265,6 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
                 state.unclaimed.put(round, new Result(round, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Winner"),
                         o.getString("Name"), o.getLong("Prize"), prize));
             } catch (IllegalArgumentException ignored) {
-                // skip malformed entry
             }
         }
 
@@ -283,7 +273,6 @@ public class RaffleState extends SavedData implements net.fugginbeenus.notchcurr
             try {
                 state.redeemedThisRound.add(Nbt.getUuid(redeemed.getCompound(i), "Id"));
             } catch (IllegalArgumentException ignored) {
-                // skip malformed entry
             }
         }
         return state;

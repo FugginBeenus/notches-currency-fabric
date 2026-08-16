@@ -22,8 +22,6 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
     private static final int BUY1_X = 14, BUY5_X = 72, BUY10_X = 130, BUY_W = 54;
     private static final int CLAIM_X = 14, CLAIM_Y = 178, CLAIM_W = 170, CLAIM_H = 18;
     private static final int REDEEM_X = 14, REDEEM_Y = 199, REDEEM_W = 170, REDEEM_H = 16;
-
-    // 9x9 clock used for the "no raffle" placeholder.
     private static final String[] CLOCK = {
             "..#####..",
             ".#..#..#.",
@@ -58,7 +56,6 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        // Raffle is the one screen that keeps a gold title (its identity).
         int round = menu.prop(RaffleScreenHandler.P_ROUND);
         ctx.drawCenteredString(this.font,
                 Component.literal("RAFFLE #" + round).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
@@ -82,11 +79,9 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             if (prize.getCount() > 1) ctx.renderItemDecorations(this.font, prize, 0, 0);
             net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
 
-            // Prize name: white hero text (readable on the light panel).
             String prizeName = hasItem ? prize.getHoverName().getString() : "Coin Jackpot";
             NotchWidgets.centerText(ctx, this.font, prizeName, x + W / 2 - 0, y + 80, NotchTheme.TEXT_LIGHT, true);
 
-            // Total coin prize = ticket pot + the admin's guaranteed coins pool.
             long pot = menu.prop(RaffleScreenHandler.P_POT) & 0xFFFFFFFFL;
             long guaranteed = menu.prop(RaffleScreenHandler.P_COINS_POOL) & 0xFFFFFFFFL;
             NotchWidgets.centerText(ctx, this.font, "Prize: " + (pot + guaranteed) + " " + NotchWidgets.coinName(), x + W / 2, y + 92, NotchTheme.TEXT_DARK, false);
@@ -117,9 +112,7 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
                     "Redeem an old ticket", over(mouseX, mouseY, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H));
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -127,7 +120,6 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
     private void drawPlaceholder(GuiGraphics ctx, int x, int y) {
         drawCase(ctx, x + CASE_X, y + CASE_Y, CASE_W, CASE_H, true);
         int cx = x + CASE_X + CASE_W / 2, cy = y + CASE_Y + CASE_H / 2;
-        // 9x9 clock at 3x, centered.
         int scale = 3;
         int ox = cx - (9 * scale) / 2, oy = cy - (9 * scale) / 2;
         for (int r = 0; r < CLOCK.length; r++) {
@@ -183,7 +175,6 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // No default labels.
     }
 
     //? if >=26.1 {
@@ -250,16 +241,13 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
         return -1;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

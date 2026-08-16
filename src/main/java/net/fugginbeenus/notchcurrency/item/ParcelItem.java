@@ -24,17 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A wrapped parcel: what a piece of mail looks like once it is in your hands.
- *
- * <p>Making mail an item rather than a row in a screen is what lets the mailbox be a plain grid of
- * slots. A parcel says who sent it and what is in it on its own tooltip, so the screen does not
- * need a column explaining the thing next to it, and it can be carried off, stored in a chest or
- * handed to somebody else before it is opened.
- *
- * <p>It stacks to one. That is not only flavour: a stack of two could be split by a right click,
- * and half a parcel is not a thing.
- */
 public class ParcelItem extends Item {
 
     private static final String K_SENDER = "Sender";
@@ -47,9 +36,6 @@ public class ParcelItem extends Item {
         super(settings.stacksTo(1));
     }
 
-    // ---- wrapping and unwrapping ----
-
-    /** Wraps a waiting entry up as something the player can pick out of a slot. */
     public static ItemStack of(MailItem mail) {
         ItemStack stack = new ItemStack(ModItems.PARCEL);
         StackData.putString(stack, K_SENDER, mail.sender());
@@ -91,7 +77,6 @@ public class ParcelItem extends Item {
         return out;
     }
 
-    /** Rewrites what is still inside, for a parcel an inventory could only half empty. */
     private static void setContents(ItemStack stack, List<ItemStack> left) {
         int old = StackData.has(stack, K_COUNT) ? StackData.getInt(stack, K_COUNT) : 0;
         for (int i = 0; i < old; i++) StackData.remove(stack, K_ITEM + i);
@@ -100,8 +85,6 @@ public class ParcelItem extends Item {
             StackData.putCompound(stack, K_ITEM + i, StackData.writePortableStack(left.get(i)));
         }
     }
-
-    // ---- opening ----
 
     //? if >=1.21.11 {
     /*@Override
@@ -122,12 +105,6 @@ public class ParcelItem extends Item {
         //?}
     }
 
-    /**
-     * Tips the parcel out.
-     *
-     * <p>Coins first, because money always fits and goods might not. What will not fit stays in the
-     * parcel, so a full inventory costs the player a second right click rather than the contents.
-     */
     public static void unwrap(ServerPlayer player, ItemStack parcel) {
         String from = sender(parcel);
         long coins = coins(parcel);
@@ -168,13 +145,10 @@ public class ParcelItem extends Item {
             return;
         }
 
-        // Nothing left inside, so the wrapping goes too.
         parcel.shrink(1);
         player.playSound(SoundEvents.ITEM_PICKUP, 0.8F, 1.0F);
         player.inventoryMenu.broadcastChanges();
     }
-
-    // ---- display ----
 
     @Override
     public Component getName(ItemStack stack) {
@@ -184,8 +158,6 @@ public class ParcelItem extends Item {
     }
 
     @Override
-    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
-    // a list, which is handed over in one go, ahead of whatever the superclass adds.
     //? if >=1.21.11 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
                                 net.minecraft.world.item.component.TooltipDisplay display,

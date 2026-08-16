@@ -44,7 +44,7 @@ public final class SlotMachineManager {
     private static double rawMultiplier(int i, int j, int k) {
         SlotSymbol[] syms = SlotSymbol.values();
         if (i == j && j == k) return syms[i].mult3();
-        if (i == j || i == k) return syms[i].mult2(); // the repeated symbol is i
+        if (i == j || i == k) return syms[i].mult2();
         if (j == k) return syms[j].mult2();
         return 0.0;
     }
@@ -88,8 +88,7 @@ public final class SlotMachineManager {
         if (payout > 0) {
             CurrencyApi.deposit(sp, payout, TransactionReason.FAUCET, "Slots win");
         }
-        // The win/loss feedback (sounds, reveal) is played client-side when the reels finish
-        // settling, so the payout lands with the spectacle rather than the instant of the click.
+
         return new SpinResult(r0, r1, r2, payout, true);
     }
 

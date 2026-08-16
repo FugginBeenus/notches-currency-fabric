@@ -94,7 +94,6 @@ public class Faction {
                 net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(nbt, "Founder") ? net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "Founder") : null);
         f.setMotto(nbt.getString("Motto"));
         f.setJoinFee(nbt.getInt("JoinFee"));
-        // Factions saved before this setting existed were all open, which is the sane default anyway.
         f.setOpenToJoin(!nbt.contains("Open") || nbt.getBoolean("Open"));
         return f;
     }

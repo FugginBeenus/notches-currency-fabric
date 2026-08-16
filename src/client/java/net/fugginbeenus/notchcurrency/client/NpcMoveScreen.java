@@ -22,7 +22,6 @@ public class NpcMoveScreen extends Screen {
     private int yaw;
     private boolean draggingYaw;
     private int lastSentYaw;
-    // The panel is draggable (grab the title bar) so it never has to sit over the NPC.
     private int panelX = -1, panelY = -1;
     private boolean draggingPanel;
     private int grabDx, grabDy;
@@ -39,7 +38,6 @@ public class NpcMoveScreen extends Screen {
             yaw = Math.round(Mth.wrapDegrees(npc.getYRot()));
             lastSentYaw = yaw;
         }
-        // Default to the bottom-left corner, out of the NPC's way; keep the spot across resizes.
         if (panelX < 0) {
             panelX = 8;
             panelY = this.height - H - 8;
@@ -58,17 +56,14 @@ public class NpcMoveScreen extends Screen {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
-        // No dimmed background: the point is watching the NPC in the world while adjusting.
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.font, "Move, Rotate & Size", px + W / 2, py + 6);
-        // Grip lines at both title corners: the title bar is the drag handle.
         for (int g = 0; g < 3; g++) {
             ctx.fill(px + 6, py + 6 + g * 3, px + 26, py + 7 + g * 3, NotchTheme.PANEL_MID);
             ctx.fill(px + W - 26, py + 6 + g * 3, px + W - 6, py + 7 + g * 3, NotchTheme.PANEL_MID);
         }
 
-        // Yaw row: slider + Face Me.
         int sy = py + 20;
         ctx.drawString(this.font, "Yaw", px + 10, sy + 2, NotchTheme.TEXT_DARK, false);
         boolean hoverYaw = draggingYaw || over(mouseX, mouseY, px + SLIDER_X, sy, SLIDER_W, SLIDER_H);
@@ -77,7 +72,6 @@ public class NpcMoveScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + 226, sy - 1, 56, 14, "Face Me",
                 over(mouseX, mouseY, px + 226, sy - 1, 56, 14));
 
-        // Nudge row: X/Y/Z minus-plus pairs, then snaps.
         int ny = py + 40;
         String[] axes = {"X", "Y", "Z"};
         for (int a = 0; a < 3; a++) {
@@ -93,8 +87,6 @@ public class NpcMoveScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + 232, ny, 50, 14, "To Me",
                 over(mouseX, mouseY, px + 232, ny, 50, 14));
 
-        // Size row: one group per axis. Sizing lives here rather than on a tab because the whole point
-        // is watching the NPC change out in the world while you do it.
         int zy = py + 60;
         NotchNpcEntity npc = findNpc();
         float[] sizes = npc == null ? new float[]{1f, 1f, 1f}
@@ -111,7 +103,6 @@ public class NpcMoveScreen extends Screen {
                     over(mouseX, mouseY, gx + 62, zy, 14, 14));
         }
 
-        // Bottom row: hint + back.
         ctx.drawString(this.font, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 84,
                 NotchTheme.TEXT_MUTED, false);
         NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 100, 272, 16, "Back to Editor",
@@ -175,7 +166,6 @@ public class NpcMoveScreen extends Screen {
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 4);
                 return true;
             }
-            // Grab the title bar to drag the whole panel out of the way.
             if (over(mx, my, px, py, W, 17)) {
                 draggingPanel = true;
                 grabDx = mx - px;
@@ -243,7 +233,6 @@ public class NpcMoveScreen extends Screen {
         if (Math.abs(deg) <= 3) deg = 0; // snap to neutral near the center tick
         if (yaw != deg) {
             yaw = deg;
-            // Throttle live updates like the pose editor's sliders.
             if (Math.abs(deg - lastSentYaw) >= 5) {
                 lastSentYaw = deg;
                 sendYaw();
@@ -320,24 +309,19 @@ public class NpcMoveScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

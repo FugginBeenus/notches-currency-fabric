@@ -17,8 +17,6 @@ public class CrateKeyItem extends Item {
     }
 
     @Override
-    // 1.21.11 feeds the lines to a consumer rather than filling a list. The body below still builds
-    // a list, which is handed over in one go, ahead of whatever the superclass adds.
     //? if >=1.21.11 {
     /*public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,
                                 net.minecraft.world.item.component.TooltipDisplay display,

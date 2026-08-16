@@ -12,10 +12,8 @@ import java.util.UUID;
 import java.util.function.LongConsumer;
 
 public final class NotchPacketsClient {
-    // Reuse the same identifiers defined in the common class
     public static final ResourceLocation BALANCE_SYNC    = NotchPackets.BALANCE_SYNC;
     public static final ResourceLocation BALANCE_REQUEST = NotchPackets.BALANCE_REQUEST;
-
     public static final ResourceLocation TRADE_OPEN     = NotchPackets.TRADE_OPEN;
     public static final ResourceLocation TRADE_UPDATE   = NotchPackets.TRADE_UPDATE;
     public static final ResourceLocation TRADE_CANCEL   = NotchPackets.TRADE_CANCEL;
@@ -34,7 +32,6 @@ public final class NotchPacketsClient {
         });
     }
 
-    // ---- Notch NPC editor ----
     public static void registerNpcEditorReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_EDITOR_OPEN, (client, buf) -> {
             UUID npcId = buf.readUUID();
@@ -171,7 +168,7 @@ public final class NotchPacketsClient {
         buf.writeUUID(shopId);
         buf.writeUUID(listingId);
         buf.writeVarInt(quantity);
-        buf.writeBoolean(false); // legacy useCoins flag: read and ignored by the server
+        buf.writeBoolean(false);
         NetClient.sendToServer(NotchPackets.SHOP_PURCHASE, buf);
     }
 
@@ -305,8 +302,6 @@ public final class NotchPacketsClient {
             });
         });
 
-        // The clipboard only exists on the client, so the code is built server-side and handed back
-        // here to be put on it.
         NetClient.registerClientReceiver(NotchPackets.NPC_SHARE_CODE, (client, buf) -> {
             String code = buf.readUtf(net.fugginbeenus.notchcurrency.npc.NpcShareCodec.MAX_WIRE_CHARS);
             client.execute(() -> {
@@ -345,7 +340,6 @@ public final class NotchPacketsClient {
             client.execute(() -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (nodeId.isEmpty()) {
-                    // Close signal: only if the dialogue screen is up.
                     if (net.fugginbeenus.notchcurrency.compat.Render.currentScreen() instanceof net.fugginbeenus.notchcurrency.client.NpcDialogueScreen) {
                         mc.setScreen(null);
                     }
@@ -511,7 +505,6 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_MODEL_WANT, buf);
     }
 
-    /** One piece of a model on its way up to the server. */
     public static void sendNpcModelPush(int phase, String id, byte[] part, int announcedBytes) {
         var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeByte(phase);
@@ -637,7 +630,7 @@ public final class NotchPacketsClient {
             int members = buf.readVarInt();
             boolean alreadyIn = buf.readBoolean();
             boolean canFound = buf.readBoolean();
-            buf.readBoolean(); // may-assign: reserved for the Role tab picker
+            buf.readBoolean();
             String motto = buf.readUtf();
             int fee = buf.readVarInt();
             boolean open = buf.readBoolean();

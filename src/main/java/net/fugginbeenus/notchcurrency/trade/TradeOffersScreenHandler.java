@@ -82,12 +82,11 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
 
     private static ItemStack display(TradeOffer offer, boolean mine) {
         ItemStack carrier = offer.firstOffered().copy();
-        if (carrier.isEmpty()) carrier = new ItemStack(net.minecraft.world.item.Items.PAPER); // coins-only offer
+        if (carrier.isEmpty()) carrier = new ItemStack(net.minecraft.world.item.Items.PAPER);
         CompoundTag t = StackData.editData(carrier);
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "nc_oid", offer.id());
         t.putLong("nc_price", offer.priceCoins());
         t.putLong("nc_gcoins", offer.offeredCoins());
-        // Every stack on both sides, so the row can draw the whole exchange like trade ingredients.
         net.minecraft.nbt.ListTag gives = new net.minecraft.nbt.ListTag();
         for (ItemStack st : offer.offeredItems()) {
             gives.add(StackData.writeStack(st));
@@ -115,7 +114,7 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
-        else if (id == 1) page = page + 1; // clamped in refresh()
+        else if (id == 1) page = page + 1;
         else return false;
         refresh();
         broadcastChanges();

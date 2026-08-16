@@ -28,18 +28,15 @@ public class ATMBlock extends HorizontalDirectionalBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    // Shape for the ATM (from your other class)
     private static final VoxelShape SHAPE = Block.box(
-            1.0, 0.0, 2.0,   // minX, minY, minZ
-            15.0, 16.0, 14.0 // maxX, maxY, maxZ
+            1.0, 0.0, 2.0,
+            15.0, 16.0, 14.0
     );
 
     public ATMBlock(Properties settings) {
         super(settings);
         this.registerDefaultState(getStateDefinition().any().setValue(FACING, Direction.NORTH));
     }
-
-    // --- Blockstate / facing ---
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -48,7 +45,6 @@ public class ATMBlock extends HorizontalDirectionalBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        // Face the player when placed
         return this.defaultBlockState()
                 .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
     }
@@ -60,8 +56,6 @@ public class ATMBlock extends HorizontalDirectionalBlock {
                                       CollisionContext context) {
         return SHAPE;
     }
-
-    // --- Interaction / GUI ---
 
     //? if >=1.21 {
     /*@Override
@@ -86,14 +80,12 @@ public class ATMBlock extends HorizontalDirectionalBlock {
                               BlockHitResult hit) {
     //?}
 
-        // Server: sync balance to HUD immediately
         if (player instanceof ServerPlayer spe) {
             long bal = net.fugginbeenus.notchcurrency.core.BalanceStore.get(spe);
             net.fugginbeenus.notchcurrency.net.NotchPackets.sendBalance(spe, bal);
         }
 
         if (world.isClientSide) {
-            // client side: hand animation & let server handle screen opening
             return InteractionResult.SUCCESS;
         }
 
@@ -103,7 +95,7 @@ public class ATMBlock extends HorizontalDirectionalBlock {
         );
 
         player.openMenu(factory);
-        return InteractionResult.CONSUME; // server handled it
+        return InteractionResult.CONSUME;
     }
 
     private static ATMTestScreenHandler createHandler(int containerId, Inventory playerInv) {

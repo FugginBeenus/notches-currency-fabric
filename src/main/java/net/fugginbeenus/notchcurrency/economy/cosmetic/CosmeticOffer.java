@@ -6,13 +6,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-/**
- * One entry in the cosmetic shop, as written in a datapack.
- *
- * <p>The icon and the reward are held as item ids rather than stacks. From 26.2 an ItemStack cannot
- * be built before item components are bound, and these are parsed during a resource reload, which
- * happens earlier than that. The two accessors build a stack when something actually needs one.
- */
 public record CosmeticOffer(String id, String name, String iconItemId, long price, boolean oneTime,
                             boolean isCommand, String rewardItemId, int rewardCount, String command) {
 
@@ -45,7 +38,6 @@ public record CosmeticOffer(String id, String name, String iconItemId, long pric
         String rewardItemId = !isCommand && reward.has("item") ? reward.get("item").getAsString() : "";
         int rewardCount = reward.has("count") ? reward.get("count").getAsInt() : 1;
 
-        // Icon: explicit, else the item reward, else a generic placeholder. Resolved in icon().
         String iconItemId = o.has("icon") ? o.get("icon").getAsString() : "";
 
         return new CosmeticOffer(id, name, iconItemId, Math.max(0, price), oneTime,

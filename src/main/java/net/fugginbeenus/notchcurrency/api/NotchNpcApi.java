@@ -25,8 +25,6 @@ public final class NotchNpcApi {
 
     private NotchNpcApi() {}
 
-    // ---- Notch NPCs: spawning & presets ----
-
     public static NotchNpcEntity spawnNpc(ServerLevel world, Vec3 pos, float yaw,
                                           @Nullable ServerPlayer owner) {
         NotchNpcEntity npc = new NotchNpcEntity(ModEntities.NOTCH_NPC, world);
@@ -65,8 +63,6 @@ public final class NotchNpcApi {
         return NpcPresetManager.list();
     }
 
-    // ---- Notch NPCs: custom roles ----
-
     public static void registerCustomRole(ResourceLocation id, NpcCustomRole handler) {
         if (id != null && handler != null) {
             CUSTOM_ROLES.put(id.toString(), handler);
@@ -82,8 +78,6 @@ public final class NotchNpcApi {
     public static NpcCustomRole customRole(String id) {
         return CUSTOM_ROLES.get(id);
     }
-
-    // ---- external entities: role binding by UUID ----
 
     public static void assignRole(MinecraftServer server, UUID npcId, NpcRole role, @Nullable UUID shopId) {
         if (server == null || npcId == null || role == null) return;

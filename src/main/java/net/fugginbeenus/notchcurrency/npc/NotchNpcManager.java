@@ -24,8 +24,6 @@ public final class NotchNpcManager {
 
     private NotchNpcManager() {}
 
-    // ---- interaction ----
-
     public static void dispatchRole(ServerPlayer sp, NotchNpcEntity npc) {
         NpcRoleDispatch.open(sp, npc.getRole(), npc.getRoleTarget(), npc);
     }
@@ -35,9 +33,7 @@ public final class NotchNpcManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the owner can edit this NPC.").withStyle(ChatFormatting.RED));
             return;
         }
-        // Back to '&' on the way out. The name is stored with real § codes because that is what
-        // renders, but the editor field has to show what was typed or every save would hand back
-        // section signs and the codes would stop being editable.
+
         String name = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString().replace('\u00a7', '&') : "";
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
@@ -57,7 +53,7 @@ public final class NotchNpcManager {
         buf.writeVarInt(npc.getBehavior().ordinal());
         buf.writeVarInt(npc.getWanderRadius());
         buf.writeVarInt(npc.getDialogue().size());
-        buf.writeBoolean(npc.getDialogue().isFlat()); // flat = Quick Lines; branching = Studio only
+        buf.writeBoolean(npc.getDialogue().isFlat());
         buf.writeVarInt(statsBits(npc));
         buf.writeVarInt(npc.getDialogueMode().ordinal());
         buf.writeVarInt(npc.getWaypoints().size());
@@ -99,10 +95,8 @@ public final class NotchNpcManager {
         if (npc.opensDoors()) bits |= 32;
         if (npc.isLeashable()) bits |= 64;
         if (npc.isManualInvisible()) bits |= 128;
-        bits |= (npc.getVisibility() & 3) << 8; // bits 8-9 reserved for the visibility rule
+        bits |= (npc.getVisibility() & 3) << 8;
         if (npc.isNpcPushable()) bits |= 1024;
-        // Bits 2048/4096 used to carry hostile-to-players and fights-back. They live with the rest of
-        // the combat settings on the Moves tab now: see the moves bits below.
         return bits;
     }
 
@@ -119,7 +113,6 @@ public final class NotchNpcManager {
         npc.setManualInvisible((bits & 128) != 0);
         npc.setVisibility((bits >> 8) & 3);
         npc.setNpcPushable((bits & 1024) != 0);
-        // Apply the effective invisibility now rather than waiting for the next tick window.
         npc.setInvisible(npc.isManualInvisible() || npc.isRuleHidden());
     }
 
@@ -128,8 +121,6 @@ public final class NotchNpcManager {
         npc.setBaseStats(maxHealth, speedPct);
         npc.setRegen(regen);
     }
-
-    // ---- equipment ----
 
     public static void openEquipScreen(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
@@ -145,7 +136,6 @@ public final class NotchNpcManager {
                                      String model, String skinType, String skinValue, boolean slim,
                                      float scaleX, float scaleY, float scaleZ, float nameOffset) {
         if (!guard(sp, npc)) return;
-        // URL skins are fetched by every client that sees the NPC: only allow real web URLs.
         if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
             String lower = skinValue.trim().toLowerCase();
             if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
@@ -157,7 +147,6 @@ public final class NotchNpcManager {
         npc.setAppearance(model, skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
     }
 
-    // Caps live on the entity, so a hand-made packet cannot post a wall of text.
     public static void setBillboard(ServerPlayer sp, NotchNpcEntity npc, String text) {
         if (!guard(sp, npc)) return;
         npc.setBillboard(text);
@@ -181,13 +170,6 @@ public final class NotchNpcManager {
         npc.setPoseAnim(anim);
     }
 
-    /**
-     * Which clip this NPC plays instead of its idle, or empty to work it out automatically.
-     *
-     * <p>The name is not checked against anything here. The server has no resource packs, so it
-     * cannot know what clips exist; the client that plays it does the checking, and falls back to
-     * the built-in idle for a name it cannot find.
-     */
     public static void setCustomClip(ServerPlayer sp, NotchNpcEntity npc, String clip) {
         if (!guard(sp, npc)) return;
         npc.setCustomClip(clip);
@@ -237,8 +219,6 @@ public final class NotchNpcManager {
         };
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Behavior set: " + desc + ".").withStyle(ChatFormatting.GREEN));
 
-        // Follow with an unresolvable target does nothing: say why. (Common in dev, where each
-        // launch gets a fresh random username/UUID.)
         if (mode == NotchNpcEntity.Behavior.FOLLOW_OWNER && npc.resolveFollowTarget() == null) {
             String who = npc.getFollowPlayerName().isEmpty()
                     ? "its owner (" + (npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName()) + ")"
@@ -252,7 +232,6 @@ public final class NotchNpcManager {
         }
     }
 
-    // Index is shared with the editor's Speed and Wait cycles: reorder one and reorder both.
     public static final float[] PATROL_SPEEDS = {0.6f, 0.9f, 1.2f};
     public static final String[] PATROL_SPEED_NAMES = {"Stroll", "Walk", "Jog"};
 
@@ -355,8 +334,6 @@ public final class NotchNpcManager {
                 .withStyle(ChatFormatting.GREEN));
     }
 
-    // ---- dialogue setup ----
-
     private static net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree buildStarterTree(NotchNpcEntity npc) {
         var tree = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
 
@@ -401,7 +378,6 @@ public final class NotchNpcManager {
         Net.sendToClient(sp, NotchPackets.NPC_STUDIO_DATA, buf);
     }
 
-    // Sizes come from the client, so everything is clamped here rather than trusted.
     public static void saveDialogue(ServerPlayer sp, NotchNpcEntity npc,
                                     net.minecraft.nbt.CompoundTag treeNbt) {
         if (!guard(sp, npc)) return;
@@ -415,7 +391,7 @@ public final class NotchNpcManager {
         boolean allowCommands = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         boolean strippedCommands = false;
         for (var node : tree.nodes().values()) {
-            if (node.id().isBlank() || node.id().length() > 32) continue; // ids are <=24 in the studio
+            if (node.id().isBlank() || node.id().length() > 32) continue;
             if (node.text().length() > 500) node.setText(node.text().substring(0, 500));
             while (node.choices().size() > 6) node.choices().remove(node.choices().size() - 1);
             if (!allowCommands) {
@@ -432,7 +408,7 @@ public final class NotchNpcManager {
         }
         clean.setStartId(tree.startId());
         if (clean.get(clean.startId()) == null && clean.size() > 0) {
-            clean.setStartId(clean.nodes().keySet().iterator().next()); // start page was dropped
+            clean.setStartId(clean.nodes().keySet().iterator().next());
         }
         npc.setDialogue(clean);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Dialogue saved (" + clean.size() + " page" + (clean.size() == 1 ? "" : "s") + ").")
@@ -460,7 +436,6 @@ public final class NotchNpcManager {
                 stripped |= kept.removeIf(a ->
                         net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.isAdminOnly(a.type()));
             }
-            // The screen caps typing at 200, but the packet is whatever the client chose to send.
             for (var a : kept) {
                 if (a.value().length() > 200) a.setValue(a.value().substring(0, 200));
                 if (a.amount() < 0) a.setAmount(0);
@@ -479,15 +454,12 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
-        // Whether a schedule can run here at all. Sent with the data so the screen can explain itself
-        // instead of the owner building a whole day that silently never advances.
         buf.writeBoolean(net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule
                 .dimensionSupports(npc.level()));
         buf.writeNbt(npc.getSchedule().toNbt());
         Net.sendToClient(sp, NotchPackets.NPC_SCHEDULE_DATA, buf);
     }
 
-    // Entry actions take the same admin gate as reactions: an entry can mint coins exactly like one.
     public static void saveSchedule(ServerPlayer sp, NotchNpcEntity npc,
                                     net.minecraft.nbt.CompoundTag nbt) {
         if (!guard(sp, npc)) return;
@@ -535,9 +507,7 @@ public final class NotchNpcManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("That schedule entry is gone.").withStyle(ChatFormatting.RED));
             return;
         }
-        // Clear any tool from a previous attempt first. Opening the picker, changing your mind and
-        // opening it again is ordinary behaviour, and it must not leave an inventory full of
-        // near-identical tools pointing at entries that may not exist any more.
+
         clearScheduleTools(sp);
         ItemStack tool = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.ROUTE_PLANNER);
         StackData.putUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUUID());
@@ -571,8 +541,6 @@ public final class NotchNpcManager {
         openSchedule(sp, npc);
     }
 
-    // Route tools are left alone. A route takes many clicks; a spot tool is spent in one, so a
-    // leftover spot tool is always litter.
     public static void clearScheduleTools(ServerPlayer sp) {
         var inv = sp.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -598,7 +566,6 @@ public final class NotchNpcManager {
                                  String subtitle, String voice, int voicePitch) {
         if (!guard(sp, npc)) return;
         npc.setSubtitle(subtitle);
-        // Only real, registered sounds: an unknown id would be a silent NPC with no clue why.
         String cleaned = voice == null ? "" : voice.trim();
         if (!cleaned.isEmpty()) {
             net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(cleaned);
@@ -609,10 +576,8 @@ public final class NotchNpcManager {
         }
         npc.setVoice(cleaned);
         npc.setVoicePitchPercent(voicePitch);
-        npc.playVoice(); // hear the change straight away rather than guessing at a number
+        npc.playVoice();
     }
-
-    // ---- edit actions (all owner/op-gated) ----
 
     public static void setRole(ServerPlayer sp, NotchNpcEntity npc, NpcRole role) {
         if (!guard(sp, npc)) return;
@@ -621,7 +586,6 @@ public final class NotchNpcManager {
         if (role == NpcRole.SHOP) {
             ensureShopForNpc(sp.serverLevel(), npc, sp);
         } else if (previous == NpcRole.SHOP) {
-            // Leaving the SHOP role: close & return the linked shop so nothing is orphaned.
             removeLinkedShop(sp, npc.getUUID());
         }
         seedRoleEntryChoice(sp, npc);
@@ -640,7 +604,7 @@ public final class NotchNpcManager {
         var role = npc.getRole();
         if (role == NpcRole.NONE || role == NpcRole.GREETER) return;
         var tree = npc.getDialogue();
-        if (tree.isEmpty() || tree.isFlat()) return; // flat = Quick Lines; CHAT opens the role itself
+        if (tree.isEmpty() || tree.isFlat()) return;
         var start = tree.start();
         if (start == null || start.choices().size() >= 6) return;
         for (var node : tree.nodes().values()) {
@@ -649,7 +613,7 @@ public final class NotchNpcManager {
                     var t = action.type();
                     if (t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_ROLE
                             || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueAction.Type.OPEN_SCREEN) {
-                        return; // the author already wired a path in
+                        return;
                     }
                 }
             }
@@ -673,12 +637,11 @@ public final class NotchNpcManager {
     public static void setName(ServerPlayer sp, NotchNpcEntity npc, String name) {
         if (!guard(sp, npc)) return;
         String trimmed = name == null ? "" : name.trim();
-        if (trimmed.length() > 48) trimmed = trimmed.substring(0, 48); // matches the editor field cap
+        if (trimmed.length() > 48) trimmed = trimmed.substring(0, 48);
         if (trimmed.isEmpty()) {
             npc.setCustomName(null);
             npc.setCustomNameVisible(false);
         } else {
-            // The same '&' codes shop titles and dialogue already use, so "&6Carol" is a gold name.
             npc.setCustomName(Component.literal(NpcText.colorize(trimmed)));
             npc.setCustomNameVisible(true);
         }
@@ -687,7 +650,6 @@ public final class NotchNpcManager {
 
     public static void pickUp(ServerPlayer sp, NotchNpcEntity npc) {
         if (!guard(sp, npc)) return;
-        // Return & close any linked shop so it isn't orphaned when the entity is removed.
         removeLinkedShop(sp, npc.getUUID());
 
         ItemStack stack = new ItemStack(ModItems.NOTCH_NPC_ITEM);
@@ -706,18 +668,11 @@ public final class NotchNpcManager {
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC deleted.").withStyle(ChatFormatting.GREEN));
     }
 
-    // ---- shop linkage (SHOP role) ----
-
     public static void ensureShopForNpc(ServerLevel world, NotchNpcEntity npc, ServerPlayer fallbackOwner) {
         ShopState state = ShopState.get(world);
         if (state.getShopByNpc(npc.getUUID()) != null) return;
         UUID ownerId = npc.getOwner() != null ? npc.getOwner() : fallbackOwner.getUUID();
 
-        // A shop outlives its shopkeeper. Somebody replacing an NPC they lost used to get a second,
-        // empty shop while the first sat there holding their stock and takings with nothing able to
-        // reach it, which reads exactly like the money having been deleted. Say so instead. It is
-        // only offered, not done: an NPC in an unloaded chunk looks the same as a deleted one from
-        // here, and the owner knows which of theirs is gone.
         var stranded = state.shopsWithoutNpc(world.getServer(), ownerId);
         if (!stranded.isEmpty()) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(fallbackOwner, Component.literal(

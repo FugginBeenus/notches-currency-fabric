@@ -15,12 +15,8 @@ import net.minecraft.world.item.ItemStack;
 public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCreateScreenHandler> {
 
     private static final int W = 226, H = 256;
-
     private static ItemStack coin;
-
     private static ItemStack coin() {
-        // Built on first use: from 26.2 an ItemStack cannot be made before item components are bound,
-        // and a static field would run while the class loads, which can be earlier than that.
         if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
         return coin;
     }
@@ -86,8 +82,6 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Create Trade Offer", x + W / 2, y + 8);
-
-        // YOU GIVE: the 3×3 grid + attached coins, like your side of a live trade.
         NotchWidgets.inset(ctx, x + 8, y + 22, 94, 104, NotchTheme.PANEL_MID);
         NotchWidgets.centerText(ctx, this.font, "YOU GIVE", x + 55, y + 24, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < TradeOfferCreateScreenHandler.GIVE_COUNT; i++) {
@@ -97,11 +91,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         NotchWidgets.pill(ctx, x + 14, y + 92, 82, 15);
         ctx.renderItem(coin(), x + 78, y + 91);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " attached", x + 55, y + 111, NotchTheme.TEXT_MUTED, false);
-
-        // The exchange arrow.
         NotchWidgets.arrowRight(ctx, x + 105, y + 68, NotchTheme.TEXT_MUTED);
-
-        // YOU GET: the requested 3×3 grid (samples, returned on close) + coin price.
         NotchWidgets.inset(ctx, x + 124, y + 22, 94, 104, NotchTheme.PANEL_MID);
         NotchWidgets.centerText(ctx, this.font, "YOU GET", x + 171, y + 24, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < TradeOfferCreateScreenHandler.WANT_COUNT; i++) {
@@ -111,8 +101,6 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         NotchWidgets.pill(ctx, x + 130, y + 92, 82, 15);
         ctx.renderItem(coin(), x + 194, y + 91);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " wanted", x + 171, y + 111, NotchTheme.TEXT_MUTED, false);
-
-        // Who can accept + create.
         ctx.drawString(this.font, "To", x + 10, y + 136, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + 26, y + 132, 110, 14, NotchTheme.DEEP);
         ctx.drawString(this.font, "(blank = anyone)", x + 141, y + 136, NotchTheme.TEXT_MUTED, false);
@@ -131,9 +119,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
                     y + TradeOfferCreateScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -190,7 +176,6 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, giveCoinsField, priceField, targetField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -199,16 +184,13 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

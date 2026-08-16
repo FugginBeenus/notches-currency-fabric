@@ -27,13 +27,10 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
 
     public static final int INPUT_X = 12, INPUT_Y = 22;
     public static final int INV_X = 47, INV_Y = 156, HOTBAR_Y = 214;
-
-    // Property indices.
     public static final int P_REPAIR_COST = 0, P_MULTIPLIER = 1, P_EXTRACT_COST = 2, P_TREASURE = 3,
             P_UNCRAFT_COST = 4, P_COST_COMMON = 5, P_COST_UNCOMMON = 6, P_COST_RARE = 7,
             P_COST_VERY_RARE = 8, P_TREASURE_MULT = 9, P_EXTRACT_VALUE_PCT = 10;
 
-    // Packet action ids.
     public static final int ACTION_REPAIR = 0, ACTION_UPGRADE = 1, ACTION_EXTRACT = 2, ACTION_UNCRAFT = 3;
 
     private final SimpleContainer input = new SimpleContainer(1);
@@ -91,12 +88,9 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
 
     @Override
     public void broadcastChanges() {
-        // Keep the repair price live as the slot contents change.
         props.set(P_REPAIR_COST, (int) EnchanterManager.repairCost(input.getItem(0), EnchanterManager.repairFullCost));
         super.broadcastChanges();
     }
-
-    // ---- actions (server side, from the ENCHANTER_ACTION packet) ----
 
     public void handleAction(ServerPlayer sp, int action, String enchId) {
         if (!EnchanterManager.enabled) return;
@@ -152,7 +146,6 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
     private void upgrade(ServerPlayer sp, ItemStack stack, String enchId) {
         Enchantment ench = enchantFromId(enchId);
         if (ench == null) return;
-        // Re-derive the offer server-side: the client can only pick from what's legitimately offered.
         int level = -1;
         for (EnchanterManager.Offer offer : EnchanterManager.upgradeOffers(stack, EnchanterManager.allowTreasure)) {
             if (offer.enchantment() == ench) {
@@ -220,7 +213,6 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Return whatever is still in the slot so items are never lost.
         if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
             ItemStack leftover = input.removeItemNoUpdate(0);
             if (!player.getInventory().add(leftover)) {

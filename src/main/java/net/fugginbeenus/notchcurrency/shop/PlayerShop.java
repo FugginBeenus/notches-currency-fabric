@@ -11,28 +11,21 @@ import java.util.*;
 
 public class PlayerShop {
 
-    public static final int MAX_LISTINGS = 27;  // 3 rows of 9, like a chest
-
+    public static final int MAX_LISTINGS = 27;
     private final UUID shopId;
-    private UUID ownerId;                 // Can be changed by admin transfer
-    private String ownerName;           // Cached for display
-    private String shopName;            // Custom shop name
-    private UUID linkedNpcId;           // Optional: linked ShopkeeperEntity UUID
-    private String shopkeeperDialog;    // NPC greeting/dialog text
-
+    private UUID ownerId;
+    private String ownerName;
+    private String shopName;
+    private UUID linkedNpcId;
+    private String shopkeeperDialog;
     private final List<ShopListing> listings;
-    private long totalRevenue;          // Lifetime coins earned
-    private long pendingBalance;        // Coins waiting to be withdrawn
-    private int totalTransactions;      // Lifetime sales count
-    private long createdAt;             // Timestamp
-    private boolean isOpen;             // Whether shop accepts purchases
-
-    // Rent state: a rent-paused shop is still "open" but won't sell until rent is paid.
+    private long totalRevenue;
+    private long pendingBalance;
+    private int totalTransactions;
+    private long createdAt;
+    private boolean isOpen;
     private boolean rentPaused = false;
     private int unpaidRentCycles = 0;
-
-    // Pending barter items for offline collection.
-    // Coin earnings are tracked solely by pendingBalance (single source of truth).
     private final List<ItemStack> pendingBarterItems;
 
     public PlayerShop(UUID ownerId, String ownerName, String shopName) {
@@ -66,20 +59,15 @@ public class PlayerShop {
         this.isOpen = true;
     }
 
-    // --- Getters ---
-
     public UUID getShopId() {
         return shopId;
     }
-
     public UUID getOwnerId() {
         return ownerId;
     }
-
     public String getOwnerName() {
         return ownerName;
     }
-
     public String getShopName() {
         return shopName;
     }
@@ -88,19 +76,15 @@ public class PlayerShop {
     public UUID getLinkedNpcId() {
         return linkedNpcId;
     }
-
     public List<ShopListing> getListings() {
         return Collections.unmodifiableList(listings);
     }
-
     public long getTotalRevenue() {
         return totalRevenue;
     }
-
     public long getPendingBalance() {
         return pendingBalance;
     }
-
     public long withdrawBalance() {
         long amount = pendingBalance;
         pendingBalance = 0;
@@ -117,47 +101,34 @@ public class PlayerShop {
         return take;
     }
 
-    // --- Rent ---
-
     public boolean isRentPaused() { return rentPaused; }
     public void setRentPaused(boolean paused) { this.rentPaused = paused; }
     public int getUnpaidRentCycles() { return unpaidRentCycles; }
     public void setUnpaidRentCycles(int n) { this.unpaidRentCycles = Math.max(0, n); }
-
     public int getTotalTransactions() {
         return totalTransactions;
     }
-
     public long getCreatedAt() {
         return createdAt;
     }
-
     public boolean isOpen() {
         return isOpen;
     }
-
-    // --- Setters ---
-
     public void setOwnerName(String name) {
         this.ownerName = name;
     }
-
     public void setShopName(String name) {
         this.shopName = name != null ? name : "Shop";
     }
-
     public String getShopkeeperDialog() {
         return shopkeeperDialog != null ? shopkeeperDialog : "";
     }
-
     public void setShopkeeperDialog(String dialog) {
         this.shopkeeperDialog = dialog != null ? dialog : "";
     }
-
     public void setLinkedNpcId(@Nullable UUID npcId) {
         this.linkedNpcId = npcId;
     }
-
     public void setOpen(boolean open) {
         this.isOpen = open;
     }
@@ -166,8 +137,6 @@ public class PlayerShop {
         this.ownerId = newOwnerId;
         this.ownerName = newOwnerName;
     }
-
-    // --- Listing Management ---
 
     public boolean canAddListing() {
         return listings.size() < MAX_LISTINGS;
@@ -197,11 +166,9 @@ public class PlayerShop {
                 .toList();
     }
 
-    // --- Sales Recording ---
-
     public void recordSale(int coinsEarned) {
         this.totalRevenue += coinsEarned;
-        this.pendingBalance += coinsEarned;  // Add to pending balance for withdrawal
+        this.pendingBalance += coinsEarned;
         this.totalTransactions++;
     }
 
@@ -220,12 +187,10 @@ public class PlayerShop {
     public int getPendingBarterCount() {
         return pendingBarterItems.size();
     }
-
     public boolean hasPendingBarterItems() {
         return !pendingBarterItems.isEmpty();
     }
 
-    // --- NBT Serialization ---
 
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
@@ -249,7 +214,6 @@ public class PlayerShop {
         }
         nbt.put("Listings", listingsNbt);
 
-        // Save pending barter items
         ListTag barterNbt = new ListTag();
         for (ItemStack item : pendingBarterItems) {
             barterNbt.add(StackData.writeStack(item));
@@ -290,7 +254,6 @@ public class PlayerShop {
             }
         }
 
-        // Load pending barter items
         if (nbt.contains("PendingBarterItems", Tag.TAG_LIST)) {
             ListTag barterNbt = nbt.getList("PendingBarterItems", Tag.TAG_COMPOUND);
             for (int i = 0; i < barterNbt.size(); i++) {

@@ -18,8 +18,6 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
     private static final int W = 176, H = 224;
 
     private static final int PRICE_X = 8, PRICE_Y = 54, PRICE_W = 160, PRICE_H = 16;
-
-    // Segmented sale-type selector.
     private static final int SEG_Y = 86, SEG_H = 15;
     private static final int[] DURATIONS = {0, 1, 3, 7};
     private static final String[] SEG_LABELS = {"Buy Now", "1d", "3d", "7d"};
@@ -67,17 +65,11 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         NotchWidgets.panel(ctx, x, y, W, H);
 
         NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8);
-
-        // Input slot + label.
         ctx.drawString(this.font, "Item to sell:", x + 16, y + AuctionListingScreenHandler.INPUT_Y + 4,
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INPUT_X - 1, y + AuctionListingScreenHandler.INPUT_Y - 1);
-
-        // Price box (TextFieldWidget renders its text on top).
         ctx.drawString(this.font, "Price (" + NotchWidgets.coinName() + "):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + PRICE_X, y + PRICE_Y, PRICE_W, PRICE_H, NotchTheme.DEEP);
-
-        // Auction-duration segmented selector (selected = green, others = grey).
         ctx.drawString(this.font, "Auction Duration", x + 8, y + 76, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < DURATIONS.length; i++) {
             boolean hov = over(mouseX, mouseY, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H);
@@ -90,8 +82,6 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         String hint = currentDays() == 0 ? "Instant sale at your price."
                 : "Highest bid after " + currentDays() + " day" + (currentDays() == 1 ? "" : "s") + " wins.";
         ctx.drawString(this.font, hint, x + 8, y + 104, NotchTheme.TEXT_MUTED, false);
-
-        // Fee note: the listing fee scales with price, so recompute it from the typed value.
         long typedPrice = 0;
         try {
             String pt = priceField.getValue();
@@ -104,8 +94,6 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
                     + (menu.feePercent() > 0 ? " (" + menu.feePercent() + "% + " + menu.feeFlat() + ")" : "");
             ctx.drawString(this.font, note, x + LIST_X + 4, y + LIST_Y - 10, NotchTheme.TEXT_MUTED, false);
         }
-
-        // List It button.
         NotchWidgets.primaryButton(ctx, this.font, x + LIST_X, y + LIST_Y, LIST_W, LIST_H, "List It!",
                 over(mouseX, mouseY, x + LIST_X, y + LIST_Y, LIST_W, LIST_H));
 
@@ -122,9 +110,7 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
                     y + AuctionListingScreenHandler.HOTBAR_Y - 1);
         }
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -135,7 +121,6 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // No default labels.
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
@@ -200,7 +185,6 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, priceField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -209,16 +193,13 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

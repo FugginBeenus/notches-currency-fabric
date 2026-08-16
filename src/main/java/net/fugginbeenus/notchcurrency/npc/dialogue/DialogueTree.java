@@ -62,7 +62,6 @@ public class DialogueTree {
         if (node == null) return false;
 
         node.setId(newId);
-        // Rebuild the map in iteration order so the page keeps its spot in the list.
         Map<String, DialogueNode> rebuilt = new LinkedHashMap<>();
         for (Map.Entry<String, DialogueNode> e : nodes.entrySet()) {
             rebuilt.put(e.getKey().equals(oldId) ? newId : e.getKey(), e.getValue());

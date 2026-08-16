@@ -33,18 +33,15 @@ public final class NotchConfigScreen extends Screen {
     private final Screen parent;
     private final NotchConfig cfg;
     private final List<ConfigEntry> entries;
-
-    private int px, py, pw, ph;        // panel rect
-    private int listTop, listBottom;   // viewport
+    private int px, py, pw, ph;
+    private int listTop, listBottom;
     private double scroll;
     private boolean draggingBar;
     private SliderEntry draggingSlider;
-
     private EditBox search;
     private EditBox editField;
     private ConfigEntry editing;
     private int editingY;
-
     private record Row(String header, ConfigEntry entry, int y) {}
     private final List<Row> rows = new ArrayList<>();
     private int contentH;
@@ -78,8 +75,6 @@ public final class NotchConfigScreen extends Screen {
         closeEdit(false);
     }
 
-    /* layout */
-
     private void buildRows() {
         rows.clear();
         String query = search.getValue().trim().toLowerCase();
@@ -104,7 +99,6 @@ public final class NotchConfigScreen extends Screen {
         return Math.max(0, contentH - (listBottom - listTop));
     }
 
-    /* render */
 
     //? if >=26.1 {
     /*@Override
@@ -132,7 +126,6 @@ public final class NotchConfigScreen extends Screen {
         ConfigEntry hoveredEntry = null;
         boolean hoveredReset = false;
 
-        // Scrolling list, scissored to the viewport.
         ctx.enableScissor(px + 1, listTop, px + pw - 1, listBottom);
         for (Row row : rows) {
             int ry = listTop + row.y() - (int) scroll;
@@ -167,7 +160,6 @@ public final class NotchConfigScreen extends Screen {
         }
         ctx.disableScissor();
 
-        // Scrollbar.
         if (maxScroll() > 0) {
             int trackX = px + pw - 14, trackW = 6;
             int trackH = listBottom - listTop;
@@ -177,7 +169,6 @@ public final class NotchConfigScreen extends Screen {
             ctx.fill(trackX + 1, thumbY, trackX + trackW - 1, thumbY + thumbH, NotchTheme.EDGE);
         }
 
-        // Footer.
         NotchWidgets.divider(ctx, px + 10, listBottom + 3, pw - 20);
         ctx.drawString(this.font, "config/notchcurrency.json", px + 12, py + ph - 18, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.neutralButton(ctx, this.font, cancelX(), footerY(), 64, 16, "Cancel",
@@ -217,8 +208,7 @@ public final class NotchConfigScreen extends Screen {
 
     private void drawControl(GuiGraphics ctx, ConfigEntry e, int ry, int mouseX, int mouseY, boolean rowHover) {
         int right = px + pw - 20;
-        if (e == editing) return; // the edit field renders on top instead
-
+        if (e == editing) return;
         if (e instanceof BoolEntry b) {
             int bx = right - 40;
             boolean hov = rowHover && mouseX >= bx;
@@ -274,8 +264,6 @@ public final class NotchConfigScreen extends Screen {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
-    /* input */
-
     //? if >=1.21.11 {
     /*@Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
@@ -303,7 +291,6 @@ public final class NotchConfigScreen extends Screen {
             return true;
         }
 
-        // Scrollbar jump/drag.
         if (maxScroll() > 0 && mouseX >= px + pw - 16 && mouseX <= px + pw - 6
                 && mouseY >= listTop && mouseY <= listBottom) {
             draggingBar = true;
@@ -466,12 +453,12 @@ public final class NotchConfigScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
         if (editing != null) {
-            if (keyCode == 257 || keyCode == 335) { // enter
+            if (keyCode == 257 || keyCode == 335) {
                 closeEdit(true);
                 NotchWidgets.tick();
                 return true;
             }
-            if (keyCode == 256) { // esc cancels just the edit
+            if (keyCode == 256) {
                 closeEdit(false);
                 return true;
             }
@@ -525,7 +512,6 @@ public final class NotchConfigScreen extends Screen {
     private void saveAndApply() {
         closeEdit(true);
         for (ConfigEntry e : entries) e.commit();
-        // Keep min/max pairs ordered so a typo can't invert a range.
         if (cfg.gambling.maxBet < cfg.gambling.minBet) cfg.gambling.maxBet = cfg.gambling.minBet;
         if (cfg.cache.currencyStacksMax < cfg.cache.currencyStacksMin) cfg.cache.currencyStacksMax = cfg.cache.currencyStacksMin;
         if (cfg.cache.currencyPerStackMax < cfg.cache.currencyPerStackMin) cfg.cache.currencyPerStackMax = cfg.cache.currencyPerStackMin;
@@ -533,8 +519,6 @@ public final class NotchConfigScreen extends Screen {
 
         NotchConfigIO.save(cfg);
         AuctionConfig.apply(cfg);
-        // Balloons live in the world save, not in this file, so they go to the server to be
-        // applied. Ignored there unless this player is an operator.
         if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
             net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendBalloonConfig(cfg);
         }
@@ -550,7 +534,6 @@ public final class NotchConfigScreen extends Screen {
         net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
-        // Rebuild the custom-currency pack so a name change takes effect right away.
         net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
         this.onClose();
     }
@@ -560,24 +543,19 @@ public final class NotchConfigScreen extends Screen {
         if (this.minecraft != null) this.minecraft.setScreen(parent);
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

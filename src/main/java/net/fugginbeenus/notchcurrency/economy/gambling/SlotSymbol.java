@@ -8,7 +8,7 @@ public enum SlotSymbol {
     BELL   (25, 6.0,   2.0,  Items.GOLD_INGOT),
     GRAPE  (18, 12.0,  3.0,  Items.EMERALD),
     GEM    (10, 30.0,  5.0,  Items.DIAMOND),
-    STAR   (4,  120.0, 8.0,  Items.NETHER_STAR); // jackpot
+    STAR   (4,  120.0, 8.0,  Items.NETHER_STAR);
 
     private final int weight;
     private final double mult3;

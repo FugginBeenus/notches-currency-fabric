@@ -34,19 +34,12 @@ import java.util.HashMap;
 
 public final class AuctionState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
 
-    // UUID → listing
     private final Map<UUID, AuctionListing> listings = new LinkedHashMap<>();
-
-    // UUID (listingId) → pending winnings / returns / payouts
     private final Map<UUID, PendingWinnings> pendingWinnings = new LinkedHashMap<>();
-
-    // UUID → worldTime tick when we should remind them about mailbox
     private final Map<UUID, Long> loginReminders = new HashMap<>();
 
     public AuctionState() {
     }
-
-    // ----- SavedData plumbing -----
 
     public static AuctionState get(ServerLevel world) {
         return get(world.getServer());
@@ -61,7 +54,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
     public static AuctionState fromNbt(CompoundTag tag) {
         AuctionState s = new AuctionState();
 
-        // Listings
         ListTag list = tag.getList("Listings", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag e = list.getCompound(i);
@@ -69,7 +61,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             s.listings.put(l.id, l);
         }
 
-        // Pending winnings
         ListTag pendingList = tag.getList("PendingWinnings", Tag.TAG_COMPOUND);
         for (int i = 0; i < pendingList.size(); i++) {
             CompoundTag e = pendingList.getCompound(i);
@@ -86,10 +77,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         public final UUID winnerUuid;
         public final String sellerName;
         public final String winnerName;
-
-        // mutable so we can partially claim
-        public ItemStack stack;    // item owed to winner (or returned item)
-        public long finalPrice;    // coins owed to seller (0 if none / already paid)
+        public ItemStack stack;
+        public long finalPrice;
 
         public PendingWinnings(UUID listingId,
                                UUID sellerUuid,
@@ -135,8 +124,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         }
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {
@@ -153,14 +140,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
     @Override
     public CompoundTag writeNbt(CompoundTag tag) {
-        // Listings
         ListTag list = new ListTag();
         for (AuctionListing l : listings.values()) {
             list.add(l.toNbt());
         }
         tag.put("Listings", list);
 
-        // Pending winnings
         ListTag pendingList = new ListTag();
         for (PendingWinnings pw : pendingWinnings.values()) {
             pendingList.add(pw.toNbt());
@@ -169,8 +154,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
         return tag;
     }
-
-    // ----- Pending winnings helpers -----
 
     public PendingWinnings getPending(UUID id) {
         return pendingWinnings.get(id);
@@ -187,8 +170,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         setDirty();
     }
 
-    // ----- Helper to strip auction NBT from items -----
-
     private static void stripAuctionTags(ItemStack stack) {
         if (StackData.hasData(stack)) {
             CompoundTag tag = StackData.editData(stack);
@@ -199,7 +180,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             tag.remove("nc_highest_bid");
             tag.remove("nc_highest_bidder");
             tag.remove("nc_listing_id");
-            // If the tag is now empty, remove it entirely
             if (tag.isEmpty()) {
                 StackData.clearData(stack);
             } else {
@@ -208,15 +188,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         }
     }
 
-    // ----- Login reminder helpers -----
-
     public void scheduleReminder(UUID playerUuid, long triggerTime) {
         loginReminders.put(playerUuid, triggerTime);
     }
 
     public void onPlayerJoin(ServerPlayer player) {
         long now = player.level().getGameTime();
-        // 45 seconds = 45 * 20 = 900 ticks
         scheduleReminder(player.getUUID(), now + 900L);
     }
 
@@ -237,12 +214,10 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
             ServerPlayer p = world.getServer().getPlayerList().getPlayer(uuid);
             if (p == null) {
-                // Player went offline again; drop this reminder
                 it.remove();
                 continue;
             }
 
-            // Only notify if they actually have pending winnings/returns
             boolean hasPending = pendingWinnings.values().stream()
                     .anyMatch(pw -> pw.winnerUuid.equals(uuid) || pw.sellerUuid.equals(uuid));
 
@@ -258,11 +233,9 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                 .append(claim));
             }
 
-            it.remove(); // Fire once per login
+            it.remove();
         }
     }
-
-    // ----- API used by commands / GUIs -----
 
     public Collection<AuctionListing> getListings() {
         return Collections.unmodifiableCollection(listings.values());
@@ -272,13 +245,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         return listings.get(id);
     }
 
-    // default addListing (3-day timed listing, can be overridden)
     public AuctionListing addListing(ServerLevel world,
                                      ServerPlayer seller,
                                      ItemStack stack,
                                      long price,
                                      String category) {
-        long defaultDurationTicks = 3L * 24L * 60L * 60L * 20L;  // 3 real days
+        long defaultDurationTicks = 3L * 24L * 60L * 60L * 20L;
         return addListing(world, seller, stack, price, category, defaultDurationTicks);
     }
 
@@ -293,8 +265,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         long now = world.getGameTime();  // global tick time, never wraps
 
         long expires = (durationTicks <= 0L) ? 0L : now + durationTicks;
-
-        // Tag the stack so client tooltip can read everything
         ItemStack listingStack = stack.copy();
         CompoundTag tag = StackData.editData(listingStack);
         tag.putLong("nc_price", price);
@@ -332,9 +302,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             return;
         }
 
-        // Expiry check: expiresGameTime <= 0 => no time limit (buy-now)
         ServerLevel world = buyer.serverLevel();
-        long now = world.getGameTime();  // use global tick time
+        long now = world.getGameTime();
         if (listing.expiresGameTime > 0L && now >= listing.expiresGameTime) {
             Msg.chat(buyer, Component.literal("This listing has expired.").withStyle(ChatFormatting.RED));
             listings.remove(id);
@@ -342,7 +311,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             return;
         }
 
-        // If this is a timed auction with any bids, force /ah bid instead
         if (listing.expiresGameTime > 0L && listing.highestBid > 0L) {
             Msg.chat(buyer, Component.literal("This is a timed auction. Use /ah bid instead.")
                             .withStyle(ChatFormatting.RED));
@@ -357,17 +325,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             return;
         }
 
-        // Withdraw from buyer
         BalanceStore.subtract(buyer, price, TransactionReason.AUCTION, "auction buy-now");
         NotchPackets.sendBalance(buyer, BalanceStore.get(buyer));
-
-        // Pay seller if online; if offline, store coins in mailbox
         ServerPlayer sellerPlayer =
                 buyer.level().getServer().getPlayerList().getPlayer(listing.sellerUuid);
 
         boolean sellerPaidNow = false;
-
-        // Apply sale tax on the seller's payout
         long gross = price;
         long net = AuctionConfig.applySaleTax(gross);
         long tax = gross - net;
@@ -405,16 +368,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             sellerPaidNow = true;
         }
 
-        // Give item; if inventory full, into mailbox
         ItemStack prize = listing.stack.copy();
-
-        // Strip auction NBT tags so the item's normal tooltip returns
         stripAuctionTags(prize);
 
         ItemStack toGive = prize.copy();
         boolean inserted = buyer.getInventory().add(toGive);
         if (!inserted && !toGive.isEmpty()) {
-            // Both sides might be partially offline -> mailbox holds obligations.
             PendingWinnings pw = new PendingWinnings(
                     listing.id,
                     listing.sellerUuid,
@@ -460,9 +419,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         Msg.chat(buyer, buyerMsg);
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-        // If seller was offline, their coins are in mailbox and will be claimable via /ah claim
         if (!sellerPaidNow && sellerPlayer == null) {
-            // Nothing else to do; claimAll will handle payout.
         }
     }
 
@@ -512,8 +469,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             return;
         }
 
-        // Refund previous highest bidder (if any). Offline-safe: an offline bidder is still credited
-        // by UUID, otherwise their reserved coins would be destroyed when outbid while away.
         if (listing.highestBidderUuid != null && listing.highestBid > 0) {
             ServerPlayer prevTop = world.getServer().getPlayerList()
                     .getPlayer(listing.highestBidderUuid);
@@ -530,7 +485,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             }
         }
 
-        // Reserve bidder's coins
         BalanceStore.subtract(bidder, amount, TransactionReason.AUCTION_BID, "bid reserve");
         NotchPackets.sendBalance(bidder, BalanceStore.get(bidder));
 
@@ -538,7 +492,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         listing.highestBidderUuid = bidder.getUUID();
         listing.highestBidderName = bidder.getName().getString();
 
-        // Sync bid info into the listing's stack NBT for client tooltip
         CompoundTag tag = StackData.editData(listing.stack);
         tag.putLong("nc_highest_bid", listing.highestBid);
         tag.putString("nc_highest_bidder", listing.highestBidderName);
@@ -551,7 +504,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                         .withStyle(ChatFormatting.GREEN));
         bidder.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);
 
-        // Notify seller if online
         ServerPlayer seller = world.getServer().getPlayerList()
                 .getPlayer(listing.sellerUuid);
         if (seller != null) {
@@ -587,7 +539,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
             BalanceStore.add(server, listing.highestBidderUuid, amount,
                     TransactionReason.AUCTION_REFUND, "auction cancelled - bid refunded (offline)");
         }
-        // Clear so no later path double-refunds.
         listing.highestBid = 0L;
         listing.highestBidderUuid = null;
         listing.highestBidderName = null;
@@ -595,10 +546,9 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
     }
 
     private int tickCounter = 0;
-    private static final int TICK_INTERVAL = 20; // Check once per second instead of every tick
+    private static final int TICK_INTERVAL = 20;
 
     public void tick(ServerLevel world) {
-        // Only process every TICK_INTERVAL ticks (1 second) - auctions don't need tick-precise expiry
         tickCounter++;
         if (tickCounter % TICK_INTERVAL != 0) {
             return;
@@ -614,7 +564,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         while (it.hasNext()) {
             AuctionListing listing = it.next();
 
-            // Only timed auctions (expiresGameTime > 0) are handled here
             if (listing.expiresGameTime <= 0L) {
                 continue;
             }
@@ -622,12 +571,10 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                 continue;
             }
 
-            // Auction is expired here
             ServerPlayer seller = world.getServer().getPlayerList()
                     .getPlayer(listing.sellerUuid);
 
             if (listing.highestBid > 0L && listing.highestBidderUuid != null) {
-                // There is a winning bidder
                 ServerPlayer winner = world.getServer().getPlayerList()
                         .getPlayer(listing.highestBidderUuid);
 
@@ -642,7 +589,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
                 boolean sellerPaidNow = false;
 
-                // Pay seller if online; otherwise they'll claim coins later
                 if (seller != null) {
                     if (net > 0) {
                         BalanceStore.add(seller, net, TransactionReason.AUCTION, "auction win payout");
@@ -677,7 +623,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                     boolean inserted = winner.getInventory().add(toGive);
 
                     if (inserted || toGive.isEmpty()) {
-                        // Fully delivered now
                         Component winMsg = Component.literal("You won the auction for ")
                                 .withStyle(ChatFormatting.GREEN)
                                 .append(itemName)
@@ -688,7 +633,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                         Msg.chat(winner, winMsg);
                         winner.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
                     } else {
-                        // Inventory full – store pending & send clickable "Claim Item"
                         PendingWinnings pw = new PendingWinnings(
                                 listing.id,
                                 listing.sellerUuid,
@@ -724,7 +668,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                         winner.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.0F);
                     }
                 } else {
-                    // Winner offline: store pending so they can /ah claim later
                     PendingWinnings pw = new PendingWinnings(
                             listing.id,
                             listing.sellerUuid,
@@ -742,17 +685,15 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                 it.remove();
                 setDirty();
             } else {
-                // No bids: return item to seller or mailbox, then remove listing.
                 if (seller != null) {
                     ItemStack toReturn = listing.stack.copy();
                     stripAuctionTags(toReturn);
                     boolean inserted = seller.getInventory().add(toReturn);
                     if (!inserted && !toReturn.isEmpty()) {
-                        // Inventory full -> mailbox instead of drop
                         PendingWinnings pw = new PendingWinnings(
                                 listing.id,
                                 listing.sellerUuid,
-                                listing.sellerUuid, // winner = seller for returns
+                                listing.sellerUuid,
                                 listing.sellerName,
                                 listing.sellerName,
                                 toReturn.copy(),
@@ -787,7 +728,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
                     }
                 } else {
-                    // Seller offline: put return item into mailbox
                     ItemStack returnStack = listing.stack.copy();
                     stripAuctionTags(returnStack);
                     PendingWinnings pw = new PendingWinnings(
@@ -808,12 +748,6 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         }
     }
 
-    /**
-     * Moves every outstanding obligation into the mail and forgets it.
-     *
-     * <p>A pending entry owes two different people two different things off one sale, so it becomes
-     * up to two pieces of mail: the money to the seller, the goods to the winner.
-     */
     public int drainIntoMail(net.minecraft.server.MinecraftServer server) {
         if (pendingWinnings.isEmpty()) return 0;
         int posted = 0;
@@ -842,17 +776,12 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                     allPosted = false;
                 }
             }
-            // A full box keeps the obligation here rather than dropping it on the floor.
             if (allPosted) it.remove();
         }
         if (posted > 0) setDirty();
         return posted;
     }
 
-    /**
-     * Kept as the entry point for /ah claim, but the mail owns the obligations now, so this sweeps
-     * anything still in the old pile and then empties the player's box.
-     */
     public void claimAll(ServerLevel world, ServerPlayer player) {
         var server = world.getServer();
         net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);

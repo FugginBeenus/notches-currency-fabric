@@ -10,42 +10,15 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 public final class BalloonConfigState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
     public BlockPos center = new BlockPos(0, 80, 0);
 
-    /**
-     * Whether anybody has actually chosen where balloons go.
-     *
-     * <p>The centre above is a placeholder, not a choice, and without this there is no way to tell
-     * the two apart. A world nobody has set up would drop balloons on its origin every week and
-     * announce it, which reads as a bug because it is one.
-     */
     public boolean configured = false;
     public int radius = 25;
     public int minY = 110;
     public int maxY = 150;
     public int perDay = 3;
     public boolean announce = true;
-
-    // ---- One each, alongside the wave ----
-
-    /**
-     * Whether each player online also gets one in the sky above them when a wave fires.
-     *
-     * <p>The wave itself lands over one place, so it belongs to whoever lives near it. This is the
-     * part everybody gets. Off until a server turns it on: loot reaching every player is a change to
-     * how a server pays out rather than a decoration.
-     */
     public boolean perPlayer = false;
-
-    /** How far up, and how far off to the side, a player's own balloon appears. */
     public int playerHeight = 40;
     public int playerSpread = 12;
-
-    /**
-     * Whether a player has to be inside the balloon area to get one.
-     *
-     * <p>Off means everybody online gets theirs wherever they are, which is what gives the whole
-     * server a chance rather than only the people who live near spawn. On keeps balloons a
-     * spawn-town thing.
-     */
     public boolean playerInAreaOnly = false;
 
     public static BalloonConfigState get(ServerLevel world) {
@@ -74,8 +47,6 @@ public final class BalloonConfigState extends SavedData implements net.fugginbee
         return s;
     }
 
-    // Only the older versions call this. 1.21.11 hands writeNbt to a codec instead, so there is
-    // nothing on SavedData left to override there.
     //? if >=1.21.11 {
     /*
     *///?} elif >=1.21 {

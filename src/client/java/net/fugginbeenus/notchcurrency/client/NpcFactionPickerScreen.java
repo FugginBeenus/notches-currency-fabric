@@ -123,7 +123,7 @@ public class NpcFactionPickerScreen extends Screen {
             }
             if (over(mx, my, px + W - 132, py + H - 26, 120, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 2); // back to the Role tab we came from
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 2);
                 return true;
             }
         }
@@ -152,24 +152,19 @@ public class NpcFactionPickerScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

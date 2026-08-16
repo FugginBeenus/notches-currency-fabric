@@ -13,13 +13,6 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Collection;
 
-/**
- * Reading and setting extra hearts, and the rule about losing them.
- *
- * <p>The toggle is a world setting rather than a config file entry, because the config here is the
- * player's own and this is the server's rule. Somebody joining with a different file must not get
- * different hearts.
- */
 public final class HeartCommands {
 
     private HeartCommands() {}

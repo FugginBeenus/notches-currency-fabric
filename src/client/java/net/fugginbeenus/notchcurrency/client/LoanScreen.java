@@ -84,7 +84,6 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
 
         NotchWidgets.divider(ctx, x + 8, y + 88, W - 16);
 
-        // Amount field + preview.
         ctx.drawString(this.font, "Amount:", x + 12, y + FIELD_Y + 3, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W, FIELD_H, NotchTheme.DEEP);
 
@@ -95,9 +94,7 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
         NotchWidgets.neutralButton(ctx, this.font, x + ALL_X, y + ALL_Y, ALL_W, ALL_H, "Repay Everything",
                 over(mouseX, mouseY, x + ALL_X, y + ALL_Y, ALL_W, ALL_H));
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
+        /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
@@ -108,7 +105,6 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
 
     @Override
     protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        // No default labels.
     }
 
     //? if >=1.21.11 {
@@ -156,7 +152,6 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        // Keep the screen from closing / hotbar-swapping while typing in a focused field.
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, amountField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
@@ -165,16 +160,13 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
         //?}
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 }

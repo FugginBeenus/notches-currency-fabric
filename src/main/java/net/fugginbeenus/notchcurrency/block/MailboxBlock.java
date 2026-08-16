@@ -30,28 +30,11 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * The mailbox: one block that stands on the ground or hangs on a wall, and puts its flag up when
- * the owner has something waiting.
- *
- * <p>Which of the two it is comes from where it was placed rather than from a second block, so the
- * player only ever has one item and never has to pick. The flag is a blockstate rather than
- * something the renderer works out, so it costs nothing to draw and is visible from across a street.
- */
 public class MailboxBlock extends Block implements EntityBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    /** True when hung on the side of something, false when standing on the ground. */
     public static final BooleanProperty WALL = BooleanProperty.create("wall");
-    /** The flag, up when the owner has mail. */
     public static final BooleanProperty FLAG = BooleanProperty.create("flag");
-
-    // These follow the model rather than approximating it: a post you can walk through, or a
-    // roof you cannot click, is the kind of thing that reads as the block being broken.
-    //
-    // The box is deeper than it is wide, so unlike the old placeholder it has to turn with the
-    // block. It is also taller than one block and the top is simply not covered, which is the
-    // usual bargain for a model that leans into the space above it.
     private static final VoxelShape POST = Block.box(6.5, 0.0, 6.5, 9.5, 11.0, 9.5);
     private static final VoxelShape FLOOR_NS = Shapes.or(POST,
             Block.box(4.7, 10.5, 2.5, 11.3, 16.0, 13.5));
@@ -79,8 +62,6 @@ public class MailboxBlock extends Block implements EntityBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Direction clicked = ctx.getClickedFace();
-        // Clicked the side of something: hang off it, front pointing away from the wall. Anything
-        // else, including the top of a block, stands it on the ground facing the player.
         if (clicked.getAxis().isHorizontal()) {
             return defaultBlockState()
                     .setValue(WALL, true)
@@ -133,14 +114,13 @@ public class MailboxBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        // An unclaimed box belongs to whoever opens it first, which is how a player gets one at all.
         if (!box.isClaimed()) {
             box.claim(sp.getUUID(), sp.getName().getString());
             net.fugginbeenus.notchcurrency.mail.MailState.get(sp.level().getServer())
                     .noteMailbox(sp.getUUID(), sp.getName().getString());
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp,
                     Component.literal("This mailbox is yours now.").withStyle(ChatFormatting.GREEN));
-            // Somebody replacing a broken one wants to know their mail came back with it.
+
             int waiting = net.fugginbeenus.notchcurrency.mail.MailState
                     .get(sp.level().getServer()).count(sp.getUUID());
             if (waiting > 0) {
@@ -157,19 +137,10 @@ public class MailboxBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        // Someone else's box: walking up to it and using it means posting them something, with them
-        // already picked out on the other side.
         net.fugginbeenus.notchcurrency.mail.MailManager.openPost(sp, box.owner());
         return InteractionResult.CONSUME;
     }
 
-    /**
-     * A wall-mounted mailbox needs the wall. Break it and the mailbox comes off with it rather than
-     * hanging in the air.
-     *
-     * <p>The mail is not affected either way. It is kept per player, not in the block, so a mailbox
-     * is a way in rather than a container: knocking one down loses the way in and nothing else.
-     */
     @Override
     public boolean canSurvive(BlockState state, net.minecraft.world.level.LevelReader world, BlockPos pos) {
         if (!state.getValue(WALL)) return super.canSurvive(state, world, pos);
@@ -200,12 +171,6 @@ public class MailboxBlock extends Block implements EntityBlock {
         //?}
     }
 
-    /**
-     * Says what happened to the mail, because a mailbox breaking looks like losing the lot.
-     *
-     * <p>Nothing is actually at risk: the mail is filed under the player, so the block going only
-     * costs them the way in. Said out loud so nobody has to take that on faith.
-     */
     @Override
     //? if >=1.21 {
     /*public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
@@ -233,7 +198,6 @@ public class MailboxBlock extends Block implements EntityBlock {
 
     @Nullable
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state,
                                                                  BlockEntityType<T> type) {
         if (world.isClientSide

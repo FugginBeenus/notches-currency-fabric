@@ -33,8 +33,6 @@ public final class CrateManager {
         keyPrice = Math.max(0L, cfg.crate.keyPrice);
     }
 
-    // ---- opening ----
-
     public static void open(ServerPlayer player, String crateType, ServerLevel world, BlockPos pos) {
         if (!enabled) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED));
@@ -59,7 +57,6 @@ public final class CrateManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This crate is empty.").withStyle(ChatFormatting.GRAY));
             return;
         }
-        // Guard BEFORE keys are consumed: a bad datapack entry must never pay out "Air".
         if (loot.isItem() && !BuiltInRegistries.ITEM.containsKey(loot.itemId())) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("This crate is misconfigured (unknown item "
                     + loot.itemId() + ") - check the server log.").withStyle(ChatFormatting.RED));
@@ -71,7 +68,6 @@ public final class CrateManager {
         if (loot.isItem()) {
             int n = randRange(loot.min(), loot.max());
             ItemStack reward = new ItemStack(BuiltInRegistries.ITEM.get(loot.itemId()), n);
-            // Name BEFORE insertion: offerOrDrop empties the stack, and an empty stack names "Air".
             rewardText = Component.literal(n + "x ").append(reward.getHoverName().copy().withStyle(ChatFormatting.WHITE));
             player.getInventory().placeItemBackInInventory(reward);
         } else {
@@ -79,7 +75,7 @@ public final class CrateManager {
             rewardText = NotchCurrency.coins(loot.coins());
         }
 
-        net.fugginbeenus.notchcurrency.block.CrateBlock.animateOpen(world, pos); // pop the lid
+        net.fugginbeenus.notchcurrency.block.CrateBlock.animateOpen(world, pos);
         effects(world, pos);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("🎁 You opened the " + def.name() + " and won ").withStyle(ChatFormatting.GOLD)
                 .append(rewardText)
@@ -108,8 +104,6 @@ public final class CrateManager {
         }
     }
 
-    // ---- keys ----
-
     public static void buyKey(ServerPlayer player, int amount) {
         if (!enabled) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Crates are disabled.").withStyle(ChatFormatting.RED));
@@ -136,8 +130,6 @@ public final class CrateManager {
     public static long getKeyPrice() {
         return keyPrice;
     }
-
-    // ---- helpers ----
 
     private static int countKeys(ServerPlayer player) {
         int n = 0;

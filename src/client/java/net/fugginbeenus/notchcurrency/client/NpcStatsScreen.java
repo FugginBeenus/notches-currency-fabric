@@ -13,12 +13,9 @@ public class NpcStatsScreen extends Screen {
     private static final int W = 300, H = 266;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
-    // Fighting lives on the Moves tab with the rest of the combat settings. This screen is what the
-    // NPC IS, not who it picks a fight with.
     private static final String[] TOGGLE_NAMES = {
             "Protected", "Silent", "Glowing", "Nameplate",
             "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable", "Talk bubble"};
-    // Explicit bit per toggle (bits 8-9 are reserved for the visibility rule, so Pushable jumps to 1024).
     private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024, 2048};
 
     private final UUID npcId;
@@ -80,7 +77,6 @@ public class NpcStatsScreen extends Screen {
             else NotchWidgets.neutralButton(ctx, this.font, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
         }
 
-        // Day/night rule: while off-schedule the NPC is invisible and won't respond to clicks.
         ctx.drawString(this.font, "Appears", px + 14, py + 226, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 223, SLIDER_W, 15,
                 VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 223, SLIDER_W, 15));
@@ -106,12 +102,10 @@ public class NpcStatsScreen extends Screen {
     private String sliderReadout(int i) {
         return switch (i) {
             case 0 -> maxHealth + " HP";
-            case 1 -> Math.round(speedPct * 100f / 30f) + "%"; // relative to the default walk speed
+            case 1 -> Math.round(speedPct * 100f / 30f) + "%";
             default -> regen == 0 ? "Off" : (regen / 2f) + " HP/5s";
         };
     }
-
-    // ---- input ----
 
     //? if >=1.21.11 {
     /*@Override
@@ -149,7 +143,7 @@ public class NpcStatsScreen extends Screen {
             }
             if (over(mx, my, px + 70, py + 244, 160, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 5); // return to the NPC editor
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
             }
         }
@@ -220,24 +214,19 @@ public class NpcStatsScreen extends Screen {
         return false;
     }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

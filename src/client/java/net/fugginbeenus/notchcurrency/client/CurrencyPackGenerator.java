@@ -18,21 +18,15 @@ import java.util.stream.Stream;
 public final class CurrencyPackGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-CurrencyPack");
-
     public static final String PACK_DIR_NAME = "NotchCurrencyCustom";
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
-
     public static final String SERVER_PACK_DIR_NAME = "NotchCurrencyServer";
     public static final String SERVER_PACK_PROFILE_NAME = "file/" + SERVER_PACK_DIR_NAME;
-
     private static boolean remindedThisSession = false;
-
     private CurrencyPackGenerator() {}
-
     public static boolean packExists() {
         return Files.isDirectory(target());
     }
-
     private static final int PACK_FORMAT =
             //? if >=1.21 {
             /*34;
@@ -130,7 +124,6 @@ public final class CurrencyPackGenerator {
             itemName = itemName == null ? "" : itemName.trim();
             boolean empty = itemName.isEmpty() && coin == null && tails == null;
 
-            // Fingerprint the payload so identical re-joins don't rewrite + reload every time.
             String stamp = itemName + "|" + (coin == null ? -1 : java.util.Arrays.hashCode(coin))
                     + "|" + (tails == null ? -1 : java.util.Arrays.hashCode(tails));
             Path stampFile = pack.resolve("sync_stamp.txt");
@@ -213,9 +206,9 @@ public final class CurrencyPackGenerator {
                 Optional: coin_tails.png for the coin-flip tails side.
                 The coin's display name is set in the mod's config screen (ModMenu -> Notch Currency -> Currency).
 
-                On the next game start a resource pack called "NotchCurrencyCustom" is generated in the
+                On the next game start, a resource pack called "NotchCurrencyCustom" is generated in the
                 resourcepacks folder. Enable it once in Options -> Resource Packs and your art shows on
-                the coin item, the balance HUD and the coin symbol in chat, everywhere at once.
+                the coin item, the balance HUD, and the coin symbol in chat, everywhere at once.
 
                 On a dedicated server, put the same files in the SERVER's config/notchcurrency/currency
                 folder (and set the name in the server's config file). The skin is pushed to every player

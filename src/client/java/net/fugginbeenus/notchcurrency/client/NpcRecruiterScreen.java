@@ -40,7 +40,7 @@ public class NpcRecruiterScreen extends Screen {
     private final String motto;
 
     private int px, py;
-    private EditBox textField; // faction name when founding, motto when editing
+    private EditBox textField;
 
     public NpcRecruiterScreen(UUID npcId, String factionId, String factionName, ChatFormatting factionColor,
                               int memberCount, boolean alreadyIn, boolean canFound,
@@ -83,8 +83,6 @@ public class NpcRecruiterScreen extends Screen {
         }
     }
 
-    // Rows used by the Found and Settings panes. The label sits clear above its field rather than
-    // on the same line, which buried it under the inset.
     private int rowLabel() { return py + 38; }
     private int rowColor() { return py + 76; }
     private int rowFee() { return py + 98; }
@@ -324,24 +322,19 @@ public class NpcRecruiterScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 
-    // The blur hook is handed the graphics now instead of the partial tick.
     //? if >=1.21.11 {
     /*@Override
     protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?} elif >=1.21 {
     /*@Override
     protected void renderBlurredBackground(float delta) {
-        // No 1.21 menu blur behind the mod's screens. They draw crisp panels over the world.
     }
     *///?}
 
     //? if >=1.21 {
     /*@Override
     public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
-        // Drawn manually at the top of render(). This screen paints its panel after the darkening,
-        // but the 1.21 base render would darken over the finished panel (super.render comes last here).
     }
     *///?}
 }

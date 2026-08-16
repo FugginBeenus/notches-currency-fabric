@@ -39,10 +39,7 @@ public class LedgerBoardBlock extends Block implements EntityBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
-
     private static final int TOP_LIMIT = 10;
-
-    // Wide display panel; spills sideways, so the shapes are wide too (per facing axis).
     private static final VoxelShape LOWER_NS = Block.box(-8, 0, 4, 24, 16, 9);
     private static final VoxelShape LOWER_EW = Block.box(4, 0, -8, 9, 16, 24);
     private static final VoxelShape UPPER_NS = Block.box(-8, 0, 4, 24, 16, 9);
@@ -155,7 +152,6 @@ public class LedgerBoardBlock extends Block implements EntityBlock {
 
     @Nullable
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
         if (world.isClientSide || state.getValue(HALF) != DoubleBlockHalf.LOWER || type != ModBlockEntities.LEDGER_BOARD) {
             return null;

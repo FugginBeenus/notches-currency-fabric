@@ -28,15 +28,14 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
             P_PEND_HI = 5, P_PEND_LO = 6, P_BARTER_COUNT = 7, P_RENT_COST = 8, P_UNPAID = 9;
     private static final int PROP_COUNT = 10;
 
-    // SHOP_MANAGE_ACTION ids.
     public static final int ACTION_RENAME = 0, ACTION_GREETING = 1, ACTION_TOGGLE_OPEN = 2,
             ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4;
 
     private final UUID shopId;
     private final String shopName;
     private final String greeting;
-    @Nullable private final UUID npcId; // linked NPC, for the client-side preview
-    @Nullable private final PlayerShop shop; // server side only
+    @Nullable private final UUID npcId;
+    @Nullable private final PlayerShop shop;
     private final SimpleContainer rowInv = new SimpleContainer(ROWS);
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
     private int page = 0;
@@ -79,7 +78,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     }
 
     private void refresh() {
-        if (shop == null) return; // client side
+        if (shop == null) return;
         props.set(P_OPEN, shop.isOpen() ? 1 : 0);
         props.set(P_RENT_PAUSED, shop.isRentPaused() ? 1 : 0);
         long pending = shop.getPendingBalance();
@@ -104,8 +103,6 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
                     ? ShopBrowseScreenHandler.displayStack(listings.get(idx)) : ItemStack.EMPTY);
         }
     }
-
-    // ---- actions (server side, from the SHOP_MANAGE_ACTION packet) ----
 
     public void handleAction(ServerPlayer sp, int action, String text, @Nullable UUID listingId) {
         if (shop == null) return;
@@ -170,7 +167,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
-        else if (id == 1) page = page + 1; // clamped in refresh()
+        else if (id == 1) page = page + 1;
         else return false;
         refresh();
         broadcastChanges();

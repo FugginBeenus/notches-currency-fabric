@@ -13,8 +13,6 @@ import java.util.*;
 
 public final class BarrelCleanupManager {
     private BarrelCleanupManager() {}
-
-    // Track per-dimension
     private static final Map<ServerLevel, Set<BlockPos>> TRACKED = new HashMap<>();
     private static boolean INIT = false;
 
@@ -38,17 +36,14 @@ public final class BarrelCleanupManager {
 
             var toRemove = new ArrayList<BlockPos>();
             for (BlockPos pos : positions) {
-                // If block changed, stop tracking
                 if (!world.getBlockState(pos).is(Blocks.BARREL)) {
                     toRemove.add(pos);
                     continue;
                 }
                 var be = world.getBlockEntity(pos);
                 if (!(be instanceof BarrelBlockEntity barrel)) continue;
-
-                // If empty -> poof and remove the barrel
                 if (isEmpty(barrel)) {
-                    world.levelEvent(2001, pos, net.minecraft.world.level.block.Block.getId(Blocks.BARREL.defaultBlockState())); // break particles
+                    world.levelEvent(2001, pos, net.minecraft.world.level.block.Block.getId(Blocks.BARREL.defaultBlockState()));
                     world.playSound(null, pos, SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.9f, 1.0f);
                     world.setBlock(pos, Blocks.AIR.defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
                     world.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5, pos.getY() + 0.8, pos.getZ() + 0.5,
