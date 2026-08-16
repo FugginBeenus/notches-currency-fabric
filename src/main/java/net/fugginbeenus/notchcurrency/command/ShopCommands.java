@@ -460,6 +460,18 @@ public final class ShopCommands {
             return 0;
         }
 
+        // Only take over an NPC that is not already doing something else. Setting the role
+        // unconditionally would quietly turn somebody's banker into a shopkeeper because they were
+        // stood in the wrong place when they ran this, and the first they would know of it is the
+        // bank no longer opening.
+        var role = npc.getRole();
+        if (role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.NONE
+                && role != net.fugginbeenus.notchcurrency.economy.npc.NpcRole.SHOP) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("That NPC is a "
+                    + role.name().toLowerCase().replace('_', ' ')
+                    + ". Use one with no job, or change its role first.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
         npc.setRole(net.fugginbeenus.notchcurrency.economy.npc.NpcRole.SHOP);
         state.linkNpcToShop(npc.getUUID(), shopId);
         state.markDirtyAndSave();
