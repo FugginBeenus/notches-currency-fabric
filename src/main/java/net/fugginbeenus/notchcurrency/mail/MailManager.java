@@ -109,6 +109,34 @@ public final class MailManager {
         MailInboxMenu.open(player);
     }
 
+    private static String takeWrapping(List<ItemStack> goods) {
+        if (takeOne(goods, net.minecraft.world.item.Items.SPRUCE_SAPLING)) {
+            if (takeOne(goods, net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN)) {
+                return MailItem.WRAP_CHRISTMAS;
+            }
+            goods.add(new ItemStack(net.minecraft.world.item.Items.SPRUCE_SAPLING));
+            return MailItem.WRAP_PLAIN;
+        }
+        if (takeOne(goods, net.minecraft.world.item.Items.CARVED_PUMPKIN)) {
+            if (takeOne(goods, net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN)) {
+                return MailItem.WRAP_HALLOWEEN;
+            }
+            goods.add(new ItemStack(net.minecraft.world.item.Items.CARVED_PUMPKIN));
+        }
+        return MailItem.WRAP_PLAIN;
+    }
+
+    private static boolean takeOne(List<ItemStack> goods, net.minecraft.world.item.Item marker) {
+        for (int i = 0; i < goods.size(); i++) {
+            ItemStack stack = goods.get(i);
+            if (!stack.is(marker)) continue;
+            stack.shrink(1);
+            if (stack.isEmpty()) goods.remove(i);
+            return true;
+        }
+        return false;
+    }
+
     public static void sendRecipients(ServerPlayer player) {
         var server = player.level().getServer();
         var known = MailState.get(server).knownMailboxes();
@@ -150,12 +178,13 @@ public final class MailManager {
         String trimmed = note == null ? "" : note.strip();
 
         List<ItemStack> goods = parcel.takeContents();
+        String wrap = takeWrapping(goods);
         if (money > 0L) {
             BalanceStore.subtract(sender, money, TransactionReason.PAY, "posted a parcel");
             NotchPackets.sendBalance(sender, BalanceStore.get(sender));
         }
 
-        if (!post(server, recipient, MailItem.parcel(from, trimmed, goods, money))) {
+        if (!post(server, recipient, MailItem.parcel(from, trimmed, goods, money, wrap))) {
             Msg.chat(sender, Component.literal("Their mailbox is full. Nothing was sent.")
                     .withStyle(ChatFormatting.RED));
             for (ItemStack stack : goods) {

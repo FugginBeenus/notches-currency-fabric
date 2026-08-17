@@ -35,6 +35,20 @@ public final class ModItems {
                     net.fugginbeenus.notchcurrency.compat.Reg.itemProps("parcel"))
     );
 
+    public static final Item PARCEL_CHRISTMAS = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("parcel_christmas"),
+            new net.fugginbeenus.notchcurrency.item.ParcelItem(
+                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("parcel_christmas"))
+    );
+
+    public static final Item PARCEL_HALLOWEEN = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("parcel_halloween"),
+            new net.fugginbeenus.notchcurrency.item.ParcelItem(
+                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("parcel_halloween"))
+    );
+
     public static final Item CRATE_KEY = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("crate_key"),

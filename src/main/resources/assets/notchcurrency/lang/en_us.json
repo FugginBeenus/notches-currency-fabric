@@ -24,5 +24,7 @@
   "key.notchcurrency.bounty_tracker": "Toggle Bounty Tracker",
   "key.categories.notchcurrency": "Notch Currency",
   "item.notchcurrency.parcel": "Parcel",
-  "item.notchcurrency.heart_crystal": "Heart Crystal"
+  "item.notchcurrency.heart_crystal": "Heart Crystal",
+  "item.notchcurrency.parcel_christmas": "Wrapped Parcel",
+  "item.notchcurrency.parcel_halloween": "Spooky Parcel"
 }

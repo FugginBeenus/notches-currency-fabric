@@ -10,12 +10,17 @@ import java.util.List;
 import java.util.UUID;
 
 public record MailItem(UUID id, String sender, String note, List<ItemStack> contents, long coins,
-                       long sentAt) {
+                       long sentAt, String wrap) {
 
     public static final int MAX_CONTENTS = 6;
 
+    public static final String WRAP_PLAIN = "";
+    public static final String WRAP_CHRISTMAS = "christmas";
+    public static final String WRAP_HALLOWEEN = "halloween";
+
     public MailItem {
         contents = List.copyOf(contents);
+        wrap = wrap == null ? WRAP_PLAIN : wrap;
     }
 
     public static MailItem parcel(String sender, String note, ItemStack stack) {
@@ -27,15 +32,19 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
     }
 
     public static MailItem parcel(String sender, String note, List<ItemStack> stacks, long coins) {
+        return parcel(sender, note, stacks, coins, WRAP_PLAIN);
+    }
+
+    public static MailItem parcel(String sender, String note, List<ItemStack> stacks, long coins, String wrap) {
         List<ItemStack> copies = new ArrayList<>();
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty() && copies.size() < MAX_CONTENTS) copies.add(stack.copy());
         }
-        return new MailItem(UUID.randomUUID(), sender, note, copies, Math.max(0L, coins), 0L);
+        return new MailItem(UUID.randomUUID(), sender, note, copies, Math.max(0L, coins), 0L, wrap);
     }
 
     public static MailItem payout(String sender, String note, long coins) {
-        return new MailItem(UUID.randomUUID(), sender, note, List.of(), Math.max(0L, coins), 0L);
+        return new MailItem(UUID.randomUUID(), sender, note, List.of(), Math.max(0L, coins), 0L, WRAP_PLAIN);
     }
 
     public boolean isEmpty() {
@@ -43,18 +52,18 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
     }
 
     public MailItem at(long gameTime) {
-        return new MailItem(id, sender, note, contents, coins, gameTime);
+        return new MailItem(id, sender, note, contents, coins, gameTime, wrap);
     }
 
     public MailItem without(boolean tookGoods, boolean tookCoins) {
         return new MailItem(id, sender, note,
                 tookGoods ? List.of() : contents,
                 tookCoins ? 0L : coins,
-                sentAt);
+                sentAt, wrap);
     }
 
     public MailItem withContents(List<ItemStack> left) {
-        return new MailItem(id, sender, note, left, coins, sentAt);
+        return new MailItem(id, sender, note, left, coins, sentAt, wrap);
     }
 
     public CompoundTag toNbt() {
@@ -68,6 +77,7 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
         }
         if (coins > 0L) nbt.putLong("Coins", coins);
         nbt.putLong("SentAt", sentAt);
+        if (!wrap.isEmpty()) nbt.putString("Wrap", wrap);
         return nbt;
     }
 
@@ -89,6 +99,7 @@ public record MailItem(UUID id, String sender, String note, List<ItemStack> cont
                 nbt.getString("Note"),
                 contents,
                 nbt.getLong("Coins"),
-                nbt.getLong("SentAt"));
+                nbt.getLong("SentAt"),
+                nbt.getString("Wrap"));
     }
 }

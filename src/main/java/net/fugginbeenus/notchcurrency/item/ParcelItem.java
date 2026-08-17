@@ -37,7 +37,7 @@ public class ParcelItem extends Item {
     }
 
     public static ItemStack of(MailItem mail) {
-        ItemStack stack = new ItemStack(ModItems.PARCEL);
+        ItemStack stack = new ItemStack(itemFor(mail.wrap()));
         StackData.putString(stack, K_SENDER, mail.sender());
         if (!mail.note().isEmpty()) StackData.putString(stack, K_NOTE, mail.note());
         if (mail.coins() > 0L) StackData.putLong(stack, K_COINS, mail.coins());
@@ -49,8 +49,15 @@ public class ParcelItem extends Item {
         return stack;
     }
 
+    public static net.minecraft.world.item.Item itemFor(String wrap) {
+        if (MailItem.WRAP_CHRISTMAS.equals(wrap)) return ModItems.PARCEL_CHRISTMAS;
+        if (MailItem.WRAP_HALLOWEEN.equals(wrap)) return ModItems.PARCEL_HALLOWEEN;
+        return ModItems.PARCEL;
+    }
+
     public static boolean isParcel(ItemStack stack) {
-        return stack.is(ModItems.PARCEL) && StackData.hasData(stack);
+        return (stack.is(ModItems.PARCEL) || stack.is(ModItems.PARCEL_CHRISTMAS)
+                || stack.is(ModItems.PARCEL_HALLOWEEN)) && StackData.hasData(stack);
     }
 
     public static String sender(ItemStack stack) {
