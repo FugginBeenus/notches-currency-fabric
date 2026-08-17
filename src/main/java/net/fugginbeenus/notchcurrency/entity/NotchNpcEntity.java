@@ -1526,7 +1526,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         readConfig(tag);
         if (tag.contains("Name")) {
             this.setCustomName(Component.literal(tag.getString("Name")));
-            this.setCustomNameVisible(true);
+            if (!tag.contains("StatNameVisible")) this.setCustomNameVisible(true);
         }
     }
 

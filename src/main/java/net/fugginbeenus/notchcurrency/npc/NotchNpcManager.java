@@ -638,12 +638,13 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         String trimmed = name == null ? "" : name.trim();
         if (trimmed.length() > 48) trimmed = trimmed.substring(0, 48);
+        boolean hadName = npc.getCustomName() != null;
         if (trimmed.isEmpty()) {
             npc.setCustomName(null);
             npc.setCustomNameVisible(false);
         } else {
             npc.setCustomName(Component.literal(NpcText.colorize(trimmed)));
-            npc.setCustomNameVisible(true);
+            if (!hadName) npc.setCustomNameVisible(true);
         }
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC name updated.").withStyle(ChatFormatting.GREEN));
     }
