@@ -258,14 +258,9 @@ public class NotchNpcEditorScreen extends Screen {
         ctx.drawString(this.font, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
         NotchWidgets.neutralButton(ctx, this.font, px + 224, py + 100, 66, 14, "Change...", over(mx, my, px + 224, py + 100, 66, 14));
         if (isApplyModel()) {
-            var variants = NpcAppearances.all();
-            for (int i = 0; i < variants.size(); i++) {
-                var v = variants.get(i);
-                int vx = varX(i), vy = varY(i);
-                boolean hover = over(mx, my, vx, vy, VAR_W, VAR_H);
-                if (v.id().equals(currentSkinValue)) NotchWidgets.primaryButton(ctx, this.font, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
-                else NotchWidgets.neutralButton(ctx, this.font, vx, vy, VAR_W, VAR_H, v.displayName(), hover);
-            }
+            NotchWidgets.neutralButton(ctx, this.font, px + 118, py + 122, 20, 16, "<", over(mx, my, px + 118, py + 122, 20, 16));
+            NotchWidgets.neutralButton(ctx, this.font, px + 268, py + 122, 20, 16, ">", over(mx, my, px + 268, py + 122, 20, 16));
+            NotchWidgets.centerText(ctx, this.font, variantDisplayName(), px + 203, py + 126, NotchTheme.TEXT_DARK, false);
         } else if (isHumanoid()) {
             boolean preset = NotchNpcEntity.SKIN_PRESET.equals(currentSkinType);
             NotchWidgets.neutralButton(ctx, this.font, px + 118, py + 122, 20, 16, "<", over(mx, my, px + 118, py + 122, 20, 16));
@@ -344,9 +339,25 @@ public class NotchNpcEditorScreen extends Screen {
         return s.length() <= max ? s : s.substring(0, max - 1) + "..";
     }
 
-    private static final int VAR_W = 84, VAR_H = 16;
-    private int varX(int i) { return (i % 2 == 0) ? px + 118 : px + 206; }
-    private int varY(int i) { return py + 106 + (i / 2) * 18; }
+    private int variantIndex() {
+        var variants = NpcAppearances.all();
+        for (int i = 0; i < variants.size(); i++) {
+            if (variants.get(i).id().equals(currentSkinValue)) return i;
+        }
+        return 0;
+    }
+
+    private String variantDisplayName() {
+        return NpcAppearances.all().get(variantIndex()).displayName();
+    }
+
+    private void cycleVariant(int delta) {
+        var variants = NpcAppearances.all();
+        int next = Math.floorMod(variantIndex() + delta, variants.size());
+        currentSkinValue = variants.get(next).id();
+        NotchWidgets.click();
+        sendAppearance();
+    }
 
     private int presetIndex() {
         try { return Math.max(1, Math.min(NpcSkinsPresetCount(), Integer.parseInt(currentSkinValue))); }
@@ -734,58 +745,78 @@ public class NotchNpcEditorScreen extends Screen {
     private static final String[] POSE_NAMES = {"Standing", "Sitting", "Sneaking", "Sleeping", "Chilling", "Prone", "Waving", "Custom"};
     private static final String[] ANIM_NAMES = {"Statue (frozen)", "Breathe (default)", "Lively"};
     private String customClip = null; // null until read off the NPC standing in the world
-    private int poseX(int i) { return (i % 2 == 0) ? px + 30 : px + 155; }
-    private int poseY(int i) { return py + 50 + (i / 2) * 19; }
+    private static final int POSE_PREV_X = 22, POSE_PREV_Y = 74, POSE_PREV_W = 96, POSE_PREV_H = 124;
+    private static final int POSE_CTL_X = 130, POSE_CTL_W = 148;
 
     private void drawPose(GuiGraphics ctx, int mx, int my) {
-        for (int i = 0; i < POSE_NAMES.length; i++) {
-            boolean hover = over(mx, my, poseX(i), poseY(i), 115, 16);
-            if (i == poseId) {
-                NotchWidgets.primaryButton(ctx, this.font, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
-            } else {
-                NotchWidgets.neutralButton(ctx, this.font, poseX(i), poseY(i), 115, 16, POSE_NAMES[i], hover);
-            }
-        }
-        ctx.drawString(this.font, "Idle:", px + 50, py + 132, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 128, 170, 16,
-                ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
-                over(mx, my, px + 80, py + 128, 170, 16));
-        ctx.drawString(this.font, "Clip:", px + 50, py + 152, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + 80, py + 148, 170, 16, clipLabel(),
-                over(mx, my, px + 80, py + 148, 170, 16));
+        NotchWidgets.neutralButton(ctx, this.font, px + 30, py + 50, 20, 16, "<", over(mx, my, px + 30, py + 50, 20, 16));
+        NotchWidgets.neutralButton(ctx, this.font, px + 250, py + 50, 20, 16, ">", over(mx, my, px + 250, py + 50, 20, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 54, py + 50, 192, 16, POSE_NAMES[poseIndex()], false);
 
-        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 170, 200, 18, "Open Pose Editor",
-                over(mx, my, px + 50, py + 170, 200, 18));
-        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 192, 200, 18, "Move, Rotate & Size",
-                over(mx, my, px + 50, py + 192, 200, 18));
+        NotchWidgets.inset(ctx, px + POSE_PREV_X, py + POSE_PREV_Y, POSE_PREV_W, POSE_PREV_H, NotchTheme.DEEP);
+        NotchNpcEntity npc = findPreview();
+        if (npc != null) {
+            float oldYaw = npc.getYRot(), oldBody = npc.yBodyRot;
+            boolean wasInvisible = npc.isInvisible();
+            npc.setYRot(180);
+            npc.yBodyRot = 180;
+            npc.setInvisible(false);
+            float lookX = (px + POSE_PREV_X + POSE_PREV_W / 2f) - mx;
+            float lookY = (py + POSE_PREV_Y + 30f) - my;
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx,
+                    px + POSE_PREV_X + POSE_PREV_W / 2, py + POSE_PREV_Y + POSE_PREV_H - 14,
+                    Math.max(8, (int) (previewSize() * 0.66f)), lookX, lookY, npc);
+            npc.setYRot(oldYaw);
+            npc.yBodyRot = oldBody;
+            npc.setInvisible(wasInvisible);
+        } else {
+            NotchWidgets.centerText(ctx, this.font, "Preview", px + POSE_PREV_X + POSE_PREV_W / 2,
+                    py + POSE_PREV_Y + POSE_PREV_H / 2, NotchTheme.TEXT_MUTED, false);
+        }
+
+        ctx.drawString(this.font, "Idle:", px + POSE_CTL_X, py + 78, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16,
+                ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
+                over(mx, my, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16));
+        ctx.drawString(this.font, "Clip:", px + POSE_CTL_X, py + 110, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16, clipLabel(),
+                over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16));
+
+        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18, "Open Pose Editor",
+                over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18));
+        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18, "Move, Rotate & Size",
+                over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18));
         NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
-                px + W / 2, py + 216, NotchTheme.TEXT_MUTED, false);
+                px + W / 2, py + 214, NotchTheme.TEXT_MUTED, false);
+    }
+
+    private int poseIndex() { return Math.max(0, Math.min(POSE_NAMES.length - 1, poseId)); }
+
+    private void cyclePose(int delta) {
+        poseId = Math.floorMod(poseIndex() + delta, POSE_NAMES.length);
+        NotchWidgets.click();
+        NotchPacketsClient.sendNpcSetPose(npcId, poseId);
     }
 
     private boolean clickPose(int mx, int my) {
-        for (int i = 0; i < POSE_NAMES.length; i++) {
-            if (over(mx, my, poseX(i), poseY(i), 115, 16)) {
-                poseId = i;
-                NotchPacketsClient.sendNpcSetPose(npcId, poseId);
-                return true;
-            }
-        }
-        if (over(mx, my, px + 80, py + 128, 170, 16)) {
+        if (over(mx, my, px + 30, py + 50, 20, 16)) { cyclePose(-1); return true; }
+        if (over(mx, my, px + 250, py + 50, 20, 16)) { cyclePose(1); return true; }
+        if (over(mx, my, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16)) {
             poseAnim = (poseAnim + 1) % ANIM_NAMES.length;
             NotchPacketsClient.sendNpcSetAnim(npcId, poseAnim);
             return true;
         }
-        if (over(mx, my, px + 80, py + 148, 170, 16)) {
+        if (over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16)) {
             cycleClip();
             return true;
         }
-        if (over(mx, my, px + 50, py + 170, 200, 18)) {
+        if (over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18)) {
             poseId = 7;
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
             Minecraft.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
-        if (over(mx, my, px + 50, py + 192, 200, 18)) {
+        if (over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18)) {
             Minecraft.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
         }
@@ -963,14 +994,8 @@ public class NotchNpcEditorScreen extends Screen {
         }
 
         if (isApplyModel()) {
-            var variants = NpcAppearances.all();
-            for (int i = 0; i < variants.size(); i++) {
-                if (over(mx, my, varX(i), varY(i), VAR_W, VAR_H)) {
-                    currentSkinValue = variants.get(i).id();
-                    sendAppearance();
-                    return true;
-                }
-            }
+            if (over(mx, my, px + 118, py + 122, 20, 16)) { cycleVariant(-1); return true; }
+            if (over(mx, my, px + 268, py + 122, 20, 16)) { cycleVariant(1); return true; }
         } else if (isHumanoid()) {
             if (over(mx, my, px + 118, py + 122, 20, 16)) { cyclePreset(-1); return true; }
             if (over(mx, my, px + 268, py + 122, 20, 16)) { cyclePreset(1); return true; }
