@@ -114,6 +114,12 @@ public class NpcDialogueScreen extends Screen {
             }
         }
 
+        if (labels.length == 0) {
+            int cy = choiceY(0);
+            NotchWidgets.primaryButton(ctx, this.font, px + TEXT_X, cy, TEXT_W, CHOICE_H, "Close",
+                    over(mouseX, mouseY, px + TEXT_X, cy, TEXT_W, CHOICE_H));
+        }
+
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
         *///?} else {
@@ -132,6 +138,11 @@ public class NpcDialogueScreen extends Screen {
     //?}
         if (button == 0 && !chose) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (labels.length == 0 && over(mx, my, px + TEXT_X, choiceY(0), TEXT_W, CHOICE_H)) {
+                NotchWidgets.tick();
+                this.onClose();
+                return true;
+            }
             for (int i = 0; i < labels.length; i++) {
                 if (enabled[i] && over(mx, my, px + TEXT_X, choiceY(i), TEXT_W, CHOICE_H)) {
                     NotchWidgets.tick();

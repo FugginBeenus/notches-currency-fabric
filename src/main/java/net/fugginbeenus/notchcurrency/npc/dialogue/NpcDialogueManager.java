@@ -39,7 +39,19 @@ public final class NpcDialogueManager {
 
         DialogueNode start = tree.start();
         if (start == null) return false;
+        if (isLineList(tree)) {
+            List<DialogueNode> pages = new ArrayList<>(tree.nodes().values());
+            start = pages.get(sp.getRandom().nextInt(pages.size()));
+        }
         sendNode(sp, npc, start);
+        return true;
+    }
+
+    private static boolean isLineList(DialogueTree tree) {
+        if (tree.nodes().size() < 2) return false;
+        for (DialogueNode node : tree.nodes().values()) {
+            if (!node.choices().isEmpty()) return false;
+        }
         return true;
     }
 
