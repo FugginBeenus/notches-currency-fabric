@@ -134,7 +134,8 @@ public final class NotchNpcManager {
 
     public static void setAppearance(ServerPlayer sp, NotchNpcEntity npc,
                                      String model, String skinType, String skinValue, boolean slim,
-                                     float scaleX, float scaleY, float scaleZ, float nameOffset) {
+                                     float scaleX, float scaleY, float scaleZ, float nameOffset,
+                                     float bodyOffset) {
         if (!guard(sp, npc)) return;
         if (NotchNpcEntity.SKIN_URL.equals(skinType) && !skinValue.isBlank()) {
             String lower = skinValue.trim().toLowerCase();
@@ -145,6 +146,7 @@ public final class NotchNpcManager {
             }
         }
         npc.setAppearance(model, skinType, skinValue, slim, scaleX, scaleY, scaleZ, nameOffset);
+        npc.setBodyOffset(bodyOffset);
     }
 
     public static void setBillboard(ServerPlayer sp, NotchNpcEntity npc, String text) {

@@ -677,7 +677,7 @@ public final class NotchPacketsClient {
 
     public static void sendNpcSetAppearance(UUID npcId, String model, String skinType, String skinValue,
                                             boolean slim, float scaleX, float scaleY, float scaleZ,
-                                            float nameOffset) {
+                                            float nameOffset, float bodyOffset) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);
         buf.writeUtf(model);
@@ -688,6 +688,7 @@ public final class NotchPacketsClient {
         buf.writeFloat(scaleY);
         buf.writeFloat(scaleZ);
         buf.writeFloat(nameOffset);
+        buf.writeFloat(bodyOffset);
         NetClient.sendToServer(NotchPackets.NPC_SET_APPEARANCE, buf);
     }
 

@@ -1103,7 +1103,8 @@ public class NotchNpcEditorScreen extends Screen {
 
     private void sendAppearance() {
         NotchPacketsClient.sendNpcSetAppearance(npcId, currentModel, currentSkinType, currentSkinValue,
-                currentSlim, currentScale, currentScaleY, currentScaleZ, currentNameOffset);
+                currentSlim, currentScale, currentScaleY, currentScaleZ, currentNameOffset,
+                findPreview() == null ? 0f : findPreview().getBodyOffset());
     }
 
     private NotchNpcEntity findPreview() {

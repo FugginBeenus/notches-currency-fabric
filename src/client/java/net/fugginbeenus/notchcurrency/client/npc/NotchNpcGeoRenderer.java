@@ -51,6 +51,10 @@ public class NotchNpcGeoRenderer extends GeoEntityRenderer<NotchNpcEntity> {
                           float partialTick, int packedLight, int packedOverlay,
                           float red, float green, float blue, float alpha) {
     //?}
+        float lift = animatable.getBodyOffset();
+        if (!isReRender && lift != 0.0f) {
+            poseStack.translate(0.0f, lift, 0.0f);
+        }
         float scale = animatable.npcScale();
         if (!isReRender && scale > 0f && scale != 1.0f) {
             poseStack.scale(scale, scale, scale);

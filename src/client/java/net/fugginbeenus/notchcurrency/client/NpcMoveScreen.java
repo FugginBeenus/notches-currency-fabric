@@ -103,10 +103,22 @@ public class NpcMoveScreen extends Screen {
                     over(mouseX, mouseY, gx + 62, zy, 14, 14));
         }
 
-        ctx.drawString(this.font, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 84,
+        int by = py + 80;
+        ctx.drawString(this.font, "Body Y", px + 8, by + 3, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 52, by, 14, 14, "-",
+                over(mouseX, mouseY, px + 52, by, 14, 14));
+        NotchWidgets.centerText(ctx, this.font, String.format("%+.2f", npc == null ? 0f : npc.getBodyOffset()),
+                px + 92, by + 3, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + 118, by, 14, 14, "+",
+                over(mouseX, mouseY, px + 118, by, 14, 14));
+        NotchWidgets.neutralButton(ctx, this.font, px + 140, by, 40, 14, "Reset",
+                over(mouseX, mouseY, px + 140, by, 40, 14));
+        ctx.drawString(this.font, "moves the model only", px + 186, by + 3, NotchTheme.TEXT_MUTED, false);
+
+        ctx.drawString(this.font, "Nudge 0.1 - hold Shift for 1 block.", px + 10, py + 100,
                 NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 100, 272, 16, "Back to Editor",
-                over(mouseX, mouseY, px + 10, py + 100, 272, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 116, 272, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 10, py + 116, 272, 16));
 
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -161,7 +173,11 @@ public class NpcMoveScreen extends Screen {
                 if (over(mx, my, gx + 12, zy, 14, 14)) { NotchWidgets.tick(); resize(a, -0.1f); return true; }
                 if (over(mx, my, gx + 62, zy, 14, 14)) { NotchWidgets.tick(); resize(a, 0.1f); return true; }
             }
-            if (over(mx, my, px + 10, py + 100, 272, 16)) {
+            int by = py + 80;
+            if (over(mx, my, px + 52, by, 14, 14)) { NotchWidgets.tick(); nudgeBody(-0.05f); return true; }
+            if (over(mx, my, px + 118, by, 14, 14)) { NotchWidgets.tick(); nudgeBody(0.05f); return true; }
+            if (over(mx, my, px + 140, by, 40, 14)) { NotchWidgets.tick(); setBody(0f); return true; }
+            if (over(mx, my, px + 10, py + 116, 272, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 4);
                 return true;
@@ -256,7 +272,22 @@ public class NpcMoveScreen extends Screen {
         float updated = Math.max(0.3f, Math.min(3.0f, Math.round(((axis == 0 ? x : axis == 1 ? y : z) + step) * 10f) / 10f));
         if (axis == 0) x = updated; else if (axis == 1) y = updated; else z = updated;
         NotchPacketsClient.sendNpcSetAppearance(npcId, npc.getModelId(), npc.getSkinType(),
-                npc.getSkinValue(), npc.isSlim(), x, y, z, npc.getNameOffset());
+                npc.getSkinValue(), npc.isSlim(), x, y, z, npc.getNameOffset(), npc.getBodyOffset());
+    }
+
+    private void nudgeBody(float step) {
+        NotchNpcEntity npc = findNpc();
+        if (npc == null) return;
+        setBody(Math.round((npc.getBodyOffset() + step) * 100f) / 100f);
+    }
+
+    private void setBody(float value) {
+        NotchNpcEntity npc = findNpc();
+        if (npc == null) return;
+        float clamped = Math.max(-2.0f, Math.min(2.0f, value));
+        NotchPacketsClient.sendNpcSetAppearance(npcId, npc.getModelId(), npc.getSkinType(),
+                npc.getSkinValue(), npc.isSlim(), npc.npcScale(), npc.getScaleY(), npc.getScaleZ(),
+                npc.getNameOffset(), clamped);
     }
 
     private void faceMe() {

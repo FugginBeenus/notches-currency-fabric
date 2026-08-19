@@ -21,6 +21,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public float clientSwingStartAge = -1000f;
     public boolean slim;
     public float nameOffset;
+    public float bodyOffset;
     public String subtitle = "";
     public float scaleX = 1f, scaleY = 1f, scaleZ = 1f;
     public String[] billboard = new String[0];
@@ -41,6 +42,7 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public float[] getCustomPoseAngles() { return customPoseAngles; }
     public boolean isSlim() { return slim; }
     public float getNameOffset() { return nameOffset; }
+    public float getBodyOffset() { return bodyOffset; }
     public String getSubtitle() { return subtitle; }
     public float npcScale() { return scaleX; }
     public float getScaleY() { return scaleY; }

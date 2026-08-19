@@ -137,6 +137,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         state.ageInTicks = entity.tickCount + partialTick;
         state.bodyHeight = entity.getBbHeight();
         state.nameOffset = entity.getNameOffset();
+        state.bodyOffset = entity.getBodyOffset();
         state.subtitle = entity.getSubtitle();
         state.scaleX = entity.npcScale();
         state.scaleY = entity.getScaleY();
@@ -199,6 +200,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     protected void scale(NotchNpcEntity entity, PoseStack matrices, float amount) {
     //?}
         // Scale only the model here (not the name label, which is rendered separately).
+        float lift = entity.getBodyOffset();
+        if (lift != 0.0f) matrices.translate(0.0f, lift, 0.0f);
         float sx = entity.npcScale(), sy = entity.getScaleY(), sz = entity.getScaleZ();
         if (sx != 1.0f || sy != 1.0f || sz != 1.0f) matrices.scale(sx, sy, sz);
     }

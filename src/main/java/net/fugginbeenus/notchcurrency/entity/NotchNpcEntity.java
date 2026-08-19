@@ -89,6 +89,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> SCALE_Z =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> BODY_OFFSET =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> NAME_OFFSET =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<String> BILLBOARD =
@@ -216,6 +218,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SCALE_Y, 1.0f);
         builder.define(SCALE_Z, 1.0f);
         builder.define(NAME_OFFSET, 0.0f);
+        builder.define(BODY_OFFSET, 0.0f);
         builder.define(BILLBOARD, "");
         builder.define(SUBTITLE, "");
         builder.define(NPC_POSE, POSE_STANDING);
@@ -237,6 +240,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SCALE_Y, 1.0f);
         this.entityData.define(SCALE_Z, 1.0f);
         this.entityData.define(NAME_OFFSET, 0.0f);
+        this.entityData.define(BODY_OFFSET, 0.0f);
         this.entityData.define(BILLBOARD, "");
         this.entityData.define(SUBTITLE, "");
         this.entityData.define(NPC_POSE, POSE_STANDING);
@@ -445,6 +449,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             lines++;
         }
         this.entityData.set(BILLBOARD, out.toString());
+    }
+
+    public float getBodyOffset() { return this.entityData.get(BODY_OFFSET); }
+    public void setBodyOffset(float offset) {
+        this.entityData.set(BODY_OFFSET, Math.max(-2.0f, Math.min(2.0f, offset)));
     }
 
     public float getNameOffset() { return this.entityData.get(NAME_OFFSET); }
@@ -991,9 +1000,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                     holdScheduleFacing();
                 }
             }
-            net.minecraft.world.entity.Pose want = entityPoseFor(getNpcPose());
-            if (this.getPose() != want) {
-                this.setPose(want);
+            if (!this.isPassenger()) {
+                net.minecraft.world.entity.Pose want = entityPoseFor(getNpcPose());
+                if (this.getPose() != want) {
+                    this.setPose(want);
+                }
             }
             if (regen > 0 && this.tickCount % 100 == 0 && this.getHealth() < this.getMaxHealth()) {
                 this.heal(regen * 0.5f);
@@ -1347,6 +1358,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putFloat("ScaleY", getScaleY());
         nbt.putFloat("ScaleZ", getScaleZ());
         nbt.putFloat("NameOffset", getNameOffset());
+        nbt.putFloat("BodyOffset", getBodyOffset());
         nbt.putString("Billboard", getBillboard());
         nbt.putInt("NpcPose", getNpcPose());
         nbt.put("CustomPose", this.entityData.get(CUSTOM_POSE).copy());
@@ -1428,6 +1440,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : npcScale());
         setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : npcScale());
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
+        if (nbt.contains("BodyOffset")) setBodyOffset(nbt.getFloat("BodyOffset"));
         if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
