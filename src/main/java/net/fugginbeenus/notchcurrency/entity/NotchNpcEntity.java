@@ -81,6 +81,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> TALK_BUBBLE =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SETTLED =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> SCALE =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> SCALE_Y =
@@ -209,6 +211,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SKIN_VALUE, "1");
         builder.define(SLIM, false);
         builder.define(TALK_BUBBLE, false);
+        builder.define(SETTLED, true);
         builder.define(SCALE, 1.0f);
         builder.define(SCALE_Y, 1.0f);
         builder.define(SCALE_Z, 1.0f);
@@ -229,6 +232,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SKIN_VALUE, "1");
         this.entityData.define(SLIM, false);
         this.entityData.define(TALK_BUBBLE, false);
+        this.entityData.define(SETTLED, true);
         this.entityData.define(SCALE, 1.0f);
         this.entityData.define(SCALE_Y, 1.0f);
         this.entityData.define(SCALE_Z, 1.0f);
@@ -998,6 +1002,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                 boolean hidden = manualInvisible || isRuleHidden();
                 if (this.isInvisible() != hidden) this.setInvisible(hidden);
             }
+            boolean settled = talkingTo == null
+                    && this.getTarget() == null
+                    && !this.isSleeping()
+                    && this.getNavigation().isDone()
+                    && this.getDeltaMovement().horizontalDistanceSqr() < 1.0E-4;
+            if (this.entityData.get(SETTLED) != settled) this.entityData.set(SETTLED, settled);
             tickProximity();
             tickSchedule();
             tickScheduleSleep();
@@ -1572,6 +1582,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
 
         if (mode != ANIM_LIVELY) return idle;
+        if (!this.entityData.get(SETTLED)) return idle;
 
         java.util.List<String> specials = bundle != null && !bundle.special().isEmpty()
                 ? bundle.special() : java.util.Arrays.asList(SPECIAL_ANIMS);
