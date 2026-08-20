@@ -188,13 +188,26 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         part.zRot = angles[idx * 3 + 2] * DEG;
     }
 
+    private boolean overlaysHidden;
+
     public void setOverlaysVisible(boolean visible) {
-        this.hat.visible = visible;
-        this.jacket.visible = visible;
-        this.rightSleeve.visible = visible;
-        this.leftSleeve.visible = visible;
-        this.rightPants.visible = visible;
-        this.leftPants.visible = visible;
+        if (!visible) {
+            this.hat.visible = false;
+            this.jacket.visible = false;
+            this.rightSleeve.visible = false;
+            this.leftSleeve.visible = false;
+            this.rightPants.visible = false;
+            this.leftPants.visible = false;
+            this.overlaysHidden = true;
+        } else if (this.overlaysHidden) {
+            this.hat.visible = true;
+            this.jacket.visible = true;
+            this.rightSleeve.visible = true;
+            this.leftSleeve.visible = true;
+            this.rightPants.visible = true;
+            this.leftPants.visible = true;
+            this.overlaysHidden = false;
+        }
     }
 
     private void syncOverlays() {
