@@ -26,5 +26,31 @@ public final class ModBlockEntities {
 
     private ModBlockEntities() {}
 
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> COMMON_CRATE =
+            crateType("common_crate", ModBlocks.COMMON_CRATE);
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> RARE_CRATE =
+            crateType("rare_crate", ModBlocks.RARE_CRATE);
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> EPIC_CRATE =
+            crateType("epic_crate", ModBlocks.EPIC_CRATE);
+
+    private static BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> crateType(
+            String id, net.minecraft.world.level.block.Block block) {
+        BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity>[] holder =
+                new BlockEntityType[1];
+        holder[0] = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id(id),
+                FabricBlockEntityTypeBuilder.create(
+                        (pos, state) -> new net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity(
+                                holder[0], pos, state), block).build());
+        return holder[0];
+    }
+
+    public static BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> crateTypeFor(String tier) {
+        return switch (tier) {
+            case "rare" -> RARE_CRATE;
+            case "epic" -> EPIC_CRATE;
+            default -> COMMON_CRATE;
+        };
+    }
+
     public static void register() {}
 }

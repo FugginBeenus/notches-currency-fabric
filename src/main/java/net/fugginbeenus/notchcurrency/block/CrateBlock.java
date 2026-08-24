@@ -24,17 +24,26 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class CrateBlock extends Block {
+public class CrateBlock extends Block implements net.minecraft.world.level.block.EntityBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
-    private static final int OPEN_TICKS = 30;
+    private static final int OPEN_TICKS = 130;
 
     private static final VoxelShape SHAPE_NS = Block.box(-4, 0, -1, 20, 20, 17);
     private static final VoxelShape SHAPE_EW = Block.box(-1, 0, -4, 17, 20, 20);
 
     private final String crateType;
+
+    public String crateType() { return crateType; }
+
+    @Override
+    public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(
+            net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        return new net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.crateTypeFor(crateType), pos, state);
+    }
 
     public CrateBlock(Properties settings, String crateType) {
         super(settings);

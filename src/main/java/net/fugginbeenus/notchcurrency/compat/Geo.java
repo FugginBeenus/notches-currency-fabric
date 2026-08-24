@@ -25,7 +25,17 @@ public final class Geo {
         return LOOPS.computeIfAbsent(animationName, name -> RawAnimation.begin().thenLoop(name));
     }
 
+    public static RawAnimation play(String animationName) {
+        return ONCE.computeIfAbsent(animationName, name -> RawAnimation.begin().thenPlay(name));
+    }
+
+    public static AnimatableInstanceCache blockCache(
+            net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity animatable) {
+        return GeckoLibUtil.createInstanceCache(animatable);
+    }
+
     private static final java.util.Map<String, RawAnimation> LOOPS = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<String, RawAnimation> ONCE = new java.util.concurrent.ConcurrentHashMap<>();
     public static final String MODEL_NAME = "notch_npc";
 
     //? if >=1.21.11 {

@@ -1,3 +1,6 @@
 {
-  "parent": "notchcurrency:block/epic_crate"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "notchcurrency:item/epic_crate"
+  }
 }

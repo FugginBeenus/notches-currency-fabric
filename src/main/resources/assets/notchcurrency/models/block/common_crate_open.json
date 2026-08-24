@@ -1,6 +1,0 @@
-{
-  "parent": "notchcurrency:block/template_crate_open",
-  "textures": {
-    "crate": "notchcurrency:block/common_crate"
-  }
-}

@@ -1,3 +1,6 @@
 {
-  "parent": "notchcurrency:block/common_crate"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "notchcurrency:item/common_crate"
+  }
 }

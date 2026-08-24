@@ -59,6 +59,16 @@ public final class ClientInit implements ClientModInitializer {
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.COIN_FLIP,
                 net.fugginbeenus.notchcurrency.client.render.CoinFlipBlockEntityRenderer::new);
 
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.COMMON_CRATE,
+                ctx -> new net.fugginbeenus.notchcurrency.client.crate.CrateBlockRenderer(ctx, "common"));
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.RARE_CRATE,
+                ctx -> new net.fugginbeenus.notchcurrency.client.crate.CrateBlockRenderer(ctx, "rare"));
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.EPIC_CRATE,
+                ctx -> new net.fugginbeenus.notchcurrency.client.crate.CrateBlockRenderer(ctx, "epic"));
+
         //? if >=26.1 {
         /*
         *///?} elif >=1.21.11 {
