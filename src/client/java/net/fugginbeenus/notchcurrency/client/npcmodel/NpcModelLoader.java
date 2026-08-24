@@ -27,13 +27,6 @@ public final class NpcModelLoader {
     public static final String PACK_DIR_NAME = "NotchCurrencyModels";
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
     private static final long MAX_FILE_BYTES = 4L * 1024 * 1024;
-    private static final int PACK_FORMAT =
-            //? if >=1.21 {
-            /*34;
-            *///?} else {
-            15;
-            //?}
-
     private static final List<String> PROBLEMS = new ArrayList<>();
 
     public static Path modelsDir() {
@@ -76,10 +69,11 @@ public final class NpcModelLoader {
                 return false;
             }
 
+            boolean hadPack = Files.isDirectory(packDir());
             deleteRecursively(packDir());
             if (folders.isEmpty()) {
                 NpcModelRegistry.replaceAll(List.of());
-                return true;
+                return hadPack;
             }
 
             writePackMeta();
@@ -133,7 +127,8 @@ public final class NpcModelLoader {
                 sig.append(folder).append(":?\n");
             }
         }
-        return Integer.toHexString(sig.toString().hashCode()) + "-" + sig.length();
+        return Integer.toHexString(sig.toString().hashCode()) + "-" + sig.length()
+                + "-" + net.fugginbeenus.notchcurrency.client.PackMeta.FORMAT;
     }
 
     private static String writtenStamp() {
@@ -322,14 +317,9 @@ public final class NpcModelLoader {
 
     private static void writePackMeta() throws Exception {
         Files.createDirectories(packDir());
-        Files.writeString(packDir().resolve("pack.mcmeta"), """
-                {
-                  "pack": {
-                    "pack_format": %d,
-                    "description": "Notch Currency NPC models (generated - edit via config/notchcurrency/npc_models)"
-                  }
-                }
-                """.formatted(PACK_FORMAT));
+        Files.writeString(packDir().resolve("pack.mcmeta"),
+                net.fugginbeenus.notchcurrency.client.PackMeta.json(
+                        "Notch Currency NPC models (generated - edit via config/notchcurrency/npc_models)"));
     }
 
     private static void writeReadme() throws Exception {

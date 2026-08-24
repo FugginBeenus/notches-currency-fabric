@@ -23,7 +23,7 @@ public final class NpcModelPacks {
             mgr.reload();
             boolean on = mgr.getSelectedIds().contains(NpcModelLoader.PACK_PROFILE_NAME);
             boolean needsSwitchingOn = packWanted && !on;
-            if (!changed && !needsSwitchingOn) {
+            if (!needsSwitchingOn && !(changed && on)) {
                 if (announce) report(client);
                 return;
             }
@@ -37,7 +37,7 @@ public final class NpcModelPacks {
                 }
                 client.options.updateResourcePacks(mgr);
             }
-            client.reloadResourcePacks().thenRun(() -> client.execute(() -> {
+            net.fugginbeenus.notchcurrency.client.PackReloads.request(client).thenRun(() -> client.execute(() -> {
                 if (announce) report(client);
             }));
         } catch (Exception e) {

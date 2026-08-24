@@ -27,13 +27,6 @@ public final class CurrencyPackGenerator {
     public static boolean packExists() {
         return Files.isDirectory(target());
     }
-    private static final int PACK_FORMAT =
-            //? if >=1.21 {
-            /*34;
-            *///?} else {
-            15;
-            //?}
-
     private static java.util.Collection<String> enabledPacks(Minecraft client) {
         //? if >=1.21 {
         /*return client.getResourcePackRepository().getSelectedIds();
@@ -74,26 +67,19 @@ public final class CurrencyPackGenerator {
             Path tails = src.resolve("coin_tails.png");
             String itemName = NotchConfigIO.get().currency.itemName.trim();
 
-            // Always start clean: stale packs from an older name/art must not linger.
             deleteRecursively(target());
 
             boolean hasArt = Files.isRegularFile(coin);
             boolean hasTails = Files.isRegularFile(tails);
             if (!hasArt && !hasTails && itemName.isEmpty()) {
-                return; // nothing customized, no pack
+                return;
             }
 
             Path assets = target().resolve("assets").resolve("notchcurrency");
             Files.createDirectories(assets.resolve("textures").resolve("item"));
 
-            Files.writeString(target().resolve("pack.mcmeta"), """
-                    {
-                      "pack": {
-                        "pack_format": %d,
-                        "description": "Notch Currency custom coin (generated - edit via config/notchcurrency/currency)"
-                      }
-                    }
-                    """.formatted(PACK_FORMAT));
+            Files.writeString(target().resolve("pack.mcmeta"), PackMeta.json(
+                    "Notch Currency custom coin (generated - edit via config/notchcurrency/currency)"));
 
             if (hasArt) {
                 Files.copy(coin, assets.resolve("textures").resolve("item").resolve("coin.png"),
@@ -125,7 +111,8 @@ public final class CurrencyPackGenerator {
             boolean empty = itemName.isEmpty() && coin == null && tails == null;
 
             String stamp = itemName + "|" + (coin == null ? -1 : java.util.Arrays.hashCode(coin))
-                    + "|" + (tails == null ? -1 : java.util.Arrays.hashCode(tails));
+                    + "|" + (tails == null ? -1 : java.util.Arrays.hashCode(tails))
+                    + "|" + PackMeta.FORMAT;
             Path stampFile = pack.resolve("sync_stamp.txt");
             if (!empty && Files.isRegularFile(stampFile) && stamp.equals(Files.readString(stampFile))) {
                 enableServerPack(client, false);
@@ -145,14 +132,8 @@ public final class CurrencyPackGenerator {
 
             Path assets = pack.resolve("assets").resolve("notchcurrency");
             Files.createDirectories(assets.resolve("textures").resolve("item"));
-            Files.writeString(pack.resolve("pack.mcmeta"), """
-                    {
-                      "pack": {
-                        "pack_format": %d,
-                        "description": "This server's coin skin (synced by Notch Currency)"
-                      }
-                    }
-                    """.formatted(PACK_FORMAT));
+            Files.writeString(pack.resolve("pack.mcmeta"),
+                    PackMeta.json("This server's coin skin (synced by Notch Currency)"));
             if (coin != null) {
                 Files.write(assets.resolve("textures").resolve("item").resolve("coin.png"), coin);
             }
@@ -182,14 +163,14 @@ public final class CurrencyPackGenerator {
             if (!enabledPacks(client).contains(SERVER_PACK_PROFILE_NAME)) {
                 if (mgr.addPack(SERVER_PACK_PROFILE_NAME)) {
                     client.options.updateResourcePacks(mgr);
-                    client.reloadResourcePacks();
+                    PackReloads.request(client);
                 } else if (client.player != null) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal(
                             "[Notch Currency] This server has custom coin art - enable \"NotchCurrencyServer\" in Options → Resource Packs.")
                             .withStyle(ChatFormatting.GOLD));
                 }
             } else if (contentChanged) {
-                client.reloadResourcePacks();
+                PackReloads.request(client);
             }
         } catch (Exception e) {
             LOGGER.error("Couldn't auto-enable the server coin pack", e);

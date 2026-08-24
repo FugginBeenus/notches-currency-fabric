@@ -302,9 +302,6 @@ tasks.processResources {
         }
     }
 
-    filesMatching("pack.mcmeta") {
-        expand("pack_format": packFormat)
-    }
     if (atLeast([1, 21, 2])) {
         doLast {
             def dir = new File(destinationDir, "data/notchcurrency/recipe")
