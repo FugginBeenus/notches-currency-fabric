@@ -18,6 +18,8 @@ public final class GoldenCacheManager {
     public static final ResourceLocation LOOT = NotchCurrency.id("golden_cache");
     public static boolean ANNOUNCE = true;
     private static final Random RNG = new Random();
+    private static final java.util.Set<net.minecraft.world.level.ChunkPos> PENDING =
+            new java.util.LinkedHashSet<>();
     public static int GLOBAL_COOLDOWN_MIN = 60;
     public static boolean NATURAL_SPAWNS = true;
     public static int NATURAL_ONE_IN = 3000;
@@ -37,6 +39,9 @@ public final class GoldenCacheManager {
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents.CHUNK_LOAD.register(
                 GoldenCacheManager::onChunkLoad);
         //?}
+        ServerTickEvents.END_SERVER_TICK.register(GoldenCacheManager::runPending);
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(
+                stopped -> { synchronized (PENDING) { PENDING.clear(); } });
     }
 
     //? if >=26.1 {
@@ -56,15 +61,37 @@ public final class GoldenCacheManager {
         int cx = chunkX(chunk.getPos()), cz = chunkZ(chunk.getPos());
         if (!isCacheChunk(world.getSeed(), cx, cz)) return;
 
+        synchronized (PENDING) {
+            PENDING.add(chunk.getPos());
+        }
+    }
+
+    private static void runPending(MinecraftServer server) {
+        java.util.List<net.minecraft.world.level.ChunkPos> due;
+        synchronized (PENDING) {
+            if (PENDING.isEmpty()) return;
+            due = new java.util.ArrayList<>(PENDING);
+            PENDING.clear();
+        }
+
+        ServerLevel world = server.overworld();
+        for (net.minecraft.world.level.ChunkPos pos : due) {
+            tryHideCache(world, pos);
+        }
+    }
+
+    private static void tryHideCache(ServerLevel world, net.minecraft.world.level.ChunkPos pos) {
+        int baseX = chunkX(pos) << 4, baseZ = chunkZ(pos) << 4;
+        if (!world.hasChunkAt(new BlockPos(baseX, 0, baseZ))) return;
+
         GoldenCacheSpawnState state = GoldenCacheSpawnState.get(world);
 
         forgetCachesThatAreGone(world, state);
         if (state.outstandingCount() >= MAX_OUTSTANDING) return;
 
-        long key = chunkKey(chunk.getPos());
-        if (!state.claim(key)) return;
+        if (!state.claim(chunkKey(pos))) return;
 
-        BlockPos spot = findSpotUnderOak(world, chunk);
+        BlockPos spot = findSpotUnderOak(world, baseX, baseZ);
         if (spot == null) return;
         if (placeCacheBlock(world, spot)) {
             state.addOutstanding(spot.asLong());
@@ -91,9 +118,7 @@ public final class GoldenCacheManager {
         return Math.floorMod(h, NATURAL_ONE_IN) == 0;
     }
 
-    private static BlockPos findSpotUnderOak(ServerLevel world, net.minecraft.world.level.chunk.LevelChunk chunk) {
-        int baseX = chunkX(chunk.getPos()) << 4, baseZ = chunkZ(chunk.getPos()) << 4;
-
+    private static BlockPos findSpotUnderOak(ServerLevel world, int baseX, int baseZ) {
         for (int attempt = 0; attempt < 24; attempt++) {
             int x = baseX + RNG.nextInt(16);
             int z = baseZ + RNG.nextInt(16);
