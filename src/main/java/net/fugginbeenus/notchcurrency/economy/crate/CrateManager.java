@@ -17,6 +17,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.server.MinecraftServer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 public final class CrateManager {
@@ -27,6 +32,59 @@ public final class CrateManager {
     private static long keyPrice = 500L;
 
     private CrateManager() {}
+
+    private static final int[] RATTLE_TICKS = {0};
+    private static final float[] THUD_PITCH = {0.52f};
+    private static final float[] THUD_KNOCK_PITCH = {0.50f};
+    private static final float[] THUD_VOLUME = {1.0f};
+    private static final int LID_OPENS_TICK = 23;
+    private static final int REWARD_TICK = 27;
+    private static final int LID_SHUTS_TICK = 108;
+
+    private static final int STEP_LID_OPENS = 100;
+    private static final int STEP_REWARD = 101;
+    private static final int STEP_LID_SHUTS = 102;
+
+    private record Cue(ServerLevel world, BlockPos pos, long at, int step) {}
+
+    private static final List<Cue> cues = new ArrayList<>();
+
+    public static void init() {
+        ServerTickEvents.END_SERVER_TICK.register(CrateManager::tick);
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(
+                stopped -> cues.clear());
+    }
+
+    private static void tick(MinecraftServer server) {
+        if (cues.isEmpty()) return;
+        Iterator<Cue> it = cues.iterator();
+        while (it.hasNext()) {
+            Cue c = it.next();
+            if (c.world().getGameTime() < c.at()) continue;
+            fire(c.world(), c.pos(), c.step());
+            it.remove();
+        }
+    }
+
+    private static void fire(ServerLevel world, BlockPos pos, int step) {
+        if (step == STEP_LID_OPENS) {
+            world.playSound(null, pos, SoundEvents.ENDER_CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.2f);
+        } else if (step == STEP_REWARD) {
+            world.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.6f, 1.4f);
+            world.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+                    24, 0.4, 0.4, 0.4, 0.1);
+            world.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+                    12, 0.3, 0.4, 0.3, 0.05);
+        } else if (step == STEP_LID_SHUTS) {
+            world.playSound(null, pos, SoundEvents.ENDER_CHEST_CLOSE, SoundSource.BLOCKS, 0.9f, 1.1f);
+        } else {
+            int i = Math.max(0, Math.min(step, THUD_PITCH.length - 1));
+            world.playSound(null, pos, SoundEvents.BARREL_CLOSE, SoundSource.BLOCKS,
+                    THUD_VOLUME[i], THUD_PITCH[i]);
+            world.playSound(null, pos, SoundEvents.WOOD_HIT, SoundSource.BLOCKS,
+                    THUD_VOLUME[i] * 0.8f, THUD_KNOCK_PITCH[i]);
+        }
+    }
 
     public static void applyConfig(NotchConfig cfg) {
         enabled = cfg.crate.enabled;
@@ -155,12 +213,14 @@ public final class CrateManager {
     }
 
     private static void effects(ServerLevel world, BlockPos pos) {
-        world.playSound(null, pos, SoundEvents.ENDER_CHEST_OPEN, SoundSource.BLOCKS, 1.0f, 1.2f);
-        world.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.6f, 1.4f);
-        world.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
-                24, 0.4, 0.4, 0.4, 0.1);
-        world.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
-                12, 0.3, 0.4, 0.3, 0.05);
+        BlockPos at = pos.immutable();
+        long now = world.getGameTime();
+        for (int i = 0; i < RATTLE_TICKS.length; i++) {
+            cues.add(new Cue(world, at, now + RATTLE_TICKS[i], i));
+        }
+        cues.add(new Cue(world, at, now + LID_OPENS_TICK, STEP_LID_OPENS));
+        cues.add(new Cue(world, at, now + REWARD_TICK, STEP_REWARD));
+        cues.add(new Cue(world, at, now + LID_SHUTS_TICK, STEP_LID_SHUTS));
     }
 
     private static int randRange(int min, int max) {

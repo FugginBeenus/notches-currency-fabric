@@ -89,6 +89,7 @@ public class NotchCurrency implements ModInitializer {
         CrateDropManager.init();
         GoldenCacheManager.init();
         DailyCrateManager.init();
+        net.fugginbeenus.notchcurrency.economy.crate.CrateManager.init();
         BossCurrencyInject.init();
         WealthTax.init();
         ShopRent.init();
