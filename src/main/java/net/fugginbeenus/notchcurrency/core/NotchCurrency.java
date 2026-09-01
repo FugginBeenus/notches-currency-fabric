@@ -102,6 +102,7 @@ public class NotchCurrency implements ModInitializer {
         AuctionConfig.apply(cfg);
         WealthTax.applyConfig(cfg);
         ShopRent.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.shop.ShopRules.applyConfig(cfg);
         RaffleManager.applyConfig(cfg);
         BountyManager.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.economy.crate.CrateManager.applyConfig(cfg);

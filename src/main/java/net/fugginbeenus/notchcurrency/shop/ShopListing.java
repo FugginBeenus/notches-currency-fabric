@@ -84,7 +84,7 @@ public class ShopListing {
         this.shopPaysPrice = Math.max(0, price);
     }
     public boolean buysFromPlayers() {
-        return shopPaysPrice > 0;
+        return ShopRules.sellToShops && shopPaysPrice > 0;
     }
     public boolean isDynamicPricing() {
         return dynamicPricing;
@@ -94,14 +94,14 @@ public class ShopListing {
         if (!on) this.stockIndex = 0.0;
     }
     public double priceMultiplier() {
-        return dynamicPricing ? DynamicPrice.multiplier(stockIndex) : 1.0;
+        return (dynamicPricing && ShopRules.dynamicPricing) ? DynamicPrice.multiplier(stockIndex) : 1.0;
     }
     public int currentCoinPrice() {
-        if (!dynamicPricing || coinPrice <= 0) return coinPrice;
+        if (!dynamicPricing || !ShopRules.dynamicPricing || coinPrice <= 0) return coinPrice;
         return (int) Math.max(1, Math.round(coinPrice * priceMultiplier()));
     }
     public int currentShopPays() {
-        if (!dynamicPricing || shopPaysPrice <= 0) return shopPaysPrice;
+        if (!dynamicPricing || !ShopRules.dynamicPricing || shopPaysPrice <= 0) return shopPaysPrice;
         return (int) Math.max(0, Math.round(shopPaysPrice * priceMultiplier()));
     }
     public synchronized void recordDemand(int units) {
@@ -154,7 +154,7 @@ public class ShopListing {
     }
 
     public synchronized int remainingFor(UUID player) {
-        if (perPlayerLimit <= 0) return Integer.MAX_VALUE;
+        if (!ShopRules.buyLimits || perPlayerLimit <= 0) return Integer.MAX_VALUE;
         return Math.max(0, perPlayerLimit - boughtBy.getOrDefault(player, 0));
     }
 
@@ -164,7 +164,7 @@ public class ShopListing {
     }
 
     public synchronized boolean maybeRestock(net.minecraft.server.level.ServerLevel level) {
-        if (restockMode == Restock.Mode.OFF) return false;
+        if (!ShopRules.restock || restockMode == Restock.Mode.OFF) return false;
         long now = Restock.periodOf(restockMode, level);
         if (now == lastRestockPeriod) return false;
         lastRestockPeriod = now;

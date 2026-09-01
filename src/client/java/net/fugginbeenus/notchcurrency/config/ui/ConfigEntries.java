@@ -215,6 +215,36 @@ final class ConfigEntries {
                 v -> cfg.loan.overdueInterestPercent = v,
                 "Interest rate charged each cycle while a loan is past due (replaces the normal rate)."));
 
+        c = "Shops";
+        e.add(new BoolEntry(c, "Admin shops", cfg.shops.adminShops, true,
+                v -> cfg.shops.adminShops = v,
+                "Let operators turn one of their shops into an admin shop.",
+                "Stock never runs out and nobody is paid."));
+        e.add(new BoolEntry(c, "Restock timers", cfg.shops.restock, true,
+                v -> cfg.shops.restock = v,
+                "Let a listing refill its stock on a game or real-world clock."));
+        e.add(new BoolEntry(c, "Per-player buy limits", cfg.shops.buyLimits, true,
+                v -> cfg.shops.buyLimits = v,
+                "Let a listing cap how much one player takes before the next reset."));
+        e.add(new BoolEntry(c, "Shops buy from players", cfg.shops.sellToShops, true,
+                v -> cfg.shops.sellToShops = v,
+                "Let a listing set what the shop pays, so players can sell to it."));
+        e.add(new BoolEntry(c, "Prices follow demand", cfg.shops.dynamicPricing, true,
+                v -> cfg.shops.dynamicPricing = v,
+                "Let prices drift up as people buy and settle back over time."));
+        e.add(new NumberEntry(c, "Price sensitivity", cfg.shops.priceSensitivity, 4, 1, 100,
+                v -> cfg.shops.priceSensitivity = v.intValue(),
+                "How far one sale moves the price. Higher swings harder."));
+        e.add(new SliderEntry(c, "Price floor", cfg.shops.priceFloorPercent, 25, 10, 100, "%",
+                v -> cfg.shops.priceFloorPercent = v,
+                "Prices never fall below this share of the set price."));
+        e.add(new SliderEntry(c, "Price ceiling", cfg.shops.priceCeilingPercent, 400, 100, 1000, "%",
+                v -> cfg.shops.priceCeilingPercent = v,
+                "Prices never rise above this share of the set price."));
+        e.add(new SliderEntry(c, "Settle speed", cfg.shops.priceSettlePercent, 2, 1, 50, "%",
+                v -> cfg.shops.priceSettlePercent = v,
+                "How fast a drifted price creeps back every ten seconds."));
+
         c = "Shop Rent";
         e.add(new BoolEntry(c, "Shop rent enabled", cfg.shopRent.enabled, false,
                 v -> cfg.shopRent.enabled = v,

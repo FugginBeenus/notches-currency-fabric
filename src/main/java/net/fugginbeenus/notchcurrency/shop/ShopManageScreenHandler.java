@@ -93,7 +93,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         props.set(P_ADMIN_MODE, shop.isAdminMode() ? 1 : 0);
         boolean op = viewer instanceof net.minecraft.server.level.ServerPlayer sp
                 && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
-        props.set(P_IS_OP, op ? 1 : 0);
+        props.set(P_IS_OP, (op && ShopRules.adminShops) ? 1 : 0);
 
         List<ShopListing> listings = shop.getListings();
         int totalPages = Math.max(1, (listings.size() + ROWS - 1) / ROWS);
@@ -120,6 +120,10 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
             case ACTION_TOGGLE_ADMIN -> {
+                if (!ShopRules.adminShops) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Admin shops are switched off on this server.").withStyle(ChatFormatting.RED));
+                    return;
+                }
                 if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only a server operator can do that.").withStyle(ChatFormatting.RED));
                     return;

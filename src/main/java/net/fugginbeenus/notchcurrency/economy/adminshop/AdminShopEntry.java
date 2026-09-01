@@ -62,7 +62,8 @@ public class AdminShopEntry {
     public void setSellLimit(int limit) { this.sellLimit = Math.max(0, limit); }
 
     public synchronized void maybeReset(net.minecraft.server.level.ServerLevel level) {
-        if (resetMode == net.fugginbeenus.notchcurrency.shop.Restock.Mode.OFF) return;
+        if (!net.fugginbeenus.notchcurrency.shop.ShopRules.restock
+                || resetMode == net.fugginbeenus.notchcurrency.shop.Restock.Mode.OFF) return;
         long now = net.fugginbeenus.notchcurrency.shop.Restock.periodOf(resetMode, level);
         if (now == lastPeriod) return;
         lastPeriod = now;
@@ -71,12 +72,12 @@ public class AdminShopEntry {
     }
 
     public synchronized int remainingBuy(UUID player) {
-        if (buyLimit <= 0) return Integer.MAX_VALUE;
+        if (!net.fugginbeenus.notchcurrency.shop.ShopRules.buyLimits || buyLimit <= 0) return Integer.MAX_VALUE;
         return Math.max(0, buyLimit - boughtBy.getOrDefault(player, 0));
     }
 
     public synchronized int remainingSell(UUID player) {
-        if (sellLimit <= 0) return Integer.MAX_VALUE;
+        if (!net.fugginbeenus.notchcurrency.shop.ShopRules.buyLimits || sellLimit <= 0) return Integer.MAX_VALUE;
         return Math.max(0, sellLimit - soldBy.getOrDefault(player, 0));
     }
 

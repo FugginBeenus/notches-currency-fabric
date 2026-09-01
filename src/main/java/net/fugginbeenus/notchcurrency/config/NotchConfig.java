@@ -6,6 +6,7 @@ public final class NotchConfig {
     public Ledger  ledger  = new Ledger();
     public WealthTax wealthTax = new WealthTax();
     public ShopRent shopRent = new ShopRent();
+    public Shops shops = new Shops();
     public Raffle raffle = new Raffle();
     public Bounty bounty = new Bounty();
     public Crate crate = new Crate();
@@ -104,6 +105,18 @@ public final class NotchConfig {
         public int drawIntervalMinutes = 1440;
         public boolean announce = true;
         public boolean redeemEnabled = true;
+    }
+
+    public static final class Shops {
+        public boolean adminShops = true;
+        public boolean restock = true;
+        public boolean buyLimits = true;
+        public boolean sellToShops = true;
+        public boolean dynamicPricing = true;
+        public int priceSensitivity = 4;
+        public int priceFloorPercent = 25;
+        public int priceCeilingPercent = 400;
+        public int priceSettlePercent = 2;
     }
 
     public static final class ShopRent {
