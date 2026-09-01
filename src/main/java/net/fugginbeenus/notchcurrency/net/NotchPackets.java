@@ -90,6 +90,7 @@ public final class NotchPackets {
     public static final ResourceLocation WAYSTONE_FEE_SYNC = NotchCurrency.id("waystone_fee_sync");
     public static final ResourceLocation ATM_WITHDRAW    = NotchCurrency.id("atm_withdraw");
     public static final ResourceLocation SHOP_PURCHASE   = NotchCurrency.id("shop_purchase");
+    public static final ResourceLocation SHOP_SELL       = NotchCurrency.id("shop_sell");
     public static final ResourceLocation SHOP_WITHDRAW = NotchCurrency.id("shop_withdraw");
 
     private NotchPackets() {}

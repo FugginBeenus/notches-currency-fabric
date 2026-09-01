@@ -62,7 +62,7 @@ public final class PlayerShopManager {
             return false;
         }
 
-        if (!shop.getOwnerId().equals(player.getUUID())) {
+        if (!canManage(player, shop)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
@@ -80,7 +80,7 @@ public final class PlayerShopManager {
         ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+        if (!canManage(owner, shop)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
@@ -124,7 +124,7 @@ public final class PlayerShopManager {
         ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+        if (!canManage(owner, shop)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!").withStyle(ChatFormatting.RED));
             return false;
         }
@@ -156,7 +156,7 @@ public final class PlayerShopManager {
         ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+        if (!canManage(owner, shop)) {
             return false;
         }
 
@@ -186,7 +186,7 @@ public final class PlayerShopManager {
         ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+        if (!canManage(owner, shop)) {
             return false;
         }
 
@@ -214,7 +214,7 @@ public final class PlayerShopManager {
         ShopState state = ShopState.get(owner.serverLevel());
         PlayerShop shop = state.getShop(shopId);
 
-        if (shop == null || !shop.getOwnerId().equals(owner.getUUID())) {
+        if (!canManage(owner, shop)) {
             return false;
         }
 
@@ -249,8 +249,9 @@ public final class PlayerShopManager {
         if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
 
         int totalItems = listing.getBundleSize() * quantity;
-        int available = listing.getStockQuantity();
-        if (available < totalItems) return PurchaseResult.INSUFFICIENT_STOCK;
+        if (!shop.isAdminMode() && listing.getStockQuantity() < totalItems) {
+            return PurchaseResult.INSUFFICIENT_STOCK;
+        }
 
         boolean needsCoins = listing.acceptsCoins() && listing.getCoinPrice() > 0;
         boolean needsBarter = listing.acceptsBarter();
@@ -260,7 +261,7 @@ public final class PlayerShopManager {
         ItemStack barterItem = ItemStack.EMPTY;
 
         if (needsCoins) {
-            totalCoinCost = listing.getCoinPrice() * quantity;
+            totalCoinCost = listing.currentCoinPrice() * quantity;
             long buyerBalance = CurrencyApi.getBalance(buyer);
             if (buyerBalance < totalCoinCost) {
                 return PurchaseResult.INSUFFICIENT_FUNDS;
@@ -276,7 +277,11 @@ public final class PlayerShopManager {
             }
         }
 
-        if (!listing.tryRemoveStock(totalItems)) {
+        if (listing.remainingFor(buyer.getUUID()) < totalItems) {
+            return PurchaseResult.LIMIT_REACHED;
+        }
+
+        if (!shop.isAdminMode() && !listing.tryRemoveStock(totalItems)) {
             return PurchaseResult.INSUFFICIENT_STOCK;
         }
 
@@ -293,19 +298,19 @@ public final class PlayerShopManager {
         ServerPlayer seller = server.getPlayerList().getPlayer(shop.getOwnerId());
 
         int sellerEarnings = 0;
-        if (needsCoins && totalCoinCost > 0) {
+        if (needsCoins && totalCoinCost > 0 && !shop.isAdminMode()) {
             int tax = (int) Math.floor(totalCoinCost * SALES_TAX_PERCENT / 100.0);
             sellerEarnings = totalCoinCost - tax;
             shop.recordSale(sellerEarnings);
         }
 
-        if (needsBarter && totalBarterCost > 0) {
+        if (needsBarter && totalBarterCost > 0 && !shop.isAdminMode()) {
             ItemStack barterPayment = barterItem.copy();
             barterPayment.setCount(totalBarterCost);
             shop.addPendingBarterItem(barterPayment);
         }
 
-        if (seller != null) {
+        if (seller != null && !shop.isAdminMode()) {
             MutableComponent message = Component.literal("")
                     .append(Component.literal(buyer.getName().getString()).withStyle(ChatFormatting.AQUA))
                     .append(Component.literal(" bought ").withStyle(ChatFormatting.GREEN))
@@ -329,6 +334,8 @@ public final class PlayerShopManager {
         }
 
         listing.recordSale(totalItems, totalCoinCost);
+        listing.recordPurchase(buyer.getUUID(), totalItems);
+        listing.recordDemand(quantity);
         state.markDirtyAndSave();
 
         //? if >=1.21 {
@@ -459,6 +466,54 @@ public final class PlayerShopManager {
         return true;
     }
 
+    public static PurchaseResult sellToShop(ServerPlayer seller, UUID shopId, UUID listingId, int quantity) {
+        ShopState state = ShopState.get(seller.serverLevel());
+        PlayerShop shop = state.getShop(shopId);
+        if (shop == null) return PurchaseResult.SHOP_NOT_FOUND;
+        if (!shop.isOpen()) return PurchaseResult.SHOP_CLOSED;
+
+        ShopListing listing = shop.getListing(listingId);
+        if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
+        if (!listing.buysFromPlayers()) return PurchaseResult.NOT_BUYING;
+        if (quantity <= 0 || quantity > 256) return PurchaseResult.INVALID_QUANTITY;
+
+        int perSale = Math.max(1, listing.getItemForSale().getCount());
+        int totalItems = perSale * quantity;
+        long payout = (long) listing.currentShopPays() * quantity;
+
+        if (countItemsInInventory(seller, listing.getItemForSale()) < totalItems) {
+            return PurchaseResult.INSUFFICIENT_ITEMS;
+        }
+        if (!shop.isAdminMode() && !shop.spendBalance(payout)) {
+            return PurchaseResult.SHOP_CANNOT_AFFORD;
+        }
+
+        removeItemsFromInventory(seller, listing.getItemForSale(), totalItems);
+        CurrencyApi.deposit(seller, payout,
+                shop.isAdminMode()
+                        ? net.fugginbeenus.notchcurrency.economy.TransactionReason.FAUCET
+                        : net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE,
+                "sold to shop: " + shop.getShopName());
+
+        if (!shop.isAdminMode()) listing.addStock(totalItems);
+        listing.recordSupply(quantity);
+        state.markDirtyAndSave();
+
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(seller, Component.literal("Sold ")
+                .withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(totalItems + "x ").withStyle(ChatFormatting.WHITE))
+                .append(listing.getItemForSale().getHoverName())
+                .append(Component.literal(" for ").withStyle(ChatFormatting.GREEN))
+                .append(NotchCurrency.coins(payout)));
+        return PurchaseResult.SUCCESS;
+    }
+
+    public static boolean canManage(ServerPlayer player, PlayerShop shop) {
+        if (shop == null) return false;
+        if (shop.getOwnerId().equals(player.getUUID())) return true;
+        return shop.isAdminMode() && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
+    }
+
     public enum PurchaseResult {
         SUCCESS,
         SHOP_NOT_FOUND,
@@ -470,6 +525,9 @@ public final class PlayerShopManager {
         INVALID_QUANTITY,
         INSUFFICIENT_STOCK,
         INSUFFICIENT_FUNDS,
-        INSUFFICIENT_ITEMS
+        INSUFFICIENT_ITEMS,
+        LIMIT_REACHED,
+        NOT_BUYING,
+        SHOP_CANNOT_AFFORD
     }
 }

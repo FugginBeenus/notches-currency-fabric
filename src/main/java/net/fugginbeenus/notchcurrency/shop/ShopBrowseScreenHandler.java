@@ -96,19 +96,21 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
         int start = page * PER_PAGE;
         for (int i = 0; i < PER_PAGE; i++) {
             int idx = start + i;
-            rowInv.setItem(i, idx < listings.size() ? displayStack(listings.get(idx)) : ItemStack.EMPTY);
+            rowInv.setItem(i, idx < listings.size()
+                    ? displayStack(listings.get(idx), shop != null && shop.isAdminMode()) : ItemStack.EMPTY);
         }
     }
 
-    static ItemStack displayStack(ShopListing listing) {
+    static ItemStack displayStack(ShopListing listing, boolean adminStock) {
         ItemStack carrier = listing.getItemForSale().copy();
         if (carrier.isEmpty()) return ItemStack.EMPTY;
         CompoundTag t = StackData.editData(carrier);
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "nc_lid", listing.getId());
-        t.putInt("nc_price", listing.getCoinPrice());
+        t.putInt("nc_price", listing.currentCoinPrice());
         t.putString("nc_bname", listing.acceptsBarter() ? listing.getItemPrice().getHoverName().getString() : "");
         t.putInt("nc_bcount", listing.acceptsBarter() ? listing.getItemPriceCount() : 0);
-        t.putInt("nc_stock", listing.getStockQuantitySafe());
+        t.putInt("nc_stock", adminStock ? -1 : listing.getStockQuantitySafe());
+        t.putInt("nc_pays", listing.currentShopPays());
         if (listing.acceptsBarter()) {
             ItemStack bs = listing.getItemPrice().copy();
             bs.setCount(Math.max(1, Math.min(64, listing.getItemPriceCount())));

@@ -172,6 +172,14 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.SHOP_PURCHASE, buf);
     }
 
+    public static void sendShopSell(UUID shopId, UUID listingId, int quantity) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(shopId);
+        buf.writeUUID(listingId);
+        buf.writeVarInt(quantity);
+        NetClient.sendToServer(NotchPackets.SHOP_SELL, buf);
+    }
+
     public static void sendShopManageAction(int action, String text, @Nullable UUID listingId) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarInt(action);

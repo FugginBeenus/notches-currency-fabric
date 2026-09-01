@@ -809,6 +809,29 @@ public final class ServerPacketHandlers {
                     });
                 }
         );
+        Net.registerServerReceiver(NotchPackets.SHOP_SELL, (server, player, buf) -> {
+            UUID shopId = buf.readUUID();
+            UUID listingId = buf.readUUID();
+            int quantity = buf.readVarInt();
+            server.execute(() -> {
+                var result = net.fugginbeenus.notchcurrency.shop.PlayerShopManager
+                        .sellToShop(player, shopId, listingId, quantity);
+                if (result != net.fugginbeenus.notchcurrency.shop.PlayerShopManager.PurchaseResult.SUCCESS) {
+                    String msg = switch (result) {
+                        case SHOP_NOT_FOUND -> "Shop not found!";
+                        case SHOP_CLOSED -> "This shop is currently closed.";
+                        case LISTING_NOT_FOUND -> "That item is no longer listed.";
+                        case NOT_BUYING -> "This shop does not buy that.";
+                        case INVALID_QUANTITY -> "Invalid quantity.";
+                        case INSUFFICIENT_ITEMS -> "You don't have enough of that item.";
+                        case SHOP_CANNOT_AFFORD -> "This shop cannot afford that right now.";
+                        default -> "Sale failed.";
+                    };
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(msg).withStyle(ChatFormatting.RED));
+                }
+            });
+        });
+
         Net.registerServerReceiver(
                 NotchPackets.SHOP_PURCHASE,
                 (server, player, buf) -> {
@@ -832,6 +855,7 @@ public final class ServerPacketHandlers {
                                 case BARTER_NOT_ACCEPTED -> "This item doesn't accept barter.";
                                 case INVALID_QUANTITY -> "Invalid quantity.";
                                 case INSUFFICIENT_STOCK -> "Not enough stock available.";
+                                case LIMIT_REACHED -> "You have hit this shop's buying limit. Try again after the next restock.";
                                 case INSUFFICIENT_FUNDS -> "You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!";
                                 case INSUFFICIENT_ITEMS -> "You don't have the required items!";
                                 default -> "Purchase failed.";
