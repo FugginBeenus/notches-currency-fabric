@@ -20,6 +20,7 @@ public class NpcActions {
 
     private final Map<NpcTrigger, List<DialogueAction>> byTrigger = new EnumMap<>(NpcTrigger.class);
     private int proximityRadius = DEFAULT_RADIUS;
+    private boolean orderedLines = false;
 
     public List<DialogueAction> get(NpcTrigger trigger) {
         List<DialogueAction> list = byTrigger.get(trigger);
@@ -39,6 +40,9 @@ public class NpcActions {
         List<DialogueAction> copy = new ArrayList<>(actions.subList(0, Math.min(actions.size(), MAX_PER_TRIGGER)));
         byTrigger.put(trigger, copy);
     }
+
+    public boolean orderedLines() { return orderedLines; }
+    public void setOrderedLines(boolean ordered) { this.orderedLines = ordered; }
 
     public int proximityRadius() { return proximityRadius; }
 
@@ -63,6 +67,7 @@ public class NpcActions {
             nbt.put(trigger.name(), out);
         }
         nbt.putInt("ProximityRadius", proximityRadius);
+        if (orderedLines) nbt.putBoolean("OrderedLines", true);
         return nbt;
     }
 
@@ -80,6 +85,7 @@ public class NpcActions {
             actions.set(trigger, parsed);
         }
         if (nbt.contains("ProximityRadius")) actions.setProximityRadius(nbt.getInt("ProximityRadius"));
+        actions.orderedLines = nbt.getBoolean("OrderedLines");
         return actions;
     }
 }

@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class NpcActionsScreen extends Screen {
 
-    private static final int W = 340, H = 232;
+    private static final int W = 340, H = 252;
     private static final int TRIG_X = 10, TRIG_Y = 42, TRIG_W = 116, TRIG_H = 18;
     private static final int ED_X = 134, ED_W = W - ED_X - 10;
     private static final int ROW_H = 16;
@@ -34,6 +34,7 @@ public class NpcActionsScreen extends Screen {
     private int px, py;
     private EditBox valueField;
     private EditBox amountField;
+    private EditBox soundField;
 
     public NpcActionsScreen(UUID npcId, NpcActions actions) {
         super(Component.literal("Reactions"));
@@ -78,6 +79,17 @@ public class NpcActionsScreen extends Screen {
         });
         addRenderableWidget(amountField);
 
+        soundField = new EditBox(this.font, px + ED_X + 46, py + 191, 92, 10, Component.empty());
+        soundField.setMaxLength(80);
+        soundField.setBordered(false);
+        soundField.setHint(Component.literal("minecraft:entity.villager.ambient")
+                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        soundField.setResponder(t -> {
+            DialogueAction a = current();
+            if (a != null && a.type() == DialogueAction.Type.SAY_LINE) a.setSound(t);
+        });
+        addRenderableWidget(soundField);
+
         syncFields();
     }
 
@@ -89,6 +101,15 @@ public class NpcActionsScreen extends Screen {
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
+        boolean line = a != null && a.type() == DialogueAction.Type.SAY_LINE;
+        soundField.setVisible(line);
+        soundField.setValue(line ? a.sound() : "");
+    }
+
+    private String fit(String text, int room) {
+        if (this.font.width(text) <= room) return text;
+        String cut = this.font.plainSubstrByWidth(text, room - this.font.width("..."));
+        return cut + "...";
     }
 
     private int trigY(int i) { return py + TRIG_Y + i * (TRIG_H + 2); }
@@ -118,7 +139,7 @@ public class NpcActionsScreen extends Screen {
             boolean hover = over(mouseX, mouseY, px + TRIG_X, ty, TRIG_W, TRIG_H);
             int count = working.get(t).size();
             String label = count > 0 ? t.label() + " (" + count + ")" : t.label();
-            label = this.font.plainSubstrByWidth(label, TRIG_W - 8);
+            label = fit(label, TRIG_W - 8);
             if (t == trigger) {
                 NotchWidgets.primaryButton(ctx, this.font, px + TRIG_X, ty, TRIG_W, TRIG_H, label, hover);
             } else {
@@ -127,8 +148,7 @@ public class NpcActionsScreen extends Screen {
         }
 
         ctx.drawString(this.font, trigger.label(), px + ED_X, py + 42, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font,
-                this.font.plainSubstrByWidth(trigger.hint(), ED_W), px + ED_X, py + 54,
+        ctx.drawString(this.font, fit(trigger.hint(), ED_W), px + ED_X, py + 54,
                 NotchTheme.TEXT_MUTED, false);
 
         List<DialogueAction> list = rows();
@@ -170,8 +190,20 @@ public class NpcActionsScreen extends Screen {
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 167, 64, 14, NotchTheme.DEEP);
             }
             if (a.type() == DialogueAction.Type.SAY_LINE) {
-                ctx.drawString(this.font, "%player% %npc% %balance% and &-colours work",
-                        px + ED_X, py + 188, NotchTheme.TEXT_MUTED, false);
+                ctx.drawString(this.font, "Sound:", px + ED_X, py + 193, NotchTheme.TEXT_DARK, false);
+                NotchWidgets.inset(ctx, px + ED_X + 44, py + 188, 100, 14, NotchTheme.DEEP);
+                NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 148, py + 188, 48, 14, "Pick",
+                        over(mouseX, mouseY, px + ED_X + 148, py + 188, 48, 14));
+
+                boolean quiet = a.hideText();
+                boolean hov = over(mouseX, mouseY, px + ED_X, py + 206, 90, 14);
+                if (quiet) {
+                    NotchWidgets.goldButton(ctx, this.font, px + ED_X, py + 206, 90, 14, "No text", hov);
+                } else {
+                    NotchWidgets.neutralButton(ctx, this.font, px + ED_X, py + 206, 90, 14, "Text on", hov);
+                }
+                ctx.drawString(this.font, fit(NpcSoundPicks.nameFor(a.sound()), 96),
+                        px + ED_X + 100, py + 210, NotchTheme.TEXT_MUTED, false);
             }
         }
 
@@ -194,6 +226,57 @@ public class NpcActionsScreen extends Screen {
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+
+        drawHints(ctx, mouseX, mouseY);
+    }
+
+    private void drawHints(GuiGraphics ctx, int mouseX, int mouseY) {
+        if (over(mouseX, mouseY, px + ED_X, py + 50, ED_W, 12)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal(trigger.label()).withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal(trigger.hint()).withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+            return;
+        }
+
+        NpcTrigger[] all = NpcTrigger.values();
+        for (int i = 0; i < all.length; i++) {
+            if (!over(mouseX, mouseY, px + TRIG_X, trigY(i), TRIG_W, TRIG_H)) continue;
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal(all[i].label()).withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal(all[i].hint()).withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+            return;
+        }
+
+        DialogueAction a = current();
+        if (a == null || a.type() != DialogueAction.Type.SAY_LINE) return;
+
+        if (over(mouseX, mouseY, px + ED_X + 44, py + 147, ED_W - 44, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("What the NPC says").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("%player% %npc% %balance% get swapped in.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("&-codes colour the text.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+            return;
+        }
+        if (over(mouseX, mouseY, px + ED_X + 148, py + 188, 48, 14)
+                || over(mouseX, mouseY, px + ED_X + 44, py + 188, 100, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal(NpcSoundPicks.nameFor(a.sound())).withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal(a.sound().isEmpty() ? "No sound plays." : a.sound())
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY),
+                    Component.literal("Pick steps through the common ones.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Or type any sound id yourself.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+            return;
+        }
+        if (over(mouseX, mouseY, px + ED_X, py + 206, 90, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal(a.hideText() ? "Sound only" : "Text and sound").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Turn text off for a grunt or a laugh.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
     }
 
     //? if >=1.21.11 {
@@ -207,6 +290,21 @@ public class NpcActionsScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+
+            DialogueAction line = current();
+            if (line != null && line.type() == DialogueAction.Type.SAY_LINE) {
+                if (over(mx, my, px + ED_X, py + 206, 90, 14)) {
+                    NotchWidgets.click();
+                    line.setHideText(!line.hideText());
+                    return true;
+                }
+                if (over(mx, my, px + ED_X + 148, py + 188, 48, 14)) {
+                    NotchWidgets.click();
+                    line.setSound(NpcSoundPicks.next(line.sound()));
+                    soundField.setValue(line.sound());
+                    return true;
+                }
+            }
 
             NpcTrigger[] triggers = NpcTrigger.values();
             for (int i = 0; i < triggers.length; i++) {

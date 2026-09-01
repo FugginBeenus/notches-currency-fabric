@@ -31,17 +31,59 @@ public final class NpcActionRunner {
 
     private NpcActionRunner() {}
 
+    private static void playLineSound(NotchNpcEntity npc, DialogueAction a) {
+        if (!a.hasSound() || !(npc.level() instanceof net.minecraft.server.level.ServerLevel world)) return;
+        net.minecraft.resources.ResourceLocation id =
+                net.minecraft.resources.ResourceLocation.tryParse(a.sound());
+        if (id == null) return;
+        net.minecraft.sounds.SoundEvent event = net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
+        world.playSound(null, npc.getX(), npc.getY(), npc.getZ(), event,
+                net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, 1.0f);
+    }
+
     private static final org.slf4j.Logger LOGGER =
             org.slf4j.LoggerFactory.getLogger("NotchCurrency-NpcActions");
 
+    private static final java.util.Map<java.util.UUID, Integer> LINE_TURN = new java.util.HashMap<>();
+    private static final java.util.Random LINE_PICK = new java.util.Random();
+
     public static Outcome run(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions) {
+        return run(sp, npc, actions, false);
+    }
+
+    public static Outcome run(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions,
+                              boolean orderedLines) {
         if (actions == null || actions.isEmpty()) return Outcome.COMPLETED;
         try {
-            return runAll(sp, npc, actions);
+            return runAll(sp, npc, pickOneLine(npc, actions, orderedLines));
         } catch (Exception e) {
             LOGGER.error("NPC action list failed on {}", npc.getUUID(), e);
             return Outcome.COMPLETED;
         }
+    }
+
+    private static List<DialogueAction> pickOneLine(NotchNpcEntity npc, List<DialogueAction> actions,
+                                                    boolean ordered) {
+        List<DialogueAction> lines = new java.util.ArrayList<>();
+        for (DialogueAction a : actions) {
+            if (a.type() == DialogueAction.Type.SAY_LINE) lines.add(a);
+        }
+        if (lines.size() < 2) return actions;
+
+        DialogueAction chosen;
+        if (ordered) {
+            int turn = LINE_TURN.merge(npc.getUUID(), 1, Integer::sum) - 1;
+            chosen = lines.get(Math.floorMod(turn, lines.size()));
+        } else {
+            chosen = lines.get(LINE_PICK.nextInt(lines.size()));
+        }
+
+        List<DialogueAction> out = new java.util.ArrayList<>();
+        for (DialogueAction a : actions) {
+            if (a.type() == DialogueAction.Type.SAY_LINE && a != chosen) continue;
+            out.add(a);
+        }
+        return out;
     }
 
     private static Outcome runAll(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions) {
@@ -50,6 +92,8 @@ public final class NpcActionRunner {
             switch (a.type()) {
                 case NONE -> { }
                 case SAY_LINE -> {
+                    playLineSound(npc, a);
+                    if (a.hideText() || a.value().isEmpty()) break;
                     if (sp != null) {
                         NpcText.say(sp, npc, a.value());
                         break;

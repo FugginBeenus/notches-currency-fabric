@@ -37,7 +37,7 @@ public class DialogueStudioScreen extends Screen {
     private net.minecraft.client.gui.components.MultiLineEditBox nodeTextBox;
     private EditBox renameField;
     private EditBox choiceLabelField;
-    private EditBox actionValueField, actionAmountField;
+    private EditBox actionValueField, actionAmountField, actionSoundField;
     private EditBox condValueField, condAmountField;
 
     public DialogueStudioScreen(UUID npcId, DialogueTree tree) {
@@ -86,6 +86,12 @@ public class DialogueStudioScreen extends Screen {
         actionValueField.setResponder(s -> {
             DialogueAction a = action(actionIdx, false);
             if (a != null) a.setValue(s);
+        });
+
+        actionSoundField = field(px + ED_X + 60, py + 196, 118, 80);
+        actionSoundField.setResponder(t -> {
+            DialogueAction a = action(actionIdx, false);
+            if (a != null && a.type() == DialogueAction.Type.SAY_LINE) a.setSound(t);
         });
 
         actionAmountField = field(px + ED_X + 60, py + 126, 96, 9);
@@ -206,6 +212,9 @@ public class DialogueStudioScreen extends Screen {
         if (valVisible) actionValueField.setValue(a.value());
         actionAmountField.setVisible(amtVisible);
         if (amtVisible) actionAmountField.setValue(a.amount() > 0 ? Long.toString(a.amount()) : "");
+        boolean sndVisible = !nodeMode && c != null && at == DialogueAction.Type.SAY_LINE;
+        actionSoundField.setVisible(sndVisible);
+        if (sndVisible) actionSoundField.setValue(a.sound());
 
         DialogueCondition cd = condition(condIdx, false);
         boolean condReal = cd != null && cd.type() != DialogueCondition.Type.NONE;
@@ -385,6 +394,19 @@ public class DialogueStudioScreen extends Screen {
             ctx.drawString(this.font, "Amount:", px + ED_X, py + 130, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + ED_X + 58, py + 124, 100, 14, NotchTheme.DEEP);
         }
+        if (actionSoundField.isVisible()) {
+            ctx.drawString(this.font, "Sound:", px + ED_X, py + 200, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + ED_X + 58, py + 194, 122, 14, NotchTheme.DEEP);
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 184, py + 194, 40, 14, "Pick",
+                    over(mx, my, px + ED_X + 184, py + 194, 40, 14));
+            boolean quiet = a.hideText();
+            boolean hov = over(mx, my, px + ED_X + 228, py + 194, 48, 14);
+            if (quiet) {
+                NotchWidgets.goldButton(ctx, this.font, px + ED_X + 228, py + 194, 48, 14, "Quiet", hov);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 228, py + 194, 48, 14, "Text", hov);
+            }
+        }
 
         DialogueCondition cd = condition(condIdx, false);
         String condName = (cd == null || cd.type() == DialogueCondition.Type.NONE) ? "None" : conditionName(cd.type());
@@ -477,6 +499,21 @@ public class DialogueStudioScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+
+            if (actionSoundField.isVisible()) {
+                DialogueAction line = action(actionIdx, false);
+                if (line != null && over(mx, my, px + ED_X + 228, py + 194, 48, 14)) {
+                    NotchWidgets.click();
+                    line.setHideText(!line.hideText());
+                    return true;
+                }
+                if (line != null && over(mx, my, px + ED_X + 184, py + 194, 40, 14)) {
+                    NotchWidgets.click();
+                    line.setSound(NpcSoundPicks.next(line.sound()));
+                    actionSoundField.setValue(line.sound());
+                    return true;
+                }
+            }
 
             if (over(mx, my, px + ED_X, py + H - 24, 104, 16)) {
                 NotchWidgets.click();

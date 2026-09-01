@@ -24,6 +24,8 @@ public class DialogueAction {
     private Type type = Type.NONE;
     private String value = "";
     private long amount = 0;
+    private String sound = "";
+    private boolean hideText = false;
 
     public DialogueAction() {}
 
@@ -41,11 +43,19 @@ public class DialogueAction {
     public void setValue(String v) { this.value = v == null ? "" : v; }
     public void setAmount(long a) { this.amount = a; }
 
+    public String sound() { return sound; }
+    public void setSound(String id) { this.sound = id == null ? "" : id.trim(); }
+    public boolean hideText() { return hideText; }
+    public void setHideText(boolean hide) { this.hideText = hide; }
+    public boolean hasSound() { return !sound.isEmpty(); }
+
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("Type", type.name());
         nbt.putString("Value", value);
         nbt.putLong("Amount", amount);
+        if (!sound.isEmpty()) nbt.putString("Sound", sound);
+        if (hideText) nbt.putBoolean("HideText", true);
         return nbt;
     }
 
@@ -58,6 +68,8 @@ public class DialogueAction {
         }
         a.value = nbt.getString("Value");
         a.amount = nbt.getLong("Amount");
+        a.sound = nbt.getString("Sound");
+        a.hideText = nbt.getBoolean("HideText");
         return a;
     }
 }
