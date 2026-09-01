@@ -252,7 +252,6 @@ public class NotchNpcEditorScreen extends Screen {
                     Component.literal("Colour it with & codes: &6Carol").withStyle(ChatFormatting.GRAY),
                     Component.literal("Same codes as dialogue and signs.").withStyle(ChatFormatting.DARK_GRAY));
         }
-        drawNameOffsetRow(ctx, mx, my);
         drawSignButton(ctx, mx, my);
         ctx.drawString(this.font, "Model:", px + RX, py + 104, NotchTheme.TEXT_DARK, false);
         ctx.drawString(this.font, trim(modelDisplayName(currentModel), 15), px + 150, py + 104, NotchTheme.TEXT_DARK, false);
@@ -277,6 +276,8 @@ public class NotchNpcEditorScreen extends Screen {
             NotchWidgets.centerText(ctx, this.font, "This mob uses its own look.", px + 203, py + 134, NotchTheme.TEXT_MUTED, false);
         }
 
+        NotchWidgets.primaryButton(ctx, this.font, px + 118, py + 230, 174, 18, "Appearance",
+                over(mx, my, px + 118, py + 230, 174, 18));
     }
 
 
@@ -784,7 +785,7 @@ public class NotchNpcEditorScreen extends Screen {
 
         NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18, "Open Pose Editor",
                 over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18));
-        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18, "Move, Rotate & Size",
+        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18, "Move & Rotate",
                 over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18));
         NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
                 px + W / 2, py + 214, NotchTheme.TEXT_MUTED, false);
@@ -897,6 +898,11 @@ public class NotchNpcEditorScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (tab == 0 && over(mx, my, px + 118, py + 230, 174, 18)) {
+                NotchWidgets.click();
+                net.minecraft.client.Minecraft.getInstance().setScreen(new NpcLooksScreen(npcId, statsBits));
+                return true;
+            }
             for (int i = 0; i < 6; i++) {
                 if (over(mx, my, tabX(i), py + TAB_Y, TAB_W, TAB_H)) {
                     if (tab != i) NotchWidgets.tick();
@@ -1010,12 +1016,6 @@ public class NotchNpcEditorScreen extends Screen {
             return true;
         }
 
-        if (over(mx, my, px + NAME_Y_MINUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
-            currentNameOffset = Math.max(-2.0f, round1(currentNameOffset - 0.1f)); sendAppearance(); return true;
-        }
-        if (over(mx, my, px + NAME_Y_PLUS_X, py + NAME_Y_ROW, STEP_W, STEP_H)) {
-            currentNameOffset = Math.min(3.0f, round1(currentNameOffset + 0.1f)); sendAppearance(); return true;
-        }
         return false;
     }
 

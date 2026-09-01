@@ -10,13 +10,12 @@ import java.util.UUID;
 
 public class NpcStatsScreen extends Screen {
 
-    private static final int W = 300, H = 266;
+    private static final int W = 300, H = 228;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
     private static final String[] TOGGLE_NAMES = {
-            "Protected", "Silent", "Glowing", "Nameplate",
-            "No gravity", "Opens doors", "Leashable", "Invisible", "Pushable", "Talk bubble"};
-    private static final int[] TOGGLE_BITS = {1, 2, 4, 8, 16, 32, 64, 128, 1024, 2048};
+            "Protected", "Silent", "No gravity", "Opens doors", "Leashable", "Pushable"};
+    private static final int[] TOGGLE_BITS = {1, 2, 16, 32, 64, 1024};
 
     private final UUID npcId;
     private int statsBits;
@@ -38,6 +37,21 @@ public class NpcStatsScreen extends Screen {
     private static final String[] VIS_NAMES = {"Always", "Day only", "Night only"};
 
     private int sliderY(int i) { return py() + 30 + i * 22; }
+    private net.fugginbeenus.notchcurrency.entity.NotchNpcEntity findNpc() {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc.level == null) return null;
+        for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+            if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                    && npc.getUUID().equals(npcId)) return npc;
+        }
+        return null;
+    }
+
+    private boolean bossBarOn() {
+        net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc = findNpc();
+        return npc != null && npc.showsBossBar();
+    }
+
     private int toggleX(int i) { return px() + 14 + (i % 2) * 140; }
     private int toggleY(int i) { return py() + 106 + (i / 2) * 19; }
     private int visibility() { return (statsBits >> 8) & 3; }
@@ -77,12 +91,27 @@ public class NpcStatsScreen extends Screen {
             else NotchWidgets.neutralButton(ctx, this.font, toggleX(i), toggleY(i), 132, 15, TOGGLE_NAMES[i], hover);
         }
 
-        ctx.drawString(this.font, "Appears", px + 14, py + 226, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 223, SLIDER_W, 15,
-                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 223, SLIDER_W, 15));
+        boolean boss = bossBarOn();
+        boolean bossHover = over(mouseX, mouseY, px + 14, py + 163, 132, 15);
+        if (boss) {
+            NotchWidgets.goldButton(ctx, this.font, px + 14, py + 163, 132, 15, "Boss bar", bossHover);
+        } else {
+            NotchWidgets.neutralButton(ctx, this.font, px + 14, py + 163, 132, 15, "Boss bar", bossHover);
+        }
+        ctx.drawString(this.font, "Appears", px + 14, py + 188, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 185, SLIDER_W, 15,
+                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 185, SLIDER_W, 15));
 
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 244, 160, 16, "Back to Editor",
-                over(mouseX, mouseY, px + 70, py + 244, 160, 16));
+        if (bossHover) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Boss bar").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("A health bar at the top of the screen").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("for players within 24 blocks.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
+
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 206, 160, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 70, py + 206, 160, 16));
 
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -118,6 +147,12 @@ public class NpcStatsScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+
+            if (over(mx, my, px() + 14, py() + 163, 132, 15)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendNpcLooks(npcId, 4, bossBarOn() ? 0 : 1);
+                return true;
+            }
             int px = px(), py = py();
             for (int i = 0; i < 3; i++) {
                 if (over(mx, my, px + SLIDER_X - 2, sliderY(i) - 2, SLIDER_W + 4, SLIDER_H + 4)) {
@@ -134,14 +169,14 @@ public class NpcStatsScreen extends Screen {
                     return true;
                 }
             }
-            if (over(mx, my, px + SLIDER_X, py + 223, SLIDER_W, 15)) {
+            if (over(mx, my, px + SLIDER_X, py + 185, SLIDER_W, 15)) {
                 NotchWidgets.tick();
                 int vis = (visibility() + 1) % 3;
                 statsBits = (statsBits & ~(3 << 8)) | (vis << 8);
                 NotchPacketsClient.sendNpcSetStats(npcId, statsBits);
                 return true;
             }
-            if (over(mx, my, px + 70, py + 244, 160, 16)) {
+            if (over(mx, my, px + 70, py + 206, 160, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
