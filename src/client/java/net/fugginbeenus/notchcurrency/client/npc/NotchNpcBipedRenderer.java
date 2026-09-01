@@ -143,6 +143,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         state.scaleY = entity.getScaleY();
         state.scaleZ = entity.getScaleZ();
         state.billboard = NpcBillboard.lines(entity);
+        state.tint = entity.getTint();
+        state.alpha = entity.getAlpha();
         state.texture = NpcSkins.resolve(entity);
         state.skinValue = entity.getSkinValue();
         vanilla.skin = new net.minecraft.world.entity.player.PlayerSkin(
@@ -263,6 +265,28 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
             matrices.popPose();
         }
     }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected int getModelTint(net.minecraft.client.renderer.entity.state.AvatarRenderState state) {
+        NotchNpcRenderState npc = NotchNpcRenderState.of(state);
+        return blend(super.getModelTint(state), npc.tint, npc.alpha);
+    }
+
+    private static int blend(int base, int tint, float alpha) {
+        if (tint == -1 && alpha >= 1.0f) return base;
+        int a = (int) (((base >>> 24) & 0xFF) * Math.max(0.0f, Math.min(1.0f, alpha)));
+        int r = (base >> 16) & 0xFF;
+        int g = (base >> 8) & 0xFF;
+        int b = base & 0xFF;
+        if (tint != -1) {
+            r = r * ((tint >> 16) & 0xFF) / 255;
+            g = g * ((tint >> 8) & 0xFF) / 255;
+            b = b * (tint & 0xFF) / 255;
+        }
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+    *///?}
 
     //? if >=1.21.11 {
     /*@Override

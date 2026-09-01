@@ -89,6 +89,16 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> SCALE_Z =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> TINT =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> ALPHA =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> HITBOX_W =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> HITBOX_H =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> BOSS_BAR =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> BODY_OFFSET =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> NAME_OFFSET =
@@ -218,6 +228,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SCALE_Y, 1.0f);
         builder.define(SCALE_Z, 1.0f);
         builder.define(NAME_OFFSET, 0.0f);
+        builder.define(TINT, -1);
+        builder.define(ALPHA, 1.0f);
+        builder.define(HITBOX_W, 1.0f);
+        builder.define(HITBOX_H, 1.0f);
+        builder.define(BOSS_BAR, false);
         builder.define(BODY_OFFSET, 0.0f);
         builder.define(BILLBOARD, "");
         builder.define(SUBTITLE, "");
@@ -240,6 +255,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SCALE_Y, 1.0f);
         this.entityData.define(SCALE_Z, 1.0f);
         this.entityData.define(NAME_OFFSET, 0.0f);
+        this.entityData.define(TINT, -1);
+        this.entityData.define(ALPHA, 1.0f);
+        this.entityData.define(HITBOX_W, 1.0f);
+        this.entityData.define(HITBOX_H, 1.0f);
+        this.entityData.define(BOSS_BAR, false);
         this.entityData.define(BODY_OFFSET, 0.0f);
         this.entityData.define(BILLBOARD, "");
         this.entityData.define(SUBTITLE, "");
@@ -279,6 +299,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
         super.onSyncedDataUpdated(data);
+        if (HITBOX_W.equals(data) || HITBOX_H.equals(data)) {
+            this.refreshDimensions();
+        }
         if (CUSTOM_POSE.equals(data)) {
             customPoseCache = unpackCustomPose(this.entityData.get(CUSTOM_POSE));
         }
@@ -392,6 +415,52 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public float getScaleY() { return this.entityData.get(SCALE_Y); }
     public void setScaleY(float scale) { this.entityData.set(SCALE_Y, clampNpcScale(scale)); }
+
+    public int getTint() { return this.entityData.get(TINT); }
+    public void setTint(int rgb) { this.entityData.set(TINT, rgb); }
+    public boolean hasTint() { return getTint() != -1; }
+
+    public float getAlpha() { return this.entityData.get(ALPHA); }
+    public void setAlpha(float a) { this.entityData.set(ALPHA, Math.max(0.1f, Math.min(1.0f, a))); }
+
+    public float getHitboxWidth() { return this.entityData.get(HITBOX_W); }
+    public float getHitboxHeight() { return this.entityData.get(HITBOX_H); }
+
+    public void setHitboxWidth(float w) {
+        this.entityData.set(HITBOX_W, Math.max(0.25f, Math.min(4.0f, w)));
+        this.refreshDimensions();
+    }
+
+    public void setHitboxHeight(float h) {
+        this.entityData.set(HITBOX_H, Math.max(0.25f, Math.min(4.0f, h)));
+        this.refreshDimensions();
+    }
+
+    //? if >=1.21 {
+    /*@Override
+    protected net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        return sizedHitbox(super.getDefaultDimensions(pose));
+    }
+    *///?} else {
+    @Override
+    public net.minecraft.world.entity.EntityDimensions getDimensions(net.minecraft.world.entity.Pose pose) {
+        return sizedHitbox(super.getDimensions(pose));
+    }
+    //?}
+
+    private net.minecraft.world.entity.EntityDimensions sizedHitbox(
+            net.minecraft.world.entity.EntityDimensions base) {
+        try {
+            float w = getHitboxWidth();
+            float h = getHitboxHeight();
+            return (w == 1.0f && h == 1.0f) ? base : base.scale(w, h);
+        } catch (Exception tooEarly) {
+            return base;
+        }
+    }
+
+    public boolean showsBossBar() { return this.entityData.get(BOSS_BAR); }
+    public void setBossBar(boolean on) { this.entityData.set(BOSS_BAR, on); }
 
     public float getScaleZ() { return this.entityData.get(SCALE_Z); }
     public void setScaleZ(float scale) { this.entityData.set(SCALE_Z, clampNpcScale(scale)); }
@@ -563,7 +632,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             if (this.tickCount - lastFiredAge[slot] < cooldown) return;
             lastFiredAge[slot] = this.tickCount;
         }
-        net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger));
+        net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(player, this, actions.get(trigger),
+                actions.orderedLines());
     }
 
     public String getFarewellText() { return farewellText; }
@@ -983,10 +1053,52 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
+    private net.minecraft.server.level.ServerBossEvent bossEvent;
+
+    private void tickBossBar() {
+        if (!showsBossBar()) {
+            if (bossEvent != null) {
+                bossEvent.removeAllPlayers();
+                bossEvent = null;
+            }
+            return;
+        }
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel world)) return;
+
+        if (bossEvent == null) {
+            //? if >=26.1 {
+            /*bossEvent = new net.minecraft.server.level.ServerBossEvent(java.util.UUID.randomUUID(),
+                    this.getDisplayName(),
+                    net.minecraft.world.BossEvent.BossBarColor.RED,
+                    net.minecraft.world.BossEvent.BossBarOverlay.PROGRESS);
+            *///?} else {
+            bossEvent = new net.minecraft.server.level.ServerBossEvent(this.getDisplayName(),
+                    net.minecraft.world.BossEvent.BossBarColor.RED,
+                    net.minecraft.world.BossEvent.BossBarOverlay.PROGRESS);
+            //?}
+        }
+        bossEvent.setName(this.getDisplayName());
+        bossEvent.setProgress(Math.max(0.0f, Math.min(1.0f, this.getHealth() / this.getMaxHealth())));
+
+        java.util.List<net.minecraft.server.level.ServerPlayer> near =
+                world.getEntitiesOfClass(net.minecraft.server.level.ServerPlayer.class,
+                        this.getBoundingBox().inflate(BOSS_BAR_RANGE));
+        for (net.minecraft.server.level.ServerPlayer sp : near) {
+            if (!bossEvent.getPlayers().contains(sp)) bossEvent.addPlayer(sp);
+        }
+        for (net.minecraft.server.level.ServerPlayer sp :
+                new java.util.ArrayList<>(bossEvent.getPlayers())) {
+            if (!near.contains(sp)) bossEvent.removePlayer(sp);
+        }
+    }
+
+    private static final double BOSS_BAR_RANGE = 24.0;
+
     @Override
     public void aiStep() {
         super.aiStep();
         if (!this.level().isClientSide) {
+            tickBossBar();
             if (movementBehavior() == Behavior.STATIONARY) {
                 net.minecraft.core.BlockPos post = leashHome();
                 if (this.getTarget() != null && this.getTarget().isAlive()) {
@@ -1357,6 +1469,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putFloat("Scale", npcScale());
         nbt.putFloat("ScaleY", getScaleY());
         nbt.putFloat("ScaleZ", getScaleZ());
+        if (hasTint()) nbt.putInt("Tint", getTint());
+        if (getAlpha() < 1.0f) nbt.putFloat("Alpha", getAlpha());
+        if (getHitboxWidth() != 1.0f) nbt.putFloat("HitboxW", getHitboxWidth());
+        if (getHitboxHeight() != 1.0f) nbt.putFloat("HitboxH", getHitboxHeight());
+        if (showsBossBar()) nbt.putBoolean("BossBar", true);
         nbt.putFloat("NameOffset", getNameOffset());
         nbt.putFloat("BodyOffset", getBodyOffset());
         nbt.putString("Billboard", getBillboard());
@@ -1439,6 +1556,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Scale")) setScale(nbt.getFloat("Scale"));
         setScaleY(nbt.contains("ScaleY") ? nbt.getFloat("ScaleY") : npcScale());
         setScaleZ(nbt.contains("ScaleZ") ? nbt.getFloat("ScaleZ") : npcScale());
+        setTint(nbt.contains("Tint") ? nbt.getInt("Tint") : -1);
+        if (nbt.contains("Alpha")) setAlpha(nbt.getFloat("Alpha"));
+        if (nbt.contains("HitboxW")) setHitboxWidth(nbt.getFloat("HitboxW"));
+        if (nbt.contains("HitboxH")) setHitboxHeight(nbt.getFloat("HitboxH"));
+        setBossBar(nbt.getBoolean("BossBar"));
         if (nbt.contains("NameOffset")) setNameOffset(nbt.getFloat("NameOffset"));
         if (nbt.contains("BodyOffset")) setBodyOffset(nbt.getFloat("BodyOffset"));
         if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));

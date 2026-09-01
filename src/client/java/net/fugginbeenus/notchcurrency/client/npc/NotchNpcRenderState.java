@@ -34,6 +34,8 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public net.minecraft.client.renderer.entity.state.EntityRenderState proxyState;
     public boolean showLabel;
     public boolean talkBubble;
+    public int tint = -1;
+    public float alpha = 1f;
     public float ageInTicks;
     public float bodyHeight;
     public net.minecraft.network.chat.Component displayName;

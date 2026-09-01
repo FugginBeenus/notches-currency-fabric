@@ -98,6 +98,14 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_EDITOR_REOPEN, buf);
     }
 
+    public static void sendNpcLooks(UUID npcId, int field, int value) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeVarInt(field);
+        buf.writeVarInt(value);
+        NetClient.sendToServer(NotchPackets.NPC_LOOKS, buf);
+    }
+
     public static void sendNpcSetPose(UUID npcId, int pose) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);

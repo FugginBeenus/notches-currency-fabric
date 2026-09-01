@@ -575,6 +575,25 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_LOOKS, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            int field = buf.readVarInt();
+            int value = buf.readVarInt();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (!(e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) return;
+                if (!npc.isOwnedBy(player) && !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                switch (field) {
+                    case 0 -> npc.setTint(value);
+                    case 1 -> npc.setAlpha(value / 100.0f);
+                    case 2 -> npc.setHitboxWidth(value / 100.0f);
+                    case 3 -> npc.setHitboxHeight(value / 100.0f);
+                    case 4 -> npc.setBossBar(value != 0);
+                    default -> { }
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SET_POSE, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int pose = buf.readVarInt();
