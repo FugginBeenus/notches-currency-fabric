@@ -18,7 +18,10 @@ public class DialogueCondition {
         HAS_ITEM,
         IS_OWNER,
         IS_OP,
-        IS_FACTION
+        IS_FACTION,
+        IS_DAY,
+        IS_NIGHT,
+        HAS_XP_LEVEL
     }
 
     private Type type = Type.HAS_COINS;
@@ -49,6 +52,9 @@ public class DialogueCondition {
             case IS_OWNER -> npc.isOwnedBy(sp);
             case IS_OP -> net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
             case IS_FACTION -> matchesFaction(sp, npc);
+            case IS_DAY -> sp.serverLevel().isDay();
+            case IS_NIGHT -> !sp.serverLevel().isDay();
+            case HAS_XP_LEVEL -> sp.experienceLevel >= amount;
         };
     }
 

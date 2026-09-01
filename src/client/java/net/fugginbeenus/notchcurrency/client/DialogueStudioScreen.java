@@ -213,7 +213,9 @@ public class DialogueStudioScreen extends Screen {
                 && (cd.type() == DialogueCondition.Type.HAS_ITEM
                 || cd.type() == DialogueCondition.Type.IS_FACTION);
         boolean caVisible = !nodeMode && c != null && condReal
-                && (cd.type() == DialogueCondition.Type.HAS_COINS || cd.type() == DialogueCondition.Type.HAS_ITEM);
+                && (cd.type() == DialogueCondition.Type.HAS_COINS
+                || cd.type() == DialogueCondition.Type.HAS_ITEM
+                || cd.type() == DialogueCondition.Type.HAS_XP_LEVEL);
         condValueField.setVisible(cvVisible);
         if (cvVisible) condValueField.setValue(cd.value());
         condAmountField.setVisible(caVisible);
@@ -444,6 +446,9 @@ public class DialogueStudioScreen extends Screen {
             case IS_OWNER -> "Is owner";
             case IS_OP -> "Is op";
             case IS_FACTION -> "In faction";
+            case IS_DAY -> "Daytime";
+            case IS_NIGHT -> "Night time";
+            case HAS_XP_LEVEL -> "Has XP level";
         };
     }
 
