@@ -20,6 +20,22 @@ public final class AdminShopMigration {
     public static final UUID SERVER_OWNER = new UUID(0L, 0L);
     public static final String SERVER_OWNER_NAME = "Server";
 
+    private static void repointNpcs(MinecraftServer server, UUID oldShopId, UUID newShopId) {
+        var roles = net.fugginbeenus.notchcurrency.economy.npc.NpcRoleState.get(server);
+        java.util.List<UUID> toMove = new java.util.ArrayList<>();
+        for (var e : roles.all().entrySet()) {
+            var a = e.getValue();
+            if (a.role() == net.fugginbeenus.notchcurrency.economy.npc.NpcRole.ADMIN_SHOP
+                    && oldShopId.equals(a.shopId())) {
+                toMove.add(e.getKey());
+            }
+        }
+        for (UUID npcId : toMove) {
+            roles.assign(npcId, net.fugginbeenus.notchcurrency.economy.npc.NpcRole.SHOP, newShopId);
+            LOGGER.info("Repointed NPC {} to the migrated shop", npcId);
+        }
+    }
+
     public static int run(MinecraftServer server, ServerLevel overworld) {
         AdminShopState old = AdminShopState.get(server);
         ShopState shops = ShopState.get(overworld);
@@ -43,6 +59,7 @@ public final class AdminShopMigration {
             }
 
             shops.adopt(target);
+            repointNpcs(server, source.getId(), target.getShopId());
             old.markMigrated(source.getId());
             moved++;
             LOGGER.info("Moved admin shop '{}' ({} items) into the shop system", source.getName(),

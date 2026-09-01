@@ -3,7 +3,6 @@ package net.fugginbeenus.notchcurrency.economy.npc;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.AuctionState;
 import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShop;
-import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopMenu;
 import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopState;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
 import net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineManager;
@@ -36,11 +35,10 @@ public final class NpcRoleDispatch {
         MinecraftServer server = sp.level().getServer();
         switch (role) {
             case ADMIN_SHOP -> {
-                AdminShop shop = target != null ? AdminShopState.get(server).get(target) : null;
-                if (shop == null) {
+                if (target == null) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop NPC isn't linked to a valid shop.").withStyle(ChatFormatting.RED));
                 } else {
-                    AdminShopMenu.sendListing(sp, shop);
+                    net.fugginbeenus.notchcurrency.shop.NpcShopLogic.openShop(sp, target);
                 }
             }
             case BANKER -> openAtm(sp);

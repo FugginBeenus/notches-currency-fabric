@@ -32,6 +32,10 @@ public class NpcRoleState extends SavedData implements net.fugginbeenus.notchcur
         setDirty();
     }
 
+    public java.util.Map<UUID, Assignment> all() {
+        return java.util.Collections.unmodifiableMap(roles);
+    }
+
     public boolean clear(UUID npcId) {
         boolean removed = roles.remove(npcId) != null;
         if (removed) setDirty();

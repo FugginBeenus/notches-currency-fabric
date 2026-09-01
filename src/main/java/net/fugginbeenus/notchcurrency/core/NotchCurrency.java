@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fugginbeenus.notchcurrency.auction.AuctionConfig;
 import net.fugginbeenus.notchcurrency.auction.AuctionState;
-import net.fugginbeenus.notchcurrency.command.AdminShopCommands;
 import net.fugginbeenus.notchcurrency.command.AuctionCommands;
 import net.fugginbeenus.notchcurrency.command.CrateCommands;
 import net.fugginbeenus.notchcurrency.command.CurrencyCommands;
@@ -133,7 +132,6 @@ public class NotchCurrency implements ModInitializer {
             AuctionState state = AuctionState.get(overworld);
             state.tick(overworld);
             state.checkLoginReminders(overworld);
-            AdminShopState.get(server).tickDecay();
             net.fugginbeenus.notchcurrency.shop.ShopState.get(overworld).tickDecay();
             net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.tick(server);
         });
@@ -145,7 +143,6 @@ public class NotchCurrency implements ModInitializer {
             AuctionCommands.register(dispatcher);
             ShopCommands.register(dispatcher);
             EcoCommands.register(dispatcher);
-            AdminShopCommands.register(dispatcher);
             NpcCommands.register(dispatcher);
             net.fugginbeenus.notchcurrency.command.FactionCommands.register(dispatcher);
             RaffleCommands.register(dispatcher);
