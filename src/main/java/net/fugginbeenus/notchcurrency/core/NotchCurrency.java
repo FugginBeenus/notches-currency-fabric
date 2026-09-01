@@ -134,6 +134,7 @@ public class NotchCurrency implements ModInitializer {
             state.tick(overworld);
             state.checkLoginReminders(overworld);
             AdminShopState.get(server).tickDecay();
+            net.fugginbeenus.notchcurrency.shop.ShopState.get(overworld).tickDecay();
             net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.tick(server);
         });
 
@@ -202,6 +203,10 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.readFromWorld(
                     server, net.fugginbeenus.notchcurrency.config.NotchConfigIO.get());
+            net.minecraft.server.level.ServerLevel main = server.overworld();
+            if (main != null) {
+                net.fugginbeenus.notchcurrency.shop.AdminShopMigration.run(server, main);
+            }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(
                 server -> net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(null));

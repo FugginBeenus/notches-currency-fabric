@@ -25,11 +25,12 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     public static final int ROWS = 6;
 
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2, P_OPEN = 3, P_RENT_PAUSED = 4,
-            P_PEND_HI = 5, P_PEND_LO = 6, P_BARTER_COUNT = 7, P_RENT_COST = 8, P_UNPAID = 9;
-    private static final int PROP_COUNT = 10;
+            P_PEND_HI = 5, P_PEND_LO = 6, P_BARTER_COUNT = 7, P_RENT_COST = 8, P_UNPAID = 9,
+            P_IS_OP = 10, P_ADMIN_MODE = 11;
+    private static final int PROP_COUNT = 12;
 
     public static final int ACTION_RENAME = 0, ACTION_GREETING = 1, ACTION_TOGGLE_OPEN = 2,
-            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4;
+            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5;
 
     private final UUID shopId;
     private final String shopName;
@@ -38,6 +39,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     @Nullable private final PlayerShop shop;
     private final SimpleContainer rowInv = new SimpleContainer(ROWS);
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    private final net.minecraft.world.entity.player.Player viewer;
     private int page = 0;
 
     private static final class ReadOnlySlot extends Slot {
@@ -59,6 +61,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         this.greeting = greeting;
         this.npcId = npcId;
         this.shop = shop;
+        this.viewer = inv.player;
         this.addDataSlots(props);
         for (int i = 0; i < ROWS; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
@@ -87,6 +90,10 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         props.set(P_BARTER_COUNT, shop.getPendingBarterCount());
         props.set(P_RENT_COST, (int) Math.min(Integer.MAX_VALUE, ShopRent.rentFor(shop.getListings().size())));
         props.set(P_UNPAID, shop.getUnpaidRentCycles());
+        props.set(P_ADMIN_MODE, shop.isAdminMode() ? 1 : 0);
+        boolean op = viewer instanceof net.minecraft.server.level.ServerPlayer sp
+                && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+        props.set(P_IS_OP, op ? 1 : 0);
 
         List<ShopListing> listings = shop.getListings();
         int totalPages = Math.max(1, (listings.size() + ROWS - 1) / ROWS);
@@ -100,18 +107,30 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < ROWS; i++) {
             int idx = start + i;
             rowInv.setItem(i, idx < listings.size()
-                    ? ShopBrowseScreenHandler.displayStack(listings.get(idx)) : ItemStack.EMPTY);
+                    ? ShopBrowseScreenHandler.displayStack(listings.get(idx), shop.isAdminMode()) : ItemStack.EMPTY);
         }
     }
 
     public void handleAction(ServerPlayer sp, int action, String text, @Nullable UUID listingId) {
         if (shop == null) return;
-        if (!shop.getOwnerId().equals(sp.getUUID())) {
+        if (!PlayerShopManager.canManage(sp, shop)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only the shop owner can manage this shop.").withStyle(ChatFormatting.RED));
             return;
         }
         ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
+            case ACTION_TOGGLE_ADMIN -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only a server operator can do that.").withStyle(ChatFormatting.RED));
+                    return;
+                }
+                shop.setAdminMode(!shop.isAdminMode());
+                state.markDirtyAndSave();
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, shop.isAdminMode()
+                        ? Component.literal("This shop is now an admin shop. Stock never runs out and nobody is paid.").withStyle(ChatFormatting.GOLD)
+                        : Component.literal("This shop is back to a normal player shop.").withStyle(ChatFormatting.GREEN));
+                refresh();
+            }
             case ACTION_RENAME -> {
                 String name = clean(text, 32);
                 if (name.isEmpty()) {

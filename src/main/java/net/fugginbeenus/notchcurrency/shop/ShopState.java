@@ -20,6 +20,24 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-ShopState");
     private static final String DATA_KEY = "notchcurrency_shops";
     private final Map<UUID, PlayerShop> shops = new HashMap<>();
+    private int decayCounter = 0;
+    private static final int DECAY_INTERVAL = 200;
+
+    public void tickDecay() {
+        if (shops.isEmpty()) return;
+        if (++decayCounter < DECAY_INTERVAL) return;
+        decayCounter = 0;
+        boolean any = false;
+        for (PlayerShop shop : shops.values()) {
+            for (ShopListing listing : shop.getListings()) {
+                if (!listing.isDynamicPricing()) continue;
+                listing.decayPrice();
+                any = true;
+            }
+        }
+        if (any) setDirty();
+    }
+
     private final Map<UUID, Set<UUID>> ownerShops = new HashMap<>();
     private final Map<UUID, UUID> npcToShop = new HashMap<>();
 
@@ -40,6 +58,12 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
     }
 
     @Nullable
+    public void adopt(PlayerShop shop) {
+        shops.put(shop.getShopId(), shop);
+        ownerShops.computeIfAbsent(shop.getOwnerId(), k -> new HashSet<>()).add(shop.getShopId());
+        setDirty();
+    }
+
     public PlayerShop createShop(UUID ownerId, String ownerName, String shopName, int maxShopsPerPlayer) {
         Set<UUID> existing = ownerShops.getOrDefault(ownerId, Collections.emptySet());
         if (existing.size() >= maxShopsPerPlayer) {

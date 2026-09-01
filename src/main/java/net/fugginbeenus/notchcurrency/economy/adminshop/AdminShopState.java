@@ -58,6 +58,12 @@ public class AdminShopState extends SavedData implements net.fugginbeenus.notchc
         return shops.values();
     }
 
+    private final java.util.Set<UUID> migrated = new java.util.HashSet<>();
+
+    public java.util.Collection<AdminShop> allShops() { return shops.values(); }
+    public boolean isMigrated(UUID id) { return migrated.contains(id); }
+    public void markMigrated(UUID id) { migrated.add(id); }
+
     private int decayCounter = 0;
     private static final int DECAY_INTERVAL = 200;
 
@@ -88,6 +94,13 @@ public class AdminShopState extends SavedData implements net.fugginbeenus.notchc
         ListTag list = new ListTag();
         for (AdminShop s : shops.values()) list.add(s.toNbt());
         nbt.put("Shops", list);
+        ListTag done = new ListTag();
+        for (UUID id : migrated) {
+            CompoundTag row = new CompoundTag();
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(row, "Id", id);
+            done.add(row);
+        }
+        nbt.put("Migrated", done);
         return nbt;
     }
 
@@ -98,6 +111,15 @@ public class AdminShopState extends SavedData implements net.fugginbeenus.notchc
             for (int i = 0; i < list.size(); i++) {
                 AdminShop s = AdminShop.fromNbt(list.getCompound(i));
                 state.shops.put(s.getId(), s);
+            }
+        }
+        if (nbt.contains("Migrated", Tag.TAG_LIST)) {
+            ListTag done = nbt.getList("Migrated", Tag.TAG_COMPOUND);
+            for (int i = 0; i < done.size(); i++) {
+                CompoundTag row = done.getCompound(i);
+                if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(row, "Id")) {
+                    state.migrated.add(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(row, "Id"));
+                }
             }
         }
         return state;

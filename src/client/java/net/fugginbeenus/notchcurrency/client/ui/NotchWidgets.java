@@ -63,6 +63,16 @@ public final class NotchWidgets {
         ctx.fill(x + w - 2, y + r, x + w - 1, y + h - r, NotchTheme.HIGHLIGHT);
     }
 
+    public static void insetFlipped(GuiGraphics ctx, int x, int y, int w, int h, int fill) {
+        final int r = 1;
+        fillRound(ctx, x, y, w, h, r, NotchTheme.OUTLINE);
+        fillRound(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, fill);
+        ctx.fill(x + r, y + 1, x + w - r, y + 2, NotchTheme.HIGHLIGHT);
+        ctx.fill(x + 1, y + r, x + 2, y + h - r, NotchTheme.HIGHLIGHT);
+        ctx.fill(x + r, y + h - 2, x + w - r, y + h - 1, NotchTheme.EDGE);
+        ctx.fill(x + w - 2, y + r, x + w - 1, y + h - r, NotchTheme.EDGE);
+    }
+
     public static void pill(GuiGraphics ctx, int x, int y, int w, int h) {
         final int r = 1;
         fillRound(ctx, x, y, w, h, r, NotchTheme.OUTLINE);

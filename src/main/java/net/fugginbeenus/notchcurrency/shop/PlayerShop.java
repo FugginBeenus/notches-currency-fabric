@@ -24,6 +24,7 @@ public class PlayerShop {
     private int totalTransactions;
     private long createdAt;
     private boolean isOpen;
+    private boolean adminMode;
     private boolean rentPaused = false;
     private int unpaidRentCycles = 0;
     private final List<ItemStack> pendingBarterItems;
@@ -85,6 +86,13 @@ public class PlayerShop {
     public long getPendingBalance() {
         return pendingBalance;
     }
+    public boolean spendBalance(long amount) {
+        if (amount <= 0) return true;
+        if (pendingBalance < amount) return false;
+        pendingBalance -= amount;
+        return true;
+    }
+
     public long withdrawBalance() {
         long amount = pendingBalance;
         pendingBalance = 0;
@@ -111,6 +119,14 @@ public class PlayerShop {
     public long getCreatedAt() {
         return createdAt;
     }
+    public boolean isAdminMode() {
+        return adminMode;
+    }
+
+    public void setAdminMode(boolean admin) {
+        this.adminMode = admin;
+    }
+
     public boolean isOpen() {
         return isOpen;
     }
@@ -162,7 +178,7 @@ public class PlayerShop {
 
     public List<ShopListing> getInStockListings() {
         return listings.stream()
-                .filter(ShopListing::isInStock)
+                .filter(l -> l.isInStock(adminMode))
                 .toList();
     }
 
@@ -225,6 +241,7 @@ public class PlayerShop {
         nbt.putInt("TotalTransactions", totalTransactions);
         nbt.putLong("CreatedAt", createdAt);
         nbt.putBoolean("IsOpen", isOpen);
+        if (adminMode) nbt.putBoolean("AdminMode", true);
         nbt.putBoolean("RentPaused", rentPaused);
         nbt.putInt("UnpaidRentCycles", unpaidRentCycles);
 
@@ -269,6 +286,7 @@ public class PlayerShop {
         shop.totalTransactions = nbt.getInt("TotalTransactions");
         shop.createdAt = nbt.getLong("CreatedAt");
         shop.isOpen = nbt.getBoolean("IsOpen");
+        shop.adminMode = nbt.getBoolean("AdminMode");
         shop.rentPaused = nbt.getBoolean("RentPaused");
         shop.unpaidRentCycles = nbt.getInt("UnpaidRentCycles");
 

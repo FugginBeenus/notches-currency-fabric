@@ -130,11 +130,24 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             NotchWidgets.dangerButton(ctx, this.font, x + 8, y + 20, 60, 14, "Closed",
                     over(mouseX, mouseY, x + 8, y + 20, 60, 14));
         }
-        String status = rentPaused ? "Rent overdue - paused" : open ? "Selling" : "Sales off";
-        int statusColor = rentPaused ? NotchTheme.TEXT_RED : open ? NotchTheme.TEXT_GREEN : NotchTheme.TEXT_MUTED;
+        boolean isOp = menu.prop(ShopManageScreenHandler.P_IS_OP) != 0;
+        boolean adminMode = menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0;
+        if (isOp) {
+            boolean hovered = over(mouseX, mouseY, x + 186, y + 20, 62, 14);
+            if (adminMode) {
+                NotchWidgets.goldButton(ctx, this.font, x + 186, y + 20, 62, 14, "Admin", hovered);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.font, x + 186, y + 20, 62, 14, "Admin", hovered);
+            }
+        }
+
+        String status = adminMode ? "Never runs out"
+                : rentPaused ? "Rent overdue" : open ? "Selling" : "Sales off";
+        int statusColor = adminMode ? NotchTheme.TEXT_GOLD
+                : rentPaused ? NotchTheme.TEXT_RED : open ? NotchTheme.TEXT_GREEN : NotchTheme.TEXT_MUTED;
         ctx.drawString(this.font, status, x + 74, y + 24, statusColor, false);
         int rentCost = menu.prop(ShopManageScreenHandler.P_RENT_COST);
-        if (rentCost > 0) {
+        if (rentCost > 0 && !adminMode) {
             MutableComponent rent = Component.literal("Rent ").append(NotchCurrency.coins(rentCost));
             ctx.drawString(this.font, rent, x + 248 - this.font.width(rent), y + 24,
                     NotchTheme.TEXT_MUTED, false);
@@ -142,16 +155,21 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
 
         long pending = menu.pendingBalance();
         int barterItems = menu.prop(ShopManageScreenHandler.P_BARTER_COUNT);
-        MutableComponent earnings = Component.literal("Earnings ").append(NotchCurrency.coins(pending));
-        if (barterItems > 0) earnings.append(Component.literal(" +" + barterItems + " barter"));
         NotchWidgets.pill(ctx, x + 8, y + 40, 160, 15);
-        ctx.drawString(this.font, earnings, x + 14, y + 44, NotchTheme.TEXT_GOLD, false);
-        boolean canCollect = pending > 0 || barterItems > 0;
-        if (canCollect) {
-            NotchWidgets.goldButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect",
-                    over(mouseX, mouseY, x + 176, y + 40, 72, 15));
-        } else {
+        if (adminMode) {
+            ctx.drawString(this.font, "No earnings to collect", x + 14, y + 44, NotchTheme.TEXT_MUTED, false);
             NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
+        } else {
+            MutableComponent earnings = Component.literal("Earnings ").append(NotchCurrency.coins(pending));
+            if (barterItems > 0) earnings.append(Component.literal(" +" + barterItems + " barter"));
+            ctx.drawString(this.font, earnings, x + 14, y + 44, NotchTheme.TEXT_GOLD, false);
+            boolean canCollect = pending > 0 || barterItems > 0;
+            if (canCollect) {
+                NotchWidgets.goldButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect",
+                        over(mouseX, mouseY, x + 176, y + 40, 72, 15));
+            } else {
+                NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
+            }
         }
 
         ctx.drawString(this.font, "Name", x + 10, y + 62, NotchTheme.TEXT_DARK, false);
@@ -186,23 +204,27 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             if (row == null) continue;
             any = true;
             int ry = rowY(i);
-            NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
+            NotchWidgets.insetFlipped(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
             if (row.price() > 0) {
                 ctx.renderItem(coin(), x + ROW_X + 3, ry + 1);
                 ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 3, ry + 1,
                         NotchWidgets.compactCount(row.price()));
             }
             if (!row.barterStack().isEmpty()) {
+                ctx.renderItem(row.barterStack(), x + ROW_X + 23, ry + 1);
                 ctx.renderItemDecorations(this.font, row.barterStack(), x + ROW_X + 23, ry + 1);
             }
             if (row.price() <= 0 && row.barterStack().isEmpty()) {
                 ctx.drawString(this.font, "free", x + ROW_X + 6, ry + 5, NotchTheme.TEXT_MUTED, false);
             }
             NotchWidgets.arrowRight(ctx, x + ROW_X + 45, ry + 5, NotchTheme.TEXT_MUTED);
+            ctx.renderItem(row.icon(), x + ROW_X + 64, ry + 1);
             ctx.renderItemDecorations(this.font, row.icon(), x + ROW_X + 64, ry + 1);
-            String s = "x" + row.stock();
+            boolean unlimited = row.stock() < 0;
+            String s = unlimited ? "inf" : "x" + row.stock();
             ctx.drawString(this.font, s, x + ROW_X + 200 - this.font.width(s), ry + 5,
-                    row.stock() > 0 ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_RED, false);
+                    unlimited ? NotchTheme.TEXT_GOLD
+                            : row.stock() > 0 ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_RED, false);
             NotchWidgets.neutralButton(ctx, this.font, x + ROW_X + 204, ry + 1, 32, 15, "Edit",
                     over(mouseX, mouseY, x + ROW_X + 204, ry + 1, 32, 15));
         }
@@ -234,6 +256,39 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+        if (menu.prop(ShopManageScreenHandler.P_IS_OP) != 0
+                && over(mouseX, mouseY, leftPos + 186, topPos + 20, 62, 14)) {
+            boolean on = menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0;
+            ctx.renderComponentTooltip(this.font, on
+                    ? List.of(Component.literal("Admin shop").withStyle(ChatFormatting.GOLD),
+                            Component.literal("Stock never runs out.").withStyle(ChatFormatting.GRAY),
+                            Component.literal("Buyers pay, but nobody is paid.").withStyle(ChatFormatting.GRAY),
+                            Component.literal("Click to make it a normal shop.").withStyle(ChatFormatting.DARK_GRAY))
+                    : List.of(Component.literal("Make this an admin shop").withStyle(ChatFormatting.WHITE),
+                            Component.literal("Stock never runs out.").withStyle(ChatFormatting.GRAY),
+                            Component.literal("Buyers pay, but nobody is paid.").withStyle(ChatFormatting.GRAY),
+                            Component.literal("Operators only.").withStyle(ChatFormatting.DARK_GRAY)),
+                    mouseX, mouseY);
+        }
+
+        if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0
+                && over(mouseX, mouseY, leftPos + 8, topPos + 40, 240, 15)) {
+            ctx.renderComponentTooltip(this.font, List.of(
+                    Component.literal("Admin shops do not earn").withStyle(ChatFormatting.GOLD),
+                    Component.literal("Coins buyers pay leave the economy.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("No rent is charged either.").withStyle(ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
+
+        if (menu.prop(ShopManageScreenHandler.P_RENT_PAUSED) != 0
+                && menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) == 0
+                && over(mouseX, mouseY, leftPos + 74, topPos + 24, 100, 10)) {
+            ctx.renderComponentTooltip(this.font, List.of(
+                    Component.literal("Rent is overdue").withStyle(ChatFormatting.RED),
+                    Component.literal("Sales are paused until it is paid.").withStyle(ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
+
         if (over(mouseX, mouseY, leftPos + 195, topPos + 59, 14, 14)) {
             ctx.renderComponentTooltip(this.font, List.of(
                     Component.literal("Title color - click to cycle"),
@@ -249,8 +304,11 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                 List<Component> lines = new ArrayList<>();
                 lines.add(row.icon().getHoverName());
                 lines.add(NotchWidgets.priceText(row.price(), row.barterName(), row.barterCount()));
-                lines.add(Component.literal(row.stock() > 0 ? "Stock: " + row.stock() : "Out of stock")
-                        .withStyle(row.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                boolean endless = row.stock() < 0;
+                lines.add(Component.literal(endless ? "Always in stock"
+                                : row.stock() > 0 ? "Stock: " + row.stock() : "Out of stock")
+                        .withStyle(endless ? ChatFormatting.GOLD
+                                : row.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
                 ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
                 break;
             }
@@ -268,7 +326,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if ((menu.pendingBalance() > 0 || menu.prop(ShopManageScreenHandler.P_BARTER_COUNT) > 0)
+            if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) == 0
+                    && (menu.pendingBalance() > 0 || menu.prop(ShopManageScreenHandler.P_BARTER_COUNT) > 0)
                     && over(mx, my, leftPos + 176, topPos + 40, 72, 15)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopWithdraw(menu.shopId());
@@ -277,6 +336,12 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             if (over(mx, my, leftPos + 8, topPos + 20, 60, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_TOGGLE_OPEN, "", null);
+                return true;
+            }
+            if (menu.prop(ShopManageScreenHandler.P_IS_OP) != 0
+                    && over(mx, my, leftPos + 186, topPos + 20, 62, 14)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_TOGGLE_ADMIN, "", null);
                 return true;
             }
             if (over(mx, my, leftPos + 195, topPos + 59, 14, 14)) {

@@ -65,6 +65,8 @@ public final class NpcShopLogic {
             return;
         }
 
+        runRestock(state, shop, player.serverLevel());
+
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Component.literal(shop.getShopName()),
                 (containerId, playerInventory, p) -> new ShopBrowseScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
@@ -74,6 +76,14 @@ public final class NpcShopLogic {
                     buf.writeUtf(shop.getShopkeeperDialog());
                     writeNpcId(buf, shop.getLinkedNpcId());
                 });
+    }
+
+    public static void runRestock(ShopState state, PlayerShop shop, net.minecraft.server.level.ServerLevel level) {
+        boolean changed = false;
+        for (ShopListing listing : shop.getListings()) {
+            if (listing.maybeRestock(level)) changed = true;
+        }
+        if (changed) state.setDirty();
     }
 
     private static void writeNpcId(FriendlyByteBuf buf, @Nullable UUID npcId) {
@@ -91,7 +101,7 @@ public final class NpcShopLogic {
             return;
         }
 
-        if (!shop.getOwnerId().equals(owner.getUUID())) {
+        if (!PlayerShopManager.canManage(owner, shop)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(owner, Component.literal("You don't own this shop!")
                     .withStyle(net.minecraft.ChatFormatting.RED));
             return;
@@ -118,7 +128,7 @@ public final class NpcShopLogic {
             return;
         }
 
-        if (shop.getOwnerId().equals(player.getUUID())) {
+        if (PlayerShopManager.canManage(player, shop)) {
             openShopManager(player, shopId);
         } else {
             openShopBrowser(player, shopId);
