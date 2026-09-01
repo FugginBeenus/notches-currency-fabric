@@ -87,6 +87,14 @@ public final class AdminShopCommands {
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> info(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
+                .then(Commands.literal("limit")
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .then(Commands.argument("shopId", StringArgumentType.word())
+                                .then(Commands.argument("entryId", StringArgumentType.word())
+                                        .then(Commands.argument("buyLimit", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 9999))
+                                                .then(Commands.argument("sellLimit", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 9999))
+                                                        .then(Commands.argument("resetEvery", StringArgumentType.word())
+                                                                .executes(ctx -> setLimit(ctx))))))))
                 .then(Commands.literal("removeitem")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
                         .then(Commands.argument("shopId", StringArgumentType.word())
@@ -188,6 +196,8 @@ public final class AdminShopCommands {
 
         if (r != AdminShopManager.Result.SUCCESS) {
             String msg = switch (r) {
+                case BUY_LIMIT_REACHED -> "You have hit the buying limit for this item. Try again after the next reset.";
+                case SELL_LIMIT_REACHED -> "You have hit the selling limit for this item. Try again after the next reset.";
                 case NOT_BUYABLE -> "This item isn't for sale here.";
                 case NOT_SELLABLE -> "This shop doesn't buy that item.";
                 case INSUFFICIENT_FUNDS -> "You don't have enough " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!";
@@ -204,6 +214,37 @@ public final class AdminShopCommands {
     private static AdminShop byId(AdminShopState state, com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, String arg) {
         UUID id = parseUuid(StringArgumentType.getString(ctx, arg));
         return id == null ? null : state.get(id);
+    }
+
+    private static int setLimit(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+        AdminShopState state = AdminShopState.get(ctx.getSource().getServer());
+        AdminShop shop = byId(state, ctx, "shopId");
+        if (shop == null) { ctx.getSource().sendFailure(Component.literal("Shop not found.")); return 0; }
+        UUID entryId = parseUuid(StringArgumentType.getString(ctx, "entryId"));
+        AdminShopEntry entry = entryId == null ? null : shop.getEntry(entryId);
+        if (entry == null) { ctx.getSource().sendFailure(Component.literal("Item not found.")); return 0; }
+
+        String modeName = StringArgumentType.getString(ctx, "resetEvery").toUpperCase(java.util.Locale.ROOT);
+        net.fugginbeenus.notchcurrency.shop.Restock.Mode mode =
+                net.fugginbeenus.notchcurrency.shop.Restock.Mode.byName(modeName);
+        if (mode == net.fugginbeenus.notchcurrency.shop.Restock.Mode.OFF && !modeName.equals("OFF")) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "Reset must be one of: OFF, GAME_DAILY, GAME_WEEKLY, REAL_DAILY, REAL_WEEKLY."));
+            return 0;
+        }
+
+        int buyLimit = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "buyLimit");
+        int sellLimit = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "sellLimit");
+        entry.setBuyLimit(buyLimit);
+        entry.setSellLimit(sellLimit);
+        entry.setResetMode(mode);
+        state.setDirty();
+
+        ctx.getSource().sendSuccess(() -> Component.literal("Limits set: buy "
+                + (buyLimit == 0 ? "unlimited" : String.valueOf(buyLimit)) + ", sell "
+                + (sellLimit == 0 ? "unlimited" : String.valueOf(sellLimit)) + ", reset "
+                + mode.label().toLowerCase(java.util.Locale.ROOT) + ".").withStyle(ChatFormatting.GREEN), false);
+        return 1;
     }
 
     private static UUID parseUuid(String s) {

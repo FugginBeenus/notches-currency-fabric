@@ -18,13 +18,17 @@ public final class AdminShopManager {
 
     public enum Result {
         SUCCESS, ENTRY_NOT_FOUND, NOT_BUYABLE, NOT_SELLABLE,
-        INVALID_QUANTITY, INSUFFICIENT_FUNDS, INSUFFICIENT_ITEMS
+        INVALID_QUANTITY, INSUFFICIENT_FUNDS, INSUFFICIENT_ITEMS,
+        BUY_LIMIT_REACHED, SELL_LIMIT_REACHED
     }
 
     public static Result buy(ServerPlayer buyer, AdminShop shop, AdminShopEntry entry, int qty) {
         if (entry == null) return Result.ENTRY_NOT_FOUND;
         if (qty <= 0 || qty > 256) return Result.INVALID_QUANTITY;
         if (!entry.isBuyable()) return Result.NOT_BUYABLE;
+
+        entry.maybeReset(buyer.serverLevel());
+        if (entry.remainingBuy(buyer.getUUID()) < qty) return Result.BUY_LIMIT_REACHED;
 
         long unitPrice = entry.currentBuyPrice();
         long total = unitPrice * qty;
@@ -41,6 +45,7 @@ public final class AdminShopManager {
         ItemStack template = entry.getItem();
         giveItems(buyer, template, qty * perBundle);
         entry.recordBuy(qty);
+        entry.recordPlayerBuy(buyer.getUUID(), qty);
 
         //? if >=1.21 {
         /*buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);
@@ -60,6 +65,9 @@ public final class AdminShopManager {
         if (qty <= 0 || qty > 256) return Result.INVALID_QUANTITY;
         if (!entry.isSellable()) return Result.NOT_SELLABLE;
 
+        entry.maybeReset(seller.serverLevel());
+        if (entry.remainingSell(seller.getUUID()) < qty) return Result.SELL_LIMIT_REACHED;
+
         ItemStack template = entry.getItem();
         int perBundle = entry.getUnit();
         int needed = qty * perBundle;
@@ -77,6 +85,7 @@ public final class AdminShopManager {
                     "admin shop sell: " + shop.getName());
         }
         entry.recordSell(qty);
+        entry.recordPlayerSell(seller.getUUID(), qty);
 
         //? if >=1.21 {
         /*seller.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 1.0F, 1.2F);

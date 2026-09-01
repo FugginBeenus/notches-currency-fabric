@@ -18,9 +18,12 @@ import java.util.List;
 
 public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEditScreenHandler> {
 
-    private static final int W = 210, H = 240;
+    private static final int W = 210, H = 296;
 
     private EditBox priceField;
+    private EditBox paysField;
+    private EditBox refillField;
+    private EditBox limitField;
 
     public ShopListingEditScreen(ShopListingEditScreenHandler handler, Inventory inv, Component title) {
         //? if >=26.1 {
@@ -40,13 +43,54 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         String old = priceField == null
                 ? (menu.priceProp() > 0 ? String.valueOf(menu.priceProp()) : "")
                 : priceField.getValue();
-        priceField = new EditBox(this.font, this.leftPos + 50, this.topPos + 50, 92, 10, Component.literal("Price"));
+        priceField = new EditBox(this.font, this.leftPos + 50, this.topPos + 50, 56, 10, Component.literal("Price"));
         priceField.setMaxLength(7);
         priceField.setBordered(false);
         priceField.setHint(Component.literal("0").withStyle(ChatFormatting.DARK_GRAY));
         net.fugginbeenus.notchcurrency.compat.Render.setFilter(priceField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         priceField.setValue(old);
         addRenderableWidget(priceField);
+
+        String oldPays = paysField == null
+                ? (menu.paysProp() > 0 ? String.valueOf(menu.paysProp()) : "")
+                : paysField.getValue();
+        paysField = numberBox(this.leftPos + 154, this.topPos + 50, 40, "0", oldPays);
+        paysField.setMaxLength(7);
+        addRenderableWidget(paysField);
+
+        String oldRefill = refillField == null
+                ? (menu.restockToProp() > 0 ? String.valueOf(menu.restockToProp()) : "")
+                : refillField.getValue();
+        refillField = numberBox(this.leftPos + 62, this.topPos + 176, 30, "0", oldRefill);
+        addRenderableWidget(refillField);
+
+        String oldLimit = limitField == null
+                ? (menu.limitProp() > 0 ? String.valueOf(menu.limitProp()) : "")
+                : limitField.getValue();
+        limitField = numberBox(this.leftPos + 154, this.topPos + 176, 32, "off", oldLimit);
+        addRenderableWidget(limitField);
+
+        boolean editing = menu.hasListing();
+        refillField.setVisible(editing);
+        limitField.setVisible(editing);
+    }
+
+    private EditBox numberBox(int x, int y, int w, String hint, String value) {
+        EditBox box = new EditBox(this.font, x, y, w, 10, Component.literal(hint));
+        box.setMaxLength(4);
+        box.setBordered(false);
+        box.setHint(Component.literal(hint).withStyle(ChatFormatting.DARK_GRAY));
+        net.fugginbeenus.notchcurrency.compat.Render.setFilter(box, t -> t.isEmpty() || t.chars().allMatch(Character::isDigit));
+        box.setValue(value);
+        return box;
+    }
+
+    private int numberIn(EditBox box) {
+        try {
+            return box.getValue().isEmpty() ? 0 : Integer.parseInt(box.getValue());
+        } catch (NumberFormatException bad) {
+            return 0;
+        }
     }
 
     private int price() {
@@ -86,8 +130,10 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             ctx.drawString(this.font, "(sample returns on close)", x + 34, y + 35, NotchTheme.TEXT_MUTED, false);
         }
         ctx.drawString(this.font, "Price", x + 12, y + 50, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + 46, y + 47, 100, 14, NotchTheme.DEEP);
-        ctx.drawString(this.font, NotchCurrency.coinIcon(), x + 150, y + 50, NotchTheme.TEXT_GOLD, false);
+        NotchWidgets.inset(ctx, x + 46, y + 47, 64, 14, NotchTheme.DEEP);
+        ctx.drawString(this.font, NotchCurrency.coinIcon(), x + 112, y + 50, NotchTheme.TEXT_GOLD, false);
+        ctx.drawString(this.font, "Pays", x + 124, y + 50, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, x + 150, y + 47, 48, 14, NotchTheme.DEEP);
 
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.BARTER_X - 1, y + ShopListingEditScreenHandler.BARTER_Y - 1);
         ItemStack barter = menu.barterSample();
@@ -145,6 +191,32 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                 over(mouseX, mouseY, x + 150, y + 134, 48, 16));
 
         NotchWidgets.divider(ctx, x + 8, y + 154, W - 16);
+
+        refillField.setVisible(editing);
+        limitField.setVisible(editing);
+        if (editing) {
+            ctx.drawString(this.font, "Restock", x + 12, y + 161, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, x + 62, y + 157, 136, 14,
+                    menu.restockModeProp().label(), over(mouseX, mouseY, x + 62, y + 157, 136, 14));
+
+            ctx.drawString(this.font, "Refill to", x + 12, y + 179, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, x + 58, y + 173, 38, 14, NotchTheme.DEEP);
+            ctx.drawString(this.font, "Max each", x + 104, y + 179, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, x + 150, y + 173, 40, 14, NotchTheme.DEEP);
+
+            boolean dyn = menu.dynamicProp();
+            boolean dynHover = over(mouseX, mouseY, x + 12, y + 191, 186, 13);
+            if (dyn) {
+                NotchWidgets.goldButton(ctx, this.font, x + 12, y + 191, 186, 13, "Prices follow demand", dynHover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.font, x + 12, y + 191, 186, 13, "Fixed prices", dynHover);
+            }
+        } else {
+            ctx.drawString(this.font, "Save first for more options.", x + 12, y + 178,
+                    NotchTheme.TEXT_MUTED, false);
+        }
+
+        NotchWidgets.divider(ctx, x + 8, y + 210, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.INV_X + col * 18 - 1,
@@ -202,6 +274,14 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             if (over(mx, my, leftPos + 12, topPos + 134, 70, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_SAVE, price());
+                if (menu.hasListing()) {
+                    NotchPacketsClient.sendShopEditAction(
+                            ShopListingEditScreenHandler.ACTION_SET_RESTOCK_TO, numberIn(refillField));
+                    NotchPacketsClient.sendShopEditAction(
+                            ShopListingEditScreenHandler.ACTION_SET_LIMIT, numberIn(limitField));
+                    NotchPacketsClient.sendShopEditAction(
+                            ShopListingEditScreenHandler.ACTION_SET_PAYS, numberIn(paysField));
+                }
                 return true;
             }
             if (editing && over(mx, my, leftPos + 86, topPos + 134, 50, 16)) {
@@ -222,6 +302,16 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             if (editing && !menu.currentBarterDesc().isEmpty() && over(mx, my, leftPos + 150, topPos + 70, 48, 13)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_CLEAR_BARTER, 0);
+                return true;
+            }
+            if (editing && over(mx, my, leftPos + 62, topPos + 157, 136, 13)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_CYCLE_RESTOCK, 0);
+                return true;
+            }
+            if (editing && over(mx, my, leftPos + 12, topPos + 191, 186, 13)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_TOGGLE_DYNAMIC, 0);
                 return true;
             }
         }

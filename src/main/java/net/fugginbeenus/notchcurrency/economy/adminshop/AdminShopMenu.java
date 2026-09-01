@@ -12,6 +12,18 @@ public final class AdminShopMenu {
 
     private AdminShopMenu() {}
 
+    private static String allowanceText(AdminShopEntry e, ServerPlayer player) {
+        StringBuilder out = new StringBuilder();
+        if (e.getBuyLimit() > 0) {
+            out.append(e.remainingBuy(player.getUUID())).append(" buy left");
+        }
+        if (e.getSellLimit() > 0) {
+            if (out.length() > 0) out.append(", ");
+            out.append(e.remainingSell(player.getUUID())).append(" sell left");
+        }
+        return out.toString();
+    }
+
     public static void sendListing(ServerPlayer player, AdminShop shop) {
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("═══ " + shop.getName() + " ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 
@@ -21,6 +33,7 @@ public final class AdminShopMenu {
         }
 
         for (AdminShopEntry e : shop.getEntries()) {
+            e.maybeReset(player.serverLevel());
             int unit = e.getUnit();
             MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(e.getItem().getHoverName().copy().withStyle(ChatFormatting.WHITE));
@@ -37,6 +50,11 @@ public final class AdminShopMenu {
                 line.append(button("Sell " + e.currentSellPrice(), ChatFormatting.YELLOW,
                         "/adminshop sell " + shop.getId() + " " + e.getId() + " 1",
                         "Sell " + unit + "x for " + e.currentSellPrice() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word()));
+            }
+
+            String left = allowanceText(e, player);
+            if (!left.isEmpty()) {
+                line.append(Component.literal("  " + left).withStyle(ChatFormatting.DARK_GRAY));
             }
             if (e.isDynamic()) {
                 line.append(Component.literal(" ~").withStyle(ChatFormatting.AQUA)

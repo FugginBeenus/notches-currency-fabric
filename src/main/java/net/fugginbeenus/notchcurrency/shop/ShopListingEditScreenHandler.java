@@ -25,12 +25,16 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
     public static final int SALE_X = 12, SALE_Y = 24;
     public static final int BARTER_X = 12, BARTER_Y = 72;
     public static final int STOCK_X = 12, STOCK_Y = 110;
-    public static final int INV_X = 24, INV_Y = 158, HOTBAR_Y = 216;
+    public static final int INV_X = 24, INV_Y = 214, HOTBAR_Y = 272;
     public static final int SLOT_SALE = 0, SLOT_BARTER = 1, SLOT_STOCK = 2, SLOT_COUNT = 3;
-    public static final int P_STOCK = 0, P_PRICE = 1, P_HAS_LISTING = 2;
-    private static final int PROP_COUNT = 3;
+    public static final int P_STOCK = 0, P_PRICE = 1, P_HAS_LISTING = 2,
+            P_RESTOCK_MODE = 3, P_RESTOCK_TO = 4, P_LIMIT = 5, P_PAYS = 6, P_DYNAMIC = 7;
+    private static final int PROP_COUNT = 8;
+    public static final int MAX_LISTING_STOCK = 9999;
     public static final int ACTION_SAVE = 0, ACTION_DEPOSIT = 1, ACTION_RETURN_STOCK = 2,
-            ACTION_DELETE = 3, ACTION_BACK = 4, ACTION_CLEAR_BARTER = 5;
+            ACTION_DELETE = 3, ACTION_BACK = 4, ACTION_CLEAR_BARTER = 5,
+            ACTION_CYCLE_RESTOCK = 6, ACTION_SET_RESTOCK_TO = 7, ACTION_SET_LIMIT = 8,
+            ACTION_SET_PAYS = 9, ACTION_TOGGLE_DYNAMIC = 10;
 
     private final Inventory playerInv;
     private final SimpleContainer samples = new SimpleContainer(SLOT_COUNT);
@@ -43,11 +47,13 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
 
     public ShopListingEditScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
         this(containerId, inv, buf.readBoolean(), buf.readUtf(64), buf.readUtf(64),
-                buf.readVarInt(), buf.readVarInt(), null, null);
+                buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+                buf.readVarInt(), buf.readBoolean(), null, null);
     }
 
     public ShopListingEditScreenHandler(int containerId, Inventory inv, boolean hasListing,
                                         String saleDesc, String barterDesc, int price, int stock,
+                                        int restockMode, int restockTo, int limit, int pays, boolean dynamic,
                                         @Nullable PlayerShop shop, @Nullable UUID listingId) {
         super(ModScreenHandlers.SHOP_LISTING_EDIT, containerId);
         this.playerInv = inv;
@@ -59,6 +65,11 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         props.set(P_HAS_LISTING, hasListing ? 1 : 0);
         props.set(P_PRICE, price);
         props.set(P_STOCK, stock);
+        props.set(P_RESTOCK_MODE, restockMode);
+        props.set(P_RESTOCK_TO, restockTo);
+        props.set(P_LIMIT, limit);
+        props.set(P_PAYS, pays);
+        props.set(P_DYNAMIC, dynamic ? 1 : 0);
 
         addSlot(new Slot(samples, SLOT_SALE, SALE_X, SALE_Y));
         addSlot(new Slot(samples, SLOT_BARTER, BARTER_X, BARTER_Y));
@@ -82,23 +93,42 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                 + listing.getItemPrice().getHoverName().getString() : "";
         int price = has ? listing.getCoinPrice() : 0;
         int stock = has ? listing.getStockQuantitySafe() : 0;
+        int restockMode = has ? listing.getRestockMode().ordinal() : 0;
+        int restockTo = has ? listing.getRestockTo() : 0;
+        int limit = has ? listing.getPerPlayerLimit() : 0;
+        int pays = has ? listing.getShopPaysPrice() : 0;
+        boolean dynamic = has && listing.isDynamicPricing();
         UUID id = has ? listing.getId() : null;
 
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal(has ? "Edit Listing" : "New Listing"),
                 (containerId, inv, p) -> new ShopListingEditScreenHandler(containerId, inv, has, saleDesc, barterDesc,
-                        price, stock, shop, id),
+                        price, stock, restockMode, restockTo, limit, pays, dynamic, shop, id),
                 buf -> {
                     buf.writeBoolean(has);
                     buf.writeUtf(saleDesc);
                     buf.writeUtf(barterDesc);
                     buf.writeVarInt(price);
                     buf.writeVarInt(stock);
+                    buf.writeVarInt(restockMode);
+                    buf.writeVarInt(restockTo);
+                    buf.writeVarInt(limit);
+                    buf.writeVarInt(pays);
+                    buf.writeBoolean(dynamic);
                 });
     }
 
     public boolean hasListing() { return props.get(P_HAS_LISTING) != 0; }
     public int stockProp() { return props.get(P_STOCK); }
     public int priceProp() { return props.get(P_PRICE); }
+    public Restock.Mode restockModeProp() {
+        Restock.Mode[] all = Restock.Mode.values();
+        int i = props.get(P_RESTOCK_MODE);
+        return (i < 0 || i >= all.length) ? Restock.Mode.OFF : all[i];
+    }
+    public int restockToProp() { return props.get(P_RESTOCK_TO); }
+    public int limitProp() { return props.get(P_LIMIT); }
+    public int paysProp() { return props.get(P_PAYS); }
+    public boolean dynamicProp() { return props.get(P_DYNAMIC) != 0; }
     public String currentSaleDesc() { return currentSaleDesc; }
     public String currentBarterDesc() { return currentBarterDesc; }
     public ItemStack saleSample() { return samples.getItem(SLOT_SALE); }
@@ -112,7 +142,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
 
     public void handleAction(ServerPlayer sp, int action, int price) {
         if (shop == null) return;
-        if (!shop.getOwnerId().equals(sp.getUUID())) return;
+        if (!PlayerShopManager.canManage(sp, shop)) return;
         ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
             case ACTION_SAVE -> save(sp, price, state);
@@ -129,6 +159,46 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                 }
             }
             case ACTION_BACK -> NpcShopLogic.openShopManager(sp, shop.getShopId());
+            case ACTION_CYCLE_RESTOCK -> {
+                ShopListing l = listing();
+                if (l != null) {
+                    l.setRestockMode(l.getRestockMode().next());
+                    props.set(P_RESTOCK_MODE, l.getRestockMode().ordinal());
+                    state.markDirtyAndSave();
+                }
+            }
+            case ACTION_SET_RESTOCK_TO -> {
+                ShopListing l = listing();
+                if (l != null) {
+                    l.setRestockTo(Math.max(0, Math.min(MAX_LISTING_STOCK, price)));
+                    props.set(P_RESTOCK_TO, l.getRestockTo());
+                    state.markDirtyAndSave();
+                }
+            }
+            case ACTION_TOGGLE_DYNAMIC -> {
+                ShopListing l = listing();
+                if (l != null) {
+                    l.setDynamicPricing(!l.isDynamicPricing());
+                    props.set(P_DYNAMIC, l.isDynamicPricing() ? 1 : 0);
+                    state.markDirtyAndSave();
+                }
+            }
+            case ACTION_SET_PAYS -> {
+                ShopListing l = listing();
+                if (l != null) {
+                    l.setShopPaysPrice(Math.max(0, Math.min(PlayerShopManager.MAX_PRICE, price)));
+                    props.set(P_PAYS, l.getShopPaysPrice());
+                    state.markDirtyAndSave();
+                }
+            }
+            case ACTION_SET_LIMIT -> {
+                ShopListing l = listing();
+                if (l != null) {
+                    l.setPerPlayerLimit(Math.max(0, Math.min(MAX_LISTING_STOCK, price)));
+                    props.set(P_LIMIT, l.getPerPlayerLimit());
+                    state.markDirtyAndSave();
+                }
+            }
             case ACTION_CLEAR_BARTER -> {
                 ShopListing l = listing();
                 if (l != null) {
