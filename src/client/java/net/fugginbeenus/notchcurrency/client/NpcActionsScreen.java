@@ -37,6 +37,7 @@ public class NpcActionsScreen extends Screen {
     private EditBox amountField;
     private EditBox soundField;
     private EditBox filterField;
+    private int typeMenuFor = -1;
     private String npcFilter = "";
 
     public NpcActionsScreen(UUID npcId, NpcActions actions) {
@@ -109,18 +110,19 @@ public class NpcActionsScreen extends Screen {
 
     private void syncFields() {
         DialogueAction a = current();
-        boolean value = a != null && NpcActionEditing.needsValue(a.type());
-        boolean amount = a != null && NpcActionEditing.needsAmount(a.type());
+        boolean menu = typeMenuFor >= 0;
+        boolean value = !menu && a != null && NpcActionEditing.needsValue(a.type());
+        boolean amount = !menu && a != null && NpcActionEditing.needsAmount(a.type());
         valueField.setVisible(value);
-        valueField.setWidth(a != null && a.type() == DialogueAction.Type.GIVE_EFFECT
-                ? ED_W - 100 : ED_W - 48);
+        valueField.setWidth(a != null && (a.type() == DialogueAction.Type.GIVE_EFFECT
+                || a.type() == DialogueAction.Type.TELEPORT) ? ED_W - 100 : ED_W - 48);
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
-        boolean line = a != null && a.type() == DialogueAction.Type.SAY_LINE;
+        boolean line = !menu && a != null && a.type() == DialogueAction.Type.SAY_LINE;
         soundField.setVisible(line);
         soundField.setValue(line ? a.sound() : "");
-        if (filterField != null) filterField.setVisible(trigger == NpcTrigger.ON_NPC_NEAR);
+        if (filterField != null) filterField.setVisible(!menu && trigger == NpcTrigger.ON_NPC_NEAR);
     }
 
     private String fit(String text, int room) {
@@ -136,6 +138,59 @@ public class NpcActionsScreen extends Screen {
     private int cooldownY() { return setRowY(0); }
     private int rangeY() { return trigger == NpcTrigger.ON_NPC_NEAR ? setRowY(1) : setRowY(0); }
     private int filterY() { return setRowY(2); }
+
+    private java.util.List<DialogueAction.Type> typeChoices() {
+        java.util.List<DialogueAction.Type> out = new ArrayList<>();
+        for (DialogueAction.Type t : NpcActionEditing.PALETTE) {
+            if (DialogueAction.isAdminOnly(t) && !NpcActionEditing.adminActionsAllowed()) continue;
+            out.add(t);
+        }
+        return out;
+    }
+
+    private int typeMenuTop(int count) {
+        int wanted = rowY(typeMenuFor) + ROW_H + 1;
+        int lowest = py + H - 6 - count * 14;
+        return Math.max(py + 40, Math.min(wanted, lowest));
+    }
+
+    private void drawTypeMenu(GuiGraphics ctx, int mouseX, int mouseY) {
+        java.util.List<DialogueAction.Type> choices = typeChoices();
+        int top = typeMenuTop(choices.size());
+        NotchWidgets.panel(ctx, px + ED_X - 2, top - 4, ED_W - 16, choices.size() * 14 + 8);
+        for (int i = 0; i < choices.size(); i++) {
+            int ry = top + i * 14;
+            boolean hover = over(mouseX, mouseY, px + ED_X, ry, ED_W - 20, 13);
+            String name = NpcActionEditing.actionName(choices.get(i));
+            if (choices.get(i) == current().type()) {
+                NotchWidgets.primaryButton(ctx, this.font, px + ED_X, ry, ED_W - 20, 13, name, hover);
+            } else {
+                NotchWidgets.neutralButton(ctx, this.font, px + ED_X, ry, ED_W - 20, 13, name, hover);
+            }
+        }
+    }
+
+    private boolean clickTypeMenu(int mx, int my) {
+        java.util.List<DialogueAction.Type> choices = typeChoices();
+        int top = typeMenuTop(choices.size());
+        for (int i = 0; i < choices.size(); i++) {
+            if (!over(mx, my, px + ED_X, top + i * 14, ED_W - 20, 13)) continue;
+            NotchWidgets.click();
+            DialogueAction a = current();
+            if (a != null) a.setType(choices.get(i));
+            typeMenuFor = -1;
+            syncFields();
+            return true;
+        }
+        typeMenuFor = -1;
+        return true;
+    }
+
+    private String hereSpec() {
+        var p = this.minecraft.player;
+        String dim = p.level().dimension().location().toString();
+        return dim + " " + net.minecraft.util.Mth.floor(p.getX()) + " " + net.minecraft.util.Mth.floor(p.getY()) + " " + net.minecraft.util.Mth.floor(p.getZ());
+    }
 
     private void cycleFilterName() {
         java.util.List<String> names = new ArrayList<>();
@@ -221,15 +276,18 @@ public class NpcActionsScreen extends Screen {
                     case SAY_LINE -> "Says:";
                     case GIVE_ITEM -> "Item id:";
                     case GIVE_EFFECT -> "Effect:";
+                    case TELEPORT -> "Go to:";
                     default -> "Command:";
                 };
                 boolean effect = a.type() == DialogueAction.Type.GIVE_EFFECT;
+                boolean warp = a.type() == DialogueAction.Type.TELEPORT;
                 ctx.drawString(this.font, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 147,
-                        effect ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
-                if (effect) {
+                        (effect || warp) ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
+                if (effect || warp) {
                     NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 48, py + 147, 48, 14,
-                            "Pick", over(mouseX, mouseY, px + ED_X + ED_W - 48, py + 147, 48, 14));
+                            warp ? "Here" : "Pick",
+                            over(mouseX, mouseY, px + ED_X + ED_W - 48, py + 147, 48, 14));
                 }
             }
             if (NpcActionEditing.needsAmount(a.type())) {
@@ -285,6 +343,8 @@ public class NpcActionsScreen extends Screen {
                     "Pick", over(mouseX, mouseY, px + TRIG_X + 80, filterY() + 10, 36, 14));
         }
 
+        if (typeMenuFor >= 0 && current() != null) drawTypeMenu(ctx, mouseX, mouseY);
+
         NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 26, 120, 16, "Save & Close",
                 over(mouseX, mouseY, px + ED_X, py + H - 26, 120, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 126, py + H - 26, 70, 16, "Discard",
@@ -300,6 +360,7 @@ public class NpcActionsScreen extends Screen {
     }
 
     private void drawHints(GuiGraphics ctx, int mouseX, int mouseY) {
+        if (typeMenuFor >= 0) return;
         if (over(mouseX, mouseY, px + ED_X, py + 50, ED_W, 12)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal(trigger.label()).withStyle(net.minecraft.ChatFormatting.WHITE),
@@ -373,6 +434,8 @@ public class NpcActionsScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
 
+            if (typeMenuFor >= 0) return clickTypeMenu(mx, my);
+
             DialogueAction line = current();
             if (line != null && line.type() == DialogueAction.Type.SAY_LINE) {
                 if (over(mx, my, px + ED_X, py + 206, 90, 14)) {
@@ -411,7 +474,7 @@ public class NpcActionsScreen extends Screen {
                 if (over(mx, my, px + ED_X, rowY(i), ED_W - 20, ROW_H)) {
                     NotchWidgets.click();
                     if (i == selected) {
-                        NpcActionEditing.cycleType(list.get(i));
+                        typeMenuFor = i;
                     } else {
                         selected = i;
                     }
@@ -453,12 +516,20 @@ public class NpcActionsScreen extends Screen {
                 }
             }
             DialogueAction pick = current();
-            if (pick != null && pick.type() == DialogueAction.Type.GIVE_EFFECT
-                    && over(mx, my, px + ED_X + ED_W - 48, py + 147, 48, 14)) {
-                NotchWidgets.tick();
-                pick.setValue(NpcEffectPicks.next(pick.value()));
-                valueField.setValue(pick.value());
-                return true;
+            if (pick != null && over(mx, my, px + ED_X + ED_W - 48, py + 147, 48, 14)) {
+                if (pick.type() == DialogueAction.Type.GIVE_EFFECT) {
+                    NotchWidgets.tick();
+                    pick.setValue(NpcEffectPicks.next(pick.value()));
+                    valueField.setValue(pick.value());
+                    return true;
+                }
+                if (pick.type() == DialogueAction.Type.TELEPORT && this.minecraft != null
+                        && this.minecraft.player != null) {
+                    NotchWidgets.tick();
+                    pick.setValue(hereSpec());
+                    valueField.setValue(pick.value());
+                    return true;
+                }
             }
             if (trigger == NpcTrigger.ON_NPC_NEAR
                     && over(mx, my, px + TRIG_X + 80, filterY() + 10, 36, 14)) {

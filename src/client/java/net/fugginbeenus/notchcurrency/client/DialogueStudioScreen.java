@@ -442,6 +442,7 @@ public class DialogueStudioScreen extends Screen {
             case RUN_COMMAND_AS_PLAYER -> "Player command";
             case HEAL_PLAYER -> "Heal player";
             case GIVE_EFFECT -> "Give effect";
+            case TELEPORT -> "Teleport player";
         };
     }
 

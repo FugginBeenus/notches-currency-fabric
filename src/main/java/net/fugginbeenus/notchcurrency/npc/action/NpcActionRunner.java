@@ -109,6 +109,10 @@ public final class NpcActionRunner {
                     if (sp == null || a.value().isBlank()) break;
                     applyEffect(sp, a);
                 }
+                case TELEPORT -> {
+                    if (sp == null || a.value().isBlank()) break;
+                    teleport(sp, a.value());
+                }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
                     NpcDialogueManager.openRole(sp, npc);
@@ -223,5 +227,53 @@ public final class NpcActionRunner {
                 effect.get(),
                 //?}
                 seconds * 20, level - 1));
+    }
+
+    private static void teleport(ServerPlayer sp, String spec) {
+        String[] parts = spec.trim().split("\\s+");
+        int at = 0;
+        net.minecraft.server.level.ServerLevel target = sp.serverLevel();
+        if (parts.length == 4) {
+            net.minecraft.resources.ResourceLocation dim =
+                    net.minecraft.resources.ResourceLocation.tryParse(parts[0]);
+            if (dim == null) return;
+            net.minecraft.server.level.ServerLevel found = sp.serverLevel().getServer().getLevel(
+                    net.minecraft.resources.ResourceKey.create(
+                            net.minecraft.core.registries.Registries.DIMENSION, dim));
+            if (found == null) return;
+            target = found;
+            at = 1;
+        } else if (parts.length != 3) {
+            return;
+        }
+        double x, y, z;
+        try {
+            x = Double.parseDouble(parts[at]) + 0.5;
+            y = Double.parseDouble(parts[at + 1]);
+            z = Double.parseDouble(parts[at + 2]) + 0.5;
+        } catch (NumberFormatException badNumber) {
+            return;
+        }
+        net.fugginbeenus.notchcurrency.compat.Teleport.move(sp, target, x, safeY(target, x, y, z), z);
+    }
+
+    private static double safeY(net.minecraft.server.level.ServerLevel level,
+                                double x, double y, double z) {
+        int bx = net.minecraft.util.Mth.floor(x), bz = net.minecraft.util.Mth.floor(z);
+        int from = net.minecraft.util.Mth.floor(y);
+        level.getChunk(bx >> 4, bz >> 4);
+        if (isClear(level, bx, from, bz)) return from;
+        for (int step = 1; step <= 48; step++) {
+            if (isClear(level, bx, from - step, bz)) return from - step;
+            if (isClear(level, bx, from + step, bz)) return from + step;
+        }
+        return level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
+    }
+
+    private static boolean isClear(net.minecraft.server.level.ServerLevel level, int x, int y, int z) {
+        net.minecraft.core.BlockPos feet = new net.minecraft.core.BlockPos(x, y, z);
+        return level.getBlockState(feet).getCollisionShape(level, feet).isEmpty()
+                && level.getBlockState(feet.above()).getCollisionShape(level, feet.above()).isEmpty()
+                && !level.getBlockState(feet.below()).getCollisionShape(level, feet.below()).isEmpty();
     }
 }

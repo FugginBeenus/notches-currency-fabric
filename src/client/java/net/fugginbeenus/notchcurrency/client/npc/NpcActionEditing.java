@@ -14,6 +14,7 @@ public final class NpcActionEditing {
             DialogueAction.Type.GIVE_ITEM,
             DialogueAction.Type.HEAL_PLAYER,
             DialogueAction.Type.GIVE_EFFECT,
+            DialogueAction.Type.TELEPORT,
             DialogueAction.Type.RUN_COMMAND,
             DialogueAction.Type.RUN_COMMAND_AS_PLAYER,
     };
@@ -24,7 +25,7 @@ public final class NpcActionEditing {
 
     public static boolean needsValue(DialogueAction.Type t) {
         return t == DialogueAction.Type.SAY_LINE || t == DialogueAction.Type.GIVE_ITEM
-                || t == DialogueAction.Type.GIVE_EFFECT
+                || t == DialogueAction.Type.GIVE_EFFECT || t == DialogueAction.Type.TELEPORT
                 || t == DialogueAction.Type.RUN_COMMAND || t == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
     }
 
@@ -44,6 +45,7 @@ public final class NpcActionEditing {
             case RUN_COMMAND_AS_PLAYER -> "Player command";
             case HEAL_PLAYER -> "Heal player";
             case GIVE_EFFECT -> "Give effect";
+            case TELEPORT -> "Teleport player";
             default -> "None";
         };
     }
@@ -54,6 +56,7 @@ public final class NpcActionEditing {
             case GIVE_ITEM -> "item id, e.g. minecraft:bread";
             case RUN_COMMAND, RUN_COMMAND_AS_PLAYER -> "command, without the slash";
             case GIVE_EFFECT -> "effect id, e.g. minecraft:regeneration";
+            case TELEPORT -> "x y z, or world x y z";
             default -> "";
         };
     }
