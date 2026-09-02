@@ -1132,6 +1132,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
                     && this.getDeltaMovement().horizontalDistanceSqr() < 1.0E-4;
             if (this.entityData.get(SETTLED) != settled) this.entityData.set(SETTLED, settled);
             tickProximity();
+            tickNpcChatter();
+            if (chatPauseTicks > 0) {
+                chatPauseTicks--;
+                this.getNavigation().stop();
+            }
             tickSchedule();
             tickScheduleSleep();
             net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(this);
@@ -1269,6 +1274,48 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (!schedule.isActive()) return null;
         if (!net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.dimensionSupports(this.level())) return null;
         return schedule.activeAt(this.level().getDayTime());
+    }
+
+    private int lastNpcChatTick = -100000;
+    private int chatPauseTicks = 0;
+
+    public void pauseForChat(int ticks) {
+        this.chatPauseTicks = Math.max(this.chatPauseTicks, Math.max(1, ticks));
+        this.getNavigation().stop();
+    }
+
+    private void tickNpcChatter() {
+        var trigger = net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_NPC_NEAR;
+        if (!actions.has(trigger)) return;
+        if (this.tickCount % PROXIMITY_SCAN_TICKS != 0) return;
+        if (manualInvisible || isRuleHidden()) return;
+        if (this.tickCount - lastNpcChatTick < actions.npcCooldownSeconds() * 20) return;
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel world)) return;
+
+        double radius = actions.proximityRadius();
+        boolean playerNear = false;
+        for (net.minecraft.world.entity.player.Player p : world.players()) {
+            if (p.distanceToSqr(this) <= radius * radius) { playerNear = true; break; }
+        }
+        if (!playerNear) return;
+
+        String wanted = actions.npcNameFilter();
+        NotchNpcEntity partner = null;
+        for (NotchNpcEntity other : world.getEntitiesOfClass(NotchNpcEntity.class,
+                this.getBoundingBox().inflate(radius))) {
+            if (other == this || !other.isAlive()) continue;
+            if (!wanted.isEmpty()
+                    && !wanted.equalsIgnoreCase(net.fugginbeenus.notchcurrency.npc.NpcText.npcName(other))) continue;
+            partner = other;
+            break;
+        }
+        if (partner == null) return;
+
+        lastNpcChatTick = this.tickCount;
+        pauseForChat(40);
+        this.getLookControl().setLookAt(partner, 30.0f, 30.0f);
+        partner.getLookControl().setLookAt(this, 30.0f, 30.0f);
+        fire(trigger, null);
     }
 
     private void tickProximity() {

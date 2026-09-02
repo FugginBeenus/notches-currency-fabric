@@ -27,6 +27,7 @@ public class NpcActionsScreen extends Screen {
     private final UUID npcId;
     private final Map<NpcTrigger, List<DialogueAction>> working = new EnumMap<>(NpcTrigger.class);
     private int proximityRadius;
+    private int npcCooldown;
 
     private NpcTrigger trigger = NpcTrigger.ON_INTERACT;
     private int selected = -1;
@@ -43,6 +44,7 @@ public class NpcActionsScreen extends Screen {
             working.put(t, new ArrayList<>(actions.get(t)));
         }
         this.proximityRadius = actions.proximityRadius();
+        this.npcCooldown = actions.npcCooldownSeconds();
     }
 
     private List<DialogueAction> rows() { return working.get(trigger); }
@@ -82,7 +84,7 @@ public class NpcActionsScreen extends Screen {
         soundField = new EditBox(this.font, px + ED_X + 46, py + 191, 92, 10, Component.empty());
         soundField.setMaxLength(80);
         soundField.setBordered(false);
-        soundField.setHint(Component.literal("minecraft:entity.villager.ambient")
+        soundField.setHint(Component.literal("sound id")
                 .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
         soundField.setResponder(t -> {
             DialogueAction a = current();
@@ -113,6 +115,10 @@ public class NpcActionsScreen extends Screen {
     }
 
     private int trigY(int i) { return py + TRIG_Y + i * (TRIG_H + 2); }
+
+    private int settingsTop() { return trigY(NpcTrigger.values().length - 1) + TRIG_H + 14; }
+    private int cooldownY() { return settingsTop(); }
+    private int rangeY() { return trigger == NpcTrigger.ON_NPC_NEAR ? settingsTop() + 30 : settingsTop(); }
     private int rowY(int i) { return py + 70 + i * (ROW_H + 2); }
 
     //? if >=26.1 {
@@ -207,13 +213,22 @@ public class NpcActionsScreen extends Screen {
             }
         }
 
-        if (trigger == NpcTrigger.ON_PROXIMITY) {
+        if (trigger == NpcTrigger.ON_NPC_NEAR) {
+            ctx.drawString(this.font, "Every " + npcCooldown + "s", px + TRIG_X, cooldownY(),
+                    NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X, cooldownY() + 10, 20, 14, "-",
+                    over(mouseX, mouseY, px + TRIG_X, cooldownY() + 10, 20, 14));
+            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X + 24, cooldownY() + 10, 20, 14, "+",
+                    over(mouseX, mouseY, px + TRIG_X + 24, cooldownY() + 10, 20, 14));
+        }
+
+        if (trigger == NpcTrigger.ON_PROXIMITY || trigger == NpcTrigger.ON_NPC_NEAR) {
             ctx.drawString(this.font, "Range: " + proximityRadius + " blocks",
-                    px + TRIG_X, py + H - 52, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X, py + H - 40, 20, 14, "-",
-                    over(mouseX, mouseY, px + TRIG_X, py + H - 40, 20, 14));
-            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X + 24, py + H - 40, 20, 14, "+",
-                    over(mouseX, mouseY, px + TRIG_X + 24, py + H - 40, 20, 14));
+                    px + TRIG_X, rangeY(), NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X, rangeY() + 10, 20, 14, "-",
+                    over(mouseX, mouseY, px + TRIG_X, rangeY() + 10, 20, 14));
+            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X + 24, rangeY() + 10, 20, 14, "+",
+                    over(mouseX, mouseY, px + TRIG_X + 24, rangeY() + 10, 20, 14));
         }
 
         NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 26, 120, 16, "Save & Close",
@@ -346,13 +361,25 @@ public class NpcActionsScreen extends Screen {
                 return true;
             }
 
-            if (trigger == NpcTrigger.ON_PROXIMITY) {
-                if (over(mx, my, px + TRIG_X, py + H - 40, 20, 14)) {
+            if (trigger == NpcTrigger.ON_NPC_NEAR) {
+                if (over(mx, my, px + TRIG_X, cooldownY() + 10, 20, 14)) {
+                    NotchWidgets.tick();
+                    npcCooldown = Math.max(1, npcCooldown - 5);
+                    return true;
+                }
+                if (over(mx, my, px + TRIG_X + 24, cooldownY() + 10, 20, 14)) {
+                    NotchWidgets.tick();
+                    npcCooldown = Math.min(600, npcCooldown + 5);
+                    return true;
+                }
+            }
+            if (trigger == NpcTrigger.ON_PROXIMITY || trigger == NpcTrigger.ON_NPC_NEAR) {
+                if (over(mx, my, px + TRIG_X, rangeY() + 10, 20, 14)) {
                     NotchWidgets.tick();
                     proximityRadius = Math.max(NpcActions.MIN_RADIUS, proximityRadius - 1);
                     return true;
                 }
-                if (over(mx, my, px + TRIG_X + 24, py + H - 40, 20, 14)) {
+                if (over(mx, my, px + TRIG_X + 24, rangeY() + 10, 20, 14)) {
                     NotchWidgets.tick();
                     proximityRadius = Math.min(NpcActions.MAX_RADIUS, proximityRadius + 1);
                     return true;
@@ -388,6 +415,7 @@ public class NpcActionsScreen extends Screen {
             out.set(t, kept);
         }
         out.setProximityRadius(proximityRadius);
+        out.setNpcCooldownSeconds(npcCooldown);
         NotchPacketsClient.sendNpcActionsSave(npcId, out.toNbt());
         this.onClose();
     }

@@ -20,6 +20,8 @@ public class NpcActions {
 
     private final Map<NpcTrigger, List<DialogueAction>> byTrigger = new EnumMap<>(NpcTrigger.class);
     private int proximityRadius = DEFAULT_RADIUS;
+    private int npcCooldownSeconds = 30;
+    private String npcNameFilter = "";
     private boolean orderedLines = false;
 
     public List<DialogueAction> get(NpcTrigger trigger) {
@@ -44,6 +46,14 @@ public class NpcActions {
     public boolean orderedLines() { return orderedLines; }
     public void setOrderedLines(boolean ordered) { this.orderedLines = ordered; }
 
+    public int npcCooldownSeconds() { return npcCooldownSeconds; }
+    public void setNpcCooldownSeconds(int seconds) {
+        this.npcCooldownSeconds = Math.max(1, Math.min(600, seconds));
+    }
+
+    public String npcNameFilter() { return npcNameFilter; }
+    public void setNpcNameFilter(String name) { this.npcNameFilter = name == null ? "" : name.trim(); }
+
     public int proximityRadius() { return proximityRadius; }
 
     public void setProximityRadius(int radius) {
@@ -67,6 +77,8 @@ public class NpcActions {
             nbt.put(trigger.name(), out);
         }
         nbt.putInt("ProximityRadius", proximityRadius);
+        nbt.putInt("NpcCooldown", npcCooldownSeconds);
+        if (!npcNameFilter.isEmpty()) nbt.putString("NpcFilter", npcNameFilter);
         if (orderedLines) nbt.putBoolean("OrderedLines", true);
         return nbt;
     }
@@ -85,6 +97,8 @@ public class NpcActions {
             actions.set(trigger, parsed);
         }
         if (nbt.contains("ProximityRadius")) actions.setProximityRadius(nbt.getInt("ProximityRadius"));
+        if (nbt.contains("NpcCooldown")) actions.setNpcCooldownSeconds(nbt.getInt("NpcCooldown"));
+        actions.setNpcNameFilter(nbt.getString("NpcFilter"));
         actions.orderedLines = nbt.getBoolean("OrderedLines");
         return actions;
     }
