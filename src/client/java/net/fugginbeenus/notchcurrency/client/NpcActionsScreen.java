@@ -36,6 +36,8 @@ public class NpcActionsScreen extends Screen {
     private EditBox valueField;
     private EditBox amountField;
     private EditBox soundField;
+    private EditBox filterField;
+    private String npcFilter = "";
 
     public NpcActionsScreen(UUID npcId, NpcActions actions) {
         super(Component.literal("Reactions"));
@@ -45,6 +47,7 @@ public class NpcActionsScreen extends Screen {
         }
         this.proximityRadius = actions.proximityRadius();
         this.npcCooldown = actions.npcCooldownSeconds();
+        this.npcFilter = actions.npcNameFilter();
     }
 
     private List<DialogueAction> rows() { return working.get(trigger); }
@@ -92,6 +95,15 @@ public class NpcActionsScreen extends Screen {
         });
         addRenderableWidget(soundField);
 
+        filterField = new EditBox(this.font, px + TRIG_X + 3, filterY() + 12, 72, 10, Component.empty());
+        filterField.setMaxLength(64);
+        filterField.setBordered(false);
+        filterField.setHint(Component.literal("any NPC")
+                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        filterField.setResponder(t -> npcFilter = t.trim());
+        filterField.setValue(npcFilter);
+        addRenderableWidget(filterField);
+
         syncFields();
     }
 
@@ -106,6 +118,7 @@ public class NpcActionsScreen extends Screen {
         boolean line = a != null && a.type() == DialogueAction.Type.SAY_LINE;
         soundField.setVisible(line);
         soundField.setValue(line ? a.sound() : "");
+        if (filterField != null) filterField.setVisible(trigger == NpcTrigger.ON_NPC_NEAR);
     }
 
     private String fit(String text, int room) {
@@ -116,9 +129,28 @@ public class NpcActionsScreen extends Screen {
 
     private int trigY(int i) { return py + TRIG_Y + i * (TRIG_H + 2); }
 
-    private int settingsTop() { return trigY(NpcTrigger.values().length - 1) + TRIG_H + 14; }
-    private int cooldownY() { return settingsTop(); }
-    private int rangeY() { return trigger == NpcTrigger.ON_NPC_NEAR ? settingsTop() + 30 : settingsTop(); }
+    private int settingsTop() { return trigY(NpcTrigger.values().length - 1) + TRIG_H + 6; }
+    private int setRowY(int i) { return settingsTop() + i * 28; }
+    private int cooldownY() { return setRowY(0); }
+    private int rangeY() { return trigger == NpcTrigger.ON_NPC_NEAR ? setRowY(1) : setRowY(0); }
+    private int filterY() { return setRowY(2); }
+
+    private void cycleFilterName() {
+        java.util.List<String> names = new ArrayList<>();
+        names.add("");
+        if (this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
+            for (net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                    : this.minecraft.level.getEntitiesOfClass(
+                            net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.class,
+                            this.minecraft.player.getBoundingBox().inflate(48.0))) {
+                String n = net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc);
+                if (!n.isBlank() && !names.contains(n)) names.add(n);
+            }
+        }
+        int at = names.indexOf(npcFilter);
+        npcFilter = names.get((at < 0 ? 0 : at + 1) % names.size());
+        filterField.setValue(npcFilter);
+    }
     private int rowY(int i) { return py + 70 + i * (ROW_H + 2); }
 
     //? if >=26.1 {
@@ -231,6 +263,14 @@ public class NpcActionsScreen extends Screen {
                     over(mouseX, mouseY, px + TRIG_X + 24, rangeY() + 10, 20, 14));
         }
 
+        if (trigger == NpcTrigger.ON_NPC_NEAR) {
+            ctx.drawString(this.font, "Only this NPC:", px + TRIG_X, filterY(),
+                    NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + TRIG_X, filterY() + 10, 76, 14, NotchTheme.DEEP);
+            NotchWidgets.neutralButton(ctx, this.font, px + TRIG_X + 80, filterY() + 10, 36, 14,
+                    "Pick", over(mouseX, mouseY, px + TRIG_X + 80, filterY() + 10, 36, 14));
+        }
+
         NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 26, 120, 16, "Save & Close",
                 over(mouseX, mouseY, px + ED_X, py + H - 26, 120, 16));
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 126, py + H - 26, 70, 16, "Discard",
@@ -260,6 +300,19 @@ public class NpcActionsScreen extends Screen {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal(all[i].label()).withStyle(net.minecraft.ChatFormatting.WHITE),
                     Component.literal(all[i].hint()).withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+            return;
+        }
+
+        if (trigger == NpcTrigger.ON_NPC_NEAR
+                && (over(mouseX, mouseY, px + TRIG_X + 80, filterY() + 10, 36, 14)
+                    || over(mouseX, mouseY, px + TRIG_X, filterY() + 10, 76, 14))) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Only this NPC").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Leave it empty and any nearby NPC sets this off.")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Type a name, or press Pick to step through").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("the NPCs loaded around you.").withStyle(net.minecraft.ChatFormatting.GRAY)),
                     mouseX, mouseY);
             return;
         }
@@ -385,6 +438,12 @@ public class NpcActionsScreen extends Screen {
                     return true;
                 }
             }
+            if (trigger == NpcTrigger.ON_NPC_NEAR
+                    && over(mx, my, px + TRIG_X + 80, filterY() + 10, 36, 14)) {
+                NotchWidgets.tick();
+                cycleFilterName();
+                return true;
+            }
 
             if (over(mx, my, px + ED_X, py + H - 26, 120, 16)) {
                 NotchWidgets.click();
@@ -416,6 +475,7 @@ public class NpcActionsScreen extends Screen {
         }
         out.setProximityRadius(proximityRadius);
         out.setNpcCooldownSeconds(npcCooldown);
+        out.setNpcNameFilter(npcFilter);
         NotchPacketsClient.sendNpcActionsSave(npcId, out.toNbt());
         this.onClose();
     }
