@@ -745,6 +745,12 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.QUEST_HAND_IN, (server, player, buf) -> {
+            String key = buf.readUtf();
+            server.execute(() ->
+                    net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.turnIn(player, key));
+        });
+
         Net.registerServerReceiver(NotchPackets.QUEST_OPEN, (server, player, buf) -> {
             String key = buf.readUtf();
             server.execute(() -> {

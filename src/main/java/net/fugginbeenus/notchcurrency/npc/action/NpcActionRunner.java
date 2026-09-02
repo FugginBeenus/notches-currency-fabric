@@ -118,7 +118,8 @@ public final class NpcActionRunner {
                 }
                 case GIVE_QUEST -> {
                     if (sp == null || a.value().isBlank()) break;
-                    net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.give(sp, a.value());
+                    net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.give(sp, a.value(),
+                            net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc));
                 }
                 case TURN_IN_QUEST -> {
                     if (sp == null || a.value().isBlank()) break;

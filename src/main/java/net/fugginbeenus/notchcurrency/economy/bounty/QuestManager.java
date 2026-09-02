@@ -80,6 +80,10 @@ public final class QuestManager {
     }
 
     public static void give(ServerPlayer player, String key) {
+        give(player, key, "");
+    }
+
+    public static void give(ServerPlayer player, String key, String giver) {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
         Bounty q = find(server, key);
@@ -99,7 +103,9 @@ public final class QuestManager {
             return;
         }
 
-        state.take(player.getUUID(), new TakenBounty(q, 0L, 0));
+        TakenBounty fresh = new TakenBounty(q, 0L, 0);
+        fresh.setGiver(giver == null ? "" : giver);
+        state.take(player.getUUID(), fresh);
         Msg.chat(player, Component.literal("New quest: ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE)));
         BountyManager.syncTracker(player);
@@ -230,7 +236,10 @@ public final class QuestManager {
 
     static void settle(ServerPlayer player, Bounty b, TakenBounty tb) {
         if (b.needsHandIn()) {
-            Msg.chat(player, Component.literal("Take it back to be paid.").withStyle(ChatFormatting.GRAY));
+            String who = tb.giver();
+            Msg.chat(player, Component.literal(who.isBlank()
+                    ? "Take it back to be paid."
+                    : "Take it back to " + who + " to be paid.").withStyle(ChatFormatting.GRAY));
             return;
         }
         MinecraftServer server = player.level().getServer();
@@ -243,6 +252,7 @@ public final class QuestManager {
                 .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(" - reward: " + b.rewardSummary()).withStyle(ChatFormatting.GREEN)));
         BountyManager.syncTracker(player);
+        if (!b.getNextQuest().isBlank()) give(player, b.getNextQuest(), tb.giver());
     }
 
     public static void tickVisits(MinecraftServer server) {

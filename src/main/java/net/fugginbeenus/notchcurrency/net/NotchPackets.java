@@ -93,6 +93,7 @@ public final class NotchPackets {
     public static final ResourceLocation QUEST_NAMES     = NotchCurrency.id("quest_names");
     public static final ResourceLocation QUEST_DESIGN    = NotchCurrency.id("quest_design");
     public static final ResourceLocation QUEST_DELETE    = NotchCurrency.id("quest_delete");
+    public static final ResourceLocation QUEST_HAND_IN   = NotchCurrency.id("quest_hand_in");
     public static final ResourceLocation NPC_SET_FLAVOR = NotchCurrency.id("npc_set_flavor");
     public static final ResourceLocation WAYSTONE_FEE_SYNC = NotchCurrency.id("waystone_fee_sync");
     public static final ResourceLocation ATM_WITHDRAW    = NotchCurrency.id("atm_withdraw");

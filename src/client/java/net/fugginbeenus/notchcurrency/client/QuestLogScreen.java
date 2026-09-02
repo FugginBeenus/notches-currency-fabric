@@ -68,9 +68,15 @@ public class QuestLogScreen extends Screen {
             ctx.drawString(this.font, fit(e.desc(), W - 32), px + 16, ry + 4,
                     NotchTheme.TEXT_DARK, false);
             boolean done = e.prog() >= e.req();
-            String state = done ? "Ready to hand in" : e.prog() + " of " + e.req();
-            ctx.drawString(this.font, state, px + 16, ry + 14,
+            String state = done
+                    ? (e.handIn() && !e.giver().isBlank() ? "Ready - take it to " + e.giver() : "Ready to hand in")
+                    : e.prog() + " of " + e.req();
+            ctx.drawString(this.font, fit(state, W - 90), px + 16, ry + 14,
                     done ? 0xFF3FA34B : NotchTheme.TEXT_MUTED, false);
+            if (done && !e.questKey().isBlank()) {
+                NotchWidgets.primaryButton(ctx, this.font, px + W - 76, ry + 4, 62, 16, "Hand in",
+                        over(mouseX, mouseY, px + W - 76, ry + 4, 62, 16));
+            }
         }
 
         if (list.size() > 6) {
@@ -116,6 +122,17 @@ public class QuestLogScreen extends Screen {
                 NotchWidgets.click();
                 scroll = Math.min(Math.max(0, size - 6), scroll + 1);
                 return true;
+            }
+            List<BountyTrackerHud.Entry> rows = quests();
+            int visible = Math.min(6, Math.max(0, rows.size() - scroll));
+            for (int i = 0; i < visible; i++) {
+                BountyTrackerHud.Entry e = rows.get(i + scroll);
+                if (e.prog() < e.req() || e.questKey().isBlank()) continue;
+                if (over(mx, my, px + W - 76, py + 30 + i * 28 + 4, 62, 16)) {
+                    NotchWidgets.click();
+                    net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendQuestHandIn(e.questKey());
+                    return true;
+                }
             }
             if (net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator()
                     && over(mx, my, px + 12, py + H - 26, 100, 16)) {

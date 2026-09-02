@@ -25,7 +25,8 @@ public final class BountyTrackerHud implements HudRenderCallback {
 //?}
 
     public record Entry(String desc, boolean kill, String targetItemId, int prog, int req,
-                        long expiry, String rarity, boolean quest) {}
+                        long expiry, String rarity, boolean quest,
+                        String questKey, boolean handIn, String giver) {}
 
     public static List<Entry> entries() { return entries; }
 

@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 
 public class QuestEditorScreen extends Screen {
 
-    private static final int W = 300, H = 276;
+    private static final int W = 300, H = 296;
     private static final int LX = 12, FX = 96, FW = 150;
 
     public static java.util.UUID cameFromNpc = null;
@@ -25,6 +25,9 @@ public class QuestEditorScreen extends Screen {
     private boolean handIn;
     private boolean factionOnly;
     private EditBox factionField;
+    private EditBox rewardItemField;
+    private EditBox rewardCountField;
+    private EditBox nextField;
     private int px, py;
 
     private EditBox targetField;
@@ -51,6 +54,15 @@ public class QuestEditorScreen extends Screen {
             this.handIn = existing.getBoolean("HandIn");
             this.factionOnly = existing.getBoolean("FactionOnly") || !existing.getString("NeedsFaction").isBlank();
             this.loadFaction = existing.getString("NeedsFaction");
+            this.loadNext = existing.getString("NextQuest");
+            if (existing.contains("RewardItem")) {
+                var st = net.fugginbeenus.notchcurrency.compat.StackData.readStack(existing.getCompound("RewardItem"));
+                if (!st.isEmpty()) {
+                    this.loadRewardItem = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                            .getKey(st.getItem()).toString();
+                    this.loadRewardCount = st.getCount();
+                }
+            }
             this.loadTarget = existing.getString("Target");
             this.loadNpc = existing.getString("TargetText");
             this.loadCount = existing.getInt("Required");
@@ -60,7 +72,8 @@ public class QuestEditorScreen extends Screen {
         }
     }
 
-    private String loadTarget = "", loadNpc = "", loadDesc = "", loadNeeds = "", loadFaction = "";
+    private String loadTarget = "", loadNpc = "", loadDesc = "", loadNeeds = "", loadFaction = "", loadNext = "", loadRewardItem = "";
+    private int loadRewardCount = 1;
     private int loadCount = 1;
     private long loadCoins = 0L;
 
@@ -76,6 +89,9 @@ public class QuestEditorScreen extends Screen {
         descField = field(py + 148, FW, loadDesc, "shown to the player");
         needsField = field(py + 168, FW - 44, loadNeeds, "another quest");
         factionField = field(py + 216, 56, loadFaction, "any");
+        rewardItemField = field(py + 128, 108, loadRewardItem, "reward item");
+        rewardCountField = field(py + 128, 32, loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
+        nextField = field(py + 236, FW - 44, loadNext, "quest that follows");
         radiusField = field(py + 108, 60, loadRadius(), "6");
         syncFields();
     }
@@ -142,7 +158,9 @@ public class QuestEditorScreen extends Screen {
             ctx.drawString(this.font, "blocks", px + FX + 66, py + 112, NotchTheme.TEXT_MUTED, false);
         }
         ctx.drawString(this.font, "Pays:", px + LX, py + 132, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + FX, py + 128, 60, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX, py + 128, 44, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX + 48, py + 128, 66, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX + 118, py + 128, 32, 14, NotchTheme.DEEP);
         ctx.drawString(this.font, "Text:", px + LX, py + 152, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + FX, py + 148, FW, 14, NotchTheme.DEEP);
         ctx.drawString(this.font, "Needs:", px + LX, py + 172, NotchTheme.TEXT_DARK, false);
@@ -170,6 +188,17 @@ public class QuestEditorScreen extends Screen {
         boolean endHover = over(mouseX, mouseY, px + FX + 78, py + 196, 72, 14);
         NotchWidgets.neutralButton(ctx, this.font, px + FX + 78, py + 196, 72, 14,
                 (handIn || forced) ? "Hand back" : "Pays now", endHover && !forced);
+        ctx.drawString(this.font, "Then:", px + LX, py + 240, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + FX, py + 236, FW - 44, 14, NotchTheme.DEEP);
+        NotchWidgets.neutralButton(ctx, this.font, px + FX + FW - 40, py + 236, 40, 14, "Pick",
+                over(mouseX, mouseY, px + FX + FW - 40, py + 236, 40, 14));
+        if (over(mouseX, mouseY, px + LX, py + 236, FX + FW - LX, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Then").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Name a quest and finishing this one hands it").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("over straight away. That is how a chain runs.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
         ctx.drawString(this.font, "Who:", px + LX, py + 220, NotchTheme.TEXT_DARK, false);
         boolean whoHover = over(mouseX, mouseY, px + FX, py + 216, 88, 14);
         if (factionOnly) {
@@ -266,6 +295,11 @@ public class QuestEditorScreen extends Screen {
                 syncFields();
                 return true;
             }
+            if (over(mx, my, px + FX + FW - 40, py + 236, 40, 14)) {
+                NotchWidgets.click();
+                nextField.setValue(nextQuestName(nextField.getValue()));
+                return true;
+            }
             if (factionOnly && over(mx, my, px + FX + 152, py + 216, 40, 14)) {
                 NotchWidgets.click();
                 factionField.setValue(QuestNames.nextFaction(factionField.getValue()));
@@ -298,6 +332,19 @@ public class QuestEditorScreen extends Screen {
         o.putString("Target", target.isEmpty() ? "minecraft:air" : target);
         o.putInt("Required", parseInt(countField.getValue(), 1));
         o.putLong("RewardCoins", parseInt(coinsField.getValue(), 0));
+        String rewardId = rewardItemField.getValue().trim();
+        if (!rewardId.isEmpty()) {
+            var id = net.minecraft.resources.ResourceLocation.tryParse(rewardId);
+            if (id != null) {
+                var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(id);
+                var stack = new net.minecraft.world.item.ItemStack(item,
+                        Math.max(1, parseInt(rewardCountField.getValue(), 1)));
+                if (!stack.isEmpty()) {
+                    o.put("RewardItem", net.fugginbeenus.notchcurrency.compat.StackData.writeStack(stack));
+                }
+            }
+        }
+        o.putString("NextQuest", nextField.getValue().trim());
         o.putString("Rarity", BountyRarity.COMMON.name());
         o.putBoolean("Repeatable", repeatable);
         o.putBoolean("HandIn", handIn);

@@ -245,6 +245,9 @@ public final class BountyManager {
             buf.writeLong(tb.expiresGameTime());
             buf.writeUtf(b.getRarity().name());
             buf.writeBoolean(b.isQuest());
+            buf.writeUtf(b.isQuest() ? b.getQuestKey() : "");
+            buf.writeBoolean(b.isQuest() && b.needsHandIn());
+            buf.writeUtf(tb.giver());
         }
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player,
                 net.fugginbeenus.notchcurrency.net.NotchPackets.BOUNTY_TRACKER, buf);

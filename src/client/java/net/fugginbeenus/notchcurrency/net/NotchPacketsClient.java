@@ -284,6 +284,12 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SCHEDULE_TOOL, buf);
     }
 
+    public static void sendQuestHandIn(String key) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(key == null ? "" : key);
+        NetClient.sendToServer(NotchPackets.QUEST_HAND_IN, buf);
+    }
+
     public static void sendQuestDesign() {
         NetClient.sendToServer(NotchPackets.QUEST_DESIGN, net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
     }
@@ -505,8 +511,11 @@ public final class NotchPacketsClient {
                 long expiry = buf.readLong();
                 String rarity = buf.readUtf();
                 boolean quest = buf.readBoolean();
+                String questKey = buf.readUtf();
+                boolean handIn = buf.readBoolean();
+                String giver = buf.readUtf();
                 list.add(new net.fugginbeenus.notchcurrency.client.BountyTrackerHud.Entry(
-                        desc, kill, target, prog, req, expiry, rarity, quest));
+                        desc, kill, target, prog, req, expiry, rarity, quest, questKey, handIn, giver));
             }
             client.execute(() -> net.fugginbeenus.notchcurrency.client.BountyTrackerHud.setEntries(list));
         });
