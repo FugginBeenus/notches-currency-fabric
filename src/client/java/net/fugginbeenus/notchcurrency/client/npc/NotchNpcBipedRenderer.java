@@ -83,6 +83,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         //? if >=1.21.11 {
         /*super.submit(state, matrices, collector, camera);
         *///?} else {
+        m.npcTint = entity.getTint();
+        m.npcAlpha = entity.getAlpha();
         this.model.crouching = entity.isCrouching();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
         //?}

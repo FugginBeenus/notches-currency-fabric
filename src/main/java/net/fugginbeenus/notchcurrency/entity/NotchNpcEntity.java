@@ -1315,7 +1315,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         pauseForChat(40);
         this.getLookControl().setLookAt(partner, 30.0f, 30.0f);
         partner.getLookControl().setLookAt(this, 30.0f, 30.0f);
-        fire(trigger, null);
+        net.fugginbeenus.notchcurrency.npc.action.NpcActionRunner.run(null, this,
+                actions.get(trigger), actions.orderedLines());
     }
 
     private void tickProximity() {

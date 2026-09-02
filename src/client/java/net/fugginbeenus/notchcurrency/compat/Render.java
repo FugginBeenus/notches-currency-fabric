@@ -197,6 +197,19 @@ public final class Render {
         //?}
     }
 
+    public static void pushGuiOverlay(net.minecraft.client.gui.GuiGraphics ctx) {
+        //? if <1.21.11 {
+        ctx.pose().pushPose();
+        ctx.pose().translate(0.0f, 0.0f, 300.0f);
+        //?}
+    }
+
+    public static void popGuiOverlay(net.minecraft.client.gui.GuiGraphics ctx) {
+        //? if <1.21.11 {
+        ctx.pose().popPose();
+        //?}
+    }
+
     public static boolean shiftDown() {
         //? if >=1.21.11 {
         /*com.mojang.blaze3d.platform.Window window = net.minecraft.client.Minecraft.getInstance().getWindow();

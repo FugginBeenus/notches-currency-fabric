@@ -15,6 +15,9 @@ import net.minecraft.util.Mth;
 public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
 //?}
 
+    public int npcTint = -1;
+    public float npcAlpha = 1.0f;
+
     private final boolean thinArms;
     //? if >=1.21.11 {
     /*private float attackTime;
@@ -25,6 +28,34 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         super(root, thinArms);
         this.thinArms = thinArms;
     }
+
+    //? if <1.21 {
+    @Override
+    public void renderToBuffer(com.mojang.blaze3d.vertex.PoseStack ps,
+                               com.mojang.blaze3d.vertex.VertexConsumer vc,
+                               int light, int overlay, float r, float g, float b, float a) {
+        if (npcTint != -1) {
+            r *= ((npcTint >> 16) & 0xFF) / 255.0f;
+            g *= ((npcTint >> 8) & 0xFF) / 255.0f;
+            b *= (npcTint & 0xFF) / 255.0f;
+        }
+        super.renderToBuffer(ps, vc, light, overlay, r, g, b, a * npcAlpha);
+    }
+    //?} elif <1.21.11 {
+    /*@Override
+    public void renderToBuffer(com.mojang.blaze3d.vertex.PoseStack ps,
+                               com.mojang.blaze3d.vertex.VertexConsumer vc,
+                               int light, int overlay, int color) {
+        int a = Math.round(((color >>> 24) & 0xFF) * Math.max(0.0f, Math.min(1.0f, npcAlpha)));
+        int r = (color >> 16) & 0xFF, g = (color >> 8) & 0xFF, b = color & 0xFF;
+        if (npcTint != -1) {
+            r = r * ((npcTint >> 16) & 0xFF) / 255;
+            g = g * ((npcTint >> 8) & 0xFF) / 255;
+            b = b * (npcTint & 0xFF) / 255;
+        }
+        super.renderToBuffer(ps, vc, light, overlay, (a << 24) | (r << 16) | (g << 8) | b);
+    }
+    *///?}
 
     private static final float DEG = (float) (Math.PI / 180.0);
     //? if >=1.21.11 {

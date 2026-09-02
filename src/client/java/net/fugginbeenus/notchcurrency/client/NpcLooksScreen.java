@@ -17,6 +17,7 @@ public class NpcLooksScreen extends Screen {
 
     private static final int W = 300, H = 244;
     private static final int PREV_X = 8, PREV_Y = 46, PREV_W = 100, PREV_H = 170;
+    private static final float BASE_W = 0.6f, BASE_H = 1.95f;
     private static final int RX = 116;
     private static final int TAB_Y = 22, TAB_H = 16, TAB_W = 44;
 
@@ -152,6 +153,7 @@ public class NpcLooksScreen extends Screen {
             npc.yBodyRot = oldBody;
             npc.setInvisible(wasInvisible);
 
+            net.fugginbeenus.notchcurrency.compat.Render.pushGuiOverlay(ctx);
             if ((statsBits & BIT_GLOWING) != 0) {
                 int glow = 0xFF7BE0FF;
                 int gx0 = px + PREV_X, gy0 = py + PREV_Y, gx1 = gx0 + PREV_W, gy1 = gy0 + PREV_H;
@@ -170,8 +172,8 @@ public class NpcLooksScreen extends Screen {
             if (tab == 1 && showBox) {
                 int cx = px + PREV_X + PREV_W / 2;
                 int baseY = py + PREV_Y + PREV_H - 16;
-                int bw = Math.max(4, Math.round(npc.getBbWidth() * 42f));
-                int bh = Math.max(4, Math.round(npc.getBbHeight() * 42f));
+                int bw = Math.max(4, Math.round(BASE_W * npc.getHitboxWidth() * 42f));
+                int bh = Math.max(4, Math.round(BASE_H * npc.getHitboxHeight() * 42f));
                 int x0 = cx - bw / 2, x1 = cx + bw / 2, y0 = baseY - bh, y1 = baseY;
                 int line = 0xFF62D0FF;
                 ctx.fill(x0, y0, x1, y0 + 1, line);
@@ -179,6 +181,7 @@ public class NpcLooksScreen extends Screen {
                 ctx.fill(x0, y0, x0 + 1, y1, line);
                 ctx.fill(x1 - 1, y0, x1, y1, line);
             }
+            net.fugginbeenus.notchcurrency.compat.Render.popGuiOverlay(ctx);
         } else {
             NotchWidgets.centerText(ctx, this.font, "Preview",
                     px + PREV_X + PREV_W / 2, py + PREV_Y + PREV_H / 2, NotchTheme.TEXT_MUTED, false);
