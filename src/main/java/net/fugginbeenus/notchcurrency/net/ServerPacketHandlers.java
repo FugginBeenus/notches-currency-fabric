@@ -335,6 +335,7 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    sendQuestNames(player, server);
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openStudio(player, npc);
                 }
             });
@@ -454,6 +455,7 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    sendQuestNames(player, server);
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.openActions(player, npc);
                 }
             });
@@ -723,6 +725,57 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.QUEST_DESIGN, (server, player, buf) -> server.execute(() -> {
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            sendQuestNames(player, server);
+            Net.sendToClient(player, NotchPackets.QUEST_DESIGN, Net.emptyBuf());
+        }));
+
+        Net.registerServerReceiver(NotchPackets.QUEST_DELETE, (server, player, buf) -> {
+            String key = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.delete(server, key)) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
+                            net.minecraft.network.chat.Component.literal("Deleted quest: " + key)
+                                    .withStyle(net.minecraft.ChatFormatting.YELLOW));
+                }
+                sendQuestNames(player, server);
+                Net.sendToClient(player, NotchPackets.QUEST_DESIGN, Net.emptyBuf());
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.QUEST_OPEN, (server, player, buf) -> {
+            String key = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                net.fugginbeenus.notchcurrency.economy.bounty.Bounty q =
+                        net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.find(server, key);
+                var out = Net.buf();
+                out.writeUtf(key);
+                out.writeBoolean(q != null);
+                if (q != null) out.writeNbt(q.toNbt());
+                var all = net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.allQuests(server);
+                out.writeVarInt(all.size());
+                for (var other : all) out.writeUtf(other.getQuestKey());
+                Net.sendToClient(player, NotchPackets.QUEST_DATA, out);
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.QUEST_SAVE, (server, player, buf) -> {
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                net.fugginbeenus.notchcurrency.economy.bounty.Bounty q =
+                        net.fugginbeenus.notchcurrency.economy.bounty.Bounty.fromNbt(nbt);
+                if (!q.isQuest() || q.getQuestKey().isBlank()) return;
+                net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.define(server, q);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
+                        net.minecraft.network.chat.Component.literal("Saved quest: " + q.getQuestKey())
+                                .withStyle(net.minecraft.ChatFormatting.GREEN));
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SCHEDULE_OPEN, (server, player, buf) -> {
             UUID id = buf.readUUID();
             server.execute(() -> {
@@ -953,6 +1006,19 @@ public final class ServerPacketHandlers {
                     });
                 }
         );
+    }
+
+
+    private static void sendQuestNames(net.minecraft.server.level.ServerPlayer player,
+                                      net.minecraft.server.MinecraftServer server) {
+        var names = Net.buf();
+        var all = net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.allQuests(server);
+        names.writeVarInt(all.size());
+        for (var q : all) {
+            names.writeUtf(q.getQuestKey());
+            names.writeUtf(q.describe());
+        }
+        Net.sendToClient(player, NotchPackets.QUEST_NAMES, names);
     }
 
 }

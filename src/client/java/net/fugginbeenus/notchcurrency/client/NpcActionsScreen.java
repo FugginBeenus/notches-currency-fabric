@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class NpcActionsScreen extends Screen {
 
-    private static final int W = 340, H = 252;
+    private static final int W = 340, H = 292;
     private static final int TRIG_X = 10, TRIG_Y = 42, TRIG_W = 116, TRIG_H = 18;
     private static final int ED_X = 134, ED_W = W - ED_X - 10;
     private static final int ROW_H = 16;
@@ -38,6 +38,8 @@ public class NpcActionsScreen extends Screen {
     private EditBox soundField;
     private EditBox filterField;
     private int typeMenuFor = -1;
+    private boolean condMenu = false;
+    private EditBox condField;
     private String npcFilter = "";
 
     public NpcActionsScreen(UUID npcId, NpcActions actions) {
@@ -105,6 +107,22 @@ public class NpcActionsScreen extends Screen {
         filterField.setValue(npcFilter);
         addRenderableWidget(filterField);
 
+        condField = new EditBox(this.font, px + ED_X + 3, py + 243, ED_W - 50, 10, Component.empty());
+        condField.setMaxLength(80);
+        condField.setBordered(false);
+        condField.setHint(Component.literal("value").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        condField.setResponder(t -> {
+            DialogueAction a = current();
+            if (a == null || !a.hasOnlyIf()) return;
+            a.onlyIf().setValue(t.trim());
+            try {
+                a.onlyIf().setAmount(Long.parseLong(t.trim()));
+            } catch (NumberFormatException notANumber) {
+                a.onlyIf().setAmount(0);
+            }
+        });
+        addRenderableWidget(condField);
+
         syncFields();
     }
 
@@ -115,7 +133,8 @@ public class NpcActionsScreen extends Screen {
         boolean amount = !menu && a != null && NpcActionEditing.needsAmount(a.type());
         valueField.setVisible(value);
         valueField.setWidth(a != null && (a.type() == DialogueAction.Type.GIVE_EFFECT
-                || a.type() == DialogueAction.Type.TELEPORT) ? ED_W - 100 : ED_W - 48);
+                || a.type() == DialogueAction.Type.TELEPORT
+                || a.type() == DialogueAction.Type.GIVE_QUEST) ? ED_W - 100 : ED_W - 48);
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
@@ -123,6 +142,17 @@ public class NpcActionsScreen extends Screen {
         soundField.setVisible(line);
         soundField.setValue(line ? a.sound() : "");
         if (filterField != null) filterField.setVisible(!menu && trigger == NpcTrigger.ON_NPC_NEAR);
+        if (condField != null) {
+            boolean show = !menu && !condMenu && a != null && a.hasOnlyIf()
+                    && condNeedsValue(a.onlyIf().type());
+            condField.setVisible(show);
+            condField.setValue(show ? condValueOf(a.onlyIf()) : "");
+            if (show) {
+                condField.setWidth(condIsQuest(a.onlyIf().type()) ? ED_W - 50 : ED_W - 8);
+                condField.setHint(Component.literal(condHint(a.onlyIf().type()))
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
+        }
     }
 
     private String fit(String text, int room) {
@@ -138,6 +168,70 @@ public class NpcActionsScreen extends Screen {
     private int cooldownY() { return setRowY(0); }
     private int rangeY() { return trigger == NpcTrigger.ON_NPC_NEAR ? setRowY(1) : setRowY(0); }
     private int filterY() { return setRowY(2); }
+
+    private static final net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type[] COND_CHOICES = {
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.NONE,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_DONE,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_TAKEN,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_DONE,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_COINS,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_ITEM,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_XP_LEVEL,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_FACTION,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_OWNER,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_OP,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_DAY,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_NIGHT,
+    };
+
+    private static String condName(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return switch (t) {
+            case NONE -> "Always";
+            case HAS_COINS -> "Has coins";
+            case HAS_ITEM -> "Has item";
+            case IS_OWNER -> "Is owner";
+            case IS_OP -> "Is op";
+            case IS_FACTION -> "In faction";
+            case IS_DAY -> "Daytime";
+            case IS_NIGHT -> "Night time";
+            case HAS_XP_LEVEL -> "Has XP level";
+            case QUEST_TAKEN -> "On quest";
+            case QUEST_DONE -> "Finished quest";
+            case QUEST_NOT_DONE -> "Not finished quest";
+            case QUEST_READY -> "Quest ready";
+        };
+    }
+
+    private static boolean condNeedsValue(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return t != net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.NONE
+                && t != net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_OWNER
+                && t != net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_OP
+                && t != net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_DAY
+                && t != net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_NIGHT;
+    }
+
+    private static boolean condIsQuest(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_TAKEN
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_DONE
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_DONE
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY;
+    }
+
+    private static String condValueOf(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition c) {
+        if (c.amount() > 0 && c.value().isBlank()) return Long.toString(c.amount());
+        return c.value();
+    }
+
+    private static String condHint(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        if (condIsQuest(t)) return "quest name";
+        return switch (t) {
+            case HAS_ITEM -> "item id";
+            case HAS_COINS, HAS_XP_LEVEL -> "how many";
+            case IS_FACTION -> "faction name";
+            default -> "value";
+        };
+    }
 
     private java.util.List<DialogueAction.Type> typeChoices() {
         java.util.List<DialogueAction.Type> out = new ArrayList<>();
@@ -170,6 +264,47 @@ public class NpcActionsScreen extends Screen {
         }
     }
 
+    private int condMenuTop() {
+        return Math.max(py + 40, py + H - 6 - COND_CHOICES.length * 14);
+    }
+
+    private void drawCondMenu(GuiGraphics ctx, int mouseX, int mouseY) {
+        int top = condMenuTop();
+        NotchWidgets.panel(ctx, px + ED_X - 2, top - 4, ED_W + 4, COND_CHOICES.length * 14 + 8);
+        var cur = current().onlyIf();
+        for (int i = 0; i < COND_CHOICES.length; i++) {
+            int ry = top + i * 14;
+            boolean hover = over(mouseX, mouseY, px + ED_X, ry, ED_W, 13);
+            boolean on = cur == null ? COND_CHOICES[i] == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.NONE
+                    : cur.type() == COND_CHOICES[i];
+            if (on) NotchWidgets.primaryButton(ctx, this.font, px + ED_X, ry, ED_W, 13, condName(COND_CHOICES[i]), hover);
+            else NotchWidgets.neutralButton(ctx, this.font, px + ED_X, ry, ED_W, 13, condName(COND_CHOICES[i]), hover);
+        }
+    }
+
+    private boolean clickCondMenu(int mx, int my) {
+        int top = condMenuTop();
+        for (int i = 0; i < COND_CHOICES.length; i++) {
+            if (!over(mx, my, px + ED_X, top + i * 14, ED_W, 13)) continue;
+            NotchWidgets.click();
+            DialogueAction a = current();
+            if (a != null) {
+                if (COND_CHOICES[i] == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.NONE) {
+                    a.setOnlyIf(null);
+                } else {
+                    a.setOnlyIf(new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition(
+                            COND_CHOICES[i], "", 0));
+                }
+            }
+            condMenu = false;
+            syncFields();
+            return true;
+        }
+        condMenu = false;
+        syncFields();
+        return true;
+    }
+
     private boolean clickTypeMenu(int mx, int my) {
         java.util.List<DialogueAction.Type> choices = typeChoices();
         int top = typeMenuTop(choices.size());
@@ -193,19 +328,7 @@ public class NpcActionsScreen extends Screen {
     }
 
     private void cycleFilterName() {
-        java.util.List<String> names = new ArrayList<>();
-        names.add("");
-        if (this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
-            for (net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                    : this.minecraft.level.getEntitiesOfClass(
-                            net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.class,
-                            this.minecraft.player.getBoundingBox().inflate(48.0))) {
-                String n = net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc);
-                if (!n.isBlank() && !names.contains(n)) names.add(n);
-            }
-        }
-        int at = names.indexOf(npcFilter);
-        npcFilter = names.get((at < 0 ? 0 : at + 1) % names.size());
+        npcFilter = NpcNames.next(npcFilter, true);
         filterField.setValue(npcFilter);
     }
     private int rowY(int i) { return py + 70 + i * (ROW_H + 2); }
@@ -277,16 +400,18 @@ public class NpcActionsScreen extends Screen {
                     case GIVE_ITEM -> "Item id:";
                     case GIVE_EFFECT -> "Effect:";
                     case TELEPORT -> "Go to:";
+                    case GIVE_QUEST, TURN_IN_QUEST -> "Quest:";
                     default -> "Command:";
                 };
                 boolean effect = a.type() == DialogueAction.Type.GIVE_EFFECT;
                 boolean warp = a.type() == DialogueAction.Type.TELEPORT;
+                boolean quest = a.type() == DialogueAction.Type.GIVE_QUEST;
                 ctx.drawString(this.font, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 147,
-                        (effect || warp) ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
-                if (effect || warp) {
+                        (effect || warp || quest) ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
+                if (effect || warp || quest) {
                     NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 48, py + 147, 48, 14,
-                            warp ? "Here" : "Pick",
+                            quest ? "Edit" : warp ? "Here" : "Pick",
                             over(mouseX, mouseY, px + ED_X + ED_W - 48, py + 147, 48, 14));
                 }
             }
@@ -343,11 +468,29 @@ public class NpcActionsScreen extends Screen {
                     "Pick", over(mouseX, mouseY, px + TRIG_X + 80, filterY() + 10, 36, 14));
         }
 
-        if (typeMenuFor >= 0 && current() != null) drawTypeMenu(ctx, mouseX, mouseY);
+        DialogueAction sel = current();
+        if (sel != null) {
+            NotchWidgets.divider(ctx, px + ED_X, py + 218, ED_W);
+            ctx.drawString(this.font, "Only if:", px + ED_X, py + 228, NotchTheme.TEXT_DARK, false);
+            var cond = sel.onlyIf();
+            String name = cond == null ? "Always" : condName(cond.type());
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 44, py + 224, ED_W - 44, 14, name,
+                    over(mouseX, mouseY, px + ED_X + 44, py + 224, ED_W - 44, 14));
+            if (cond != null && condNeedsValue(cond.type())) {
+                NotchWidgets.inset(ctx, px + ED_X, py + 240, ED_W - 44, 14, NotchTheme.DEEP);
+                if (condIsQuest(cond.type())) {
+                    NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 40, py + 240, 40, 14, "Pick",
+                            over(mouseX, mouseY, px + ED_X + ED_W - 40, py + 240, 40, 14));
+                }
+            }
+        }
 
-        NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 26, 120, 16, "Save & Close",
+        if (typeMenuFor >= 0 && current() != null) drawTypeMenu(ctx, mouseX, mouseY);
+        if (condMenu && current() != null) drawCondMenu(ctx, mouseX, mouseY);
+
+        NotchWidgets.primaryButton(ctx, this.font, px + ED_X, py + H - 26, 120, 16, "Save & Back",
                 over(mouseX, mouseY, px + ED_X, py + H - 26, 120, 16));
-        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 126, py + H - 26, 70, 16, "Discard",
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 126, py + H - 26, 70, 16, "Back",
                 over(mouseX, mouseY, px + ED_X + 126, py + H - 26, 70, 16));
 
         //? if >=26.1 {
@@ -360,7 +503,7 @@ public class NpcActionsScreen extends Screen {
     }
 
     private void drawHints(GuiGraphics ctx, int mouseX, int mouseY) {
-        if (typeMenuFor >= 0) return;
+        if (typeMenuFor >= 0 || condMenu) return;
         if (over(mouseX, mouseY, px + ED_X, py + 50, ED_W, 12)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal(trigger.label()).withStyle(net.minecraft.ChatFormatting.WHITE),
@@ -435,6 +578,22 @@ public class NpcActionsScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
 
             if (typeMenuFor >= 0) return clickTypeMenu(mx, my);
+            if (condMenu) return clickCondMenu(mx, my);
+
+            DialogueAction sel = current();
+            if (sel != null && over(mx, my, px + ED_X + 44, py + 224, ED_W - 44, 14)) {
+                NotchWidgets.click();
+                condMenu = true;
+                syncFields();
+                return true;
+            }
+            if (sel != null && sel.hasOnlyIf() && condIsQuest(sel.onlyIf().type())
+                    && over(mx, my, px + ED_X + ED_W - 40, py + 240, 40, 14)) {
+                NotchWidgets.click();
+                sel.onlyIf().setValue(QuestNames.next(sel.onlyIf().value()));
+                condField.setValue(sel.onlyIf().value());
+                return true;
+            }
 
             DialogueAction line = current();
             if (line != null && line.type() == DialogueAction.Type.SAY_LINE) {
@@ -523,6 +682,17 @@ public class NpcActionsScreen extends Screen {
                     valueField.setValue(pick.value());
                     return true;
                 }
+                if (pick.type() == DialogueAction.Type.GIVE_QUEST) {
+                    NotchWidgets.click();
+                    String name = valueField.getValue().trim();
+                    if (!name.isBlank()) {
+                        pick.setValue(name);
+                        QuestEditorScreen.cameFromNpc = npcId;
+                        saveOnly();
+                        NotchPacketsClient.sendQuestOpen(name);
+                    }
+                    return true;
+                }
                 if (pick.type() == DialogueAction.Type.TELEPORT && this.minecraft != null
                         && this.minecraft.player != null) {
                     NotchWidgets.tick();
@@ -545,7 +715,7 @@ public class NpcActionsScreen extends Screen {
             }
             if (over(mx, my, px + ED_X + 126, py + H - 26, 70, 16)) {
                 NotchWidgets.click();
-                this.onClose();
+                NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
             }
         }
@@ -557,6 +727,11 @@ public class NpcActionsScreen extends Screen {
     }
 
     private void save() {
+        saveOnly();
+        NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
+    }
+
+    private void saveOnly() {
         NpcActions out = new NpcActions();
         for (NpcTrigger t : NpcTrigger.values()) {
             List<DialogueAction> kept = new ArrayList<>();
@@ -570,7 +745,6 @@ public class NpcActionsScreen extends Screen {
         out.setNpcCooldownSeconds(npcCooldown);
         out.setNpcNameFilter(npcFilter);
         NotchPacketsClient.sendNpcActionsSave(npcId, out.toNbt());
-        this.onClose();
     }
 
     //? if >=1.21.11 {

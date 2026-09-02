@@ -16,7 +16,9 @@ public class DialogueAction {
         RUN_COMMAND_AS_PLAYER,
         HEAL_PLAYER,
         GIVE_EFFECT,
-        TELEPORT
+        TELEPORT,
+        GIVE_QUEST,
+        TURN_IN_QUEST
     }
 
     public static boolean isAdminOnly(Type t) {
@@ -29,6 +31,7 @@ public class DialogueAction {
     private long amount = 0;
     private String sound = "";
     private boolean hideText = false;
+    private DialogueCondition onlyIf = null;
 
     public DialogueAction() {}
 
@@ -52,6 +55,12 @@ public class DialogueAction {
     public void setHideText(boolean hide) { this.hideText = hide; }
     public boolean hasSound() { return !sound.isEmpty(); }
 
+    public DialogueCondition onlyIf() { return onlyIf; }
+    public void setOnlyIf(DialogueCondition c) {
+        this.onlyIf = (c == null || c.type() == DialogueCondition.Type.NONE) ? null : c;
+    }
+    public boolean hasOnlyIf() { return onlyIf != null; }
+
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("Type", type.name());
@@ -59,6 +68,7 @@ public class DialogueAction {
         nbt.putLong("Amount", amount);
         if (!sound.isEmpty()) nbt.putString("Sound", sound);
         if (hideText) nbt.putBoolean("HideText", true);
+        if (onlyIf != null) nbt.put("OnlyIf", onlyIf.toNbt());
         return nbt;
     }
 
@@ -73,6 +83,7 @@ public class DialogueAction {
         a.amount = nbt.getLong("Amount");
         a.sound = nbt.getString("Sound");
         a.hideText = nbt.getBoolean("HideText");
+        if (nbt.contains("OnlyIf")) a.onlyIf = DialogueCondition.fromNbt(nbt.getCompound("OnlyIf"));
         return a;
     }
 }

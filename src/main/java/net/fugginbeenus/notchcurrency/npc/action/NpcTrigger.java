@@ -7,7 +7,8 @@ public enum NpcTrigger {
     ON_HURT("When hurt", "Runs when the NPC is hit, even if it's protected from the damage.", 40),
     ON_DEATH("When killed", "Runs as the NPC dies. May have no player attached - a fall or lava counts.", 0),
     ON_KILL("When it kills", "Runs when the NPC kills something.", 0),
-    ON_NPC_NEAR("When an NPC is near", "Runs when another NPC comes close. Use it for chatter between NPCs.", 0);
+    ON_NPC_NEAR("When an NPC is near", "Runs when another NPC comes close. Use it for chatter between NPCs.", 0),
+    ON_QUEST_DONE("When a quest is finished", "Runs on this NPC when a player hands in a quest to it.", 0);
 
     private final String label;
     private final String hint;

@@ -159,6 +159,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerMailAimReceiver();
         NotchPacketsClient.registerNpcPresetReceiver();
         NotchPacketsClient.registerNpcScheduleReceiver();
+        NotchPacketsClient.registerQuestReceiver();
 
         NetClient.registerClientReceiver(NotchPackets.TRADE_CANCEL, (client, buf) -> {
             String reason = buf.readUtf(64);

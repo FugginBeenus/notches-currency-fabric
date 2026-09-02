@@ -55,18 +55,20 @@ public final class NpcActionRunner {
                               boolean orderedLines) {
         if (actions == null || actions.isEmpty()) return Outcome.COMPLETED;
         try {
-            return runAll(sp, npc, pickOneLine(npc, actions, orderedLines));
+            return runAll(sp, npc, pickOneLine(sp, npc, actions, orderedLines));
         } catch (Exception e) {
             LOGGER.error("NPC action list failed on {}", npc.getUUID(), e);
             return Outcome.COMPLETED;
         }
     }
 
-    private static List<DialogueAction> pickOneLine(NotchNpcEntity npc, List<DialogueAction> actions,
-                                                    boolean ordered) {
+    private static List<DialogueAction> pickOneLine(@Nullable ServerPlayer sp, NotchNpcEntity npc,
+                                                    List<DialogueAction> actions, boolean ordered) {
         List<DialogueAction> lines = new java.util.ArrayList<>();
         for (DialogueAction a : actions) {
-            if (a.type() == DialogueAction.Type.SAY_LINE) lines.add(a);
+            if (a.type() != DialogueAction.Type.SAY_LINE) continue;
+            if (a.hasOnlyIf() && (sp == null || !a.onlyIf().test(sp, npc))) continue;
+            lines.add(a);
         }
         if (lines.size() < 2) return actions;
 
@@ -89,6 +91,7 @@ public final class NpcActionRunner {
     private static Outcome runAll(@Nullable ServerPlayer sp, NotchNpcEntity npc, List<DialogueAction> actions) {
         boolean openedScreen = false;
         for (DialogueAction a : actions) {
+            if (a.hasOnlyIf() && (sp == null || !a.onlyIf().test(sp, npc))) continue;
             switch (a.type()) {
                 case NONE -> { }
                 case SAY_LINE -> {
@@ -112,6 +115,14 @@ public final class NpcActionRunner {
                 case TELEPORT -> {
                     if (sp == null || a.value().isBlank()) break;
                     teleport(sp, a.value());
+                }
+                case GIVE_QUEST -> {
+                    if (sp == null || a.value().isBlank()) break;
+                    net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.give(sp, a.value());
+                }
+                case TURN_IN_QUEST -> {
+                    if (sp == null || a.value().isBlank()) break;
+                    net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.turnIn(sp, a.value(), npc);
                 }
                 case OPEN_ROLE -> {
                     if (sp == null) break;

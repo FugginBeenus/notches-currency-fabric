@@ -65,6 +65,7 @@ public final class BountyManager {
     }
 
     private static void sweepTick(MinecraftServer server) {
+        if (server.getTickCount() % 20 == 0) QuestManager.tickVisits(server);
         if (!enabled) return;
         if (++tickAccum < REFRESH_CHECK_TICKS) return;
         tickAccum = 0;
@@ -144,9 +145,13 @@ public final class BountyManager {
             state.setDirty();
             syncTracker(player);
             if (next >= b.getRequired()) {
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("✔ Bounty complete: ").withStyle(ChatFormatting.GREEN)
-                        .append(Component.literal(b.describe()).withStyle(b.getRarity().color()))
-                        .append(Component.literal(" - collect it at the board!").withStyle(ChatFormatting.GREEN)));
+                if (b.isQuest()) {
+                    QuestManager.settle(player, b, tb);
+                } else {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("✔ Bounty complete: ").withStyle(ChatFormatting.GREEN)
+                            .append(Component.literal(b.describe()).withStyle(b.getRarity().color()))
+                            .append(Component.literal(" - collect it at the board!").withStyle(ChatFormatting.GREEN)));
+                }
             }
         }
     }
@@ -238,12 +243,13 @@ public final class BountyManager {
             buf.writeVarInt(b.getRequired());
             buf.writeLong(tb.expiresGameTime());
             buf.writeUtf(b.getRarity().name());
+            buf.writeBoolean(b.isQuest());
         }
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(player,
                 net.fugginbeenus.notchcurrency.net.NotchPackets.BOUNTY_TRACKER, buf);
     }
 
-    private static void giveReward(ServerPlayer player, Bounty b) {
+    static void giveReward(ServerPlayer player, Bounty b) {
         if (b.getRewardCoins() > 0) {
             CurrencyApi.deposit(player, b.getRewardCoins(), TransactionReason.FAUCET, "bounty: " + b.describe());
         }
@@ -312,7 +318,7 @@ public final class BountyManager {
         return enabled;
     }
 
-    private static int countItem(ServerPlayer player, Item item) {
+    static int countItem(ServerPlayer player, Item item) {
         int n = 0;
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -322,7 +328,7 @@ public final class BountyManager {
         return n;
     }
 
-    private static void removeItem(ServerPlayer player, Item item, int amount) {
+    static void removeItem(ServerPlayer player, Item item, int amount) {
         Inventory inv = player.getInventory();
         int remaining = amount;
         for (int i = 0; i < inv.getContainerSize() && remaining > 0; i++) {

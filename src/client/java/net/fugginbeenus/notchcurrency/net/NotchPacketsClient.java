@@ -284,6 +284,57 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SCHEDULE_TOOL, buf);
     }
 
+    public static void sendQuestDesign() {
+        NetClient.sendToServer(NotchPackets.QUEST_DESIGN, net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
+    }
+
+    public static void sendQuestDelete(String key) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(key == null ? "" : key);
+        NetClient.sendToServer(NotchPackets.QUEST_DELETE, buf);
+    }
+
+    public static void sendQuestOpen(String key) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(key == null ? "" : key);
+        NetClient.sendToServer(NotchPackets.QUEST_OPEN, buf);
+    }
+
+    public static void sendQuestSave(net.minecraft.nbt.CompoundTag nbt) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeNbt(nbt);
+        NetClient.sendToServer(NotchPackets.QUEST_SAVE, buf);
+    }
+
+    public static void registerQuestReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.QUEST_DESIGN, (client, buf) ->
+                client.execute(() -> Minecraft.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.QuestDesignerScreen())));
+        NetClient.registerClientReceiver(NotchPackets.QUEST_NAMES, (client, buf) -> {
+            int n = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.QuestNames.Entry> names =
+                    new java.util.ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                names.add(new net.fugginbeenus.notchcurrency.client.QuestNames.Entry(
+                        buf.readUtf(), buf.readUtf()));
+            }
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.QuestNames.set(names));
+        });
+        NetClient.registerClientReceiver(NotchPackets.QUEST_LOG, (client, buf) ->
+                client.execute(() -> Minecraft.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.QuestLogScreen())));
+        NetClient.registerClientReceiver(NotchPackets.QUEST_DATA, (client, buf) -> {
+            String key = buf.readUtf();
+            boolean exists = buf.readBoolean();
+            net.minecraft.nbt.CompoundTag nbt = exists ? buf.readNbt() : null;
+            int count = buf.readVarInt();
+            java.util.List<String> names = new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) names.add(buf.readUtf());
+            client.execute(() -> Minecraft.getInstance().setScreen(
+                    new net.fugginbeenus.notchcurrency.client.QuestEditorScreen(key, nbt, names)));
+        });
+    }
+
     public static void registerNpcScheduleReceiver() {
         NetClient.registerClientReceiver(NotchPackets.NPC_SCHEDULE_DATA, (client, buf) -> {
             UUID npcId = buf.readUUID();
@@ -447,8 +498,9 @@ public final class NotchPacketsClient {
                 int req = buf.readVarInt();
                 long expiry = buf.readLong();
                 String rarity = buf.readUtf();
+                boolean quest = buf.readBoolean();
                 list.add(new net.fugginbeenus.notchcurrency.client.BountyTrackerHud.Entry(
-                        desc, kill, target, prog, req, expiry, rarity));
+                        desc, kill, target, prog, req, expiry, rarity, quest));
             }
             client.execute(() -> net.fugginbeenus.notchcurrency.client.BountyTrackerHud.setEntries(list));
         });

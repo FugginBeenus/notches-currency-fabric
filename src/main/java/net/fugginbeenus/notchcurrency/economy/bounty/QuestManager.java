@@ -1,0 +1,234 @@
+package net.fugginbeenus.notchcurrency.economy.bounty;
+
+import net.fugginbeenus.notchcurrency.compat.Msg;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public final class QuestManager {
+
+    private QuestManager() {}
+
+    public static void define(MinecraftServer server, Bounty quest) {
+        BountyState state = BountyState.get(server);
+        state.removeOffer(quest.getId());
+        state.addOffer(quest);
+    }
+
+    public static boolean delete(MinecraftServer server, String key) {
+        Bounty q = find(server, key);
+        if (q == null) return false;
+        BountyState.get(server).removeOffer(q.getId());
+        return true;
+    }
+
+    public static Bounty find(MinecraftServer server, String key) {
+        if (key == null || key.isBlank()) return null;
+        for (Bounty b : BountyState.get(server).allOffers()) {
+            if (b.isQuest() && b.getQuestKey().equalsIgnoreCase(key.trim())) return b;
+        }
+        return null;
+    }
+
+    public static List<Bounty> allQuests(MinecraftServer server) {
+        List<Bounty> out = new ArrayList<>();
+        for (Bounty b : BountyState.get(server).allOffers()) {
+            if (b.isQuest()) out.add(b);
+        }
+        return out;
+    }
+
+    public static boolean hasTaken(ServerPlayer player, String key) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return false;
+        Bounty q = find(server, key);
+        return q != null && BountyState.get(server).getTaken(player.getUUID(), q.getId()) != null;
+    }
+
+    public static boolean hasDone(ServerPlayer player, String key) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return false;
+        Bounty q = find(server, key);
+        return q != null && BountyState.get(server).hasCompletedOffer(player.getUUID(), q.getId());
+    }
+
+    public static boolean canStart(ServerPlayer player, String key) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return false;
+        Bounty q = find(server, key);
+        if (q == null) return false;
+        if (!q.getNeedsQuest().isBlank() && !hasDone(player, q.getNeedsQuest())) return false;
+        BountyState state = BountyState.get(server);
+        if (state.getTaken(player.getUUID(), q.getId()) != null) return false;
+        return q.isRepeatable() || !state.hasCompletedOffer(player.getUUID(), q.getId());
+    }
+
+    public static boolean isReady(ServerPlayer player, String key) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return false;
+        Bounty q = find(server, key);
+        if (q == null) return false;
+        TakenBounty tb = BountyState.get(server).getTaken(player.getUUID(), q.getId());
+        return tb != null && tb.progress() >= q.getRequired();
+    }
+
+    public static void give(ServerPlayer player, String key) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return;
+        Bounty q = find(server, key);
+        if (q == null) {
+            Msg.chat(player, Component.literal("That quest does not exist.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        BountyState state = BountyState.get(server);
+        if (state.getTaken(player.getUUID(), q.getId()) != null) return;
+        if (state.hasCompletedOffer(player.getUUID(), q.getId()) && !q.isRepeatable()) return;
+        if (!q.getNeedsQuest().isBlank() && !hasDone(player, q.getNeedsQuest())) return;
+
+        state.take(player.getUUID(), new TakenBounty(q, 0L, 0));
+        Msg.chat(player, Component.literal("New quest: ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE)));
+        BountyManager.syncTracker(player);
+    }
+
+    public static void turnIn(ServerPlayer player, String key) {
+        turnIn(player, key, null);
+    }
+
+    public static void turnIn(ServerPlayer player, String key,
+                              net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return;
+        Bounty q = find(server, key);
+        if (q == null) return;
+        BountyState state = BountyState.get(server);
+        TakenBounty tb = state.getTaken(player.getUUID(), q.getId());
+        if (tb == null) {
+            Msg.chat(player, Component.literal("You are not on that quest.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        if (q.getType().usesItem()) {
+            Item item = BuiltInRegistries.ITEM.get(q.getTarget());
+            int have = BountyManager.countItem(player, item);
+            if (have < q.getRequired()) {
+                Msg.chat(player, Component.literal("You need " + q.getRequired() + " ").withStyle(ChatFormatting.RED)
+                        .append(q.targetName().copy().withStyle(ChatFormatting.WHITE))
+                        .append(Component.literal(" - you have " + have + ".").withStyle(ChatFormatting.RED)));
+                return;
+            }
+            BountyManager.removeItem(player, item, q.getRequired());
+        } else if (tb.progress() < q.getRequired()) {
+            Msg.chat(player, Component.literal("Not finished yet: ").withStyle(ChatFormatting.RED)
+                    .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE)));
+            return;
+        }
+
+        BountyManager.giveReward(player, q);
+        state.removeTaken(player.getUUID(), q.getId());
+        state.markOfferCompleted(player.getUUID(), q.getId());
+        Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" - reward: " + q.rewardSummary()).withStyle(ChatFormatting.GREEN)));
+        BountyManager.syncTracker(player);
+        if (npc != null) {
+            npc.fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_QUEST_DONE, player);
+        }
+    }
+
+    public static void onTalkedTo(ServerPlayer player, String npcName) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null || npcName == null || npcName.isBlank()) return;
+        BountyState state = BountyState.get(server);
+        for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
+            Bounty b = tb.bounty();
+            if (!b.isQuest() || tb.progress() >= b.getRequired()) continue;
+            if (!b.getTargetText().equalsIgnoreCase(npcName)) continue;
+
+            if (b.getType() == BountyType.TALK_TO) {
+                tb.addProgress(b.getRequired());
+                state.setDirty();
+                announce(player, b, "Talked to " + npcName);
+                settle(player, b, tb);
+            } else if (b.getType() == BountyType.DELIVER) {
+                Item item = BuiltInRegistries.ITEM.get(b.getTarget());
+                int have = BountyManager.countItem(player, item);
+                if (have < b.getRequired()) {
+                    Msg.chat(player, Component.literal(npcName + " wants " + b.getRequired() + " ")
+                            .withStyle(ChatFormatting.YELLOW)
+                            .append(b.targetName().copy().withStyle(ChatFormatting.WHITE))
+                            .append(Component.literal(" - you have " + have + ".").withStyle(ChatFormatting.YELLOW)));
+                    continue;
+                }
+                BountyManager.removeItem(player, item, b.getRequired());
+                tb.addProgress(b.getRequired());
+                state.setDirty();
+                announce(player, b, "Delivered to " + npcName);
+                settle(player, b, tb);
+            }
+        }
+    }
+
+    private static void announce(ServerPlayer player, Bounty b, String what) {
+        Msg.chat(player, Component.literal(what + ": ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE)));
+        BountyManager.syncTracker(player);
+    }
+
+    static void settle(ServerPlayer player, Bounty b, TakenBounty tb) {
+        if (b.needsHandIn()) {
+            Msg.chat(player, Component.literal("Take it back to be paid.").withStyle(ChatFormatting.GRAY));
+            return;
+        }
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return;
+        BountyState state = BountyState.get(server);
+        BountyManager.giveReward(player, b);
+        state.removeTaken(player.getUUID(), b.getId());
+        state.markOfferCompleted(player.getUUID(), b.getId());
+        Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" - reward: " + b.rewardSummary()).withStyle(ChatFormatting.GREEN)));
+        BountyManager.syncTracker(player);
+    }
+
+    public static void tickVisits(MinecraftServer server) {
+        BountyState state = BountyState.get(server);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
+                Bounty b = tb.bounty();
+                if (!b.isQuest() || b.getType() != BountyType.VISIT) continue;
+                if (tb.progress() >= b.getRequired()) continue;
+                if (!nearSpot(player, b.getTargetText())) continue;
+                tb.addProgress(b.getRequired());
+                state.setDirty();
+                announce(player, b, "Arrived");
+                settle(player, b, tb);
+            }
+        }
+    }
+
+    private static boolean nearSpot(ServerPlayer player, String spec) {
+        String[] parts = spec == null ? new String[0] : spec.trim().split("\\s+");
+        if (parts.length < 3) return false;
+        try {
+            double x = Double.parseDouble(parts[0]);
+            double y = Double.parseDouble(parts[1]);
+            double z = Double.parseDouble(parts[2]);
+            double r = parts.length >= 4 ? Double.parseDouble(parts[3]) : 6.0;
+            return player.distanceToSqr(x + 0.5, y, z + 0.5) <= r * r;
+        } catch (NumberFormatException badSpot) {
+            return false;
+        }
+    }
+
+    public static UUID keyId(String key) {
+        return Bounty.idForKey(key);
+    }
+}

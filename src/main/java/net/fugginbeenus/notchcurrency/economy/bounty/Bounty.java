@@ -22,10 +22,28 @@ public class Bounty {
     private final boolean repeatable;
     private final long expiresGameTime;
     private final String description;
+    private final boolean quest;
+    private final String questKey;
+    private final String targetText;
+    private final String needsQuest;
+    private final boolean handInRequired;
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
                   String description) {
+        this(id, type, target, required, rewardCoins, rewardItem, rarity, repeatable, expiresGameTime,
+                description, false, "", "", "", false);
+    }
+
+    public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
+                  ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
+                  String description, boolean quest, String questKey, String targetText,
+                  String needsQuest, boolean handInRequired) {
+        this.handInRequired = handInRequired;
+        this.needsQuest = needsQuest == null ? "" : needsQuest;
+        this.quest = quest;
+        this.questKey = questKey == null ? "" : questKey;
+        this.targetText = targetText == null ? "" : targetText;
         this.id = id;
         this.type = type;
         this.target = target;
@@ -47,12 +65,25 @@ public class Bounty {
     public BountyRarity getRarity() { return rarity; }
     public boolean isRepeatable() { return repeatable; }
     public long getExpiresGameTime() { return expiresGameTime; }
+    public boolean isQuest() { return quest; }
+    public String getQuestKey() { return questKey; }
+    public String getTargetText() { return targetText; }
+    public String getNeedsQuest() { return needsQuest; }
+    public boolean needsHandIn() { return handInRequired || type == BountyType.FETCH; }
+
+    public static UUID idForKey(String key) {
+        return UUID.nameUUIDFromBytes(("notchquest:" + (key == null ? "" : key.trim().toLowerCase()))
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
 
     public boolean isExpired(long now) {
         return expiresGameTime > 0 && now >= expiresGameTime;
     }
 
     public Component targetName() {
+        if (type == BountyType.TALK_TO || type == BountyType.VISIT) {
+            return Component.literal(targetText);
+        }
         if (type == BountyType.KILL) {
             EntityType<?> et = BuiltInRegistries.ENTITY_TYPE.get(target);
             return et.getDescription();
@@ -62,8 +93,13 @@ public class Bounty {
 
     public String describe() {
         if (!description.isEmpty()) return description;
-        String verb = type == BountyType.KILL ? "Kill " : "Deliver ";
-        return verb + required + " " + targetName().getString();
+        return switch (type) {
+            case KILL -> "Kill " + required + " " + targetName().getString();
+            case FETCH -> "Collect " + required + " " + targetName().getString();
+            case TALK_TO -> "Talk to " + targetText;
+            case VISIT -> "Go to " + targetText;
+            case DELIVER -> "Take " + required + " " + targetName().getString() + " to " + targetText;
+        };
     }
 
     public String rewardSummary() {
@@ -89,6 +125,11 @@ public class Bounty {
         o.putBoolean("Repeatable", repeatable);
         o.putLong("Expires", expiresGameTime);
         o.putString("Desc", description);
+        if (quest) o.putBoolean("Quest", true);
+        if (!questKey.isEmpty()) o.putString("QuestKey", questKey);
+        if (!targetText.isEmpty()) o.putString("TargetText", targetText);
+        if (!needsQuest.isEmpty()) o.putString("NeedsQuest", needsQuest);
+        if (handInRequired) o.putBoolean("HandIn", true);
         return o;
     }
 
@@ -104,6 +145,11 @@ public class Bounty {
                 BountyRarity.fromString(o.getString("Rarity")),
                 o.getBoolean("Repeatable"),
                 o.getLong("Expires"),
-                o.getString("Desc"));
+                o.getString("Desc"),
+                o.getBoolean("Quest"),
+                o.getString("QuestKey"),
+                o.getString("TargetText"),
+                o.getString("NeedsQuest"),
+                o.getBoolean("HandIn"));
     }
 }

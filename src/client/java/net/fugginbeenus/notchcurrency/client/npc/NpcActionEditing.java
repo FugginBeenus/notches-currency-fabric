@@ -15,6 +15,8 @@ public final class NpcActionEditing {
             DialogueAction.Type.HEAL_PLAYER,
             DialogueAction.Type.GIVE_EFFECT,
             DialogueAction.Type.TELEPORT,
+            DialogueAction.Type.GIVE_QUEST,
+            DialogueAction.Type.TURN_IN_QUEST,
             DialogueAction.Type.RUN_COMMAND,
             DialogueAction.Type.RUN_COMMAND_AS_PLAYER,
     };
@@ -26,6 +28,7 @@ public final class NpcActionEditing {
     public static boolean needsValue(DialogueAction.Type t) {
         return t == DialogueAction.Type.SAY_LINE || t == DialogueAction.Type.GIVE_ITEM
                 || t == DialogueAction.Type.GIVE_EFFECT || t == DialogueAction.Type.TELEPORT
+                || t == DialogueAction.Type.GIVE_QUEST || t == DialogueAction.Type.TURN_IN_QUEST
                 || t == DialogueAction.Type.RUN_COMMAND || t == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
     }
 
@@ -33,6 +36,25 @@ public final class NpcActionEditing {
         return t == DialogueAction.Type.PAY_COINS || t == DialogueAction.Type.CHARGE_COINS
                 || t == DialogueAction.Type.GIVE_ITEM || t == DialogueAction.Type.HEAL_PLAYER
                 || t == DialogueAction.Type.GIVE_EFFECT;
+    }
+
+    public static boolean condNeedsValue(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_ITEM
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.IS_FACTION
+                || condIsQuest(t);
+    }
+
+    public static boolean condNeedsAmount(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_COINS
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_ITEM
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.HAS_XP_LEVEL;
+    }
+
+    public static boolean condIsQuest(net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type t) {
+        return t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_TAKEN
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_DONE
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_DONE
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY;
     }
 
     public static String actionName(DialogueAction.Type t) {
@@ -46,6 +68,8 @@ public final class NpcActionEditing {
             case HEAL_PLAYER -> "Heal player";
             case GIVE_EFFECT -> "Give effect";
             case TELEPORT -> "Teleport player";
+            case GIVE_QUEST -> "Give quest";
+            case TURN_IN_QUEST -> "Turn in quest";
             default -> "None";
         };
     }
@@ -57,6 +81,7 @@ public final class NpcActionEditing {
             case RUN_COMMAND, RUN_COMMAND_AS_PLAYER -> "command, without the slash";
             case GIVE_EFFECT -> "effect id, e.g. minecraft:regeneration";
             case TELEPORT -> "x y z, or world x y z";
+            case GIVE_QUEST, TURN_IN_QUEST -> "quest name";
             default -> "";
         };
     }

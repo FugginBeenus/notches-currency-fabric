@@ -11,6 +11,7 @@ public class DialogueNode {
     private String id;
     private String text = "";
     private final List<DialogueChoice> choices = new ArrayList<>();
+    private DialogueCondition openIf = null;
 
     public DialogueNode(String id) {
         this.id = id == null ? "node" : id;
@@ -19,6 +20,12 @@ public class DialogueNode {
     public String id() { return id; }
     public String text() { return text; }
     public List<DialogueChoice> choices() { return choices; }
+
+    public DialogueCondition openIf() { return openIf; }
+    public void setOpenIf(DialogueCondition c) {
+        this.openIf = (c == null || c.type() == DialogueCondition.Type.NONE) ? null : c;
+    }
+    public boolean hasOpenIf() { return openIf != null; }
 
     public void setId(String id) { this.id = id == null ? "node" : id; }
     public void setText(String t) { this.text = t == null ? "" : t; }
@@ -35,6 +42,7 @@ public class DialogueNode {
         ListTag list = new ListTag();
         for (DialogueChoice c : choices) list.add(c.toNbt());
         nbt.put("Choices", list);
+        if (openIf != null) nbt.put("OpenIf", openIf.toNbt());
         return nbt;
     }
 
@@ -43,6 +51,7 @@ public class DialogueNode {
         n.text = nbt.getString("Text");
         ListTag list = nbt.getList("Choices", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) n.choices.add(DialogueChoice.fromNbt(list.getCompound(i)));
+        if (nbt.contains("OpenIf")) n.openIf = DialogueCondition.fromNbt(nbt.getCompound("OpenIf"));
         return n;
     }
 }

@@ -75,6 +75,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
+            if (b.isQuest()) continue;
             if (b.isExpired(now) || state.hasTaken(sp.getUUID(), b.getId())
                     || state.hasCompletedOffer(sp.getUUID(), b.getId())) continue;
             avail.add(b);

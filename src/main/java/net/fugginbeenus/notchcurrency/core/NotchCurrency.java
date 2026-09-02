@@ -148,6 +148,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.command.FactionCommands.register(dispatcher);
             RaffleCommands.register(dispatcher);
             BountyCommands.register(dispatcher);
+            net.fugginbeenus.notchcurrency.command.QuestCommands.register(dispatcher);
             CrateKeyCommands.register(dispatcher);
             LoanCommands.register(dispatcher);
             net.fugginbeenus.notchcurrency.command.GamblingCommands.register(dispatcher);

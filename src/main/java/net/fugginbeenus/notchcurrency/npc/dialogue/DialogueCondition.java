@@ -21,7 +21,11 @@ public class DialogueCondition {
         IS_FACTION,
         IS_DAY,
         IS_NIGHT,
-        HAS_XP_LEVEL
+        HAS_XP_LEVEL,
+        QUEST_TAKEN,
+        QUEST_DONE,
+        QUEST_NOT_DONE,
+        QUEST_READY
     }
 
     private Type type = Type.HAS_COINS;
@@ -55,6 +59,10 @@ public class DialogueCondition {
             case IS_DAY -> sp.serverLevel().isDay();
             case IS_NIGHT -> !sp.serverLevel().isDay();
             case HAS_XP_LEVEL -> sp.experienceLevel >= amount;
+            case QUEST_TAKEN -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.hasTaken(sp, value);
+            case QUEST_DONE -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.hasDone(sp, value);
+            case QUEST_NOT_DONE -> !net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.hasDone(sp, value);
+            case QUEST_READY -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.isReady(sp, value);
         };
     }
 

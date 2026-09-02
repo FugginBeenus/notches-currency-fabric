@@ -202,14 +202,16 @@ public class DialogueStudioScreen extends Screen {
         DialogueAction a = action(actionIdx, false);
         DialogueAction.Type at = a == null ? DialogueAction.Type.NONE : a.type();
         boolean valVisible = !nodeMode && c != null
-                && (at == DialogueAction.Type.SAY_LINE || at == DialogueAction.Type.GIVE_ITEM
-                || at == DialogueAction.Type.RUN_COMMAND
-                || at == DialogueAction.Type.RUN_COMMAND_AS_PLAYER);
+                && net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.needsValue(at);
         boolean amtVisible = !nodeMode && c != null
-                && (at == DialogueAction.Type.PAY_COINS || at == DialogueAction.Type.CHARGE_COINS
-                || at == DialogueAction.Type.GIVE_ITEM);
+                && net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.needsAmount(at);
         actionValueField.setVisible(valVisible);
-        if (valVisible) actionValueField.setValue(a.value());
+        if (valVisible) {
+            boolean questVal = at == DialogueAction.Type.GIVE_QUEST
+                    || at == DialogueAction.Type.TURN_IN_QUEST;
+            actionValueField.setWidth(questVal ? ED_W - 106 : ED_W - 62);
+            actionValueField.setValue(a.value());
+        }
         actionAmountField.setVisible(amtVisible);
         if (amtVisible) actionAmountField.setValue(a.amount() > 0 ? Long.toString(a.amount()) : "");
         boolean sndVisible = !nodeMode && c != null && at == DialogueAction.Type.SAY_LINE;
@@ -219,14 +221,14 @@ public class DialogueStudioScreen extends Screen {
         DialogueCondition cd = condition(condIdx, false);
         boolean condReal = cd != null && cd.type() != DialogueCondition.Type.NONE;
         boolean cvVisible = !nodeMode && c != null && condReal
-                && (cd.type() == DialogueCondition.Type.HAS_ITEM
-                || cd.type() == DialogueCondition.Type.IS_FACTION);
+                && net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.condNeedsValue(cd.type());
         boolean caVisible = !nodeMode && c != null && condReal
-                && (cd.type() == DialogueCondition.Type.HAS_COINS
-                || cd.type() == DialogueCondition.Type.HAS_ITEM
-                || cd.type() == DialogueCondition.Type.HAS_XP_LEVEL);
+                && net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.condNeedsAmount(cd.type());
         condValueField.setVisible(cvVisible);
-        if (cvVisible) condValueField.setValue(cd.value());
+        if (cvVisible) {
+            condValueField.setWidth(isQuestCondition(cd.type()) ? ED_W - 106 : ED_W - 62);
+            condValueField.setValue(cd.value());
+        }
         condAmountField.setVisible(caVisible);
         if (caVisible) condAmountField.setValue(cd.amount() > 0 ? Long.toString(cd.amount()) : "");
     }
@@ -385,10 +387,19 @@ public class DialogueStudioScreen extends Screen {
             String hint = switch (at) {
                 case GIVE_ITEM -> "Item id:";
                 case SAY_LINE -> "Says:";
+                case GIVE_QUEST, TURN_IN_QUEST -> "Quest:";
+                case GIVE_EFFECT -> "Effect:";
+                case TELEPORT -> "Go to:";
                 default -> "Command:";
             };
+            boolean questVal = at == DialogueAction.Type.GIVE_QUEST || at == DialogueAction.Type.TURN_IN_QUEST;
             ctx.drawString(this.font, hint, px + ED_X, py + 112, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, px + ED_X + 58, py + 106, ED_W - 60, 14, NotchTheme.DEEP);
+            NotchWidgets.inset(ctx, px + ED_X + 58, py + 106,
+                    questVal ? ED_W - 104 : ED_W - 60, 14, NotchTheme.DEEP);
+            if (questVal) {
+                NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 42, py + 106, 42, 14, "Pick",
+                        over(mx, my, px + ED_X + ED_W - 42, py + 106, 42, 14));
+            }
         }
         if (actionAmountField.isVisible()) {
             ctx.drawString(this.font, "Amount:", px + ED_X, py + 130, NotchTheme.TEXT_DARK, false);
@@ -415,8 +426,15 @@ public class DialogueStudioScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 92, py + 144, 126, 14, condName,
                 over(mx, my, px + ED_X + 92, py + 144, 126, 14));
         if (condValueField.isVisible()) {
-            ctx.drawString(this.font, "Item id:", px + ED_X, py + 166, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, px + ED_X + 58, py + 160, ED_W - 60, 14, NotchTheme.DEEP);
+            boolean questCond = isQuestCondition(cd.type());
+            ctx.drawString(this.font, questCond ? "Quest:" : "Item id:", px + ED_X, py + 166,
+                    NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, px + ED_X + 58, py + 160,
+                    questCond ? ED_W - 104 : ED_W - 60, 14, NotchTheme.DEEP);
+            if (questCond) {
+                NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 42, py + 160, 42, 14, "Pick",
+                        over(mx, my, px + ED_X + ED_W - 42, py + 160, 42, 14));
+            }
         }
         if (condAmountField.isVisible()) {
             ctx.drawString(this.font, "At least:", px + ED_X, py + 184, NotchTheme.TEXT_DARK, false);
@@ -443,6 +461,8 @@ public class DialogueStudioScreen extends Screen {
             case HEAL_PLAYER -> "Heal player";
             case GIVE_EFFECT -> "Give effect";
             case TELEPORT -> "Teleport player";
+            case GIVE_QUEST -> "Give quest";
+            case TURN_IN_QUEST -> "Turn in quest";
         };
     }
 
@@ -463,6 +483,10 @@ public class DialogueStudioScreen extends Screen {
         return SCREEN_IDS[0];
     }
 
+    private static boolean isQuestCondition(DialogueCondition.Type t) {
+        return net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.condIsQuest(t);
+    }
+
     private static String conditionName(DialogueCondition.Type t) {
         return switch (t) {
             case NONE -> "None";
@@ -474,6 +498,10 @@ public class DialogueStudioScreen extends Screen {
             case IS_DAY -> "Daytime";
             case IS_NIGHT -> "Night time";
             case HAS_XP_LEVEL -> "Has XP level";
+            case QUEST_TAKEN -> "On this quest";
+            case QUEST_DONE -> "Finished quest";
+            case QUEST_NOT_DONE -> "Not finished quest";
+            case QUEST_READY -> "Quest ready to hand in";
         };
     }
 
@@ -644,6 +672,25 @@ public class DialogueStudioScreen extends Screen {
             choiceLabelField.moveCursorToEnd();
             //?}
             return true;
+        }
+        if (actionValueField.isVisible() && over(mx, my, px + ED_X + ED_W - 42, py + 106, 42, 14)) {
+            DialogueAction pa = action(actionIdx, true);
+            if (pa.type() == DialogueAction.Type.GIVE_QUEST
+                    || pa.type() == DialogueAction.Type.TURN_IN_QUEST) {
+                NotchWidgets.click();
+                pa.setValue(QuestNames.next(pa.value()));
+                actionValueField.setValue(pa.value());
+                return true;
+            }
+        }
+        if (condValueField.isVisible() && over(mx, my, px + ED_X + ED_W - 42, py + 160, 42, 14)) {
+            DialogueCondition pc = condition(condIdx, true);
+            if (isQuestCondition(pc.type())) {
+                NotchWidgets.click();
+                pc.setValue(QuestNames.next(pc.value()));
+                condValueField.setValue(pc.value());
+                return true;
+            }
         }
         if (over(mx, my, px + ED_X + 58, py + 72, 160, 14)) { // Leads to (cycle)
             cycleNext(c);

@@ -903,8 +903,18 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 70, py + 166, 160, 16));
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 186, 160, 16, "Presets",
                 over(mx, my, px + 70, py + 186, 160, 16));
-        NotchWidgets.centerText(ctx, this.font, "Reactions: what it does when things happen to it.",
-                px + W / 2, py + 206, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 206, 160, 16, "Quests",
+                over(mx, my, px + 70, py + 206, 160, 16));
+        if (over(mx, my, px + 70, py + 166, 160, 16)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Reactions").withStyle(ChatFormatting.WHITE),
+                    Component.literal("What this NPC does when things happen to it.").withStyle(ChatFormatting.GRAY));
+        } else if (over(mx, my, px + 70, py + 206, 160, 16)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Quests").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Write quests once, then hand them out from any").withStyle(ChatFormatting.GRAY),
+                    Component.literal("NPC by name, from Reactions or from dialogue.").withStyle(ChatFormatting.GRAY));
+        }
     }
 
     //? if >=1.21.11 {
@@ -990,6 +1000,12 @@ public class NotchNpcEditorScreen extends Screen {
                 if (over(mx, my, px + 70, py + 166, 160, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendNpcActionsOpen(npcId);
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 206, 160, 16)) {
+                    NotchWidgets.click();
+                    net.fugginbeenus.notchcurrency.client.QuestDesignerScreen.cameFromNpc = npcId;
+                    NotchPacketsClient.sendQuestDesign();
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 186, 160, 16)) {

@@ -25,7 +25,9 @@ public final class BountyTrackerHud implements HudRenderCallback {
 //?}
 
     public record Entry(String desc, boolean kill, String targetItemId, int prog, int req,
-                        long expiry, String rarity) {}
+                        long expiry, String rarity, boolean quest) {}
+
+    public static List<Entry> entries() { return entries; }
 
     private static List<Entry> entries = new ArrayList<>();
     private static boolean visible = true;

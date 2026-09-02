@@ -38,6 +38,12 @@ public final class NpcDialogueManager {
         }
 
         DialogueNode start = tree.start();
+        for (DialogueNode page : tree.nodes().values()) {
+            if (page.hasOpenIf() && page.openIf().test(sp, npc)) {
+                start = page;
+                break;
+            }
+        }
         if (start == null) return false;
         if (isLineList(tree)) {
             List<DialogueNode> pages = new ArrayList<>(tree.nodes().values());
