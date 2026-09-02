@@ -100,6 +100,15 @@ public final class NpcActionRunner {
                     }
                     sayNearby(npc, a.value());
                 }
+                case HEAL_PLAYER -> {
+                    if (sp == null || a.amount() <= 0) break;
+                    float hearts = Math.min(20L, a.amount()) * 2.0f;
+                    sp.heal(hearts);
+                }
+                case GIVE_EFFECT -> {
+                    if (sp == null || a.value().isBlank()) break;
+                    applyEffect(sp, a);
+                }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
                     NpcDialogueManager.openRole(sp, npc);
@@ -187,5 +196,32 @@ public final class NpcActionRunner {
         if (cmd.startsWith("/")) cmd = cmd.substring(1);
         var source = (asPlayer && sp != null) ? sp.createCommandSourceStack() : server.createCommandSourceStack();
         server.getCommands().performPrefixedCommand(source, cmd);
+    }
+
+    private static void applyEffect(ServerPlayer sp, DialogueAction a) {
+        String raw = a.value().trim();
+        int level = 1;
+        int space = raw.lastIndexOf(' ');
+        if (space > 0) {
+            try {
+                level = Math.max(1, Math.min(3, Integer.parseInt(raw.substring(space + 1).trim())));
+                raw = raw.substring(0, space).trim();
+            } catch (NumberFormatException notALevel) {
+                level = 1;
+            }
+        }
+        net.minecraft.resources.ResourceLocation id =
+                net.minecraft.resources.ResourceLocation.tryParse(raw);
+        if (id == null) return;
+        var effect = net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getOptional(id);
+        if (effect.isEmpty()) return;
+        int seconds = (int) Math.max(1L, Math.min(300L, a.amount() <= 0 ? 30L : a.amount()));
+        sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                //? if >=1.21 {
+                /*net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect.get()),
+                *///?} else {
+                effect.get(),
+                //?}
+                seconds * 20, level - 1));
     }
 }

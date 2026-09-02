@@ -12,6 +12,8 @@ public final class NpcActionEditing {
             DialogueAction.Type.PAY_COINS,
             DialogueAction.Type.CHARGE_COINS,
             DialogueAction.Type.GIVE_ITEM,
+            DialogueAction.Type.HEAL_PLAYER,
+            DialogueAction.Type.GIVE_EFFECT,
             DialogueAction.Type.RUN_COMMAND,
             DialogueAction.Type.RUN_COMMAND_AS_PLAYER,
     };
@@ -23,12 +25,14 @@ public final class NpcActionEditing {
 
     public static boolean needsValue(DialogueAction.Type t) {
         return t == DialogueAction.Type.SAY_LINE || t == DialogueAction.Type.GIVE_ITEM
+                || t == DialogueAction.Type.GIVE_EFFECT
                 || t == DialogueAction.Type.RUN_COMMAND || t == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
     }
 
     public static boolean needsAmount(DialogueAction.Type t) {
         return t == DialogueAction.Type.PAY_COINS || t == DialogueAction.Type.CHARGE_COINS
-                || t == DialogueAction.Type.GIVE_ITEM;
+                || t == DialogueAction.Type.GIVE_ITEM || t == DialogueAction.Type.HEAL_PLAYER
+                || t == DialogueAction.Type.GIVE_EFFECT;
     }
 
     public static String actionName(DialogueAction.Type t) {
@@ -39,6 +43,8 @@ public final class NpcActionEditing {
             case GIVE_ITEM -> "Give item";
             case RUN_COMMAND -> "Server command";
             case RUN_COMMAND_AS_PLAYER -> "Player command";
+            case HEAL_PLAYER -> "Heal player";
+            case GIVE_EFFECT -> "Give effect";
             default -> "None";
         };
     }
@@ -48,6 +54,7 @@ public final class NpcActionEditing {
             case SAY_LINE -> "what it says";
             case GIVE_ITEM -> "item id, e.g. minecraft:bread";
             case RUN_COMMAND, RUN_COMMAND_AS_PLAYER -> "command, without the slash";
+            case GIVE_EFFECT -> "effect id, e.g. minecraft:regeneration";
             default -> "";
         };
     }
@@ -70,6 +77,10 @@ public final class NpcActionEditing {
 
     public static String describe(DialogueAction a) {
         String name = actionName(a.type());
+        if (a.type() == DialogueAction.Type.HEAL_PLAYER) return name + ": " + a.amount() + " hearts";
+        if (a.type() == DialogueAction.Type.GIVE_EFFECT) {
+            return name + ": " + shorten(a.value()) + " " + a.amount() + "s";
+        }
         if (needsAmount(a.type()) && needsValue(a.type())) {
             return name + ": " + a.amount() + "x " + shorten(a.value());
         }

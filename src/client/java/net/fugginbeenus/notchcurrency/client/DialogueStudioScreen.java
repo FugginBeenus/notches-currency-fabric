@@ -440,6 +440,8 @@ public class DialogueStudioScreen extends Screen {
             case GIVE_ITEM -> "Give item";
             case RUN_COMMAND -> "Server command";
             case RUN_COMMAND_AS_PLAYER -> "Player command";
+            case HEAL_PLAYER -> "Heal player";
+            case GIVE_EFFECT -> "Give effect";
         };
     }
 

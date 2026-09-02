@@ -13,11 +13,13 @@ public class DialogueAction {
         CHARGE_COINS,
         GIVE_ITEM,
         RUN_COMMAND,
-        RUN_COMMAND_AS_PLAYER
+        RUN_COMMAND_AS_PLAYER,
+        HEAL_PLAYER,
+        GIVE_EFFECT
     }
 
     public static boolean isAdminOnly(Type t) {
-        return t == Type.PAY_COINS || t == Type.GIVE_ITEM
+        return t == Type.PAY_COINS || t == Type.GIVE_ITEM || t == Type.GIVE_EFFECT
                 || t == Type.RUN_COMMAND || t == Type.RUN_COMMAND_AS_PLAYER;
     }
 

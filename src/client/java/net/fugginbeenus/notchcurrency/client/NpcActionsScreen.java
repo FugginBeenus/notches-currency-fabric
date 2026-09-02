@@ -112,6 +112,8 @@ public class NpcActionsScreen extends Screen {
         boolean value = a != null && NpcActionEditing.needsValue(a.type());
         boolean amount = a != null && NpcActionEditing.needsAmount(a.type());
         valueField.setVisible(value);
+        valueField.setWidth(a != null && a.type() == DialogueAction.Type.GIVE_EFFECT
+                ? ED_W - 100 : ED_W - 48);
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
@@ -218,13 +220,25 @@ public class NpcActionsScreen extends Screen {
                 String hint = switch (a.type()) {
                     case SAY_LINE -> "Says:";
                     case GIVE_ITEM -> "Item id:";
+                    case GIVE_EFFECT -> "Effect:";
                     default -> "Command:";
                 };
+                boolean effect = a.type() == DialogueAction.Type.GIVE_EFFECT;
                 ctx.drawString(this.font, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
-                NotchWidgets.inset(ctx, px + ED_X + 44, py + 147, ED_W - 44, 14, NotchTheme.DEEP);
+                NotchWidgets.inset(ctx, px + ED_X + 44, py + 147,
+                        effect ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
+                if (effect) {
+                    NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 48, py + 147, 48, 14,
+                            "Pick", over(mouseX, mouseY, px + ED_X + ED_W - 48, py + 147, 48, 14));
+                }
             }
             if (NpcActionEditing.needsAmount(a.type())) {
-                ctx.drawString(this.font, "Amount:", px + ED_X, py + 172, NotchTheme.TEXT_DARK, false);
+                String unit = switch (a.type()) {
+                    case HEAL_PLAYER -> "Hearts:";
+                    case GIVE_EFFECT -> "Seconds:";
+                    default -> "Amount:";
+                };
+                ctx.drawString(this.font, unit, px + ED_X, py + 172, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 167, 64, 14, NotchTheme.DEEP);
             }
             if (a.type() == DialogueAction.Type.SAY_LINE) {
@@ -437,6 +451,14 @@ public class NpcActionsScreen extends Screen {
                     proximityRadius = Math.min(NpcActions.MAX_RADIUS, proximityRadius + 1);
                     return true;
                 }
+            }
+            DialogueAction pick = current();
+            if (pick != null && pick.type() == DialogueAction.Type.GIVE_EFFECT
+                    && over(mx, my, px + ED_X + ED_W - 48, py + 147, 48, 14)) {
+                NotchWidgets.tick();
+                pick.setValue(NpcEffectPicks.next(pick.value()));
+                valueField.setValue(pick.value());
+                return true;
             }
             if (trigger == NpcTrigger.ON_NPC_NEAR
                     && over(mx, my, px + TRIG_X + 80, filterY() + 10, 36, 14)) {
