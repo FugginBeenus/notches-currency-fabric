@@ -144,6 +144,7 @@ public final class BountyManager {
             int next = tb.addProgress(1);
             state.setDirty();
             syncTracker(player);
+            if (b.isQuest()) QuestManager.shareProgress(player, b, "Killed together");
             if (next >= b.getRequired()) {
                 if (b.isQuest()) {
                     QuestManager.settle(player, b, tb);

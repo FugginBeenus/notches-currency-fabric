@@ -23,6 +23,8 @@ public class QuestEditorScreen extends Screen {
     private BountyType type = BountyType.KILL;
     private boolean repeatable;
     private boolean handIn;
+    private boolean factionOnly;
+    private EditBox factionField;
     private int px, py;
 
     private EditBox targetField;
@@ -47,6 +49,8 @@ public class QuestEditorScreen extends Screen {
             }
             this.repeatable = existing.getBoolean("Repeatable");
             this.handIn = existing.getBoolean("HandIn");
+            this.factionOnly = existing.getBoolean("FactionOnly") || !existing.getString("NeedsFaction").isBlank();
+            this.loadFaction = existing.getString("NeedsFaction");
             this.loadTarget = existing.getString("Target");
             this.loadNpc = existing.getString("TargetText");
             this.loadCount = existing.getInt("Required");
@@ -56,7 +60,7 @@ public class QuestEditorScreen extends Screen {
         }
     }
 
-    private String loadTarget = "", loadNpc = "", loadDesc = "", loadNeeds = "";
+    private String loadTarget = "", loadNpc = "", loadDesc = "", loadNeeds = "", loadFaction = "";
     private int loadCount = 1;
     private long loadCoins = 0L;
 
@@ -71,6 +75,7 @@ public class QuestEditorScreen extends Screen {
         coinsField = field(py + 128, 60, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
         descField = field(py + 148, FW, loadDesc, "shown to the player");
         needsField = field(py + 168, FW - 44, loadNeeds, "another quest");
+        factionField = field(py + 216, 56, loadFaction, "any");
         radiusField = field(py + 108, 60, loadRadius(), "6");
         syncFields();
     }
@@ -90,6 +95,7 @@ public class QuestEditorScreen extends Screen {
         npcField.setVisible(type.usesNpc() || type == BountyType.VISIT);
         countField.setVisible(type != BountyType.TALK_TO && type != BountyType.VISIT);
         radiusField.setVisible(type == BountyType.VISIT);
+        factionField.setVisible(factionOnly);
     }
 
     private boolean over(int mx, int my, int x, int y, int w, int h) {
@@ -153,18 +159,35 @@ public class QuestEditorScreen extends Screen {
         }
 
         NotchWidgets.divider(ctx, px + 8, py + 188, W - 16);
-        boolean repHover = over(mouseX, mouseY, px + FX, py + 196, FW, 14);
+        boolean repHover = over(mouseX, mouseY, px + FX, py + 196, 72, 14);
         ctx.drawString(this.font, "Repeat:", px + LX, py + 200, NotchTheme.TEXT_DARK, false);
         if (repeatable) {
-            NotchWidgets.primaryButton(ctx, this.font, px + FX, py + 196, FW, 14, "Can repeat", repHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + FX, py + 196, 72, 14, "Repeats", repHover);
         } else {
-            NotchWidgets.neutralButton(ctx, this.font, px + FX, py + 196, FW, 14, "Once only", repHover);
+            NotchWidgets.neutralButton(ctx, this.font, px + FX, py + 196, 72, 14, "Once only", repHover);
         }
-        ctx.drawString(this.font, "Ends:", px + LX, py + 220, NotchTheme.TEXT_DARK, false);
         boolean forced = type == BountyType.FETCH;
-        boolean endHover = over(mouseX, mouseY, px + FX, py + 216, FW, 14);
-        NotchWidgets.neutralButton(ctx, this.font, px + FX, py + 216, FW, 14,
-                (handIn || forced) ? "Hand it back" : "On its own", endHover && !forced);
+        boolean endHover = over(mouseX, mouseY, px + FX + 78, py + 196, 72, 14);
+        NotchWidgets.neutralButton(ctx, this.font, px + FX + 78, py + 196, 72, 14,
+                (handIn || forced) ? "Hand back" : "Pays now", endHover && !forced);
+        ctx.drawString(this.font, "Who:", px + LX, py + 220, NotchTheme.TEXT_DARK, false);
+        boolean whoHover = over(mouseX, mouseY, px + FX, py + 216, 88, 14);
+        if (factionOnly) {
+            NotchWidgets.primaryButton(ctx, this.font, px + FX, py + 216, 88, 14, "Faction", whoHover);
+            NotchWidgets.inset(ctx, px + FX + 92, py + 216, 56, 14, NotchTheme.DEEP);
+            NotchWidgets.neutralButton(ctx, this.font, px + FX + 152, py + 216, 40, 14, "Pick",
+                    over(mouseX, mouseY, px + FX + 152, py + 216, 40, 14));
+        } else {
+            NotchWidgets.neutralButton(ctx, this.font, px + FX, py + 216, 88, 14, "Anyone", whoHover);
+        }
+        if (whoHover) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Who").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Faction: only faction members can take it, and").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("faction mates within 48 blocks share the progress.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Leave the box empty for any faction.").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                    mouseX, mouseY);
+        }
         if (endHover) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Ends").withStyle(net.minecraft.ChatFormatting.WHITE),
@@ -226,14 +249,26 @@ public class QuestEditorScreen extends Screen {
                 needsField.setValue(nextQuestName(needsField.getValue()));
                 return true;
             }
-            if (over(mx, my, px + FX, py + 196, FW, 14)) {
+            if (over(mx, my, px + FX, py + 196, 72, 14)) {
                 NotchWidgets.click();
                 repeatable = !repeatable;
                 return true;
             }
-            if (over(mx, my, px + FX, py + 216, FW, 14) && type != BountyType.FETCH) {
+            if (over(mx, my, px + FX + 78, py + 196, 72, 14) && type != BountyType.FETCH) {
                 NotchWidgets.click();
                 handIn = !handIn;
+                return true;
+            }
+            if (over(mx, my, px + FX, py + 216, 88, 14)) {
+                NotchWidgets.click();
+                factionOnly = !factionOnly;
+                if (!factionOnly) factionField.setValue("");
+                syncFields();
+                return true;
+            }
+            if (factionOnly && over(mx, my, px + FX + 152, py + 216, 40, 14)) {
+                NotchWidgets.click();
+                factionField.setValue(QuestNames.nextFaction(factionField.getValue()));
                 return true;
             }
             if (over(mx, my, px + 40, py + H - 26, 100, 16)) {
@@ -266,6 +301,8 @@ public class QuestEditorScreen extends Screen {
         o.putString("Rarity", BountyRarity.COMMON.name());
         o.putBoolean("Repeatable", repeatable);
         o.putBoolean("HandIn", handIn);
+        o.putBoolean("FactionOnly", factionOnly);
+        o.putString("NeedsFaction", factionOnly ? factionField.getValue().trim() : "");
         o.putLong("Expires", 0L);
         o.putString("Desc", descField.getValue().trim());
         o.putBoolean("Quest", true);

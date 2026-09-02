@@ -91,11 +91,56 @@ public final class QuestManager {
         if (state.getTaken(player.getUUID(), q.getId()) != null) return;
         if (state.hasCompletedOffer(player.getUUID(), q.getId()) && !q.isRepeatable()) return;
         if (!q.getNeedsQuest().isBlank() && !hasDone(player, q.getNeedsQuest())) return;
+        if (q.isFactionOnly() && !factionOk(player, q)) {
+            Msg.chat(player, Component.literal(q.getNeedsFaction().isBlank()
+                            ? "You need to be in a faction for that."
+                            : "That is for the " + q.getNeedsFaction() + " faction.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
 
         state.take(player.getUUID(), new TakenBounty(q, 0L, 0));
         Msg.chat(player, Component.literal("New quest: ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE)));
         BountyManager.syncTracker(player);
+    }
+
+    public static final double SHARE_RANGE = 48.0;
+
+    private static boolean factionOk(ServerPlayer player, Bounty q) {
+        MinecraftServer server = player.level().getServer();
+        if (server == null) return false;
+        String mine = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
+                .factionIdOf(player.getUUID());
+        if (mine == null || mine.isBlank()) return false;
+        return q.getNeedsFaction().isBlank() || mine.equalsIgnoreCase(q.getNeedsFaction());
+    }
+
+    static void shareProgress(ServerPlayer source, Bounty q, String what) {
+        if (!q.isFactionOnly()) return;
+        MinecraftServer server = source.level().getServer();
+        if (server == null) return;
+        String mine = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
+                .factionIdOf(source.getUUID());
+        if (mine == null || mine.isBlank()) return;
+        BountyState state = BountyState.get(server);
+        for (ServerPlayer mate : server.getPlayerList().getPlayers()) {
+            if (mate == source) continue;
+            if (mate.level() != source.level()) continue;
+            if (mate.distanceToSqr(source) > SHARE_RANGE * SHARE_RANGE) continue;
+            String theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
+                    .factionIdOf(mate.getUUID());
+            if (theirs == null || !theirs.equalsIgnoreCase(mine)) continue;
+            TakenBounty tb = state.getTaken(mate.getUUID(), q.getId());
+            if (tb == null || tb.progress() >= q.getRequired()) continue;
+            tb.addProgress(1);
+            state.setDirty();
+            BountyManager.syncTracker(mate);
+            if (tb.progress() >= q.getRequired()) {
+                announce(mate, q, what + " with " + source.getName().getString());
+                settle(mate, q, tb);
+            }
+        }
     }
 
     public static void turnIn(ServerPlayer player, String key) {
@@ -155,6 +200,7 @@ public final class QuestManager {
                 tb.addProgress(b.getRequired());
                 state.setDirty();
                 announce(player, b, "Talked to " + npcName);
+                shareProgress(player, b, "Talked to " + npcName);
                 settle(player, b, tb);
             } else if (b.getType() == BountyType.DELIVER) {
                 Item item = BuiltInRegistries.ITEM.get(b.getTarget());
@@ -170,6 +216,7 @@ public final class QuestManager {
                 tb.addProgress(b.getRequired());
                 state.setDirty();
                 announce(player, b, "Delivered to " + npcName);
+                shareProgress(player, b, "Delivered to " + npcName);
                 settle(player, b, tb);
             }
         }
@@ -209,6 +256,7 @@ public final class QuestManager {
                 tb.addProgress(b.getRequired());
                 state.setDirty();
                 announce(player, b, "Arrived");
+                shareProgress(player, b, "Arrived");
                 settle(player, b, tb);
             }
         }

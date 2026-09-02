@@ -27,18 +27,23 @@ public class Bounty {
     private final String targetText;
     private final String needsQuest;
     private final boolean handInRequired;
+    private final boolean factionOnly;
+    private final String needsFaction;
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
                   String description) {
         this(id, type, target, required, rewardCoins, rewardItem, rarity, repeatable, expiresGameTime,
-                description, false, "", "", "", false);
+                description, false, "", "", "", false, false, "");
     }
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
                   String description, boolean quest, String questKey, String targetText,
-                  String needsQuest, boolean handInRequired) {
+                  String needsQuest, boolean handInRequired,
+                  boolean factionOnly, String needsFaction) {
+        this.factionOnly = factionOnly;
+        this.needsFaction = needsFaction == null ? "" : needsFaction;
         this.handInRequired = handInRequired;
         this.needsQuest = needsQuest == null ? "" : needsQuest;
         this.quest = quest;
@@ -70,6 +75,8 @@ public class Bounty {
     public String getTargetText() { return targetText; }
     public String getNeedsQuest() { return needsQuest; }
     public boolean needsHandIn() { return handInRequired || type == BountyType.FETCH; }
+    public boolean isFactionOnly() { return factionOnly || !needsFaction.isEmpty(); }
+    public String getNeedsFaction() { return needsFaction; }
 
     public static UUID idForKey(String key) {
         return UUID.nameUUIDFromBytes(("notchquest:" + (key == null ? "" : key.trim().toLowerCase()))
@@ -130,6 +137,8 @@ public class Bounty {
         if (!targetText.isEmpty()) o.putString("TargetText", targetText);
         if (!needsQuest.isEmpty()) o.putString("NeedsQuest", needsQuest);
         if (handInRequired) o.putBoolean("HandIn", true);
+        if (factionOnly) o.putBoolean("FactionOnly", true);
+        if (!needsFaction.isEmpty()) o.putString("NeedsFaction", needsFaction);
         return o;
     }
 
@@ -150,6 +159,8 @@ public class Bounty {
                 o.getString("QuestKey"),
                 o.getString("TargetText"),
                 o.getString("NeedsQuest"),
-                o.getBoolean("HandIn"));
+                o.getBoolean("HandIn"),
+                o.getBoolean("FactionOnly"),
+                o.getString("NeedsFaction"));
     }
 }

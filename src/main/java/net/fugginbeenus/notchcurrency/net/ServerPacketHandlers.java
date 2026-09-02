@@ -1018,6 +1018,9 @@ public final class ServerPacketHandlers {
             names.writeUtf(q.getQuestKey());
             names.writeUtf(q.describe());
         }
+        var factions = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server).all();
+        names.writeVarInt(factions.size());
+        for (var f : factions) names.writeUtf(f.id());
         Net.sendToClient(player, NotchPackets.QUEST_NAMES, names);
     }
 

@@ -318,7 +318,13 @@ public final class NotchPacketsClient {
                 names.add(new net.fugginbeenus.notchcurrency.client.QuestNames.Entry(
                         buf.readUtf(), buf.readUtf()));
             }
-            client.execute(() -> net.fugginbeenus.notchcurrency.client.QuestNames.set(names));
+            int fc = buf.readVarInt();
+            java.util.List<String> facs = new java.util.ArrayList<>();
+            for (int i = 0; i < fc; i++) facs.add(buf.readUtf());
+            client.execute(() -> {
+                net.fugginbeenus.notchcurrency.client.QuestNames.set(names);
+                net.fugginbeenus.notchcurrency.client.QuestNames.setFactions(facs);
+            });
         });
         NetClient.registerClientReceiver(NotchPackets.QUEST_LOG, (client, buf) ->
                 client.execute(() -> Minecraft.getInstance().setScreen(
