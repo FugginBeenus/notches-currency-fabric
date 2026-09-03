@@ -105,6 +105,11 @@ public final class QuestManager {
 
         TakenBounty fresh = new TakenBounty(q, 0L, 0);
         fresh.setGiver(giver == null ? "" : giver);
+        Long blocked = JUST_SETTLED.get(java.util.UUID.nameUUIDFromBytes(
+                settleKey(player, key).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        long nowTick = player.level().getGameTime();
+        if (blocked != null && nowTick - blocked < 20L) return;
+
         state.take(player.getUUID(), fresh);
         Msg.chat(player, Component.literal("New quest: ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE)));
@@ -112,6 +117,12 @@ public final class QuestManager {
     }
 
     public static final double SHARE_RANGE = 48.0;
+
+    private static final java.util.Map<java.util.UUID, Long> JUST_SETTLED = new java.util.HashMap<>();
+
+    private static String settleKey(ServerPlayer p, String key) {
+        return p.getUUID() + "|" + (key == null ? "" : key.toLowerCase());
+    }
 
     private static boolean factionOk(ServerPlayer player, Bounty q) {
         MinecraftServer server = player.level().getServer();
@@ -181,16 +192,27 @@ public final class QuestManager {
             return;
         }
 
-        BountyManager.giveReward(player, q);
-        state.removeTaken(player.getUUID(), q.getId());
-        state.markOfferCompleted(player.getUUID(), q.getId());
-        Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
-                .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(" - reward: " + q.rewardSummary()).withStyle(ChatFormatting.GREEN)));
-        BountyManager.syncTracker(player);
+        payOut(player, q, state);
         if (npc != null) {
             npc.fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_QUEST_DONE, player);
         }
+    }
+
+    private static void payOut(ServerPlayer player, Bounty q, BountyState state) {
+        BountyManager.giveReward(player, q);
+        state.removeTaken(player.getUUID(), q.getId());
+        state.markOfferCompleted(player.getUUID(), q.getId());
+        JUST_SETTLED.put(java.util.UUID.nameUUIDFromBytes(
+                settleKey(player, q.getQuestKey()).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                player.level().getGameTime());
+        Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(q.describe()).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" - reward: " + q.rewardSummary()).withStyle(ChatFormatting.GREEN)));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
+                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.4f);
+        BountyManager.syncTracker(player);
+        if (!q.getNextQuest().isBlank()) give(player, q.getNextQuest(), "");
     }
 
     public static void onTalkedTo(ServerPlayer player, String npcName) {
@@ -258,22 +280,19 @@ public final class QuestManager {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
         BountyState state = BountyState.get(server);
-        BountyManager.giveReward(player, b);
-        state.removeTaken(player.getUUID(), b.getId());
-        state.markOfferCompleted(player.getUUID(), b.getId());
-        Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
-                .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(" - reward: " + b.rewardSummary()).withStyle(ChatFormatting.GREEN)));
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
-                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.4f);
-        BountyManager.syncTracker(player);
-        if (!b.getNextQuest().isBlank()) give(player, b.getNextQuest(), tb.giver());
+        payOut(player, b, state);
     }
 
     public static void tickVisits(MinecraftServer server) {
         BountyState state = BountyState.get(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
+                BountyType kind = tb.bounty().getType();
+                if (kind == BountyType.FETCH || kind == BountyType.DELIVER) {
+                    BountyManager.syncTracker(player);
+                    break;
+                }
+            }
             for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
                 Bounty b = tb.bounty();
                 if (!b.isQuest() || b.getType() != BountyType.VISIT) continue;

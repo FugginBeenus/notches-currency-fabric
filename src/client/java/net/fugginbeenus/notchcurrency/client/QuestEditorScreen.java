@@ -85,12 +85,12 @@ public class QuestEditorScreen extends Screen {
         targetField = field(py + 68, FW, loadTarget, "minecraft:zombie");
         npcField = field(py + 88, FW - 44, loadNpc, "who, or x y z r");
         countField = field(py + 108, 60, loadCount <= 0 ? "1" : Integer.toString(loadCount), "1");
-        coinsField = fieldAt(px + FX, py + 128, 44, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
+        coinsField = fieldAt(px + FX, py + 128, 38, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
         descField = field(py + 148, FW, loadDesc, "shown to the player");
         needsField = field(py + 168, FW - 44, loadNeeds, "another quest");
         factionField = field(py + 216, 56, loadFaction, "any");
-        rewardItemField = fieldAt(px + FX + 48, py + 128, 66, loadRewardItem, "item id");
-        rewardCountField = fieldAt(px + FX + 118, py + 128, 32,
+        rewardItemField = fieldAt(px + FX + 42, py + 128, 84, loadRewardItem, "item id");
+        rewardCountField = fieldAt(px + FX + 130, py + 128, 24,
                 loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
         nextField = field(py + 236, FW - 44, loadNext, "quest that follows");
         radiusField = field(py + 108, 60, loadRadius(), "6");
@@ -163,9 +163,9 @@ public class QuestEditorScreen extends Screen {
             ctx.drawString(this.font, "blocks", px + FX + 66, py + 112, NotchTheme.TEXT_MUTED, false);
         }
         ctx.drawString(this.font, "Pays:", px + LX, py + 132, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + FX, py + 128, 44, 14, NotchTheme.DEEP);
-        NotchWidgets.inset(ctx, px + FX + 48, py + 128, 66, 14, NotchTheme.DEEP);
-        NotchWidgets.inset(ctx, px + FX + 118, py + 128, 32, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX, py + 128, 38, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX + 42, py + 128, 84, 14, NotchTheme.DEEP);
+        NotchWidgets.inset(ctx, px + FX + 130, py + 128, 24, 14, NotchTheme.DEEP);
         if (over(mouseX, mouseY, px + LX, py + 128, FX + FW - LX, 14)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Pays").withStyle(net.minecraft.ChatFormatting.WHITE),
@@ -250,6 +250,37 @@ public class QuestEditorScreen extends Screen {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
+        //?}
+
+        int goalKind = type.usesItem() ? IdSuggest.KIND_ITEM : IdSuggest.KIND_MOB;
+        IdSuggest.draw(ctx, this.font, targetField, goalKind);
+        IdSuggest.draw(ctx, this.font, rewardItemField, IdSuggest.KIND_ITEM);
+        IdSuggest.tip(ctx, this.font, targetField, goalKind, mouseX, mouseY);
+        IdSuggest.tip(ctx, this.font, rewardItemField, IdSuggest.KIND_ITEM, mouseX, mouseY);
+    }
+
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key();
+    *///?} else {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_TAB
+                || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT) {
+            if (targetField.isFocused() && IdSuggest.accept(targetField,
+                    type.usesItem() ? IdSuggest.KIND_ITEM : IdSuggest.KIND_MOB)) {
+                return true;
+            }
+            if (rewardItemField.isFocused() && IdSuggest.accept(rewardItemField, IdSuggest.KIND_ITEM)) {
+                return true;
+            }
+        }
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
+        return super.keyPressed(keyCode, scanCode, modifiers);
         //?}
     }
 

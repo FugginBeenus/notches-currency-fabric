@@ -24,6 +24,7 @@ public class DialogueStudioScreen extends Screen {
     private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
     private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
+    private static final int COND_W = 120;
     private final UUID npcId;
     private final DialogueTree tree;
     private int px, py;
@@ -39,6 +40,7 @@ public class DialogueStudioScreen extends Screen {
     private EditBox choiceLabelField;
     private EditBox actionValueField, actionAmountField, actionSoundField;
     private EditBox condValueField, condAmountField;
+    private EditBox pageIfField;
 
     public DialogueStudioScreen(UUID npcId, DialogueTree tree) {
         super(Component.literal("Dialogue Studio"));
@@ -60,10 +62,10 @@ public class DialogueStudioScreen extends Screen {
                 .setX(px + ED_X)
                 .setY(py + 54)
                 .setPlaceholder(Component.literal("What the NPC says...").withStyle(ChatFormatting.DARK_GRAY))
-                .build(this.font, ED_W - 4, 56, Component.empty());
+                .build(this.font, ED_W - 4, 42, Component.empty());
         *///?} else {
         nodeTextBox = new net.minecraft.client.gui.components.MultiLineEditBox(this.font,
-                px + ED_X, py + 54, ED_W - 4, 56,
+                px + ED_X, py + 54, ED_W - 4, 42,
                 Component.literal("What the NPC says...").withStyle(ChatFormatting.DARK_GRAY), Component.empty());
         //?}
         nodeTextBox.setCharacterLimit(500);
@@ -102,6 +104,11 @@ public class DialogueStudioScreen extends Screen {
             if (a != null) a.setAmount(parse(s));
                 });
 
+        pageIfField = field(px + ED_X + 172, py + 112, 72, 120);
+        pageIfField.setResponder(v -> {
+            DialogueNode n = node();
+            if (n != null && n.hasOpenIf()) n.openIf().setValue(v.trim());
+        });
         condValueField = field(px + ED_X + 60, py + 162, ED_W - 62, 200);
         condValueField.setResponder(s -> {
             DialogueCondition c = condition(condIdx, false);
@@ -194,6 +201,11 @@ public class DialogueStudioScreen extends Screen {
         if (nodeMode && n != null && !nodeTextBox.getValue().equals(n.text())) nodeTextBox.setValue(n.text());
 
         renameField.setVisible(nodeMode && n != null);
+        boolean pageIf = nodeMode && n != null && n.hasOpenIf() && isQuestCondition(n.openIf().type());
+        if (pageIfField != null) {
+            pageIfField.setVisible(pageIf);
+            if (pageIf) pageIfField.setValue(n.openIf().value());
+        }
         if (nodeMode && n != null) renameField.setValue(n.id());
 
         choiceLabelField.setVisible(!nodeMode && c != null);
@@ -330,11 +342,29 @@ public class DialogueStudioScreen extends Screen {
         if (!statusMsg.isEmpty() && System.currentTimeMillis() < statusUntil) {
             ctx.drawString(this.font, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
         }
-        ctx.drawString(this.font, "Choices:", px + ED_X, py + 118, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font, "(click one to edit it)", px + ED_X + 50, py + 118, NotchTheme.TEXT_MUTED, false);
+        var open = n.openIf();
+        boolean openQuest = open != null && isQuestCondition(open.type());
+        ctx.drawString(this.font, "Show if:", px + ED_X, py + 116, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 44, py + 112, COND_W, 14,
+                open == null ? "Always" : shortCond(open.type()),
+                over(mx, my, px + ED_X + 44, py + 112, COND_W, 14));
+        if (openQuest) {
+            NotchWidgets.inset(ctx, px + ED_X + 170, py + 112, 72, 14, NotchTheme.DEEP);
+            NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 246, py + 112, 30, 14, "Pick",
+                    over(mx, my, px + ED_X + 246, py + 112, 30, 14));
+        }
+        if (over(mx, my, px + ED_X, py + 112, 44 + COND_W, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Opens on the first page that passes.")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mx, my);
+        }
+
+        ctx.drawString(this.font, "Choices:", px + ED_X, py + 132, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "(click one to edit it)", px + ED_X + 50, py + 132, NotchTheme.TEXT_MUTED, false);
         List<DialogueChoice> choices = n.choices();
         for (int i = 0; i < choices.size(); i++) {
-            int ry = py + 129 + i * 17;
+            int ry = py + 143 + i * 17;
             DialogueChoice c = choices.get(i);
             String label = c.label().isEmpty() ? "(unnamed)" : c.label();
             String target = c.next().isEmpty() ? "end" : c.next();
@@ -348,7 +378,7 @@ public class DialogueStudioScreen extends Screen {
                     over(mx, my, px + ED_X + 246, ry, 16, 15));
         }
         if (choices.size() < MAX_CHOICES) {
-            int ry = py + 129 + choices.size() * 17;
+            int ry = py + 143 + choices.size() * 17;
             NotchWidgets.neutralButton(ctx, this.font, px + ED_X, ry, 262, 15, "+ Add Choice",
                     over(mx, my, px + ED_X, ry, 262, 15));
         }
@@ -484,6 +514,44 @@ public class DialogueStudioScreen extends Screen {
         return SCREEN_IDS[0];
     }
 
+    private static final DialogueCondition.Type[] PAGE_CONDS = {
+            DialogueCondition.Type.NONE,
+            DialogueCondition.Type.QUEST_NOT_STARTED,
+            DialogueCondition.Type.QUEST_TAKEN,
+            DialogueCondition.Type.QUEST_READY,
+            DialogueCondition.Type.QUEST_DONE,
+            DialogueCondition.Type.IS_OWNER,
+            DialogueCondition.Type.IS_OP,
+            DialogueCondition.Type.IS_DAY,
+            DialogueCondition.Type.IS_NIGHT,
+    };
+
+    private static String shortCond(DialogueCondition.Type t) {
+        return switch (t) {
+            case QUEST_NOT_STARTED -> "Not started";
+            case QUEST_TAKEN -> "On quest";
+            case QUEST_READY -> "Ready";
+            case QUEST_DONE -> "Finished";
+            case IS_OWNER -> "Owner";
+            case IS_OP -> "Op";
+            case IS_DAY -> "Daytime";
+            case IS_NIGHT -> "Night time";
+            default -> "Always";
+        };
+    }
+
+    private void cyclePageCondition(DialogueNode n) {
+        DialogueCondition cur = n.openIf();
+        DialogueCondition.Type now = cur == null ? DialogueCondition.Type.NONE : cur.type();
+        int at = 0;
+        for (int i = 0; i < PAGE_CONDS.length; i++) {
+            if (PAGE_CONDS[i] == now) { at = i; break; }
+        }
+        DialogueCondition.Type next = PAGE_CONDS[(at + 1) % PAGE_CONDS.length];
+        n.setOpenIf(next == DialogueCondition.Type.NONE
+                ? null : new DialogueCondition(next, cur == null ? "" : cur.value(), 0));
+    }
+
     private static boolean isQuestCondition(DialogueCondition.Type t) {
         return net.fugginbeenus.notchcurrency.client.npc.NpcActionEditing.condIsQuest(t);
     }
@@ -613,9 +681,20 @@ public class DialogueStudioScreen extends Screen {
             deletePage(n.id());
             return true;
         }
+        if (over(mx, my, px + ED_X + 44, py + 112, COND_W, 14)) {
+            cyclePageCondition(n);
+            refreshFields();
+            return true;
+        }
+        if (n.hasOpenIf() && isQuestCondition(n.openIf().type())
+                && over(mx, my, px + ED_X + 246, py + 112, 30, 14)) {
+            n.openIf().setValue(QuestNames.next(n.openIf().value()));
+            pageIfField.setValue(n.openIf().value());
+            return true;
+        }
         List<DialogueChoice> choices = n.choices();
         for (int i = 0; i < choices.size(); i++) {
-            int ry = py + 129 + i * 17;
+            int ry = py + 149 + i * 17;
             if (over(mx, my, px + ED_X + 246, ry, 16, 15)) {
                 choices.remove(i);
                 refreshFields();
@@ -636,7 +715,7 @@ public class DialogueStudioScreen extends Screen {
             }
         }
         if (choices.size() < MAX_CHOICES) {
-            int ry = py + 129 + choices.size() * 17;
+            int ry = py + 149 + choices.size() * 17;
             if (over(mx, my, px + ED_X, ry, 262, 15)) {
                 choices.add(new DialogueChoice("New choice", ""));
                 return true;

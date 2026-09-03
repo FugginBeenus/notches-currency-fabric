@@ -14,8 +14,8 @@ import java.util.List;
 
 public class AnimationDesignerScreen extends Screen {
 
-    private static final int W = 320, H = 240;
-    private static final int ROW_H = 26, ROWS = 5;
+    private static final int W = 320, H = 260;
+    private static final int ROW_H = 31, ROWS = 5;
 
     public static java.util.UUID cameFromNpc = null;
 
@@ -69,13 +69,13 @@ public class AnimationDesignerScreen extends Screen {
         for (int i = 0; i < shown; i++) {
             NpcAnimation a = list.get(i + scroll);
             int ry = py + 42 + i * ROW_H;
-            NotchWidgets.neutralButton(ctx, this.font, px + 12, ry, W - 46, 24, "",
-                    over(mouseX, mouseY, px + 12, ry, W - 46, 24));
-            ctx.drawString(this.font, fit(a.name(), W - 62), px + 18, ry + 4, NotchTheme.TEXT_DARK, false);
-            ctx.drawString(this.font, fit(a.summary(), W - 62), px + 18, ry + 14,
+            NotchWidgets.neutralButton(ctx, this.font, px + 12, ry, W - 46, 27, "",
+                    over(mouseX, mouseY, px + 12, ry, W - 46, 27));
+            ctx.drawString(this.font, fit(a.name(), W - 62), px + 18, ry + 6, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, fit(a.summary(), W - 62), px + 18, ry + 17,
                     NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.dangerButton(ctx, this.font, px + W - 34, ry + 4, 18, 16, "x",
-                    over(mouseX, mouseY, px + W - 34, ry + 4, 18, 16));
+            NotchWidgets.dangerButton(ctx, this.font, px + W - 34, ry + 5, 18, 18, "x",
+                    over(mouseX, mouseY, px + W - 34, ry + 5, 18, 18));
         }
         if (list.size() > ROWS) {
             NotchWidgets.neutralButton(ctx, this.font, px + W - 32, py + 42 + ROWS * ROW_H, 20, 12, "^",
@@ -114,12 +114,12 @@ public class AnimationDesignerScreen extends Screen {
             for (int i = 0; i < shown; i++) {
                 int ry = py + 42 + i * ROW_H;
                 NpcAnimation a = list.get(i + scroll);
-                if (over(mx, my, px + W - 34, ry + 4, 18, 16)) {
+                if (over(mx, my, px + W - 34, ry + 5, 18, 18)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendAnimDelete(a.name());
                     return true;
                 }
-                if (over(mx, my, px + 12, ry, W - 46, 24)) {
+                if (over(mx, my, px + 12, ry, W - 46, 27)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendAnimOpen(a.name());
                     return true;

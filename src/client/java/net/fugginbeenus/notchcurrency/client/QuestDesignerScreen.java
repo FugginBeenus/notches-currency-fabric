@@ -12,8 +12,8 @@ import java.util.List;
 
 public class QuestDesignerScreen extends Screen {
 
-    private static final int W = 320, H = 240;
-    private static final int ROW_H = 20, ROWS = 6;
+    private static final int W = 320, H = 260;
+    private static final int ROW_H = 31, ROWS = 5;
 
     public static java.util.UUID cameFromNpc = null;
 
@@ -69,13 +69,13 @@ public class QuestDesignerScreen extends Screen {
         for (int i = 0; i < shown; i++) {
             QuestNames.Entry e = list.get(i + scroll);
             int ry = py + 42 + i * ROW_H;
-            boolean hover = over(mouseX, mouseY, px + 12, ry, W - 46, 18);
-            NotchWidgets.neutralButton(ctx, this.font, px + 12, ry, W - 46, 18, "", hover);
-            ctx.drawString(this.font, fit(e.key(), W - 56), px + 18, ry + 2, NotchTheme.TEXT_DARK, false);
-            ctx.drawString(this.font, fit(e.summary(), W - 56), px + 18, ry + 11,
+            boolean hover = over(mouseX, mouseY, px + 12, ry, W - 46, 27);
+            NotchWidgets.neutralButton(ctx, this.font, px + 12, ry, W - 46, 27, "", hover);
+            ctx.drawString(this.font, fit(e.key(), W - 62), px + 18, ry + 6, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, fit(e.summary(), W - 62), px + 18, ry + 16,
                     NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.dangerButton(ctx, this.font, px + W - 32, ry, 20, 18, "x",
-                    over(mouseX, mouseY, px + W - 32, ry, 20, 18));
+            NotchWidgets.dangerButton(ctx, this.font, px + W - 32, ry + 5, 20, 18, "x",
+                    over(mouseX, mouseY, px + W - 32, ry + 5, 20, 18));
         }
 
         if (list.size() > ROWS) {
@@ -115,12 +115,12 @@ public class QuestDesignerScreen extends Screen {
             for (int i = 0; i < shown; i++) {
                 int ry = py + 42 + i * ROW_H;
                 QuestNames.Entry e = list.get(i + scroll);
-                if (over(mx, my, px + W - 32, ry, 20, 18)) {
+                if (over(mx, my, px + W - 32, ry + 5, 20, 18)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendQuestDelete(e.key());
                     return true;
                 }
-                if (over(mx, my, px + 12, ry, W - 46, 18)) {
+                if (over(mx, my, px + 12, ry, W - 46, 27)) {
                     NotchWidgets.click();
                     QuestEditorScreen.cameFromDesigner = true;
                     NotchPacketsClient.sendQuestOpen(e.key());

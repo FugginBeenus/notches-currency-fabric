@@ -74,10 +74,17 @@ public final class BountyTrackerHud implements HudRenderCallback {
         NotchConfig.Hud cfg = NotchConfigIO.get().hud;
         float s = clamp(cfg.bountyTrackerScale, 50, 200) / 100f;
         int alpha = (int) (clamp(cfg.bountyTrackerOpacity, 0, 100) / 100f * 255) & 0xFF;
-        int bg = alpha << 24;
+        int bg = (alpha << 24) | hex(cfg.bountyTrackerBackColour, 0x000000);
+        int textArgb = 0xFF000000 | hex(cfg.bountyTrackerTextColour, 0xFFFFFF);
+        int doneArgb = 0xFF000000 | hex(cfg.bountyTrackerDoneColour, 0x55BB55);
 
         String corner = cfg.bountyTrackerCorner == null ? "TOP_RIGHT" : cfg.bountyTrackerCorner.toUpperCase();
-        int totalH = live.size() * (PILL_H + PILL_GAP) - PILL_GAP;
+        int[] rowH = new int[live.size()];
+        int totalH = -PILL_GAP;
+        for (int i = 0; i < live.size(); i++) {
+            rowH[i] = PILL_H + (cfg.bountyTrackerWrap && wraps(client, live.get(i)) ? 9 : 0);
+            totalH += rowH[i] + PILL_GAP;
+        }
         int scaledW = Math.round(PILL_W * s), scaledH = Math.round(totalH * s);
         int sw = ctx.guiWidth(), sh = ctx.guiHeight();
         int x = corner.contains("CENTER") ? (sw - scaledW) / 2 + cfg.bountyTrackerX
@@ -91,8 +98,10 @@ public final class BountyTrackerHud implements HudRenderCallback {
 
         var tr = client.font;
         int py = 0;
-        for (Entry e : live) {
-            fillRound(ctx, 0, py, PILL_W, PILL_H, 1, bg);
+        for (int idx = 0; idx < live.size(); idx++) {
+            Entry e = live.get(idx);
+            int ph = rowH[idx];
+            fillRound(ctx, 0, py, PILL_W, ph, 1, bg);
 
             ItemStack icon = e.kill() ? sword() : stackOf(e.targetItemId());
             ctx.renderItem(icon, 4, py + 5);
@@ -105,26 +114,56 @@ public final class BountyTrackerHud implements HudRenderCallback {
             int cw = tr.width(count);
             int room = PILL_W - 26 - cw - 10;
             String desc = e.desc();
+            int extra = 0;
             if (tr.width(desc) > room) {
-                desc = tr.plainSubstrByWidth(desc, room - tr.width("...")) + "...";
+                if (cfg.bountyTrackerWrap) {
+                    String head = tr.plainSubstrByWidth(desc, room);
+                    int cut = head.lastIndexOf(' ');
+                    if (cut > 4) head = head.substring(0, cut);
+                    String rest = desc.substring(head.length()).trim();
+                    if (tr.width(rest) > room) rest = tr.plainSubstrByWidth(rest, room - tr.width("...")) + "...";
+                    ctx.drawString(tr, head, 25, py + 5, textArgb, true);
+                    ctx.drawString(tr, rest, 25, py + 14, textArgb, true);
+                    extra = 9;
+                    desc = null;
+                } else {
+                    desc = tr.plainSubstrByWidth(desc, room - tr.width("...")) + "...";
+                }
             }
-            ctx.drawString(tr, desc, 25, py + 5, 0xFFFFFFFF, true);
-            ctx.drawString(tr, count, PILL_W - 6 - cw, py + 5, done ? 0xFF7FDF7F : 0xFFDDDDDD, true);
+            if (desc != null) ctx.drawString(tr, desc, 25, py + 5, textArgb, true);
+            ctx.drawString(tr, count, PILL_W - 6 - cw, py + 5, done ? doneArgb : 0xFFDDDDDD, true);
 
-            int barW = PILL_W - 31 - 30;
-            int fill = (int) (barW * Math.min(1f, have / (float) req));
-            ctx.fill(25, py + 17, 25 + barW, py + 19, 0x80101820);
-            ctx.fill(25, py + 17, 25 + fill, py + 19, done ? 0xFF55BB55 : accent);
+            if (cfg.bountyTrackerShowBar) {
+                int barW = PILL_W - 31 - 30;
+                int fill = (int) (barW * Math.min(1f, have / (float) req));
+                ctx.fill(25, py + 17 + extra, 25 + barW, py + 19 + extra, 0x80101820);
+                ctx.fill(25, py + 17 + extra, 25 + fill, py + 19 + extra, done ? doneArgb : accent);
+            }
             if (e.expiry() > 0) {
                 long mins = Math.max(0, (e.expiry() - now) / 20L / 60L);
                 String time = done ? "ready!" : mins + "m";
                 int tw = tr.width(time);
-                ctx.drawString(tr, time, PILL_W - 6 - tw, py + 14, done ? 0xFF7FDF7F : 0xFFB8C4CE, true);
+                ctx.drawString(tr, time, PILL_W - 6 - tw, py + 14 + extra, done ? doneArgb : 0xFFB8C4CE, true);
             }
-            py += PILL_H + PILL_GAP;
+            py += ph + PILL_GAP;
         }
 
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
+    }
+
+    private static boolean wraps(Minecraft client, Entry e) {
+        String count = Math.min(e.prog(), Math.max(1, e.req())) + "/" + Math.max(1, e.req());
+        return client.font.width(e.desc()) > PILL_W - 26 - client.font.width(count) - 10;
+    }
+
+    private static int hex(String raw, int fallback) {
+        if (raw == null) return fallback;
+        String t = raw.trim().replace("#", "");
+        try {
+            return Integer.parseInt(t, 16) & 0xFFFFFF;
+        } catch (NumberFormatException notAColour) {
+            return fallback;
+        }
     }
 
     private static void fillRound(GuiGraphics ctx, int x, int y, int w, int h, int r, int argb) {

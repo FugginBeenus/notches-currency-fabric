@@ -31,6 +31,11 @@ public final class NotchConfig {
         public int bountyTrackerY = 40;
         public int bountyTrackerScale = 100;
         public int bountyTrackerOpacity = 85;
+        public String bountyTrackerTextColour = "FFFFFF";
+        public String bountyTrackerBackColour = "000000";
+        public String bountyTrackerDoneColour = "55BB55";
+        public boolean bountyTrackerShowBar = true;
+        public boolean bountyTrackerWrap = true;
     }
 
     public static final class Cosmetic {
