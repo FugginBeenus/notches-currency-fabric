@@ -37,6 +37,12 @@ public final class NotchConfigIO {
             try (Reader r = Files.newBufferedReader(FILE)) {
                 NotchConfig cfg = GSON.fromJson(r, NotchConfig.class);
                 if (cfg == null) cfg = new NotchConfig();
+                if (cfg.hud != null && cfg.hud.bountyTrackerY == 6
+                        && (cfg.hud.bountyTrackerCorner == null
+                            || cfg.hud.bountyTrackerCorner.toUpperCase().contains("TOP"))) {
+                    cfg.hud.bountyTrackerY = 40;
+                    save(cfg);
+                }
                 CURRENT = cfg;
                 return cfg;
             }

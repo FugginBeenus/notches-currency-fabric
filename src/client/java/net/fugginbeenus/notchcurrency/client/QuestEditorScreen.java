@@ -166,7 +166,7 @@ public class QuestEditorScreen extends Screen {
         NotchWidgets.inset(ctx, px + FX, py + 128, 38, 14, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, px + FX + 42, py + 128, 84, 14, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, px + FX + 130, py + 128, 24, 14, NotchTheme.DEEP);
-        if (over(mouseX, mouseY, px + LX, py + 128, FX + FW - LX, 14)) {
+        if (over(mouseX, mouseY, px + LX, py + 128, FX - LX + 38, 14)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Pays").withStyle(net.minecraft.ChatFormatting.WHITE),
                     Component.literal("Coins, then an item id, then how many of it.").withStyle(net.minecraft.ChatFormatting.GRAY),

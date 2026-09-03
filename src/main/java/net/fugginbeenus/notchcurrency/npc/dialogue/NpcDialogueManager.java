@@ -37,13 +37,7 @@ public final class NpcDialogueManager {
             return true;
         }
 
-        DialogueNode start = tree.start();
-        for (DialogueNode page : tree.nodes().values()) {
-            if (page.hasOpenIf() && page.openIf().test(sp, npc)) {
-                start = page;
-                break;
-            }
-        }
+        DialogueNode start = pickOpening(sp, npc, tree);
         if (start == null) return false;
         if (isLineList(tree)) {
             List<DialogueNode> pages = new ArrayList<>(tree.nodes().values());
@@ -51,6 +45,18 @@ public final class NpcDialogueManager {
         }
         sendNode(sp, npc, start);
         return true;
+    }
+
+    private static DialogueNode pickOpening(ServerPlayer sp, NotchNpcEntity npc, DialogueTree tree) {
+        for (DialogueNode page : tree.nodes().values()) {
+            if (page.hasOpenIf() && page.openIf().test(sp, npc)) return page;
+        }
+        DialogueNode start = tree.start();
+        if (start != null && (!start.hasOpenIf() || start.openIf().test(sp, npc))) return start;
+        for (DialogueNode page : tree.nodes().values()) {
+            if (!page.hasOpenIf()) return page;
+        }
+        return start;
     }
 
     private static boolean isLineList(DialogueTree tree) {

@@ -1433,8 +1433,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             }
             startTalking(player);
             playVoice();
-            net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.onTalkedTo(sp,
-                    net.fugginbeenus.notchcurrency.npc.NpcText.npcName(this));
+            net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.onTalkedTo(sp, this);
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
             if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
                 NotchNpcManager.dispatchRole(sp, this);

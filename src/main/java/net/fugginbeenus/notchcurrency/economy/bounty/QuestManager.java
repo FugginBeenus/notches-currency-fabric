@@ -215,7 +215,10 @@ public final class QuestManager {
         if (!q.getNextQuest().isBlank()) give(player, q.getNextQuest(), "");
     }
 
-    public static void onTalkedTo(ServerPlayer player, String npcName) {
+    public static void onTalkedTo(ServerPlayer player,
+                                 net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+        String npcName = net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc);
+        boolean hasDialogue = !npc.getDialogue().isEmpty();
         MinecraftServer server = player.level().getServer();
         if (server == null || npcName == null || npcName.isBlank()) return;
         BountyState state = BountyState.get(server);
@@ -223,7 +226,7 @@ public final class QuestManager {
             Bounty b = tb.bounty();
             if (!b.isQuest()) continue;
 
-            if (b.needsHandIn() && npcName.equalsIgnoreCase(tb.giver())) {
+            if (!hasDialogue && b.needsHandIn() && npcName.equalsIgnoreCase(tb.giver())) {
                 boolean ready = b.getType().usesItem()
                         ? BountyManager.countItem(player,
                                 BuiltInRegistries.ITEM.get(b.getTarget())) >= b.getRequired()
