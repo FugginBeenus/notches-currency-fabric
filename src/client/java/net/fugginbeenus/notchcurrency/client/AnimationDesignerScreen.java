@@ -166,4 +166,20 @@ public class AnimationDesignerScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+    }
+    *///?} elif >=1.21 {
+    /*@Override
+    protected void renderBlurredBackground(float delta) {
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    }
+    *///?}
 }

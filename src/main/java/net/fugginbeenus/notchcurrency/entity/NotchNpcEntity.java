@@ -275,6 +275,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(SUBTITLE, "");
         this.entityData.define(NPC_POSE, POSE_STANDING);
         this.entityData.define(CUSTOM_POSE, new CompoundTag());
+        this.entityData.define(KEYFRAME_IDLE, "");
+        this.entityData.define(KEYFRAME_PLAY, "");
+        this.entityData.define(KEYFRAME_START, 0);
         this.entityData.define(POSE_ANIM, ANIM_BREATHE);
         this.entityData.define(CUSTOM_CLIP, "");
         this.entityData.define(ATTACK_PULSE, 0);

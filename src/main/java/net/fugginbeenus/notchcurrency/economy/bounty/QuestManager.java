@@ -96,10 +96,18 @@ public final class QuestManager {
         if (state.hasCompletedOffer(player.getUUID(), q.getId()) && !q.isRepeatable()) return;
         if (!q.getNeedsQuest().isBlank() && !hasDone(player, q.getNeedsQuest())) return;
         if (q.isFactionOnly() && !factionOk(player, q)) {
-            Msg.chat(player, Component.literal(q.getNeedsFaction().isBlank()
-                            ? "You need to be in a faction for that."
-                            : "That is for the " + q.getNeedsFaction() + " faction.")
-                    .withStyle(ChatFormatting.RED));
+            if (q.getNeedsFaction().isBlank()) {
+                Msg.chat(player, Component.literal("You need to be in a faction for that.")
+                        .withStyle(ChatFormatting.RED));
+            } else {
+                var want = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
+                        .get(q.getNeedsFaction());
+                Msg.chat(player, Component.literal("That is for ").withStyle(ChatFormatting.RED)
+                        .append(want == null
+                                ? Component.literal(q.getNeedsFaction()).withStyle(ChatFormatting.WHITE)
+                                : Component.literal(want.displayName()).withStyle(want.color()))
+                        .append(Component.literal(".").withStyle(ChatFormatting.RED)));
+            }
             return;
         }
 

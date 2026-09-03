@@ -88,7 +88,7 @@ public class QuestEditorScreen extends Screen {
         coinsField = fieldAt(px + FX, py + 128, 38, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
         descField = field(py + 148, FW, loadDesc, "shown to the player");
         needsField = field(py + 168, FW - 44, loadNeeds, "another quest");
-        factionField = field(py + 216, 56, loadFaction, "any");
+        factionField = fieldAt(px + FX + 92, py + 216, 56, loadFaction, "any");
         rewardItemField = fieldAt(px + FX + 42, py + 128, 84, loadRewardItem, "item id");
         rewardCountField = fieldAt(px + FX + 130, py + 128, 24,
                 loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
@@ -451,4 +451,20 @@ public class QuestEditorScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+    }
+    *///?} elif >=1.21 {
+    /*@Override
+    protected void renderBlurredBackground(float delta) {
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    }
+    *///?}
 }

@@ -198,14 +198,13 @@ public class AnimationEditorScreen extends Screen {
                     px + RX + 12 + SLIDER_W / 2, ry + 3,
                     held ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
         }
-        NotchWidgets.neutralButton(ctx, this.font, px + RX, py + 180, RW, 14, "Clear this part",
+        NotchWidgets.dangerButton(ctx, this.font, px + RX, py + 180, RW, 14, "Reset this part",
                 over(mouseX, mouseY, px + RX, py + 180, RW, 14));
         if (over(mouseX, mouseY, px + RX, py + 180, RW, 14)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
-                    Component.literal("Clear this part").withStyle(net.minecraft.ChatFormatting.WHITE),
-                    Component.literal("A keyframe only holds what you touch.").withStyle(net.minecraft.ChatFormatting.GRAY),
-                    Component.literal("Values with a ~ are worked out from the").withStyle(net.minecraft.ChatFormatting.GRAY),
-                    Component.literal("keyframes either side of this one.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    Component.literal("Reset this part").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Wipes this part on every keyframe, turn and").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("move, so it stands still for the whole thing.").withStyle(net.minecraft.ChatFormatting.GRAY)),
                     mouseX, mouseY);
         }
 
@@ -362,7 +361,15 @@ public class AnimationEditorScreen extends Screen {
             }
             if (over(mx, my, px + RX, py + 180, RW, 14)) {
                 NotchWidgets.click();
-                for (int axis = 0; axis < 3; axis++) current().clear(slotOf(axis));
+                for (NpcAnimation.Frame f : anim.frames()) {
+                    for (int axis = 0; axis < 3; axis++) {
+                        int rot = part * 3 + axis;
+                        f.clear(rot);
+                        f.clear(NpcAnimation.SLOTS + rot);
+                        f.angles[rot] = 0;
+                        f.offsets[rot] = 0;
+                    }
+                }
                 return true;
             }
             int tx = px + TL_X, tw = W - TL_X * 2;
@@ -428,4 +435,20 @@ public class AnimationEditorScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+    }
+    *///?} elif >=1.21 {
+    /*@Override
+    protected void renderBlurredBackground(float delta) {
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    }
+    *///?}
 }
