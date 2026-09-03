@@ -47,12 +47,30 @@ public final class NpcDialogueManager {
         return true;
     }
 
-    private static DialogueNode pickOpening(ServerPlayer sp, NotchNpcEntity npc, DialogueTree tree) {
-        for (DialogueNode page : tree.nodes().values()) {
-            if (page.hasOpenIf() && page.openIf().test(sp, npc)) return page;
+    private static boolean opens(ServerPlayer sp, NotchNpcEntity npc, DialogueNode page) {
+        for (DialogueCondition c : page.openIf()) {
+            if (c != null && !c.test(sp, npc)) return false;
         }
+        return true;
+    }
+
+    private static DialogueNode pickOpening(ServerPlayer sp, NotchNpcEntity npc, DialogueTree tree) {
+        DialogueNode best = null;
+        int bestCount = 0;
+        for (DialogueNode page : tree.nodes().values()) {
+            if (!page.hasOpenIf() || !opens(sp, npc, page)) continue;
+            int count = 0;
+            for (DialogueCondition c : page.openIf()) {
+                if (c != null) count++;
+            }
+            if (count > bestCount) {
+                best = page;
+                bestCount = count;
+            }
+        }
+        if (best != null) return best;
         DialogueNode start = tree.start();
-        if (start != null && (!start.hasOpenIf() || start.openIf().test(sp, npc))) return start;
+        if (start != null && opens(sp, npc, start)) return start;
         for (DialogueNode page : tree.nodes().values()) {
             if (!page.hasOpenIf()) return page;
         }

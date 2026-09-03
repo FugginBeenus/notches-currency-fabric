@@ -24,7 +24,7 @@ public class DialogueStudioScreen extends Screen {
     private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
     private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
-    private static final int COND_W = 120;
+    private static final int COND_W = 90;
     private final UUID npcId;
     private final DialogueTree tree;
     private int px, py;
@@ -104,10 +104,12 @@ public class DialogueStudioScreen extends Screen {
             if (a != null) a.setAmount(parse(s));
                 });
 
-        pageIfField = field(px + ED_X + 172, py + 112, 72, 120);
+        pageIfField = field(px + ED_X + 182, py + 112, 58, 120);
         pageIfField.setResponder(v -> {
             DialogueNode n = node();
-            if (n != null && n.hasOpenIf()) n.openIf().setValue(v.trim());
+            if (n == null) return;
+            DialogueCondition c = n.openIf(pageIfIdx);
+            if (c != null) c.setValue(v.trim());
         });
         condValueField = field(px + ED_X + 60, py + 162, ED_W - 62, 200);
         condValueField.setResponder(s -> {
@@ -201,10 +203,11 @@ public class DialogueStudioScreen extends Screen {
         if (nodeMode && n != null && !nodeTextBox.getValue().equals(n.text())) nodeTextBox.setValue(n.text());
 
         renameField.setVisible(nodeMode && n != null);
-        boolean pageIf = nodeMode && n != null && n.hasOpenIf() && isQuestCondition(n.openIf().type());
+        DialogueCondition pc = n == null ? null : n.openIf(pageIfIdx);
+        boolean pageIf = nodeMode && pc != null && isQuestCondition(pc.type());
         if (pageIfField != null) {
             pageIfField.setVisible(pageIf);
-            if (pageIf) pageIfField.setValue(n.openIf().value());
+            if (pageIf) pageIfField.setValue(pc.value());
         }
         if (nodeMode && n != null) renameField.setValue(n.id());
 
@@ -342,18 +345,20 @@ public class DialogueStudioScreen extends Screen {
         if (!statusMsg.isEmpty() && System.currentTimeMillis() < statusUntil) {
             ctx.drawString(this.font, statusMsg, px + ED_X + 36, py + 44, NotchTheme.TEXT_RED, false);
         }
-        var open = n.openIf();
+        DialogueCondition open = n.openIf(pageIfIdx);
         boolean openQuest = open != null && isQuestCondition(open.type());
         ctx.drawString(this.font, "Show if:", px + ED_X, py + 116, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 44, py + 112, COND_W, 14,
+        drawSlotTabs(ctx, px + ED_X + 46, py + 112, pageIfIdx,
+                n.openIf(0) != null, n.openIf(1) != null, mx, my);
+        NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 86, py + 112, COND_W, 14,
                 open == null ? "Always" : shortCond(open.type()),
-                over(mx, my, px + ED_X + 44, py + 112, COND_W, 14));
+                over(mx, my, px + ED_X + 86, py + 112, COND_W, 14));
         if (openQuest) {
-            NotchWidgets.inset(ctx, px + ED_X + 170, py + 112, 72, 14, NotchTheme.DEEP);
+            NotchWidgets.inset(ctx, px + ED_X + 180, py + 112, 62, 14, NotchTheme.DEEP);
             NotchWidgets.neutralButton(ctx, this.font, px + ED_X + 246, py + 112, 30, 14, "Pick",
                     over(mx, my, px + ED_X + 246, py + 112, 30, 14));
         }
-        if (over(mx, my, px + ED_X, py + 112, 44 + COND_W, 14)) {
+        if (over(mx, my, px + ED_X, py + 112, 86 + COND_W, 14)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Opens on the first page that passes.")
                             .withStyle(net.minecraft.ChatFormatting.GRAY)),
@@ -540,15 +545,17 @@ public class DialogueStudioScreen extends Screen {
         };
     }
 
+    private int pageIfIdx = 0;
+
     private void cyclePageCondition(DialogueNode n) {
-        DialogueCondition cur = n.openIf();
+        DialogueCondition cur = n.openIf(pageIfIdx);
         DialogueCondition.Type now = cur == null ? DialogueCondition.Type.NONE : cur.type();
         int at = 0;
         for (int i = 0; i < PAGE_CONDS.length; i++) {
             if (PAGE_CONDS[i] == now) { at = i; break; }
         }
         DialogueCondition.Type next = PAGE_CONDS[(at + 1) % PAGE_CONDS.length];
-        n.setOpenIf(next == DialogueCondition.Type.NONE
+        n.setOpenIf(pageIfIdx, next == DialogueCondition.Type.NONE
                 ? null : new DialogueCondition(next, cur == null ? "" : cur.value(), 0));
     }
 
@@ -681,15 +688,23 @@ public class DialogueStudioScreen extends Screen {
             deletePage(n.id());
             return true;
         }
-        if (over(mx, my, px + ED_X + 44, py + 112, COND_W, 14)) {
+        for (int i = 0; i < 2; i++) {
+            if (over(mx, my, px + ED_X + 46 + i * 19, py + 112, 17, 14)) {
+                pageIfIdx = i;
+                refreshFields();
+                return true;
+            }
+        }
+        if (over(mx, my, px + ED_X + 86, py + 112, COND_W, 14)) {
             cyclePageCondition(n);
             refreshFields();
             return true;
         }
-        if (n.hasOpenIf() && isQuestCondition(n.openIf().type())
+        DialogueCondition slot = n.openIf(pageIfIdx);
+        if (slot != null && isQuestCondition(slot.type())
                 && over(mx, my, px + ED_X + 246, py + 112, 30, 14)) {
-            n.openIf().setValue(QuestNames.next(n.openIf().value()));
-            pageIfField.setValue(n.openIf().value());
+            slot.setValue(QuestNames.next(slot.value()));
+            pageIfField.setValue(slot.value());
             return true;
         }
         List<DialogueChoice> choices = n.choices();
