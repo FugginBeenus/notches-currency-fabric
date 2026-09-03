@@ -12,13 +12,39 @@ public class NpcAnimation {
     public static final int PARTS = 6;
     public static final int SLOTS = PARTS * 3;
     public static final int WIDE = SLOTS * 2;
-    public static final int MAX_FRAMES = 16;
+    public static final int MAX_FRAMES = 32;
+
+    public static final int EASE_STRAIGHT = 0;
+    public static final int EASE_IN = 1;
+    public static final int EASE_OUT = 2;
+    public static final int EASE_BOTH = 3;
+
+    public static String easeName(int mode) {
+        return switch (mode) {
+            case EASE_IN -> "Ease in";
+            case EASE_OUT -> "Ease out";
+            case EASE_BOTH -> "Ease both";
+            default -> "Straight";
+        };
+    }
+
+    private static float shape(float t, int mode) {
+        float x = Math.max(0f, Math.min(1f, t));
+        return switch (mode) {
+            case EASE_IN -> x * x;
+            case EASE_OUT -> 1f - (1f - x) * (1f - x);
+            case EASE_BOTH -> x * x * (3f - 2f * x);
+            default -> x;
+        };
+    }
 
     public static class Frame {
         public final int[] angles = new int[SLOTS];
         public final int[] offsets = new int[SLOTS];
         public long set = 0L;
         public int holdTicks = 10;
+        public int time = 0;
+        public int ease = EASE_BOTH;
 
         public Frame() {}
 
@@ -46,6 +72,8 @@ public class NpcAnimation {
         public Frame copy() {
             Frame f = new Frame(angles, offsets, holdTicks);
             f.set = this.set;
+            f.time = this.time;
+            f.ease = this.ease;
             return f;
         }
     }
@@ -79,6 +107,19 @@ public class NpcAnimation {
         return lengthTicks / (float) Math.max(1, frames.size());
     }
 
+    public void sort() {
+        frames.sort(java.util.Comparator.comparingInt(f -> f.time));
+    }
+
+    public int addAt(int ticks) {
+        if (frames.size() >= MAX_FRAMES) return -1;
+        Frame f = new Frame();
+        f.time = Math.max(0, Math.min(lengthTicks, ticks));
+        frames.add(f);
+        sort();
+        return frames.indexOf(f);
+    }
+
     public String summary() {
         return frames.size() + " frame" + (frames.size() == 1 ? "" : "s")
                 + ", " + String.format("%.1f", lengthTicks / 20.0f) + "s"
@@ -98,38 +139,38 @@ public class NpcAnimation {
 
     private float channel(int slot, float t, float span, int total) {
         int n = frames.size();
-        int at = Math.min(n - 1, (int) (t / span));
+        int at = -1;
+        for (int i = 0; i < n; i++) {
+            if (frames.get(i).time <= t && frames.get(i).has(slot)) at = i;
+        }
 
-        int prev = -1;
-        for (int step = 0; step < n; step++) {
-            int i = at - step;
-            if (i < 0) {
-                if (!loop) break;
-                i += n;
+        int prev = at;
+        if (prev < 0 && loop) {
+            for (int i = n - 1; i >= 0; i--) {
+                if (frames.get(i).has(slot)) { prev = i; break; }
             }
-            if (frames.get(i).has(slot)) { prev = i; break; }
         }
         int next = -1;
-        for (int step = 1; step <= n; step++) {
-            int i = at + step;
-            if (i >= n) {
-                if (!loop) break;
-                i -= n;
+        for (int i = 0; i < n; i++) {
+            if (frames.get(i).time > t && frames.get(i).has(slot)) { next = i; break; }
+        }
+        if (next < 0 && loop) {
+            for (int i = 0; i < n; i++) {
+                if (frames.get(i).has(slot)) { next = i; break; }
             }
-            if (frames.get(i).has(slot)) { next = i; break; }
         }
 
         if (prev < 0 && next < 0) return 0f;
         if (prev < 0) return frames.get(next).value(slot);
         if (next < 0 || !smooth || prev == next) return frames.get(prev).value(slot);
 
-        float prevT = prev * span;
+        float prevT = frames.get(prev).time;
         if (prevT > t) prevT -= total;
-        float nextT = next * span;
+        float nextT = frames.get(next).time;
         if (nextT <= prevT) nextT += total;
         float gap = nextT - prevT;
         if (gap <= 0.001f) return frames.get(prev).value(slot);
-        float mix = Math.max(0f, Math.min(1f, (t - prevT) / gap));
+        float mix = shape((t - prevT) / gap, frames.get(prev).ease);
         int a = frames.get(prev).value(slot), b = frames.get(next).value(slot);
         return a + (b - a) * mix;
     }
@@ -167,6 +208,8 @@ public class NpcAnimation {
             o.putIntArray("O", f.offsets);
             o.putInt("T", f.holdTicks);
             o.putLong("S", f.set);
+            o.putInt("At", f.time);
+            o.putInt("E", f.ease);
             list.add(o);
         }
         nbt.put("Frames", list);
@@ -187,8 +230,21 @@ public class NpcAnimation {
                     net.fugginbeenus.notchcurrency.compat.Nbt.intArray(o, "O"),
                     o.getInt("T"));
             f.set = o.contains("S") ? o.getLong("S") : -1L;
+            if (o.contains("At")) f.time = o.getInt("At");
+            f.ease = o.contains("E") ? o.getInt("E") : EASE_BOTH;
             a.frames.add(f);
         }
+        boolean anyTimed = false;
+        for (Frame f : a.frames) {
+            if (f.time > 0) { anyTimed = true; break; }
+        }
+        if (!anyTimed && a.frames.size() > 1) {
+            float step = a.lengthTicks / (float) a.frames.size();
+            for (int i = 0; i < a.frames.size(); i++) {
+                a.frames.get(i).time = Math.round(i * step);
+            }
+        }
+        a.sort();
         return a;
     }
 }

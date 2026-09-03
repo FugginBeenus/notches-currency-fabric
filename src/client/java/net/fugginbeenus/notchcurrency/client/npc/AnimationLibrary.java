@@ -27,10 +27,16 @@ public final class AnimationLibrary {
     }
 
     public static final String PREVIEW = "__preview";
+    public static final String GHOST = "__ghost";
 
     public static void setPreview(NpcAnimation anim) {
         if (anim == null) KNOWN.remove(PREVIEW);
         else KNOWN.put(PREVIEW, anim);
+    }
+
+    public static void setGhost(NpcAnimation anim) {
+        if (anim == null) KNOWN.remove(GHOST);
+        else KNOWN.put(GHOST, anim);
     }
 
     public static NpcAnimation get(String name) {
@@ -40,7 +46,7 @@ public final class AnimationLibrary {
     public static List<NpcAnimation> all() {
         List<NpcAnimation> out = new ArrayList<>();
         for (Map.Entry<String, NpcAnimation> e : KNOWN.entrySet()) {
-            if (!PREVIEW.equals(e.getKey())) out.add(e.getValue());
+            if (!PREVIEW.equals(e.getKey()) && !GHOST.equals(e.getKey())) out.add(e.getValue());
         }
         return out;
     }
