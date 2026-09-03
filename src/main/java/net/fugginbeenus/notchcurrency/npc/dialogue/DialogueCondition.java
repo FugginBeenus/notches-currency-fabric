@@ -25,7 +25,8 @@ public class DialogueCondition {
         QUEST_TAKEN,
         QUEST_DONE,
         QUEST_NOT_DONE,
-        QUEST_READY
+        QUEST_READY,
+        QUEST_NOT_STARTED
     }
 
     private Type type = Type.HAS_COINS;
@@ -63,6 +64,7 @@ public class DialogueCondition {
             case QUEST_DONE -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.hasDone(sp, value);
             case QUEST_NOT_DONE -> !net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.hasDone(sp, value);
             case QUEST_READY -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.isReady(sp, value);
+            case QUEST_NOT_STARTED -> net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.canStart(sp, value);
         };
     }
 

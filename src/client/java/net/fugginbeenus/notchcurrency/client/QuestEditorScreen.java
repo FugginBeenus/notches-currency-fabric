@@ -85,19 +85,24 @@ public class QuestEditorScreen extends Screen {
         targetField = field(py + 68, FW, loadTarget, "minecraft:zombie");
         npcField = field(py + 88, FW - 44, loadNpc, "who, or x y z r");
         countField = field(py + 108, 60, loadCount <= 0 ? "1" : Integer.toString(loadCount), "1");
-        coinsField = field(py + 128, 60, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
+        coinsField = fieldAt(px + FX, py + 128, 44, loadCoins <= 0 ? "" : Long.toString(loadCoins), "0");
         descField = field(py + 148, FW, loadDesc, "shown to the player");
         needsField = field(py + 168, FW - 44, loadNeeds, "another quest");
         factionField = field(py + 216, 56, loadFaction, "any");
-        rewardItemField = field(py + 128, 108, loadRewardItem, "reward item");
-        rewardCountField = field(py + 128, 32, loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
+        rewardItemField = fieldAt(px + FX + 48, py + 128, 66, loadRewardItem, "item id");
+        rewardCountField = fieldAt(px + FX + 118, py + 128, 32,
+                loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
         nextField = field(py + 236, FW - 44, loadNext, "quest that follows");
         radiusField = field(py + 108, 60, loadRadius(), "6");
         syncFields();
     }
 
     private EditBox field(int y, int w, String value, String hint) {
-        EditBox box = new EditBox(this.font, px + FX + 3, y + 3, w - 6, 10, Component.empty());
+        return fieldAt(px + FX, y, w, value, hint);
+    }
+
+    private EditBox fieldAt(int x, int y, int w, String value, String hint) {
+        EditBox box = new EditBox(this.font, x + 3, y + 3, w - 6, 10, Component.empty());
         box.setMaxLength(120);
         box.setBordered(false);
         box.setHint(Component.literal(hint).withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
@@ -161,6 +166,13 @@ public class QuestEditorScreen extends Screen {
         NotchWidgets.inset(ctx, px + FX, py + 128, 44, 14, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, px + FX + 48, py + 128, 66, 14, NotchTheme.DEEP);
         NotchWidgets.inset(ctx, px + FX + 118, py + 128, 32, 14, NotchTheme.DEEP);
+        if (over(mouseX, mouseY, px + LX, py + 128, FX + FW - LX, 14)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Pays").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("Coins, then an item id, then how many of it.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Leave the item empty to pay coins only.").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                    mouseX, mouseY);
+        }
         ctx.drawString(this.font, "Text:", px + LX, py + 152, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + FX, py + 148, FW, 14, NotchTheme.DEEP);
         ctx.drawString(this.font, "Needs:", px + LX, py + 172, NotchTheme.TEXT_DARK, false);

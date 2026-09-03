@@ -28,7 +28,7 @@ public final class NotchConfig {
     public static final class Hud {
         public String bountyTrackerCorner = "TOP_RIGHT";
         public int bountyTrackerX = 6;
-        public int bountyTrackerY = 6;
+        public int bountyTrackerY = 40;
         public int bountyTrackerScale = 100;
         public int bountyTrackerOpacity = 85;
     }

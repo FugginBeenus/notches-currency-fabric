@@ -56,7 +56,8 @@ public final class NpcActionEditing {
         return t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_TAKEN
                 || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_DONE
                 || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_DONE
-                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY;
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY
+                || t == net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_STARTED;
     }
 
     public static String actionName(DialogueAction.Type t) {

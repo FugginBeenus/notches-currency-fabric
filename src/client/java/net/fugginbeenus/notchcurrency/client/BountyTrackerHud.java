@@ -32,7 +32,7 @@ public final class BountyTrackerHud implements HudRenderCallback {
 
     private static List<Entry> entries = new ArrayList<>();
     private static boolean visible = true;
-    private static final int PILL_W = 150, PILL_H = 26, PILL_GAP = 4;
+    private static final int PILL_W = 176, PILL_H = 26, PILL_GAP = 4;
     private static ItemStack sword;
     private static ItemStack sword() {
 
@@ -98,12 +98,16 @@ public final class BountyTrackerHud implements HudRenderCallback {
             ctx.renderItem(icon, 4, py + 5);
 
             int accent = BountyRarity.fromString(e.rarity()).accentArgb();
-            int have = e.kill() ? e.prog() : countInInventory(client, e.targetItemId());
+            int have = e.prog();
             int req = Math.max(1, e.req());
             boolean done = have >= req;
             String count = Math.min(have, req) + "/" + req;
             int cw = tr.width(count);
-            String desc = tr.plainSubstrByWidth(e.desc(), PILL_W - 26 - cw - 10);
+            int room = PILL_W - 26 - cw - 10;
+            String desc = e.desc();
+            if (tr.width(desc) > room) {
+                desc = tr.plainSubstrByWidth(desc, room - tr.width("...")) + "...";
+            }
             ctx.drawString(tr, desc, 25, py + 5, 0xFFFFFFFF, true);
             ctx.drawString(tr, count, PILL_W - 6 - cw, py + 5, done ? 0xFF7FDF7F : 0xFFDDDDDD, true);
 

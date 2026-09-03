@@ -134,7 +134,9 @@ public class NpcActionsScreen extends Screen {
         valueField.setVisible(value);
         valueField.setWidth(a != null && (a.type() == DialogueAction.Type.GIVE_EFFECT
                 || a.type() == DialogueAction.Type.TELEPORT
-                || a.type() == DialogueAction.Type.GIVE_QUEST) ? ED_W - 100 : ED_W - 48);
+                || a.type() == DialogueAction.Type.GIVE_QUEST
+                || a.type() == DialogueAction.Type.TURN_IN_QUEST
+                || a.type() == DialogueAction.Type.PLAY_ANIMATION) ? ED_W - 100 : ED_W - 48);
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
@@ -171,6 +173,7 @@ public class NpcActionsScreen extends Screen {
 
     private static final net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type[] COND_CHOICES = {
             net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.NONE,
+            net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_STARTED,
             net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_NOT_DONE,
             net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_TAKEN,
             net.fugginbeenus.notchcurrency.npc.dialogue.DialogueCondition.Type.QUEST_READY,
@@ -200,6 +203,7 @@ public class NpcActionsScreen extends Screen {
             case QUEST_DONE -> "Finished quest";
             case QUEST_NOT_DONE -> "Not finished quest";
             case QUEST_READY -> "Quest ready";
+            case QUEST_NOT_STARTED -> "Not started";
         };
     }
 
@@ -405,13 +409,15 @@ public class NpcActionsScreen extends Screen {
                 };
                 boolean effect = a.type() == DialogueAction.Type.GIVE_EFFECT;
                 boolean warp = a.type() == DialogueAction.Type.TELEPORT;
-                boolean quest = a.type() == DialogueAction.Type.GIVE_QUEST;
+                boolean quest = a.type() == DialogueAction.Type.GIVE_QUEST
+                        || a.type() == DialogueAction.Type.TURN_IN_QUEST
+                        || a.type() == DialogueAction.Type.PLAY_ANIMATION;
                 ctx.drawString(this.font, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 147,
                         (effect || warp || quest) ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
                 if (effect || warp || quest) {
                     NotchWidgets.neutralButton(ctx, this.font, px + ED_X + ED_W - 48, py + 147, 48, 14,
-                            quest ? "Edit" : warp ? "Here" : "Pick",
+                            warp ? "Here" : "Pick",
                             over(mouseX, mouseY, px + ED_X + ED_W - 48, py + 147, 48, 14));
                 }
             }
@@ -682,15 +688,18 @@ public class NpcActionsScreen extends Screen {
                     valueField.setValue(pick.value());
                     return true;
                 }
-                if (pick.type() == DialogueAction.Type.GIVE_QUEST) {
+                if (pick.type() == DialogueAction.Type.GIVE_QUEST
+                        || pick.type() == DialogueAction.Type.TURN_IN_QUEST) {
                     NotchWidgets.click();
-                    String name = valueField.getValue().trim();
-                    if (!name.isBlank()) {
-                        pick.setValue(name);
-                        QuestEditorScreen.cameFromNpc = npcId;
-                        saveOnly();
-                        NotchPacketsClient.sendQuestOpen(name);
-                    }
+                    pick.setValue(QuestNames.next(pick.value()));
+                    valueField.setValue(pick.value());
+                    return true;
+                }
+                if (pick.type() == DialogueAction.Type.PLAY_ANIMATION) {
+                    NotchWidgets.click();
+                    pick.setValue(net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary
+                            .next(pick.value()));
+                    valueField.setValue(pick.value());
                     return true;
                 }
                 if (pick.type() == DialogueAction.Type.TELEPORT && this.minecraft != null

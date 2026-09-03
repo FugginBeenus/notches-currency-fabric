@@ -1427,14 +1427,16 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             if (isRuleHidden() && !canEdit(sp)) {
                 return InteractionResult.PASS;
             }
+            if (sp.isShiftKeyDown() && canEdit(sp)) {
+                NotchNpcManager.openEditor(sp, this);
+                return InteractionResult.SUCCESS;
+            }
             startTalking(player);
             playVoice();
             net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.onTalkedTo(sp,
                     net.fugginbeenus.notchcurrency.npc.NpcText.npcName(this));
             fire(net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.ON_INTERACT, sp);
-            if (sp.isShiftKeyDown() && canEdit(sp)) {
-                NotchNpcManager.openEditor(sp, this);
-            } else if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
+            if (!net.fugginbeenus.notchcurrency.npc.dialogue.NpcDialogueManager.open(sp, this)) {
                 NotchNpcManager.dispatchRole(sp, this);
             }
         }

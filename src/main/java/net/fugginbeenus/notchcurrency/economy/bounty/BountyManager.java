@@ -237,10 +237,15 @@ public final class BountyManager {
         for (TakenBounty tb : taken) {
             if (tb.isExpired(now)) continue;
             Bounty b = tb.bounty();
+            int shown = tb.progress();
+            if (b.getType() == BountyType.FETCH || b.getType() == BountyType.DELIVER) {
+                shown = Math.min(b.getRequired(),
+                        countItem(player, BuiltInRegistries.ITEM.get(b.getTarget())));
+            }
             buf.writeUtf(b.describe());
             buf.writeBoolean(b.getType() == BountyType.KILL);
             buf.writeUtf(b.getType() == BountyType.FETCH ? b.getTarget().toString() : "");
-            buf.writeVarInt(tb.progress());
+            buf.writeVarInt(shown);
             buf.writeVarInt(b.getRequired());
             buf.writeLong(tb.expiresGameTime());
             buf.writeUtf(b.getRarity().name());

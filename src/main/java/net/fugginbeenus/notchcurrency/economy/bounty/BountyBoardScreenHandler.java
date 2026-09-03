@@ -97,6 +97,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         List<TakenBounty> mine = state.getTakenAll(sp.getUUID());
         int t = 0;
         for (TakenBounty tb : mine) {
+            if (tb.bounty().isQuest()) continue;
             if (t >= TAKEN_SLOTS) break;
             boardInv.setItem(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime()));
         }

@@ -830,6 +830,13 @@ public final class ServerPacketHandlers {
                 net.fugginbeenus.notchcurrency.economy.bounty.Bounty q =
                         net.fugginbeenus.notchcurrency.economy.bounty.Bounty.fromNbt(nbt);
                 if (!q.isQuest() || q.getQuestKey().isBlank()) return;
+                String bad = badTarget(q);
+                if (bad != null) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
+                            net.minecraft.network.chat.Component.literal("Not saved: " + bad)
+                                    .withStyle(net.minecraft.ChatFormatting.RED));
+                    return;
+                }
                 net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.define(server, q);
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
                         net.minecraft.network.chat.Component.literal("Saved quest: " + q.getQuestKey())
@@ -1069,6 +1076,22 @@ public final class ServerPacketHandlers {
         );
     }
 
+
+    private static String badTarget(net.fugginbeenus.notchcurrency.economy.bounty.Bounty q) {
+        var type = q.getType();
+        boolean wantsItem = type.usesItem();
+        boolean wantsMob = type == net.fugginbeenus.notchcurrency.economy.bounty.BountyType.KILL;
+        if (!wantsItem && !wantsMob) return null;
+        var id = q.getTarget();
+        if (id == null) return "that is not a valid id.";
+        if (wantsItem && !net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(id)) {
+            return "no item called " + id + ".";
+        }
+        if (wantsMob && !net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
+            return "no mob called " + id + ".";
+        }
+        return null;
+    }
 
     private static void sendQuestNames(net.minecraft.server.level.ServerPlayer player,
                                       net.minecraft.server.MinecraftServer server) {

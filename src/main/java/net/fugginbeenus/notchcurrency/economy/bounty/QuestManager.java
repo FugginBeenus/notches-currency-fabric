@@ -199,7 +199,20 @@ public final class QuestManager {
         BountyState state = BountyState.get(server);
         for (TakenBounty tb : state.getTakenAll(player.getUUID())) {
             Bounty b = tb.bounty();
-            if (!b.isQuest() || tb.progress() >= b.getRequired()) continue;
+            if (!b.isQuest()) continue;
+
+            if (b.needsHandIn() && npcName.equalsIgnoreCase(tb.giver())) {
+                boolean ready = b.getType().usesItem()
+                        ? BountyManager.countItem(player,
+                                BuiltInRegistries.ITEM.get(b.getTarget())) >= b.getRequired()
+                        : tb.progress() >= b.getRequired();
+                if (ready) {
+                    turnIn(player, b.getQuestKey());
+                    continue;
+                }
+            }
+
+            if (tb.progress() >= b.getRequired()) continue;
             if (!b.getTargetText().equalsIgnoreCase(npcName)) continue;
 
             if (b.getType() == BountyType.TALK_TO) {
@@ -251,6 +264,9 @@ public final class QuestManager {
         Msg.chat(player, Component.literal("Quest complete: ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(b.describe()).withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(" - reward: " + b.rewardSummary()).withStyle(ChatFormatting.GREEN)));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
+                net.minecraft.sounds.SoundSource.PLAYERS, 0.6f, 1.4f);
         BountyManager.syncTracker(player);
         if (!b.getNextQuest().isBlank()) give(player, b.getNextQuest(), tb.giver());
     }

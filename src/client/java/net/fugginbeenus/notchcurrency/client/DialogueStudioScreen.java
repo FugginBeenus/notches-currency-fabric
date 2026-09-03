@@ -503,6 +503,7 @@ public class DialogueStudioScreen extends Screen {
             case QUEST_DONE -> "Finished quest";
             case QUEST_NOT_DONE -> "Not finished quest";
             case QUEST_READY -> "Quest ready to hand in";
+            case QUEST_NOT_STARTED -> "Has not started quest";
         };
     }
 
