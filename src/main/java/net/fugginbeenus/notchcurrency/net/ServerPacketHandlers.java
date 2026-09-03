@@ -751,6 +751,61 @@ public final class ServerPacketHandlers {
                     net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.turnIn(player, key));
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SET_IDLE_ANIM, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String name = buf.readUtf();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                        && npc.canEdit(player)) {
+                    npc.setIdleAnimation(name);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.ANIM_DESIGN, (server, player, buf) -> server.execute(() -> {
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncTo(player, server);
+            Net.sendToClient(player, NotchPackets.ANIM_DESIGN, Net.emptyBuf());
+        }));
+
+        Net.registerServerReceiver(NotchPackets.ANIM_OPEN, (server, player, buf) -> {
+            String name = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                var anim = net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).get(name);
+                var out = Net.buf();
+                out.writeUtf(name);
+                out.writeBoolean(anim != null);
+                if (anim != null) out.writeNbt(anim.toNbt());
+                Net.sendToClient(player, NotchPackets.ANIM_DATA, out);
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.ANIM_SAVE, (server, player, buf) -> {
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                var anim = net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation.fromNbt(nbt);
+                if (anim.name().isBlank()) return;
+                net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).put(anim);
+                net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncAll(server);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
+                        net.minecraft.network.chat.Component.literal("Saved animation: " + anim.name())
+                                .withStyle(net.minecraft.ChatFormatting.GREEN));
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.ANIM_DELETE, (server, player, buf) -> {
+            String name = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).remove(name);
+                net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncAll(server);
+                Net.sendToClient(player, NotchPackets.ANIM_DESIGN, Net.emptyBuf());
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.QUEST_OPEN, (server, player, buf) -> {
             String key = buf.readUtf();
             server.execute(() -> {

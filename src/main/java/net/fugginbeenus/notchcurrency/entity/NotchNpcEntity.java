@@ -119,6 +119,13 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public static final int POSE_WAVING = 6;
     public static final int POSE_CUSTOM = 7;
 
+    private static final EntityDataAccessor<String> KEYFRAME_IDLE =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> KEYFRAME_PLAY =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> KEYFRAME_START =
+            SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.INT);
+
     private static final EntityDataAccessor<CompoundTag> CUSTOM_POSE =
             SynchedEntityData.defineId(NotchNpcEntity.class,
                     net.fugginbeenus.notchcurrency.compat.Sync.compound());
@@ -238,6 +245,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(SUBTITLE, "");
         builder.define(NPC_POSE, POSE_STANDING);
         builder.define(CUSTOM_POSE, new CompoundTag());
+        builder.define(KEYFRAME_IDLE, "");
+        builder.define(KEYFRAME_PLAY, "");
+        builder.define(KEYFRAME_START, 0);
         builder.define(POSE_ANIM, ANIM_BREATHE);
         builder.define(CUSTOM_CLIP, "");
         builder.define(ATTACK_PULSE, 0);
@@ -457,6 +467,20 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         } catch (Exception tooEarly) {
             return base;
         }
+    }
+
+    public String getIdleAnimation() { return this.entityData.get(KEYFRAME_IDLE); }
+    public void setIdleAnimation(String name) {
+        this.entityData.set(KEYFRAME_IDLE, name == null ? "" : name.trim());
+    }
+
+    public String getPlayingAnimation() { return this.entityData.get(KEYFRAME_PLAY); }
+    public int getAnimationStart() { return this.entityData.get(KEYFRAME_START); }
+    public int getNpcAge() { return this.tickCount; }
+
+    public void playAnimationOnce(String name) {
+        this.entityData.set(KEYFRAME_PLAY, name == null ? "" : name.trim());
+        this.entityData.set(KEYFRAME_START, this.tickCount);
     }
 
     public boolean showsBossBar() { return this.entityData.get(BOSS_BAR); }

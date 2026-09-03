@@ -80,6 +80,16 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         applyPose(entity, animationProgress, swinging);
         applyIdleAnim(entity, animationProgress, swinging);
         applyAttackSwing(entity, animationProgress);
+        float[] framed = sampleAnimation(entity.getPlayingAnimation(), entity.getAnimationStart(),
+                entity.getIdleAnimation(), entity.getNpcAge(), animationProgress);
+        if (framed != null) {
+            applyFrame(this.head, framed, 0);
+            applyFrame(this.body, framed, 1);
+            applyFrame(this.rightArm, framed, 2);
+            applyFrame(this.leftArm, framed, 3);
+            applyFrame(this.rightLeg, framed, 4);
+            applyFrame(this.leftLeg, framed, 5);
+        }
         syncOverlays();
     }
 
@@ -213,6 +223,19 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.leftArm.xRot += Mth.sin(t * 0.013f) * 0.03f;
     }
 
+    private static final float[] BASE_Y = {0f, 0f, 2f, 2f, 12f, 12f};
+    private static final float[] BASE_X = {0f, 0f, -5f, 5f, -1.9f, 1.9f};
+
+    private static void applyFrame(ModelPart part, float[] f, int idx) {
+        applyRot(part, f, idx);
+        int o = net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation.SLOTS + idx * 3;
+        if (f.length > o + 2) {
+            part.x = BASE_X[idx] + f[o];
+            part.y = BASE_Y[idx] + f[o + 1];
+            part.z = f[o + 2];
+        }
+    }
+
     private static void applyRot(ModelPart part, float[] angles, int idx) {
         part.xRot = angles[idx * 3] * DEG;
         part.yRot = angles[idx * 3 + 1] * DEG;
@@ -250,5 +273,21 @@ public class NpcPlayerModel extends PlayerModel<NotchNpcEntity> {
         this.rightPants.copyFrom(this.rightLeg);
         this.leftPants.copyFrom(this.leftLeg);
         //?}
+    }
+
+    private static float[] sampleAnimation(String playing, int start, String idle,
+                                           int npcAge, float ageInTicks) {
+        if (playing != null && !playing.isBlank()) {
+            net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation once = AnimationLibrary.get(playing);
+            if (once != null) {
+                float elapsed = npcAge - start;
+                if (elapsed >= 0 && (once.loop() || elapsed < once.totalTicks())) {
+                    return once.sample(elapsed);
+                }
+            }
+        }
+        if (idle == null || idle.isBlank()) return null;
+        net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation anim = AnimationLibrary.get(idle);
+        return anim == null ? null : anim.sample(ageInTicks);
     }
 }

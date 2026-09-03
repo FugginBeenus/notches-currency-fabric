@@ -116,6 +116,7 @@ public class NotchCurrency implements ModInitializer {
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
             net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.register();
         }
+        net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.register();
 
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
                 .get(net.minecraft.server.packs.PackType.SERVER_DATA)

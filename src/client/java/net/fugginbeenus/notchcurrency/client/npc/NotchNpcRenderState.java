@@ -42,6 +42,15 @@ package net.fugginbeenus.notchcurrency.client.npc;
     public int getPoseAnim() { return poseAnim; }
     public int getNpcPose() { return npcPose; }
     public float[] getCustomPoseAngles() { return customPoseAngles; }
+    public String idleAnimation = "";
+    public String playingAnimation = "";
+    public int animationStart = 0;
+    public int npcAge = 0;
+
+    public String getIdleAnimation() { return idleAnimation; }
+    public String getPlayingAnimation() { return playingAnimation; }
+    public int getAnimationStart() { return animationStart; }
+    public int getNpcAge() { return npcAge; }
     public boolean isSlim() { return slim; }
     public float getNameOffset() { return nameOffset; }
     public float getBodyOffset() { return bodyOffset; }

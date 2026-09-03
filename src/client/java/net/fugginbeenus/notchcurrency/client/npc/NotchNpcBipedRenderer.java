@@ -133,6 +133,10 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         state.poseAnim = entity.getPoseAnim();
         state.npcPose = entity.getNpcPose();
         state.customPoseAngles = entity.getCustomPoseAngles();
+        state.idleAnimation = entity.getIdleAnimation();
+        state.playingAnimation = entity.getPlayingAnimation();
+        state.animationStart = entity.getAnimationStart();
+        state.npcAge = entity.tickCount;
         state.clientSwingStartAge = entity.clientSwingStartAge;
         state.slim = entity.isSlim();
         state.talkBubble = entity.showsTalkBubble();

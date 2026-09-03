@@ -807,8 +807,16 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18));
         NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18, "Move & Rotate",
                 over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18));
-        NotchWidgets.centerText(ctx, this.font, "Opens a movable panel; the world stays visible.",
-                px + W / 2, py + 214, NotchTheme.TEXT_MUTED, false);
+        ctx.drawString(this.font, "Animation:", px + POSE_CTL_X, py + 196, NotchTheme.TEXT_DARK, false);
+        String animName = npc == null || npc.getIdleAnimation().isBlank() ? "None" : npc.getIdleAnimation();
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16, animName,
+                over(mx, my, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16));
+        if (over(mx, my, px + POSE_CTL_X, py + 196, POSE_CTL_W, 26)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Animation").withStyle(ChatFormatting.WHITE),
+                    Component.literal("A loop of poses this NPC plays forever.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Write them on the Manage tab, under Animations.").withStyle(ChatFormatting.DARK_GRAY));
+        }
     }
 
     private int poseIndex() { return Math.max(0, Math.min(POSE_NAMES.length - 1, poseId)); }
@@ -822,6 +830,14 @@ public class NotchNpcEditorScreen extends Screen {
     private boolean clickPose(int mx, int my) {
         if (over(mx, my, px + 30, py + 50, 20, 16)) { cyclePose(-1); return true; }
         if (over(mx, my, px + 250, py + 50, 20, 16)) { cyclePose(1); return true; }
+        if (over(mx, my, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16)) {
+            NotchNpcEntity npc = findPreview();
+            String next = net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary
+                    .next(npc == null ? "" : npc.getIdleAnimation());
+            NotchPacketsClient.sendNpcSetIdleAnim(npcId, next);
+            if (npc != null) npc.setIdleAnimation(next);
+            return true;
+        }
         if (over(mx, my, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16)) {
             poseAnim = (poseAnim + 1) % ANIM_NAMES.length;
             NotchPacketsClient.sendNpcSetAnim(npcId, poseAnim);
@@ -905,6 +921,8 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 70, py + 186, 160, 16));
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 206, 160, 16, "Quests",
                 over(mx, my, px + 70, py + 206, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 226, 160, 16, "Animations",
+                over(mx, my, px + 70, py + 226, 160, 16));
         if (over(mx, my, px + 70, py + 166, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Reactions").withStyle(ChatFormatting.WHITE),
@@ -1006,6 +1024,12 @@ public class NotchNpcEditorScreen extends Screen {
                     NotchWidgets.click();
                     net.fugginbeenus.notchcurrency.client.QuestDesignerScreen.cameFromNpc = npcId;
                     NotchPacketsClient.sendQuestDesign();
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 226, 160, 16)) {
+                    NotchWidgets.click();
+                    net.fugginbeenus.notchcurrency.client.AnimationDesignerScreen.cameFromNpc = npcId;
+                    NotchPacketsClient.sendAnimDesign();
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 186, 160, 16)) {

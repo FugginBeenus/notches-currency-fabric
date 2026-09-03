@@ -125,6 +125,10 @@ public final class NpcActionRunner {
                     if (sp == null || a.value().isBlank()) break;
                     net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.turnIn(sp, a.value(), npc);
                 }
+                case PLAY_ANIMATION -> {
+                    if (a.value().isBlank()) break;
+                    npc.playAnimationOnce(a.value());
+                }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
                     NpcDialogueManager.openRole(sp, npc);

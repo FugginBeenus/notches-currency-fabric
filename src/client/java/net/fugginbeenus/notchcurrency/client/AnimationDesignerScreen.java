@@ -1,0 +1,169 @@
+package net.fugginbeenus.notchcurrency.client;
+
+import net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary;
+import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
+import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
+import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
+import net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+
+import java.util.List;
+
+public class AnimationDesignerScreen extends Screen {
+
+    private static final int W = 320, H = 240;
+    private static final int ROW_H = 20, ROWS = 6;
+
+    public static java.util.UUID cameFromNpc = null;
+
+    private int px, py, scroll;
+    private EditBox newNameField;
+
+    public AnimationDesignerScreen() {
+        super(Component.literal("Animations"));
+    }
+
+    @Override
+    protected void init() {
+        px = (this.width - W) / 2;
+        py = (this.height - H) / 2;
+        newNameField = new EditBox(this.font, px + 13, py + H - 45, 170, 10, Component.empty());
+        newNameField.setMaxLength(48);
+        newNameField.setBordered(false);
+        newNameField.setHint(Component.literal("new animation name")
+                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        addRenderableWidget(newNameField);
+    }
+
+    private boolean over(int mx, int my, int x, int y, int w, int h) {
+        return mx >= x && mx < x + w && my >= y && my < y + h;
+    }
+
+    private String fit(String text, int room) {
+        if (this.font.width(text) <= room) return text;
+        return this.font.plainSubstrByWidth(text, room - this.font.width("...")) + "...";
+    }
+
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    *///?} else {
+    @Override
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    //?}
+        NotchWidgets.panel(ctx, px, py, W, H);
+        NotchWidgets.title(ctx, this.font, "Animations", px + W / 2, py + 8);
+        NotchWidgets.centerText(ctx, this.font, "Build a loop of poses, then any NPC can play it.",
+                px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.divider(ctx, px + 8, py + 34, W - 16);
+
+        List<NpcAnimation> list = AnimationLibrary.all();
+        if (list.isEmpty()) {
+            NotchWidgets.centerText(ctx, this.font, "None yet. Name one below.",
+                    px + W / 2, py + 80, NotchTheme.TEXT_MUTED, false);
+        }
+        int shown = Math.min(ROWS, Math.max(0, list.size() - scroll));
+        for (int i = 0; i < shown; i++) {
+            NpcAnimation a = list.get(i + scroll);
+            int ry = py + 42 + i * ROW_H;
+            NotchWidgets.neutralButton(ctx, this.font, px + 12, ry, W - 46, 18, "",
+                    over(mouseX, mouseY, px + 12, ry, W - 46, 18));
+            ctx.drawString(this.font, fit(a.name(), W - 56), px + 18, ry + 2, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, fit(a.summary(), W - 56), px + 18, ry + 11,
+                    NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.dangerButton(ctx, this.font, px + W - 32, ry, 20, 18, "x",
+                    over(mouseX, mouseY, px + W - 32, ry, 20, 18));
+        }
+        if (list.size() > ROWS) {
+            NotchWidgets.neutralButton(ctx, this.font, px + W - 32, py + 42 + ROWS * ROW_H, 20, 12, "^",
+                    over(mouseX, mouseY, px + W - 32, py + 42 + ROWS * ROW_H, 20, 12));
+            NotchWidgets.neutralButton(ctx, this.font, px + 12, py + 42 + ROWS * ROW_H, 20, 12, "v",
+                    over(mouseX, mouseY, px + 12, py + 42 + ROWS * ROW_H, 20, 12));
+        }
+
+        NotchWidgets.divider(ctx, px + 8, py + H - 54, W - 16);
+        NotchWidgets.inset(ctx, px + 10, py + H - 49, 176, 14, NotchTheme.DEEP);
+        NotchWidgets.primaryButton(ctx, this.font, px + 192, py + H - 49, 116, 14, "+ New animation",
+                over(mouseX, mouseY, px + 192, py + H - 49, 116, 14));
+        NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 50, py + H - 26, 100, 16, "Back",
+                over(mouseX, mouseY, px + W / 2 - 50, py + H - 26, 100, 16));
+
+        //? if >=26.1 {
+        /*super.extractRenderState(ctx, mouseX, mouseY, delta);
+        *///?} else {
+        super.render(ctx, mouseX, mouseY, delta);
+        //?}
+    }
+
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
+    *///?} else {
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    //?}
+        if (button == 0) {
+            int mx = (int) mouseX, my = (int) mouseY;
+            List<NpcAnimation> list = AnimationLibrary.all();
+            int shown = Math.min(ROWS, Math.max(0, list.size() - scroll));
+            for (int i = 0; i < shown; i++) {
+                int ry = py + 42 + i * ROW_H;
+                NpcAnimation a = list.get(i + scroll);
+                if (over(mx, my, px + W - 32, ry, 20, 18)) {
+                    NotchWidgets.click();
+                    NotchPacketsClient.sendAnimDelete(a.name());
+                    return true;
+                }
+                if (over(mx, my, px + 12, ry, W - 46, 18)) {
+                    NotchWidgets.click();
+                    NotchPacketsClient.sendAnimOpen(a.name());
+                    return true;
+                }
+            }
+            if (list.size() > ROWS) {
+                if (over(mx, my, px + W - 32, py + 42 + ROWS * ROW_H, 20, 12)) {
+                    NotchWidgets.click();
+                    scroll = Math.max(0, scroll - 1);
+                    return true;
+                }
+                if (over(mx, my, px + 12, py + 42 + ROWS * ROW_H, 20, 12)) {
+                    NotchWidgets.click();
+                    scroll = Math.min(Math.max(0, list.size() - ROWS), scroll + 1);
+                    return true;
+                }
+            }
+            if (over(mx, my, px + 192, py + H - 49, 116, 14)) {
+                String name = newNameField.getValue().trim();
+                if (!name.isBlank()) {
+                    NotchWidgets.click();
+                    NotchPacketsClient.sendAnimOpen(name);
+                }
+                return true;
+            }
+            if (over(mx, my, px + W / 2 - 50, py + H - 26, 100, 16)) {
+                NotchWidgets.click();
+                if (cameFromNpc != null) {
+                    java.util.UUID back = cameFromNpc;
+                    cameFromNpc = null;
+                    NotchPacketsClient.sendNpcEditorReopen(back, 5);
+                } else {
+                    this.onClose();
+                }
+                return true;
+            }
+        }
+        //? if >=1.21.11 {
+        /*return super.mouseClicked(event, doubleClick);
+        *///?} else {
+        return super.mouseClicked(mouseX, mouseY, button);
+        //?}
+    }
+
+    @Override
+    public boolean isPauseScreen() { return false; }
+}

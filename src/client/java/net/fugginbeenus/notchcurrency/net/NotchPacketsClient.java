@@ -290,6 +290,35 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.QUEST_HAND_IN, buf);
     }
 
+    public static void sendNpcSetIdleAnim(UUID npcId, String name) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(name == null ? "" : name);
+        NetClient.sendToServer(NotchPackets.NPC_SET_IDLE_ANIM, buf);
+    }
+
+    public static void sendAnimDesign() {
+        NetClient.sendToServer(NotchPackets.ANIM_DESIGN, net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
+    }
+
+    public static void sendAnimOpen(String name) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(name == null ? "" : name);
+        NetClient.sendToServer(NotchPackets.ANIM_OPEN, buf);
+    }
+
+    public static void sendAnimSave(net.minecraft.nbt.CompoundTag nbt) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeNbt(nbt);
+        NetClient.sendToServer(NotchPackets.ANIM_SAVE, buf);
+    }
+
+    public static void sendAnimDelete(String name) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(name == null ? "" : name);
+        NetClient.sendToServer(NotchPackets.ANIM_DELETE, buf);
+    }
+
     public static void sendQuestDesign() {
         NetClient.sendToServer(NotchPackets.QUEST_DESIGN, net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
     }
@@ -310,6 +339,23 @@ public final class NotchPacketsClient {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeNbt(nbt);
         NetClient.sendToServer(NotchPackets.QUEST_SAVE, buf);
+    }
+
+    public static void registerAnimReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.ANIM_LIST, (client, buf) -> {
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary.load(nbt));
+        });
+        NetClient.registerClientReceiver(NotchPackets.ANIM_DESIGN, (client, buf) ->
+                client.execute(() -> Minecraft.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.AnimationDesignerScreen())));
+        NetClient.registerClientReceiver(NotchPackets.ANIM_DATA, (client, buf) -> {
+            String name = buf.readUtf();
+            boolean exists = buf.readBoolean();
+            net.minecraft.nbt.CompoundTag nbt = exists ? buf.readNbt() : null;
+            client.execute(() -> Minecraft.getInstance().setScreen(
+                    new net.fugginbeenus.notchcurrency.client.AnimationEditorScreen(name, nbt)));
+        });
     }
 
     public static void registerQuestReceiver() {

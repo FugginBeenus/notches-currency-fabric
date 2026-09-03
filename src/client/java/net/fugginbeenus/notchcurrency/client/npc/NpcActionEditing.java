@@ -17,6 +17,7 @@ public final class NpcActionEditing {
             DialogueAction.Type.TELEPORT,
             DialogueAction.Type.GIVE_QUEST,
             DialogueAction.Type.TURN_IN_QUEST,
+            DialogueAction.Type.PLAY_ANIMATION,
             DialogueAction.Type.RUN_COMMAND,
             DialogueAction.Type.RUN_COMMAND_AS_PLAYER,
     };
@@ -29,6 +30,7 @@ public final class NpcActionEditing {
         return t == DialogueAction.Type.SAY_LINE || t == DialogueAction.Type.GIVE_ITEM
                 || t == DialogueAction.Type.GIVE_EFFECT || t == DialogueAction.Type.TELEPORT
                 || t == DialogueAction.Type.GIVE_QUEST || t == DialogueAction.Type.TURN_IN_QUEST
+                || t == DialogueAction.Type.PLAY_ANIMATION
                 || t == DialogueAction.Type.RUN_COMMAND || t == DialogueAction.Type.RUN_COMMAND_AS_PLAYER;
     }
 
@@ -70,6 +72,7 @@ public final class NpcActionEditing {
             case TELEPORT -> "Teleport player";
             case GIVE_QUEST -> "Give quest";
             case TURN_IN_QUEST -> "Turn in quest";
+            case PLAY_ANIMATION -> "Play animation";
             default -> "None";
         };
     }
@@ -82,6 +85,7 @@ public final class NpcActionEditing {
             case GIVE_EFFECT -> "effect id, e.g. minecraft:regeneration";
             case TELEPORT -> "x y z, or world x y z";
             case GIVE_QUEST, TURN_IN_QUEST -> "quest name";
+            case PLAY_ANIMATION -> "animation name";
             default -> "";
         };
     }

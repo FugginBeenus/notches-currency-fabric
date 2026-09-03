@@ -18,7 +18,8 @@ public class DialogueAction {
         GIVE_EFFECT,
         TELEPORT,
         GIVE_QUEST,
-        TURN_IN_QUEST
+        TURN_IN_QUEST,
+        PLAY_ANIMATION
     }
 
     public static boolean isAdminOnly(Type t) {
