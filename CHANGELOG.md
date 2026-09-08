@@ -1,5 +1,105 @@
 # Changelog
 
+## 0.12.0
+
+The NPC becomes a storyteller. Quests, an animation maker, and a reactions system that can finally
+tell one situation from another.
+
+### Quests
+
+A quest is a job an NPC hands out. **Manage tab -> Quests** to write one, then any NPC can give it
+out by name, from a reaction or from a line of dialogue. Write it once, hand it out anywhere.
+
+Five things a quest can ask for: **kill** something, **collect** something, **talk to** someone,
+**go to** a place, or **deliver** items to someone. Every one of them pays coins, an item, or both.
+
+Each quest says how it ends. **Pays now** settles the moment you do the thing, which is right for
+"go say hi to the blacksmith". **Hand back** sends the player to an NPC, which is right for a story.
+Whoever gave the quest accepts it back without any extra setup, so a hand-back quest works out of
+the box.
+
+Two ways to build a chain. **Needs** is a gate: the quest exists but is refused until another one is
+finished. **Then** is a handoff: finishing one starts the next on the spot.
+
+**Faction quests** are for guilds. Only members can take one, and faction mates within 48 blocks
+share the progress, so three people clearing a cave all count the kills. Everyone gets their own
+full reward.
+
+`/quests` shows a player what they are on, with a hand-in button as a safety net if the giver has
+gone. The tracker on screen wraps long text now, and servers can set its colours or turn its
+progress bar off.
+
+### The animation maker
+
+**Manage tab -> Animations.** Build a loop of poses and any NPC can play it, either forever from the
+Pose tab or once from a reaction, so a guard can wave when you talk to it and go back to standing.
+
+It works the way an animation tool should. Keyframes sit **anywhere on the timeline**, not at fixed
+spacing, so you can do a fast snap and a slow settle. A **dope sheet** shows a lane per body part, so
+you can see which limb is keyed when and click straight to it. A keyframe **only holds the parts you
+touch**; everything else slides between the keyframes either side, which is how Blockbench behaves
+and the reason two limbs can move on different rhythms.
+
+Every keyframe has **easing**, and new ones default to eased both ways, because nothing in life moves
+at a constant speed and a linear wave reads as a robot.
+
+A **mannequin** shows the frame you are editing, with a **ghost** of the previous pose behind it.
+**Mirror** flips left and right, which halves the work on any walk cycle. And you can grab a limb on
+the mannequin and drag it, rather than hunting for the right slider.
+
+Blockbench models are untouched: they already animate through GeckoLib from their own file.
+
+### Reactions that can tell situations apart
+
+**Any action can carry a condition.** That is one small change with a large result: a single NPC can
+now greet a stranger, nudge someone mid-quest, take the hand-in and thank them afterwards, all from
+one screen with no dialogue tree.
+
+Because both editors share the same actions, the Dialogue Studio got it for free.
+
+New actions: **heal the player**, **give an effect**, **teleport** (same world or another, landing on
+solid ground with room to stand), **give quest**, **turn in quest**, and **play animation**.
+
+Two new triggers: **when an NPC is near**, for chatter between NPCs, and **when a quest is finished**.
+
+An NPC that reacts to another NPC stops walking, turns to face them, and carries on afterwards. It
+only fires with a player in range, so an empty town stays quiet.
+
+### Dialogue pages can branch
+
+A page can carry **two conditions**, and the NPC opens on the first page that matches. So one NPC has
+a page per quest state instead of a button per state, and the greeting stops coming back once you
+have taken the job.
+
+More ways to gate a choice, too: faction, time of day, and experience level, alongside the quest
+tests.
+
+### One place for how an NPC looks
+
+Seven settings that were scattered across three screens now live on one **Appearance** screen with
+tabs. It also gained **tint**, **fade**, and a **hitbox** you can resize and see while you drag it.
+
+### Shops
+
+Admin shops are gone as a separate thing. They are **player shops with an admin flag**, which means
+one shop system, one set of screens, and every player feature works on a server shop. Existing admin
+shops convert themselves.
+
+Along the way shops gained **restocking** on a game or real clock, a **cap on what one player can
+buy**, prices that **drift with stock**, and the ability to **buy from players**, not only sell.
+
+### Fixes
+
+- **Tints and fades did nothing on 1.20.1 and 1.21.1.** The hook they used only exists from 1.21.11,
+  so on the two older versions the code was skipped entirely and never told anyone.
+- **Admins could not see admin-only actions on 1.21.11 and up.** The check asked whether the player
+  was a server player, which is never true on the client, so it hid them from everyone.
+- **1.20.1 crashed on any NPC** once animations landed, because the entity registers its fields in
+  two places and the new ones went into one.
+- The hitbox preview drew behind the model on older versions, the quest tracker sat under
+  advancement toasts, and the new screens were washed out by the 1.21 menu blur.
+- Item and mob fields **autocomplete as you type** now, so a typo cannot quietly save as Air.
+
 ## 0.8.1
 
 Small things, all aimed at the same problem: a street of NPCs reading as a row of identical

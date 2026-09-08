@@ -41,6 +41,10 @@ Requires Fabric API, and GeckoLib for the animated NPC model.
 - Color the shop title with `&`-codes in the name (`&6Golden Goods`), using the same codes as dialogue
 - Each shop is run by an NPC with the Shop role; add dialogue and shoppers get the conversation
   first with a "Browse the shop" option, plus an optional goodbye line when they close the screen
+- **Server shops are the same thing.** Tick *Admin shop* on any shop and it gains endless stock and
+  pays from thin air, while keeping every player feature. There is one shop system, not two
+- Restocking on a game or real clock, a cap on how much one player can buy, prices that drift with
+  stock, and shops that buy *from* players as well as selling
 
 ### Auction House
 - Buy-now and timed auctions with bidding, offline-safe outbid refunds, and a winnings mailbox
@@ -66,8 +70,15 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Appearance: vanilla humanoid, GeckoLib models, or disguise as any entity; preset/player/URL skins
 - Behaviors: stationary, wander, follow, patrol, or guard
 - Daily schedules: send an NPC to a spot at a time of day, with a route it walks to get there
-- Poses (presets + a live custom-pose editor) and a visual branching dialogue studio
-- Reactions: have an NPC respond when it's talked to, approached, hurt, killed, or kills something
+- Poses (presets + a live custom-pose editor) and a visual branching dialogue studio, where a page
+  can carry conditions so the NPC opens on the right one for the player in front of it
+- Appearance in one place: tint, fade, glow, invisibility, per-axis size and a resizable hitbox
+- Reactions: respond when it's talked to, approached, hurt, killed, kills something, when another
+  NPC wanders past, or when a player hands in a quest. Every action can carry a condition, so one
+  NPC greets a stranger, nudges someone mid-quest and thanks them afterwards from a single screen
+- Quests: jobs an NPC hands out (kill, collect, talk to, go to, deliver), with rewards, chains and
+  shared progress for faction mates
+- Animations: build a loop of poses on a timeline in game, then give it to any NPC
 - Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance
 - Floating signs: up to four lines hovering above an NPC, for shop boards and titles
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
@@ -168,8 +179,9 @@ placeable via ModMenu so it dodges other mods' overlays.
 - `/faction`: list, join, leave; found, rename or disband your own
 - `/bal` / `/balance`: your balance in chat
 - `/hearts`: your extra hearts, and whether this server takes one when you die
+- `/quests`: your quest log, with a hand-in button for anything ready
 - `/npc setrole <role>`, `/npc spawn [preset]`, `/eco …`: op tools
-- `/adminshop`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcmodels sync`: more op tools
+- `/quests list`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcmodels sync`: more op tools
 
 ## Dependencies
 - Fabric API (required)
