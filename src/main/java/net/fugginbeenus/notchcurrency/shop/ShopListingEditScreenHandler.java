@@ -223,10 +223,6 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
                         .withStyle(ChatFormatting.RED));
                 return;
             }
-            if (price <= 0 && barter.isEmpty()) {
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Set a coin price and/or a barter item.").withStyle(ChatFormatting.RED));
-                return;
-            }
             if (shop.getListings().size() >= PlayerShop.MAX_LISTINGS) {
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("This shop is full.").withStyle(ChatFormatting.RED));
                 return;
@@ -252,14 +248,16 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         }
         if (!sale.isEmpty()) l.setItemForSale(sale.copy());
         if (!barter.isEmpty()) l.setBarterPrice(barter.copy(), barter.getCount());
-        if (price <= 0 && !l.acceptsBarter() && barter.isEmpty()) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("A listing needs a coin price and/or a barter item.").withStyle(ChatFormatting.RED));
-            return;
-        }
         l.setCoinPrice(price);
         props.set(P_PRICE, price);
         state.markDirtyAndSave();
-        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listing saved.").withStyle(ChatFormatting.GREEN));
+        if (!l.forSale() && l.getShopPaysPrice() <= 0) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "Listing saved. Set a price to sell it, or a Pays amount to buy it from players.")
+                    .withStyle(ChatFormatting.YELLOW));
+        } else {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Listing saved.").withStyle(ChatFormatting.GREEN));
+        }
     }
 
     private void deposit(ServerPlayer sp, ShopState state) {

@@ -248,6 +248,8 @@ public final class PlayerShopManager {
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
         if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
 
+        if (!listing.forSale()) return PurchaseResult.NOT_FOR_SALE;
+
         int totalItems = listing.getBundleSize() * quantity;
         if (!shop.isAdminMode() && listing.getStockQuantity() < totalItems) {
             return PurchaseResult.INSUFFICIENT_STOCK;
@@ -528,6 +530,7 @@ public final class PlayerShopManager {
         INSUFFICIENT_ITEMS,
         LIMIT_REACHED,
         NOT_BUYING,
+        NOT_FOR_SALE,
         SHOP_CANNOT_AFFORD
     }
 }

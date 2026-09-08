@@ -122,6 +122,9 @@ public class ShopListing {
     public boolean acceptsBarter() {
         return !itemPrice.isEmpty() && itemPriceCount > 0;
     }
+    public boolean forSale() {
+        return acceptsCoins() || acceptsBarter();
+    }
     public int getTotalSold() {
         return totalSold;
     }

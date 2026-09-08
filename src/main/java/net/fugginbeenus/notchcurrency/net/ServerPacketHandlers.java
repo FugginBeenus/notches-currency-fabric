@@ -991,6 +991,7 @@ public final class ServerPacketHandlers {
                                 case SHOP_CLOSED -> "This shop is currently closed.";
                                 case OWN_SHOP -> "You can't buy from your own shop!";
                                 case LISTING_NOT_FOUND -> "Item no longer available.";
+                                case NOT_FOR_SALE -> "This shop only buys this item, it doesn't sell it.";
                                 case COINS_NOT_ACCEPTED -> "This item doesn't accept coin payment.";
                                 case BARTER_NOT_ACCEPTED -> "This item doesn't accept barter.";
                                 case INVALID_QUANTITY -> "Invalid quantity.";

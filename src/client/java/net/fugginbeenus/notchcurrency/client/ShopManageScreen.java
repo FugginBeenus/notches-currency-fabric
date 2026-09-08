@@ -98,7 +98,9 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     }
 
     private record Row(ItemStack icon, UUID listingId, int price, String barterName, int barterCount,
-                       ItemStack barterStack, int stock) {}
+                       ItemStack barterStack, int stock, int pays) {
+        boolean buyOnly() { return price <= 0 && barterCount <= 0 && pays > 0; }
+    }
 
     private Row row(int i) {
         ItemStack stack = menu.rowStack(i);
@@ -107,7 +109,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "nc_lid")) return null;
         ItemStack barter = t.contains("nc_bstack") ? StackData.readStack(t.getCompound("nc_bstack")) : ItemStack.EMPTY;
         return new Row(stack, net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "nc_lid"), t.getInt("nc_price"),
-                t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"));
+                t.getString("nc_bname"), t.getInt("nc_bcount"), barter, t.getInt("nc_stock"),
+                t.getInt("nc_pays"));
     }
 
     //? if >=26.1 {
@@ -205,6 +208,18 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             any = true;
             int ry = rowY(i);
             NotchWidgets.insetFlipped(ctx, x + ROW_X, ry, ROW_W, ROW_H, NotchTheme.DEEP);
+            if (row.buyOnly()) {
+                ctx.renderItem(row.icon(), x + ROW_X + 3, ry + 1);
+                ctx.renderItemDecorations(this.font, row.icon(), x + ROW_X + 3, ry + 1);
+                NotchWidgets.arrowRight(ctx, x + ROW_X + 45, ry + 5, NotchTheme.TEXT_MUTED);
+                ctx.renderItem(coin(), x + ROW_X + 64, ry + 1);
+                ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 64, ry + 1,
+                        NotchWidgets.compactCount(row.pays()));
+                ctx.drawString(this.font, "buying", x + ROW_X + 160, ry + 5, NotchTheme.TEXT_MUTED, false);
+                NotchWidgets.neutralButton(ctx, this.font, x + ROW_X + 204, ry + 1, 32, 15, "Edit",
+                        over(mouseX, mouseY, x + ROW_X + 204, ry + 1, 32, 15));
+                continue;
+            }
             if (row.price() > 0) {
                 ctx.renderItem(coin(), x + ROW_X + 3, ry + 1);
                 ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 3, ry + 1,
@@ -303,12 +318,19 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             if (over(mouseX, mouseY, leftPos + ROW_X, ry, ROW_W - 40, ROW_H)) {
                 List<Component> lines = new ArrayList<>();
                 lines.add(row.icon().getHoverName());
-                lines.add(NotchWidgets.priceText(row.price(), row.barterName(), row.barterCount()));
-                boolean endless = row.stock() < 0;
-                lines.add(Component.literal(endless ? "Always in stock"
-                                : row.stock() > 0 ? "Stock: " + row.stock() : "Out of stock")
-                        .withStyle(endless ? ChatFormatting.GOLD
-                                : row.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                if (row.buyOnly()) {
+                    lines.add(Component.literal("You buy this, you don't sell it")
+                            .withStyle(ChatFormatting.GRAY));
+                    lines.add(Component.literal("You pay " + row.pays() + " per sale")
+                            .withStyle(ChatFormatting.GREEN));
+                } else {
+                    lines.add(NotchWidgets.priceText(row.price(), row.barterName(), row.barterCount()));
+                    boolean endless = row.stock() < 0;
+                    lines.add(Component.literal(endless ? "Always in stock"
+                                    : row.stock() > 0 ? "Stock: " + row.stock() : "Out of stock")
+                            .withStyle(endless ? ChatFormatting.GOLD
+                                    : row.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                }
                 ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
                 break;
             }

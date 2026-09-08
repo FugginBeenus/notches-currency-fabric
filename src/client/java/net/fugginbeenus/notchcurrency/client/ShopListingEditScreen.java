@@ -167,7 +167,8 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             anyPrice = true;
         }
         Component summary = anyPrice ? Component.literal("Buyer pays: ").append(pays)
-                : Component.literal("Set a coin price and/or a barter item.");
+                : menu.paysProp() > 0 ? Component.literal("You buy this one, you don't sell it.")
+                : Component.literal("Set a Price to sell, or a Pays amount to buy.");
         ctx.drawString(this.font, summary, x + 12, y + 98, anyPrice ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
 
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.STOCK_X - 1, y + ShopListingEditScreenHandler.STOCK_Y - 1);
@@ -279,9 +280,9 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                             ShopListingEditScreenHandler.ACTION_SET_RESTOCK_TO, numberIn(refillField));
                     NotchPacketsClient.sendShopEditAction(
                             ShopListingEditScreenHandler.ACTION_SET_LIMIT, numberIn(limitField));
-                    NotchPacketsClient.sendShopEditAction(
-                            ShopListingEditScreenHandler.ACTION_SET_PAYS, numberIn(paysField));
                 }
+                NotchPacketsClient.sendShopEditAction(
+                        ShopListingEditScreenHandler.ACTION_SET_PAYS, numberIn(paysField));
                 return true;
             }
             if (editing && over(mx, my, leftPos + 86, topPos + 134, 50, 16)) {

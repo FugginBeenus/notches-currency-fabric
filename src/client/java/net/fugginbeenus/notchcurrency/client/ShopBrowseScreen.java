@@ -49,7 +49,8 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private record Cell(ItemStack icon, UUID listingId, int price, String barterName, int barterCount,
                         ItemStack barterStack, int stock, int pays) {
         boolean unlimited() { return stock < 0; }
-        boolean has(int bundle) { return unlimited() || stock >= bundle; }
+        boolean forSale() { return price > 0 || barterCount > 0; }
+        boolean has(int bundle) { return forSale() && (unlimited() || stock >= bundle); }
     }
 
     private Cell cell(int i) {
@@ -86,10 +87,20 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             Cell c = cell(i);
             if (c == null) continue;
             int ry = rowY(i);
-            boolean hover = canBuy && c.has(1) && over(mouseX, mouseY, x + LIST_X, ry, ROW_W, ROW_H);
+            boolean buyOnly = !c.forSale() && c.pays() > 0;
+            boolean hover = canBuy && (c.has(1) || buyOnly) && over(mouseX, mouseY, x + LIST_X, ry, ROW_W, ROW_H);
             NotchWidgets.button(ctx, x + LIST_X, ry, ROW_W, ROW_H, hover, false);
 
             int ix = x + LIST_X + 4;
+            if (buyOnly) {
+                ctx.renderItem(c.icon(), ix, ry + 2);
+                ctx.renderItemDecorations(this.font, c.icon(), ix, ry + 2);
+                arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
+                ctx.renderItem(coin(), x + LIST_X + ROW_W - 20, ry + 2);
+                ctx.renderItemDecorations(this.font, coin(), x + LIST_X + ROW_W - 20, ry + 2,
+                        NotchWidgets.compactCount(c.pays()));
+                continue;
+            }
             if (c.price() > 0) {
                 ctx.renderItem(coin(), ix, ry + 2);
                 ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(c.price()));
@@ -177,12 +188,17 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             Cell c = cell(i);
             if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
                 List<Component> lines = new ArrayList<>();
+                boolean buyOnly = !c.forSale() && c.pays() > 0;
                 lines.add(c.icon().getHoverName());
-                lines.add(NotchWidgets.priceText(c.price(), c.barterName(), c.barterCount()));
-                lines.add(Component.literal(c.unlimited() ? "Always in stock"
-                                : c.stock() > 0 ? "Stock: " + c.stock() : "Sold out")
-                        .withStyle(c.unlimited() ? ChatFormatting.GOLD
-                                : c.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                if (buyOnly) {
+                    lines.add(Component.literal("The shop only buys this one").withStyle(ChatFormatting.GRAY));
+                } else {
+                    lines.add(NotchWidgets.priceText(c.price(), c.barterName(), c.barterCount()));
+                    lines.add(Component.literal(c.unlimited() ? "Always in stock"
+                                    : c.stock() > 0 ? "Stock: " + c.stock() : "Sold out")
+                            .withStyle(c.unlimited() ? ChatFormatting.GOLD
+                                    : c.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                }
                 if (open() && c.has(1)) {
                     lines.add(Component.literal("Click to buy · Shift = a stack").withStyle(ChatFormatting.DARK_GRAY));
                 }

@@ -1,7 +1,5 @@
 package net.fugginbeenus.notchcurrency.client.npc;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.client.Minecraft;
@@ -10,9 +8,7 @@ import net.minecraft.client.renderer.texture.HttpTexture;
 //?}
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.resources.ResourceLocation;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public final class NpcSkins {
@@ -30,8 +26,28 @@ public final class NpcSkins {
     private static final ResourceLocation DEFAULT = DefaultPlayerSkin.getDefaultSkin();
     //?}
 
-    private static final Map<String, ResourceLocation> cache = new HashMap<>();
-    private static final Map<String, Boolean> loading = new HashMap<>();
+    private static final Map<String, ResourceLocation> cache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, Boolean> loading = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, Long> retryAt = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("NotchCurrency-Skins");
+    private static final long RETRY_DELAY_MS = 60_000L;
+
+    private static boolean shouldStart(String key) {
+        Long wait = retryAt.get(key);
+        if (wait != null && System.currentTimeMillis() < wait) return false;
+        return !Boolean.TRUE.equals(loading.put(key, true));
+    }
+
+    private static void fail(String key) {
+        retryAt.put(key, System.currentTimeMillis() + RETRY_DELAY_MS);
+        loading.put(key, false);
+    }
+
+    private static void done(String key, ResourceLocation texture) {
+        cache.put(key, texture);
+        retryAt.remove(key);
+        loading.put(key, false);
+    }
 
     private NpcSkins() {}
 
@@ -53,33 +69,11 @@ public final class NpcSkins {
 
     private static ResourceLocation url(String url) {
         if (url == null || url.isEmpty()) return DEFAULT;
-        ResourceLocation cached = cache.get("url:" + url);
+        String key = "url:" + url;
+        ResourceLocation cached = cache.get(key);
         if (cached != null) return cached;
-        if (Boolean.TRUE.equals(loading.get("url:" + url))) return DEFAULT;
-        loading.put("url:" + url, true);
-        Minecraft.getInstance().execute(() -> {
-            try {
-                ResourceLocation id = NotchCurrency.id("skins/url/" + Integer.toHexString(url.hashCode()));
-                //? if >=1.21.11 {
-                /*Minecraft mc = Minecraft.getInstance();
-                new net.minecraft.client.renderer.texture.SkinTextureDownloader(
-                        mc.getProxy(), mc.getTextureManager(), java.util.concurrent.ForkJoinPool.commonPool())
-                        .downloadAndRegisterSkin(id, mc.gameDirectory.toPath().resolve("assets/skins"), url, true)
-                        .thenAccept(asset -> mc.execute(() -> {
-                            cache.put("url:" + url, asset.texturePath());
-                            loading.put("url:" + url, false);
-                        }));
-                *///?} else {
-                Minecraft.getInstance().getTextureManager().register(id,
-                        new HttpTexture(null, url, DEFAULT, true, () -> {
-                            cache.put("url:" + url, id);
-                            loading.put("url:" + url, false);
-                        }));
-                //?}
-            } catch (Exception e) {
-                loading.put("url:" + url, false);
-            }
-        });
+        if (!shouldStart(key)) return DEFAULT;
+        download(url, key);
         return DEFAULT;
     }
 
@@ -88,73 +82,118 @@ public final class NpcSkins {
         String key = "player:" + username.toLowerCase();
         ResourceLocation cached = cache.get(key);
         if (cached != null) return cached;
-        if (Boolean.TRUE.equals(loading.get(key))) return DEFAULT;
-        loading.put(key, true);
+        if (!shouldStart(key)) return DEFAULT;
         loadPlayerAsync(username, key);
         return DEFAULT;
+    }
+
+    private static void download(String url, String key) {
+        LOGGER.info("downloading skin for {} from {}", key, url);
+        Minecraft.getInstance().execute(() -> {
+            try {
+                ResourceLocation id = NotchCurrency.id("skins/web/"
+                        + Integer.toHexString(url.hashCode()) + "_" + url.length());
+                //? if >=1.21.11 {
+                /*Minecraft mc = Minecraft.getInstance();
+                new net.minecraft.client.renderer.texture.SkinTextureDownloader(
+                        mc.getProxy(), mc.getTextureManager(), mc)
+                        .downloadAndRegisterSkin(id, mc.gameDirectory.toPath().resolve("assets/skins"), url, true)
+                        .whenComplete((asset, error) -> mc.execute(() -> {
+                            if (error != null || asset == null) {
+                                LOGGER.warn("skin download failed for {}", key, error);
+                                fail(key);
+                                return;
+                            }
+                            LOGGER.info("skin ready for {} as {}", key, asset.texturePath());
+                            done(key, asset.texturePath());
+                        }));
+                *///?} else {
+                java.io.File cacheFile = new java.io.File(Minecraft.getInstance().gameDirectory,
+                        "assets/skins/" + Integer.toHexString(url.hashCode()) + "_" + url.length() + ".png");
+                Minecraft.getInstance().getTextureManager().register(id,
+                        new HttpTexture(cacheFile, url, DEFAULT, true, () -> {
+                            LOGGER.info("skin ready for {} as {}", key, id);
+                            done(key, id);
+                        }));
+                //?}
+                CompletableFuture.delayedExecutor(30, java.util.concurrent.TimeUnit.SECONDS).execute(() -> {
+                    if (cache.get(key) == null) {
+                        LOGGER.warn("skin timed out for {}", key);
+                        fail(key);
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("skin download errored for {}", key, e);
+                fail(key);
+            }
+        });
     }
 
     private static void loadPlayerAsync(String username, String key) {
         CompletableFuture.runAsync(() -> {
             try {
-                java.net.URL api = new java.net.URL("https://api.mojang.com/users/profiles/minecraft/" + username);
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) api.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                conn.setRequestProperty("User-Agent", "NotchCurrency-Mod");
-                if (conn.getResponseCode() != 200) { loading.put(key, false); return; }
-                StringBuilder sb = new StringBuilder();
-                try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()))) {
-                    String line;
-                    while ((line = r.readLine()) != null) sb.append(line);
+                String raw = jsonString(fetch("https://api.mojang.com/users/profiles/minecraft/" + username), "id");
+                if (raw == null || raw.length() < 32) {
+                    LOGGER.warn("no mojang account for {}", username);
+                    fail(key);
+                    return;
                 }
-                conn.disconnect();
-                String json = sb.toString();
-                int idIdx = json.indexOf("\"id\"");
-                if (idIdx < 0) { loading.put(key, false); return; }
-                int colon = json.indexOf(":", idIdx);
-                int s = json.indexOf("\"", colon + 1);
-                int e = json.indexOf("\"", s + 1);
-                String raw = json.substring(s + 1, e);
-                if (raw.length() == 32) {
-                    raw = raw.substring(0, 8) + "-" + raw.substring(8, 12) + "-" + raw.substring(12, 16)
-                            + "-" + raw.substring(16, 20) + "-" + raw.substring(20);
+                String textures = jsonString(fetch(
+                        "https://sessionserver.mojang.com/session/minecraft/profile/" + raw), "value");
+                if (textures == null) {
+                    LOGGER.warn("no texture property for {}", username);
+                    fail(key);
+                    return;
                 }
-                UUID uuid = UUID.fromString(raw);
-                Minecraft.getInstance().execute(() -> {
-                    try {
-                        GameProfile profile = new GameProfile(uuid, username);
-                        //? if >=1.21.11 {
-                        /*Minecraft.getInstance().getSkinManager().get(profile)
-                                .thenAccept(skin -> Minecraft.getInstance().execute(() -> {
-                                    skin.ifPresent(loaded -> cache.put(key, loaded.body().texturePath()));
-                                    loading.put(key, false);
-                                }));
-                        *///?} elif >=1.21 {
-                        /*Minecraft.getInstance().getSkinManager().getOrLoad(profile)
-                                .thenAccept(textures -> Minecraft.getInstance().execute(() -> {
-                                    cache.put(key, textures.texture());
-                                    loading.put(key, false);
-                                }));
-                        *///?} else {
-                        Minecraft.getInstance().getSkinManager().registerSkins(profile, (type, id, tex) -> {
-                            if (type == MinecraftProfileTexture.Type.SKIN) {
-                                cache.put(key, id);
-                                loading.put(key, false);
-                            }
-                        }, true);
-                        //?}
-                        CompletableFuture.delayedExecutor(30, java.util.concurrent.TimeUnit.SECONDS).execute(() -> {
-                            if (cache.get(key) == null) loading.put(key, false);
-                        });
-                    } catch (Exception ex) {
-                        loading.put(key, false);
-                    }
-                });
+                String decoded = new String(java.util.Base64.getDecoder().decode(textures),
+                        java.nio.charset.StandardCharsets.UTF_8);
+                int skinAt = decoded.indexOf("\"SKIN\"");
+                String skinUrl = skinAt < 0 ? null : jsonString(decoded.substring(skinAt), "url");
+                if (skinUrl == null) {
+                    LOGGER.warn("no skin url for {}", username);
+                    fail(key);
+                    return;
+                }
+                download(skinUrl.replace("\\/", "/"), key);
             } catch (Exception ex) {
-                loading.put(key, false);
+                LOGGER.warn("skin lookup failed for {}", username, ex);
+                fail(key);
             }
         });
+    }
+
+    private static String fetch(String address) throws Exception {
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(address).openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        conn.setRequestProperty("User-Agent", "NotchCurrency-Mod");
+        int code = conn.getResponseCode();
+        if (code != 200) {
+            LOGGER.warn("mojang returned {} for {}", code, address);
+            conn.disconnect();
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        try (java.io.BufferedReader r = new java.io.BufferedReader(
+                new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line);
+        }
+        conn.disconnect();
+        return sb.toString();
+    }
+
+    private static String jsonString(String json, String field) {
+        if (json == null) return null;
+        int at = json.indexOf("\"" + field + "\"");
+        if (at < 0) return null;
+        int colon = json.indexOf(":", at);
+        if (colon < 0) return null;
+        int s = json.indexOf("\"", colon + 1);
+        if (s < 0) return null;
+        int e = json.indexOf("\"", s + 1);
+        if (e < 0) return null;
+        return json.substring(s + 1, e);
     }
 }

@@ -26,6 +26,9 @@ import net.minecraft.resources.ResourceLocation;
 *///?} else {
 public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, PlayerModel<NotchNpcEntity>> {
 //?}
+    //? if >=1.21.11 {
+    /*private final net.minecraft.client.renderer.item.ItemModelResolver itemModels;
+    *///?}
     private final NpcPlayerModel live;
     private final NpcPlayerModel liveSlim;
     private final NpcPlayerModel frozen;
@@ -36,6 +39,9 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
 
     public NotchNpcBipedRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcPlayerModel(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
+        //? if >=1.21.11 {
+        /*this.itemModels = ctx.getItemModelResolver();
+        *///?}
         this.live = (NpcPlayerModel) this.model; // the model handed to super() just above
         this.liveSlim = new NpcPlayerModel(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
         this.frozen = new NpcPlayerModel(ctx.bakeLayer(NpcModelLayers.NPC_PLAYER), false);
@@ -128,6 +134,8 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
     @Override
     public void extractRenderState(NotchNpcEntity entity, net.minecraft.client.renderer.entity.state.AvatarRenderState vanilla, float partialTick) {
         super.extractRenderState(entity, vanilla, partialTick);
+        net.minecraft.client.renderer.entity.HumanoidMobRenderer.extractHumanoidRenderState(
+                entity, vanilla, partialTick, this.itemModels);
         NotchNpcRenderState state = new NotchNpcRenderState();
         NotchNpcRenderState.attachTo(vanilla, state);
         state.poseAnim = entity.getPoseAnim();
