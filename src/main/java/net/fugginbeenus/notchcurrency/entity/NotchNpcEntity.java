@@ -1558,6 +1558,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.putInt("NpcPose", getNpcPose());
         nbt.put("CustomPose", this.entityData.get(CUSTOM_POSE).copy());
         nbt.putInt("PoseAnim", getPoseAnim());
+        nbt.putString("IdleAnim", getIdleAnimation());
         if (!getCustomClip().isEmpty()) nbt.putString("CustomClip", getCustomClip());
         nbt.putString("Behavior", behavior.name());
         nbt.putInt("WanderRadius", wanderRadius);
@@ -1644,6 +1645,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (nbt.contains("Billboard")) setBillboard(nbt.getString("Billboard"));
         if (nbt.contains("NpcPose")) setNpcPose(nbt.getInt("NpcPose"));
         if (nbt.contains("PoseAnim")) setPoseAnim(nbt.getInt("PoseAnim"));
+        if (nbt.contains("IdleAnim")) setIdleAnimation(nbt.getString("IdleAnim"));
         if (nbt.contains("CustomClip")) setCustomClip(nbt.getString("CustomClip"));
         if (nbt.contains("CustomPose")) {
             CompoundTag pose = nbt.getCompound("CustomPose");
