@@ -131,6 +131,6 @@ Then hand it to any NPC: loop it forever as an idle, or play it once when someth
 
 ## Links
 
-- [Wiki](https://github.com/FugginBeenus/notches-currency-fabric/wiki) — every screen explained
-- [Discord](https://discord.gg/fMpb6retYA) — questions, bugs, ideas
+- [Wiki](https://github.com/FugginBeenus/notches-currency-fabric/wiki) - every screen explained
+- [Discord](https://discord.gg/fMpb6retYA) - questions, bugs, ideas
 - [Source](https://github.com/FugginBeenus/notches-currency-fabric)
