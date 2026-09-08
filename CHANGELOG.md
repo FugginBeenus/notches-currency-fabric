@@ -99,6 +99,14 @@ buy**, prices that **drift with stock**, and the ability to **buy from players**
 - The hitbox preview drew behind the model on older versions, the quest tracker sat under
   advancement toasts, and the new screens were washed out by the 1.21 menu blur.
 - Item and mob fields **autocomplete as you type** now, so a typo cannot quietly save as Air.
+- **NPCs showed up empty handed on 1.21.11 and up.** Armor and held items never reached the drawing
+  step, so nothing an NPC wore or carried was visible.
+- **Player skins never loaded.** On 1.21.11 the picture was built on the wrong thread; on 1.20.1 and
+  1.21.1 the download hung up before the game could read it. A failed name also retried every frame
+  until Mojang rate limited us, so it now waits a minute between tries.
+- **A shop could not buy an item without also selling it.** It demanded a sell price first, so
+  players had to spend coins to make a deal that pays coins. Buy-only rows read the right way round
+  now instead of showing "free" and an empty stock count.
 
 ## 0.8.1
 
