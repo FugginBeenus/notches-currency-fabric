@@ -74,6 +74,14 @@ public final class NotchNpcManager {
         buf.writeUtf(npc.getSubtitle());
         buf.writeUtf(npc.getVoice());
         buf.writeVarInt(npc.getVoicePitchPercent());
+        buf.writeVarInt(npc.getFlyCeiling());
+        buf.writeUtf(npc.getHurtSoundId());
+        buf.writeUtf(npc.getDeathSoundId());
+        buf.writeUtf(npc.getStepSoundId());
+        buf.writeUtf(npc.getAngrySoundId());
+        buf.writeUtf(npc.getAmbientSoundId());
+        buf.writeVarInt(npc.getAmbientEvery());
+        buf.writeBoolean(npc.isAmbientRandom());
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
@@ -562,6 +570,51 @@ public final class NotchNpcManager {
         if (sp.serverLevel().getEntity(npcId) instanceof NotchNpcEntity npc) {
             openSchedule(sp, npc);
         }
+    }
+
+    private static String validSound(ServerPlayer sp, String raw, String current) {
+        String cleaned = raw == null ? "" : raw.trim();
+        if (cleaned.isEmpty()) return "";
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(cleaned);
+        if (id == null) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "'" + cleaned + "' is not a sound name.").withStyle(ChatFormatting.RED));
+            return current;
+        }
+        if (net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(id)) return cleaned;
+        if (id.getNamespace().equals("notchcurrency")
+                && net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore.has(id.getPath())) {
+            return cleaned;
+        }
+        if (id.getNamespace().equals("minecraft")) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "No sound called '" + cleaned + "'.").withStyle(ChatFormatting.RED));
+            return current;
+        }
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                "'" + cleaned + "' is not built in. It plays only for players who have a resource pack with it.")
+                .withStyle(ChatFormatting.YELLOW));
+        return cleaned;
+    }
+
+    public static void setFlyCeiling(ServerPlayer sp, NotchNpcEntity npc, int y) {
+        if (!guard(sp, npc)) return;
+        npc.setFlyCeiling(y);
+    }
+
+    public static void setSounds(ServerPlayer sp, NotchNpcEntity npc, String voice, int pitch,
+                                 String hurt, String death, String step, String angry,
+                                 String ambient, int every, boolean random) {
+        if (!guard(sp, npc)) return;
+        npc.setVoice(validSound(sp, voice, npc.getVoice()));
+        npc.setVoicePitchPercent(pitch);
+        npc.setHurtSoundId(validSound(sp, hurt, npc.getHurtSoundId()));
+        npc.setDeathSoundId(validSound(sp, death, npc.getDeathSoundId()));
+        npc.setStepSoundId(validSound(sp, step, npc.getStepSoundId()));
+        npc.setAngrySoundId(validSound(sp, angry, npc.getAngrySoundId()));
+        npc.setAmbientSoundId(validSound(sp, ambient, npc.getAmbientSoundId()));
+        npc.setAmbientEvery(every);
+        npc.setAmbientRandom(random);
     }
 
     public static void setFlavor(ServerPlayer sp, NotchNpcEntity npc,

@@ -523,6 +523,36 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SOUND_WANT, (server, player, buf) -> {
+            String id = buf.readUtf(64);
+            server.execute(() -> net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare
+                    .sendSoundTo(player, id));
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SOUND_DROP, (server, player, buf) -> {
+            String id = buf.readUtf(64);
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                String problem = net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore
+                        .remove(server, id);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
+                        problem == null ? "Removed " + id + " from this server." : problem)
+                        .withStyle(problem == null ? ChatFormatting.GREEN : ChatFormatting.RED));
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SOUND_PUSH, (server, player, buf) -> {
+            int phase = buf.readByte();
+            String id = buf.readUtf(64);
+            byte[] payload = phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            server.execute(() -> net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare
+                    .receiveUpload(player, phase, id, payload, announced));
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_MODEL_WANT, (server, player, buf) -> {
             String id = buf.readUtf(64);
             server.execute(() -> net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare
@@ -751,6 +781,22 @@ public final class ServerPacketHandlers {
                     net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.turnIn(player, key));
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_SET_TIMED_ANIM, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String name = buf.readUtf();
+            int every = buf.readVarInt();
+            boolean random = buf.readBoolean();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                        && npc.canEdit(player)) {
+                    npc.setTimedAnimation(name);
+                    npc.setTimedEvery(every);
+                    npc.setTimedRandom(random);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SET_IDLE_ANIM, (server, player, buf) -> {
             UUID id = buf.readUUID();
             String name = buf.readUtf();
@@ -874,6 +920,37 @@ public final class ServerPacketHandlers {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFlavor(player, npc, subtitle, voice, pitch);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SET_FLY_CEILING, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            int y = buf.readVarInt();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFlyCeiling(player, npc, y);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SET_SOUNDS, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String voice = buf.readUtf(128);
+            int pitch = buf.readVarInt();
+            String hurt = buf.readUtf(128);
+            String death = buf.readUtf(128);
+            String step = buf.readUtf(128);
+            String angry = buf.readUtf(128);
+            String ambient = buf.readUtf(128);
+            int every = buf.readVarInt();
+            boolean random = buf.readBoolean();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setSounds(player, npc, voice, pitch,
+                            hurt, death, step, angry, ambient, every, random);
                 }
             });
         });

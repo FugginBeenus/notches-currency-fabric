@@ -119,6 +119,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public static final int POSE_WAVING = 6;
     public static final int POSE_CUSTOM = 7;
 
+    private static final EntityDataAccessor<String> KEYFRAME_TIMED =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(
+                    NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> KEYFRAME_TIMED_EVERY =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(
+                    NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> KEYFRAME_TIMED_RANDOM =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(
+                    NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<String> KEYFRAME_IDLE =
             SynchedEntityData.defineId(NotchNpcEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> KEYFRAME_PLAY =
@@ -184,6 +193,16 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private int actionSweepVersion = 0;
     private String voiceSound = "";
     private int voicePitch = 100;
+    private String hurtSound = "";
+    private String deathSound = "";
+    private String stepSound = "";
+    private String angrySound = "";
+    private String ambientSound = "";
+    private int ambientEvery = 0;
+    private boolean ambientRandom = true;
+    private int ambientTimer = -1;
+    private int timedTimer = -1;
+    private int flyCeiling = 0;
 
     private net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule schedule =
             new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule();
@@ -246,6 +265,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(NPC_POSE, POSE_STANDING);
         builder.define(CUSTOM_POSE, new CompoundTag());
         builder.define(KEYFRAME_IDLE, "");
+        builder.define(KEYFRAME_TIMED, "");
+        builder.define(KEYFRAME_TIMED_EVERY, 0);
+        builder.define(KEYFRAME_TIMED_RANDOM, true);
         builder.define(KEYFRAME_PLAY, "");
         builder.define(KEYFRAME_START, 0);
         builder.define(POSE_ANIM, ANIM_BREATHE);
@@ -276,6 +298,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(NPC_POSE, POSE_STANDING);
         this.entityData.define(CUSTOM_POSE, new CompoundTag());
         this.entityData.define(KEYFRAME_IDLE, "");
+        this.entityData.define(KEYFRAME_TIMED, "");
+        this.entityData.define(KEYFRAME_TIMED_EVERY, 0);
+        this.entityData.define(KEYFRAME_TIMED_RANDOM, true);
         this.entityData.define(KEYFRAME_PLAY, "");
         this.entityData.define(KEYFRAME_START, 0);
         this.entityData.define(POSE_ANIM, ANIM_BREATHE);
@@ -295,6 +320,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     //?}
         if (hit && !this.level().isClientSide) {
             this.entityData.set(ATTACK_PULSE, this.entityData.get(ATTACK_PULSE) + 1);
+            playAngrySound();
         }
         return hit;
     }
@@ -481,6 +507,21 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public int getAnimationStart() { return this.entityData.get(KEYFRAME_START); }
     public int getNpcAge() { return this.tickCount; }
 
+    public String getTimedAnimation() { return this.entityData.get(KEYFRAME_TIMED); }
+    public void setTimedAnimation(String name) {
+        this.entityData.set(KEYFRAME_TIMED, name == null ? "" : name.trim());
+        this.timedTimer = -1;
+    }
+
+    public int getTimedEvery() { return this.entityData.get(KEYFRAME_TIMED_EVERY); }
+    public void setTimedEvery(int seconds) {
+        this.entityData.set(KEYFRAME_TIMED_EVERY, Math.max(0, Math.min(600, seconds)));
+        this.timedTimer = -1;
+    }
+
+    public boolean isTimedRandom() { return this.entityData.get(KEYFRAME_TIMED_RANDOM); }
+    public void setTimedRandom(boolean random) { this.entityData.set(KEYFRAME_TIMED_RANDOM, random); }
+
     public void playAnimationOnce(String name) {
         this.entityData.set(KEYFRAME_PLAY, name == null ? "" : name.trim());
         this.entityData.set(KEYFRAME_START, this.tickCount);
@@ -515,13 +556,118 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public void playVoice() {
-        if (voiceSound.isEmpty() || this.isSilent()) return;
-        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(voiceSound);
-        if (id == null) return;
-        net.minecraft.sounds.SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(id);
+        playSoundId(voiceSound, 1.0f);
+    }
+
+    @Nullable
+    private net.minecraft.sounds.SoundEvent soundById(String soundId) {
+        if (soundId == null || soundId.isEmpty()) return null;
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(soundId);
+        if (id == null) return null;
+        net.minecraft.sounds.SoundEvent known = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(id);
+        return known != null ? known : net.minecraft.sounds.SoundEvent.createVariableRangeEvent(id);
+    }
+
+    private void playSoundId(String soundId, float volume) {
+        if (this.isSilent()) return;
+        net.minecraft.sounds.SoundEvent sound = soundById(soundId);
         if (sound == null) return;
         this.level().playSound(null, this.getX(), this.getY(), this.getZ(), sound,
-                net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, voicePitch / 100.0f);
+                net.minecraft.sounds.SoundSource.NEUTRAL, volume, voicePitch / 100.0f);
+    }
+
+    public String getHurtSoundId() { return hurtSound; }
+    public void setHurtSoundId(String id) { this.hurtSound = id == null ? "" : id.trim(); }
+
+    public String getDeathSoundId() { return deathSound; }
+    public void setDeathSoundId(String id) { this.deathSound = id == null ? "" : id.trim(); }
+
+    public String getStepSoundId() { return stepSound; }
+    public void setStepSoundId(String id) { this.stepSound = id == null ? "" : id.trim(); }
+
+    public String getAngrySoundId() { return angrySound; }
+    public void setAngrySoundId(String id) { this.angrySound = id == null ? "" : id.trim(); }
+
+    public String getAmbientSoundId() { return ambientSound; }
+    public void setAmbientSoundId(String id) {
+        this.ambientSound = id == null ? "" : id.trim();
+        this.ambientTimer = -1;
+    }
+
+    public int getAmbientEvery() { return ambientEvery; }
+    public void setAmbientEvery(int seconds) {
+        this.ambientEvery = Math.max(0, Math.min(600, seconds));
+        this.ambientTimer = -1;
+    }
+
+    public boolean isAmbientRandom() { return ambientRandom; }
+    public void setAmbientRandom(boolean random) { this.ambientRandom = random; }
+
+    public int getFlyCeiling() { return flyCeiling; }
+    public void setFlyCeiling(int y) { this.flyCeiling = Math.max(0, y); }
+
+    public void playAngrySound() { playSoundId(angrySound, 1.0f); }
+
+    @Override
+    protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource source) {
+        net.minecraft.sounds.SoundEvent own = soundById(hurtSound);
+        return own != null ? own : super.getHurtSound(source);
+    }
+
+    @Override
+    protected net.minecraft.sounds.SoundEvent getDeathSound() {
+        net.minecraft.sounds.SoundEvent own = soundById(deathSound);
+        return own != null ? own : super.getDeathSound();
+    }
+
+    @Override
+    protected void playStepSound(net.minecraft.core.BlockPos pos,
+                                 net.minecraft.world.level.block.state.BlockState state) {
+        net.minecraft.sounds.SoundEvent own = soundById(stepSound);
+        if (own == null) {
+            super.playStepSound(pos, state);
+            return;
+        }
+        this.playSound(own, 0.15f, voicePitch / 100.0f);
+    }
+
+    private void resetAmbientTimer() {
+        int base = Math.max(1, ambientEvery) * 20;
+        ambientTimer = ambientRandom ? base / 2 + this.random.nextInt(base + 1) : base;
+    }
+
+    private void resetTimedAnimTimer() {
+        int base = Math.max(1, getTimedEvery()) * 20;
+        timedTimer = isTimedRandom() ? base / 2 + this.random.nextInt(base + 1) : base;
+    }
+
+    private void tickTimedAnimation() {
+        if (getTimedAnimation().isEmpty() || getTimedEvery() <= 0) return;
+        if (timedTimer < 0) {
+            resetTimedAnimTimer();
+            return;
+        }
+        if (--timedTimer > 0) return;
+        resetTimedAnimTimer();
+        playAnimationOnce(getTimedAnimation());
+    }
+
+    private void tickAmbientSound() {
+        if (ambientSound.isEmpty() || ambientEvery <= 0) return;
+        if (ambientTimer < 0) {
+            resetAmbientTimer();
+            return;
+        }
+        if (--ambientTimer > 0) return;
+        resetAmbientTimer();
+        playSoundId(ambientSound, 1.0f);
+    }
+
+    private void tickFlyCeiling() {
+        if (flyCeiling <= 0 || !this.isNoGravity()) return;
+        if (this.getY() < flyCeiling) return;
+        net.minecraft.world.phys.Vec3 move = this.getDeltaMovement();
+        if (move.y > 0) this.setDeltaMovement(move.x, 0, move.z);
     }
 
     public static final int MAX_BILLBOARD_LINES = 4;
@@ -1126,6 +1272,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         super.aiStep();
         if (!this.level().isClientSide) {
             tickBossBar();
+            tickAmbientSound();
+            tickTimedAnimation();
+            tickFlyCeiling();
             if (movementBehavior() == Behavior.STATIONARY) {
                 net.minecraft.core.BlockPos post = leashHome();
                 if (this.getTarget() != null && this.getTarget().isAlive()) {
@@ -1581,6 +1730,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (!getSubtitle().isEmpty()) nbt.putString("Subtitle", getSubtitle());
         if (!voiceSound.isEmpty()) nbt.putString("Voice", voiceSound);
         if (voicePitch != 100) nbt.putInt("VoicePitch", voicePitch);
+        if (!hurtSound.isEmpty()) nbt.putString("HurtSound", hurtSound);
+        if (!deathSound.isEmpty()) nbt.putString("DeathSound", deathSound);
+        if (!stepSound.isEmpty()) nbt.putString("StepSound", stepSound);
+        if (!angrySound.isEmpty()) nbt.putString("AngrySound", angrySound);
+        if (!getTimedAnimation().isEmpty()) nbt.putString("TimedAnim", getTimedAnimation());
+        if (getTimedEvery() > 0) nbt.putInt("TimedAnimEvery", getTimedEvery());
+        if (!isTimedRandom()) nbt.putBoolean("TimedAnimRandom", false);
+        if (!ambientSound.isEmpty()) nbt.putString("AmbientSound", ambientSound);
+        if (ambientEvery > 0) nbt.putInt("AmbientEvery", ambientEvery);
+        if (!ambientRandom) nbt.putBoolean("AmbientRandom", false);
+        if (flyCeiling > 0) nbt.putInt("FlyCeiling", flyCeiling);
         nbt.putBoolean("Protected", protectedNpc);
         nbt.putBoolean("StatSilent", this.isSilent());
         nbt.putBoolean("StatGlowing", this.isCurrentlyGlowing());
@@ -1682,6 +1842,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         setSubtitle(nbt.getString("Subtitle"));
         setVoice(nbt.getString("Voice"));
         setVoicePitchPercent(nbt.contains("VoicePitch") ? nbt.getInt("VoicePitch") : 100);
+        setHurtSoundId(nbt.getString("HurtSound"));
+        setDeathSoundId(nbt.getString("DeathSound"));
+        setStepSoundId(nbt.getString("StepSound"));
+        setAngrySoundId(nbt.getString("AngrySound"));
+        setTimedAnimation(nbt.getString("TimedAnim"));
+        setTimedEvery(nbt.contains("TimedAnimEvery") ? nbt.getInt("TimedAnimEvery") : 0);
+        setTimedRandom(!nbt.contains("TimedAnimRandom") || nbt.getBoolean("TimedAnimRandom"));
+        setAmbientSoundId(nbt.getString("AmbientSound"));
+        setAmbientEvery(nbt.contains("AmbientEvery") ? nbt.getInt("AmbientEvery") : 0);
+        setAmbientRandom(!nbt.contains("AmbientRandom") || nbt.getBoolean("AmbientRandom"));
+        setFlyCeiling(nbt.contains("FlyCeiling") ? nbt.getInt("FlyCeiling") : 0);
         setSchedule(nbt.contains("Schedule")
                 ? net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt.getCompound("Schedule"))
                 : new net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule());

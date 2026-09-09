@@ -12,12 +12,31 @@ public final class IdSuggest {
 
     public static final int KIND_ITEM = 0;
     public static final int KIND_MOB = 1;
+    public static final int KIND_SOUND = 2;
+
+    private static java.util.List<String> soundIds() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (ResourceLocation id : BuiltInRegistries.SOUND_EVENT.keySet()) out.add(id.toString());
+        for (String own : net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.names()) {
+            out.add("notchcurrency:" + own);
+        }
+        return out;
+    }
 
     public static String best(String typed, int kind) {
         String want = typed == null ? "" : typed.trim().toLowerCase();
         if (want.isEmpty()) return "";
         String bare = want.startsWith("minecraft:") ? want.substring(10) : want;
         String hit = "";
+        if (kind == KIND_SOUND) {
+            for (String full : soundIds()) {
+                boolean match = full.startsWith(want)
+                        || (full.startsWith("minecraft:") && full.substring(10).startsWith(bare));
+                if (!match) continue;
+                if (hit.isEmpty() || full.length() < hit.length()) hit = full;
+            }
+            return hit;
+        }
         for (ResourceLocation id : (kind == KIND_MOB
                 ? BuiltInRegistries.ENTITY_TYPE.keySet()
                 : BuiltInRegistries.ITEM.keySet())) {
@@ -33,6 +52,11 @@ public final class IdSuggest {
     public static boolean known(String typed, int kind) {
         ResourceLocation id = ResourceLocation.tryParse(fill(typed));
         if (id == null) return false;
+        if (kind == KIND_SOUND) {
+            return BuiltInRegistries.SOUND_EVENT.containsKey(id)
+                    || ("notchcurrency".equals(id.getNamespace())
+                        && net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.has(id.getPath()));
+        }
         return kind == KIND_MOB
                 ? BuiltInRegistries.ENTITY_TYPE.containsKey(id)
                 : BuiltInRegistries.ITEM.containsKey(id);
@@ -46,6 +70,10 @@ public final class IdSuggest {
     public static String friendly(String typed, int kind) {
         ResourceLocation id = ResourceLocation.tryParse(fill(typed));
         if (id == null) return "";
+        if (kind == KIND_SOUND) {
+            String tail = id.getPath().replace('.', ' ').replace('_', ' ');
+            return tail.isEmpty() ? "" : Character.toUpperCase(tail.charAt(0)) + tail.substring(1);
+        }
         if (kind == KIND_MOB) {
             var t = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
             return t.isEmpty() ? "" : t.get().getDescription().getString();
@@ -88,7 +116,7 @@ public final class IdSuggest {
         if (box == null || !box.isVisible()) return;
         String typed = box.getValue();
         if (typed.isBlank()) return;
-        String hit = best(typed, kind);
+        String hit = box.isFocused() ? best(typed, kind) : "";
         int colour = known(typed, kind) ? 0xFF6FC274 : 0xFFD06B5A;
         if (!hit.isEmpty() && hit.length() > typed.trim().length()) {
             String tail = hit.substring(typed.trim().length());

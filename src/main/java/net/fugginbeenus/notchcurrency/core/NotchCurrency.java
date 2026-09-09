@@ -169,11 +169,15 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(sp);
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
+            net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare.greet(sp);
             HeartState.applyTo(sp);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-                net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.forget(handler.player));
+                {
+                    net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.forget(handler.player);
+                    net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare.forget(handler.player);
+                });
 
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
             ServerPlayer sp = newP;
@@ -201,6 +205,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.compat.RegistryAccess.setServer(server.registryAccess());
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
+            net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore.load(server);
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.readFromWorld(
                     server, net.fugginbeenus.notchcurrency.config.NotchConfigIO.get());
             net.minecraft.server.level.ServerLevel main = server.overworld();

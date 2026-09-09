@@ -154,6 +154,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerMailRecipientsReceiver();
         NotchPacketsClient.registerModelReloadReceiver();
         NotchPacketsClient.registerNpcModelReceivers();
+        NotchPacketsClient.registerNpcSoundReceivers();
         NotchPacketsClient.registerBalloonConfigReceiver();
         net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelHint.register();
         NotchPacketsClient.registerMailAimReceiver();

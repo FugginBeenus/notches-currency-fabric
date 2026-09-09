@@ -24,7 +24,8 @@ public final class NpcModelLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcModels");
 
-    public static final String PACK_DIR_NAME = "NotchCurrencyModels";
+    public static final String PACK_DIR_NAME = "NotchCurrencyAssets";
+    private static final String OLD_PACK_DIR_NAME = "NotchCurrencyModels";
     public static final String PACK_PROFILE_NAME = "file/" + PACK_DIR_NAME;
     private static final long MAX_FILE_BYTES = 4L * 1024 * 1024;
     private static final List<String> PROBLEMS = new ArrayList<>();
@@ -41,6 +42,10 @@ public final class NpcModelLoader {
         return FabricLoader.getInstance().getGameDir().resolve("resourcepacks").resolve(PACK_DIR_NAME);
     }
 
+    private static Path oldPackDir() {
+        return FabricLoader.getInstance().getGameDir().resolve("resourcepacks").resolve(OLD_PACK_DIR_NAME);
+    }
+
     public static List<String> problems() {
         return List.copyOf(PROBLEMS);
     }
@@ -50,6 +55,8 @@ public final class NpcModelLoader {
         try {
             Files.createDirectories(importDir());
             writeReadme();
+            deleteRecursively(oldPackDir());
+            net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.scan();
 
             List<Path> folders = new ArrayList<>();
             try (Stream<Path> entries = Files.list(modelsDir())) {
@@ -59,7 +66,8 @@ public final class NpcModelLoader {
                         .forEach(folders::add);
             }
 
-            String stamp = stampOf(folders);
+            String stamp = stampOf(folders)
+                    + net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.stampPart();
             if (stamp.equals(writtenStamp())) {
                 for (Path folder : folders) {
                     NpcModelBundle bundle = readOnly(folder);
@@ -71,7 +79,8 @@ public final class NpcModelLoader {
 
             boolean hadPack = Files.isDirectory(packDir());
             deleteRecursively(packDir());
-            if (folders.isEmpty()) {
+            boolean anySounds = net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.count() > 0;
+            if (folders.isEmpty() && !anySounds) {
                 NpcModelRegistry.replaceAll(List.of());
                 return hadPack;
             }
@@ -81,6 +90,8 @@ public final class NpcModelLoader {
                 NpcModelBundle bundle = readAndWrite(folder);
                 if (bundle != null) found.add(bundle);
             }
+            net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.writeInto(
+                    packDir().resolve("assets").resolve("notchcurrency"));
             Files.writeString(packDir().resolve(".stamp"), stamp);
         } catch (Exception e) {
             LOGGER.error("Could not load custom NPC models", e);
@@ -319,7 +330,7 @@ public final class NpcModelLoader {
         Files.createDirectories(packDir());
         Files.writeString(packDir().resolve("pack.mcmeta"),
                 net.fugginbeenus.notchcurrency.client.PackMeta.json(
-                        "Notch Currency NPC models (generated - edit via config/notchcurrency/npc_models)"));
+                        "Notch Currency NPC models and sounds (generated - do not edit by hand)"));
     }
 
     private static void writeReadme() throws Exception {

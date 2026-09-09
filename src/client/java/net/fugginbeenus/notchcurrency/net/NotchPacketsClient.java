@@ -68,12 +68,16 @@ public final class NotchPacketsClient {
             String subtitle = buf.readUtf(64);
             String voice = buf.readUtf(128);
             int voicePitch = buf.readVarInt();
+            int flyCeiling = buf.readVarInt();
+            var sounds = new net.fugginbeenus.notchcurrency.client.npc.NpcSounds(
+                    voice, voicePitch, buf.readUtf(128), buf.readUtf(128), buf.readUtf(128),
+                    buf.readUtf(128), buf.readUtf(128), buf.readVarInt(), buf.readBoolean());
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
                     scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
-                    regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch);
+                    regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch, sounds, flyCeiling);
             client.execute(() -> Minecraft.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });
@@ -254,6 +258,28 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SHARE, buf);
     }
 
+    public static void sendNpcFlyCeiling(UUID npcId, int y) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeVarInt(y);
+        NetClient.sendToServer(NotchPackets.NPC_SET_FLY_CEILING, buf);
+    }
+
+    public static void sendNpcSounds(UUID npcId, net.fugginbeenus.notchcurrency.client.npc.NpcSounds s) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(s.voice());
+        buf.writeVarInt(s.pitch());
+        buf.writeUtf(s.hurt());
+        buf.writeUtf(s.death());
+        buf.writeUtf(s.step());
+        buf.writeUtf(s.angry());
+        buf.writeUtf(s.ambient());
+        buf.writeVarInt(s.every());
+        buf.writeBoolean(s.random());
+        NetClient.sendToServer(NotchPackets.NPC_SET_SOUNDS, buf);
+    }
+
     public static void sendNpcFlavor(UUID npcId, String subtitle, String voice, int voicePitch) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);
@@ -288,6 +314,15 @@ public final class NotchPacketsClient {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUtf(key == null ? "" : key);
         NetClient.sendToServer(NotchPackets.QUEST_HAND_IN, buf);
+    }
+
+    public static void sendNpcSetTimedAnim(UUID npcId, String name, int every, boolean random) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(name == null ? "" : name);
+        buf.writeVarInt(every);
+        buf.writeBoolean(random);
+        NetClient.sendToServer(NotchPackets.NPC_SET_TIMED_ANIM, buf);
     }
 
     public static void sendNpcSetIdleAnim(UUID npcId, String name) {
@@ -626,6 +661,58 @@ public final class NotchPacketsClient {
         buf.writeUtf(note, 128);
         buf.writeVarLong(Math.max(0L, coins));
         NetClient.sendToServer(NotchPackets.MAIL_SEND, buf);
+    }
+
+    public static void sendNpcSoundWant(String id) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(id, 64);
+        NetClient.sendToServer(NotchPackets.NPC_SOUND_WANT, buf);
+    }
+
+    public static void sendNpcSoundDrop(String id) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(id, 64);
+        NetClient.sendToServer(NotchPackets.NPC_SOUND_DROP, buf);
+    }
+
+    public static void sendNpcSoundPush(int phase, String id, byte[] part, int announcedBytes) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeByte(phase);
+        buf.writeUtf(id, 64);
+        if (phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_CHUNK) {
+            buf.writeByteArray(part);
+        }
+        if (phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_BEGIN) {
+            buf.writeVarInt(announcedBytes);
+        }
+        NetClient.sendToServer(NotchPackets.NPC_SOUND_PUSH, buf);
+    }
+
+    public static void registerNpcSoundReceivers() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_SOUND_LIST, (client, buf) -> {
+            boolean mayShare = buf.readBoolean();
+            int count = buf.readVarInt();
+            java.util.Map<String, String> offered = new java.util.LinkedHashMap<>();
+            for (int i = 0; i < count; i++) {
+                String id = buf.readUtf(64);
+                offered.put(id, buf.readUtf(32));
+            }
+            client.execute(() ->
+                    net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundDownloads
+                            .onList(offered, mayShare));
+        });
+
+        NetClient.registerClientReceiver(NotchPackets.NPC_SOUND_SEND, (client, buf) -> {
+            int phase = buf.readByte();
+            String id = buf.readUtf(64);
+            byte[] part = phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npcsound.NpcSoundStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundDownloads
+                    .onPiece(phase, id, part, announced));
+        });
     }
 
     public static void sendNpcModelWant(String id) {

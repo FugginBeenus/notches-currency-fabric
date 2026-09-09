@@ -59,6 +59,9 @@ public class NotchNpcEditorScreen extends Screen {
     private String currentSubtitle = "";
     private String currentVoice = "";
     private int currentVoicePitch = 100;
+    private net.fugginbeenus.notchcurrency.client.npc.NpcSounds currentSounds =
+            net.fugginbeenus.notchcurrency.client.npc.NpcSounds.empty();
+    private int currentFlyCeiling = 0;
     private EditBox playerField;
     private EditBox urlField;
     private EditBox followField;
@@ -81,6 +84,11 @@ public class NotchNpcEditorScreen extends Screen {
         this.currentSubtitle = state.subtitle() == null ? "" : state.subtitle();
         this.currentVoice = state.voice() == null ? "" : state.voice();
         this.currentVoicePitch = state.voicePitch();
+        this.currentSounds = state.sounds() == null
+                ? net.fugginbeenus.notchcurrency.client.npc.NpcSounds.empty() : state.sounds();
+        this.currentVoice = this.currentSounds.voice();
+        this.currentVoicePitch = this.currentSounds.pitch();
+        this.currentFlyCeiling = state.flyCeiling();
         this.ownerName = state.ownerName() == null ? "" : state.ownerName();
         this.canEdit = state.canEdit();
         this.currentModel = (state.model() == null || state.model().isEmpty())
@@ -458,77 +466,40 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, hint, px + W / 2, py + 261, NotchTheme.TEXT_MUTED, false);
     }
 
-    private static final String[][] VOICES = {
-            {"", "Silent"},
-            {"entity.villager.ambient", "Villager"},
-            {"entity.villager.trade", "Trader"},
-            {"entity.wandering_trader.ambient", "Wanderer"},
-            {"entity.pillager.ambient", "Gruff"},
-            {"entity.piglin.ambient", "Snorty"},
-            {"entity.witch.ambient", "Cackle"},
-            {"entity.evoker.ambient", "Mystic"},
-            {"entity.allay.ambient_without_item", "Chime"},
-            {"entity.cat.ambient", "Cat"},
-            {"entity.wolf.ambient", "Dog"},
-            {"entity.parrot.ambient", "Bird"},
-    };
-
-    private int voiceIndex() {
-        String id = currentVoice.startsWith("minecraft:") ? currentVoice.substring(10) : currentVoice;
-        for (int i = 0; i < VOICES.length; i++) {
-            if (VOICES[i][0].equals(id)) return i;
-        }
-        return 0;
-    }
-
     private void sendFlavor() {
         NotchPacketsClient.sendNpcFlavor(npcId, currentSubtitle, currentVoice, currentVoicePitch);
     }
 
     private void drawVoiceRow(GuiGraphics ctx, int mx, int my) {
-        NotchWidgets.divider(ctx, px + 8, py + 214, W - 16);
-        ctx.drawString(this.font, "Voice:", px + 22, py + 226, NotchTheme.TEXT_DARK, false);
-        boolean voiceHover = over(mx, my, px + 75, py + 222, 90, 14);
-        NotchWidgets.neutralButton(ctx, this.font, px + 75, py + 222, 90, 14,
-                VOICES[voiceIndex()][1], voiceHover);
-        if (voiceHover) {
+        boolean hover = over(mx, my, px + 60, py + 226, 180, 16);
+        NotchWidgets.primaryButton(ctx, this.font, px + 60, py + 226, 180, 16, "Sounds...", hover);
+        String voiceName = currentSounds.voice().isEmpty() ? "silent" : shortSound(currentSounds.voice());
+        NotchWidgets.centerText(ctx, this.font, "Voice: " + voiceName, px + W / 2, py + 248,
+                NotchTheme.TEXT_MUTED, false);
+        if (hover) {
             tooltip = java.util.List.of(
-                    Component.literal("Voice").withStyle(ChatFormatting.WHITE),
-                    Component.literal("A short sound when it is spoken to,").withStyle(ChatFormatting.GRAY),
-                    Component.literal("and on every line it says.").withStyle(ChatFormatting.GRAY),
-                    Component.literal("Click to cycle. Silent NPCs stay silent.").withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        ctx.drawString(this.font, "Pitch:", px + 172, py + 226, NotchTheme.TEXT_DARK, false);
-        boolean downHover = over(mx, my, px + 208, py + 222, 16, 14);
-        boolean upHover = over(mx, my, px + 254, py + 222, 16, 14);
-        NotchWidgets.neutralButton(ctx, this.font, px + 208, py + 222, 16, 14, "-", downHover);
-        NotchWidgets.centerText(ctx, this.font, currentVoicePitch + "%", px + 239, py + 226,
-                NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + 254, py + 222, 16, 14, "+", upHover);
-        if (downHover || upHover) {
-            tooltip = java.util.List.of(
-                    Component.literal("Pitch").withStyle(ChatFormatting.WHITE),
-                    Component.literal("Low for big and slow, high for small").withStyle(ChatFormatting.GRAY),
-                    Component.literal("and quick. This is what makes a cast").withStyle(ChatFormatting.GRAY),
-                    Component.literal("out of one sound.").withStyle(ChatFormatting.DARK_GRAY));
+                    Component.literal("Sounds").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Voice, pitch, and the sounds it makes when").withStyle(ChatFormatting.GRAY),
+                    Component.literal("hurt, killed, walking or swinging.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("An ambient sound plays on a timer, so a").withStyle(ChatFormatting.GRAY),
+                    Component.literal("blacksmith can keep hammering.").withStyle(ChatFormatting.DARK_GRAY));
         }
     }
 
+    private static String shortSound(String id) {
+        String cut = id.startsWith("minecraft:") ? id.substring(10) : id;
+        int dot = cut.lastIndexOf('.');
+        return dot > 0 ? cut.substring(dot + 1) : cut;
+    }
+
     private boolean clickVoiceRow(int mx, int my) {
-        if (over(mx, my, px + 75, py + 222, 90, 14)) {
-            currentVoice = VOICES[(voiceIndex() + 1) % VOICES.length][0];
-            sendFlavor();
-            return true;
-        }
-        if (over(mx, my, px + 208, py + 222, 16, 14)) {
-            currentVoicePitch = Math.max(50, currentVoicePitch - (net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 5 : 10));
-            sendFlavor();
-            return true;
-        }
-        if (over(mx, my, px + 254, py + 222, 16, 14)) {
-            currentVoicePitch = Math.min(200, currentVoicePitch + (net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 5 : 10));
-            sendFlavor();
+        if (over(mx, my, px + 60, py + 226, 180, 16)) {
+            final NotchNpcEditorScreen self = this;
+            net.minecraft.client.Minecraft.getInstance().setScreen(
+                    new NpcSoundsScreen(npcId, currentSounds, saved -> {
+                        self.currentSounds = saved;
+                        net.minecraft.client.Minecraft.getInstance().setScreen(self);
+                    }));
             return true;
         }
         return false;
@@ -817,6 +788,38 @@ public class NotchNpcEditorScreen extends Screen {
                     Component.literal("A loop of poses this NPC plays forever.").withStyle(ChatFormatting.GRAY),
                     Component.literal("Write them on the Manage tab, under Animations.").withStyle(ChatFormatting.DARK_GRAY));
         }
+
+        ctx.drawString(this.font, "Now and then:", px + POSE_CTL_X, py + 228, NotchTheme.TEXT_DARK, false);
+        String timedName = npc == null || npc.getTimedAnimation().isBlank()
+                ? "None" : npc.getTimedAnimation();
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16, timedName,
+                over(mx, my, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16));
+
+        int every = npc == null ? 0 : npc.getTimedEvery();
+        boolean steady = npc != null && !npc.isTimedRandom();
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 258, 16, 14, "-",
+                over(mx, my, px + POSE_CTL_X, py + 258, 16, 14));
+        NotchWidgets.centerText(ctx, this.font, every <= 0 ? "off" : every + "s",
+                px + POSE_CTL_X + 40, py + 262, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 64, py + 258, 16, 14, "+",
+                over(mx, my, px + POSE_CTL_X + 64, py + 258, 16, 14));
+        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 86, py + 258, 62, 14,
+                steady ? "Exact" : "Random",
+                over(mx, my, px + POSE_CTL_X + 86, py + 258, 62, 14));
+        if (over(mx, my, px + POSE_CTL_X, py + 228, POSE_CTL_W, 46)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Now and then").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Plays once on a timer, then goes back").withStyle(ChatFormatting.GRAY),
+                    Component.literal("to the idle loop.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Exact swings on the beat, so it can match").withStyle(ChatFormatting.GRAY),
+                    Component.literal("an anvil sound set to the same gap.").withStyle(ChatFormatting.DARK_GRAY));
+        }
+    }
+
+    private void sendTimed(NotchNpcEntity npc) {
+        if (npc == null) return;
+        NotchPacketsClient.sendNpcSetTimedAnim(npcId, npc.getTimedAnimation(),
+                npc.getTimedEvery(), npc.isTimedRandom());
     }
 
     private int poseIndex() { return Math.max(0, Math.min(POSE_NAMES.length - 1, poseId)); }
@@ -836,6 +839,42 @@ public class NotchNpcEditorScreen extends Screen {
                     .next(npc == null ? "" : npc.getIdleAnimation());
             NotchPacketsClient.sendNpcSetIdleAnim(npcId, next);
             if (npc != null) npc.setIdleAnimation(next);
+            return true;
+        }
+        if (over(mx, my, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16)) {
+            NotchNpcEntity npc = findPreview();
+            String next = net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary
+                    .next(npc == null ? "" : npc.getTimedAnimation());
+            if (npc != null) {
+                npc.setTimedAnimation(next);
+                sendTimed(npc);
+            }
+            return true;
+        }
+        if (over(mx, my, px + POSE_CTL_X, py + 258, 16, 14)) {
+            NotchNpcEntity npc = findPreview();
+            int step = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 10 : 1;
+            if (npc != null) {
+                npc.setTimedEvery(Math.max(0, npc.getTimedEvery() - step));
+                sendTimed(npc);
+            }
+            return true;
+        }
+        if (over(mx, my, px + POSE_CTL_X + 64, py + 258, 16, 14)) {
+            NotchNpcEntity npc = findPreview();
+            int step = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 10 : 1;
+            if (npc != null) {
+                npc.setTimedEvery(Math.min(600, npc.getTimedEvery() + step));
+                sendTimed(npc);
+            }
+            return true;
+        }
+        if (over(mx, my, px + POSE_CTL_X + 86, py + 258, 62, 14)) {
+            NotchNpcEntity npc = findPreview();
+            if (npc != null) {
+                npc.setTimedRandom(!npc.isTimedRandom());
+                sendTimed(npc);
+            }
             return true;
         }
         if (over(mx, my, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16)) {
@@ -1007,7 +1046,7 @@ public class NotchNpcEditorScreen extends Screen {
                 if (over(mx, my, px + 70, py + 126, 160, 16)) {
                     NotchWidgets.click();
                     Minecraft.getInstance().setScreen(
-                            new NpcStatsScreen(npcId, statsBits, maxHealth, speedPct, regen));
+                            new NpcStatsScreen(npcId, statsBits, maxHealth, speedPct, regen, currentFlyCeiling));
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 146, 160, 16)) {

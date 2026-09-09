@@ -55,6 +55,12 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_MODEL_WANT = NotchCurrency.id("npc_model_want");
     public static final ResourceLocation NPC_MODEL_PUSH = NotchCurrency.id("npc_model_push");
     public static final ResourceLocation NPC_MODELS_RELOAD = NotchCurrency.id("npc_models_reload");
+    public static final ResourceLocation NPC_SOUND_LIST = NotchCurrency.id("npc_sound_list");
+    public static final ResourceLocation NPC_SOUND_SEND = NotchCurrency.id("npc_sound_send");
+    public static final ResourceLocation NPC_SOUND_WANT = NotchCurrency.id("npc_sound_want");
+    public static final ResourceLocation NPC_SOUND_PUSH = NotchCurrency.id("npc_sound_push");
+    public static final ResourceLocation NPC_SOUND_DROP = NotchCurrency.id("npc_sound_drop");
+    public static final ResourceLocation NPC_SET_TIMED_ANIM = NotchCurrency.id("npc_set_timed_anim");
     public static final ResourceLocation NPC_SET_CLIP = NotchCurrency.id("npc_set_clip");
     public static final ResourceLocation NPC_SET_ANIM = NotchCurrency.id("npc_set_anim");
     public static final ResourceLocation BOUNTY_TRACKER = NotchCurrency.id("bounty_tracker");
@@ -102,6 +108,8 @@ public final class NotchPackets {
     public static final ResourceLocation ANIM_DELETE     = NotchCurrency.id("anim_delete");
     public static final ResourceLocation NPC_SET_IDLE_ANIM = NotchCurrency.id("npc_set_idle_anim");
     public static final ResourceLocation NPC_SET_FLAVOR = NotchCurrency.id("npc_set_flavor");
+    public static final ResourceLocation NPC_SET_SOUNDS = NotchCurrency.id("npc_set_sounds");
+    public static final ResourceLocation NPC_SET_FLY_CEILING = NotchCurrency.id("npc_set_fly_ceiling");
     public static final ResourceLocation WAYSTONE_FEE_SYNC = NotchCurrency.id("waystone_fee_sync");
     public static final ResourceLocation ATM_WITHDRAW    = NotchCurrency.id("atm_withdraw");
     public static final ResourceLocation SHOP_PURCHASE   = NotchCurrency.id("shop_purchase");

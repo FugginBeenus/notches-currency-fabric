@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class NpcStatsScreen extends Screen {
 
-    private static final int W = 300, H = 228;
+    private static final int W = 300, H = 250;
     private static final int SLIDER_X = 96, SLIDER_W = 130, SLIDER_H = 12;
     private static final String[] SLIDER_NAMES = {"Max Health", "Speed", "Regen"};
     private static final String[] TOGGLE_NAMES = {
@@ -20,15 +20,17 @@ public class NpcStatsScreen extends Screen {
     private final UUID npcId;
     private int statsBits;
     private int maxHealth, speedPct, regen;
+    private int flyCeiling;
     private int draggingSlider = -1;
 
-    public NpcStatsScreen(UUID npcId, int statsBits, int maxHealth, int speedPct, int regen) {
+    public NpcStatsScreen(UUID npcId, int statsBits, int maxHealth, int speedPct, int regen, int flyCeiling) {
         super(Component.literal("NPC Stats"));
         this.npcId = npcId;
         this.statsBits = statsBits;
         this.maxHealth = Math.max(2, Math.min(100, maxHealth));
         this.speedPct = Math.max(10, Math.min(60, speedPct));
         this.regen = Math.max(0, Math.min(10, regen));
+        this.flyCeiling = Math.max(0, flyCeiling);
     }
 
     private int px() { return (this.width - W) / 2; }
@@ -98,9 +100,32 @@ public class NpcStatsScreen extends Screen {
         } else {
             NotchWidgets.neutralButton(ctx, this.font, px + 14, py + 163, 132, 15, "Boss bar", bossHover);
         }
-        ctx.drawString(this.font, "Appears", px + 14, py + 188, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 185, SLIDER_W, 15,
-                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 185, SLIDER_W, 15));
+        boolean flying = (statsBits & 16) != 0;
+        ctx.drawString(this.font, "Fly ceiling", px + 14, py + 188,
+                flying ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
+        boolean fDown = over(mouseX, mouseY, px + SLIDER_X, py + 185, 18, 15);
+        boolean fUp = over(mouseX, mouseY, px + SLIDER_X + 94, py + 185, 18, 15);
+        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 185, 18, 15, "-", fDown);
+        NotchWidgets.centerText(ctx, this.font, flyCeiling <= 0 ? "off" : "Y " + flyCeiling,
+                px + SLIDER_X + 56, py + 188, flying ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X + 94, py + 185, 18, 15, "+", fUp);
+        net.fugginbeenus.notchcurrency.entity.NotchNpcEntity here = findNpc();
+        if (here != null) {
+            ctx.drawString(this.font, "now Y " + (int) Math.floor(here.getY()),
+                    px + SLIDER_X + SLIDER_W + 2, py + 188, NotchTheme.TEXT_MUTED, false);
+        }
+        if (fDown || fUp) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Fly ceiling").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("How high a flying NPC may rise.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Needs No gravity switched on.").withStyle(net.minecraft.ChatFormatting.DARK_GRAY),
+                    Component.literal("Shift steps by 10.").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                    mouseX, mouseY);
+        }
+
+        ctx.drawString(this.font, "Appears", px + 14, py + 210, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.neutralButton(ctx, this.font, px + SLIDER_X, py + 207, SLIDER_W, 15,
+                VIS_NAMES[visibility() % 3], over(mouseX, mouseY, px + SLIDER_X, py + 207, SLIDER_W, 15));
 
         if (bossHover) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
@@ -110,8 +135,8 @@ public class NpcStatsScreen extends Screen {
                     mouseX, mouseY);
         }
 
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 206, 160, 16, "Back to Editor",
-                over(mouseX, mouseY, px + 70, py + 206, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 228, 160, 16, "Back to Editor",
+                over(mouseX, mouseY, px + 70, py + 228, 160, 16));
 
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -169,14 +194,27 @@ public class NpcStatsScreen extends Screen {
                     return true;
                 }
             }
-            if (over(mx, my, px + SLIDER_X, py + 185, SLIDER_W, 15)) {
+            int fStep = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 10 : 1;
+            if (over(mx, my, px + SLIDER_X, py + 185, 18, 15)) {
+                NotchWidgets.tick();
+                flyCeiling = Math.max(0, flyCeiling - fStep);
+                NotchPacketsClient.sendNpcFlyCeiling(npcId, flyCeiling);
+                return true;
+            }
+            if (over(mx, my, px + SLIDER_X + 94, py + 185, 18, 15)) {
+                NotchWidgets.tick();
+                flyCeiling = Math.min(1000, flyCeiling + fStep);
+                NotchPacketsClient.sendNpcFlyCeiling(npcId, flyCeiling);
+                return true;
+            }
+            if (over(mx, my, px + SLIDER_X, py + 207, SLIDER_W, 15)) {
                 NotchWidgets.tick();
                 int vis = (visibility() + 1) % 3;
                 statsBits = (statsBits & ~(3 << 8)) | (vis << 8);
                 NotchPacketsClient.sendNpcSetStats(npcId, statsBits);
                 return true;
             }
-            if (over(mx, my, px + 70, py + 206, 160, 16)) {
+            if (over(mx, my, px + 70, py + 228, 160, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendNpcEditorReopen(npcId, 5);
                 return true;
