@@ -38,8 +38,8 @@ you hover. A few of them ignore where you put them, so there are **seven tame ve
 that wear the same pictures and behave. And **eight slots for your own PNGs**, shared the same way
 sounds are.
 
-Six starter effects come with a fresh world: wizard, ghost, blacksmith, holy, cursed and hearth.
-Pull them apart. On an older world, `/npcfx starters` adds them.
+Four starter effects come with a fresh world: wizard, ghost, holy and cursed. Pull them apart.
+On an older world, `/npcfx starters` adds them.
 
 ### Also
 

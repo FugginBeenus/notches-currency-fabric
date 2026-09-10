@@ -91,7 +91,7 @@ public final class NpcCommands {
                                             .syncAll(server);
                                     net.fugginbeenus.notchcurrency.compat.Msg.chat(p,
                                             net.minecraft.network.chat.Component.literal(added == 0
-                                                    ? "You already have all six."
+                                                    ? "You already have all four."
                                                     : "Added " + added + " starter effects.")
                                                     .withStyle(added == 0
                                                             ? net.minecraft.ChatFormatting.GRAY
