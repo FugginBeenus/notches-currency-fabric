@@ -106,8 +106,8 @@ public class ParticleDesignerScreen extends Screen {
             int sy = py + 42 + ROWS * ROW_H;
             NotchWidgets.neutralButton(ctx, this.font, px + 12, sy, 20, 12, "v",
                     over(mouseX, mouseY, px + 12, sy, 20, 12));
-            NotchWidgets.neutralButton(ctx, this.font, px + W - 32, sy, 20, 12, "^",
-                    over(mouseX, mouseY, px + W - 32, sy, 20, 12));
+            NotchWidgets.neutralButton(ctx, this.font, px + 36, sy, 20, 12, "^",
+                    over(mouseX, mouseY, px + 36, sy, 20, 12));
         }
 
         NotchWidgets.divider(ctx, px + 8, py + H - 54, W - 16);
@@ -182,7 +182,7 @@ public class ParticleDesignerScreen extends Screen {
                     scroll = Math.min(Math.max(0, list.size() - ROWS), scroll + 1);
                     return true;
                 }
-                if (over(mx, my, px + W - 32, sy, 20, 12)) {
+                if (over(mx, my, px + 36, sy, 20, 12)) {
                     NotchWidgets.click();
                     scroll = Math.max(0, scroll - 1);
                     return true;
