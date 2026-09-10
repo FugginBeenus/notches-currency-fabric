@@ -63,6 +63,12 @@ A pass over the money side, looking for holes.
 - A listing with some stock left, but not enough for one sale, looked buyable and then did
   nothing when clicked. It now shows the red cross, and the tooltip says how many a sale needs.
   The owner's screen shows the same.
+- APP.ly's battery swap (special_idle3) played some moves backwards: the head door swung into the
+  head, he leaned back instead of forward, and an arm passed through his head. The X and Y turns
+  in that one animation had their signs flipped in the conversion. Flipped back.
+- APP.ly's random clips are weighted now: the flourish often, the doze rarely and only when no
+  player is within 8 blocks, the battery swap rarest. They still need **Idle** set to **Lively**,
+  which now says so on the button.
 
 ### Also
 

@@ -740,7 +740,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private static final String[] POSE_NAMES = {"Standing", "Sitting", "Sneaking", "Sleeping", "Chilling", "Prone", "Waving", "Custom"};
-    private static final String[] ANIM_NAMES = {"Statue (frozen)", "Breathe (default)", "Lively"};
+    private static final String[] ANIM_NAMES = {"Statue (frozen)", "Breathe (default)", "Lively (random clips)"};
     private String customClip = null; // null until read off the NPC standing in the world
     private static final int POSE_PREV_X = 22, POSE_PREV_Y = 74, POSE_PREV_W = 96, POSE_PREV_H = 124;
     private static final int POSE_CTL_X = 130, POSE_CTL_W = 148;

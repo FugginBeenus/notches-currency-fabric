@@ -63,6 +63,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private static final int[] SPECIAL_TICKS = {215, 341, 234};
     private static final int FLOURISH_EVERY = 600;
     private static final int BUNDLE_SPECIAL_TICKS = 200;
+    private static final int APPLY_BATTERIES_PCT = 6;
+    private static final int APPLY_DOZE_PCT = 10;
+    private static final int APPLY_FLOURISH_PCT = 50;
+    private static final double APPLY_ALONE_RANGE = 8.0;
     private final AnimatableInstanceCache geoCache = net.fugginbeenus.notchcurrency.compat.Geo.cache(this);
     public static final String MODEL_HUMANOID = "humanoid";
     public static final String MODEL_APPLY = "apply";
@@ -2016,9 +2020,30 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         int stagger = Math.floorMod(getUUID().hashCode(), FLOURISH_EVERY);
         int spot = Math.floorMod(this.tickCount + stagger, FLOURISH_EVERY);
         long window = Math.floorDiv((long) this.tickCount + stagger, FLOURISH_EVERY);
-        int roll = Math.floorMod(Long.hashCode(window * 31L + getUUID().hashCode()), specials.size());
-        int holdFor = bundle == null ? SPECIAL_TICKS[roll] : BUNDLE_SPECIAL_TICKS;
-        return spot < holdFor ? specials.get(roll) : idle;
+        int seed = Long.hashCode(window * 31L + getUUID().hashCode());
+        if (bundle != null) {
+            int roll = Math.floorMod(seed, specials.size());
+            return spot < BUNDLE_SPECIAL_TICKS ? specials.get(roll) : idle;
+        }
+        int pick = applyPick(seed);
+        if (pick < 0) return idle;
+        return spot < SPECIAL_TICKS[pick] ? specials.get(pick) : idle;
+    }
+
+    private int applyPick(int seed) {
+        int roll = Math.floorMod(seed, 100);
+        if (roll < APPLY_BATTERIES_PCT) return 2;
+        if (roll < APPLY_BATTERIES_PCT + APPLY_DOZE_PCT) return nobodyNear() ? 1 : -1;
+        if (roll < APPLY_BATTERIES_PCT + APPLY_DOZE_PCT + APPLY_FLOURISH_PCT) return 0;
+        return -1;
+    }
+
+    private boolean nobodyNear() {
+        double rangeSq = APPLY_ALONE_RANGE * APPLY_ALONE_RANGE;
+        for (net.minecraft.world.entity.player.Player p : this.level().players()) {
+            if (!p.isSpectator() && p.distanceToSqr(this) < rangeSq) return false;
+        }
+        return true;
     }
 
     @Override
