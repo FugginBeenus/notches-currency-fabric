@@ -92,6 +92,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.economy.crate.CrateManager.init();
         BossCurrencyInject.init();
         WealthTax.init();
+        net.fugginbeenus.notchcurrency.economy.SavingsInterest.init();
         ShopRent.init();
         RaffleManager.init();
         BountyManager.init();
@@ -102,6 +103,7 @@ public class NotchCurrency implements ModInitializer {
         GoldenCacheManager.applyConfig(cfg);
         AuctionConfig.apply(cfg);
         WealthTax.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.SavingsInterest.applyConfig(cfg);
         ShopRent.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.shop.ShopRules.applyConfig(cfg);
         RaffleManager.applyConfig(cfg);
@@ -160,6 +162,7 @@ public class NotchCurrency implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer sp = handler.player;
+            net.fugginbeenus.notchcurrency.economy.StartingBalance.grant(sp);
             NotchPackets.sendBalance(sp, BalanceStore.get(sp));
             ServerLevel world = sp.serverLevel();
             AuctionState state = AuctionState.get(world);

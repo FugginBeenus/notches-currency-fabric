@@ -20,6 +20,10 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
         return balances.getOrDefault(id, 0L);
     }
 
+    public boolean has(UUID id) {
+        return balances.containsKey(id);
+    }
+
     public long set(UUID id, long value) {
         long v = Math.max(0L, value);
         balances.put(id, v);
@@ -28,7 +32,10 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
     }
 
     public long add(UUID id, long delta) {
-        long next = Math.max(0L, get(id) + delta);
+        long cur = get(id);
+        long next = delta > 0 && cur > Long.MAX_VALUE - delta
+                ? Long.MAX_VALUE
+                : Math.max(0L, cur + delta);
         balances.put(id, next);
         this.setDirty();
         return next;

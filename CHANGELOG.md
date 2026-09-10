@@ -41,6 +41,26 @@ sounds are.
 Four starter effects come with a fresh world: wizard, ghost, holy and cursed. Pull them apart.
 On an older world, `/npcfx starters` adds them.
 
+### Economy
+
+A pass over the money side, looking for holes.
+
+- **Shop buying is airtight now.** The server takes the quantity from the client, and it only
+  checked that it was above zero. A hacked client could send a number so big the price wrapped
+  around, and the shop handed over the items for nothing. Buying is capped at 256 per click, the
+  price maths cannot wrap, and if the withdrawal fails the sale stops. The sell side already did
+  all of this.
+- **Loans have a debt ceiling.** An overdue loan grew 20% a cycle forever, so a player who left for
+  two months came back owing millions. Interest and fees now stop at **3x the borrowing limit**.
+  Config: **Debt ceiling**, 0 for the old behaviour.
+- **Big payments ask first.** `/pay` for 10,000 or more shows a **[Confirm]** button. Click it, or
+  run the same command again within 30 seconds. Config: **Confirm /pay above**, 0 to turn it off.
+- **Starting balance.** A config option to hand every brand-new player a few coins on their first
+  join. Off by default.
+- **Savings interest.** A config option to pay every account a small percent of its balance on a
+  timer, capped per payout. Off by default, it creates money.
+- A balance can no longer wrap past the top of the number range.
+
 ### Also
 
 - A **fly ceiling** for NPCs with gravity off, on Stats & Abilities, next to the toggle.

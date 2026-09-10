@@ -524,6 +524,7 @@ public final class NotchConfigScreen extends Screen {
         }
         GoldenCacheManager.applyConfig(cfg);
         WealthTax.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.economy.SavingsInterest.applyConfig(cfg);
         ShopRent.applyConfig(cfg);
         net.fugginbeenus.notchcurrency.shop.ShopRules.applyConfig(cfg);
         RaffleManager.applyConfig(cfg);

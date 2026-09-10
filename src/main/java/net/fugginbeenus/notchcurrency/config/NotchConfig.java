@@ -5,6 +5,7 @@ public final class NotchConfig {
     public Cache   cache   = new Cache();
     public Ledger  ledger  = new Ledger();
     public WealthTax wealthTax = new WealthTax();
+    public Savings savings = new Savings();
     public ShopRent shopRent = new ShopRent();
     public Shops shops = new Shops();
     public Raffle raffle = new Raffle();
@@ -51,6 +52,8 @@ public final class NotchConfig {
 
     public static final class Currency {
         public String itemName = "";
+        public long payConfirmAbove = 10_000L;
+        public long startingBalance = 0L;
     }
 
     public static final class Enchanter {
@@ -86,6 +89,7 @@ public final class NotchConfig {
         public int termDays = 7;
         public int lateFeePercent = 10;
         public int overdueInterestPercent = 20;
+        public int debtCeilingMultiplier = 3;
     }
 
     public static final class Crate {
@@ -138,6 +142,14 @@ public final class NotchConfig {
         public long threshold = 100_000L;
         public int ratePercent = 1;
         public int intervalMinutes = 1440;
+        public boolean announce = true;
+    }
+
+    public static final class Savings {
+        public boolean enabled = false;
+        public int ratePercent = 1;
+        public int intervalMinutes = 1440;
+        public long maxPerCycle = 1_000L;
         public boolean announce = true;
     }
 

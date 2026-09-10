@@ -43,6 +43,14 @@ final class ConfigEntries {
                 "Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\".",
                 "Drop coin.png in config/notchcurrency/currency/ to reskin the art.",
                 "A resource pack is generated on save; servers push it to every player."));
+        e.add(new NumberEntry(c, "Starting balance", cfg.currency.startingBalance, 0, 0, 1_000_000_000,
+                v -> cfg.currency.startingBalance = v,
+                "Coins a brand-new player gets the first time they join.",
+                "A money FAUCET. 0 = nothing."));
+        e.add(new NumberEntry(c, "Confirm /pay above", cfg.currency.payConfirmAbove, 10_000, 0, Long.MAX_VALUE / 2,
+                v -> cfg.currency.payConfirmAbove = v,
+                "A payment this big or bigger asks the sender to confirm first.",
+                "Catches a typo with one extra zero. 0 = never ask."));
 
         c = "Villager Trades";
         e.add(new BoolEntry(c, "Coin-priced villager trades", cfg.villagerTrades.enabled, true,
@@ -214,6 +222,10 @@ final class ConfigEntries {
         e.add(new SliderEntry(c, "Overdue interest", cfg.loan.overdueInterestPercent, 20, 0, 100, "%",
                 v -> cfg.loan.overdueInterestPercent = v,
                 "Interest rate charged each cycle while a loan is past due (replaces the normal rate)."));
+        e.add(new NumberEntry(c, "Debt ceiling (x borrowing limit)", cfg.loan.debtCeilingMultiplier, 3, 0, 100,
+                v -> cfg.loan.debtCeilingMultiplier = v.intValue(),
+                "Interest and fees stop once a debt reaches this many times the borrowing limit.",
+                "Keeps a forgotten loan from growing forever. 0 = no ceiling."));
 
         c = "Shops";
         e.add(new BoolEntry(c, "Admin shops", cfg.shops.adminShops, true,
@@ -280,6 +292,22 @@ final class ConfigEntries {
                 "How often the tax runs. 1440 = once a day."));
         e.add(new BoolEntry(c, "Announce to taxed players", cfg.wealthTax.announce, true,
                 v -> cfg.wealthTax.announce = v));
+
+        c = "Savings Interest";
+        e.add(new BoolEntry(c, "Savings interest enabled", cfg.savings.enabled, false,
+                v -> cfg.savings.enabled = v,
+                "Pay every account a small percent of its balance on a timer.",
+                "A money FAUCET. Off by default - it creates money."));
+        e.add(new SliderEntry(c, "Rate (of balance)", cfg.savings.ratePercent, 1, 0, 100, "%",
+                v -> cfg.savings.ratePercent = v));
+        e.add(new NumberEntry(c, "Interval (minutes)", cfg.savings.intervalMinutes, 1440, 1, 100_000,
+                v -> cfg.savings.intervalMinutes = v.intValue(),
+                "How often interest is paid. 1440 = once a day."));
+        e.add(new NumberEntry(c, "Max per payout", cfg.savings.maxPerCycle, 1_000, 0, Long.MAX_VALUE / 2,
+                v -> cfg.savings.maxPerCycle = v,
+                "Cap on one payout to one account, so a huge balance cannot snowball. 0 = uncapped."));
+        e.add(new BoolEntry(c, "Announce to paid players", cfg.savings.announce, true,
+                v -> cfg.savings.announce = v));
 
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,

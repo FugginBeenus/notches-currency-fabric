@@ -246,7 +246,7 @@ public final class PlayerShopManager {
 
         ShopListing listing = shop.getListing(listingId);
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;
-        if (quantity <= 0) return PurchaseResult.INVALID_QUANTITY;
+        if (quantity <= 0 || quantity > 256) return PurchaseResult.INVALID_QUANTITY;
 
         if (!listing.forSale()) return PurchaseResult.NOT_FOR_SALE;
 
@@ -263,7 +263,9 @@ public final class PlayerShopManager {
         ItemStack barterItem = ItemStack.EMPTY;
 
         if (needsCoins) {
-            totalCoinCost = listing.currentCoinPrice() * quantity;
+            long cost = (long) listing.currentCoinPrice() * quantity;
+            if (cost > Integer.MAX_VALUE) return PurchaseResult.INVALID_QUANTITY;
+            totalCoinCost = (int) cost;
             long buyerBalance = CurrencyApi.getBalance(buyer);
             if (buyerBalance < totalCoinCost) {
                 return PurchaseResult.INSUFFICIENT_FUNDS;
@@ -287,9 +289,10 @@ public final class PlayerShopManager {
             return PurchaseResult.INSUFFICIENT_STOCK;
         }
 
-        if (needsCoins) {
-            CurrencyApi.withdraw(buyer, totalCoinCost,
-                    net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE, "shop purchase");
+        if (needsCoins && !CurrencyApi.withdraw(buyer, totalCoinCost,
+                net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE, "shop purchase")) {
+            if (!shop.isAdminMode()) listing.addStock(totalItems);
+            return PurchaseResult.INSUFFICIENT_FUNDS;
         }
         if (needsBarter) {
             removeItemsFromInventory(buyer, barterItem, totalBarterCost);

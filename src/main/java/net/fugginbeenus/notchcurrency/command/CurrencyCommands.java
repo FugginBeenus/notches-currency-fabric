@@ -35,6 +35,37 @@ public final class CurrencyCommands {
 
     private CurrencyCommands() {}
 
+    private record PendingPay(UUID to, long amount, long expiresAt) {}
+
+    private static final java.util.Map<UUID, PendingPay> PENDING_PAYS = new java.util.HashMap<>();
+    private static final long PAY_CONFIRM_WINDOW_MS = 30_000L;
+
+    private static boolean needsPayConfirm(ServerPlayer from, ServerPlayer to, long amt) {
+        long threshold = net.fugginbeenus.notchcurrency.config.NotchConfigIO.get().currency.payConfirmAbove;
+        if (threshold <= 0 || amt < threshold) return false;
+        long now = System.currentTimeMillis();
+        PendingPay pending = PENDING_PAYS.get(from.getUUID());
+        if (pending != null && pending.expiresAt() > now
+                && pending.to().equals(to.getUUID()) && pending.amount() == amt) {
+            PENDING_PAYS.remove(from.getUUID());
+            return false;
+        }
+        PENDING_PAYS.put(from.getUUID(), new PendingPay(to.getUUID(), amt, now + PAY_CONFIRM_WINDOW_MS));
+        String again = "/pay " + to.getName().getString() + " " + amt;
+        Component confirm = Component.literal("[Confirm]")
+                .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+                .withStyle(style -> style
+                        .withClickEvent(net.fugginbeenus.notchcurrency.compat.Chat.runCommand(again))
+                        .withHoverEvent(net.fugginbeenus.notchcurrency.compat.Chat.showText(Component.literal(again))));
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("That is a big payment: ")
+                .withStyle(ChatFormatting.YELLOW)
+                .append(coins(amt))
+                .append(Component.literal(" to " + to.getName().getString() + ". ").withStyle(ChatFormatting.YELLOW))
+                .append(confirm)
+                .append(Component.literal(" or run the same command again within 30 seconds.").withStyle(ChatFormatting.GRAY)));
+        return true;
+    }
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("givnotches")
@@ -90,6 +121,8 @@ public final class CurrencyCommands {
                                                                 .withStyle(ChatFormatting.RED));
                                                 return 0;
                                             }
+
+                                            if (needsPayConfirm(from, to, amt)) return 1;
 
                                             BalanceStore.subtract(from, amt, net.fugginbeenus.notchcurrency.economy.TransactionReason.PAY, "paid " + to.getName().getString());
                                             BalanceStore.add(to, amt, net.fugginbeenus.notchcurrency.economy.TransactionReason.PAY, "from " + from.getName().getString());

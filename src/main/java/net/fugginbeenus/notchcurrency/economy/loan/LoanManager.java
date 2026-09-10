@@ -28,6 +28,7 @@ public final class LoanManager {
     private static int termDays = 7;
     private static int lateFeePercent = 10;
     private static int overdueInterestPercent = 20;
+    private static int debtCeilingMultiplier = 3;
 
     private static long tickAccum = 0;
 
@@ -48,6 +49,14 @@ public final class LoanManager {
         termTicks = (long) termDays * TICKS_PER_DAY;
         lateFeePercent = Math.max(0, l.lateFeePercent);
         overdueInterestPercent = Math.max(0, l.overdueInterestPercent);
+        debtCeilingMultiplier = Math.max(0, l.debtCeilingMultiplier);
+    }
+
+    public static long debtCeiling() {
+        if (debtCeilingMultiplier <= 0 || maxDebt <= 0) return 0L;
+        return maxDebt > Long.MAX_VALUE / debtCeilingMultiplier
+                ? Long.MAX_VALUE
+                : maxDebt * debtCeilingMultiplier;
     }
 
     public static boolean isEnabled() { return enabled; }
@@ -149,6 +158,8 @@ public final class LoanManager {
 
             boolean overdue = now >= loan.dueTime;
             ServerPlayer online = server.getPlayerList().getPlayer(id);
+            long ceiling = debtCeiling();
+            if (ceiling > 0 && loan.debt > ceiling) loan.debt = ceiling;
             if (overdue) {
                 if (!loan.lateFeeApplied && lateFeePercent > 0) {
                     loan.debt += loan.debt * lateFeePercent / 100;
@@ -157,10 +168,16 @@ public final class LoanManager {
                             + lateFeePercent + "% late fee was added.").withStyle(ChatFormatting.RED));
                 }
                 loan.debt += loan.debt * overdueInterestPercent / 100;
-                if (online != null) net.fugginbeenus.notchcurrency.compat.Msg.chat(online, Component.literal("Overdue loan penalty interest applied - you owe ")
-                        .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(loan.debt)).append(Component.literal(".").withStyle(ChatFormatting.RED)));
             } else {
                 loan.debt += loan.debt * interestPercent / 100;
+            }
+            boolean capped = ceiling > 0 && loan.debt >= ceiling;
+            if (capped) loan.debt = ceiling;
+            if (overdue && online != null) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(online, Component.literal(capped
+                                ? "Overdue loan - your debt has hit the ceiling and will not grow past "
+                                : "Overdue loan penalty interest applied - you owe ")
+                        .withStyle(ChatFormatting.RED).append(NotchCurrency.coins(loan.debt)).append(Component.literal(".").withStyle(ChatFormatting.RED)));
             }
             state.markDirtyPublic();
         }
