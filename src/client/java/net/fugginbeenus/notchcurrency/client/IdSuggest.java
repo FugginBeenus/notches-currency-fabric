@@ -13,6 +13,13 @@ public final class IdSuggest {
     public static final int KIND_ITEM = 0;
     public static final int KIND_MOB = 1;
     public static final int KIND_SOUND = 2;
+    public static final int KIND_PARTICLE = 3;
+
+    private static java.util.List<String> particleIds() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (ResourceLocation id : BuiltInRegistries.PARTICLE_TYPE.keySet()) out.add(id.toString());
+        return out;
+    }
 
     private static java.util.List<String> soundIds() {
         java.util.List<String> out = new java.util.ArrayList<>();
@@ -28,8 +35,8 @@ public final class IdSuggest {
         if (want.isEmpty()) return "";
         String bare = want.startsWith("minecraft:") ? want.substring(10) : want;
         String hit = "";
-        if (kind == KIND_SOUND) {
-            for (String full : soundIds()) {
+        if (kind == KIND_SOUND || kind == KIND_PARTICLE) {
+            for (String full : (kind == KIND_SOUND ? soundIds() : particleIds())) {
                 boolean match = full.startsWith(want)
                         || (full.startsWith("minecraft:") && full.substring(10).startsWith(bare));
                 if (!match) continue;
@@ -52,6 +59,7 @@ public final class IdSuggest {
     public static boolean known(String typed, int kind) {
         ResourceLocation id = ResourceLocation.tryParse(fill(typed));
         if (id == null) return false;
+        if (kind == KIND_PARTICLE) return BuiltInRegistries.PARTICLE_TYPE.containsKey(id);
         if (kind == KIND_SOUND) {
             return BuiltInRegistries.SOUND_EVENT.containsKey(id)
                     || ("notchcurrency".equals(id.getNamespace())
@@ -70,7 +78,7 @@ public final class IdSuggest {
     public static String friendly(String typed, int kind) {
         ResourceLocation id = ResourceLocation.tryParse(fill(typed));
         if (id == null) return "";
-        if (kind == KIND_SOUND) {
+        if (kind == KIND_SOUND || kind == KIND_PARTICLE) {
             String tail = id.getPath().replace('.', ' ').replace('_', ' ');
             return tail.isEmpty() ? "" : Character.toUpperCase(tail.charAt(0)) + tail.substring(1);
         }

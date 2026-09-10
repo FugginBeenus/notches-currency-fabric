@@ -376,6 +376,59 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.QUEST_SAVE, buf);
     }
 
+    public static void sendParticleDesign() {
+        NetClient.sendToServer(NotchPackets.PARTICLE_DESIGN, net.fugginbeenus.notchcurrency.compat.Net.buf());
+    }
+
+    public static void sendParticleOpen(String name) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(name);
+        NetClient.sendToServer(NotchPackets.PARTICLE_OPEN, buf);
+    }
+
+    public static void sendParticleSave(net.minecraft.nbt.CompoundTag nbt) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeNbt(nbt);
+        NetClient.sendToServer(NotchPackets.PARTICLE_SAVE, buf);
+    }
+
+    public static void sendParticleDelete(String name) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUtf(name);
+        NetClient.sendToServer(NotchPackets.PARTICLE_DELETE, buf);
+    }
+
+    public static void sendParticleTest(UUID npcId, net.minecraft.nbt.CompoundTag nbt) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeNbt(nbt);
+        NetClient.sendToServer(NotchPackets.PARTICLE_TEST, buf);
+    }
+
+    public static void sendNpcSetFx(UUID npcId, String name) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(name == null ? "" : name);
+        NetClient.sendToServer(NotchPackets.NPC_SET_FX, buf);
+    }
+
+    public static void registerParticleReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.PARTICLE_LIST, (client, buf) -> {
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.particle.ParticleLibrary.load(nbt));
+        });
+        NetClient.registerClientReceiver(NotchPackets.PARTICLE_DESIGN, (client, buf) ->
+                client.execute(() -> Minecraft.getInstance().setScreen(
+                        new net.fugginbeenus.notchcurrency.client.ParticleDesignerScreen())));
+        NetClient.registerClientReceiver(NotchPackets.PARTICLE_DATA, (client, buf) -> {
+            String name = buf.readUtf();
+            boolean exists = buf.readBoolean();
+            net.minecraft.nbt.CompoundTag nbt = exists ? buf.readNbt() : null;
+            client.execute(() -> Minecraft.getInstance().setScreen(
+                    new net.fugginbeenus.notchcurrency.client.ParticleEditorScreen(name, nbt)));
+        });
+    }
+
     public static void registerAnimReceiver() {
         NetClient.registerClientReceiver(NotchPackets.ANIM_LIST, (client, buf) -> {
             net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
@@ -661,6 +714,56 @@ public final class NotchPacketsClient {
         buf.writeUtf(note, 128);
         buf.writeVarLong(Math.max(0L, coins));
         NetClient.sendToServer(NotchPackets.MAIL_SEND, buf);
+    }
+
+    public static void sendNpcTextureWant(int slot) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeVarInt(slot);
+        NetClient.sendToServer(NotchPackets.NPC_TEXTURE_WANT, buf);
+    }
+
+    public static void sendNpcTextureDrop(int slot) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeVarInt(slot);
+        NetClient.sendToServer(NotchPackets.NPC_TEXTURE_DROP, buf);
+    }
+
+    public static void sendNpcTexturePush(int phase, String key, byte[] part, int announcedBytes) {
+        var buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeByte(phase);
+        buf.writeUtf(key, 64);
+        if (phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_CHUNK) {
+            buf.writeByteArray(part);
+        }
+        if (phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_BEGIN) {
+            buf.writeVarInt(announcedBytes);
+        }
+        NetClient.sendToServer(NotchPackets.NPC_TEXTURE_PUSH, buf);
+    }
+
+    public static void registerNpcTextureReceivers() {
+        NetClient.registerClientReceiver(NotchPackets.NPC_TEXTURE_LIST, (client, buf) -> {
+            boolean mayShare = buf.readBoolean();
+            int count = buf.readVarInt();
+            java.util.Map<Integer, String[]> offered = new java.util.LinkedHashMap<>();
+            for (int i = 0; i < count; i++) {
+                int slot = buf.readVarInt();
+                offered.put(slot, new String[]{buf.readUtf(64), buf.readUtf(32)});
+            }
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureDownloads
+                    .onList(offered, mayShare));
+        });
+        NetClient.registerClientReceiver(NotchPackets.NPC_TEXTURE_SEND, (client, buf) -> {
+            int phase = buf.readByte();
+            String key = buf.readUtf(64);
+            byte[] part = phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureDownloads
+                    .onPiece(phase, key, part, announced));
+        });
     }
 
     public static void sendNpcSoundWant(String id) {

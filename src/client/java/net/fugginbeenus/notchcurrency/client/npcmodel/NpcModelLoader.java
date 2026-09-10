@@ -57,6 +57,7 @@ public final class NpcModelLoader {
             writeReadme();
             deleteRecursively(oldPackDir());
             net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.scan();
+            net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.scan();
 
             List<Path> folders = new ArrayList<>();
             try (Stream<Path> entries = Files.list(modelsDir())) {
@@ -67,7 +68,8 @@ public final class NpcModelLoader {
             }
 
             String stamp = stampOf(folders)
-                    + net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.stampPart();
+                    + net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.stampPart()
+                    + net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.stampPart();
             if (stamp.equals(writtenStamp())) {
                 for (Path folder : folders) {
                     NpcModelBundle bundle = readOnly(folder);
@@ -80,7 +82,8 @@ public final class NpcModelLoader {
             boolean hadPack = Files.isDirectory(packDir());
             deleteRecursively(packDir());
             boolean anySounds = net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.count() > 0;
-            if (folders.isEmpty() && !anySounds) {
+            boolean anyTextures = net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.count() > 0;
+            if (folders.isEmpty() && !anySounds && !anyTextures) {
                 NpcModelRegistry.replaceAll(List.of());
                 return hadPack;
             }
@@ -91,6 +94,8 @@ public final class NpcModelLoader {
                 if (bundle != null) found.add(bundle);
             }
             net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.writeInto(
+                    packDir().resolve("assets").resolve("notchcurrency"));
+            net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.writeInto(
                     packDir().resolve("assets").resolve("notchcurrency"));
             Files.writeString(packDir().resolve(".stamp"), stamp);
         } catch (Exception e) {

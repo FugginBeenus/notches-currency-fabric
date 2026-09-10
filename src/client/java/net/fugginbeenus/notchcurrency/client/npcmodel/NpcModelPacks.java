@@ -17,7 +17,8 @@ public final class NpcModelPacks {
     public static void reload(Minecraft client, boolean announce) {
         boolean changed = NpcModelLoader.loadAll();
         boolean packWanted = NpcModelRegistry.count() > 0
-                || net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.count() > 0;
+                || net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.count() > 0
+                || net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.count() > 0;
 
         try {
             var mgr = client.getResourcePackRepository();

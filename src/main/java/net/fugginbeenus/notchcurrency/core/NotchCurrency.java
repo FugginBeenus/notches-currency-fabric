@@ -73,6 +73,7 @@ public class NotchCurrency implements ModInitializer {
     public void onInitialize() {
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
         net.fugginbeenus.notchcurrency.compat.Geo.init();
+        net.fugginbeenus.notchcurrency.registry.ModParticles.register();
         ModBlocks.register();
         net.fugginbeenus.notchcurrency.registry.ModBlockEntities.register();
         ModItems.register();
@@ -117,6 +118,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.register();
         }
         net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.register();
+        net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.register();
 
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
                 .get(net.minecraft.server.packs.PackType.SERVER_DATA)
@@ -170,6 +172,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(sp);
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);
             net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare.greet(sp);
+            net.fugginbeenus.notchcurrency.npctexture.NpcTextureShare.greet(sp);
             HeartState.applyTo(sp);
         });
 
@@ -177,6 +180,7 @@ public class NotchCurrency implements ModInitializer {
                 {
                     net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.forget(handler.player);
                     net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare.forget(handler.player);
+                    net.fugginbeenus.notchcurrency.npctexture.NpcTextureShare.forget(handler.player);
                 });
 
         ServerPlayerEvents.COPY_FROM.register((oldP, newP, alive) -> {
@@ -206,6 +210,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelServerStore.load(server);
             net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore.load(server);
+            net.fugginbeenus.notchcurrency.npctexture.NpcTextureStore.load(server);
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.readFromWorld(
                     server, net.fugginbeenus.notchcurrency.config.NotchConfigIO.get());
             net.minecraft.server.level.ServerLevel main = server.overworld();

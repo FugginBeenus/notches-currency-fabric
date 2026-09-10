@@ -138,6 +138,8 @@ public final class ClientInit implements ClientModInitializer {
                         com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
                         "key.categories.notchcurrency"));
                 //?}
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(
+                net.fugginbeenus.notchcurrency.client.particle.NpcFxRenderer::tick);
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (trackerKey.consumeClick()) {
                 BountyTrackerHud.toggle();
@@ -155,6 +157,7 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerModelReloadReceiver();
         NotchPacketsClient.registerNpcModelReceivers();
         NotchPacketsClient.registerNpcSoundReceivers();
+        NotchPacketsClient.registerNpcTextureReceivers();
         NotchPacketsClient.registerBalloonConfigReceiver();
         net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelHint.register();
         NotchPacketsClient.registerMailAimReceiver();
@@ -162,6 +165,8 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerNpcScheduleReceiver();
         NotchPacketsClient.registerQuestReceiver();
         NotchPacketsClient.registerAnimReceiver();
+        NotchPacketsClient.registerParticleReceiver();
+        net.fugginbeenus.notchcurrency.client.particle.ModParticleFactories.register();
 
         NetClient.registerClientReceiver(NotchPackets.TRADE_CANCEL, (client, buf) -> {
             String reason = buf.readUtf(64);

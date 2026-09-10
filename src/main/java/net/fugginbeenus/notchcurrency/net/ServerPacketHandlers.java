@@ -523,6 +523,34 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_TEXTURE_WANT, (server, player, buf) -> {
+            int slot = buf.readVarInt();
+            server.execute(() -> net.fugginbeenus.notchcurrency.npctexture.NpcTextureShare.sendTo(player, slot));
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_TEXTURE_DROP, (server, player, buf) -> {
+            int slot = buf.readVarInt();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                String problem = net.fugginbeenus.notchcurrency.npctexture.NpcTextureStore.remove(server, slot);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
+                        problem == null ? "Cleared slot " + slot + " on this server." : problem)
+                        .withStyle(problem == null ? ChatFormatting.GREEN : ChatFormatting.RED));
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_TEXTURE_PUSH, (server, player, buf) -> {
+            int phase = buf.readByte();
+            String key = buf.readUtf(64);
+            byte[] payload = phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_CHUNK
+                    ? buf.readByteArray(net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.CHUNK_BYTES)
+                    : new byte[0];
+            int announced = phase == net.fugginbeenus.notchcurrency.npctexture.NpcTextureStream.PHASE_BEGIN
+                    ? buf.readVarInt() : 0;
+            server.execute(() -> net.fugginbeenus.notchcurrency.npctexture.NpcTextureShare
+                    .receiveUpload(player, phase, key, payload, announced));
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_SOUND_WANT, (server, player, buf) -> {
             String id = buf.readUtf(64);
             server.execute(() -> net.fugginbeenus.notchcurrency.npcsound.NpcSoundShare
@@ -805,6 +833,79 @@ public final class ServerPacketHandlers {
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
                         && npc.canEdit(player)) {
                     npc.setIdleAnimation(name);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.PARTICLE_DESIGN, (server, player, buf) -> server.execute(() -> {
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncTo(player, server);
+            Net.sendToClient(player, NotchPackets.PARTICLE_DESIGN, Net.emptyBuf());
+        }));
+
+        Net.registerServerReceiver(NotchPackets.PARTICLE_OPEN, (server, player, buf) -> {
+            String name = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                var fx = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server).get(name);
+                var out = Net.buf();
+                out.writeUtf(name);
+                out.writeBoolean(fx != null);
+                if (fx != null) out.writeNbt(fx.toNbt());
+                Net.sendToClient(player, NotchPackets.PARTICLE_DATA, out);
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.PARTICLE_SAVE, (server, player, buf) -> {
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                var fx = net.fugginbeenus.notchcurrency.npc.particle.ParticleEffect.fromNbt(nbt);
+                if (fx.name().isBlank()) return;
+                var state = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server);
+                if (state.isFull() && state.get(fx.name()) == null) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
+                            "This world already holds 64 effects.").withStyle(ChatFormatting.RED));
+                    return;
+                }
+                state.put(fx);
+                net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncAll(server);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
+                        "Saved effect: " + fx.name()).withStyle(ChatFormatting.GREEN));
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.PARTICLE_DELETE, (server, player, buf) -> {
+            String name = buf.readUtf();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server).remove(name);
+                net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncAll(server);
+                Net.sendToClient(player, NotchPackets.PARTICLE_DESIGN, Net.emptyBuf());
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.PARTICLE_TEST, (server, player, buf) -> {
+            UUID npcId = buf.readUUID();
+            net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
+            server.execute(() -> {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                if (player.serverLevel().getEntity(npcId)
+                        instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.particle.ParticleSprayer.burst(player.serverLevel(),
+                            npc, net.fugginbeenus.notchcurrency.npc.particle.ParticleEffect.fromNbt(nbt));
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SET_FX, (server, player, buf) -> {
+            UUID npcId = buf.readUUID();
+            String name = buf.readUtf();
+            server.execute(() -> {
+                if (player.serverLevel().getEntity(npcId)
+                        instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
+                        && npc.canEdit(player)) {
+                    npc.setParticleFx(name);
                 }
             });
         });

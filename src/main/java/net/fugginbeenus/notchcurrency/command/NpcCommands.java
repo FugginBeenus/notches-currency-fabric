@@ -28,6 +28,40 @@ public final class NpcCommands {
 
     private NpcCommands() {}
 
+    private static int tryFx(CommandSourceStack source, String particle, int shape, int count, int motion) {
+        net.minecraft.server.level.ServerPlayer player = source.getPlayer();
+        if (player == null) return 0;
+        net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc = null;
+        double best = Double.MAX_VALUE;
+        for (net.fugginbeenus.notchcurrency.entity.NotchNpcEntity e
+                : player.serverLevel().getEntitiesOfClass(
+                        net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.class,
+                        player.getBoundingBox().inflate(12.0))) {
+            double d = e.distanceToSqr(player);
+            if (d < best) { best = d; npc = e; }
+        }
+        if (npc == null) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, net.minecraft.network.chat.Component
+                    .literal("Stand near an NPC first.").withStyle(net.minecraft.ChatFormatting.RED));
+            return 0;
+        }
+        net.fugginbeenus.notchcurrency.npc.particle.ParticleEffect effect =
+                new net.fugginbeenus.notchcurrency.npc.particle.ParticleEffect("__try");
+        net.fugginbeenus.notchcurrency.npc.particle.ParticleLayer layer = effect.addLayer();
+        layer.setParticle(particle);
+        layer.setShape(shape);
+        layer.setCount(count);
+        layer.setMotion(motion);
+        layer.setSize(0.8f);
+        layer.setAnchor(net.fugginbeenus.notchcurrency.npc.particle.ParticleLayer.AT_CHEST);
+        layer.setColour(0xB07BFF);
+        net.fugginbeenus.notchcurrency.npc.particle.ParticleSprayer.burst(player.serverLevel(), npc, effect);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(player, net.minecraft.network.chat.Component
+                .literal("Fired " + particle + " on " + npc.getName().getString())
+                .withStyle(net.minecraft.ChatFormatting.GREEN));
+        return 1;
+    }
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("npcmodels")
@@ -42,6 +76,38 @@ public final class NpcCommands {
                                     net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(p);
                                     return 1;
                                 })));
+
+        dispatcher.register(
+                Commands.literal("npcfx")
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .then(Commands.literal("starters")
+                                .executes(ctx -> {
+                                    net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p == null) return 0;
+                                    var server = ctx.getSource().getServer();
+                                    int added = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState
+                                            .get(server).addStarters();
+                                    net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager
+                                            .syncAll(server);
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(p,
+                                            net.minecraft.network.chat.Component.literal(added == 0
+                                                    ? "You already have all six."
+                                                    : "Added " + added + " starter effects.")
+                                                    .withStyle(added == 0
+                                                            ? net.minecraft.ChatFormatting.GRAY
+                                                            : net.minecraft.ChatFormatting.GREEN));
+                                    return 1;
+                                }))
+                        .then(Commands.literal("try")
+                                .then(Commands.argument("particle", com.mojang.brigadier.arguments.StringArgumentType.string())
+                                        .then(Commands.argument("shape", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 5))
+                                                .then(Commands.argument("count", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 200))
+                                                        .then(Commands.argument("motion", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 2))
+                                                                .executes(ctx -> tryFx(ctx.getSource(),
+                                                                        com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "particle"),
+                                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "shape"),
+                                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "count"),
+                                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "motion")))))))));
 
         dispatcher.register(Commands.literal("npc")
                 .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)

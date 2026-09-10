@@ -129,6 +129,17 @@ public final class NpcActionRunner {
                     if (a.value().isBlank()) break;
                     npc.playAnimationOnce(a.value());
                 }
+                case PLAY_PARTICLES -> {
+                    if (a.value().isBlank()) break;
+                    if (npc.level() instanceof net.minecraft.server.level.ServerLevel sl
+                            && sl.getServer() != null) {
+                        var fx = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState
+                                .get(sl.getServer()).get(a.value());
+                        if (fx != null) {
+                            net.fugginbeenus.notchcurrency.npc.particle.ParticleSprayer.burst(sl, npc, fx);
+                        }
+                    }
+                }
                 case OPEN_ROLE -> {
                     if (sp == null) break;
                     NpcDialogueManager.openRole(sp, npc);

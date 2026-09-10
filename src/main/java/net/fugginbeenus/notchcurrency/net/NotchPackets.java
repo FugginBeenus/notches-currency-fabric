@@ -60,6 +60,11 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_SOUND_WANT = NotchCurrency.id("npc_sound_want");
     public static final ResourceLocation NPC_SOUND_PUSH = NotchCurrency.id("npc_sound_push");
     public static final ResourceLocation NPC_SOUND_DROP = NotchCurrency.id("npc_sound_drop");
+    public static final ResourceLocation NPC_TEXTURE_LIST = NotchCurrency.id("npc_texture_list");
+    public static final ResourceLocation NPC_TEXTURE_SEND = NotchCurrency.id("npc_texture_send");
+    public static final ResourceLocation NPC_TEXTURE_WANT = NotchCurrency.id("npc_texture_want");
+    public static final ResourceLocation NPC_TEXTURE_PUSH = NotchCurrency.id("npc_texture_push");
+    public static final ResourceLocation NPC_TEXTURE_DROP = NotchCurrency.id("npc_texture_drop");
     public static final ResourceLocation NPC_SET_TIMED_ANIM = NotchCurrency.id("npc_set_timed_anim");
     public static final ResourceLocation NPC_SET_CLIP = NotchCurrency.id("npc_set_clip");
     public static final ResourceLocation NPC_SET_ANIM = NotchCurrency.id("npc_set_anim");
@@ -101,6 +106,14 @@ public final class NotchPackets {
     public static final ResourceLocation QUEST_DELETE    = NotchCurrency.id("quest_delete");
     public static final ResourceLocation QUEST_HAND_IN   = NotchCurrency.id("quest_hand_in");
     public static final ResourceLocation ANIM_LIST       = NotchCurrency.id("anim_list");
+    public static final ResourceLocation PARTICLE_LIST   = NotchCurrency.id("particle_list");
+    public static final ResourceLocation PARTICLE_DESIGN = NotchCurrency.id("particle_design");
+    public static final ResourceLocation PARTICLE_OPEN   = NotchCurrency.id("particle_open");
+    public static final ResourceLocation PARTICLE_DATA   = NotchCurrency.id("particle_data");
+    public static final ResourceLocation PARTICLE_SAVE   = NotchCurrency.id("particle_save");
+    public static final ResourceLocation PARTICLE_DELETE = NotchCurrency.id("particle_delete");
+    public static final ResourceLocation PARTICLE_TEST   = NotchCurrency.id("particle_test");
+    public static final ResourceLocation NPC_SET_FX      = NotchCurrency.id("npc_set_fx");
     public static final ResourceLocation ANIM_DESIGN     = NotchCurrency.id("anim_design");
     public static final ResourceLocation ANIM_OPEN       = NotchCurrency.id("anim_open");
     public static final ResourceLocation ANIM_DATA       = NotchCurrency.id("anim_data");

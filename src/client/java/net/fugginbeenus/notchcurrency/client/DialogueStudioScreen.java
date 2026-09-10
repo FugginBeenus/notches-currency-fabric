@@ -499,6 +499,7 @@ public class DialogueStudioScreen extends Screen {
             case GIVE_QUEST -> "Give quest";
             case TURN_IN_QUEST -> "Turn in quest";
             case PLAY_ANIMATION -> "Play animation";
+            case PLAY_PARTICLES -> "Play particles";
         };
     }
 

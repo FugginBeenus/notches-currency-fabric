@@ -962,6 +962,14 @@ public class NotchNpcEditorScreen extends Screen {
                 over(mx, my, px + 70, py + 206, 160, 16));
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 226, 160, 16, "Animations",
                 over(mx, my, px + 70, py + 226, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 246, 160, 16, "Particles",
+                over(mx, my, px + 70, py + 246, 160, 16));
+        if (over(mx, my, px + 70, py + 246, 160, 16)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Particles").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Build a look, then pick which one this").withStyle(ChatFormatting.GRAY),
+                    Component.literal("NPC wears all the time.").withStyle(ChatFormatting.GRAY));
+        }
         if (over(mx, my, px + 70, py + 166, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Reactions").withStyle(ChatFormatting.WHITE),
@@ -1069,6 +1077,12 @@ public class NotchNpcEditorScreen extends Screen {
                     NotchWidgets.click();
                     net.fugginbeenus.notchcurrency.client.AnimationDesignerScreen.cameFromNpc = npcId;
                     NotchPacketsClient.sendAnimDesign();
+                    return true;
+                }
+                if (over(mx, my, px + 70, py + 246, 160, 16)) {
+                    NotchWidgets.click();
+                    net.fugginbeenus.notchcurrency.client.ParticleDesignerScreen.cameFromNpc = npcId;
+                    NotchPacketsClient.sendParticleDesign();
                     return true;
                 }
                 if (over(mx, my, px + 70, py + 186, 160, 16)) {

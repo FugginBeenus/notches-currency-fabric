@@ -136,7 +136,8 @@ public class NpcActionsScreen extends Screen {
                 || a.type() == DialogueAction.Type.TELEPORT
                 || a.type() == DialogueAction.Type.GIVE_QUEST
                 || a.type() == DialogueAction.Type.TURN_IN_QUEST
-                || a.type() == DialogueAction.Type.PLAY_ANIMATION) ? ED_W - 100 : ED_W - 48);
+                || a.type() == DialogueAction.Type.PLAY_ANIMATION
+                || a.type() == DialogueAction.Type.PLAY_PARTICLES) ? ED_W - 100 : ED_W - 48);
         valueField.setValue(value ? a.value() : "");
         amountField.setVisible(amount);
         amountField.setValue(amount && a.amount() > 0 ? Long.toString(a.amount()) : "");
@@ -411,7 +412,8 @@ public class NpcActionsScreen extends Screen {
                 boolean warp = a.type() == DialogueAction.Type.TELEPORT;
                 boolean quest = a.type() == DialogueAction.Type.GIVE_QUEST
                         || a.type() == DialogueAction.Type.TURN_IN_QUEST
-                        || a.type() == DialogueAction.Type.PLAY_ANIMATION;
+                        || a.type() == DialogueAction.Type.PLAY_ANIMATION
+                        || a.type() == DialogueAction.Type.PLAY_PARTICLES;
                 ctx.drawString(this.font, hint, px + ED_X, py + 152, NotchTheme.TEXT_DARK, false);
                 NotchWidgets.inset(ctx, px + ED_X + 44, py + 147,
                         (effect || warp || quest) ? ED_W - 96 : ED_W - 44, 14, NotchTheme.DEEP);
@@ -692,6 +694,13 @@ public class NpcActionsScreen extends Screen {
                         || pick.type() == DialogueAction.Type.TURN_IN_QUEST) {
                     NotchWidgets.click();
                     pick.setValue(QuestNames.next(pick.value()));
+                    valueField.setValue(pick.value());
+                    return true;
+                }
+                if (pick.type() == DialogueAction.Type.PLAY_PARTICLES) {
+                    NotchWidgets.click();
+                    pick.setValue(net.fugginbeenus.notchcurrency.client.particle.ParticleLibrary
+                            .next(pick.value()));
                     valueField.setValue(pick.value());
                     return true;
                 }
