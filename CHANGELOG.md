@@ -60,6 +60,9 @@ A pass over the money side, looking for holes.
 - **Savings interest.** A config option to pay every account a small percent of its balance on a
   timer, capped per payout. Off by default, it creates money.
 - A balance can no longer wrap past the top of the number range.
+- A listing with some stock left, but not enough for one sale, looked buyable and then did
+  nothing when clicked. It now shows the red cross, and the tooltip says how many a sale needs.
+  The owner's screen shows the same.
 
 ### Also
 

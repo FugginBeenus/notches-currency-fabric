@@ -100,6 +100,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     private record Row(ItemStack icon, UUID listingId, int price, String barterName, int barterCount,
                        ItemStack barterStack, int stock, int pays) {
         boolean buyOnly() { return price <= 0 && barterCount <= 0 && pays > 0; }
+        int bundle() { return Math.max(1, icon.getCount()); }
+        boolean enoughForSale() { return stock < 0 || stock >= bundle(); }
     }
 
     private Row row(int i) {
@@ -239,7 +241,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             String s = unlimited ? "inf" : "x" + row.stock();
             ctx.drawString(this.font, s, x + ROW_X + 200 - this.font.width(s), ry + 5,
                     unlimited ? NotchTheme.TEXT_GOLD
-                            : row.stock() > 0 ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_RED, false);
+                            : row.enoughForSale() ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_RED, false);
             NotchWidgets.neutralButton(ctx, this.font, x + ROW_X + 204, ry + 1, 32, 15, "Edit",
                     over(mouseX, mouseY, x + ROW_X + 204, ry + 1, 32, 15));
         }
@@ -327,9 +329,11 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     lines.add(NotchWidgets.priceText(row.price(), row.barterName(), row.barterCount()));
                     boolean endless = row.stock() < 0;
                     lines.add(Component.literal(endless ? "Always in stock"
-                                    : row.stock() > 0 ? "Stock: " + row.stock() : "Out of stock")
+                                    : row.enoughForSale() ? "Stock: " + row.stock()
+                                    : row.stock() > 0 ? "Stock: " + row.stock() + ", a sale needs " + row.bundle()
+                                    : "Out of stock")
                             .withStyle(endless ? ChatFormatting.GOLD
-                                    : row.stock() > 0 ? ChatFormatting.GRAY : ChatFormatting.RED));
+                                    : row.enoughForSale() ? ChatFormatting.GRAY : ChatFormatting.RED));
                 }
                 ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
                 break;
