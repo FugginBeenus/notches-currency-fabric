@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.12.5: Sounds and particles
+
+An NPC can now make noise, and it can glow. Both come with a way to bring in your own files and
+share them with a whole server.
+
+### Sounds
+
+**Talk tab, then Sounds.** Six slots: a **voice**, an **ambient** sound on a timer, and sounds for
+**hurt**, **death**, **step** and **angry**. Pitch shifts all of them at once, so one villager noise
+becomes a whole cast.
+
+The ambient sound has a gap and a mode. **Exact** plays on the dot, for a blacksmith at an anvil.
+**Random** wanders, for chatter. The boxes fill in as you type, and a typo is refused in chat
+instead of saving silently.
+
+**Your own sounds.** Drop an `.ogg` in a folder, name it, done. It is `notchcurrency:yourname` from
+then on. On a server an operator's import goes up at once and everyone else gets it on their next
+join. Nothing is pushed to players already online, on purpose.
+
+### Animations on a timer
+
+**Pose tab, Now and then.** A second animation that plays once on a timer, exact or random, then
+drops back to the idle loop. Set it and the anvil sound to the same gap and the swing lands with the
+clang. They used to drift apart. They do not any more.
+
+### Particles
+
+**Manage tab, then Particles.** Build an effect from up to four layers, six shapes, spin and rise,
+and give it to any NPC to wear all the time or fire from any reaction, dialogue choice or quest.
+
+Every effect is drawn on your own game with a one tick lifetime, so a ring of glyphs holds together
+and turns as one thing, and moving it costs the server nothing.
+
+Minecraft's own particles are all there with plain names, sorted into groups, with a picture when
+you hover. A few of them ignore where you put them, so there are **seven tame versions of ours**
+that wear the same pictures and behave. And **eight slots for your own PNGs**, shared the same way
+sounds are.
+
+Six starter effects come with a fresh world: wizard, ghost, blacksmith, holy, cursed and hearth.
+Pull them apart. On an older world, `/npcfx starters` adds them.
+
+### Also
+
+- A **fly ceiling** for NPCs with gravity off, on Stats & Abilities, next to the toggle.
+- Three quiet guards keep particles from ever hurting a server: a 32 block range, a cap per shape,
+  and a per player budget every tick.
+
 ## 0.12.0
 
 The NPC becomes a storyteller. Quests, an animation maker, and a reactions system that can finally

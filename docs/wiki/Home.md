@@ -1,6 +1,6 @@
 # Notch Currency Mod - Wiki
 
-**Version:** 0.12.0
+**Version:** 0.12.5
 **Minecraft:** 1.20.1, 1.21.1, 1.21.11, 26.1.2, 26.2
 **Mod Loader:** Fabric
 **Dependencies:** Fabric API (required), GeckoLib (required), ModMenu (optional, config GUI), Waystones (optional, teleport fee)
@@ -26,6 +26,10 @@ deliberate money **sinks** and **faucets**.
   and shared progress for faction mates.
 - **Animations** - build a loop of poses on a timeline in game and give it to any NPC. Keyframes,
   easing, a dope sheet, and a live mannequin. No modelling software needed.
+- **Sounds** - a voice and five more sounds per NPC, an ambient sound on a timer, and your own
+  `.ogg` files shared with the whole server.
+- **Particles** - a particle designer. Six shapes, spin and rise, up to four layers, tame versions
+  of vanilla's awkward particles, and eight slots for your own pictures.
 - **Sinks & Faucets** - enchanter, raffle, gambling, crates, bounties, loans, cosmetics, plus wealth
   tax, shop rent, and auction/teleport fees.
 - **World Events** - balloon crates, golden caches buried under oak trees, and heart crystals.
@@ -49,7 +53,9 @@ deliberate money **sinks** and **faucets**.
 12. [Mail](12.-Mail)
 13. [Quests](13.-Quests)
 14. [Animations](14.-Animations)
-15. [Admin](Admin)
+15. [Sounds](15.-Sounds)
+16. [Particles](16.-Particles)
+17. [Admin](Admin)
 
 ---
 

@@ -79,6 +79,8 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Quests: jobs an NPC hands out (kill, collect, talk to, go to, deliver), with rewards, chains and
   shared progress for faction mates
 - Animations: build a loop of poses on a timeline in game, then give it to any NPC
+- Sounds: a voice and five more per NPC, an ambient sound on a timer, and your own .ogg files shared server-wide
+- Particles: a designer with six shapes, spin and rise, four layers, tame versions of vanilla's awkward particles, and eight slots for your own pictures
 - Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance
 - Floating signs: up to four lines hovering above an NPC, for shop boards and titles
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
@@ -181,7 +183,7 @@ placeable via ModMenu so it dodges other mods' overlays.
 - `/hearts`: your extra hearts, and whether this server takes one when you die
 - `/quests`: your quest log, with a hand-in button for anything ready
 - `/npc setrole <role>`, `/npc spawn [preset]`, `/eco …`: op tools
-- `/quests list`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcmodels sync`: more op tools
+- `/quests list`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcmodels sync`, `/npcfx starters`: more op tools
 
 ## Dependencies
 - Fabric API (required)
