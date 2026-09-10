@@ -230,6 +230,11 @@ public class NotchNpcEditorScreen extends Screen {
     private static final int RX = 116;
     private boolean isApplyModel() { return NotchNpcEntity.MODEL_APPLY.equals(currentModel); }
 
+    private boolean usesGeo() {
+        return NotchNpcEntity.MODEL_APPLY.equals(currentModel)
+                || net.fugginbeenus.notchcurrency.npcmodel.NpcModelRegistry.forModelId(currentModel) != null;
+    }
+
     private void drawAppearance(GuiGraphics ctx, int mx, int my) {
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findPreview();
@@ -770,49 +775,55 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16,
                 ANIM_NAMES[Math.max(0, Math.min(ANIM_NAMES.length - 1, poseAnim))],
                 over(mx, my, px + POSE_CTL_X, py + 88, POSE_CTL_W, 16));
-        ctx.drawString(this.font, "Clip:", px + POSE_CTL_X, py + 110, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16, clipLabel(),
-                over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16));
-
-        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18, "Open Pose Editor",
-                over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18));
-        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18, "Move & Rotate",
-                over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18));
-        ctx.drawString(this.font, "Animation:", px + POSE_CTL_X, py + 196, NotchTheme.TEXT_DARK, false);
-        String animName = npc == null || npc.getIdleAnimation().isBlank() ? "None" : npc.getIdleAnimation();
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16, animName,
-                over(mx, my, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16));
-        if (over(mx, my, px + POSE_CTL_X, py + 196, POSE_CTL_W, 26)) {
-            tooltip = java.util.List.of(
-                    Component.literal("Animation").withStyle(ChatFormatting.WHITE),
-                    Component.literal("A loop of poses this NPC plays forever.").withStyle(ChatFormatting.GRAY),
-                    Component.literal("Write them on the Manage tab, under Animations.").withStyle(ChatFormatting.DARK_GRAY));
+        boolean geo = usesGeo();
+        int d = geo ? 0 : -30;
+        if (geo) {
+            ctx.drawString(this.font, "Clip:", px + POSE_CTL_X, py + 110, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16, clipLabel(),
+                    over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16));
         }
 
-        ctx.drawString(this.font, "Now and then:", px + POSE_CTL_X, py + 228, NotchTheme.TEXT_DARK, false);
-        String timedName = npc == null || npc.getTimedAnimation().isBlank()
-                ? "None" : npc.getTimedAnimation();
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16, timedName,
-                over(mx, my, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 148 + d, POSE_CTL_W, 18, "Open Pose Editor",
+                over(mx, my, px + POSE_CTL_X, py + 148 + d, POSE_CTL_W, 18));
+        NotchWidgets.primaryButton(ctx, this.font, px + POSE_CTL_X, py + 170 + d, POSE_CTL_W, 18, "Move & Rotate",
+                over(mx, my, px + POSE_CTL_X, py + 170 + d, POSE_CTL_W, 18));
+        if (!geo) {
+            ctx.drawString(this.font, "Animation:", px + POSE_CTL_X, py + 196 + d, NotchTheme.TEXT_DARK, false);
+            String animName = npc == null || npc.getIdleAnimation().isBlank() ? "None" : npc.getIdleAnimation();
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 206 + d, POSE_CTL_W, 16, animName,
+                    over(mx, my, px + POSE_CTL_X, py + 206 + d, POSE_CTL_W, 16));
+            if (over(mx, my, px + POSE_CTL_X, py + 196 + d, POSE_CTL_W, 26)) {
+                tooltip = java.util.List.of(
+                        Component.literal("Animation").withStyle(ChatFormatting.WHITE),
+                        Component.literal("A loop of poses this NPC plays forever.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("Write them on the Manage tab, under Animations.").withStyle(ChatFormatting.DARK_GRAY));
+            }
 
-        int every = npc == null ? 0 : npc.getTimedEvery();
-        boolean steady = npc != null && !npc.isTimedRandom();
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 258, 16, 14, "-",
-                over(mx, my, px + POSE_CTL_X, py + 258, 16, 14));
-        NotchWidgets.centerText(ctx, this.font, every <= 0 ? "off" : every + "s",
-                px + POSE_CTL_X + 40, py + 262, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 64, py + 258, 16, 14, "+",
-                over(mx, my, px + POSE_CTL_X + 64, py + 258, 16, 14));
-        NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 86, py + 258, 62, 14,
-                steady ? "Exact" : "Random",
-                over(mx, my, px + POSE_CTL_X + 86, py + 258, 62, 14));
-        if (over(mx, my, px + POSE_CTL_X, py + 228, POSE_CTL_W, 46)) {
-            tooltip = java.util.List.of(
-                    Component.literal("Now and then").withStyle(ChatFormatting.WHITE),
-                    Component.literal("Plays once on a timer, then goes back").withStyle(ChatFormatting.GRAY),
-                    Component.literal("to the idle loop.").withStyle(ChatFormatting.GRAY),
-                    Component.literal("Exact swings on the beat, so it can match").withStyle(ChatFormatting.GRAY),
-                    Component.literal("an anvil sound set to the same gap.").withStyle(ChatFormatting.DARK_GRAY));
+            ctx.drawString(this.font, "Now and then:", px + POSE_CTL_X, py + 228 + d, NotchTheme.TEXT_DARK, false);
+            String timedName = npc == null || npc.getTimedAnimation().isBlank()
+                    ? "None" : npc.getTimedAnimation();
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 238 + d, POSE_CTL_W, 16, timedName,
+                    over(mx, my, px + POSE_CTL_X, py + 238 + d, POSE_CTL_W, 16));
+
+            int every = npc == null ? 0 : npc.getTimedEvery();
+            boolean steady = npc != null && !npc.isTimedRandom();
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X, py + 258 + d, 16, 14, "-",
+                    over(mx, my, px + POSE_CTL_X, py + 258 + d, 16, 14));
+            NotchWidgets.centerText(ctx, this.font, every <= 0 ? "off" : every + "s",
+                    px + POSE_CTL_X + 40, py + 262 + d, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 64, py + 258 + d, 16, 14, "+",
+                    over(mx, my, px + POSE_CTL_X + 64, py + 258 + d, 16, 14));
+            NotchWidgets.neutralButton(ctx, this.font, px + POSE_CTL_X + 86, py + 258 + d, 62, 14,
+                    steady ? "Exact" : "Random",
+                    over(mx, my, px + POSE_CTL_X + 86, py + 258 + d, 62, 14));
+            if (over(mx, my, px + POSE_CTL_X, py + 228 + d, POSE_CTL_W, 46)) {
+                tooltip = java.util.List.of(
+                        Component.literal("Now and then").withStyle(ChatFormatting.WHITE),
+                        Component.literal("Plays once on a timer, then goes back").withStyle(ChatFormatting.GRAY),
+                        Component.literal("to the idle loop.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("Exact swings on the beat, so it can match").withStyle(ChatFormatting.GRAY),
+                        Component.literal("an anvil sound set to the same gap.").withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
     }
 
@@ -831,9 +842,11 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private boolean clickPose(int mx, int my) {
+        boolean geo = usesGeo();
+        int d = geo ? 0 : -30;
         if (over(mx, my, px + 30, py + 50, 20, 16)) { cyclePose(-1); return true; }
         if (over(mx, my, px + 250, py + 50, 20, 16)) { cyclePose(1); return true; }
-        if (over(mx, my, px + POSE_CTL_X, py + 206, POSE_CTL_W, 16)) {
+        if (!geo && over(mx, my, px + POSE_CTL_X, py + 206 + d, POSE_CTL_W, 16)) {
             NotchNpcEntity npc = findPreview();
             String next = net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary
                     .next(npc == null ? "" : npc.getIdleAnimation());
@@ -841,7 +854,7 @@ public class NotchNpcEditorScreen extends Screen {
             if (npc != null) npc.setIdleAnimation(next);
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X, py + 238, POSE_CTL_W, 16)) {
+        if (!geo && over(mx, my, px + POSE_CTL_X, py + 238 + d, POSE_CTL_W, 16)) {
             NotchNpcEntity npc = findPreview();
             String next = net.fugginbeenus.notchcurrency.client.npc.AnimationLibrary
                     .next(npc == null ? "" : npc.getTimedAnimation());
@@ -851,7 +864,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X, py + 258, 16, 14)) {
+        if (!geo && over(mx, my, px + POSE_CTL_X, py + 258 + d, 16, 14)) {
             NotchNpcEntity npc = findPreview();
             int step = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 10 : 1;
             if (npc != null) {
@@ -860,7 +873,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X + 64, py + 258, 16, 14)) {
+        if (!geo && over(mx, my, px + POSE_CTL_X + 64, py + 258 + d, 16, 14)) {
             NotchNpcEntity npc = findPreview();
             int step = net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? 10 : 1;
             if (npc != null) {
@@ -869,7 +882,7 @@ public class NotchNpcEditorScreen extends Screen {
             }
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X + 86, py + 258, 62, 14)) {
+        if (!geo && over(mx, my, px + POSE_CTL_X + 86, py + 258 + d, 62, 14)) {
             NotchNpcEntity npc = findPreview();
             if (npc != null) {
                 npc.setTimedRandom(!npc.isTimedRandom());
@@ -882,17 +895,17 @@ public class NotchNpcEditorScreen extends Screen {
             NotchPacketsClient.sendNpcSetAnim(npcId, poseAnim);
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16)) {
+        if (geo && over(mx, my, px + POSE_CTL_X, py + 120, POSE_CTL_W, 16)) {
             cycleClip();
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X, py + 148, POSE_CTL_W, 18)) {
+        if (over(mx, my, px + POSE_CTL_X, py + 148 + d, POSE_CTL_W, 18)) {
             poseId = 7;
             NotchPacketsClient.sendNpcSetPose(npcId, poseId);
             Minecraft.getInstance().setScreen(new PoseEditorScreen(npcId));
             return true;
         }
-        if (over(mx, my, px + POSE_CTL_X, py + 170, POSE_CTL_W, 18)) {
+        if (over(mx, my, px + POSE_CTL_X, py + 170 + d, POSE_CTL_W, 18)) {
             Minecraft.getInstance().setScreen(new NpcMoveScreen(npcId));
             return true;
         }
