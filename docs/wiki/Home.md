@@ -37,27 +37,5 @@ deliberate money **sinks** and **faucets**.
 
 ---
 
-## Table of Contents
-
-1. [Getting Started](01.-Getting-Started)
-2. [Currency System](02.-Currency-System)
-3. [Currency Creator](03.-Currency-Creator)
-4. [Shops](04.-Shops)
-5. [Auction House](05.-Auction-House)
-6. [Player-to-Player Trading](06.-Player%E2%80%90to%E2%80%90Player-Trading)
-7. [World Events](07.-World-Events)
-8. [NPCs](08.-NPCs)
-9. [Economy Roles](09.-Economy-Roles)
-10. [Money Sinks & Faucets](10.-Money-Sinks-and-Faucets)
-11. [Configuration](11.-Configuration)
-12. [Mail](12.-Mail)
-13. [Quests](13.-Quests)
-14. [Animations](14.-Animations)
-15. [Sounds](15.-Sounds)
-16. [Particles](16.-Particles)
-17. [Admin](Admin)
-
----
-
 *This mod is heavily inspired by the Origin Realms economy system, and the NPC system is inspired by
-EasyNPC. All the code and assets are made by the author.*
+EasyNPC. All the code and assets are made by myself or artists.*
