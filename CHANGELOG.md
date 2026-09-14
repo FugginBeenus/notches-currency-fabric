@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.12.6: Talk bubble
 
 - The talk bubble over an NPC's head only showed on 1.20.1. Minecraft flipped the way
   camera-facing text is mirrored in 1.21, so on every newer version the bubble faced away from
