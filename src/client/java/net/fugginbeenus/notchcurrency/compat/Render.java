@@ -125,18 +125,20 @@ public final class Render {
     *///?}
 
 
-    //? if >=26.2 {
-    /*public static org.joml.Quaternionf cameraFacing(
-            net.minecraft.client.renderer.state.level.CameraRenderState camera) {
-        return new org.joml.Quaternionf().rotationYXZ(
-                -camera.yRot * ((float) Math.PI / 180f), camera.xRot * ((float) Math.PI / 180f), 0f);
-    }
-    *///?} elif >=1.21.11 {
+    //? if >=1.21.11 {
     /*public static org.joml.Quaternionf cameraFacing(
             net.minecraft.client.renderer.state.CameraRenderState camera) {
         return camera.orientation;
     }
     *///?}
+
+    public static void billboardScale(PoseStack matrices, float size) {
+        //? if >=1.21 {
+        /*matrices.scale(size, -size, size);
+        *///?} else {
+        matrices.scale(-size, -size, size);
+        //?}
+    }
 
     @org.jetbrains.annotations.Nullable
     public static net.minecraft.world.entity.Entity createDetached(

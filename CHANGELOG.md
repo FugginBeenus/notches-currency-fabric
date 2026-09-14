@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The talk bubble over an NPC's head only showed on 1.20.1. Minecraft flipped the way
+  camera-facing text is mirrored in 1.21, so on every newer version the bubble faced away from
+  you and was culled. It now uses the same maths as a name tag on each version.
+
 ## 0.12.5: Sounds and particles
 
 An NPC can now make noise, and it can glow. Both come with a way to bring in your own files and

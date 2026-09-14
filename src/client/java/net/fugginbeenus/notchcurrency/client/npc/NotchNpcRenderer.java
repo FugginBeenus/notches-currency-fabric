@@ -310,7 +310,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         matrices.translate(0.0f, bubbleHeight(state.bodyHeight, state.getNameOffset(),
                 usedLines(state.billboard), state.ageInTicks), 0.0f);
         matrices.mulPose(net.fugginbeenus.notchcurrency.compat.Render.cameraFacing(camera));
-        matrices.scale(-BUBBLE_SCALE, -BUBBLE_SCALE, BUBBLE_SCALE);
+        net.fugginbeenus.notchcurrency.compat.Render.billboardScale(matrices, BUBBLE_SCALE);
         net.fugginbeenus.notchcurrency.compat.Render.submitText(font, glyph,
                 -font.width(glyph) / 2f, 0f, 0xFFFFFFFF, matrices, collector, BUBBLE_LIGHT);
         matrices.popPose();
@@ -323,7 +323,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         matrices.translate(0.0f, bubbleHeight(npc.getBbHeight(), npc.getNameOffset(),
                 usedLines(NpcBillboard.lines(npc)), npc.tickCount), 0.0f);
         matrices.mulPose(this.entityRenderDispatcher.cameraOrientation());
-        matrices.scale(-BUBBLE_SCALE, -BUBBLE_SCALE, BUBBLE_SCALE);
+        net.fugginbeenus.notchcurrency.compat.Render.billboardScale(matrices, BUBBLE_SCALE);
         net.fugginbeenus.notchcurrency.compat.Render.drawText(font, glyph,
                 -font.width(glyph) / 2f, 0f, 0xFFFFFFFF,
                 matrices.last().pose(), vertexConsumers, BUBBLE_LIGHT);
