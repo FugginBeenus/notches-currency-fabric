@@ -166,7 +166,9 @@ public final class AuctionCommands {
                                             boolean claimedSomething = false;
                                             if (p.getUUID().equals(pw.sellerUuid) && pw.finalPrice > 0L) {
                                                 long amt = pw.finalPrice;
-                                                BalanceStore.add(p, amt);
+                                                BalanceStore.add(p, amt,
+                                                        net.fugginbeenus.notchcurrency.economy.TransactionReason.AUCTION,
+                                                        "auction sale payout");
                                                 NotchPackets.sendBalance(p, BalanceStore.get(p));
 
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Claimed ")

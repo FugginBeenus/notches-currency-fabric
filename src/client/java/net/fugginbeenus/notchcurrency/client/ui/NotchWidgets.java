@@ -132,6 +132,11 @@ public final class NotchWidgets {
                 ? "coins" : resolved;
     }
 
+    public static String coinLabel() {
+        String resolved = net.minecraft.network.chat.Component.translatable("item.notchcurrency.notch_coin").getString();
+        return resolved.equals("item.notchcurrency.notch_coin") ? "Coin" : resolved;
+    }
+
     public static void click() {
         net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
                 net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(

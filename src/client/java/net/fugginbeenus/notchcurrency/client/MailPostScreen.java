@@ -80,7 +80,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
 
         String oldCoins = coins == null ? "" : coins.getValue();
         coins = new EditBox(this.font, this.leftPos + EDGE + 4, this.topPos + COINS_Y + 3,
-                INNER_W - 8, 10, Component.literal("Coins"));
+                INNER_W - 8, 10, Component.literal(NotchWidgets.coinLabel()));
         coins.setMaxLength(12);
         coins.setBordered(false);
         coins.setResponder(value -> {
@@ -165,7 +165,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         long balance = NotchHud.getBalance();
         if (coins == null || balance == hintedBalance) return;
         hintedBalance = balance;
-        coins.setHint(Component.literal("coins to send (you have "
+        coins.setHint(Component.literal(NotchWidgets.coinName() + " to send (you have "
                 + NotchWidgets.compactCount(balance) + ")").withStyle(ChatFormatting.DARK_GRAY));
     }
 

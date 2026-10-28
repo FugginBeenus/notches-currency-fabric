@@ -115,7 +115,8 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
             long withdrawn = CoinEconomy.withdrawFromBalanceToInventory(sp, amount);
 
             if (withdrawn <= 0) {
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have enough balance to withdraw that many Notch Coins.")
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have enough balance to withdraw that many "
+                                + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".")
                                 .withStyle(ChatFormatting.RED));
             }
 

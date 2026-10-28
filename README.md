@@ -133,6 +133,8 @@ Enchanter, Cosmetics, or Recruiter (factions), plus admin server-shops.
 - Enchanter (repair / buy enchants / extract to book), raffle, gambling (slots + coin flip),
   crates & keys, bounty board, loans, and a cosmetics shop
 - Sinks: wealth tax, shop rent, auction fees, and an optional Waystone teleport fee
+- Optional faucets, both off by default: a starting balance for brand-new players, and savings
+  interest that pays every account a small percent of its balance on a timer, capped per payout
 - Villager currency trades: when villagers roll new trades, some have a rare chance to be priced
   in coins instead of emeralds (chance and exchange rate configurable)
 - A custom-currency maker: rename the coin and drop in your own art, and it flows everywhere: the
@@ -183,7 +185,8 @@ placeable via ModMenu so it dodges other mods' overlays.
 - `/hearts`: your extra hearts, and whether this server takes one when you die
 - `/quests`: your quest log, with a hand-in button for anything ready
 - `/npc setrole <role>`, `/npc spawn [preset]`, `/eco …`: op tools
-- `/quests list`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcmodels sync`, `/npcfx starters`: more op tools
+- `/quests list`, `/balloon`, `/cache spawn`, `/givnotches`, `/npcfx starters`: more op tools
+- `/npcmodels sync`: anyone can run this. It re-checks the server for NPC models you are missing
 
 ## Dependencies
 - Fabric API (required)

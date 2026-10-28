@@ -79,7 +79,8 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             if (prize.getCount() > 1) ctx.renderItemDecorations(this.font, prize, 0, 0);
             net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
 
-            String prizeName = hasItem ? prize.getHoverName().getString() : "Coin Jackpot";
+            String prizeName = hasItem ? prize.getHoverName().getString()
+                    : NotchWidgets.coinLabel() + " Jackpot";
             NotchWidgets.centerText(ctx, this.font, prizeName, x + W / 2 - 0, y + 80, NotchTheme.TEXT_LIGHT, true);
 
             long pot = menu.prop(RaffleScreenHandler.P_POT) & 0xFFFFFFFFL;

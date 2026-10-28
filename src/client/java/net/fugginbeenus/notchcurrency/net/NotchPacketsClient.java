@@ -14,7 +14,6 @@ import java.util.function.LongConsumer;
 public final class NotchPacketsClient {
     public static final ResourceLocation BALANCE_SYNC    = NotchPackets.BALANCE_SYNC;
     public static final ResourceLocation BALANCE_REQUEST = NotchPackets.BALANCE_REQUEST;
-    public static final ResourceLocation TRADE_OPEN     = NotchPackets.TRADE_OPEN;
     public static final ResourceLocation TRADE_UPDATE   = NotchPackets.TRADE_UPDATE;
     public static final ResourceLocation TRADE_CANCEL   = NotchPackets.TRADE_CANCEL;
     public static final ResourceLocation TRADE_COMPLETE = NotchPackets.TRADE_COMPLETE;
@@ -877,11 +876,6 @@ public final class NotchPacketsClient {
         });
     }
 
-    public static void registerModelReloadReceiver() {
-        NetClient.registerClientReceiver(NotchPackets.NPC_MODELS_RELOAD, (client, buf) ->
-                client.execute(() ->
-                        net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelPacks.reload(client, true)));
-    }
 
     public static void registerMailAimReceiver() {
         NetClient.registerClientReceiver(NotchPackets.MAIL_AIM, (client, buf) -> {

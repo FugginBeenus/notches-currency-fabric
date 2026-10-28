@@ -35,18 +35,56 @@ public final class CurrencyPackGenerator {
         //?}
     }
 
-    public static void remindIfDisabled(Minecraft client) {
-        if (remindedThisSession || !packExists() || client.player == null) return;
-        boolean enabled = enabledPacks(client).contains(PACK_PROFILE_NAME);
-        if (enabled) {
-            remindedThisSession = true;
-            return;
-        }
+    private static void remindIfDisabled(Minecraft client) {
+        if (remindedThisSession || client.player == null) return;
         remindedThisSession = true;
         net.fugginbeenus.notchcurrency.compat.Msg.chat(client.player, Component.literal("[Notch Currency] Custom coin art is ready - enable ")
                 .withStyle(ChatFormatting.GOLD)
                 .append(Component.literal("\"NotchCurrencyCustom\"").withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" in Options → Resource Packs to see it.").withStyle(ChatFormatting.GOLD)));
+    }
+
+    public static void enableLocalPack(Minecraft client) {
+        if (client == null || !packExists()) return;
+        try {
+            var mgr = client.getResourcePackRepository();
+            mgr.reload();
+            if (enabledPacks(client).contains(PACK_PROFILE_NAME)) return;
+            if (!mgr.addPack(PACK_PROFILE_NAME)) {
+                remindIfDisabled(client);
+                return;
+            }
+            client.options.updateResourcePacks(mgr);
+            PackReloads.request(client);
+        } catch (Exception e) {
+            LOGGER.error("Couldn't auto-enable the custom coin pack", e);
+        }
+    }
+
+    private static void refreshLocalPack(Minecraft client, boolean wanted) {
+        if (client == null) return;
+        try {
+            var mgr = client.getResourcePackRepository();
+            mgr.reload();
+            boolean on = enabledPacks(client).contains(PACK_PROFILE_NAME);
+            if (!wanted) {
+                if (!on) return;
+                mgr.removePack(PACK_PROFILE_NAME);
+                client.options.updateResourcePacks(mgr);
+                PackReloads.request(client);
+                return;
+            }
+            if (!on) {
+                if (!mgr.addPack(PACK_PROFILE_NAME)) {
+                    remindIfDisabled(client);
+                    return;
+                }
+                client.options.updateResourcePacks(mgr);
+            }
+            PackReloads.request(client);
+        } catch (Exception e) {
+            LOGGER.error("Couldn't refresh the custom coin pack", e);
+        }
     }
 
     private static Path target() {
@@ -58,6 +96,10 @@ public final class CurrencyPackGenerator {
     }
 
     public static void generate() {
+        generate(null);
+    }
+
+    public static void generate(Minecraft client) {
         try {
             Path src = sourceDir();
             Files.createDirectories(src);
@@ -72,6 +114,7 @@ public final class CurrencyPackGenerator {
             boolean hasArt = Files.isRegularFile(coin);
             boolean hasTails = Files.isRegularFile(tails);
             if (!hasArt && !hasTails && itemName.isEmpty()) {
+                refreshLocalPack(client, false);
                 return;
             }
 
@@ -98,6 +141,7 @@ public final class CurrencyPackGenerator {
 
             LOGGER.info("Generated the custom currency pack (art: {}, tails: {}, name: '{}') at {}",
                     hasArt, hasTails, itemName, target());
+            refreshLocalPack(client, true);
         } catch (IOException e) {
             LOGGER.error("Couldn't generate the custom currency pack", e);
         }

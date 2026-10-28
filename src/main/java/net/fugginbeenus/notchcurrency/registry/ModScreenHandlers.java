@@ -9,7 +9,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.MenuType;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
-import net.fugginbeenus.notchcurrency.auction.UserListingsScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyAdminScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyBoardScreenHandler;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleAdminScreenHandler;
@@ -20,7 +19,6 @@ public final class ModScreenHandlers {
     public static MenuType<ATMTestScreenHandler> ATM;
     public static MenuType<TradeScreenHandler> TRADE;
     public static MenuType<AuctionHouseScreenHandler> AUCTION_HOUSE;
-    public static MenuType<UserListingsScreenHandler> USER_AUCTIONS;
     public static MenuType<RaffleScreenHandler> RAFFLE;
     public static MenuType<RaffleAdminScreenHandler> RAFFLE_ADMIN;
     public static MenuType<AuctionListingScreenHandler> AUCTION_LISTING;
@@ -64,11 +62,6 @@ public final class ModScreenHandlers {
         AUCTION_HOUSE = simple(
                 NotchCurrency.id("auction_house"),
                 AuctionHouseScreenHandler::new
-        );
-
-        USER_AUCTIONS = simple(
-                NotchCurrency.id("user_auctions"),
-                UserListingsScreenHandler::new
         );
 
         RAFFLE = simple(

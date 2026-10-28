@@ -482,7 +482,7 @@ public final class PlayerShopManager {
         if (!listing.buysFromPlayers()) return PurchaseResult.NOT_BUYING;
         if (quantity <= 0 || quantity > 256) return PurchaseResult.INVALID_QUANTITY;
 
-        int perSale = Math.max(1, listing.getItemForSale().getCount());
+        int perSale = listing.getBundleSize();
         int totalItems = perSale * quantity;
         long payout = (long) listing.currentShopPays() * quantity;
 

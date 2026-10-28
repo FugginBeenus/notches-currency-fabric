@@ -42,7 +42,7 @@ final class ConfigEntries {
                 "Rename the coin everywhere - the item AND messages/GUIs (\"You won 50 Rupees\").",
                 "Pick a name that reads well after a number. Blank keeps \"Notch Coin\"/\"coins\".",
                 "Drop coin.png in config/notchcurrency/currency/ to reskin the art.",
-                "A resource pack is generated on save; servers push it to every player."));
+                "A resource pack is built and switched on when you save; servers push it to every player."));
         e.add(new NumberEntry(c, "Starting balance", cfg.currency.startingBalance, 0, 0, 1_000_000_000,
                 v -> cfg.currency.startingBalance = v,
                 "Coins a brand-new player gets the first time they join.",

@@ -292,7 +292,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                 && over(mouseX, mouseY, leftPos + 8, topPos + 40, 240, 15)) {
             ctx.renderComponentTooltip(this.font, List.of(
                     Component.literal("Admin shops do not earn").withStyle(ChatFormatting.GOLD),
-                    Component.literal("Coins buyers pay leave the economy.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("What buyers pay leaves the economy.").withStyle(ChatFormatting.GRAY),
                     Component.literal("No rent is charged either.").withStyle(ChatFormatting.GRAY)),
                     mouseX, mouseY);
         }

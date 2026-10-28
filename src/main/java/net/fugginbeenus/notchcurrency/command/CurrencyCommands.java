@@ -75,7 +75,8 @@ public final class CurrencyCommands {
                                     ServerPlayer player = ctx.getSource().getPlayer();
                                     int amount = IntegerArgumentType.getInteger(ctx, "amount");
                                     player.addItem(new ItemStack(ModItems.NOTCH_COIN, amount));
-                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Given " + amount + " Notch Coins!"));
+                                    net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Given " + amount + " "
+                                            + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + "!"));
                                     return 1;
                                 }))
         );

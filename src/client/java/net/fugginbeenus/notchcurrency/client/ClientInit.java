@@ -13,8 +13,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.client.AuctionTooltips;
-import net.fugginbeenus.notchcurrency.auction.UserListingsScreenHandler;
-import net.fugginbeenus.notchcurrency.client.UserListingsScreen;
 import net.fugginbeenus.notchcurrency.crate.BarrelCleanupManager;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -154,7 +152,6 @@ public final class ClientInit implements ClientModInitializer {
         NotchPacketsClient.registerRecruiterReceiver();
         NotchPacketsClient.registerFactionListReceiver();
         NotchPacketsClient.registerMailRecipientsReceiver();
-        NotchPacketsClient.registerModelReloadReceiver();
         NotchPacketsClient.registerNpcModelReceivers();
         NotchPacketsClient.registerNpcSoundReceivers();
         NotchPacketsClient.registerNpcTextureReceivers();
@@ -202,16 +199,12 @@ public final class ClientInit implements ClientModInitializer {
                 net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClient(client.level.registryAccess());
             }
             NotchPacketsClient.requestBalance();
-            CurrencyPackGenerator.remindIfDisabled(client);
+            CurrencyPackGenerator.enableLocalPack(client);
         });
 
         MenuScreens.register(
                 ModScreenHandlers.AUCTION_HOUSE,
                 AuctionHouseScreen::new
-        );
-        MenuScreens.register(
-                ModScreenHandlers.USER_AUCTIONS,
-                UserListingsScreen::new
         );
 
         AuctionTooltips.init();

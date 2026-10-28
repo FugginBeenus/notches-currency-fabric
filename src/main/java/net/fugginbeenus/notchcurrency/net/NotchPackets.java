@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerPlayer;
 public final class NotchPackets {
     public static final ResourceLocation BALANCE_SYNC    = NotchCurrency.id("balance_sync");
     public static final ResourceLocation BALANCE_REQUEST = NotchCurrency.id("balance_request");
-    public static final ResourceLocation TRADE_OPEN      = NotchCurrency.id("trade_open");
     public static final ResourceLocation TRADE_UPDATE    = NotchCurrency.id("trade_update");
     public static final ResourceLocation TRADE_CANCEL    = NotchCurrency.id("trade_cancel");
     public static final ResourceLocation TRADE_COMPLETE  = NotchCurrency.id("trade_complete");
@@ -54,7 +53,6 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_MODEL_SEND = NotchCurrency.id("npc_model_send");
     public static final ResourceLocation NPC_MODEL_WANT = NotchCurrency.id("npc_model_want");
     public static final ResourceLocation NPC_MODEL_PUSH = NotchCurrency.id("npc_model_push");
-    public static final ResourceLocation NPC_MODELS_RELOAD = NotchCurrency.id("npc_models_reload");
     public static final ResourceLocation NPC_SOUND_LIST = NotchCurrency.id("npc_sound_list");
     public static final ResourceLocation NPC_SOUND_SEND = NotchCurrency.id("npc_sound_send");
     public static final ResourceLocation NPC_SOUND_WANT = NotchCurrency.id("npc_sound_want");

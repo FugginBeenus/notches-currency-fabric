@@ -1,6 +1,5 @@
 package net.fugginbeenus.notchcurrency.config.ui;
 
-import net.fugginbeenus.notchcurrency.auction.AuctionConfig;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
@@ -10,12 +9,6 @@ import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.NumberEntry;
 import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.SelectEntry;
 import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.SliderEntry;
 import net.fugginbeenus.notchcurrency.config.ui.ConfigEntry.StringEntry;
-import net.fugginbeenus.notchcurrency.crate.DailyCrateManager;
-import net.fugginbeenus.notchcurrency.crate.GoldenCacheManager;
-import net.fugginbeenus.notchcurrency.economy.ShopRent;
-import net.fugginbeenus.notchcurrency.economy.WealthTax;
-import net.fugginbeenus.notchcurrency.economy.bounty.BountyManager;
-import net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -518,25 +511,12 @@ public final class NotchConfigScreen extends Screen {
         if (cfg.balloon.maxY < cfg.balloon.minY) cfg.balloon.maxY = cfg.balloon.minY;
 
         NotchConfigIO.save(cfg);
-        AuctionConfig.apply(cfg);
+        net.fugginbeenus.notchcurrency.config.NotchConfigApply.applyAll(cfg);
         if (net.minecraft.client.Minecraft.getInstance().getConnection() != null) {
             net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendBalloonConfig(cfg);
         }
-        GoldenCacheManager.applyConfig(cfg);
-        WealthTax.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.SavingsInterest.applyConfig(cfg);
-        ShopRent.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.shop.ShopRules.applyConfig(cfg);
-        RaffleManager.applyConfig(cfg);
-        BountyManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.crate.CrateManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.loan.LoanManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.gambling.GamblingManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.cosmetic.CosmeticManager.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.integration.WaystoneFeeHandler.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.economy.villager.VillagerCoinTrades.applyConfig(cfg);
-        net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate();
+        net.fugginbeenus.notchcurrency.client.CurrencyPackGenerator.generate(
+                net.minecraft.client.Minecraft.getInstance());
         this.onClose();
     }
 

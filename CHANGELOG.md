@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+Housekeeping from a pass over the whole mod. Nothing you were doing changes.
+
+- Renaming the coin now shows up the moment you press Save. The pack it builds was never switched
+  on for you, so nothing changed until you went and ticked it in Options yourself. The server pack
+  and the NPC assets pack already did this; the coin pack is the one that got missed.
+- A renamed coin now reaches five places that still said "coins" or "Notch Coins" out loud: the ATM
+  message, `/givnotches`, the mailbox amount box, a shop tooltip and the raffle jackpot title.
+- Claiming one auction listing with `/ah claim <id>` showed up in `/receipts` as "unspecified".
+  It says "auction" now, like every other auction payout. `[Claim All]` was already right.
+- Removed a leftover auction screen that nothing could open. The "my listings" view has lived
+  inside the Auction House screen for a long time.
+- Removed two network ids that nothing sent, and the listener behind one of them.
+- Every config option is now applied from one place instead of two lists kept in step by hand.
+  A new option could previously work at startup and do nothing after a Save, and that happened once.
+- Docs: the Modrinth page now covers sounds and particles, the README lists the starting balance
+  and savings interest, and the wiki folder in the repo holds all 18 pages instead of 10.
+
 ## 0.12.6: Talk bubble
 
 - The talk bubble over an NPC's head only showed on 1.20.1. Minecraft flipped the way

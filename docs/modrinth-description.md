@@ -118,6 +118,52 @@ Then hand it to any NPC: loop it forever as an idle, or play it once when someth
 
 ---
 
+## Give them a voice
+
+Six sound slots per NPC: a **voice** for when it is spoken to, an **ambient** sound on a timer, and
+one each for hurt, death, footsteps and landing a hit.
+
+<!-- IMAGE: the Sounds screen, a few slots filled in. -->
+
+**Pitch** shifts every sound on that NPC at once, so one villager noise becomes a whole cast. The
+boxes fill themselves in as you type, and a typo is refused in chat rather than saved quietly.
+
+Ambient has a gap and a mode. **Exact** plays on the dot, which is what a blacksmith at an anvil
+needs. **Random** wanders, which is what background chatter needs. Set an Exact ambient sound and
+an Exact timed animation to the same gap and the clang lands with the hammer, every time.
+
+**Your own `.ogg` files work.** Drop one in a folder, name it, done. On a server an operator's
+import goes up on the spot and every other player gets it on their next join. Nothing is pushed to
+players already online, on purpose, so a bad upload cannot be used to grief a full server.
+
+---
+
+## Particles, designed in game
+
+A wizard trailing motes. A ghost bleeding wisps. A blacksmith throwing sparks.
+
+<!-- IMAGE: the particle editor with the live preview showing a ring of glyphs around the NPC. -->
+
+Build an effect from up to **four layers**, each with its own particle, shape and motion. Six
+shapes: point, ring, ball, cone, column, spiral. The shape can sit still, **spin** around the NPC,
+or **rise** and wrap. A ring that sits there is a puddle. A ring that turns is a spell.
+
+Dusts take a colour, and so do seven **tame versions** of vanilla particles we wrote ourselves.
+Those matter: a few of Minecraft's own particles ignore where you put them. `enchant` flies off
+toward a table, `note` reads its speed as a colour. The picker marks those, and one click swaps in
+a twin that behaves.
+
+The picker also gives every particle a **plain name** sorted into groups, with a picture when you
+hover, so you do not need to know Minecraft's asset names to find a spark.
+
+**Eight slots for your own PNGs**, animated if you want, shared the same way sounds are.
+
+Give an effect to an NPC to wear all the time, or fire it from any reaction, dialogue choice or
+quest. Effects are drawn on each player's own game, so a town full of wizards costs the server
+nothing, and three guards keep it cheap: a 32 block range, a cap per shape, and a budget per tick.
+
+---
+
 ## Good to know
 
 - **Fabric**, for **1.20.1, 1.21.1, 1.21.11, 26.1.2 and 26.2**
@@ -125,6 +171,8 @@ Then hand it to any NPC: loop it forever as an idle, or play it once when someth
 - **ModMenu** optional, for the settings screen
 - **Waystones** optional, to charge for teleports
 - Nearly everything is configurable, with a searchable settings screen in game
+- Money in and money out are both tunable: wealth tax, shop rent and fees on one side, optional
+  savings interest and a starting balance for new players on the other
 - Single player works fine, but this is built for servers
 
 ---
