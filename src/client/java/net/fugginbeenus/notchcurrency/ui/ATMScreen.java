@@ -16,45 +16,15 @@ import org.lwjgl.glfw.GLFW;
 
 public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
 
-    // === BALANCE PILL (top dark bar with coin + balance text) ===
-
-    // Outer pill frame
-    private static final int PILL_W = 74;
-    private static final int PILL_H = 16;
-    private static final int PILL_X = (176 - PILL_W) / 2; // centered on the 176-wide panel
-    private static final int PILL_Y = 52;
-
-    // Coin icon inside the pill
-    private static final int PILL_ICON_W = 10;
-    private static final int PILL_ICON_H = 10;
-    private static final int PILL_ICON_X = PILL_X + 4;
-    private static final int PILL_ICON_Y = PILL_Y + 3;
-
-    // Component layout
-    private static final int TEXT_LEFT_PADDING = 4;
-    private static final int RIGHT_MARGIN      = 6;
-    private static final int TEXT_X_OFFSET     = 8;
-    private static final int TEXT_Y_OFFSET     = 2;
-
-    // === WITHDRAW ROW (black bar + green button under the pill) ===
-
-    // Black input bar
-    public static final int WITHDRAW_FIELD_X = 48;
-    public static final int WITHDRAW_FIELD_Y = 90;
+    private static final int SLOTS_X = 43, SLOTS_Y = 17, COL_X = 41, COL_W = 94, MONEY_Y = 49;
+    public static final int WITHDRAW_FIELD_X = 41;
+    public static final int WITHDRAW_FIELD_Y = 84;
     public static final int WITHDRAW_FIELD_W = 62;
     public static final int WITHDRAW_FIELD_H = 16;
-
-    // Green arrow button
-    public static final int WITHDRAW_BUTTON_W = 29;
-    public static final int WITHDRAW_BUTTON_H = 17;
-    public static final int WITHDRAW_BUTTON_X = WITHDRAW_FIELD_X + WITHDRAW_FIELD_W - -7;
-    public static final int WITHDRAW_BUTTON_Y = WITHDRAW_FIELD_Y + 1;
-
-    // Debug toggles
-    private static final boolean DEBUG_WITHDRAW_BUTTON_BOUNDS = false;
-    private static final boolean DEBUG_WITHDRAW_FIELD_BOUNDS  = false;
-
-    // ---------------------------------------------------------------------
+    public static final int WITHDRAW_BUTTON_X = 107;
+    public static final int WITHDRAW_BUTTON_Y = 84;
+    public static final int WITHDRAW_BUTTON_W = 28;
+    public static final int WITHDRAW_BUTTON_H = 16;
 
     private EditBox withdrawField;
     private Button withdrawButton;
@@ -65,7 +35,7 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         *///?} else {
         super(handler, inv, title);
         this.imageWidth = 176;
-        this.imageHeight = 200; // taller texture
+        this.imageHeight = 200;
         //?}
 
         this.titleLabelX = 9999;
@@ -81,26 +51,23 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        // ---- Withdraw amount text field (sits on the black bar) ----
         withdrawField = new EditBox(
                 this.font,
-                x + WITHDRAW_FIELD_X + 4,   // nudge text right off the rounded edge
-                y + WITHDRAW_FIELD_Y + 4,   // nudge text down to vertical center
-                WITHDRAW_FIELD_W - 7,
-                WITHDRAW_FIELD_H,
+                x + WITHDRAW_FIELD_X + 4,
+                y + WITHDRAW_FIELD_Y + 4,
+                WITHDRAW_FIELD_W - 8,
+                WITHDRAW_FIELD_H - 6,
                 Component.literal("Withdraw")
         );
         withdrawField.setMaxLength(12);
         withdrawField.setValue("");
-        withdrawField.setBordered(false); // let the black bar texture show
+        withdrawField.setBordered(false);
         withdrawField.setTextColor(0xFFFFFFFF);
 
-        // IMPORTANT: add as drawable child so it renders and receives input
         this.addRenderableWidget(withdrawField);
         this.setInitialFocus(withdrawField);
-        withdrawField.setFocused(true); // ensure caret is blinking immediately
+        withdrawField.setFocused(true);
 
-        // ---- Withdraw button (click area over the green arrow) ----
         withdrawButton = this.addRenderableWidget(
                 Button.builder(Component.empty(), btn -> onWithdrawClicked())
                         .bounds(
@@ -111,7 +78,6 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
                         )
                         .build()
         );
-        // Make the button visually invisible but keep the hitbox
         withdrawButton.setAlpha(0.0f);
     }
 
@@ -142,66 +108,72 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
     //?}
         final int x = (this.width - this.imageWidth) / 2;
         final int y = (this.height - this.imageHeight) / 2;
+        final int cx = x + this.imageWidth / 2;
 
-        // Window panel: code-drawn from the Notch theme (no texture).
         NotchWidgets.panel(ctx, x, y, this.imageWidth, this.imageHeight);
-        ctx.drawString(this.font, Component.literal("ATM"), x + 8, y + 6, NotchTheme.TEXT_DARK, false);
 
-        // Deposit slots (5 across). Item positions mirror the handler; insets sit 1px out.
+        int sx = x + SLOTS_X, sy = y + SLOTS_Y;
+        NotchWidgets.roundBox(ctx, sx - 2, sy - 2, 94, 22, NotchTheme.OUTLINE);
+        ctx.fill(sx - 1, sy - 1, sx + 91, sy + 19, NotchTheme.ATM_GOLD_LO);
+        ctx.fill(sx - 1, sy - 1, sx + 91, sy, NotchTheme.ATM_GOLD);
         for (int i = 0; i < 5; i++) {
-            NotchWidgets.slot(ctx, x + 45 + i * 18, y + 17);
+            NotchWidgets.slot(ctx, sx + i * 18, sy);
+        }
+        ctx.fill(cx - 1, y + 40, cx + 1, y + 43, NotchTheme.SLOT_FILL);
+        for (int i = 0; i < 3; i++) {
+            ctx.fill(cx - 3 + i, y + 43 + i, cx + 3 - i, y + 44 + i, NotchTheme.SLOT_FILL);
         }
 
-        // Balance pill (coin glyph + balance).
-        NotchWidgets.pill(ctx, x + PILL_X, y + PILL_Y, PILL_W, PILL_H);
-        String label = " " + NotchHud.getBalance();
-        int tw = this.font.width(label);
-        int tx = x + PILL_X + (PILL_W - tw) / 2;
-        int ty = y + PILL_Y + (PILL_H - this.font.lineHeight) / 2 + 1;
-        ctx.drawString(this.font, label, tx, ty, NotchTheme.TEXT_GOLD, true);
+        long bal = NotchHud.getBalance();
+        String text = String.format(java.util.Locale.ROOT, "%,d", bal);
+        if (this.font.width(text) > COL_W - 24) text = NotchWidgets.compactCount(bal);
+        moneyBar(ctx, x + COL_X, y + MONEY_Y, text);
 
-        // Withdraw amount box: the text field renders its text on top.
+        NotchWidgets.smallCaps(ctx, "Withdraw", x + WITHDRAW_FIELD_X, y + 77, NotchTheme.TEXT_MUTED);
         NotchWidgets.inset(ctx, x + WITHDRAW_FIELD_X, y + WITHDRAW_FIELD_Y,
                 WITHDRAW_FIELD_W, WITHDRAW_FIELD_H, NotchTheme.DEEP);
-
-        // Withdraw button (green) with a down-arrow.
         int bx = x + WITHDRAW_BUTTON_X, by = y + WITHDRAW_BUTTON_Y;
         boolean hov = mouseX >= bx && mouseX < bx + WITHDRAW_BUTTON_W
                 && mouseY >= by && mouseY < by + WITHDRAW_BUTTON_H;
-        greenButton(ctx, bx, by, WITHDRAW_BUTTON_W, WITHDRAW_BUTTON_H, hov);
+        withdrawButton(ctx, bx, by, hov);
 
-        // Player inventory + hotbar.
-        final int invX = x + 8;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                NotchWidgets.slot(ctx, invX + col * 18 - 1, y + 113 + row * 18 - 1);
+                NotchWidgets.slot(ctx, x + 7 + col * 18, y + 112 + row * 18);
             }
         }
         for (int col = 0; col < 9; col++) {
-            NotchWidgets.slot(ctx, invX + col * 18 - 1, y + 171 - 1);
+            NotchWidgets.slot(ctx, x + 7 + col * 18, y + 170);
         }
+        NotchWidgets.title(ctx, this.font, "ATM", cx, y + 6, NotchWidgets.Plate.BRASS);
         //? if >=26.1 {
-        /*// Widgets are drawn by the base implementation of this method, so a screen that
-        // replaces it and never calls up loses every real widget it added. Last, so the
-        // panel above stays behind them.
-        super.extractContents(ctx, mouseX, mouseY, delta);
+        /*super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
 
-    private void greenButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hovered) {
-        int face = hovered ? 0xFF6FB85A : NotchTheme.ACCENT_GREEN;
-        ctx.fill(bx, by, bx + w, by + h, NotchTheme.OUTLINE);
-        ctx.fill(bx + 1, by + 1, bx + w - 1, by + h - 1, face);
-        ctx.fill(bx + 1, by + 1, bx + w - 1, by + 2, 0xFF8FD07A);     // light top
-        ctx.fill(bx + 1, by + 1, bx + 2, by + h - 1, 0xFF8FD07A);     // light left
-        ctx.fill(bx + 1, by + h - 2, bx + w - 1, by + h - 1, 0xFF3C6E2F); // dark bottom
-        ctx.fill(bx + w - 2, by + 1, bx + w - 1, by + h - 1, 0xFF3C6E2F); // dark right
-        // downward arrow (withdraw = coins come to you)
-        int cx = bx + w / 2, cy = by + h / 2 - 2;
-        ctx.fill(cx - 3, cy, cx + 4, cy + 1, NotchTheme.TEXT_LIGHT);
-        ctx.fill(cx - 2, cy + 1, cx + 3, cy + 2, NotchTheme.TEXT_LIGHT);
-        ctx.fill(cx - 1, cy + 2, cx + 2, cy + 3, NotchTheme.TEXT_LIGHT);
-        ctx.fill(cx, cy + 3, cx + 1, cy + 4, NotchTheme.TEXT_LIGHT);
+    private void moneyBar(GuiGraphics ctx, int bx, int by, String text) {
+        int fx = bx + 8, fw = COL_W - 8;
+        NotchWidgets.roundBox(ctx, fx, by + 3, fw, 11, NotchTheme.OUTLINE);
+        ctx.fill(fx + 1, by + 4, fx + fw - 1, by + 13, NotchTheme.DEEP);
+        ctx.fill(fx + 1, by + 4, fx + fw - 1, by + 5, 0xFF181818);
+        ctx.renderItem(NotchWidgets.coinStack(), bx, by);
+        int tw = this.font.width(text) - 1;
+        ctx.drawString(this.font, text, bx + 18 + (COL_W - 21 - tw) / 2, by + 5, NotchWidgets.COIN_GOLD, true);
+    }
+
+    private static void withdrawButton(GuiGraphics ctx, int bx, int by, boolean hovered) {
+        NotchWidgets.colorButton(ctx, bx, by, WITHDRAW_BUTTON_W, WITHDRAW_BUTTON_H,
+                NotchTheme.ACCENT_GREEN, NotchTheme.GREEN_HI, NotchTheme.GREEN_LO, hovered);
+        int cx = bx + WITHDRAW_BUTTON_W / 2;
+        downArrow(ctx, cx + 1, by + 1, NotchTheme.GREEN_LO);
+        downArrow(ctx, cx, by, NotchTheme.TEXT_LIGHT);
+    }
+
+    private static void downArrow(GuiGraphics ctx, int cx, int by, int color) {
+        ctx.fill(cx - 1, by + 3, cx + 1, by + 8, color);
+        for (int i = 0; i < 4; i++) {
+            ctx.fill(cx - 4 + i, by + 8 + i, cx + 4 - i, by + 9 + i, color);
+        }
     }
 
     @Override

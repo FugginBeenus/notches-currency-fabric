@@ -78,7 +78,7 @@ public class ParticleDesignerScreen extends Screen {
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Particle Effects", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Particle Effects", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Build a look here, then give it to any NPC.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.divider(ctx, px + 8, py + 34, W - 16);
@@ -88,6 +88,7 @@ public class ParticleDesignerScreen extends Screen {
             NotchWidgets.centerText(ctx, this.font, "No effects yet. Name one below.",
                     px + W / 2, py + 80, NotchTheme.TEXT_MUTED, false);
         }
+        scroll = NotchWidgets.pageStart(scroll, list.size(), ROWS);
         int shown = Math.min(ROWS, Math.max(0, list.size() - scroll));
         for (int i = 0; i < shown; i++) {
             ParticleEffect e = list.get(i + scroll);
@@ -103,11 +104,8 @@ public class ParticleDesignerScreen extends Screen {
         }
 
         if (list.size() > ROWS) {
-            int sy = py + 42 + ROWS * ROW_H;
-            NotchWidgets.neutralButton(ctx, this.font, px + 12, sy, 20, 12, "v",
-                    over(mouseX, mouseY, px + 12, sy, 20, 12));
-            NotchWidgets.neutralButton(ctx, this.font, px + 36, sy, 20, 12, "^",
-                    over(mouseX, mouseY, px + 36, sy, 20, 12));
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12, scroll / ROWS + 1, NotchWidgets.pages(list.size(), ROWS),
+                    over(mouseX, mouseY, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12));
         }
 
         NotchWidgets.divider(ctx, px + 8, py + H - 54, W - 16);
@@ -176,15 +174,18 @@ public class ParticleDesignerScreen extends Screen {
                 }
             }
             if (list.size() > ROWS) {
-                int sy = py + 42 + ROWS * ROW_H;
-                if (over(mx, my, px + 12, sy, 20, 12)) {
-                    NotchWidgets.click();
-                    scroll = Math.min(Math.max(0, list.size() - ROWS), scroll + 1);
+                if (over(mx, my, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12)) {
+                    if (scroll > 0) {
+                        NotchWidgets.click();
+                        scroll = Math.max(0, scroll - ROWS);
+                    }
                     return true;
                 }
-                if (over(mx, my, px + 36, sy, 20, 12)) {
-                    NotchWidgets.click();
-                    scroll = Math.max(0, scroll - 1);
+                if (over(mx, my, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12)) {
+                    if (scroll + ROWS < list.size()) {
+                        NotchWidgets.click();
+                        scroll += ROWS;
+                    }
                     return true;
                 }
             }

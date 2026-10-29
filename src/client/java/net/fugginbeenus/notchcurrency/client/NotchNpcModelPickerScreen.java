@@ -165,7 +165,7 @@ public class NotchNpcModelPickerScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Choose Model", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Choose Model", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         ctx.drawString(this.font, "Search:", px + 12, py + 30, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, px + 56, py + 26, W - 92, 14, NotchTheme.DEEP);

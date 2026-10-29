@@ -72,7 +72,7 @@ public class NpcStatsScreen extends Screen {
         //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Stats & Abilities", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Stats & Abilities", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         for (int i = 0; i < 3; i++) {
             int sy = sliderY(i);

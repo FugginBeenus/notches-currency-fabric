@@ -64,7 +64,7 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
         ctx.drawString(this.font, "Item to sell:", x + 16, y + AuctionListingScreenHandler.INPUT_Y + 4,
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INPUT_X - 1, y + AuctionListingScreenHandler.INPUT_Y - 1);

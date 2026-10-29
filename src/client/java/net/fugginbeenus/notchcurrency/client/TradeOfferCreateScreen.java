@@ -81,7 +81,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Create Trade Offer", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Create Trade Offer", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
         NotchWidgets.inset(ctx, x + 8, y + 22, 94, 104, NotchTheme.PANEL_MID);
         NotchWidgets.centerText(ctx, this.font, "YOU GIVE", x + 55, y + 24, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < TradeOfferCreateScreenHandler.GIVE_COUNT; i++) {

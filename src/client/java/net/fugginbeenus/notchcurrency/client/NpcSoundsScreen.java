@@ -121,7 +121,7 @@ public class NpcSoundsScreen extends Screen {
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Sounds", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Sounds", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Type a sound id, or press Pick to cycle good ones.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.divider(ctx, px + 8, py + 34, W - 16);

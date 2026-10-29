@@ -72,6 +72,14 @@ public final class Render {
         //?}
     }
 
+    public static void rotateGui(net.minecraft.client.gui.GuiGraphics ctx, float degrees) {
+        //? if >=1.21.11 {
+        /*ctx.pose().rotate((float) Math.toRadians(degrees));
+        *///?} else {
+        ctx.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(degrees));
+        //?}
+    }
+
     public static void scaleGui(net.minecraft.client.gui.GuiGraphics ctx, float sx, float sy) {
         //? if >=1.21.11 {
         /*ctx.pose().scale(sx, sy);

@@ -56,7 +56,7 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Loans", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Loans", x + W / 2, y + 8, NotchWidgets.Plate.BRASS);
 
         if (menu.prop(LoanScreenHandler.P_ENABLED) == 0) {
             NotchWidgets.centerText(ctx, this.font, "Loans are disabled.", x + W / 2, y + 40, NotchTheme.TEXT_MUTED, false);

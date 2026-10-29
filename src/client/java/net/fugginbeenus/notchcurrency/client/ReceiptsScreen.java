@@ -57,18 +57,14 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Receipts", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Receipts", x + W / 2, y + 8, NotchWidgets.Plate.BRASS);
 
         if (page >= totalPages()) page = totalPages() - 1;
 
         int pageCount = totalPages();
         if (pageCount > 1) {
-            NotchWidgets.neutralButton(ctx, this.font, x + 190, y + 16, 13, 12, "<",
-                    over(mouseX, mouseY, x + 190, y + 16, 13, 12));
-            NotchWidgets.centerText(ctx, this.font, (page + 1) + "/" + pageCount,
-                    x + 214, y + 18, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.font, x + 227, y + 16, 13, 12, ">",
-                    over(mouseX, mouseY, x + 227, y + 16, 13, 12));
+            NotchWidgets.pager(ctx, this.font, x + 190, x + 227, y + 16, 13, 12, page + 1, pageCount,
+                    over(mouseX, mouseY, x + 190, y + 16, 13, 12), over(mouseX, mouseY, x + 227, y + 16, 13, 12));
         }
 
         if (menu.rows.isEmpty()) {

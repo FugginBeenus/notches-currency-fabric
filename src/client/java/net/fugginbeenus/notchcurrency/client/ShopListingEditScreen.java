@@ -116,7 +116,7 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         final int x = this.leftPos, y = this.topPos;
         boolean editing = menu.hasListing();
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, editing ? "Edit Listing" : "New Listing", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, editing ? "Edit Listing" : "New Listing", x + W / 2, y + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.SALE_X - 1, y + ShopListingEditScreenHandler.SALE_Y - 1);
         ItemStack sale = menu.saleSample();
         if (sale.isEmpty()) {

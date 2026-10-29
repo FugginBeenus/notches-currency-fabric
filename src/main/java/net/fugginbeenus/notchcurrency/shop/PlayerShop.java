@@ -16,6 +16,7 @@ public class PlayerShop {
     private UUID ownerId;
     private String ownerName;
     private String shopName;
+    private String sign = SignStyles.SHOP_DEFAULT;
     private UUID linkedNpcId;
     private String shopkeeperDialog;
     private final List<ShopListing> listings;
@@ -136,6 +137,12 @@ public class PlayerShop {
     public void setShopName(String name) {
         this.shopName = name != null ? name : "Shop";
     }
+    public String getSign() {
+        return sign;
+    }
+    public void setSign(String sign) {
+        this.sign = SignStyles.clean(sign, SignStyles.SHOP_DEFAULT);
+    }
     public String getShopkeeperDialog() {
         return shopkeeperDialog != null ? shopkeeperDialog : "";
     }
@@ -215,6 +222,7 @@ public class PlayerShop {
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "OwnerId", ownerId);
         nbt.putString("OwnerName", ownerName);
         nbt.putString("ShopName", shopName);
+        if (!SignStyles.SHOP_DEFAULT.equals(sign)) nbt.putString("Sign", sign);
 
         if (linkedNpcId != null) {
             net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(nbt, "LinkedNpcId", linkedNpcId);
@@ -255,6 +263,7 @@ public class PlayerShop {
         PlayerShop shop = new PlayerShop(shopId, ownerId);
         shop.ownerName = nbt.getString("OwnerName");
         shop.shopName = nbt.getString("ShopName");
+        if (nbt.contains("Sign")) shop.sign = SignStyles.clean(nbt.getString("Sign"), SignStyles.SHOP_DEFAULT);
 
         if (nbt.contains("LinkedNpcId")) {
             shop.linkedNpcId = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(nbt, "LinkedNpcId");

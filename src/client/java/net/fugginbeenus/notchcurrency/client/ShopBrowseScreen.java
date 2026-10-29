@@ -79,7 +79,9 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7,
+                NotchWidgets.Plate.forSign(net.fugginbeenus.notchcurrency.shop.SignStyles.byIndex(
+                        menu.prop(ShopBrowseScreenHandler.P_SIGN), net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT)));
 
         boolean canBuy = open();
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
@@ -91,30 +93,37 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             int ry = rowY(i);
             boolean buyOnly = !c.forSale() && c.pays() > 0;
             boolean hover = canBuy && (c.canSell() || buyOnly) && over(mouseX, mouseY, x + LIST_X, ry, ROW_W, ROW_H);
-            NotchWidgets.button(ctx, x + LIST_X, ry, ROW_W, ROW_H, hover, false);
+            boolean soldOut = !buyOnly && !c.canSell();
+            if (soldOut) NotchWidgets.disabledButton(ctx, x + LIST_X, ry, ROW_W, ROW_H);
+            else NotchWidgets.button(ctx, x + LIST_X, ry, ROW_W, ROW_H, hover, false);
 
             int ix = x + LIST_X + 4;
             if (buyOnly) {
                 ctx.renderItem(c.icon(), ix, ry + 2);
                 ctx.renderItemDecorations(this.font, c.icon(), ix, ry + 2);
-                arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
-                ctx.renderItem(coin(), x + LIST_X + ROW_W - 20, ry + 2);
-                ctx.renderItemDecorations(this.font, coin(), x + LIST_X + ROW_W - 20, ry + 2,
-                        NotchWidgets.compactCount(c.pays()));
+                int fx = x + LIST_X + ROW_W - 5 - NotchWidgets.coinFieldWidth(this.font, c.pays());
+                arrow(ctx, fx - 19, ry + 6, NotchTheme.TEXT_MUTED);
+                NotchWidgets.coinField(ctx, this.font, coin(), fx, ry + 2, c.pays(), NotchWidgets.COIN_GREEN);
                 continue;
             }
             if (c.price() > 0) {
-                ctx.renderItem(coin(), ix, ry + 2);
-                ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(c.price()));
-                ix += 28;
+                ix += NotchWidgets.coinField(ctx, this.font, coin(), ix, ry + 2, c.price(), NotchWidgets.COIN_GOLD) + 4;
+                if (!c.barterStack().isEmpty()) {
+                    ctx.drawString(this.font, "+", ix, ry + 6, NotchTheme.TEXT_MUTED, false);
+                    ix += 7;
+                }
             }
             if (!c.barterStack().isEmpty()) {
                 ctx.renderItem(c.barterStack(), ix, ry + 2);
                 ctx.renderItemDecorations(this.font, c.barterStack(), ix, ry + 2);
             }
 
+            if (soldOut) {
+                NotchWidgets.stamp(ctx, this.font, x + LIST_X + 86, ry + 5, "SOLD OUT", NotchTheme.ACCENT_RED, 0x26B23030);
+                ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
+                continue;
+            }
             arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
-            if (!c.canSell()) cross(ctx, x + LIST_X + ROW_W - 38, ry + 5);
             ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
             ctx.renderItemDecorations(this.font, c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
@@ -154,13 +163,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         ctx.fill(x, y + 3, x + 10, y + 5, color);
         for (int i = 0; i < 4; i++) {
             ctx.fill(x + 10 + i, y + i, x + 11 + i, y + 8 - i, color);
-        }
-    }
-
-    private static void cross(GuiGraphics ctx, int x, int y) {
-        for (int i = 0; i < 8; i++) {
-            ctx.fill(x + i, y + i, x + i + 2, y + i + 2, NotchTheme.ACCENT_RED);
-            ctx.fill(x + 7 - i, y + i, x + 9 - i, y + i + 2, NotchTheme.ACCENT_RED);
         }
     }
 

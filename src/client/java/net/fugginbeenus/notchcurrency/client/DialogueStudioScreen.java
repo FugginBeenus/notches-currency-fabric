@@ -261,7 +261,7 @@ public class DialogueStudioScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Dialogue Studio", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Dialogue Studio", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Pages are what the NPC says. Choices are the buttons players click.",
                 px + W / 2, py + 18, NotchTheme.TEXT_MUTED, false);
 

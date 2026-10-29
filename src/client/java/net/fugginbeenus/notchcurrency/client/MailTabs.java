@@ -30,19 +30,16 @@ public final class MailTabs {
         return aim;
     }
 
-    public static void draw(GuiGraphics ctx, Font font, int px, int py, int active, int mouseX, int mouseY) {
+    public static void draw(GuiGraphics ctx, Font font, int px, int py, int active, int waiting, int mouseX, int mouseY) {
         drawOne(ctx, font, px + TAB_X, py + TAB_Y, "Inbox", active == INBOX, mouseX, mouseY);
         drawOne(ctx, font, px + TAB_X + TAB_W + TAB_GAP, py + TAB_Y, "Outbox", active == OUTBOX, mouseX, mouseY);
+        NotchWidgets.badge(ctx, font, px + TAB_X + TAB_W - 6, py + TAB_Y - 3, waiting);
     }
 
     private static void drawOne(GuiGraphics ctx, Font font, int x, int y, String label,
                                 boolean active, int mouseX, int mouseY) {
         boolean hover = !active && over(mouseX, mouseY, x, y, TAB_W, TAB_H);
-        if (active) {
-            NotchWidgets.primaryButton(ctx, font, x, y, TAB_W, TAB_H, label, false);
-        } else {
-            NotchWidgets.neutralButton(ctx, font, x, y, TAB_W, TAB_H, label, hover);
-        }
+        NotchWidgets.tab(ctx, font, x, y, TAB_W, TAB_H, label, active, hover);
     }
 
     public static boolean click(int px, int py, int active, int mx, int my) {

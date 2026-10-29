@@ -18,8 +18,8 @@ import java.util.UUID;
 public class NpcScheduleScreen extends Screen {
 
     private static final int W = 340, H = 236;
-    private static final int LIST_X = 12, LIST_Y = 40, LIST_W = 120, LIST_H = 150;
-    private static final int ROW_H = 18, VISIBLE_ROWS = 8;
+    private static final int LIST_X = 12, LIST_Y = 40, LIST_W = 120, LIST_H = 132;
+    private static final int ROW_H = 18, VISIBLE_ROWS = 7;
     private static final int PANE_X = 140, PANE_W = 188;
 
     private final UUID npcId;
@@ -85,7 +85,7 @@ public class NpcScheduleScreen extends Screen {
         tooltip = null;
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Daily Schedule", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Daily Schedule", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         if (!dimensionOk) {
             renderNoDayHere(ctx, mouseX, mouseY, px, py);
@@ -107,6 +107,7 @@ public class NpcScheduleScreen extends Screen {
             NotchWidgets.centerText(ctx, this.font, "Add one below.",
                     px + LIST_X + LIST_W / 2, py + LIST_Y + LIST_H / 2 + 2, NotchTheme.TEXT_MUTED, false);
         }
+        scroll = NotchWidgets.pageStart(scroll, entries.size(), VISIBLE_ROWS);
         for (int v = 0; v < VISIBLE_ROWS; v++) {
             int i = scroll + v;
             if (i >= entries.size()) break;
@@ -122,6 +123,13 @@ public class NpcScheduleScreen extends Screen {
             }
         }
 
+        if (entries.size() > VISIBLE_ROWS) {
+            int pgY = py + LIST_Y + LIST_H + 4;
+            NotchWidgets.pager(ctx, this.font, px + LIST_X + LIST_W / 2 - 38, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12,
+                    scroll / VISIBLE_ROWS + 1, NotchWidgets.pages(entries.size(), VISIBLE_ROWS),
+                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 12),
+                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12));
+        }
         NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + 194, 58, 14, "Add",
                 over(mouseX, mouseY, px + LIST_X, py + 194, 58, 14));
         NotchWidgets.dangerButton(ctx, this.font, px + LIST_X + 62, py + 194, 58, 14, "Remove",
@@ -322,6 +330,21 @@ public class NpcScheduleScreen extends Screen {
             enforceHours = !enforceHours;
             return true;
         }
+        int pgY = py + LIST_Y + LIST_H + 4;
+        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 12)) {
+            if (scroll > 0) {
+                NotchWidgets.click();
+                scroll = Math.max(0, scroll - VISIBLE_ROWS);
+            }
+            return true;
+        }
+        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12)) {
+            if (scroll + VISIBLE_ROWS < entries.size()) {
+                NotchWidgets.click();
+                scroll += VISIBLE_ROWS;
+            }
+            return true;
+        }
         for (int v = 0; v < VISIBLE_ROWS; v++) {
             int i = scroll + v;
             if (i >= entries.size()) break;
@@ -356,7 +379,7 @@ public class NpcScheduleScreen extends Screen {
             int i = firstBroken();
             if (i >= 0) {
                 selected = i;
-                scroll = Math.max(0, Math.min(i, Math.max(0, entries.size() - VISIBLE_ROWS)));
+                scroll = NotchWidgets.pageStart(i, entries.size(), VISIBLE_ROWS);
                 requestAnchorTool(i);
             }
             return true;
@@ -477,8 +500,7 @@ public class NpcScheduleScreen extends Screen {
     *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
-        int maxScroll = Math.max(0, entries.size() - VISIBLE_ROWS);
-        scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(amount)));
+        scroll = NotchWidgets.pageStart(scroll - (int) Math.signum(amount) * VISIBLE_ROWS, entries.size(), VISIBLE_ROWS);
         return true;
     }
 

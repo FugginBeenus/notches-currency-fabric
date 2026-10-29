@@ -16,7 +16,7 @@ public class NpcFactionPickerScreen extends Screen {
     public record Entry(String id, String name, ChatFormatting color, int members) {}
 
     private static final int W = 280, H = 210;
-    private static final int LIST_X = 12, LIST_Y = 44, ROW_H = 18, VISIBLE = 7;
+    private static final int LIST_X = 12, LIST_Y = 44, ROW_H = 18, VISIBLE = 6;
 
     private final UUID npcId;
     private final String currentId;
@@ -53,7 +53,7 @@ public class NpcFactionPickerScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Faction", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Faction", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Who this NPC stands with.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
 
@@ -81,9 +81,10 @@ public class NpcFactionPickerScreen extends Screen {
                     selected ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_MUTED, false);
         }
         if (factions.size() > VISIBLE) {
-            NotchWidgets.centerText(ctx, this.font,
-                    (scroll + 1) + "-" + Math.min(factions.size(), scroll + VISIBLE) + " of " + factions.size(),
-                    px + W / 2, py + LIST_Y + VISIBLE * ROW_H + 6, NotchTheme.TEXT_MUTED, false);
+            int by = py + LIST_Y + VISIBLE * ROW_H + 6;
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, by, 20, 12,
+                    scroll / VISIBLE + 1, NotchWidgets.pages(factions.size(), VISIBLE),
+                    over(mouseX, mouseY, px + W / 2 - 38, by, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, by, 20, 12));
         }
 
         NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
@@ -108,6 +109,21 @@ public class NpcFactionPickerScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            int by = py + LIST_Y + VISIBLE * ROW_H + 6;
+            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 - 38, by, 20, 12)) {
+                if (scroll > 0) {
+                    NotchWidgets.click();
+                    scroll = Math.max(0, scroll - VISIBLE);
+                }
+                return true;
+            }
+            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 + 18, by, 20, 12)) {
+                if (scroll + VISIBLE < factions.size()) {
+                    NotchWidgets.click();
+                    scroll += VISIBLE;
+                }
+                return true;
+            }
             for (int i = 0; i < VISIBLE && i + scroll < factions.size(); i++) {
                 if (over(mx, my, px + LIST_X, rowY(i), W - 24, ROW_H - 2)) {
                     NotchWidgets.click();
@@ -140,8 +156,7 @@ public class NpcFactionPickerScreen extends Screen {
     *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
-        int maxScroll = Math.max(0, factions.size() - VISIBLE);
-        scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(amount)));
+        scroll = NotchWidgets.pageStart(scroll - (int) Math.signum(amount) * VISIBLE, factions.size(), VISIBLE);
         return true;
     }
 

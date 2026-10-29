@@ -112,7 +112,7 @@ public class NpcTextureManageScreen extends Screen {
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Particle textures", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Particle textures", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Drop PNGs in the import folder, then name them into a slot.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.divider(ctx, px + 8, py + 34, W - 16);

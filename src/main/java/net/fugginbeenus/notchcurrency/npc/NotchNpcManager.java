@@ -85,6 +85,11 @@ public final class NotchNpcManager {
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
+    public static void setNamePlate(ServerPlayer sp, NotchNpcEntity npc, String plate) {
+        if (!guard(sp, npc)) return;
+        npc.setNamePlate(plate);
+    }
+
     public static void setDialogueMode(ServerPlayer sp, NotchNpcEntity npc, int modeOrdinal) {
         if (!guard(sp, npc)) return;
         NotchNpcEntity.DialogueMode[] modes = NotchNpcEntity.DialogueMode.values();

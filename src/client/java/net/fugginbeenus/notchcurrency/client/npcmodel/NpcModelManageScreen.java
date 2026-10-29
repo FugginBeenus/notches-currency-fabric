@@ -64,7 +64,7 @@ public class NpcModelManageScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "NPC Models", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "NPC Models", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         List<NpcModelBundle> models = installed();
         if (models.isEmpty()) {
@@ -98,10 +98,10 @@ public class NpcModelManageScreen extends Screen {
         }
 
         if (models.size() > VISIBLE) {
-            NotchWidgets.centerText(ctx, this.font,
-                    (scroll + 1) + "-" + Math.min(models.size(), scroll + VISIBLE)
-                            + " of " + models.size(),
-                    px + W / 2, py + LIST_Y + VISIBLE * ROW_H + 6, NotchTheme.TEXT_MUTED, false);
+            int pgY = py + LIST_Y + VISIBLE * ROW_H + 4;
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, pgY, 20, 12,
+                    scroll / VISIBLE + 1, NotchWidgets.pages(models.size(), VISIBLE),
+                    over(mouseX, mouseY, px + W / 2 - 38, pgY, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, pgY, 20, 12));
         } else if (!status.isEmpty()) {
             ctx.drawString(this.font, fit(status, W - LIST_X * 2), px + LIST_X,
                     py + LIST_Y + VISIBLE * ROW_H + 6,
@@ -147,6 +147,21 @@ public class NpcModelManageScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             List<NpcModelBundle> models = installed();
+            int pgY = py + LIST_Y + VISIBLE * ROW_H + 4;
+            if (models.size() > VISIBLE && over(mx, my, px + W / 2 - 38, pgY, 20, 12)) {
+                if (scroll > 0) {
+                    NotchWidgets.click();
+                    scroll = Math.max(0, scroll - VISIBLE);
+                }
+                return true;
+            }
+            if (models.size() > VISIBLE && over(mx, my, px + W / 2 + 18, pgY, 20, 12)) {
+                if (scroll + VISIBLE < models.size()) {
+                    NotchWidgets.click();
+                    scroll += VISIBLE;
+                }
+                return true;
+            }
 
             for (int i = 0; i < VISIBLE && i + scroll < models.size(); i++) {
                 if (over(mx, my, removeX(), rowY(i), REMOVE_W, 14)) {
@@ -227,8 +242,7 @@ public class NpcModelManageScreen extends Screen {
     *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
-        int max = Math.max(0, installed().size() - VISIBLE);
-        scroll = Math.max(0, Math.min(max, scroll - (int) Math.signum(amount)));
+        scroll = NotchWidgets.pageStart(scroll - (int) Math.signum(amount) * VISIBLE, installed().size(), VISIBLE);
         return true;
     }
 

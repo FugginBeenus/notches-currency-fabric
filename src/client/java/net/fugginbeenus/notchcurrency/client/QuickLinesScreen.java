@@ -63,7 +63,7 @@ public class QuickLinesScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Quick Lines", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Quick Lines", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font,
                 "The NPC says one of these at random when talked to.",
                 px + W / 2, py + 20, NotchTheme.TEXT_MUTED, false);

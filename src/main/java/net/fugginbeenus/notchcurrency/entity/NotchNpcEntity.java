@@ -126,6 +126,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private static final EntityDataAccessor<String> PARTICLE_FX =
             net.minecraft.network.syncher.SynchedEntityData.defineId(
                     NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> NAME_PLATE =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(
+                    NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> KEYFRAME_TIMED =
             net.minecraft.network.syncher.SynchedEntityData.defineId(
                     NotchNpcEntity.class, net.minecraft.network.syncher.EntityDataSerializers.STRING);
@@ -276,6 +279,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         builder.define(KEYFRAME_IDLE, "");
         builder.define(KEYFRAME_TIMED, "");
         builder.define(PARTICLE_FX, "");
+        builder.define(NAME_PLATE, "");
         builder.define(KEYFRAME_TIMED_EVERY, 0);
         builder.define(KEYFRAME_TIMED_RANDOM, true);
         builder.define(KEYFRAME_PLAY, "");
@@ -310,6 +314,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.entityData.define(KEYFRAME_IDLE, "");
         this.entityData.define(KEYFRAME_TIMED, "");
         this.entityData.define(PARTICLE_FX, "");
+        this.entityData.define(NAME_PLATE, "");
         this.entityData.define(KEYFRAME_TIMED_EVERY, 0);
         this.entityData.define(KEYFRAME_TIMED_RANDOM, true);
         this.entityData.define(KEYFRAME_PLAY, "");
@@ -517,6 +522,15 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     public String getPlayingAnimation() { return this.entityData.get(KEYFRAME_PLAY); }
     public int getAnimationStart() { return this.entityData.get(KEYFRAME_START); }
     public int getNpcAge() { return this.tickCount; }
+
+    public String getNamePlate() {
+        return net.fugginbeenus.notchcurrency.shop.SignStyles.clean(this.entityData.get(NAME_PLATE),
+                net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT);
+    }
+    public void setNamePlate(String id) {
+        this.entityData.set(NAME_PLATE, net.fugginbeenus.notchcurrency.shop.SignStyles.clean(id,
+                net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT));
+    }
 
     public String getParticleFx() { return this.entityData.get(PARTICLE_FX); }
     public void setParticleFx(String name) {
@@ -1776,6 +1790,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (!stepSound.isEmpty()) nbt.putString("StepSound", stepSound);
         if (!angrySound.isEmpty()) nbt.putString("AngrySound", angrySound);
         if (!getParticleFx().isEmpty()) nbt.putString("ParticleFx", getParticleFx());
+        if (!net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT.equals(getNamePlate())) nbt.putString("NamePlate", getNamePlate());
         if (!getTimedAnimation().isEmpty()) nbt.putString("TimedAnim", getTimedAnimation());
         if (getTimedEvery() > 0) nbt.putInt("TimedAnimEvery", getTimedEvery());
         if (!isTimedRandom()) nbt.putBoolean("TimedAnimRandom", false);
@@ -1889,6 +1904,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         setStepSoundId(nbt.getString("StepSound"));
         setAngrySoundId(nbt.getString("AngrySound"));
         setParticleFx(nbt.getString("ParticleFx"));
+        setNamePlate(nbt.getString("NamePlate"));
         setTimedAnimation(nbt.getString("TimedAnim"));
         setTimedEvery(nbt.contains("TimedAnimEvery") ? nbt.getInt("TimedAnimEvery") : 0);
         setTimedRandom(!nbt.contains("TimedAnimRandom") || nbt.getBoolean("TimedAnimRandom"));

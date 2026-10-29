@@ -85,7 +85,7 @@ public class RaffleAdminScreen extends AbstractContainerScreen<RaffleAdminScreen
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.font, "Raffle Setup", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Raffle Setup", x + W / 2, y + 8, NotchWidgets.Plate.STEEL);
 
         ctx.drawString(this.font, "Prize:", x + 12, y + 12, NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + RaffleAdminScreenHandler.CUR_X - 1, y + RaffleAdminScreenHandler.CUR_Y - 1);

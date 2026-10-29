@@ -17,7 +17,7 @@ import java.util.UUID;
 public class NpcDialogueScreen extends Screen {
 
     private static final int W = 280, H = 190;
-    private static final int PORTRAIT_X = 10, PORTRAIT_Y = 26, PORTRAIT_W = 70, PORTRAIT_H = 120;
+    private static final int PORTRAIT_X = 10, PORTRAIT_Y = 26, PORTRAIT_W = 70, PORTRAIT_H = 149;
     private static final int TEXT_X = 90, TEXT_Y = 30, TEXT_W = 180;
     private static final int CHOICE_H = 16;
 
@@ -54,7 +54,7 @@ public class NpcDialogueScreen extends Screen {
     }
 
     private int choiceY(int i) {
-        return py + H - 12 - (labels.length - i) * (CHOICE_H + 3);
+        return py + H - 12 - (Math.max(1, labels.length) - i) * (CHOICE_H + 3);
     }
 
     //? if >=26.1 {
@@ -75,7 +75,8 @@ public class NpcDialogueScreen extends Screen {
         String heading = npc != null && npc.hasCustomName()
                 ? npc.getCustomName().getString()
                 : npcName;
-        NotchWidgets.title(ctx, this.font, heading, px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, heading, px + W / 2, py + 8,
+                npc != null ? NotchWidgets.Plate.forSign(npc.getNamePlate()) : NotchWidgets.Plate.PLAIN);
         if (!bannerText().isEmpty()) {
             NotchWidgets.centerText(ctx, this.font, bannerText(), px + W / 2, py + 18,
                     NotchTheme.TEXT_MUTED, false);
@@ -88,8 +89,8 @@ public class NpcDialogueScreen extends Screen {
             npc.setYRot(180);
             npc.yBodyRot = 180;
             npc.setCustomNameVisible(false);
-            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 12, 34,
-                    (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 30f) - mouseY, npc);
+            net.fugginbeenus.notchcurrency.compat.Render.drawEntityAt(ctx, px + PORTRAIT_X + PORTRAIT_W / 2, py + PORTRAIT_Y + PORTRAIT_H - 14, 40,
+                    (px + PORTRAIT_X + PORTRAIT_W / 2f) - mouseX, (py + PORTRAIT_Y + 56f) - mouseY, npc);
             npc.setYRot(oldYaw);
             npc.yBodyRot = oldBody;
             npc.setCustomNameVisible(showedName);

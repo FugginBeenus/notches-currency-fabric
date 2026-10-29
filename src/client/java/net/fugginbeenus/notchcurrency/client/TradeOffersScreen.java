@@ -74,9 +74,7 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
 
         int gx = x + ROW_X + 4;
         if (r.giveCoins() > 0) {
-            ctx.renderItem(coin(), gx, ry + 2);
-            ctx.renderItemDecorations(this.font, coin(), gx, ry + 2, NotchWidgets.compactCount(r.giveCoins()));
-            gx += 22;
+            gx += NotchWidgets.coinField(ctx, this.font, coin(), gx, ry + 2, r.giveCoins(), NotchWidgets.COIN_GOLD) + 4;
         }
         int shown = 0;
         for (ItemStack st : r.gives()) {
@@ -95,9 +93,7 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
 
         int ix = x + ROW_X + 106;
         if (r.price() > 0) {
-            ctx.renderItem(coin(), ix, ry + 2);
-            ctx.renderItemDecorations(this.font, coin(), ix, ry + 2, NotchWidgets.compactCount(r.price()));
-            ix += 22;
+            ix += NotchWidgets.coinField(ctx, this.font, coin(), ix, ry + 2, r.price(), NotchWidgets.COIN_GOLD) + 4;
         }
         int wantsShown = 0;
         for (ItemStack st : r.wants()) {
@@ -134,18 +130,14 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
 
         ctx.drawString(this.font, "OFFERS FOR YOU", x + 10, y + 24, NotchTheme.TEXT_DARK, false);
         int pageCount = menu.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
         if (pageCount > 1) {
-            NotchWidgets.neutralButton(ctx, this.font, x + 190, y + 22, 13, 11, "<",
-                    over(mouseX, mouseY, x + 190, y + 22, 13, 11));
-            NotchWidgets.centerText(ctx, this.font,
-                    (menu.prop(TradeOffersScreenHandler.P_PAGE) + 1) + "/" + pageCount,
-                    x + 214, y + 24, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.font, x + 227, y + 22, 13, 11, ">",
-                    over(mouseX, mouseY, x + 227, y + 22, 13, 11));
+            NotchWidgets.pager(ctx, this.font, x + 190, x + 227, y + 22, 13, 11,
+                    menu.prop(TradeOffersScreenHandler.P_PAGE) + 1, pageCount,
+                    over(mouseX, mouseY, x + 190, y + 22, 13, 11), over(mouseX, mouseY, x + 227, y + 22, 13, 11));
         }
         boolean anyIn = false;
         for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {

@@ -319,6 +319,17 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_NAME_PLATE, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String plate = buf.readUtf(32);
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setNamePlate(player, npc, plate);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_MODE, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int mode = buf.readVarInt();
@@ -367,6 +378,10 @@ public final class ServerPacketHandlers {
             int tab = buf.readVarInt();
             UUID aim = buf.readBoolean() ? buf.readUUID() : null;
             server.execute(() -> {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.mail.MailInboxMenu
+                        || player.containerMenu instanceof net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler) {
+                    player.doCloseContainer();
+                }
                 if (tab == 0) {
                     net.fugginbeenus.notchcurrency.mail.MailManager.openInbox(player);
                 } else {

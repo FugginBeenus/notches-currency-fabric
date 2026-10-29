@@ -21,14 +21,15 @@ import net.minecraft.world.item.ItemStack;
 
 public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreenHandler> {
 
-    private static final int W = 200, H = 196;
+    private static final int W = 200, H = 210;
     private static final int REEL_Y = 28, REEL_H = 40, REEL_W = 34;
     private static final int[] REEL_X = {43, 83, 123};
     private static final int FRAME_X1 = 37, FRAME_Y1 = 22, FRAME_X2 = 163, FRAME_Y2 = 72;
-    private static final int MARQUEE_Y = 16, PAYLINE_CY = REEL_Y + REEL_H / 2;
-    private static final int STATUS_Y = 78, BAL_Y = 90;
-    private static final int FIELD_X = 46, FIELD_Y = 108, FIELD_W = 140, FIELD_H = 14;
-    private static final int SPIN_X = 14, SPIN_Y = 126, SPIN_W = 172, SPIN_H = 18;
+    private static final int PAYLINE_CY = REEL_Y + REEL_H / 2;
+    private static final int STATUS_Y = 78, BAL_Y = 87, RULE_Y = 108;
+    private static final int FIELD_X = 42, FIELD_Y = 114, FIELD_W = 144, FIELD_H = 14;
+    private static final int SPIN_X = 14, SPIN_Y = 132, SPIN_W = 172, SPIN_H = 18;
+    private static final int PAY_Y = 156, PAY_H = 40, PAY_STEP = 34;
     private static final long MIN_SPIN_MS = 900L;
     private static final long REEL_STAGGER_MS = 240L;
     private static final long MAX_WAIT_MS = 5000L;
@@ -78,44 +79,46 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     //?}
         final int x = this.leftPos, y = this.topPos;
         final long now = System.currentTimeMillis();
-        NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Slot Machine", x + W / 2, y + 6);
+        drawCabinet(ctx, x, y);
 
         int[] display = computeReels();
         boolean jackpotShown = !spinning && hasShown && shownWin > 0
                 && display[0] == display[1] && display[1] == display[2]
                 && display[0] == SlotSymbol.STAR.ordinal();
 
-        drawMarquee(ctx, x, y, now);
+        drawLights(ctx, x, y, now);
         drawFrame(ctx, x, y);
         drawPaylineMarkers(ctx, x, y, now);
         for (int i = 0; i < 3; i++) {
             int rx = x + REEL_X[i];
-            NotchWidgets.slot(ctx, rx, y + REEL_Y, REEL_W, REEL_H);
+            drawReel(ctx, rx, y + REEL_Y, REEL_W, REEL_H);
             drawSymbol(ctx, display[i], rx + REEL_W / 2, y + PAYLINE_CY);
         }
         if (!spinning && hasShown && shownWin > 0) drawWinGlow(ctx, x, y, now, jackpotShown);
 
         if (errorMsg != null && now < errorUntilMs) {
-            NotchWidgets.centerText(ctx, this.font, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, false);
+            NotchWidgets.centerText(ctx, this.font, errorMsg, x + W / 2, y + STATUS_Y, NotchTheme.TEXT_RED, true);
         } else if (!spinning && hasShown) {
             if (shownWin > 0) {
                 String msg = jackpotShown ? "JACKPOT!  +" + shownWin + " " + NotchWidgets.coinName() : "You won " + shownWin + " " + NotchWidgets.coinName() + "!";
                 NotchWidgets.centerText(ctx, this.font, msg, x + W / 2, y + STATUS_Y,
-                        jackpotShown ? NotchTheme.TEXT_GOLD : NotchTheme.TEXT_GREEN, true);
+                        jackpotShown ? NotchTheme.TEXT_GOLD : 0xFF8CF07A, true);
             } else {
                 NotchWidgets.centerText(ctx, this.font, "No win - spin again!",
-                        x + W / 2, y + STATUS_Y, NotchTheme.TEXT_MUTED, false);
+                        x + W / 2, y + STATUS_Y, NotchTheme.SLATE_TEXT, false);
             }
         }
 
         long bal = spinning ? frozenBalance : (menu.prop(SlotMachineScreenHandler.P_BAL) & 0xFFFFFFFFL);
-        NotchWidgets.centerText(ctx, this.font, bal + " " + NotchWidgets.coinName(), x + W / 2, y + BAL_Y, NotchTheme.TEXT_GOLD, true);
+        String balText = Long.toString(bal);
+        int balW = 18 + this.font.width(balText) - 1 + 4;
+        NotchWidgets.coinField(ctx, this.font, x + W / 2 - balW / 2, y + BAL_Y, balText, NotchWidgets.COIN_GOLD);
 
-        NotchWidgets.divider(ctx, x + 8, y + 102, W - 16);
+        ctx.fill(x + 14, y + RULE_Y, x + W - 14, y + RULE_Y + 1, NotchTheme.SLATE_LO);
+        ctx.fill(x + 14, y + RULE_Y + 1, x + W - 14, y + RULE_Y + 2, NotchTheme.SLATE_HI);
 
-        ctx.drawString(this.font, "Bet:", x + 16, y + FIELD_Y + 3, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W, FIELD_H, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Bet:", x + 14, y + FIELD_Y + 3, 0xFFC9CED8, false);
+        NotchWidgets.slateInset(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W, FIELD_H);
 
         boolean spinHover = !spinning && over(mouseX, mouseY, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H);
         if (spinning) {
@@ -123,16 +126,18 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         } else {
             NotchWidgets.primaryButton(ctx, this.font, x + SPIN_X, y + SPIN_Y, SPIN_W, SPIN_H, "SPIN", spinHover);
         }
-        NotchWidgets.divider(ctx, x + 8, y + 148, W - 16);
-        NotchWidgets.centerText(ctx, this.font, "3-in-a-row pays:", x + W / 2, y + 152, NotchTheme.TEXT_MUTED, false);
+        NotchWidgets.slateInset(ctx, x + 14, y + PAY_Y, W - 28, PAY_H);
+        String pays = "3 in a row pays";
+        NotchWidgets.smallCaps(ctx, pays, x + W / 2 - NotchWidgets.smallCapsWidth(pays) / 2, y + PAY_Y + 4, NotchTheme.SLATE_TEXT);
         SlotSymbol[] syms = SlotSymbol.values();
         for (int i = 0; i < syms.length; i++) {
-            int cx = x + 24 + i * 38;
-            ctx.renderItem(new ItemStack(syms[i].displayItem()), cx - 8, y + 162);
+            int cx = x + W / 2 + (2 * i - (syms.length - 1)) * PAY_STEP / 2;
+            ctx.renderItem(new ItemStack(syms[i].displayItem()), cx - 8, y + PAY_Y + 11);
             int m10 = menu.prop(SlotMachineScreenHandler.P_MULT_BASE + i);
             String mult = "x" + (m10 / 10) + "." + (m10 % 10);
-            NotchWidgets.centerText(ctx, this.font, mult, cx, y + 180, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.centerText(ctx, this.font, mult, cx, y + PAY_Y + 29, 0xFFE6E6E6, false);
         }
+        NotchWidgets.title(ctx, this.font, "Slot Machine", x + W / 2, y + 6, NotchWidgets.Plate.MARQUEE);
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
@@ -203,29 +208,64 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
+    private void drawCabinet(GuiGraphics ctx, int x, int y) {
+        NotchWidgets.roundBox(ctx, x, y, W, H, NotchTheme.OUTLINE);
+        ctx.fill(x + 1, y + 1, x + W - 1, y + H - 1, NotchTheme.BLOCK_GOLD);
+        ctx.fill(x + 1, y + 1, x + W - 1, y + 2, NotchTheme.BLOCK_GOLD_HI);
+        ctx.fill(x + 1, y + 1, x + 2, y + H - 1, NotchTheme.BLOCK_GOLD_HI);
+        ctx.fill(x + 1, y + H - 2, x + W - 1, y + H - 1, NotchTheme.BLOCK_GOLD_LO);
+        ctx.fill(x + W - 2, y + 2, x + W - 1, y + H - 1, NotchTheme.BLOCK_GOLD_LO);
+        NotchWidgets.outline(ctx, x + 5, y + 5, W - 10, H - 10, NotchTheme.BLOCK_GOLD_DK);
+        ctx.fill(x + 6, y + 6, x + W - 6, y + H - 6, NotchTheme.SLATE);
+        ctx.fill(x + 6, y + 6, x + W - 8, y + 8, NotchTheme.SLATE_HI);
+        ctx.fill(x + 6, y + 6, x + 8, y + H - 6, NotchTheme.SLATE_HI);
+        ctx.fill(x + 8, y + H - 8, x + W - 6, y + H - 6, NotchTheme.SLATE_LO);
+        ctx.fill(x + W - 8, y + 6, x + W - 6, y + H - 6, NotchTheme.SLATE_LO);
+        NotchWidgets.outline(ctx, x + 10, y + 10, W - 20, H - 20, NotchTheme.SLATE_LO);
+        NotchWidgets.rivet(ctx, x + 2, y + 2);
+        NotchWidgets.rivet(ctx, x + W - 4, y + 2);
+        NotchWidgets.rivet(ctx, x + 2, y + H - 4);
+        NotchWidgets.rivet(ctx, x + W - 4, y + H - 4);
+    }
+
+    private void drawReel(GuiGraphics ctx, int x, int y, int w, int h) {
+        ctx.fill(x, y, x + w, y + h, NotchTheme.BLOCK_GOLD_DK);
+        ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, NotchTheme.CREAM);
+        int[] shade = {0xFFBDB49C, 0xFFD2CAB3, 0xFFE4DCC6};
+        for (int i = 0; i < 3; i++) {
+            ctx.fill(x + 1, y + 1 + i, x + w - 1, y + 2 + i, shade[i]);
+            ctx.fill(x + 1, y + h - 2 - i, x + w - 1, y + h - 1 - i, shade[i]);
+        }
+    }
+
     private void drawFrame(GuiGraphics ctx, int x, int y) {
         int x1 = x + FRAME_X1, y1 = y + FRAME_Y1, x2 = x + FRAME_X2, y2 = y + FRAME_Y2;
         ctx.fill(x1 - 1, y1 - 1, x2 + 1, y2 + 1, NotchTheme.OUTLINE);
-        ctx.fill(x1, y1, x2, y2, NotchTheme.ACCENT_GOLD);
-        ctx.fill(x1 + 1, y1 + 1, x2 - 1, y2 - 1, NotchTheme.GOLD_LO);
-        ctx.fill(x1 + 3, y1 + 3, x2 - 3, y2 - 3, NotchTheme.DEEP);
+        ctx.fill(x1, y1, x2, y2, NotchTheme.BLOCK_GOLD);
+        ctx.fill(x1, y1, x2, y1 + 1, NotchTheme.BLOCK_GOLD_HI);
+        ctx.fill(x1 + 1, y1 + 1, x2 - 1, y2 - 1, NotchTheme.BLOCK_GOLD_LO);
+        ctx.fill(x1 + 3, y1 + 3, x2 - 3, y2 - 3, NotchTheme.SLATE_DK);
     }
 
-    private void drawMarquee(GuiGraphics ctx, int x, int y, long now) {
-        int bulbs = 11;
-        int runner = (int) ((now / 110) % bulbs);
-        for (int i = 0; i < bulbs; i++) {
-            int bx = x + 41 + i * 12;
-            int by = y + MARQUEE_Y;
-            int col = ((i + (int) (now / 150)) % 2 == 0) ? NotchTheme.ACCENT_GOLD : NotchTheme.GOLD_LO;
-            if (i == runner) col = 0xFFFFF3B0;
-            ctx.fill(bx, by, bx + 3, by + 3, col);
+    private void drawLights(GuiGraphics ctx, int x, int y, long now) {
+        int x1 = x + FRAME_X1 - 1, x2 = x + FRAME_X2 + 1, top = y + FRAME_Y1 - 9, cx = x + W / 2;
+        ctx.fill(x1, top, x2, top + 8, NotchTheme.BLOCK_GOLD_DK);
+        ctx.fill(x1 + 1, top + 1, x2 - 1, top + 7, NotchTheme.BLOCK_RED);
+        int phase = (int) (now / 150 % 5);
+        int k = 0;
+        for (int bx = x1 + 1; bx + 2 <= x2 - 1; bx += 4, k++) {
+            int col = (k + phase) % 5 == 0 ? 0xFFFFFFFF : NotchTheme.BLOCK_RED_LO;
+            ctx.fill(bx, top + 1, bx + 2, top + 3, col);
+            ctx.fill(bx, top + 5, bx + 2, top + 7, col);
+            if (bx + 4 < x2 - 1) ctx.fill(bx + 2, top + 1, bx + 4, top + 2, NotchTheme.BLOCK_RED_HI);
         }
+        ctx.fill(cx - 1, top + 1, cx + 1, top + 7, NotchTheme.BLOCK_GOLD);
+        ctx.fill(cx - 3, top + 3, cx + 3, top + 5, NotchTheme.BLOCK_GOLD);
     }
 
     private void drawPaylineMarkers(GuiGraphics ctx, int x, int y, long now) {
         boolean pulse = (now / 400) % 2 == 0;
-        int col = pulse ? NotchTheme.ACCENT_GOLD : NotchTheme.GOLD_HI;
+        int col = pulse ? NotchTheme.BLOCK_GOLD : NotchTheme.BLOCK_GOLD_HI;
         triRight(ctx, x + FRAME_X1 - 8, y + PAYLINE_CY, 5, col);
         triLeft(ctx, x + FRAME_X2 + 4, y + PAYLINE_CY, 5, col);
     }
@@ -233,7 +273,7 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     private void drawWinGlow(GuiGraphics ctx, int x, int y, long now, boolean jackpot) {
         double s = 0.5 + 0.5 * Math.sin(now / 150.0);
         int a = 0x40 + (int) (0x80 * s);
-        int base = jackpot ? 0xFFF3B0 : 0xE0A526;
+        int base = jackpot ? 0xFFF3B0 : 0xF3B93F;
         int col = (a << 24) | base;
         int x1 = x + FRAME_X1 - 2, y1 = y + FRAME_Y1 - 2, x2 = x + FRAME_X2 + 2, y2 = y + FRAME_Y2 + 2;
         ctx.fill(x1, y1, x2, y1 + 2, col);

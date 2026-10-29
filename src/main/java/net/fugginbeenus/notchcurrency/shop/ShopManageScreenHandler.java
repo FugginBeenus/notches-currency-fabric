@@ -26,11 +26,11 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
 
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2, P_OPEN = 3, P_RENT_PAUSED = 4,
             P_PEND_HI = 5, P_PEND_LO = 6, P_BARTER_COUNT = 7, P_RENT_COST = 8, P_UNPAID = 9,
-            P_IS_OP = 10, P_ADMIN_MODE = 11;
-    private static final int PROP_COUNT = 12;
+            P_IS_OP = 10, P_ADMIN_MODE = 11, P_SIGN = 12;
+    private static final int PROP_COUNT = 13;
 
     public static final int ACTION_RENAME = 0, ACTION_GREETING = 1, ACTION_TOGGLE_OPEN = 2,
-            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5;
+            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5, ACTION_SIGN = 6;
 
     private final UUID shopId;
     private final String shopName;
@@ -91,6 +91,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         props.set(P_RENT_COST, (int) Math.min(Integer.MAX_VALUE, ShopRent.rentFor(shop.getListings().size())));
         props.set(P_UNPAID, shop.getUnpaidRentCycles());
         props.set(P_ADMIN_MODE, shop.isAdminMode() ? 1 : 0);
+        props.set(P_SIGN, SignStyles.indexOf(shop.getSign()));
         boolean op = viewer instanceof net.minecraft.server.level.ServerPlayer sp
                 && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         props.set(P_IS_OP, (op && ShopRules.adminShops) ? 1 : 0);
@@ -144,6 +145,10 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
                 shop.setShopName(name);
                 state.markDirtyAndSave();
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Shop renamed to '" + name + "'.").withStyle(ChatFormatting.GREEN));
+            }
+            case ACTION_SIGN -> {
+                shop.setSign(text);
+                state.markDirtyAndSave();
             }
             case ACTION_GREETING -> {
                 shop.setShopkeeperDialog(clean(text, 128));

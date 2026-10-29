@@ -78,7 +78,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.font, "Bounty Setup", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Bounty Setup", x + W / 2, y + 8, NotchWidgets.Plate.STEEL);
 
         ctx.drawString(this.font, "Decrees (empty = all categories):", x + 10, y + 22, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < BountyAdminScreenHandler.DECREE_SLOTS; i++) {

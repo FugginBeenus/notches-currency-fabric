@@ -105,7 +105,7 @@ public class NpcSoundManageScreen extends Screen {
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Custom sounds", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Custom sounds", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font,
                 "Drop .ogg files in the import folder, then name them here.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
@@ -117,6 +117,7 @@ public class NpcSoundManageScreen extends Screen {
             NotchWidgets.centerText(ctx, this.font, "No custom sounds yet.",
                     px + W / 2, py + 76, NotchTheme.TEXT_MUTED, false);
         }
+        scroll = NotchWidgets.pageStart(scroll, all.size(), ROWS);
         int shown = Math.min(ROWS, Math.max(0, all.size() - scroll));
         for (int i = 0; i < shown; i++) {
             String id = all.get(i + scroll);
@@ -136,11 +137,8 @@ public class NpcSoundManageScreen extends Screen {
         }
 
         if (all.size() > ROWS) {
-            int sy = py + 44 + ROWS * ROW_H;
-            NotchWidgets.neutralButton(ctx, this.font, px + 12, sy, 24, 12, "v",
-                    over(mouseX, mouseY, px + 12, sy, 24, 12));
-            NotchWidgets.neutralButton(ctx, this.font, px + 40, sy, 24, 12, "^",
-                    over(mouseX, mouseY, px + 40, sy, 24, 12));
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12, scroll / ROWS + 1, NotchWidgets.pages(all.size(), ROWS),
+                    over(mouseX, mouseY, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12));
         }
 
         int waiting = NpcSoundLoader.imported().size();
@@ -207,15 +205,18 @@ public class NpcSoundManageScreen extends Screen {
                 }
             }
             if (all.size() > ROWS) {
-                int sy = py + 44 + ROWS * ROW_H;
-                if (over(mx, my, px + 12, sy, 24, 12)) {
-                    NotchWidgets.click();
-                    scroll = Math.min(Math.max(0, all.size() - ROWS), scroll + 1);
+                if (over(mx, my, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 12)) {
+                    if (scroll > 0) {
+                        NotchWidgets.click();
+                        scroll = Math.max(0, scroll - ROWS);
+                    }
                     return true;
                 }
-                if (over(mx, my, px + 40, sy, 24, 12)) {
-                    NotchWidgets.click();
-                    scroll = Math.max(0, scroll - 1);
+                if (over(mx, my, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12)) {
+                    if (scroll + ROWS < all.size()) {
+                        NotchWidgets.click();
+                        scroll += ROWS;
+                    }
                     return true;
                 }
             }

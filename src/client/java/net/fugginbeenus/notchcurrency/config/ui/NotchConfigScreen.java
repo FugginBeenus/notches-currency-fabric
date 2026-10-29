@@ -113,7 +113,7 @@ public final class NotchConfigScreen extends Screen {
         scroll = Math.max(0, Math.min(scroll, maxScroll()));
 
         NotchWidgets.panel(ctx, px, py, pw, ph);
-        NotchWidgets.title(ctx, this.font, "Notch Currency", px + pw / 2, py + 7);
+        NotchWidgets.title(ctx, this.font, "Notch Currency", px + pw / 2, py + 7, NotchWidgets.Plate.STEEL);
         NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.PANEL_MID);
 
         ConfigEntry hoveredEntry = null;

@@ -84,7 +84,7 @@ public class ParticlePickerScreen extends Screen {
         hoveredId = null;
 
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Pick a particle", px + W / 2, py + 7);
+        NotchWidgets.title(ctx, this.font, "Pick a particle", px + W / 2, py + 7, NotchWidgets.Plate.STEEL);
 
         for (int i = 0; i < ParticleCatalog.GROUPS.length; i++) {
             boolean hover = over(mouseX, mouseY, groupX(i), py + 20, 38, 13);

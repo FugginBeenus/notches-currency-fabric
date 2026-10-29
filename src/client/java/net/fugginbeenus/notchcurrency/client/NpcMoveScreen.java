@@ -58,7 +58,7 @@ public class NpcMoveScreen extends Screen {
     //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Move & Rotate", px + W / 2, py + 6);
+        NotchWidgets.title(ctx, this.font, "Move & Rotate", px + W / 2, py + 6, NotchWidgets.Plate.STEEL);
         for (int g = 0; g < 3; g++) {
             ctx.fill(px + 6, py + 6 + g * 3, px + 26, py + 7 + g * 3, NotchTheme.PANEL_MID);
             ctx.fill(px + W - 26, py + 6 + g * 3, px + W - 6, py + 7 + g * 3, NotchTheme.PANEL_MID);

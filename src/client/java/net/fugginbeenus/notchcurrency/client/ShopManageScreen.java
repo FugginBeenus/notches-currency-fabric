@@ -30,6 +30,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     }
 
     private EditBox nameField;
+    private final net.fugginbeenus.notchcurrency.client.ui.SignPicker signPicker = new net.fugginbeenus.notchcurrency.client.ui.SignPicker();
     private EditBox greetField;
 
     public ShopManageScreen(ShopManageScreenHandler handler, Inventory inv, Component title) {
@@ -124,7 +125,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Shop Manager", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Shop Manager", x + W / 2, y + 8, NotchWidgets.Plate.STEEL);
 
         boolean open = menu.prop(ShopManageScreenHandler.P_OPEN) != 0;
         boolean rentPaused = menu.prop(ShopManageScreenHandler.P_RENT_PAUSED) != 0;
@@ -172,6 +173,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             if (canCollect) {
                 NotchWidgets.goldButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect",
                         over(mouseX, mouseY, x + 176, y + 40, 72, 15));
+                NotchWidgets.badge(ctx, this.font, x + 176 + 72 - 6, y + 37, "!");
             } else {
                 NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
             }
@@ -194,13 +196,9 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         ctx.drawString(this.font, "LISTINGS (" + count + "/27)", x + 10, y + 99, NotchTheme.TEXT_DARK, false);
         int pageCount = menu.prop(ShopManageScreenHandler.P_TOTAL_PAGES);
         if (pageCount > 1) {
-            NotchWidgets.neutralButton(ctx, this.font, x + 196, y + 97, 13, 11, "<",
-                    over(mouseX, mouseY, x + 196, y + 97, 13, 11));
-            NotchWidgets.centerText(ctx, this.font,
-                    (menu.prop(ShopManageScreenHandler.P_PAGE) + 1) + "/" + pageCount,
-                    x + 220, y + 99, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.font, x + 233, y + 97, 13, 11, ">",
-                    over(mouseX, mouseY, x + 233, y + 97, 13, 11));
+            NotchWidgets.pager(ctx, this.font, x + 196, x + 233, y + 97, 13, 11,
+                    menu.prop(ShopManageScreenHandler.P_PAGE) + 1, pageCount,
+                    over(mouseX, mouseY, x + 196, y + 97, 13, 11), over(mouseX, mouseY, x + 233, y + 97, 13, 11));
         }
 
         boolean any = false;
@@ -213,30 +211,31 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             if (row.buyOnly()) {
                 ctx.renderItem(row.icon(), x + ROW_X + 3, ry + 1);
                 ctx.renderItemDecorations(this.font, row.icon(), x + ROW_X + 3, ry + 1);
-                NotchWidgets.arrowRight(ctx, x + ROW_X + 45, ry + 5, NotchTheme.TEXT_MUTED);
-                ctx.renderItem(coin(), x + ROW_X + 64, ry + 1);
-                ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 64, ry + 1,
-                        NotchWidgets.compactCount(row.pays()));
+                NotchWidgets.arrowRight(ctx, x + ROW_X + 24, ry + 5, NotchTheme.TEXT_MUTED);
+                NotchWidgets.coinField(ctx, this.font, coin(), x + ROW_X + 43, ry + 1, row.pays(), NotchWidgets.COIN_GREEN);
                 ctx.drawString(this.font, "buying", x + ROW_X + 160, ry + 5, NotchTheme.TEXT_MUTED, false);
                 NotchWidgets.neutralButton(ctx, this.font, x + ROW_X + 204, ry + 1, 32, 15, "Edit",
                         over(mouseX, mouseY, x + ROW_X + 204, ry + 1, 32, 15));
                 continue;
             }
+            int bx = x + ROW_X + 3;
             if (row.price() > 0) {
-                ctx.renderItem(coin(), x + ROW_X + 3, ry + 1);
-                ctx.renderItemDecorations(this.font, coin(), x + ROW_X + 3, ry + 1,
-                        NotchWidgets.compactCount(row.price()));
+                bx += NotchWidgets.coinField(ctx, this.font, coin(), bx, ry + 1, row.price(), NotchWidgets.COIN_GOLD) + 3;
+                if (!row.barterStack().isEmpty()) {
+                    ctx.drawString(this.font, "+", bx, ry + 5, NotchTheme.TEXT_MUTED, false);
+                    bx += 7;
+                }
             }
             if (!row.barterStack().isEmpty()) {
-                ctx.renderItem(row.barterStack(), x + ROW_X + 23, ry + 1);
-                ctx.renderItemDecorations(this.font, row.barterStack(), x + ROW_X + 23, ry + 1);
+                ctx.renderItem(row.barterStack(), bx, ry + 1);
+                ctx.renderItemDecorations(this.font, row.barterStack(), bx, ry + 1);
             }
             if (row.price() <= 0 && row.barterStack().isEmpty()) {
                 ctx.drawString(this.font, "free", x + ROW_X + 6, ry + 5, NotchTheme.TEXT_MUTED, false);
             }
-            NotchWidgets.arrowRight(ctx, x + ROW_X + 45, ry + 5, NotchTheme.TEXT_MUTED);
-            ctx.renderItem(row.icon(), x + ROW_X + 64, ry + 1);
-            ctx.renderItemDecorations(this.font, row.icon(), x + ROW_X + 64, ry + 1);
+            NotchWidgets.arrowRight(ctx, x + ROW_X + 84, ry + 5, NotchTheme.TEXT_MUTED);
+            ctx.renderItem(row.icon(), x + ROW_X + 103, ry + 1);
+            ctx.renderItemDecorations(this.font, row.icon(), x + ROW_X + 103, ry + 1);
             boolean unlimited = row.stock() < 0;
             String s = unlimited ? "inf" : "x" + row.stock();
             ctx.drawString(this.font, s, x + ROW_X + 200 - this.font.width(s), ry + 5,
@@ -250,8 +249,10 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     x + W / 2, y + ROWS_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.primaryButton(ctx, this.font, x + 8, y + 224, 240, 15, "+ New Listing",
-                over(mouseX, mouseY, x + 8, y + 224, 240, 15));
+        NotchWidgets.primaryButton(ctx, this.font, x + 8, y + 224, 160, 15, "+ New Listing",
+                over(mouseX, mouseY, x + 8, y + 224, 160, 15));
+        NotchWidgets.neutralButton(ctx, this.font, x + 172, y + 224, 76, 15, "Sign...",
+                over(mouseX, mouseY, x + 172, y + 224, 76, 15));
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
@@ -273,6 +274,10 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+        if (signPicker.isOpen()) {
+            signPicker.draw(ctx, this.font, this.width, this.height, mouseX, mouseY);
+            return;
+        }
         if (menu.prop(ShopManageScreenHandler.P_IS_OP) != 0
                 && over(mouseX, mouseY, leftPos + 186, topPos + 20, 62, 14)) {
             boolean on = menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0;
@@ -350,8 +355,22 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
+        if (signPicker.isOpen()) {
+            String pick = signPicker.click((int) mouseX, (int) mouseY);
+            if (pick != null && !pick.isEmpty()) {
+                NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_SIGN, pick, null);
+            }
+            return true;
+        }
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (over(mx, my, leftPos + 172, topPos + 224, 76, 15)) {
+                NotchWidgets.click();
+                signPicker.open(net.fugginbeenus.notchcurrency.shop.SignStyles.byIndex(
+                                menu.prop(ShopManageScreenHandler.P_SIGN), net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
+                        NotchWidgets.colorize(nameField == null ? menu.shopName() : nameField.getValue()));
+                return true;
+            }
             if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) == 0
                     && (menu.pendingBalance() > 0 || menu.prop(ShopManageScreenHandler.P_BARTER_COUNT) > 0)
                     && over(mx, my, leftPos + 176, topPos + 40, 72, 15)) {
@@ -401,7 +420,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                     return true;
                 }
             }
-            if (over(mx, my, leftPos + 8, topPos + 224, 240, 15)) {
+            if (over(mx, my, leftPos + 8, topPos + 224, 160, 15)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_NEW_LISTING, "", null);
                 return true;
@@ -432,6 +451,10 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
+        if (signPicker.isOpen() && keyCode == 256) {
+            signPicker.close();
+            return true;
+        }
         if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, nameField, greetField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);

@@ -137,7 +137,7 @@ public class NotchNpcEditorScreen extends Screen {
         addRenderableWidget(nameField);
 
 
-        farewellField = new EditBox(this.font, px + 78, py + 160, 158, 9, Component.literal("Goodbye"));
+        farewellField = new EditBox(this.font, px + 24, py + 189, 212, 9, Component.literal("Goodbye"));
         farewellField.setMaxLength(150);
         farewellField.setBordered(false);
         farewellField.setHint(Component.literal("(optional)").withStyle(ChatFormatting.DARK_GRAY));
@@ -192,7 +192,7 @@ public class NotchNpcEditorScreen extends Screen {
         //?}
         tooltip = null;
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "NPC Editor", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "NPC Editor", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         drawTabs(ctx, mouseX, mouseY);
         switch (tab) {
             case 0 -> drawAppearance(ctx, mouseX, mouseY);
@@ -220,10 +220,9 @@ public class NotchNpcEditorScreen extends Screen {
         for (int i = 0; i < 6; i++) {
             int tx = tabX(i);
             boolean hover = over(mx, my, tx, py + TAB_Y, TAB_W, TAB_H);
-            if (i == tab) NotchWidgets.primaryButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
-            else NotchWidgets.neutralButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], hover);
+            NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], i == tab, hover);
         }
-        NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
+        if (tab != 3) NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
     }
 
     private static final int PREV_X = 8, PREV_Y = 46, PREV_W = 100, PREV_H = 176;
@@ -476,10 +475,10 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private void drawVoiceRow(GuiGraphics ctx, int mx, int my) {
-        boolean hover = over(mx, my, px + 60, py + 226, 180, 16);
-        NotchWidgets.primaryButton(ctx, this.font, px + 60, py + 226, 180, 16, "Sounds...", hover);
+        boolean hover = over(mx, my, px + 60, py + 233, 180, 16);
+        NotchWidgets.primaryButton(ctx, this.font, px + 60, py + 233, 180, 16, "Sounds...", hover);
         String voiceName = currentSounds.voice().isEmpty() ? "silent" : shortSound(currentSounds.voice());
-        NotchWidgets.centerText(ctx, this.font, "Voice: " + voiceName, px + W / 2, py + 248,
+        NotchWidgets.centerText(ctx, this.font, "Voice: " + voiceName, px + W / 2, py + 256,
                 NotchTheme.TEXT_MUTED, false);
         if (hover) {
             tooltip = java.util.List.of(
@@ -498,7 +497,7 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private boolean clickVoiceRow(int mx, int my) {
-        if (over(mx, my, px + 60, py + 226, 180, 16)) {
+        if (over(mx, my, px + 60, py + 233, 180, 16)) {
             final NotchNpcEditorScreen self = this;
             net.minecraft.client.Minecraft.getInstance().setScreen(
                     new NpcSoundsScreen(npcId, currentSounds, saved -> {
@@ -626,18 +625,23 @@ public class NotchNpcEditorScreen extends Screen {
     }
 
     private void drawTalk(GuiGraphics ctx, int mx, int my) {
+        NotchWidgets.groupBox(ctx, px + 8, py + 46, W - 16, 74);
+        NotchWidgets.groupBox(ctx, px + 8, py + 126, W - 16, 40);
+        NotchWidgets.groupBox(ctx, px + 8, py + 172, W - 16, 40);
+        NotchWidgets.groupBox(ctx, px + 8, py + 218, W - 16, 58);
+
         String header = dialogueNodes <= 0 ? "No dialogue yet."
-                : dialogueFlat ? "Quick lines: " + dialogueNodes
-                : "Dialogue: " + dialogueNodes + " page" + (dialogueNodes == 1 ? "" : "s") + " (branching)";
-        NotchWidgets.centerText(ctx, this.font, header, px + W / 2, py + 48, NotchTheme.TEXT_DARK, false);
+                : dialogueFlat ? dialogueNodes + " quick line" + (dialogueNodes == 1 ? "" : "s")
+                : dialogueNodes + " page" + (dialogueNodes == 1 ? "" : "s") + " (branching)";
+        int top = dialogueTop();
+        NotchWidgets.centerText(ctx, this.font, header, px + W / 2, top, NotchTheme.TEXT_DARK, false);
 
         boolean branching = dialogueNodes > 0 && !dialogueFlat;
-        boolean quickHover = over(mx, my, px + 50, py + 62, 200, 18);
+        boolean quickHover = over(mx, my, px + 20, top + 14, 126, 18);
         if (branching) {
-            NotchWidgets.neutralButton(ctx, this.font, px + 50, py + 62, 200, 18, "Quick Lines", false);
+            NotchWidgets.neutralButton(ctx, this.font, px + 20, top + 14, 126, 18, "Quick Lines", false);
         } else {
-            NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 62, 200, 18,
-                    "Quick Lines", quickHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + 20, top + 14, 126, 18, "Quick Lines", quickHover);
         }
         if (quickHover) {
             tooltip = new java.util.ArrayList<>(java.util.List.of(
@@ -652,26 +656,27 @@ public class NotchNpcEditorScreen extends Screen {
             }
         }
 
-        boolean studioHover = over(mx, my, px + 50, py + 84, 200, 18);
-        NotchWidgets.primaryButton(ctx, this.font, px + 50, py + 84, 200, 18,
-                "Dialogue Studio", studioHover);
+        boolean studioHover = over(mx, my, px + 154, top + 14, 126, 18);
+        NotchWidgets.primaryButton(ctx, this.font, px + 154, top + 14, 126, 18, "Dialogue Studio", studioHover);
         if (studioHover) {
             tooltip = java.util.List.of(
                     Component.literal("Dialogue Studio").withStyle(ChatFormatting.WHITE),
                     Component.literal("Full conversations with pages and choices.").withStyle(ChatFormatting.GRAY),
                     Component.literal("Use it for quests, hints and branching talk.").withStyle(ChatFormatting.DARK_GRAY));
         }
+        if (dialogueNodes > 0) {
+            NotchWidgets.dangerButton(ctx, this.font, px + 90, top + 38, 120, 14, "Remove Dialogue",
+                    over(mx, my, px + 90, top + 38, 120, 14));
+        }
 
-        NotchWidgets.divider(ctx, px + 8, py + 112, W - 16);
-        ctx.drawString(this.font, "Style:", px + 50, py + 124, NotchTheme.TEXT_DARK, false);
-        boolean winHover = over(mx, my, px + 90, py + 120, 76, 14);
-        boolean chatHover = over(mx, my, px + 170, py + 120, 76, 14);
+        boolean winHover = over(mx, my, px + 20, py + 140, 126, 16);
+        boolean chatHover = over(mx, my, px + 154, py + 140, 126, 16);
         if (dialogueMode == 0) {
-            NotchWidgets.primaryButton(ctx, this.font, px + 90, py + 120, 76, 14, "Window", winHover);
-            NotchWidgets.neutralButton(ctx, this.font, px + 170, py + 120, 76, 14, "Chat", chatHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + 20, py + 140, 126, 16, "Window", winHover);
+            NotchWidgets.neutralButton(ctx, this.font, px + 154, py + 140, 126, 16, "Chat", chatHover);
         } else {
-            NotchWidgets.neutralButton(ctx, this.font, px + 90, py + 120, 76, 14, "Window", winHover);
-            NotchWidgets.primaryButton(ctx, this.font, px + 170, py + 120, 76, 14, "Chat", chatHover);
+            NotchWidgets.neutralButton(ctx, this.font, px + 20, py + 140, 126, 16, "Window", winHover);
+            NotchWidgets.primaryButton(ctx, this.font, px + 154, py + 140, 126, 16, "Chat", chatHover);
         }
         if (winHover) {
             tooltip = java.util.List.of(
@@ -683,54 +688,55 @@ public class NotchNpcEditorScreen extends Screen {
                     Component.literal("One random line in chat, then opens its job.").withStyle(ChatFormatting.GRAY));
         }
 
-        NotchWidgets.divider(ctx, px + 8, py + 144, W - 16);
-        ctx.drawString(this.font, "Goodbye:", px + 22, py + 160, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + 75, py + 156, 164, 13, NotchTheme.PANEL_MID);
-        boolean setHover = over(mx, my, px + 244, py + 156, 34, 13);
-        NotchWidgets.neutralButton(ctx, this.font, px + 244, py + 156, 34, 13, "Set", setHover);
-        if (setHover || over(mx, my, px + 22, py + 156, 217, 13)) {
+        NotchWidgets.inset(ctx, px + 20, py + 187, 220, 13, NotchTheme.PANEL_MID);
+        boolean setHover = over(mx, my, px + 246, py + 187, 34, 13);
+        NotchWidgets.neutralButton(ctx, this.font, px + 246, py + 187, 34, 13, "Set", setHover);
+        if (setHover || over(mx, my, px + 20, py + 187, 220, 13)) {
             tooltip = java.util.List.of(
                     Component.literal("Goodbye").withStyle(ChatFormatting.WHITE),
                     Component.literal("Said when the player walks away or closes").withStyle(ChatFormatting.GRAY),
                     Component.literal("the window. Leave it empty for none.").withStyle(ChatFormatting.GRAY));
         }
 
-        if (dialogueNodes > 0) {
-            NotchWidgets.divider(ctx, px + 8, py + 178, W - 16);
-            NotchWidgets.dangerButton(ctx, this.font, px + 80, py + 186, 140, 14, "Remove Dialogue",
-                    over(mx, my, px + 80, py + 186, 140, 14));
-        }
-
-        NotchWidgets.divider(ctx, px + 8, py + 212, W - 16);
         drawVoiceRow(ctx, mx, my);
+
+        NotchWidgets.groupLabel(ctx, px + 16, py + 46, "Dialogue");
+        NotchWidgets.groupLabel(ctx, px + 16, py + 126, "How it talks");
+        NotchWidgets.groupLabel(ctx, px + 16, py + 172, "Goodbye");
+        NotchWidgets.groupLabel(ctx, px + 16, py + 218, "Voice");
+    }
+
+    private int dialogueTop() {
+        return py + (dialogueNodes > 0 ? 58 : 68);
     }
 
     private boolean clickTalk(int mx, int my) {
         boolean branching = dialogueNodes > 0 && !dialogueFlat;
-        if (!branching && over(mx, my, px + 50, py + 62, 200, 18)) {
+        int top = dialogueTop();
+        if (!branching && over(mx, my, px + 20, top + 14, 126, 18)) {
             NotchPacketsClient.sendNpcStudioOpen(npcId, true);
             return true;
         }
-        if (over(mx, my, px + 50, py + 84, 200, 18)) {
+        if (over(mx, my, px + 154, top + 14, 126, 18)) {
             NotchPacketsClient.sendNpcStudioOpen(npcId);
             return true;
         }
-        if (over(mx, my, px + 90, py + 120, 76, 14)) {
+        if (over(mx, my, px + 20, py + 140, 126, 16)) {
             dialogueMode = 0;
             NotchPacketsClient.sendNpcDialogueMode(npcId, 0);
             return true;
         }
-        if (over(mx, my, px + 170, py + 120, 76, 14)) {
+        if (over(mx, my, px + 154, py + 140, 126, 16)) {
             dialogueMode = 1;
             NotchPacketsClient.sendNpcDialogueMode(npcId, 1);
             return true;
         }
-        if (over(mx, my, px + 244, py + 156, 34, 13)) {
+        if (over(mx, my, px + 246, py + 187, 34, 13)) {
             currentFarewell = farewellField.getValue().trim();
             NotchPacketsClient.sendNpcSetFarewell(npcId, currentFarewell);
             return true;
         }
-        if (dialogueNodes > 0 && over(mx, my, px + 80, py + 186, 140, 14)) {
+        if (dialogueNodes > 0 && over(mx, my, px + 90, top + 38, 120, 14)) {
             NotchPacketsClient.sendNpcDialogueClear(npcId);
             dialogueNodes = 0;
             dialogueFlat = true;

@@ -69,7 +69,7 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7, NotchWidgets.Plate.WOOD);
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
@@ -83,9 +83,7 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
                 ctx.drawString(this.font, Component.literal("Owned").withStyle(ChatFormatting.DARK_GREEN),
                         x + LIST_X + 6, ry + 6, NotchTheme.TEXT_DARK, false);
             } else {
-                ctx.renderItem(coin(), x + LIST_X + 4, ry + 2);
-                ctx.renderItemDecorations(this.font, coin(), x + LIST_X + 4, ry + 2,
-                        NotchWidgets.compactCount(c.price()));
+                NotchWidgets.coinField(ctx, this.font, coin(), x + LIST_X + 4, ry + 2, c.price(), NotchWidgets.COIN_GOLD);
             }
             arrow(ctx, x + LIST_X + ROW_W - 40, ry + 6, NotchTheme.TEXT_MUTED);
             ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);

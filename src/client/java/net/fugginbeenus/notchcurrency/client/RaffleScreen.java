@@ -4,7 +4,6 @@ import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleScreenHandler;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -57,9 +56,6 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
         NotchWidgets.panel(ctx, x, y, W, H);
 
         int round = menu.prop(RaffleScreenHandler.P_ROUND);
-        ctx.drawCenteredString(this.font,
-                Component.literal("RAFFLE #" + round).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
-                x + W / 2, y + 8, 0xFFFFFFFF);
 
         boolean enabled = menu.prop(RaffleScreenHandler.P_ENABLED) == 1;
 
@@ -112,6 +108,7 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             NotchWidgets.neutralButton(ctx, this.font, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H,
                     "Redeem an old ticket", over(mouseX, mouseY, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H));
         }
+        NotchWidgets.title(ctx, this.font, "Raffle #" + round, x + W / 2, y + 8, NotchWidgets.Plate.MARQUEE);
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);

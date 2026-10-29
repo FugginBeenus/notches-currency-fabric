@@ -351,7 +351,7 @@ public class NpcActionsScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Reactions", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Reactions", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "What this NPC does when something happens.",
                 px + W / 2, py + 20, NotchTheme.TEXT_MUTED, false);
 

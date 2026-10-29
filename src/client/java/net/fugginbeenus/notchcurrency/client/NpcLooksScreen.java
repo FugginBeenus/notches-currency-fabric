@@ -42,6 +42,9 @@ public class NpcLooksScreen extends Screen {
     private int px, py;
     private int tab = 0;
     private boolean showBox = true;
+    private final net.fugginbeenus.notchcurrency.client.ui.SignPicker platePicker =
+            new net.fugginbeenus.notchcurrency.client.ui.SignPicker();
+    private String currentPlate;
     private static final String[] TABS = {"Colour", "Size", "Name"};
     private static final int BIT_GLOWING = 4, BIT_NAMEPLATE = 8, BIT_INVISIBLE = 128, BIT_BUBBLE = 2048;
 
@@ -117,6 +120,11 @@ public class NpcLooksScreen extends Screen {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
+    private String plate(NotchNpcEntity npc) {
+        if (currentPlate != null) return currentPlate;
+        return npc != null ? npc.getNamePlate() : net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT;
+    }
+
     //? if >=26.1 {
     /*@Override
     public void extractRenderState(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
@@ -124,16 +132,20 @@ public class NpcLooksScreen extends Screen {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
+        //? if >=1.21 {
+        /*renderTransparentBackground(ctx);
+        *///?} else {
+        this.renderBackground(ctx);
+        //?}
         NotchNpcEntity npc = findNpc();
 
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Appearance", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Appearance", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         for (int i = 0; i < TABS.length; i++) {
             int tx = px + 9 + i * 47;
             boolean hov = over(mouseX, mouseY, tx, py + TAB_Y, TAB_W, TAB_H);
-            if (i == tab) NotchWidgets.primaryButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, TABS[i], hov);
-            else NotchWidgets.neutralButton(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, TABS[i], hov);
+            NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, TABS[i], i == tab, hov);
         }
         NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
 
@@ -226,7 +238,13 @@ public class NpcLooksScreen extends Screen {
             drawBit(ctx, mouseX, mouseY, py + 68, BIT_BUBBLE, "Talk bubble");
             stepper(ctx, mouseX, mouseY, py + 92, "Name Y",
                     String.format("%+.1f", npc == null ? 0f : npc.getNameOffset()));
-            ctx.drawString(this.font, "Name Y lifts the label.", px + RX, py + 116,
+            ctx.drawString(this.font, "Name Y lifts the label.", px + RX, py + 112,
+                    NotchTheme.TEXT_MUTED, false);
+            String plateName = net.fugginbeenus.notchcurrency.shop.SignStyles.NAMES.get(
+                    net.fugginbeenus.notchcurrency.shop.SignStyles.indexOf(plate(npc)));
+            NotchWidgets.neutralButton(ctx, this.font, px + RX, py + 130, 172, 14, "Plate: " + plateName,
+                    over(mouseX, mouseY, px + RX, py + 130, 172, 14));
+            ctx.drawString(this.font, "The sign on its talk window.", px + RX, py + 148,
                     NotchTheme.TEXT_MUTED, false);
         }
 
@@ -238,6 +256,7 @@ public class NpcLooksScreen extends Screen {
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+        if (platePicker.isOpen()) platePicker.draw(ctx, this.font, this.width, this.height, mouseX, mouseY);
     }
 
     //? if >=1.21.11 {
@@ -250,6 +269,14 @@ public class NpcLooksScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
         int mx = (int) mouseX, my = (int) mouseY;
+        if (platePicker.isOpen()) {
+            String pick = platePicker.click(mx, my);
+            if (pick != null && !pick.isEmpty()) {
+                currentPlate = pick;
+                NotchPacketsClient.sendNpcNamePlate(npcId, pick);
+            }
+            return true;
+        }
         if (button == 0) {
             NotchNpcEntity npc = findNpc();
 
@@ -321,6 +348,11 @@ public class NpcLooksScreen extends Screen {
                     pushShape(npc, npc.npcScale(), npc.getScaleY(), npc.getScaleZ(), n, npc.getBodyOffset());
                     return true;
                 }
+                if (over(mx, my, px + RX, py + 130, 172, 14)) {
+                    NotchWidgets.click();
+                    platePicker.open(plate(npc), npc == null ? "" : npc.getName().getString());
+                    return true;
+                }
             }
 
             if (over(mx, my, px + RX, py + 218, W - RX - 12, 18)) {
@@ -336,8 +368,43 @@ public class NpcLooksScreen extends Screen {
         //?}
     }
 
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int keyCode = event.key();
+    *///?} else {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    //?}
+        if (platePicker.isOpen() && keyCode == 256) {
+            platePicker.close();
+            return true;
+        }
+        //? if >=1.21.11 {
+        /*return super.keyPressed(event);
+        *///?} else {
+        return super.keyPressed(keyCode, scanCode, modifiers);
+        //?}
+    }
+
     @Override
     public boolean isPauseScreen() {
         return false;
     }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+    }
+    *///?} elif >=1.21 {
+    /*@Override
+    protected void renderBlurredBackground(float delta) {
+    }
+    *///?}
+
+    //? if >=1.21 {
+    /*@Override
+    public void renderBackground(net.minecraft.client.gui.GuiGraphics ctx, int mouseX, int mouseY, float delta) {
+    }
+    *///?}
 }

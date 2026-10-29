@@ -49,7 +49,7 @@ public class NpcEquipScreen extends AbstractContainerScreen<NpcEquipScreenHandle
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Equipment", x + W / 2, y + 7);
+        NotchWidgets.title(ctx, this.font, "Equipment", x + W / 2, y + 7, NotchWidgets.Plate.STEEL);
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
         NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
 

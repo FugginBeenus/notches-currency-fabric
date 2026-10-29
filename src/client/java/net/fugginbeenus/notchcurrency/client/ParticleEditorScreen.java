@@ -309,13 +309,12 @@ public class ParticleEditorScreen extends Screen {
         }
 
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, effect.name(), px + W / 2, py + 7);
+        NotchWidgets.title(ctx, this.font, effect.name(), px + W / 2, py + 7, NotchWidgets.Plate.STEEL);
 
         for (int i = 0; i < TABS.length; i++) {
             int tx = px + 10 + i * 58;
             boolean hover = over(mouseX, mouseY, tx, py + TAB_Y, 54, TAB_H);
-            if (i == tab) NotchWidgets.primaryButton(ctx, this.font, tx, py + TAB_Y, 54, TAB_H, TABS[i], hover);
-            else NotchWidgets.neutralButton(ctx, this.font, tx, py + TAB_Y, 54, TAB_H, TABS[i], hover);
+            NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, 54, TAB_H, TABS[i], i == tab, hover);
         }
         NotchWidgets.divider(ctx, px + 8, py + 36, W - 16);
 

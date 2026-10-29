@@ -49,7 +49,7 @@ public class QuestLogScreen extends Screen {
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Quest Log", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Quest Log", px + W / 2, py + 8, NotchWidgets.Plate.PARCHMENT);
 
         List<BountyTrackerHud.Entry> list = quests();
         if (list.isEmpty()) {
@@ -60,7 +60,8 @@ public class QuestLogScreen extends Screen {
         }
 
         NotchWidgets.divider(ctx, px + 8, py + 22, W - 16);
-        int rows = Math.min(6, list.size());
+        scroll = NotchWidgets.pageStart(scroll, list.size(), 6);
+        int rows = Math.min(6, Math.max(0, list.size() - scroll));
         for (int i = 0; i < rows; i++) {
             BountyTrackerHud.Entry e = list.get(i + scroll);
             int ry = py + 30 + i * 28;
@@ -80,10 +81,9 @@ public class QuestLogScreen extends Screen {
         }
 
         if (list.size() > 6) {
-            NotchWidgets.neutralButton(ctx, this.font, px + W - 34, py + 30, 24, 14, "^",
-                    over(mouseX, mouseY, px + W - 34, py + 30, 24, 14));
-            NotchWidgets.neutralButton(ctx, this.font, px + W - 34, py + 48, 24, 14, "v",
-                    over(mouseX, mouseY, px + W - 34, py + 48, 24, 14));
+            NotchWidgets.pager(ctx, this.font, px + 116, px + 166, py + H - 26, 18, 16,
+                    scroll / 6 + 1, NotchWidgets.pages(list.size(), 6),
+                    over(mouseX, mouseY, px + 116, py + H - 26, 18, 16), over(mouseX, mouseY, px + 166, py + H - 26, 18, 16));
         }
 
         boolean admin = net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator();
@@ -113,14 +113,18 @@ public class QuestLogScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int size = quests().size();
-            if (over(mx, my, px + W - 34, py + 30, 24, 14)) {
-                NotchWidgets.click();
-                scroll = Math.max(0, scroll - 1);
+            if (size > 6 && over(mx, my, px + 116, py + H - 26, 18, 16)) {
+                if (scroll > 0) {
+                    NotchWidgets.click();
+                    scroll = Math.max(0, scroll - 6);
+                }
                 return true;
             }
-            if (over(mx, my, px + W - 34, py + 48, 24, 14)) {
-                NotchWidgets.click();
-                scroll = Math.min(Math.max(0, size - 6), scroll + 1);
+            if (size > 6 && over(mx, my, px + 166, py + H - 26, 18, 16)) {
+                if (scroll + 6 < size) {
+                    NotchWidgets.click();
+                    scroll += 6;
+                }
                 return true;
             }
             List<BountyTrackerHud.Entry> rows = quests();

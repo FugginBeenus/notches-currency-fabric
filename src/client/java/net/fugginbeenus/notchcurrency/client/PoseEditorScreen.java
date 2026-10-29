@@ -64,7 +64,7 @@ public class PoseEditorScreen extends Screen {
         //?}
         int px = px(), py = py();
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Pose Editor", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Pose Editor", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.inset(ctx, px + PREV_X, py + PREV_Y, PREV_W, PREV_H, NotchTheme.DEEP);
         NotchNpcEntity npc = findNpc();
         if (npc != null) {

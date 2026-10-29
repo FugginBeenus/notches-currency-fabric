@@ -146,7 +146,7 @@ public class NpcModelCreateScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "New NPC Model", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "New NPC Model", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
 
         row(ctx, 0, "Name", null, mouseX, mouseY);
         NotchWidgets.inset(ctx, px + CTRL_X, py + rowY(0), CTRL_W, 14, NotchTheme.DEEP);

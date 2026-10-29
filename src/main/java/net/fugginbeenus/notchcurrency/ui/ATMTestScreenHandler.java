@@ -21,7 +21,7 @@ public class ATMTestScreenHandler extends AbstractContainerMenu {
     private static final int BANK_BASE_X = 8;
     private static final int BANK_BASE_Y = 17;
     private static final int BANK_SPACING = 18;
-    public static int BANK_NUDGE_X = 38;
+    public static int BANK_NUDGE_X = 36;
     public static int BANK_NUDGE_Y = 1;
     private static final int PLAYER_X = 8;
     private static final int PLAYER_Y = 113;

@@ -149,8 +149,8 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, MailLayout.W, MailLayout.H);
-        NotchWidgets.title(ctx, this.font, this.title.getString(), x + MailLayout.W / 2, y + 6);
-        MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, mouseX, mouseY);
+        NotchWidgets.title(ctx, this.font, this.title.getString(), x + MailLayout.W / 2, y + 6, NotchWidgets.Plate.STAMP);
+        MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, 0, mouseX, mouseY);
 
         refreshCoinsHint();
         drawParcelSide(ctx, x, y, mouseX, mouseY);
@@ -216,6 +216,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
             return;
         }
 
+        scroll = NotchWidgets.pageStart(scroll, shown.size(), VISIBLE);
         for (int i = 0; i < VISIBLE && i + scroll < shown.size(); i++) {
             Recipient r = shown.get(i + scroll);
             boolean selected = r.id().equals(chosen);
@@ -233,15 +234,16 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
             }
         }
         if (shown.size() > VISIBLE) {
-            NotchWidgets.centerText(ctx, this.font,
-                    (scroll + 1) + "-" + Math.min(shown.size(), scroll + VISIBLE) + " of " + shown.size(),
-                    x + MailLayout.W / 2, y + ROW_Y + VISIBLE * ROW_H + 3, NotchTheme.TEXT_MUTED, false);
+            int pgY = y + ROW_Y + VISIBLE * ROW_H + 4;
+            NotchWidgets.pager(ctx, this.font, x + MailLayout.W / 2 - 38, x + MailLayout.W / 2 + 18, pgY, 20, 11,
+                    scroll / VISIBLE + 1, NotchWidgets.pages(shown.size(), VISIBLE),
+                    over(mouseX, mouseY, x + MailLayout.W / 2 - 38, pgY, 20, 11),
+                    over(mouseX, mouseY, x + MailLayout.W / 2 + 18, pgY, 20, 11));
         }
     }
 
     static void drawInventory(GuiGraphics ctx, int x, int y, Font font) {
-        ctx.drawString(font, "Inventory", x + MailLayout.INV_X, y + MailLayout.INV_LABEL_Y,
-                NotchTheme.TEXT_DARK, false);
+        NotchWidgets.stampLabel(ctx, x + MailLayout.INV_X, y + MailLayout.INV_LABEL_Y + 3, MailLayout.W - 16, "Inventory");
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + MailLayout.INV_X + col * 18 - 1,
@@ -293,6 +295,21 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (picking) {
+                int pgY = this.topPos + ROW_Y + VISIBLE * ROW_H + 4;
+                if (shown.size() > VISIBLE && over(mx, my, this.leftPos + MailLayout.W / 2 - 38, pgY, 20, 11)) {
+                    if (scroll > 0) {
+                        NotchWidgets.click();
+                        scroll = Math.max(0, scroll - VISIBLE);
+                    }
+                    return true;
+                }
+                if (shown.size() > VISIBLE && over(mx, my, this.leftPos + MailLayout.W / 2 + 18, pgY, 20, 11)) {
+                    if (scroll + VISIBLE < shown.size()) {
+                        NotchWidgets.click();
+                        scroll += VISIBLE;
+                    }
+                    return true;
+                }
                 for (int i = 0; i < VISIBLE && i + scroll < shown.size(); i++) {
                     if (over(mx, my, this.leftPos + EDGE, rowY(i), INNER_W, ROW_H - 1)) {
                         NotchWidgets.click();
@@ -342,8 +359,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
         if (!picking) return false;
-        int maxScroll = Math.max(0, shown.size() - VISIBLE);
-        scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(amount)));
+        scroll = NotchWidgets.pageStart(scroll - (int) Math.signum(amount) * VISIBLE, shown.size(), VISIBLE);
         return true;
     }
 
@@ -395,4 +411,14 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         super.removed();
         MailTabs.screenClosed();
     }
+
+    //? if >=1.21.11 {
+    /*@Override
+    protected void renderBlurredBackground(net.minecraft.client.gui.GuiGraphics ctx) {
+    }
+    *///?} elif >=1.21 {
+    /*@Override
+    protected void renderBlurredBackground(float delta) {
+    }
+    *///?}
 }

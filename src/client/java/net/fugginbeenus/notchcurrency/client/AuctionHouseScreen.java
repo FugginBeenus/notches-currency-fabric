@@ -818,7 +818,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         ctx.fill(0, 0, this.width, this.height, 0x88000000);
         int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
         NotchWidgets.panel(ctx, px, py, BID_W, BID_H);
-        NotchWidgets.title(ctx, this.font, "Place a Bid", px + BID_W / 2, py + 6);
+        NotchWidgets.title(ctx, this.font, "Place a Bid", px + BID_W / 2, py + 6, NotchWidgets.Plate.WOOD);
         NotchWidgets.centerText(ctx, this.font, bidItemName, px + BID_W / 2, py + 18, NotchTheme.TEXT_LIGHT, true);
         long cur = bidHighest > 0 ? bidHighest : bidStartPrice;
         long min = cur + 1;

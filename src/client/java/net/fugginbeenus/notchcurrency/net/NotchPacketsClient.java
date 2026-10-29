@@ -151,6 +151,13 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_TRANSFORM, buf);
     }
 
+    public static void sendNpcNamePlate(UUID npcId, String plate) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(plate);
+        NetClient.sendToServer(NotchPackets.NPC_NAME_PLATE, buf);
+    }
+
     public static void sendNpcDialogueMode(UUID npcId, int modeOrdinal) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);

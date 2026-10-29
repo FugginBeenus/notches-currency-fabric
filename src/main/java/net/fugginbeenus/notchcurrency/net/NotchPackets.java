@@ -76,6 +76,7 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_STUDIO_DATA = NotchCurrency.id("npc_studio_data");
     public static final ResourceLocation NPC_STUDIO_SAVE = NotchCurrency.id("npc_studio_save");
     public static final ResourceLocation NPC_DIALOGUE_MODE = NotchCurrency.id("npc_dialogue_mode");
+    public static final ResourceLocation NPC_NAME_PLATE = NotchCurrency.id("npc_name_plate");
     public static final ResourceLocation NPC_BILLBOARD = NotchCurrency.id("npc_billboard");
     public static final ResourceLocation NPC_FACTION_PICK = NotchCurrency.id("npc_faction_pick");
     public static final ResourceLocation NPC_FACTION_LIST = NotchCurrency.id("npc_faction_list");

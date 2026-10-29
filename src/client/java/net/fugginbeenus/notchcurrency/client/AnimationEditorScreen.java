@@ -175,7 +175,7 @@ public class AnimationEditorScreen extends Screen {
         if (playing) playTicks += delta;
 
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, name.isBlank() ? "Animation" : name, px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, name.isBlank() ? "Animation" : name, px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.divider(ctx, px + 8, py + 22, W - 16);
 
         ctx.drawString(this.font, "Length", px + LX, py + 30, NotchTheme.TEXT_DARK, false);

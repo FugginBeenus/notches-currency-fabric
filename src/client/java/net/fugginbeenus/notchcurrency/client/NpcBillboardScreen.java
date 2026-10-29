@@ -79,7 +79,7 @@ public class NpcBillboardScreen extends Screen {
         this.renderBackground(ctx);
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
-        NotchWidgets.title(ctx, this.font, "Floating Text", px + W / 2, py + 8);
+        NotchWidgets.title(ctx, this.font, "Floating Text", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
         NotchWidgets.centerText(ctx, this.font, "Text that hovers above this NPC.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.centerText(ctx, this.font, "Top line first. Leave a row empty to skip it.",

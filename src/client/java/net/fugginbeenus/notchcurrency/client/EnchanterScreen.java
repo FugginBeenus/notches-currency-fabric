@@ -96,7 +96,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Enchanter", x + W / 2, y + 8);
+        NotchWidgets.title(ctx, this.font, "Enchanter", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
         NotchWidgets.slot(ctx, x + EnchanterScreenHandler.INPUT_X - 1, y + EnchanterScreenHandler.INPUT_Y - 1);
         ItemStack stack = menu.inputStack();
         if (stack.isEmpty()) {
@@ -123,8 +123,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         for (int i = 0; i < 3; i++) {
             int tx = x + 8 + i * 82;
             boolean hover = over(mouseX, mouseY, tx, y + TAB_Y, 76, TAB_H);
-            if (i == tab) NotchWidgets.primaryButton(ctx, this.font, tx, y + TAB_Y, 76, TAB_H, tabs[i], hover);
-            else NotchWidgets.neutralButton(ctx, this.font, tx, y + TAB_Y, 76, TAB_H, tabs[i], hover);
+            NotchWidgets.tab(ctx, this.font, tx, y + TAB_Y, 76, TAB_H, tabs[i], i == tab, hover);
         }
 
         NotchWidgets.inset(ctx, x + 6, y + 63, 234, 86, NotchTheme.PANEL_MID);
@@ -172,13 +171,12 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             ctx.renderItem(c.book(), x + LIST_X + 4, cy + 5);
 
             String name = net.fugginbeenus.notchcurrency.compat.Ench.name(c.ench(), c.level()).getString();
-            while (name.length() > 3 && this.font.width(name) > CARD_W - 52) name = name.substring(0, name.length() - 2) + "…";
+            int costW = NotchWidgets.coinFieldWidth(this.font, c.cost());
+            while (name.length() > 3 && this.font.width(name) > CARD_W - 34 - costW) name = name.substring(0, name.length() - 2) + "…";
             ctx.drawString(this.font, name, x + LIST_X + 24, cy + 9,
                     net.fugginbeenus.notchcurrency.compat.Ench.isTreasure(c.ench()) ? 0xFF9A5CC6 : NotchTheme.TEXT_DARK, false);
 
-            ctx.renderItem(coin(), x + LIST_X + CARD_W - 22, cy + 5);
-            ctx.renderItemDecorations(this.font, coin(), x + LIST_X + CARD_W - 22, cy + 5,
-                    NotchWidgets.compactCount(c.cost()));
+            NotchWidgets.coinField(ctx, this.font, coin(), x + LIST_X + CARD_W - 6 - costW, cy + 5, c.cost(), NotchWidgets.COIN_GOLD);
         }
 
         NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
