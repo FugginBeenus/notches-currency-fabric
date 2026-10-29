@@ -29,7 +29,7 @@ public class ModCreativeTab {
                 entries.accept(ModBlocks.GOLDEN_CACHE_ITEM);
                 entries.accept(ModBlocks.LEDGER_BOARD_ITEM);
                 entries.accept(ModBlocks.BOUNTY_BOARD_ITEM);
-                entries.accept(ModBlocks.MAILBOX_ITEM);
+                for (net.minecraft.world.item.Item mailbox : ModBlocks.MAILBOX_ITEMS) entries.accept(mailbox);
                 entries.accept(ModBlocks.crateItem("common_crate"));
                 entries.accept(ModBlocks.crateItem("rare_crate"));
                 entries.accept(ModBlocks.crateItem("epic_crate"));

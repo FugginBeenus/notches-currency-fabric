@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "notchcurrency:mailbox",
+    "notchcurrency:spruce_mailbox",
+    "notchcurrency:birch_mailbox",
+    "notchcurrency:jungle_mailbox",
+    "notchcurrency:acacia_mailbox",
+    "notchcurrency:dark_oak_mailbox",
+    "notchcurrency:mangrove_mailbox",
+    "notchcurrency:cherry_mailbox",
+    "notchcurrency:bamboo_mailbox",
+    "notchcurrency:crimson_mailbox",
+    "notchcurrency:warped_mailbox"
+  ]
+}

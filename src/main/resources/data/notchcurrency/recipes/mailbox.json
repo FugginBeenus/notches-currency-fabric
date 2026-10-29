@@ -1,19 +1,19 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "III",
-    "IRI",
-    " S "
+    "PPP",
+    "PDP",
+    " L "
   ],
   "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "P": {
+      "item": "minecraft:oak_planks"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "D": {
+      "item": "minecraft:red_dye"
     },
-    "S": {
-      "item": "minecraft:stick"
+    "L": {
+      "tag": "minecraft:oak_logs"
     }
   },
   "result": {

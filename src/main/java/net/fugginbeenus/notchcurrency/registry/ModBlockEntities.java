@@ -14,7 +14,7 @@ public final class ModBlockEntities {
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("mailbox"),
                     FabricBlockEntityTypeBuilder.create(
                             net.fugginbeenus.notchcurrency.block.entity.MailboxBlockEntity::new,
-                            ModBlocks.MAILBOX).build());
+                            ModBlocks.MAILBOXES.toArray(new net.minecraft.world.level.block.Block[0])).build());
 
     public static final BlockEntityType<LedgerBoardBlockEntity> LEDGER_BOARD =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("ledger_board"),

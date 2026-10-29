@@ -326,6 +326,7 @@ tasks.processResources {
             f.path = f.path
                     .replace("data/notchcurrency/loot_tables/", "data/notchcurrency/loot_table/")
                     .replace("data/notchcurrency/recipes/", "data/notchcurrency/recipe/")
+                    .replace("data/minecraft/tags/blocks/", "data/minecraft/tags/block/")
         }
         includeEmptyDirs = false
     }

@@ -35,16 +35,16 @@ public class MailboxBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty WALL = BooleanProperty.create("wall");
     public static final BooleanProperty FLAG = BooleanProperty.create("flag");
-    private static final VoxelShape POST = Block.box(6.5, 0.0, 6.5, 9.5, 11.0, 9.5);
+    private static final VoxelShape POST = Block.box(6.5, 0.0, 6.5, 9.5, 9.0, 9.5);
     private static final VoxelShape FLOOR_NS = Shapes.or(POST,
-            Block.box(4.7, 10.5, 2.5, 11.3, 16.0, 13.5));
+            Block.box(4.5, 9.0, 3.5, 11.5, 16.0, 12.5));
     private static final VoxelShape FLOOR_EW = Shapes.or(POST,
-            Block.box(2.5, 10.5, 4.7, 13.5, 16.0, 11.3));
+            Block.box(3.5, 9.0, 4.5, 12.5, 16.0, 11.5));
 
-    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(4.7, 5.0, 12.0, 11.3, 12.0, 16.0);
-    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(4.7, 5.0, 0.0, 11.3, 12.0, 4.0);
-    private static final VoxelShape SHAPE_WALL_WEST = Block.box(12.0, 5.0, 4.7, 16.0, 12.0, 11.3);
-    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 5.0, 4.7, 4.0, 12.0, 11.3);
+    private static final VoxelShape SHAPE_WALL_NORTH = Block.box(4.0, 5.0, 11.5, 12.0, 12.0, 16.0);
+    private static final VoxelShape SHAPE_WALL_SOUTH = Block.box(4.0, 5.0, 0.0, 12.0, 12.0, 4.5);
+    private static final VoxelShape SHAPE_WALL_WEST = Block.box(11.5, 5.0, 4.0, 16.0, 12.0, 12.0);
+    private static final VoxelShape SHAPE_WALL_EAST = Block.box(0.0, 5.0, 4.0, 4.5, 12.0, 12.0);
 
     public MailboxBlock(Properties properties) {
         super(properties);

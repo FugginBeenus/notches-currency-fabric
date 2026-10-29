@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PDP",
+    " L "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:mangrove_planks"
+    },
+    "D": {
+      "item": "minecraft:red_dye"
+    },
+    "L": {
+      "tag": "minecraft:mangrove_logs"
+    }
+  },
+  "result": {
+    "item": "notchcurrency:mangrove_mailbox",
+    "id": "notchcurrency:mangrove_mailbox",
+    "count": 1
+  }
+}

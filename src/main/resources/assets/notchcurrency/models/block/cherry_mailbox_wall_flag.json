@@ -1,0 +1,6 @@
+{
+  "parent": "notchcurrency:block/template_mailbox_wall_flag",
+  "textures": {
+    "planks": "minecraft:block/cherry_planks"
+  }
+}

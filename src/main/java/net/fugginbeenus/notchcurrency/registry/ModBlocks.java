@@ -48,20 +48,36 @@ public final class ModBlocks {
             new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache"))
     );
 
-    public static final Block MAILBOX = Registry.register(
-            BuiltInRegistries.BLOCK,
-            NotchCurrency.id("mailbox"),
-            new net.fugginbeenus.notchcurrency.block.MailboxBlock(
-                    net.fugginbeenus.notchcurrency.compat.Reg.blockProps("mailbox")
-                            .strength(1.5f)
-                            .noOcclusion())
-    );
+    public static final java.util.List<Block> MAILBOXES = new java.util.ArrayList<>();
+    public static final java.util.List<Item> MAILBOX_ITEMS = new java.util.ArrayList<>();
 
-    public static final Item MAILBOX_ITEM = Registry.register(
-            BuiltInRegistries.ITEM,
-            NotchCurrency.id("mailbox"),
-            new BlockItem(MAILBOX, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("mailbox"))
-    );
+    public static final Block MAILBOX = registerMailbox("mailbox", "oak");
+    public static final Item MAILBOX_ITEM = MAILBOX_ITEMS.get(0);
+
+    static {
+        for (String wood : new String[]{"spruce", "birch", "jungle", "acacia", "dark_oak",
+                "mangrove", "cherry", "bamboo", "crimson", "warped"}) {
+            registerMailbox(wood + "_mailbox", wood);
+        }
+    }
+
+    private static Block registerMailbox(String id, String wood) {
+        Block block = Registry.register(BuiltInRegistries.BLOCK, NotchCurrency.id(id),
+                new net.fugginbeenus.notchcurrency.block.MailboxBlock(
+                        net.fugginbeenus.notchcurrency.compat.Reg.blockProps(id)
+                                .strength(1.5f)
+                                .sound(switch (wood) {
+                                    case "cherry" -> net.minecraft.world.level.block.SoundType.CHERRY_WOOD;
+                                    case "bamboo" -> net.minecraft.world.level.block.SoundType.BAMBOO_WOOD;
+                                    case "crimson", "warped" -> net.minecraft.world.level.block.SoundType.NETHER_WOOD;
+                                    default -> net.minecraft.world.level.block.SoundType.WOOD;
+                                })
+                                .noOcclusion()));
+        MAILBOXES.add(block);
+        MAILBOX_ITEMS.add(Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(id),
+                new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps(id))));
+        return block;
+    }
 
     public static final Block LEDGER_BOARD = Registry.register(
             BuiltInRegistries.BLOCK,

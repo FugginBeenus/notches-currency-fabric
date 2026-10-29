@@ -1,0 +1,8 @@
+{
+  "parent": "notchcurrency:block/template_mailbox_flag",
+  "textures": {
+    "planks": "minecraft:block/acacia_planks",
+    "log": "minecraft:block/acacia_log",
+    "log_top": "minecraft:block/acacia_log_top"
+  }
+}
