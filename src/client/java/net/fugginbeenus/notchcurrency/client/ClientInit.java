@@ -38,8 +38,6 @@ public final class ClientInit implements ClientModInitializer {
         });
         net.fugginbeenus.notchcurrency.compat.RegistryAccess.setClientThreadCheck(
                 () -> net.minecraft.client.Minecraft.getInstance().isSameThread());
-        net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register(
-                (message, overlay) -> { if (!overlay) NotchHud.noteChatMessage(message); });
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("waystones")) {
             WaystoneFeeOverlay.register();
         }
@@ -116,11 +114,14 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.MAIL_INBOX, MailInboxScreen::new);
 
         //? if >=1.21.11 {
-        /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+        /*net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.attachElementBefore(
+                net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements.CHAT,
                 net.fugginbeenus.notchcurrency.core.NotchCurrency.id("balance"), new NotchHud());
-        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.attachElementBefore(
+                net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements.CHAT,
                 net.fugginbeenus.notchcurrency.core.NotchCurrency.id("route"), new RouteHud());
-        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.addLast(
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.attachElementBefore(
+                net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements.CHAT,
                 net.fugginbeenus.notchcurrency.core.NotchCurrency.id("bounty_tracker"), new BountyTrackerHud());
         *///?} else {
         HudRenderCallback.EVENT.register(new NotchHud());

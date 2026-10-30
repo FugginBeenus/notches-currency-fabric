@@ -14,7 +14,7 @@ import java.util.List;
 
 public class AnimationDesignerScreen extends Screen {
 
-    private static final int W = 320, H = 260;
+    private static final int W = 320, H = 266;
     private static final int ROW_H = 31, ROWS = 5;
 
     public static java.util.UUID cameFromNpc = null;
@@ -79,8 +79,8 @@ public class AnimationDesignerScreen extends Screen {
                     over(mouseX, mouseY, px + W - 34, ry + 5, 18, 18));
         }
         if (list.size() > ROWS) {
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12, scroll / ROWS + 1, NotchWidgets.pages(list.size(), ROWS),
-                    over(mouseX, mouseY, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12));
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13, scroll / ROWS + 1, NotchWidgets.pages(list.size(), ROWS),
+                    over(mouseX, mouseY, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13));
         }
 
         NotchWidgets.divider(ctx, px + 8, py + H - 54, W - 16);
@@ -125,14 +125,14 @@ public class AnimationDesignerScreen extends Screen {
                 }
             }
             if (list.size() > ROWS) {
-                if (over(mx, my, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 13)) {
                     if (scroll > 0) {
                         NotchWidgets.click();
                         scroll = Math.max(0, scroll - ROWS);
                     }
                     return true;
                 }
-                if (over(mx, my, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13)) {
                     if (scroll + ROWS < list.size()) {
                         NotchWidgets.click();
                         scroll += ROWS;

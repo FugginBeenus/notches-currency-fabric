@@ -125,10 +125,10 @@ public class NpcScheduleScreen extends Screen {
 
         if (entries.size() > VISIBLE_ROWS) {
             int pgY = py + LIST_Y + LIST_H + 4;
-            NotchWidgets.pager(ctx, this.font, px + LIST_X + LIST_W / 2 - 38, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12,
+            NotchWidgets.pager(ctx, this.font, px + LIST_X + LIST_W / 2 - 38, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 13,
                     scroll / VISIBLE_ROWS + 1, NotchWidgets.pages(entries.size(), VISIBLE_ROWS),
-                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 12),
-                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12));
+                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 13),
+                    over(mouseX, mouseY, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 13));
         }
         NotchWidgets.primaryButton(ctx, this.font, px + LIST_X, py + 194, 58, 14, "Add",
                 over(mouseX, mouseY, px + LIST_X, py + 194, 58, 14));
@@ -331,14 +331,14 @@ public class NpcScheduleScreen extends Screen {
             return true;
         }
         int pgY = py + LIST_Y + LIST_H + 4;
-        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 12)) {
+        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 - 38, pgY, 20, 13)) {
             if (scroll > 0) {
                 NotchWidgets.click();
                 scroll = Math.max(0, scroll - VISIBLE_ROWS);
             }
             return true;
         }
-        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 12)) {
+        if (entries.size() > VISIBLE_ROWS && over(mx, my, px + LIST_X + LIST_W / 2 + 18, pgY, 20, 13)) {
             if (scroll + VISIBLE_ROWS < entries.size()) {
                 NotchWidgets.click();
                 scroll += VISIBLE_ROWS;

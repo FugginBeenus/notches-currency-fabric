@@ -104,7 +104,7 @@ public final class BountyTrackerHud implements HudRenderCallback {
             fillRound(ctx, 0, py, PILL_W, ph, 1, bg);
 
             ItemStack icon = e.kill() ? sword() : stackOf(e.targetItemId());
-            ctx.renderItem(icon, 4, py + 5);
+            net.fugginbeenus.notchcurrency.compat.Render.renderItemUnderChat(ctx, icon, 4, py + 5);
 
             int accent = BountyRarity.fromString(e.rarity()).accentArgb();
             int have = e.prog();

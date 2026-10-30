@@ -22,7 +22,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     private static final int W = 248, H = 240;
     private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 158, ROW_H = 20, ROW_STEP = 21;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
-    private static final int PG_LX = 174, PG_RX = 229, PG_Y = 136, PG_BW = 13, PG_H = 13;
+    private static final int PG_LX = 174, PG_RX = 228, PG_Y = 136, PG_BW = 14, PG_H = 13;
 
     private static ItemStack coin;
 

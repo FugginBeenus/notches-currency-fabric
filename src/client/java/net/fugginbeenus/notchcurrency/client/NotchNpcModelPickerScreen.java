@@ -43,7 +43,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     private static final int W = 320, H = 250;
     private static final int COLS = 5, TILE_W = 60, TILE_H = 56;
     private static final int GRID_TOP = 48, VISIBLE_ROWS = 3;
-    private static final int PG_LX = W / 2 - 30, PG_RX = W / 2 + 17, PG_BW = 13, PG_H = 16;
+    private static final int PG_LX = W / 2 - 30, PG_RX = W / 2 + 16, PG_BW = 14, PG_H = 16;
     private static boolean stale = false;
     public static void markStale() {
         stale = true;

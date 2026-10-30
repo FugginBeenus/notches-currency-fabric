@@ -220,6 +220,18 @@ public final class Render {
         //?}
     }
 
+    public static void renderItemUnderChat(net.minecraft.client.gui.GuiGraphics ctx,
+                                           net.minecraft.world.item.ItemStack stack, int x, int y) {
+        //? if <1.21.11 {
+        ctx.pose().pushPose();
+        ctx.pose().translate(0.0f, 0.0f, -140.0f);
+        //?}
+        ctx.renderItem(stack, x, y);
+        //? if <1.21.11 {
+        ctx.pose().popPose();
+        //?}
+    }
+
     public static boolean shiftDown() {
         //? if >=1.21.11 {
         /*com.mojang.blaze3d.platform.Window window = net.minecraft.client.Minecraft.getInstance().getWindow();

@@ -63,8 +63,8 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
 
         int pageCount = totalPages();
         if (pageCount > 1) {
-            NotchWidgets.pager(ctx, this.font, x + 190, x + 227, y + 16, 13, 12, page + 1, pageCount,
-                    over(mouseX, mouseY, x + 190, y + 16, 13, 12), over(mouseX, mouseY, x + 227, y + 16, 13, 12));
+            NotchWidgets.pager(ctx, this.font, x + 190, x + 226, y + 15, 14, 13, page + 1, pageCount,
+                    over(mouseX, mouseY, x + 190, y + 15, 14, 13), over(mouseX, mouseY, x + 226, y + 15, 14, 13));
         }
 
         if (menu.rows.isEmpty()) {
@@ -128,8 +128,8 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
     //?}
         if (button == 0 && totalPages() > 1) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, leftPos + 190, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
-            if (over(mx, my, leftPos + 227, topPos + 16, 13, 12)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
+            if (over(mx, my, leftPos + 190, topPos + 15, 14, 13)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
+            if (over(mx, my, leftPos + 226, topPos + 15, 14, 13)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }
         }
         //? if >=1.21.11 {
         /*return super.mouseClicked(event, doubleClick);

@@ -82,9 +82,9 @@ public class NpcFactionPickerScreen extends Screen {
         }
         if (factions.size() > VISIBLE) {
             int by = py + LIST_Y + VISIBLE * ROW_H + 6;
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, by, 20, 12,
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, by, 20, 13,
                     scroll / VISIBLE + 1, NotchWidgets.pages(factions.size(), VISIBLE),
-                    over(mouseX, mouseY, px + W / 2 - 38, by, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, by, 20, 12));
+                    over(mouseX, mouseY, px + W / 2 - 38, by, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, by, 20, 13));
         }
 
         NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
@@ -110,14 +110,14 @@ public class NpcFactionPickerScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             int by = py + LIST_Y + VISIBLE * ROW_H + 6;
-            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 - 38, by, 20, 12)) {
+            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 - 38, by, 20, 13)) {
                 if (scroll > 0) {
                     NotchWidgets.click();
                     scroll = Math.max(0, scroll - VISIBLE);
                 }
                 return true;
             }
-            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 + 18, by, 20, 12)) {
+            if (factions.size() > VISIBLE && over(mx, my, px + W / 2 + 18, by, 20, 13)) {
                 if (scroll + VISIBLE < factions.size()) {
                     NotchWidgets.click();
                     scroll += VISIBLE;

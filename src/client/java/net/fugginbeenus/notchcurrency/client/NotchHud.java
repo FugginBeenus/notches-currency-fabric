@@ -1,17 +1,12 @@
 package net.fugginbeenus.notchcurrency.client;
 
-import net.minecraft.network.chat.Component;
 //? if >=1.21.11 {
 /*import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 *///?} else {
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 //?}
-import net.fugginbeenus.notchcurrency.core.NotchCurrency;
-import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
 //? if >=1.21.11 {
 /*public final class NotchHud implements HudElement {
@@ -23,23 +18,7 @@ public final class NotchHud implements HudRenderCallback {
     private static final int X_NUDGE = 0;
     private static final int Y_NUDGE = -27;
     private static final int GAP = 4;
-    private static final int ICON_PX = 9;
-    private static final boolean USE_ITEM_ICON = false;
-    private static final ResourceLocation COIN_HUD_TEX =
-            NotchCurrency.id("textures/item/coin.png");
-    private static long chatClashUntil = 0;
-    public static void noteChatMessage(net.minecraft.network.chat.Component message) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null) return;
-        double chatScale = mc.options.chatScale().get();
-        int lineEnd = 4 + (int) Math.ceil(mc.font.width(message) * chatScale);
-        int anchorRight = mc.getWindow().getGuiScaledWidth() / 2 + 91 + X_NUDGE;
-        int balanceW = mc.font.width(String.valueOf(BALANCE));
-        int hudLeft = anchorRight - balanceW - GAP - (USE_ITEM_ICON ? 16 : ICON_PX);
-        if (lineEnd >= hudLeft) {
-            chatClashUntil = System.currentTimeMillis() + 10_000;
-        }
-    }
+    private static final String COIN_GLYPH = "\uE000";
 
     public static void setBalance(long value) {
         BALANCE = value;
@@ -74,25 +53,9 @@ public final class NotchHud implements HudRenderCallback {
         final int textH = mc.font.lineHeight;
         final int textX = anchorRight - textW;
         final int textY = rowY + (9 - textH) / 2;
-        final int iconSize = USE_ITEM_ICON ? 16 : ICON_PX;
-        final int iconX = textX - GAP - iconSize;
-        final int iconY = rowY + (9 - iconSize) / 2;
+        final int iconX = textX - GAP - (mc.font.width(COIN_GLYPH) - 1);
 
-        if (USE_ITEM_ICON) {
-            ItemStack stack = new ItemStack(ModItems.NOTCH_COIN);
-            ctx.renderItem(stack, iconX, iconY);
-            ctx.renderItemDecorations(mc.font, stack, iconX, iconY);
-        } else {
-            //? if >=1.21.11 {
-            /*
-            ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, COIN_HUD_TEX,
-                    iconX, iconY, 0f, 0f, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
-            *///?} else {
-            ctx.blit(COIN_HUD_TEX, iconX, iconY,
-                    0, 0, ICON_PX, ICON_PX, ICON_PX, ICON_PX);
-            //?}
-        }
-
+        ctx.drawString(mc.font, COIN_GLYPH, iconX, textY, 0xFFFFFFFF, false);
         ctx.drawString(mc.font, s, textX, textY, 0xFFFFFFFF, true);
     }
 
@@ -100,10 +63,6 @@ public final class NotchHud implements HudRenderCallback {
         //? if <26.1 {
         if (mc.options.hideGui) return true;
         //?}
-
-        //? if >=1.21 {
-        /*if (System.currentTimeMillis() < chatClashUntil) return true;
-        *///?}
 
         var player = mc.player;
         if (player == null) return true;

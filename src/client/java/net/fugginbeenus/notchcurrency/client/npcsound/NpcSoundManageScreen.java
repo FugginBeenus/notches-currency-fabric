@@ -137,8 +137,8 @@ public class NpcSoundManageScreen extends Screen {
         }
 
         if (all.size() > ROWS) {
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12, scroll / ROWS + 1, NotchWidgets.pages(all.size(), ROWS),
-                    over(mouseX, mouseY, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12));
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 13, scroll / ROWS + 1, NotchWidgets.pages(all.size(), ROWS),
+                    over(mouseX, mouseY, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 13));
         }
 
         int waiting = NpcSoundLoader.imported().size();
@@ -205,14 +205,14 @@ public class NpcSoundManageScreen extends Screen {
                 }
             }
             if (all.size() > ROWS) {
-                if (over(mx, my, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 - 38, py + 44 + ROWS * ROW_H, 20, 13)) {
                     if (scroll > 0) {
                         NotchWidgets.click();
                         scroll = Math.max(0, scroll - ROWS);
                     }
                     return true;
                 }
-                if (over(mx, my, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 + 18, py + 44 + ROWS * ROW_H, 20, 13)) {
                     if (scroll + ROWS < all.size()) {
                         NotchWidgets.click();
                         scroll += ROWS;

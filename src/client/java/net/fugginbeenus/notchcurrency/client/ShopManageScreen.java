@@ -199,9 +199,9 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         ctx.drawString(this.font, "LISTINGS (" + count + "/27)", x + 10, y + 99, NotchTheme.TEXT_DARK, false);
         int pageCount = menu.prop(ShopManageScreenHandler.P_TOTAL_PAGES);
         if (pageCount > 1) {
-            NotchWidgets.pager(ctx, this.font, x + 196, x + 233, y + 97, 13, 11,
+            NotchWidgets.pager(ctx, this.font, x + 196, x + 232, y + 97, 14, 11,
                     menu.prop(ShopManageScreenHandler.P_PAGE) + 1, pageCount,
-                    over(mouseX, mouseY, x + 196, y + 97, 13, 11), over(mouseX, mouseY, x + 233, y + 97, 13, 11));
+                    over(mouseX, mouseY, x + 196, y + 97, 14, 11), over(mouseX, mouseY, x + 232, y + 97, 14, 11));
         }
 
         boolean any = false;
@@ -412,8 +412,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             }
             int pageCount = menu.prop(ShopManageScreenHandler.P_TOTAL_PAGES);
             if (pageCount > 1) {
-                if (over(mx, my, leftPos + 196, topPos + 97, 13, 11)) { NotchWidgets.tick(); clickButton(0); return true; }
-                if (over(mx, my, leftPos + 233, topPos + 97, 13, 11)) { NotchWidgets.tick(); clickButton(1); return true; }
+                if (over(mx, my, leftPos + 196, topPos + 97, 14, 11)) { NotchWidgets.tick(); clickButton(0); return true; }
+                if (over(mx, my, leftPos + 232, topPos + 97, 14, 11)) { NotchWidgets.tick(); clickButton(1); return true; }
             }
             for (int i = 0; i < ShopManageScreenHandler.ROWS; i++) {
                 Row row = row(i);

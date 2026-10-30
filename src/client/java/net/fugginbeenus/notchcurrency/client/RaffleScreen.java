@@ -13,14 +13,14 @@ import net.minecraft.world.item.ItemStack;
 public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
     private static final int W = 198;
-    private static final int H = 218;
+    private static final int H = 214;
 
     private static final int CASE_X = 73, CASE_Y = 22, CASE_W = 52, CASE_H = 52;
 
-    private static final int BUY_Y = 156, BUY_H = 18;
+    private static final int BUY_Y = 167, BUY_H = 18;
     private static final int BUY1_X = 14, BUY5_X = 72, BUY10_X = 130, BUY_W = 54;
-    private static final int CLAIM_X = 14, CLAIM_Y = 178, CLAIM_W = 170, CLAIM_H = 18;
-    private static final int REDEEM_X = 14, REDEEM_Y = 199, REDEEM_W = 170, REDEEM_H = 16;
+    private static final int CLAIM_X = 14, CLAIM_Y = 190, CLAIM_W = 83, CLAIM_H = 16;
+    private static final int REDEEM_X = 101, REDEEM_Y = 190, REDEEM_W = 83, REDEEM_H = 16;
     private static final String[] CLOCK = {
             "..#####..",
             ".#..#..#.",
@@ -77,27 +77,30 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
             String prizeName = hasItem ? prize.getHoverName().getString()
                     : NotchWidgets.coinLabel() + " Jackpot";
-            NotchWidgets.centerText(ctx, this.font, prizeName, x + W / 2 - 0, y + 80, NotchTheme.TEXT_LIGHT, true);
+            while (prizeName.length() > 3 && this.font.width(prizeName) > W - 24) {
+                prizeName = prizeName.substring(0, prizeName.length() - 2) + "…";
+            }
+            NotchWidgets.centerText(ctx, this.font, prizeName, x + W / 2, y + 86, NotchTheme.TEXT_DARK, false);
 
             long pot = menu.prop(RaffleScreenHandler.P_POT) & 0xFFFFFFFFL;
             long guaranteed = menu.prop(RaffleScreenHandler.P_COINS_POOL) & 0xFFFFFFFFL;
             String prizeText = String.format(java.util.Locale.ROOT, "%,d", pot + guaranteed);
             int prizeW = 18 + this.font.width(prizeText) - 1 + 4;
-            NotchWidgets.coinField(ctx, this.font, x + W / 2 - prizeW / 2, y + 87, prizeText, NotchWidgets.COIN_GOLD);
+            NotchWidgets.coinField(ctx, this.font, x + W / 2 - prizeW / 2, y + 96, prizeText, NotchWidgets.COIN_GOLD);
 
-            NotchWidgets.divider(ctx, x + 12, y + 107, W - 24);
+            NotchWidgets.divider(ctx, x + 12, y + 117, W - 24);
 
             int price = menu.prop(RaffleScreenHandler.P_PRICE);
             int yours = menu.prop(RaffleScreenHandler.P_YOURS);
             int total = menu.prop(RaffleScreenHandler.P_TOTAL);
             String odds = (total > 0 && yours > 0) ? String.format("%.1f%%", 100.0 * yours / total) : "0%";
 
-            ctx.drawString(this.font, "Ticket price", x + 14, y + 116, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Ticket price", x + 14, y + 127, NotchTheme.TEXT_DARK, false);
             String priceText = String.format(java.util.Locale.ROOT, "%,d", price);
             int priceW = 18 + this.font.width(priceText) - 1 + 4;
-            NotchWidgets.coinField(ctx, this.font, x + W - 14 - priceW, y + 111, priceText, NotchWidgets.COIN_GOLD);
-            ctx.drawString(this.font, "Your entries: " + yours + "  (" + odds + " to win)", x + 14, y + 131, NotchTheme.TEXT_DARK, false);
-            ctx.drawString(this.font, "Total entries: " + total, x + 14, y + 143, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.coinField(ctx, this.font, x + W - 14 - priceW, y + 122, priceText, NotchWidgets.COIN_GOLD);
+            ctx.drawString(this.font, "Your entries: " + yours + "  (" + odds + " to win)", x + 14, y + 143, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Total entries: " + total, x + 14, y + 155, NotchTheme.TEXT_DARK, false);
 
             NotchWidgets.primaryButton(ctx, this.font, x + BUY1_X, y + BUY_Y, BUY_W, BUY_H, "Buy 1", over(mouseX, mouseY, x + BUY1_X, y + BUY_Y, BUY_W, BUY_H));
             NotchWidgets.primaryButton(ctx, this.font, x + BUY5_X, y + BUY_Y, BUY_W, BUY_H, "Buy 5", over(mouseX, mouseY, x + BUY5_X, y + BUY_Y, BUY_W, BUY_H));
@@ -106,18 +109,27 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
         if (menu.prop(RaffleScreenHandler.P_HAS_CLAIM) == 1) {
             NotchWidgets.goldButton(ctx, this.font, x + CLAIM_X, y + CLAIM_Y, CLAIM_W, CLAIM_H,
-                    "CLAIM PRIZE", over(mouseX, mouseY, x + CLAIM_X, y + CLAIM_Y, CLAIM_W, CLAIM_H));
+                    "Claim prize", over(mouseX, mouseY, x + CLAIM_X, y + CLAIM_Y, CLAIM_W, CLAIM_H));
+        } else {
+            offButton(ctx, x + CLAIM_X, y + CLAIM_Y, CLAIM_W, CLAIM_H, "Claim prize");
         }
 
         if (menu.prop(RaffleScreenHandler.P_LOSERS) > 0 && menu.prop(RaffleScreenHandler.P_CAN_REDEEM) == 1) {
             NotchWidgets.neutralButton(ctx, this.font, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H,
-                    "Redeem an old ticket", over(mouseX, mouseY, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H));
+                    "Redeem ticket", over(mouseX, mouseY, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H));
+        } else {
+            offButton(ctx, x + REDEEM_X, y + REDEEM_Y, REDEEM_W, REDEEM_H, "Redeem ticket");
         }
         NotchWidgets.title(ctx, this.font, "Raffle #" + round, x + W / 2, y + 8, NotchWidgets.Plate.MARQUEE);
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
+    }
+
+    private void offButton(GuiGraphics ctx, int bx, int by, int w, int h, String label) {
+        NotchWidgets.disabledButton(ctx, bx, by, w, h);
+        NotchWidgets.centerText(ctx, this.font, label, bx + w / 2, by + (h - 8) / 2, 0xFF7E7E7E, false);
     }
 
     private void drawPlaceholder(GuiGraphics ctx, int x, int y) {
@@ -203,6 +215,13 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
             if (!prize.isEmpty()) {
                 ctx.renderTooltip(this.font, prize, mouseX, mouseY);
             }
+        }
+        if (over(mouseX, mouseY, this.leftPos + REDEEM_X, this.topPos + REDEEM_Y, REDEEM_W, REDEEM_H)) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Redeem an old ticket"),
+                    Component.literal("Trade one losing ticket for free").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("entries. Once per raffle.").withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
         }
     }
 

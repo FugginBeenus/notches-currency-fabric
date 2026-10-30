@@ -22,7 +22,7 @@ public class DialogueStudioScreen extends Screen {
 
     private static final int W = 400, H = 260;
     private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
-    private static final int PG_Y = H - 25, PG_BW = 13, PG_H = 13;
+    private static final int PG_Y = H - 25, PG_BW = 14, PG_H = 13;
     private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
     private static final int COND_W = 90;

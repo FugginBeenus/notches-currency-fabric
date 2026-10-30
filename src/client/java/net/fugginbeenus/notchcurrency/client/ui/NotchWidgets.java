@@ -292,9 +292,10 @@ public final class NotchWidgets {
             ctx.fill(x + 2, y + 2, x + w - 2, y + h - 2, 0xFF5E5E5E);
         }
         int cx = x + (w - 4) / 2 + 2, cy = y + (h - 1) / 2, color = on ? NotchTheme.TEXT_DARK : 0xFF8A8A8A;
+        int tip = 1 - (h & 1);
         for (int i = 0; i < 4; i++) {
             int xx = left ? cx - 2 + i : cx + 1 - i;
-            ctx.fill(xx, cy - i, xx + 1, cy + i + 1, color);
+            ctx.fill(xx, cy - i, xx + 1, cy + i + 1 + tip, color);
         }
     }
 

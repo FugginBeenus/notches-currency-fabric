@@ -96,9 +96,9 @@ public class NpcPresetScreen extends Screen {
         }
         if (presets.size() > VISIBLE_ROWS) {
             int pgY = py + LIST_Y + LIST_H + 4;
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, pgY, 20, 12,
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, pgY, 20, 13,
                     scroll / VISIBLE_ROWS + 1, NotchWidgets.pages(presets.size(), VISIBLE_ROWS),
-                    over(mouseX, mouseY, px + W / 2 - 38, pgY, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, pgY, 20, 12));
+                    over(mouseX, mouseY, px + W / 2 - 38, pgY, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, pgY, 20, 13));
         }
 
         NotchWidgets.primaryButton(ctx, this.font, px + 16, py + 146, 170, 15, "Load onto this NPC",
@@ -147,14 +147,14 @@ public class NpcPresetScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
             int px = px(), py = py();
             int pgY = py + LIST_Y + LIST_H + 4;
-            if (presets.size() > VISIBLE_ROWS && over(mx, my, px + W / 2 - 38, pgY, 20, 12)) {
+            if (presets.size() > VISIBLE_ROWS && over(mx, my, px + W / 2 - 38, pgY, 20, 13)) {
                 if (scroll > 0) {
                     NotchWidgets.click();
                     scroll = Math.max(0, scroll - VISIBLE_ROWS);
                 }
                 return true;
             }
-            if (presets.size() > VISIBLE_ROWS && over(mx, my, px + W / 2 + 18, pgY, 20, 12)) {
+            if (presets.size() > VISIBLE_ROWS && over(mx, my, px + W / 2 + 18, pgY, 20, 13)) {
                 if (scroll + VISIBLE_ROWS < presets.size()) {
                     NotchWidgets.click();
                     scroll += VISIBLE_ROWS;

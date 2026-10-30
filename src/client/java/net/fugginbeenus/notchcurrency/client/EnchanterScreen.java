@@ -22,7 +22,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     private static final int W = 256, H = 254;
     private static final int TAB_Y = 46, TAB_H = 14;
     private static final int LIST_X = 10, LIST_Y = 66, CARD_W = 236, CARD_H = 26, CARD_STEP = 28, VISIBLE = 3;
-    private static final int PG_LX = 98, PG_RX = 145, PG_Y = 151, PG_BW = 13, PG_H = 12;
+    private static final int PG_LX = 98, PG_RX = 144, PG_Y = 151, PG_BW = 14, PG_H = 13;
 
     private static ItemStack coin;
 

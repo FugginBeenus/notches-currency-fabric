@@ -104,16 +104,16 @@ public class ParticleDesignerScreen extends Screen {
         }
 
         if (list.size() > ROWS) {
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12, scroll / ROWS + 1, NotchWidgets.pages(list.size(), ROWS),
-                    over(mouseX, mouseY, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12));
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13, scroll / ROWS + 1, NotchWidgets.pages(list.size(), ROWS),
+                    over(mouseX, mouseY, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13));
         }
 
         NotchWidgets.divider(ctx, px + 8, py + H - 54, W - 16);
         NotchWidgets.inset(ctx, px + 10, py + H - 49, 176, 14, NotchTheme.DEEP);
         NotchWidgets.primaryButton(ctx, this.font, px + 192, py + H - 49, 116, 14, "+ New effect",
                 over(mouseX, mouseY, px + 192, py + H - 49, 116, 14));
-        NotchWidgets.neutralButton(ctx, this.font, px + W - 84, py + 42 + ROWS * ROW_H, 72, 12, "Textures...",
-                over(mouseX, mouseY, px + W - 84, py + 42 + ROWS * ROW_H, 72, 12));
+        NotchWidgets.neutralButton(ctx, this.font, px + W - 84, py + 42 + ROWS * ROW_H, 72, 13, "Textures...",
+                over(mouseX, mouseY, px + W - 84, py + 42 + ROWS * ROW_H, 72, 13));
         var worn = findNpc();
         if (worn != null) {
             String on = worn.getParticleFx().isBlank() ? "None" : worn.getParticleFx();
@@ -174,14 +174,14 @@ public class ParticleDesignerScreen extends Screen {
                 }
             }
             if (list.size() > ROWS) {
-                if (over(mx, my, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 - 38, py + 42 + ROWS * ROW_H, 20, 13)) {
                     if (scroll > 0) {
                         NotchWidgets.click();
                         scroll = Math.max(0, scroll - ROWS);
                     }
                     return true;
                 }
-                if (over(mx, my, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 12)) {
+                if (over(mx, my, px + W / 2 + 18, py + 42 + ROWS * ROW_H, 20, 13)) {
                     if (scroll + ROWS < list.size()) {
                         NotchWidgets.click();
                         scroll += ROWS;
@@ -189,7 +189,7 @@ public class ParticleDesignerScreen extends Screen {
                     return true;
                 }
             }
-            if (over(mx, my, px + W - 84, py + 42 + ROWS * ROW_H, 72, 12)) {
+            if (over(mx, my, px + W - 84, py + 42 + ROWS * ROW_H, 72, 13)) {
                 NotchWidgets.click();
                 final ParticleDesignerScreen self = this;
                 net.minecraft.client.Minecraft.getInstance().setScreen(

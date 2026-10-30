@@ -16,7 +16,7 @@ public class ParticlePickerScreen extends Screen {
 
     private static final int W = 340, H = 232;
     private static final int LIST_Y = 60, ROW_H = 17, ROWS = 8;
-    private static final int PG_LX = W - 70, PG_RX = W - 23, PG_BW = 13, PG_H = 16;
+    private static final int PG_LX = W - 70, PG_RX = W - 24, PG_BW = 14, PG_H = 16;
 
     private final String current;
     private final java.util.function.Consumer<String> onPick;

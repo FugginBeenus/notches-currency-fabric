@@ -98,10 +98,10 @@ public class NpcModelManageScreen extends Screen {
         }
 
         if (models.size() > VISIBLE) {
-            int pgY = py + LIST_Y + VISIBLE * ROW_H + 4;
-            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, pgY, 20, 12,
+            int pgY = py + LIST_Y + VISIBLE * ROW_H + 3;
+            NotchWidgets.pager(ctx, this.font, px + W / 2 - 38, px + W / 2 + 18, pgY, 20, 13,
                     scroll / VISIBLE + 1, NotchWidgets.pages(models.size(), VISIBLE),
-                    over(mouseX, mouseY, px + W / 2 - 38, pgY, 20, 12), over(mouseX, mouseY, px + W / 2 + 18, pgY, 20, 12));
+                    over(mouseX, mouseY, px + W / 2 - 38, pgY, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, pgY, 20, 13));
         } else if (!status.isEmpty()) {
             ctx.drawString(this.font, fit(status, W - LIST_X * 2), px + LIST_X,
                     py + LIST_Y + VISIBLE * ROW_H + 6,
@@ -147,15 +147,15 @@ public class NpcModelManageScreen extends Screen {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
             List<NpcModelBundle> models = installed();
-            int pgY = py + LIST_Y + VISIBLE * ROW_H + 4;
-            if (models.size() > VISIBLE && over(mx, my, px + W / 2 - 38, pgY, 20, 12)) {
+            int pgY = py + LIST_Y + VISIBLE * ROW_H + 3;
+            if (models.size() > VISIBLE && over(mx, my, px + W / 2 - 38, pgY, 20, 13)) {
                 if (scroll > 0) {
                     NotchWidgets.click();
                     scroll = Math.max(0, scroll - VISIBLE);
                 }
                 return true;
             }
-            if (models.size() > VISIBLE && over(mx, my, px + W / 2 + 18, pgY, 20, 12)) {
+            if (models.size() > VISIBLE && over(mx, my, px + W / 2 + 18, pgY, 20, 13)) {
                 if (scroll + VISIBLE < models.size()) {
                     NotchWidgets.click();
                     scroll += VISIBLE;

@@ -21,7 +21,7 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     private static final int W = 248, H = 232;
     private static final int ROW_X = 8, ROW_W = 232, ROW_H = 20;
     private static final int IN_Y = 34, MINE_Y = 142, ROW_STEP = 21;
-    private static final int PG_LX = 190, PG_RX = 227, PG_BW = 13, PG_H = 11;
+    private static final int PG_LX = 190, PG_RX = 226, PG_BW = 14, PG_H = 11;
 
     private static ItemStack coin;
     private static ItemStack coin() {
