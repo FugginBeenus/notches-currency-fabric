@@ -10,7 +10,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public class TradeScreenHandler extends AbstractContainerMenu {
 
     private final SimpleContainer selfInv  = new SimpleContainer(9);
     private final SimpleContainer otherInv = new SimpleContainer(9);
-    private final ContainerData props = new SimpleContainerData(5);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(5);
 
     private static final int SELF_GRID_X  = 34;
     private static final int SELF_GRID_Y  = 25;
@@ -60,7 +59,7 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         this.leftSideSelf = true;
         hookInventories();
         buildSlots();
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
     }
 
     public TradeScreenHandler(int containerId, Inventory inv, Player player,
@@ -71,7 +70,7 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         this.leftSideSelf = selfOnLeft;
         hookInventories();
         buildSlots();
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
         sendAllDataToRemote();
     }
 
@@ -162,13 +161,9 @@ public class TradeScreenHandler extends AbstractContainerMenu {
 
     private void unreadySelfAndSync() {
         if (session == null) return;
-        boolean changed = false;
-
-        if (player == session.a) {
-            if (session.aReady) { session.aReady = false; changed = true; }
-        } else {
-            if (session.bReady) { session.bReady = false; changed = true; }
-        }
+        boolean changed = session.aReady || session.bReady;
+        session.aReady = false;
+        session.bReady = false;
 
         if (changed) {
             if (session.aHandler != null) session.aHandler.sendAllDataToRemote();

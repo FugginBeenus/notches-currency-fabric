@@ -57,6 +57,14 @@ public final class ClientInit implements ClientModInitializer {
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.COIN_FLIP,
                 net.fugginbeenus.notchcurrency.client.render.CoinFlipBlockEntityRenderer::new);
 
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper
+                .get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+                .registerReloadListener(net.fugginbeenus.notchcurrency.client.ui.Signs.LOADER);
+
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.fugginbeenus.notchcurrency.registry.ModBlockEntities.ATM,
+                net.fugginbeenus.notchcurrency.client.render.ATMBlockEntityRenderer::new);
+
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.COMMON_CRATE,
                 ctx -> new net.fugginbeenus.notchcurrency.client.crate.CrateBlockRenderer(ctx, "common"));

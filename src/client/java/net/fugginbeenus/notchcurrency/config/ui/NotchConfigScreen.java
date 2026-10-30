@@ -20,7 +20,7 @@ import java.util.Set;
 
 public final class NotchConfigScreen extends Screen {
 
-    private static final int ROW_H = 17, HEADER_H = 18;
+    private static final int ROW_H = 17, HEADER_H = 18, TOGGLE_W = 34;
     private static final Set<String> COLLAPSED = new HashSet<>();
 
     private final Screen parent;
@@ -60,7 +60,8 @@ public final class NotchConfigScreen extends Screen {
         listBottom = py + ph - 28;
 
         String keep = search == null ? "" : search.getValue();
-        search = new EditBox(this.font, px + 13, py + 21, pw - 26, 14, Component.literal("search"));
+        search = new EditBox(this.font, px + 27, py + 24, pw - 42, 10, Component.literal("search"));
+        search.setBordered(false);
         search.setMaxLength(64);
         search.setValue(keep);
         search.setResponder(s -> scroll = 0);
@@ -100,24 +101,26 @@ public final class NotchConfigScreen extends Screen {
     @Override
     public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
     //?}
-        //? if >=1.21 {
-        /*renderBackground(ctx, mouseX, mouseY, delta);
-        *///?} else {
-        //? if >=1.21 {
-        /*renderTransparentBackground(ctx);
+        //? if >=26.1 {
+        /*if (this.minecraft != null && this.minecraft.level == null) extractPanorama(ctx, delta);
+        renderTransparentBackground(ctx);
+        *///?} elif >=1.21 {
+        /*if (this.minecraft != null && this.minecraft.level == null) renderPanorama(ctx, delta);
+        renderTransparentBackground(ctx);
         *///?} else {
         renderBackground(ctx);
-        //?}
         //?}
         buildRows();
         scroll = Math.max(0, Math.min(scroll, maxScroll()));
 
         NotchWidgets.panel(ctx, px, py, pw, ph);
         NotchWidgets.title(ctx, this.font, "Notch Currency", px + pw / 2, py + 7, NotchWidgets.Plate.STEEL);
-        NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.PANEL_MID);
+        NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.DEEP);
+        magnifier(ctx, px + 16, py + 23, 0xFFA0A0A0);
 
         ConfigEntry hoveredEntry = null;
         boolean hoveredReset = false;
+        int stripe = 0;
 
         ctx.enableScissor(px + 1, listTop, px + pw - 1, listBottom);
         for (Row row : rows) {
@@ -125,6 +128,7 @@ public final class NotchConfigScreen extends Screen {
             if (ry + HEADER_H < listTop || ry > listBottom) continue;
 
             if (row.header() != null) {
+                stripe = 0;
                 boolean folded = COLLAPSED.contains(row.header());
                 NotchWidgets.triangle(ctx, px + 19, ry + 7, folded, NotchTheme.TEXT_MUTED);
                 ctx.drawString(this.font, row.header(), px + 28, ry + 5, NotchTheme.TEXT_DARK, false);
@@ -135,6 +139,7 @@ public final class NotchConfigScreen extends Screen {
                 boolean rowHover = mouseY >= ry && mouseY < ry + ROW_H
                         && mouseX >= px + 8 && mouseX < px + pw - 18
                         && mouseY >= listTop && mouseY < listBottom;
+                if (stripe++ % 2 == 1) ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x10000000);
                 if (rowHover) {
                     ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x18000000);
                     hoveredEntry = e;
@@ -159,7 +164,7 @@ public final class NotchConfigScreen extends Screen {
             NotchWidgets.inset(ctx, trackX, listTop, trackW, trackH, NotchTheme.PANEL_MID);
             int thumbH = Math.max(16, (int) ((long) trackH * trackH / contentH));
             int thumbY = listTop + (int) ((trackH - thumbH) * (scroll / maxScroll()));
-            ctx.fill(trackX + 1, thumbY, trackX + trackW - 1, thumbY + thumbH, NotchTheme.EDGE);
+            NotchWidgets.button(ctx, trackX, thumbY, trackW, thumbH, draggingBar, false);
         }
 
         NotchWidgets.divider(ctx, px + 10, listBottom + 3, pw - 20);
@@ -175,11 +180,13 @@ public final class NotchConfigScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
         if (search.getValue().isEmpty() && !search.isFocused()) {
-            ctx.drawString(this.font, "Search settings…", px + 18, py + 24, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "Search settings…", px + 27, py + 24, 0xFF808080, false);
         }
         //? if >=26.1 {
-        /*if (editField != null) editField.extractRenderState(ctx, mouseX, mouseY, delta);
+        /*search.extractRenderState(ctx, mouseX, mouseY, delta);
+        if (editField != null) editField.extractRenderState(ctx, mouseX, mouseY, delta);
         *///?} else {
+        search.render(ctx, mouseX, mouseY, delta);
         if (editField != null) editField.render(ctx, mouseX, mouseY, delta);
         //?}
 
@@ -203,38 +210,37 @@ public final class NotchConfigScreen extends Screen {
         int right = px + pw - 20;
         if (e == editing) return;
         if (e instanceof BoolEntry b) {
-            int bx = right - 40;
+            int bx = right - TOGGLE_W;
             boolean hov = rowHover && mouseX >= bx;
             if (b.value) {
-                ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF6FB25D : NotchTheme.ACCENT_GREEN);
-                ctx.drawString(this.font, "ON", bx + 12, ry + 5, NotchTheme.TEXT_LIGHT, true);
+                NotchWidgets.primaryButton(ctx, this.font, bx, ry + 2, TOGGLE_W, 13, "ON", hov);
             } else {
-                ctx.fill(bx, ry + 3, bx + 40, ry + 14, hov ? 0xFF8A8A8A : NotchTheme.PANEL_MID);
-                ctx.drawString(this.font, "OFF", bx + 10, ry + 5, NotchTheme.TEXT_DARK, false);
+                NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, TOGGLE_W, 13, "OFF", hov);
             }
         } else if (e instanceof SliderEntry s) {
             String val = s.value + s.suffix;
             ctx.drawString(this.font, val, right - this.font.width(val), ry + 5,
                     NotchTheme.TEXT_DARK, false);
             int tx = sliderX(), tw = sliderW();
-            NotchWidgets.inset(ctx, tx, ry + 6, tw, 6, NotchTheme.PANEL_MID);
-            int thumb = tx + 1 + (int) ((tw - 8) * s.fraction());
-            ctx.fill(thumb, ry + 4, thumb + 6, ry + 14,
-                    draggingSlider == s ? NotchTheme.ACCENT_GREEN : NotchTheme.EDGE);
+            NotchWidgets.inset(ctx, tx, ry + 6, tw, 6, NotchTheme.DEEP);
+            int thumb = tx + (int) ((tw - 8) * s.fraction());
+            NotchWidgets.button(ctx, thumb, ry + 3, 8, 12,
+                    draggingSlider == s || (rowHover && mouseX >= tx && mouseX < tx + tw), false);
         } else if (e instanceof SelectEntry sel) {
             int bx = right - 110;
-            NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, 110, 14, sel.value(),
+            NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, 110, 13, sel.value(),
                     rowHover && mouseX >= bx);
+            leftTriangle(ctx, bx + 7, ry + 8, NotchTheme.TEXT_MUTED);
+            rightTriangle(ctx, bx + 103, ry + 8, NotchTheme.TEXT_MUTED);
         } else {
             String val = e instanceof NumberEntry n ? Long.toString(n.value)
                     : ((StringEntry) e).value.isEmpty() ? "(blank)" : ((StringEntry) e).value;
-            val = this.font.plainSubstrByWidth(val, 110);
-            int vw = this.font.width(val);
+            val = this.font.plainSubstrByWidth(val, 106);
             boolean hov = rowHover && mouseX >= right - 116;
-            ctx.drawString(this.font, val, right - vw, ry + 4,
+            NotchWidgets.inset(ctx, right - 116, ry + 2, 116, 13, hov ? 0xFFF4F4F4 : 0xFFE6E6E6);
+            ctx.drawString(this.font, val, right - 112, ry + 5,
                     e instanceof StringEntry && ((StringEntry) e).value.isEmpty()
                             ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK, false);
-            if (hov) ctx.fill(right - vw, ry + 13, right, ry + 14, NotchTheme.TEXT_MUTED);
         }
     }
 
@@ -243,6 +249,22 @@ public final class NotchConfigScreen extends Screen {
             int half = 3 - c;
             ctx.fill(cx - 3 + c, cy - half, cx - 2 + c, cy + half + 1, color);
         }
+    }
+
+    private static void rightTriangle(GuiGraphics ctx, int cx, int cy, int color) {
+        for (int c = 0; c < 4; c++) {
+            int half = 3 - c;
+            ctx.fill(cx + 2 - c, cy - half, cx + 3 - c, cy + half + 1, color);
+        }
+    }
+
+    private static void magnifier(GuiGraphics ctx, int x, int y, int color) {
+        ctx.fill(x + 1, y, x + 5, y + 1, color);
+        ctx.fill(x, y + 1, x + 1, y + 5, color);
+        ctx.fill(x + 5, y + 1, x + 6, y + 5, color);
+        ctx.fill(x + 1, y + 5, x + 5, y + 6, color);
+        ctx.fill(x + 5, y + 5, x + 7, y + 7, color);
+        ctx.fill(x + 6, y + 6, x + 9, y + 9, color);
     }
 
     private int labelW() { return pw - 200; }
@@ -321,7 +343,7 @@ public final class NotchConfigScreen extends Screen {
             NotchWidgets.tick();
             return true;
         }
-        if (e instanceof BoolEntry b && mouseX >= right - 40 && mouseX < right) {
+        if (e instanceof BoolEntry b && mouseX >= right - TOGGLE_W && mouseX < right) {
             b.value = !b.value;
             NotchWidgets.tick();
             return true;

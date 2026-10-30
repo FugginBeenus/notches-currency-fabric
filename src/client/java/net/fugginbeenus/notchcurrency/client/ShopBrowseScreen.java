@@ -79,9 +79,11 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7,
-                NotchWidgets.Plate.forSign(net.fugginbeenus.notchcurrency.shop.SignStyles.byIndex(
-                        menu.prop(ShopBrowseScreenHandler.P_SIGN), net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT)));
+        net.fugginbeenus.notchcurrency.client.ui.Signs.draw(ctx, this.font,
+                net.fugginbeenus.notchcurrency.shop.SignStyles.read(menu::prop, ShopBrowseScreenHandler.P_SIGN,
+                        net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
+                net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT,
+                NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7 - 14);
 
         boolean canBuy = open();
         NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);

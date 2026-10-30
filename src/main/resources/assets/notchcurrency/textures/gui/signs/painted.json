@@ -1,0 +1,10 @@
+{
+  "name": "Painted",
+  "order": 10,
+  "left": 4,
+  "right": 4,
+  "padding": 9,
+  "top": 0,
+  "color": "#FFFFFF",
+  "shadow": true
+}

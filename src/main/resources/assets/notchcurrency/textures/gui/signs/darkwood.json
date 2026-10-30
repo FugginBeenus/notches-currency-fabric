@@ -1,0 +1,10 @@
+{
+  "name": "Dark wood",
+  "order": 2,
+  "left": 12,
+  "right": 12,
+  "padding": 10,
+  "top": 6,
+  "color": "#F5E6C8",
+  "shadow": true
+}

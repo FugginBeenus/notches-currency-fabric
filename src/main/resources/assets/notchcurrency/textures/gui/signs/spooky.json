@@ -1,0 +1,11 @@
+{
+  "name": "Spooky",
+  "order": 8,
+  "left": 10,
+  "right": 10,
+  "padding": 10,
+  "top": 0,
+  "color": "#9CFF8A",
+  "shadow": false,
+  "outline": "#1E5A2A"
+}

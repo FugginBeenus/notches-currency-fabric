@@ -8,6 +8,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -19,6 +20,7 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
             HOTBAR_Y = MailLayout.HOTBAR_Y;
 
     private final SimpleContainer parcel = new SimpleContainer(PARCEL_SLOTS);
+    private final DataSlot waiting = DataSlot.standalone();
 
     public boolean parcelSlotsHidden;
 
@@ -41,12 +43,21 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInv, col, INV_X + col * 18, HOTBAR_Y));
         }
+        addDataSlot(waiting);
     }
 
     public static void open(ServerPlayer sp) {
         sp.openMenu(new SimpleMenuProvider(
-                (containerId, inv, p) -> new MailPostScreenHandler(containerId, inv),
+                (containerId, inv, p) -> {
+                    MailPostScreenHandler menu = new MailPostScreenHandler(containerId, inv);
+                    menu.waiting.set(MailState.get(sp.level().getServer()).count(sp.getUUID()));
+                    return menu;
+                },
                 Component.literal("Mailbox")));
+    }
+
+    public int waiting() {
+        return waiting.get();
     }
 
     public boolean isEmpty() {

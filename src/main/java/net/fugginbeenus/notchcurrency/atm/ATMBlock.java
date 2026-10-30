@@ -1,10 +1,13 @@
 package net.fugginbeenus.notchcurrency.atm;
 
+import net.fugginbeenus.notchcurrency.block.entity.ATMBlockEntity;
 import net.fugginbeenus.notchcurrency.ui.ATMTestScreenHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -15,18 +18,22 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class ATMBlock extends HorizontalDirectionalBlock {
+public class ATMBlock extends HorizontalDirectionalBlock implements EntityBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final BooleanProperty ANIMATED = BooleanProperty.create("animated");
 
     private static final VoxelShape SHAPE = Block.box(
             1.0, 0.0, 2.0,
@@ -35,18 +42,34 @@ public class ATMBlock extends HorizontalDirectionalBlock {
 
     public ATMBlock(Properties settings) {
         super(settings);
-        this.registerDefaultState(getStateDefinition().any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(getStateDefinition().any().setValue(FACING, Direction.NORTH).setValue(ANIMATED, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, ANIMATED);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.defaultBlockState()
-                .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+                .setValue(FACING, ctx.getHorizontalDirection().getOpposite())
+                .setValue(ANIMATED, true);
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return state.getValue(ANIMATED) ? new ATMBlockEntity(pos, state) : null;
+    }
+
+    @Override
+    public boolean isRandomlyTicking(BlockState state) {
+        return !state.getValue(ANIMATED);
+    }
+
+    @Override
+    public void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        world.setBlock(pos, state.setValue(ANIMATED, true), Block.UPDATE_ALL);
     }
 
     @Override

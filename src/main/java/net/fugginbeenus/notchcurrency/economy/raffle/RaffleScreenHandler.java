@@ -8,8 +8,6 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,7 +31,7 @@ public class RaffleScreenHandler extends AbstractContainerMenu {
     private final Inventory playerInv;
     private final Level world;
     private final SimpleContainer prizeInv = new SimpleContainer(1);
-    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(PROP_COUNT);
 
     private static final class ReadOnlySlot extends Slot {
         ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
@@ -45,7 +43,7 @@ public class RaffleScreenHandler extends AbstractContainerMenu {
         super(ModScreenHandlers.RAFFLE, containerId);
         this.playerInv = inv;
         this.world = inv.player.level();
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
         this.addSlot(new ReadOnlySlot(prizeInv, 0, -10000, -10000));
         refreshFromState();
     }

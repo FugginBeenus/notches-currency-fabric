@@ -11,8 +11,6 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +25,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_COUNT = 2, P_OPEN = 3, P_RENT_PAUSED = 4,
             P_PEND_HI = 5, P_PEND_LO = 6, P_BARTER_COUNT = 7, P_RENT_COST = 8, P_UNPAID = 9,
             P_IS_OP = 10, P_ADMIN_MODE = 11, P_SIGN = 12;
-    private static final int PROP_COUNT = 13;
+    private static final int PROP_COUNT = P_SIGN + SignStyles.SLOTS;
 
     public static final int ACTION_RENAME = 0, ACTION_GREETING = 1, ACTION_TOGGLE_OPEN = 2,
             ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5, ACTION_SIGN = 6;
@@ -38,7 +36,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     @Nullable private final UUID npcId;
     @Nullable private final PlayerShop shop;
     private final SimpleContainer rowInv = new SimpleContainer(ROWS);
-    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(PROP_COUNT);
     private final net.minecraft.world.entity.player.Player viewer;
     private int page = 0;
 
@@ -62,7 +60,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         this.npcId = npcId;
         this.shop = shop;
         this.viewer = inv.player;
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
         for (int i = 0; i < ROWS; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
         }
@@ -91,7 +89,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         props.set(P_RENT_COST, (int) Math.min(Integer.MAX_VALUE, ShopRent.rentFor(shop.getListings().size())));
         props.set(P_UNPAID, shop.getUnpaidRentCycles());
         props.set(P_ADMIN_MODE, shop.isAdminMode() ? 1 : 0);
-        props.set(P_SIGN, SignStyles.indexOf(shop.getSign()));
+        SignStyles.write(props, P_SIGN, shop.getSign());
         boolean op = viewer instanceof net.minecraft.server.level.ServerPlayer sp
                 && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         props.set(P_IS_OP, (op && ShopRules.adminShops) ? 1 : 0);

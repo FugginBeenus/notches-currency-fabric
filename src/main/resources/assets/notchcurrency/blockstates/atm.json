@@ -1,8 +1,34 @@
 {
   "variants": {
-    "facing=north": { "model": "notchcurrency:block/atm" },
-    "facing=south": { "model": "notchcurrency:block/atm", "y": 180 },
-    "facing=west":  { "model": "notchcurrency:block/atm", "y": 270 },
-    "facing=east":  { "model": "notchcurrency:block/atm", "y": 90 }
+    "animated=false,facing=north": {
+      "model": "notchcurrency:block/atm"
+    },
+    "animated=false,facing=south": {
+      "model": "notchcurrency:block/atm",
+      "y": 180
+    },
+    "animated=false,facing=west": {
+      "model": "notchcurrency:block/atm",
+      "y": 270
+    },
+    "animated=false,facing=east": {
+      "model": "notchcurrency:block/atm",
+      "y": 90
+    },
+    "animated=true,facing=north": {
+      "model": "notchcurrency:block/atm_base"
+    },
+    "animated=true,facing=south": {
+      "model": "notchcurrency:block/atm_base",
+      "y": 180
+    },
+    "animated=true,facing=west": {
+      "model": "notchcurrency:block/atm_base",
+      "y": 270
+    },
+    "animated=true,facing=east": {
+      "model": "notchcurrency:block/atm_base",
+      "y": 90
+    }
   }
 }

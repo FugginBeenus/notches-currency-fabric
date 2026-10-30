@@ -1,0 +1,10 @@
+{
+  "name": "Plain",
+  "order": 0,
+  "left": 4,
+  "right": 4,
+  "padding": 8,
+  "top": 0,
+  "color": "#404040",
+  "shadow": false
+}

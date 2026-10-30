@@ -240,8 +240,8 @@ public class NpcLooksScreen extends Screen {
                     String.format("%+.1f", npc == null ? 0f : npc.getNameOffset()));
             ctx.drawString(this.font, "Name Y lifts the label.", px + RX, py + 112,
                     NotchTheme.TEXT_MUTED, false);
-            String plateName = net.fugginbeenus.notchcurrency.shop.SignStyles.NAMES.get(
-                    net.fugginbeenus.notchcurrency.shop.SignStyles.indexOf(plate(npc)));
+            String plateName = net.fugginbeenus.notchcurrency.client.ui.Signs.name(plate(npc),
+                    net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT);
             NotchWidgets.neutralButton(ctx, this.font, px + RX, py + 130, 172, 14, "Plate: " + plateName,
                     over(mouseX, mouseY, px + RX, py + 130, 172, 14));
             ctx.drawString(this.font, "The sign on its talk window.", px + RX, py + 148,
@@ -350,7 +350,8 @@ public class NpcLooksScreen extends Screen {
                 }
                 if (over(mx, my, px + RX, py + 130, 172, 14)) {
                     NotchWidgets.click();
-                    platePicker.open(plate(npc), npc == null ? "" : npc.getName().getString());
+                    platePicker.open(plate(npc), net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT,
+                            npc == null ? "" : npc.getName().getString());
                     return true;
                 }
             }

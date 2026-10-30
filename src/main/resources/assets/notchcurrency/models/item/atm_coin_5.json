@@ -1,0 +1,90 @@
+{
+	"credit": "Made with Blockbench",
+	"texture_size": [
+		32,
+		32
+	],
+	"textures": {
+		"0": "notchcurrency:block/currency_block",
+		"particle": "notchcurrency:block/currency_block"
+	},
+	"elements": [
+		{
+			"from": [
+				0.47765,
+				16.70806,
+				10
+			],
+			"to": [
+				3.47765,
+				19.70806,
+				12
+			],
+			"rotation": {
+				"angle": -22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						5.625,
+						8.75,
+						6,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						5.375,
+						8.75,
+						5.625,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						5,
+						8.75,
+						5.375,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						4.75,
+						8.75,
+						5,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						5,
+						8.5,
+						5.375,
+						8.75
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						5.375,
+						8.75,
+						5.75,
+						8.5
+					],
+					"texture": "#0"
+				}
+			}
+		}
+	]
+}

@@ -105,24 +105,7 @@ public final class NotchWidgets {
     }
 
     public enum Plate {
-        PLAIN, STEEL, BRASS, MARQUEE, STAMP, PARCHMENT, WOOD, DARKWOOD, STONE, ROYAL, MYSTIC, SPOOKY, FROST, PAINTED;
-
-        public static Plate forSign(String id) {
-            if (id == null) return PLAIN;
-            return switch (id) {
-                case "wood" -> WOOD;
-                case "darkwood" -> DARKWOOD;
-                case "stone" -> STONE;
-                case "brass" -> BRASS;
-                case "parchment" -> PARCHMENT;
-                case "royal" -> ROYAL;
-                case "mystic" -> MYSTIC;
-                case "spooky" -> SPOOKY;
-                case "frost" -> FROST;
-                case "painted" -> PAINTED;
-                default -> PLAIN;
-            };
-        }
+        PLAIN, STEEL, BRASS, MARQUEE, STAMP, PARCHMENT, WOOD
     }
 
     private static final int GOLD = 0xFFF3B93F, GOLD_HI = 0xFFFFE08A, GOLD_LO = 0xFFC4842A;
@@ -208,86 +191,6 @@ public final class NotchWidgets {
                 dot(ctx, x + 5, top + 2, 0xFF3E3E3E);
                 dot(ctx, x + w - 6, top + 2, 0xFF3E3E3E);
                 ctx.drawString(tr, label, x + 10, top + 4, 0xFFFFF3D6, true);
-            }
-            case DARKWOOD -> {
-                int w = tw + 20, x = cx - w / 2;
-                hooks(ctx, x, w, top);
-                shell(ctx, x, top, w, 15, NotchTheme.OUTLINE, 0xFF5C3C24, 0xFF7C5634, 0xFF3A2614);
-                ctx.fill(x + 3, top + 5, x + 7, top + 6, 0xFF4A301C);
-                ctx.fill(x + w - 8, top + 9, x + w - 3, top + 10, 0xFF4A301C);
-                dot(ctx, x + 5, top + 2, 0xFF2A2A2A);
-                dot(ctx, x + w - 6, top + 2, 0xFF2A2A2A);
-                ctx.drawString(tr, label, x + 10, top + 4, 0xFFF5E6C8, true);
-            }
-            case STONE -> {
-                int w = tw + 18, h = 15, x = cx - w / 2;
-                shell(ctx, x, top, w, h, NotchTheme.OUTLINE, 0xFF8E8E8E, 0xFF8E8E8E, 0xFF8E8E8E);
-                for (int j = top + 2; j < top + h - 2; j++) {
-                    for (int i = x + 2; i < x + w - 2; i++) {
-                        int k = Math.floorMod(i * 7 + j * 13, 11);
-                        if (k == 0) dot(ctx, i, j, 0xFF7A7A7A);
-                        else if (k == 5) dot(ctx, i, j, 0xFFA2A2A2);
-                    }
-                }
-                ctx.fill(x + 2, top + 1, x + w - 2, top + 2, 0xFFB8B8B8);
-                ctx.fill(x + 1, top + 2, x + 2, top + h - 2, 0xFFB8B8B8);
-                ctx.fill(x + 2, top + h - 2, x + w - 2, top + h - 1, 0xFF5E5E5E);
-                ctx.fill(x + w - 2, top + 2, x + w - 1, top + h - 2, 0xFF5E5E5E);
-                ctx.drawString(tr, label, x + 9, top + 5, 0xFFC4C4C4, false);
-                ctx.drawString(tr, label, x + 9, top + 4, 0xFF3A3A3A, false);
-            }
-            case ROYAL -> {
-                int w = tw + 24, h = 15, x = cx - w / 2;
-                shell(ctx, x, top, w, h, NotchTheme.OUTLINE, 0xFF8C1C24, 0xFFB8323A, 0xFF5A0F15);
-                rectLine(ctx, x + 3, top + 3, w - 6, h - 6, NotchTheme.ACCENT_GOLD);
-                for (int dx : new int[]{x + 6, x + w - 7}) {
-                    dot(ctx, dx, top + 6, NotchTheme.GOLD_HI);
-                    dot(ctx, dx - 1, top + 7, NotchTheme.ACCENT_GOLD);
-                    dot(ctx, dx + 1, top + 7, NotchTheme.ACCENT_GOLD);
-                    dot(ctx, dx, top + 8, NotchTheme.GOLD_LO);
-                }
-                ctx.drawString(tr, label, x + 12, top + 4, NotchTheme.GOLD_HI, true);
-            }
-            case MYSTIC -> {
-                int w = tw + 22, h = 15, x = cx - w / 2;
-                long phase = System.currentTimeMillis() / 350;
-                shell(ctx, x, top, w, h, NotchTheme.OUTLINE, 0xFF261C46, 0xFF3E2F6B, 0xFF1A1232);
-                int[][] stars = {{4, 4}, {w - 5, 4}, {5, 10}, {w - 5, 10}, {w / 2 - 14, 2}, {w / 2 + 16, 12}, {8, 7}, {w - 9, 7}};
-                for (int i = 0; i < stars.length; i++) {
-                    boolean on = (i + phase) % 3 != 0;
-                    dot(ctx, x + stars[i][0], top + stars[i][1], on ? 0xFFFFFFFF : 0xFF8A7ACA);
-                    if (on && i % 2 == 0) {
-                        dot(ctx, x + stars[i][0] - 1, top + stars[i][1], 0xFF8A7ACA);
-                        dot(ctx, x + stars[i][0] + 1, top + stars[i][1], 0xFF8A7ACA);
-                    }
-                }
-                ctx.drawString(tr, label, x + 11, top + 4, 0xFFE8E0FF, true);
-            }
-            case SPOOKY -> {
-                int w = tw + 20, h = 15, x = cx - w / 2, tx = x + 10, ty = top + 4;
-                shell(ctx, x, top, w, h, NotchTheme.OUTLINE, 0xFF1C2420, 0xFF2E4A36, 0xFF121814);
-                ctx.fill(x + 3, top + 3, x + 4, top + 7, 0xFF6E7E72);
-                ctx.fill(x + 3, top + 3, x + 7, top + 4, 0xFF6E7E72);
-                dot(ctx, x + 4, top + 4, 0xFF6E7E72);
-                dot(ctx, x + 5, top + 5, 0xFF6E7E72);
-                int[][] glow = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-                for (int[] o : glow) ctx.drawString(tr, label, tx + o[0], ty + o[1], 0xFF1E5A2A, false);
-                ctx.drawString(tr, label, tx, ty, 0xFF9CFF8A, false);
-            }
-            case FROST -> {
-                int w = tw + 18, h = 15, x = cx - w / 2;
-                shell(ctx, x, top, w, h, 0xFF2E5A7A, 0xFFD6F0FF, 0xFFFFFFFF, 0xFF9ACFEA);
-                int[][] icicles = {{6, 3}, {w / 2, 2}, {w - 8, 3}, {12, 2}, {w - 14, 2}};
-                for (int[] ic : icicles) {
-                    ctx.fill(x + ic[0], top + h, x + ic[0] + 1, top + h + ic[1], 0xFFBFE6FF);
-                    dot(ctx, x + ic[0], top + h + ic[1] - 1, 0xFFFFFFFF);
-                }
-                ctx.drawString(tr, label, x + 9, top + 4, 0xFF1E4A6A, false);
-            }
-            case PAINTED -> {
-                int w = tw + 18, x = cx - w / 2;
-                shell(ctx, x, top, w, 15, NotchTheme.OUTLINE, 0xFF2E9A8E, 0xFF4EBAAE, 0xFF206B63);
-                ctx.drawString(tr, label, x + 9, top + 4, 0xFFFFFFFF, true);
             }
             default -> {
                 int w = tw + 16, x = cx - w / 2;
@@ -420,6 +323,16 @@ public final class NotchWidgets {
         ctx.renderItem(coinStack(), x, y);
         ctx.drawString(tr, text, x + 18, y + 5, color, true);
         return w;
+    }
+
+    public static void blit(GuiGraphics ctx, net.minecraft.resources.ResourceLocation tex, int x, int y,
+                            int u, int v, int w, int h, int texW, int texH) {
+        //? if >=1.21.11 {
+        /*ctx.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, x, y, (float) u, (float) v,
+                w, h, texW, texH);
+        *///?} else {
+        ctx.blit(tex, x, y, (float) u, (float) v, w, h, texW, texH);
+        //?}
     }
 
     public static void tile(GuiGraphics ctx, net.minecraft.resources.ResourceLocation tex, int x, int y, int w, int h) {

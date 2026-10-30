@@ -1,0 +1,430 @@
+{
+	"credit": "Made with Blockbench",
+	"texture_size": [
+		32,
+		32
+	],
+	"textures": {
+		"0": "notchcurrency:block/currency_block",
+		"particle": "notchcurrency:block/currency_block"
+	},
+	"elements": [
+		{
+			"from": [
+				8.82683,
+				18.2388,
+				7
+			],
+			"to": [
+				14.82683,
+				24.2388,
+				9
+			],
+			"rotation": {
+				"angle": 22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						7.375,
+						3.75,
+						8.125,
+						4.5
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						7.125,
+						3.75,
+						7.375,
+						4.5
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						8.375,
+						3.75,
+						9.125,
+						4.5
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						8.125,
+						3.75,
+						8.375,
+						4.5
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						8.125,
+						3.75,
+						7.375,
+						3.5
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						8.875,
+						3.5,
+						8.125,
+						3.75
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"from": [
+				5.28983,
+				17.53909,
+				4
+			],
+			"to": [
+				8.28983,
+				20.53909,
+				6
+			],
+			"rotation": {
+				"angle": 22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						5,
+						8.75,
+						5.375,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						4.75,
+						8.75,
+						5,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						5.625,
+						8.75,
+						6,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						5.375,
+						8.75,
+						5.625,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						5.375,
+						8.75,
+						5,
+						8.5
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						5.75,
+						8.5,
+						5.375,
+						8.75
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"from": [
+				12.52235,
+				16.70806,
+				4
+			],
+			"to": [
+				15.52235,
+				19.70806,
+				6
+			],
+			"rotation": {
+				"angle": 22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						5,
+						8.75,
+						5.375,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						4.75,
+						8.75,
+						5,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						5.625,
+						8.75,
+						6,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						5.375,
+						8.75,
+						5.625,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						5.375,
+						8.75,
+						5,
+						8.5
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						5.75,
+						8.5,
+						5.375,
+						8.75
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"from": [
+				7.71017,
+				17.53909,
+				10
+			],
+			"to": [
+				10.71017,
+				20.53909,
+				12
+			],
+			"rotation": {
+				"angle": -22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						5.625,
+						8.75,
+						6,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						5.375,
+						8.75,
+						5.625,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						5,
+						8.75,
+						5.375,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						4.75,
+						8.75,
+						5,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						5,
+						8.5,
+						5.375,
+						8.75
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						5.375,
+						8.75,
+						5.75,
+						8.5
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"from": [
+				0.47765,
+				16.70806,
+				10
+			],
+			"to": [
+				3.47765,
+				19.70806,
+				12
+			],
+			"rotation": {
+				"angle": -22.5,
+				"axis": "z",
+				"origin": [
+					8,
+					12,
+					8
+				]
+			},
+			"faces": {
+				"north": {
+					"uv": [
+						5.625,
+						8.75,
+						6,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						5.375,
+						8.75,
+						5.625,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						5,
+						8.75,
+						5.375,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						4.75,
+						8.75,
+						5,
+						9.125
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						5,
+						8.5,
+						5.375,
+						8.75
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						5.375,
+						8.75,
+						5.75,
+						8.5
+					],
+					"texture": "#0"
+				}
+			}
+		}
+	],
+	"overrides": [
+		{
+			"predicate": {
+				"custom_model_data": 1
+			},
+			"model": "notchcurrency:item/atm_coin_1"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 2
+			},
+			"model": "notchcurrency:item/atm_coin_2"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 3
+			},
+			"model": "notchcurrency:item/atm_coin_3"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 4
+			},
+			"model": "notchcurrency:item/atm_coin_4"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 5
+			},
+			"model": "notchcurrency:item/atm_coin_5"
+		}
+	]
+}

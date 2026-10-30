@@ -1,0 +1,10 @@
+{
+  "name": "Brass",
+  "order": 4,
+  "left": 8,
+  "right": 8,
+  "padding": 10,
+  "top": 0,
+  "color": "#FFE08A",
+  "shadow": true
+}

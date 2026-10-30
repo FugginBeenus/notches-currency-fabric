@@ -1,0 +1,10 @@
+{
+  "name": "Wood",
+  "order": 1,
+  "left": 12,
+  "right": 12,
+  "padding": 10,
+  "top": 6,
+  "color": "#FFF3D6",
+  "shadow": true
+}

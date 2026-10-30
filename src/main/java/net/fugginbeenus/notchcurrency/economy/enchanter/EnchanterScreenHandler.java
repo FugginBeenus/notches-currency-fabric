@@ -16,8 +16,6 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -35,12 +33,12 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
 
     private final SimpleContainer input = new SimpleContainer(1);
     private final Inventory playerInv;
-    private final ContainerData props = new SimpleContainerData(11);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(11);
 
     public EnchanterScreenHandler(int containerId, Inventory inv) {
         super(ModScreenHandlers.ENCHANTER, containerId);
         this.playerInv = inv;
-        addDataSlots(props);
+        addDataSlots(props.halves());
         props.set(P_MULTIPLIER, EnchanterManager.costMultiplierPercent);
         props.set(P_EXTRACT_COST, EnchanterManager.extractCost);
         props.set(P_TREASURE, EnchanterManager.allowTreasure ? 1 : 0);

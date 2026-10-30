@@ -12,8 +12,6 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +36,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
 
     private final Inventory playerInv;
     private final SimpleContainer samples = new SimpleContainer(SLOT_COUNT);
-    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(PROP_COUNT);
     private final String currentSaleDesc;
     private final String currentBarterDesc;
 
@@ -61,7 +59,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         this.listingId = hasListing ? listingId : null;
         this.currentSaleDesc = saleDesc;
         this.currentBarterDesc = barterDesc;
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
         props.set(P_HAS_LISTING, hasListing ? 1 : 0);
         props.set(P_PRICE, price);
         props.set(P_STOCK, stock);

@@ -1,0 +1,10 @@
+{
+  "name": "Parchment",
+  "order": 5,
+  "left": 12,
+  "right": 12,
+  "padding": 12,
+  "top": 0,
+  "color": "#523E2A",
+  "shadow": false
+}

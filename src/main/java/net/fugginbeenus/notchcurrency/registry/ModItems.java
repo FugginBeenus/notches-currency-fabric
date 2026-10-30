@@ -61,6 +61,12 @@ public final class ModItems {
             new Item(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("coin_tails"))
     );
 
+    public static final Item ATM_COINS = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("atm_coins"),
+            new Item(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("atm_coins"))
+    );
+
     public static final Item NOTCH_NPC_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("notch_npc"),

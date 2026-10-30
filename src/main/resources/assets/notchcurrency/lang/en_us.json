@@ -21,6 +21,7 @@
   "block.notchcurrency.coin_flip": "Coin Flip",
   "item.notchcurrency.crate_key": "Crate Key",
   "item.notchcurrency.coin_tails": "Coin (Tails)",
+  "item.notchcurrency.atm_coins": "ATM Coins",
   "item.notchcurrency.notch_npc": "Notch NPC",
   "item.notchcurrency.route_planner": "Route Planner",
   "entity.notchcurrency.notch_npc": "Notch NPC",

@@ -366,8 +366,9 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, leftPos + 172, topPos + 224, 76, 15)) {
                 NotchWidgets.click();
-                signPicker.open(net.fugginbeenus.notchcurrency.shop.SignStyles.byIndex(
-                                menu.prop(ShopManageScreenHandler.P_SIGN), net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
+                signPicker.open(net.fugginbeenus.notchcurrency.shop.SignStyles.read(menu::prop,
+                                ShopManageScreenHandler.P_SIGN, net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
+                        net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT,
                         NotchWidgets.colorize(nameField == null ? menu.shopName() : nameField.getValue()));
                 return true;
             }

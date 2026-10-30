@@ -24,6 +24,11 @@ public final class ModBlockEntities {
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("coin_flip"),
                     FabricBlockEntityTypeBuilder.create(CoinFlipBlockEntity::new, ModBlocks.COIN_FLIP).build());
 
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.ATMBlockEntity> ATM =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("atm"),
+                    FabricBlockEntityTypeBuilder.create(
+                            net.fugginbeenus.notchcurrency.block.entity.ATMBlockEntity::new, ModBlocks.ATM).build());
+
     private ModBlockEntities() {}
 
     public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.CrateBlockEntity> COMMON_CRATE =

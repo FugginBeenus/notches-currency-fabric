@@ -32,7 +32,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
     @Nullable private final UUID npcId;
     @Nullable private final PlayerShop shop;
     private final SimpleContainer rowInv = new SimpleContainer(PER_PAGE);
-    private final ContainerData props = new SimpleContainerData(5);
+    private final ContainerData props = new SimpleContainerData(P_SIGN + SignStyles.SLOTS);
     private int page = 0;
 
     private static final class ReadOnlySlot extends Slot {
@@ -84,7 +84,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
         if (shop == null) return;
         props.set(P_STATUS, !shop.isOpen() ? STATUS_CLOSED
                 : shop.isRentPaused() ? STATUS_RENT_PAUSED : STATUS_OPEN);
-        props.set(P_SIGN, SignStyles.indexOf(shop.getSign()));
+        SignStyles.write(props, P_SIGN, shop.getSign());
 
         List<ShopListing> listings = shop.getListings();
         int totalPages = Math.max(1, (listings.size() + PER_PAGE - 1) / PER_PAGE);

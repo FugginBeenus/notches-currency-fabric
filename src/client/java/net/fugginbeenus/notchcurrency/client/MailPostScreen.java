@@ -150,7 +150,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, MailLayout.W, MailLayout.H);
         NotchWidgets.title(ctx, this.font, this.title.getString(), x + MailLayout.W / 2, y + 6, NotchWidgets.Plate.STAMP);
-        MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, 0, mouseX, mouseY);
+        MailTabs.draw(ctx, this.font, x, y, MailTabs.OUTBOX, this.menu.waiting(), mouseX, mouseY);
 
         refreshCoinsHint();
         drawParcelSide(ctx, x, y, mouseX, mouseY);

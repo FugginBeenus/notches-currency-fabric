@@ -1,0 +1,10 @@
+{
+  "name": "Royal",
+  "order": 6,
+  "left": 10,
+  "right": 10,
+  "padding": 12,
+  "top": 0,
+  "color": "#FFD56B",
+  "shadow": true
+}

@@ -159,8 +159,11 @@ public final class TradeManager {
         }
 
         void updateOffer(ServerPlayer who, int money, boolean ready) {
-            if (who == a) { aMoney = Math.max(0, money); aReady = ready; }
-            else if (who == b) { bMoney = Math.max(0, money); bReady = ready; }
+            int m = Math.max(0, money);
+            boolean changed = (who == a && m != aMoney) || (who == b && m != bMoney);
+            if (who == a) { aMoney = m; aReady = ready; }
+            else if (who == b) { bMoney = m; bReady = ready; }
+            if (changed) { aReady = false; bReady = false; }
 
             if (aHandler != null) aHandler.sendAllDataToRemote();
             if (bHandler != null) bHandler.sendAllDataToRemote();

@@ -1,0 +1,11 @@
+{
+  "name": "Stone",
+  "order": 3,
+  "left": 8,
+  "right": 8,
+  "padding": 9,
+  "top": 0,
+  "color": "#3A3A3A",
+  "shadow": false,
+  "emboss": "#C4C4C4"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Frost",
+  "order": 9,
+  "left": 14,
+  "right": 16,
+  "padding": 9,
+  "top": 0,
+  "color": "#1E4A6A",
+  "shadow": false
+}

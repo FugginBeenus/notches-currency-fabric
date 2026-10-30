@@ -13,8 +13,6 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -25,12 +23,12 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
     private final SimpleContainer input = new SimpleContainer(1);
     private final Inventory playerInv;
     public static final int P_FEE_FLAT = 0, P_FEE_PERCENT = 1, P_FEE_MAX = 2;
-    private final ContainerData props = new SimpleContainerData(3);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(3);
 
     public AuctionListingScreenHandler(int containerId, Inventory inv) {
         super(ModScreenHandlers.AUCTION_LISTING, containerId);
         this.playerInv = inv;
-        addDataSlots(props);
+        addDataSlots(props.halves());
         props.set(P_FEE_FLAT, AuctionConfig.LISTING_FEE_FLAT);
         props.set(P_FEE_PERCENT, AuctionConfig.LISTING_FEE_PERCENT);
         props.set(P_FEE_MAX, AuctionConfig.LISTING_FEE_MAX);

@@ -1,0 +1,12 @@
+{
+  "name": "Mystic",
+  "order": 7,
+  "left": 12,
+  "right": 12,
+  "padding": 11,
+  "top": 0,
+  "frames": 3,
+  "frametime": 7,
+  "color": "#E8E0FF",
+  "shadow": true
+}

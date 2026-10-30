@@ -75,8 +75,9 @@ public class NpcDialogueScreen extends Screen {
         String heading = npc != null && npc.hasCustomName()
                 ? npc.getCustomName().getString()
                 : npcName;
-        NotchWidgets.title(ctx, this.font, heading, px + W / 2, py + 8,
-                npc != null ? NotchWidgets.Plate.forSign(npc.getNamePlate()) : NotchWidgets.Plate.PLAIN);
+        net.fugginbeenus.notchcurrency.client.ui.Signs.draw(ctx, this.font,
+                npc != null ? npc.getNamePlate() : net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT,
+                net.fugginbeenus.notchcurrency.shop.SignStyles.NPC_DEFAULT, heading, px + W / 2, py + 8 - 14);
         if (!bannerText().isEmpty()) {
             NotchWidgets.centerText(ctx, this.font, bannerText(), px + W / 2, py + 18,
                     NotchTheme.TEXT_MUTED, false);

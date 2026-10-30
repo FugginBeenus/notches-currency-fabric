@@ -19,15 +19,17 @@ import java.util.List;
 
 public class TradeOffersScreenHandler extends AbstractContainerMenu {
 
-    public static final int INCOMING = 5, OUTGOING = 5;
+    public static final int INCOMING = 4, OUTGOING = 4;
 
-    public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_INCOMING = 2, P_OUTGOING = 3;
-    private static final int PROP_COUNT = 4;
+    public static final int P_PAGE = 0, P_TOTAL_PAGES = 1, P_INCOMING = 2, P_OUTGOING = 3,
+            P_MINE_PAGE = 4, P_MINE_PAGES = 5;
+    private static final int PROP_COUNT = 6;
 
     private final Inventory playerInv;
     private final SimpleContainer inv = new SimpleContainer(INCOMING + OUTGOING);
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
     private int page = 0;
+    private int minePage = 0;
 
     private static final class ReadOnlySlot extends Slot {
         ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
@@ -74,9 +76,16 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
         }
 
         List<TradeOffer> outgoing = state.outgoingBy(sp.getUUID());
+        int minePages = Math.max(1, (outgoing.size() + OUTGOING - 1) / OUTGOING);
+        if (minePage >= minePages) minePage = minePages - 1;
+        if (minePage < 0) minePage = 0;
         props.set(P_OUTGOING, outgoing.size());
+        props.set(P_MINE_PAGE, minePage);
+        props.set(P_MINE_PAGES, minePages);
+        int mineStart = minePage * OUTGOING;
         for (int i = 0; i < OUTGOING; i++) {
-            inv.setItem(INCOMING + i, i < outgoing.size() ? display(outgoing.get(i), true) : ItemStack.EMPTY);
+            int idx = mineStart + i;
+            inv.setItem(INCOMING + i, idx < outgoing.size() ? display(outgoing.get(idx), true) : ItemStack.EMPTY);
         }
     }
 
@@ -115,6 +124,8 @@ public class TradeOffersScreenHandler extends AbstractContainerMenu {
         if (!(player instanceof ServerPlayer)) return false;
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1;
+        else if (id == 2) minePage = Math.max(0, minePage - 1);
+        else if (id == 3) minePage = minePage + 1;
         else return false;
         refresh();
         broadcastChanges();

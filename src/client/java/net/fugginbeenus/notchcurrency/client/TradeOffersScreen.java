@@ -18,9 +18,10 @@ import java.util.UUID;
 
 public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreenHandler> {
 
-    private static final int W = 248, H = 236;
+    private static final int W = 248, H = 232;
     private static final int ROW_X = 8, ROW_W = 232, ROW_H = 20;
-    private static final int IN_Y = 34, MINE_Y = 152, ROW_STEP = 21;
+    private static final int IN_Y = 34, MINE_Y = 142, ROW_STEP = 21;
+    private static final int PG_LX = 190, PG_RX = 227, PG_BW = 13, PG_H = 11;
 
     private static ItemStack coin;
     private static ItemStack coin() {
@@ -130,15 +131,10 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     //?}
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
-        NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
+        NotchWidgets.title(ctx, this.font, "Trade Offers", x + W / 2, y + 8, NotchWidgets.Plate.BRASS);
 
-        ctx.drawString(this.font, "OFFERS FOR YOU", x + 10, y + 24, NotchTheme.TEXT_DARK, false);
-        int pageCount = menu.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
-        if (pageCount > 1) {
-            NotchWidgets.pager(ctx, this.font, x + 190, x + 227, y + 22, 13, 11,
-                    menu.prop(TradeOffersScreenHandler.P_PAGE) + 1, pageCount,
-                    over(mouseX, mouseY, x + 190, y + 22, 13, 11), over(mouseX, mouseY, x + 227, y + 22, 13, 11));
-        }
+        section(ctx, "Offers for you", y + IN_Y - 8, TradeOffersScreenHandler.P_PAGE,
+                TradeOffersScreenHandler.P_TOTAL_PAGES, mouseX, mouseY);
         boolean anyIn = false;
         for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {
             Row r = row(menu.incomingStack(i));
@@ -148,11 +144,11 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         }
         if (!anyIn) {
             NotchWidgets.centerText(ctx, this.font, "No offers waiting for you.",
-                    x + W / 2, y + IN_Y + 20, NotchTheme.TEXT_MUTED, false);
+                    x + W / 2, y + IN_Y + 34, NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.divider(ctx, x + 8, y + MINE_Y - 8, W - 16);
-        ctx.drawString(this.font, "YOUR OFFERS", x + 10, y + MINE_Y - 6, NotchTheme.TEXT_DARK, false);
+        section(ctx, "Your offers", y + MINE_Y - 8, TradeOffersScreenHandler.P_MINE_PAGE,
+                TradeOffersScreenHandler.P_MINE_PAGES, mouseX, mouseY);
         boolean anyMine = false;
         for (int i = 0; i < TradeOffersScreenHandler.OUTGOING; i++) {
             Row r = row(menu.outgoingStack(i));
@@ -161,8 +157,10 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
             drawRow(ctx, r, mineY(i), true, mouseX, mouseY);
         }
         if (!anyMine) {
-            NotchWidgets.centerText(ctx, this.font, "You have no open offers. Use /trade offer to create one.",
-                    x + W / 2, y + MINE_Y + 14, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.font, "You have no open offers.",
+                    x + W / 2, y + MINE_Y + 28, NotchTheme.TEXT_MUTED, false);
+            NotchWidgets.centerText(ctx, this.font, "Make one with /trade offer",
+                    x + W / 2, y + MINE_Y + 40, NotchTheme.TEXT_MUTED, false);
         }
         //? if >=26.1 {
         /*
@@ -193,6 +191,25 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
         for (int i = 0; i < TradeOffersScreenHandler.OUTGOING; i++) {
             if (tooltipFor(ctx, row(menu.outgoingStack(i)), mineY(i), true, mouseX, mouseY)) return;
         }
+    }
+
+    private void section(GuiGraphics ctx, String label, int ly, int pageProp, int pagesProp, int mouseX, int mouseY) {
+        int x = this.leftPos, pages = menu.prop(pagesProp);
+        int ruleEnd = pages > 1 ? PG_LX - 12 : W - 16;
+        NotchWidgets.stampLabel(ctx, x + 8, ly, ruleEnd, label);
+        if (pages > 1) {
+            int py = ly - PG_H / 2;
+            NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, py, PG_BW, PG_H, menu.prop(pageProp) + 1, pages,
+                    over(mouseX, mouseY, x + PG_LX, py, PG_BW, PG_H), over(mouseX, mouseY, x + PG_RX, py, PG_BW, PG_H));
+        }
+    }
+
+    private boolean pageClick(int mx, int my, int ly, int pagesProp, int backId) {
+        if (menu.prop(pagesProp) <= 1) return false;
+        int py = topPos + ly - PG_H / 2;
+        if (over(mx, my, leftPos + PG_LX, py, PG_BW, PG_H)) { NotchWidgets.tick(); clickButton(backId); return true; }
+        if (over(mx, my, leftPos + PG_RX, py, PG_BW, PG_H)) { NotchWidgets.tick(); clickButton(backId + 1); return true; }
+        return false;
     }
 
     private boolean tooltipFor(GuiGraphics ctx, Row r, int ry, boolean mine, int mouseX, int mouseY) {
@@ -232,11 +249,8 @@ public class TradeOffersScreen extends AbstractContainerScreen<TradeOffersScreen
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            int pageCount = menu.prop(TradeOffersScreenHandler.P_TOTAL_PAGES);
-            if (pageCount > 1) {
-                if (over(mx, my, leftPos + 190, topPos + 22, 13, 11)) { NotchWidgets.tick(); clickButton(0); return true; }
-                if (over(mx, my, leftPos + 227, topPos + 22, 13, 11)) { NotchWidgets.tick(); clickButton(1); return true; }
-            }
+            if (pageClick(mx, my, IN_Y - 8, TradeOffersScreenHandler.P_TOTAL_PAGES, 0)) return true;
+            if (pageClick(mx, my, MINE_Y - 8, TradeOffersScreenHandler.P_MINE_PAGES, 2)) return true;
             int bxIn = leftPos + ROW_X + ROW_W - 54;
             for (int i = 0; i < TradeOffersScreenHandler.INCOMING; i++) {
                 Row r = row(menu.incomingStack(i));

@@ -7,8 +7,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -23,13 +21,13 @@ public class CoinFlipScreenHandler extends AbstractContainerMenu {
 
     private final Inventory playerInv;
     private final Level world;
-    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    private final net.fugginbeenus.notchcurrency.core.WideData props = new net.fugginbeenus.notchcurrency.core.WideData(PROP_COUNT);
 
     public CoinFlipScreenHandler(int containerId, Inventory inv) {
         super(ModScreenHandlers.COIN_FLIP, containerId);
         this.playerInv = inv;
         this.world = inv.player.level();
-        this.addDataSlots(props);
+        this.addDataSlots(props.halves());
         refresh();
     }
 
