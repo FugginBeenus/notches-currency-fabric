@@ -30,8 +30,8 @@ public final class NotchConfig {
         public String bountyTrackerCorner = "TOP_RIGHT";
         public int bountyTrackerX = 6;
         public int bountyTrackerY = 40;
-        public int bountyTrackerScale = 100;
-        public int bountyTrackerOpacity = 85;
+        public int bountyTrackerScale = 60;
+        public int bountyTrackerOpacity = 25;
         public String bountyTrackerTextColour = "FFFFFF";
         public String bountyTrackerBackColour = "000000";
         public String bountyTrackerDoneColour = "55BB55";

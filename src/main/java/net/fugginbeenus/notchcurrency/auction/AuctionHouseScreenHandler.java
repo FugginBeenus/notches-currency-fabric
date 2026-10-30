@@ -32,9 +32,9 @@ public class AuctionHouseScreenHandler extends AbstractContainerMenu {
     public static final int LISTING_SIZE    = LISTING_COLUMNS * LISTING_ROWS;
     private static final int SLOT_SIZE        = 18;
     private static final int LISTING_START_X  = 9;
-    private static final int LISTING_START_Y  = 28;
+    public static final int LISTING_START_Y  = 35;
     private static final int PLAYER_INV_START_X = 9;
-    private static final int PLAYER_INV_START_Y = 127;
+    public static final int PLAYER_INV_START_Y = 136;
     private static final int HOTBAR_START_X = 9;
     private static final int HOTBAR_START_Y = PLAYER_INV_START_Y + 58;
     public static final int POPUP_COLUMNS = 5;

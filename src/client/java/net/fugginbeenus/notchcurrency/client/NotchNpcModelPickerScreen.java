@@ -43,6 +43,7 @@ public class NotchNpcModelPickerScreen extends Screen {
     private static final int W = 320, H = 250;
     private static final int COLS = 5, TILE_W = 60, TILE_H = 56;
     private static final int GRID_TOP = 48, VISIBLE_ROWS = 3;
+    private static final int PG_LX = W / 2 - 30, PG_RX = W / 2 + 17, PG_BW = 13, PG_H = 16;
     private static boolean stale = false;
     public static void markStale() {
         stale = true;
@@ -53,7 +54,6 @@ public class NotchNpcModelPickerScreen extends Screen {
     private int px, py, gridX, gridY;
     private EditBox search;
     private int scrollRow = 0;
-    private boolean draggingScroll = false;
 
     public NotchNpcModelPickerScreen(NotchNpcEditorScreen editor) {
         super(Component.literal("Choose Model"));
@@ -171,8 +171,7 @@ public class NotchNpcModelPickerScreen extends Screen {
         NotchWidgets.inset(ctx, px + 56, py + 26, W - 92, 14, NotchTheme.DEEP);
 
         int totalRows = (filtered.size() + COLS - 1) / COLS;
-        int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
-        if (scrollRow > maxScroll) scrollRow = maxScroll;
+        scrollRow = NotchWidgets.pageStart(scrollRow, totalRows, VISIBLE_ROWS);
 
         int gridH = VISIBLE_ROWS * TILE_H;
         ctx.enableScissor(gridX, gridY, gridX + COLS * TILE_W, gridY + gridH);
@@ -186,18 +185,18 @@ public class NotchNpcModelPickerScreen extends Screen {
         }
         ctx.disableScissor();
 
-        if (maxScroll > 0) {
-            int sbX = gridX + COLS * TILE_W + 1, sbW = 6;
-            NotchWidgets.inset(ctx, sbX, gridY, sbW, gridH, NotchTheme.DEEP);
-            int thumbH = Math.max(14, gridH * VISIBLE_ROWS / totalRows);
-            int thumbY = gridY + (gridH - thumbH) * scrollRow / maxScroll;
-            NotchWidgets.button(ctx, sbX, thumbY, sbW, thumbH, over(mouseX, mouseY, sbX, gridY, sbW, gridH), false);
+        int pages = NotchWidgets.pages(totalRows, VISIBLE_ROWS);
+        if (pages > 1) {
+            NotchWidgets.pager(ctx, this.font, px + PG_LX, px + PG_RX, py + H - 22, PG_BW, PG_H,
+                    scrollRow / VISIBLE_ROWS + 1, pages,
+                    over(mouseX, mouseY, px + PG_LX, py + H - 22, PG_BW, PG_H),
+                    over(mouseX, mouseY, px + PG_RX, py + H - 22, PG_BW, PG_H));
         }
 
-        NotchWidgets.primaryButton(ctx, this.font, px + W / 2 + 4, py + H - 22, 90, 16, "Manage models",
-                over(mouseX, mouseY, px + W / 2 + 4, py + H - 22, 90, 16));
-        NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 94, py + H - 22, 90, 16, "Back",
-                over(mouseX, mouseY, px + W / 2 - 94, py + H - 22, 90, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + W - 102, py + H - 22, 90, 16, "Manage models",
+                over(mouseX, mouseY, px + W - 102, py + H - 22, 90, 16));
+        NotchWidgets.neutralButton(ctx, this.font, px + 12, py + H - 22, 90, 16, "Back",
+                over(mouseX, mouseY, px + 12, py + H - 22, 90, 16));
 
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -236,21 +235,26 @@ public class NotchNpcModelPickerScreen extends Screen {
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (over(mx, my, px + W / 2 + 4, py + H - 22, 90, 16)) {
+            if (over(mx, my, px + W - 102, py + H - 22, 90, 16)) {
                 NotchWidgets.click();
                 Minecraft.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelManageScreen(this));
                 return true;
             }
-            if (over(mx, my, px + W / 2 - 94, py + H - 22, 90, 16)) {
+            if (over(mx, my, px + 12, py + H - 22, 90, 16)) {
                 NotchWidgets.click();
                 Minecraft.getInstance().setScreen(editor);
                 return true;
             }
-            int gridH = VISIBLE_ROWS * TILE_H, sbX = gridX + COLS * TILE_W + 1;
-            if (mx >= sbX && mx < sbX + 6 && my >= gridY && my < gridY + gridH) {
-                draggingScroll = true;
-                scrollbarTo(my, gridH);
+            int totalRows = (filtered.size() + COLS - 1) / COLS;
+            if (totalRows > VISIBLE_ROWS && over(mx, my, px + PG_LX, py + H - 22, PG_BW, PG_H)) {
+                if (scrollRow > 0) NotchWidgets.tick();
+                scrollRow = NotchWidgets.pageStart(Math.max(0, scrollRow - VISIBLE_ROWS), totalRows, VISIBLE_ROWS);
+                return true;
+            }
+            if (totalRows > VISIBLE_ROWS && over(mx, my, px + PG_RX, py + H - 22, PG_BW, PG_H)) {
+                if (scrollRow + VISIBLE_ROWS < totalRows) NotchWidgets.tick();
+                scrollRow = NotchWidgets.pageStart(scrollRow + VISIBLE_ROWS, totalRows, VISIBLE_ROWS);
                 return true;
             }
             if (mx >= gridX && mx < gridX + COLS * TILE_W && my >= gridY && my < gridY + VISIBLE_ROWS * TILE_H) {
@@ -279,54 +283,9 @@ public class NotchNpcModelPickerScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
         int totalRows = (filtered.size() + COLS - 1) / COLS;
-        int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
-        scrollRow = Math.max(0, Math.min(maxScroll, scrollRow - (int) Math.signum(amount)));
+        scrollRow = NotchWidgets.pageStart(Math.max(0, scrollRow - (int) Math.signum(amount) * VISIBLE_ROWS),
+                totalRows, VISIBLE_ROWS);
         return true;
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-    //?}
-        if (draggingScroll) {
-            scrollbarTo(mouseY, VISIBLE_ROWS * TILE_H);
-            return true;
-        }
-        //? if >=1.21.11 {
-        /*return super.mouseDragged(event, dx, dy);
-        *///?} else {
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    //?}
-        draggingScroll = false;
-        //? if >=1.21.11 {
-        /*return super.mouseReleased(event);
-        *///?} else {
-        return super.mouseReleased(mouseX, mouseY, button);
-        //?}
-    }
-
-    private void scrollbarTo(double my, int gridH) {
-        int totalRows = (filtered.size() + COLS - 1) / COLS;
-        int maxScroll = Math.max(0, totalRows - VISIBLE_ROWS);
-        if (maxScroll == 0) { scrollRow = 0; return; }
-        float t = (float) ((my - gridY) / gridH);
-        scrollRow = Math.max(0, Math.min(maxScroll, Math.round(t * maxScroll)));
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

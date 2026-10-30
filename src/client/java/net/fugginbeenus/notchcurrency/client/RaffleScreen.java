@@ -81,18 +81,23 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
 
             long pot = menu.prop(RaffleScreenHandler.P_POT) & 0xFFFFFFFFL;
             long guaranteed = menu.prop(RaffleScreenHandler.P_COINS_POOL) & 0xFFFFFFFFL;
-            NotchWidgets.centerText(ctx, this.font, "Prize: " + (pot + guaranteed) + " " + NotchWidgets.coinName(), x + W / 2, y + 92, NotchTheme.TEXT_DARK, false);
+            String prizeText = String.format(java.util.Locale.ROOT, "%,d", pot + guaranteed);
+            int prizeW = 18 + this.font.width(prizeText) - 1 + 4;
+            NotchWidgets.coinField(ctx, this.font, x + W / 2 - prizeW / 2, y + 87, prizeText, NotchWidgets.COIN_GOLD);
 
-            NotchWidgets.divider(ctx, x + 12, y + 104, W - 24);
+            NotchWidgets.divider(ctx, x + 12, y + 107, W - 24);
 
             int price = menu.prop(RaffleScreenHandler.P_PRICE);
             int yours = menu.prop(RaffleScreenHandler.P_YOURS);
             int total = menu.prop(RaffleScreenHandler.P_TOTAL);
             String odds = (total > 0 && yours > 0) ? String.format("%.1f%%", 100.0 * yours / total) : "0%";
 
-            ctx.drawString(this.font, "Ticket price: " + price + " " + NotchWidgets.coinName(), x + 14, y + 112, NotchTheme.TEXT_DARK, false);
-            ctx.drawString(this.font, "Your entries: " + yours + "  (" + odds + " to win)", x + 14, y + 124, NotchTheme.TEXT_DARK, false);
-            ctx.drawString(this.font, "Total entries: " + total, x + 14, y + 136, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Ticket price", x + 14, y + 116, NotchTheme.TEXT_DARK, false);
+            String priceText = String.format(java.util.Locale.ROOT, "%,d", price);
+            int priceW = 18 + this.font.width(priceText) - 1 + 4;
+            NotchWidgets.coinField(ctx, this.font, x + W - 14 - priceW, y + 111, priceText, NotchWidgets.COIN_GOLD);
+            ctx.drawString(this.font, "Your entries: " + yours + "  (" + odds + " to win)", x + 14, y + 131, NotchTheme.TEXT_DARK, false);
+            ctx.drawString(this.font, "Total entries: " + total, x + 14, y + 143, NotchTheme.TEXT_DARK, false);
 
             NotchWidgets.primaryButton(ctx, this.font, x + BUY1_X, y + BUY_Y, BUY_W, BUY_H, "Buy 1", over(mouseX, mouseY, x + BUY1_X, y + BUY_Y, BUY_W, BUY_H));
             NotchWidgets.primaryButton(ctx, this.font, x + BUY5_X, y + BUY_Y, BUY_W, BUY_H, "Buy 5", over(mouseX, mouseY, x + BUY5_X, y + BUY_Y, BUY_W, BUY_H));

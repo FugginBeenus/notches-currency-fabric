@@ -43,9 +43,10 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         String old = priceField == null
                 ? (menu.priceProp() > 0 ? String.valueOf(menu.priceProp()) : "")
                 : priceField.getValue();
-        priceField = new EditBox(this.font, this.leftPos + 50, this.topPos + 50, 56, 10, Component.literal("Price"));
+        priceField = new EditBox(this.font, this.leftPos + 62, this.topPos + 53, 41, 10, Component.literal("Price"));
         priceField.setMaxLength(7);
         priceField.setBordered(false);
+        priceField.setTextColor(NotchWidgets.COIN_GOLD);
         priceField.setHint(Component.literal("0").withStyle(ChatFormatting.DARK_GRAY));
         net.fugginbeenus.notchcurrency.compat.Render.setFilter(priceField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         priceField.setValue(old);
@@ -54,20 +55,21 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         String oldPays = paysField == null
                 ? (menu.paysProp() > 0 ? String.valueOf(menu.paysProp()) : "")
                 : paysField.getValue();
-        paysField = numberBox(this.leftPos + 154, this.topPos + 50, 40, "0", oldPays);
+        paysField = numberBox(this.leftPos + 164, this.topPos + 53, 31, "0", oldPays);
         paysField.setMaxLength(7);
+        paysField.setTextColor(NotchWidgets.COIN_GOLD);
         addRenderableWidget(paysField);
 
         String oldRefill = refillField == null
                 ? (menu.restockToProp() > 0 ? String.valueOf(menu.restockToProp()) : "")
                 : refillField.getValue();
-        refillField = numberBox(this.leftPos + 62, this.topPos + 176, 30, "0", oldRefill);
+        refillField = numberBox(this.leftPos + 62, this.topPos + 178, 30, "0", oldRefill);
         addRenderableWidget(refillField);
 
         String oldLimit = limitField == null
                 ? (menu.limitProp() > 0 ? String.valueOf(menu.limitProp()) : "")
                 : limitField.getValue();
-        limitField = numberBox(this.leftPos + 154, this.topPos + 176, 32, "off", oldLimit);
+        limitField = numberBox(this.leftPos + 162, this.topPos + 178, 32, "off", oldLimit);
         addRenderableWidget(limitField);
 
         boolean editing = menu.hasListing();
@@ -129,11 +131,10 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             ctx.drawString(this.font, "Each sale gives " + sale.getCount(), x + 34, y + 25, NotchTheme.TEXT_DARK, false);
             ctx.drawString(this.font, "(sample returns on close)", x + 34, y + 35, NotchTheme.TEXT_MUTED, false);
         }
-        ctx.drawString(this.font, "Price", x + 12, y + 50, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + 46, y + 47, 64, 14, NotchTheme.DEEP);
-        ctx.drawString(this.font, NotchCurrency.coinIcon(), x + 112, y + 50, NotchTheme.TEXT_GOLD, false);
-        ctx.drawString(this.font, "Pays", x + 124, y + 50, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + 150, y + 47, 48, 14, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Price", x + 12, y + 53, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.coinInput(ctx, x + 44, y + 48, 62);
+        ctx.drawString(this.font, "Pays", x + 116, y + 53, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.coinInput(ctx, x + 146, y + 48, 52);
 
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.BARTER_X - 1, y + ShopListingEditScreenHandler.BARTER_Y - 1);
         ItemStack barter = menu.barterSample();
@@ -147,39 +148,34 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
             ctx.drawString(this.font, "(sample returns on close)", x + 34, y + 83, NotchTheme.TEXT_MUTED, false);
         }
         if (editing && !menu.currentBarterDesc().isEmpty()) {
-            NotchWidgets.dangerButton(ctx, this.font, x + 150, y + 70, 48, 13, "Clear",
-                    over(mouseX, mouseY, x + 150, y + 70, 48, 13));
+            NotchWidgets.dangerButton(ctx, this.font, x + 150, y + 73, 48, 14, "Clear",
+                    over(mouseX, mouseY, x + 150, y + 73, 48, 14));
         }
 
-        MutableComponent pays = Component.empty();
-        boolean anyPrice = false;
         int p = price();
-        if (p > 0) { pays.append(NotchCurrency.coins(p)); anyPrice = true; }
-        String bn = !barter.isEmpty() ? barter.getHoverName().getString() : "";
-        if (bn.length() > 8) bn = bn.substring(0, 7) + "…";
-        if (!barter.isEmpty()) {
-            if (anyPrice) pays.append(Component.literal(" + "));
-            pays.append(Component.literal(barter.getCount() + "× " + bn));
-            anyPrice = true;
-        } else if (editing && !menu.currentBarterDesc().isEmpty()) {
-            if (anyPrice) pays.append(Component.literal(" + "));
-            pays.append(Component.literal(menu.currentBarterDesc()));
-            anyPrice = true;
+        String barterText = !barter.isEmpty() ? barter.getCount() + "× " + barter.getHoverName().getString()
+                : editing ? menu.currentBarterDesc() : "";
+        MutableComponent line = Component.literal("Buyer pays: ");
+        if (p > 0) line.append(NotchCurrency.coins(p));
+        if (!barterText.isEmpty()) {
+            if (p > 0) line.append(Component.literal(" + "));
+            line.append(Component.literal(fit(barterText, 186 - this.font.width(line))));
         }
-        Component summary = anyPrice ? Component.literal("Buyer pays: ").append(pays)
+        boolean anyPrice = p > 0 || !barterText.isEmpty();
+        Component summary = anyPrice ? line
                 : menu.paysProp() > 0 ? Component.literal("You buy this one, you don't sell it.")
-                : Component.literal("Set a Price to sell, or a Pays amount to buy.");
-        ctx.drawString(this.font, summary, x + 12, y + 98, anyPrice ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
+                : Component.literal("Set a Price to sell, or Pays to buy.");
+        ctx.drawString(this.font, summary, x + 12, y + 96, anyPrice ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
 
         NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.STOCK_X - 1, y + ShopListingEditScreenHandler.STOCK_Y - 1);
         ctx.drawString(this.font, "Stock: " + menu.stockProp(), x + 34, y + 112, NotchTheme.TEXT_DARK, false);
         if (editing) {
             ctx.drawString(this.font, "drop stacks here", x + 34, y + 122, NotchTheme.TEXT_MUTED, false);
             boolean canTake = menu.stockProp() > 0;
-            NotchWidgets.neutralButton(ctx, this.font, x + 150, y + 109, 48, 14, "Take",
-                    canTake && over(mouseX, mouseY, x + 150, y + 109, 48, 14));
+            NotchWidgets.neutralButton(ctx, this.font, x + 150, y + 111, 48, 14, "Take",
+                    canTake && over(mouseX, mouseY, x + 150, y + 111, 48, 14));
         } else {
-            ctx.drawString(this.font, "save first to add stock", x + 34, y + 122, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "press Create to add stock", x + 34, y + 122, NotchTheme.TEXT_MUTED, false);
         }
 
         NotchWidgets.primaryButton(ctx, this.font, x + 12, y + 134, 70, 16,
@@ -191,33 +187,34 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
         NotchWidgets.neutralButton(ctx, this.font, x + 150, y + 134, 48, 16, "Back",
                 over(mouseX, mouseY, x + 150, y + 134, 48, 16));
 
-        NotchWidgets.divider(ctx, x + 8, y + 154, W - 16);
+        NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
 
         refillField.setVisible(editing);
         limitField.setVisible(editing);
         if (editing) {
             ctx.drawString(this.font, "Restock", x + 12, y + 161, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.neutralButton(ctx, this.font, x + 62, y + 157, 136, 14,
-                    menu.restockModeProp().label(), over(mouseX, mouseY, x + 62, y + 157, 136, 14));
+            NotchWidgets.neutralButton(ctx, this.font, x + 62, y + 158, 136, 14,
+                    menu.restockModeProp().label(), over(mouseX, mouseY, x + 62, y + 158, 136, 14));
 
-            ctx.drawString(this.font, "Refill to", x + 12, y + 179, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, x + 58, y + 173, 38, 14, NotchTheme.DEEP);
-            ctx.drawString(this.font, "Max each", x + 104, y + 179, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.inset(ctx, x + 150, y + 173, 40, 14, NotchTheme.DEEP);
+            ctx.drawString(this.font, "Refill to", x + 12, y + 178, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, x + 58, y + 175, 38, 14, NotchTheme.DEEP);
+            ctx.drawString(this.font, "Max each", x + 106, y + 178, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.inset(ctx, x + 158, y + 175, 40, 14, NotchTheme.DEEP);
 
             boolean dyn = menu.dynamicProp();
-            boolean dynHover = over(mouseX, mouseY, x + 12, y + 191, 186, 13);
+            boolean dynHover = over(mouseX, mouseY, x + 12, y + 192, 186, 14);
             if (dyn) {
-                NotchWidgets.goldButton(ctx, this.font, x + 12, y + 191, 186, 13, "Prices follow demand", dynHover);
+                NotchWidgets.goldButton(ctx, this.font, x + 12, y + 192, 186, 14, "Prices follow demand", dynHover);
             } else {
-                NotchWidgets.neutralButton(ctx, this.font, x + 12, y + 191, 186, 13, "Fixed prices", dynHover);
+                NotchWidgets.neutralButton(ctx, this.font, x + 12, y + 192, 186, 14, "Fixed prices", dynHover);
             }
         } else {
-            ctx.drawString(this.font, "Save first for more options.", x + 12, y + 178,
+            NotchWidgets.centerText(ctx, this.font, "Press Create first.", x + W / 2, y + 172, NotchTheme.TEXT_DARK, false);
+            NotchWidgets.centerText(ctx, this.font, "Then you can set restock and limits.", x + W / 2, y + 184,
                     NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.divider(ctx, x + 8, y + 210, W - 16);
+        NotchWidgets.divider(ctx, x + 8, y + 209, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + ShopListingEditScreenHandler.INV_X + col * 18 - 1,
@@ -254,8 +251,12 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                 && over(mouseX, mouseY, leftPos + ShopListingEditScreenHandler.STOCK_X, topPos + ShopListingEditScreenHandler.STOCK_Y, 16, 16)) {
             List<Component> lines = new ArrayList<>();
             lines.add(Component.literal("Stock bin"));
-            lines.add(Component.literal("Drop stacks of the item you're").withStyle(ChatFormatting.GRAY));
-            lines.add(Component.literal("selling here to add stock.").withStyle(ChatFormatting.GRAY));
+            if (menu.hasListing()) {
+                lines.add(Component.literal("Drop stacks of the item you're").withStyle(ChatFormatting.GRAY));
+                lines.add(Component.literal("selling here to add stock.").withStyle(ChatFormatting.GRAY));
+            } else {
+                lines.add(Component.literal("Press Create first.").withStyle(ChatFormatting.GRAY));
+            }
             ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
         }
     }
@@ -295,22 +296,22 @@ public class ShopListingEditScreen extends AbstractContainerScreen<ShopListingEd
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_BACK, 0);
                 return true;
             }
-            if (editing && menu.stockProp() > 0 && over(mx, my, leftPos + 150, topPos + 109, 48, 14)) {
+            if (editing && menu.stockProp() > 0 && over(mx, my, leftPos + 150, topPos + 111, 48, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_RETURN_STOCK, 0);
                 return true;
             }
-            if (editing && !menu.currentBarterDesc().isEmpty() && over(mx, my, leftPos + 150, topPos + 70, 48, 13)) {
+            if (editing && !menu.currentBarterDesc().isEmpty() && over(mx, my, leftPos + 150, topPos + 73, 48, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_CLEAR_BARTER, 0);
                 return true;
             }
-            if (editing && over(mx, my, leftPos + 62, topPos + 157, 136, 13)) {
+            if (editing && over(mx, my, leftPos + 62, topPos + 158, 136, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_CYCLE_RESTOCK, 0);
                 return true;
             }
-            if (editing && over(mx, my, leftPos + 12, topPos + 191, 186, 13)) {
+            if (editing && over(mx, my, leftPos + 12, topPos + 192, 186, 14)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendShopEditAction(ShopListingEditScreenHandler.ACTION_TOGGLE_DYNAMIC, 0);
                 return true;

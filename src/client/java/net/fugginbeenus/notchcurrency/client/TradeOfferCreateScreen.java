@@ -10,17 +10,11 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.ItemStack;
 
 public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCreateScreenHandler> {
 
     private static final int W = 226, H = 256;
     private static final int GIVE_MONEY_X = 14, WANT_MONEY_X = 130, MONEY_Y = 92, MONEY_W = 82;
-    private static ItemStack coin;
-    private static ItemStack coin() {
-        if (coin == null) coin = new ItemStack(net.fugginbeenus.notchcurrency.registry.ModItems.NOTCH_COIN);
-        return coin;
-    }
 
     private EditBox giveCoinsField;
     private EditBox priceField;
@@ -89,7 +83,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
             NotchWidgets.slot(ctx, x + TradeOfferCreateScreenHandler.GIVE_X + (i % 3) * 18 - 1,
                     y + TradeOfferCreateScreenHandler.GIVE_Y + (i / 3) * 18 - 1);
         }
-        moneyPill(ctx, x + GIVE_MONEY_X, y + MONEY_Y);
+        NotchWidgets.coinInput(ctx, x + GIVE_MONEY_X, y + MONEY_Y, MONEY_W);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " attached", x + 55, y + 112, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.arrowRight(ctx, x + 106, y + 56, NotchTheme.TEXT_MUTED);
         NotchWidgets.inset(ctx, x + 124, y + 22, 94, 104, NotchTheme.PANEL_MID);
@@ -98,7 +92,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
             NotchWidgets.slot(ctx, x + TradeOfferCreateScreenHandler.WANT_X + (i % 3) * 18 - 1,
                     y + TradeOfferCreateScreenHandler.WANT_Y + (i / 3) * 18 - 1);
         }
-        moneyPill(ctx, x + WANT_MONEY_X, y + MONEY_Y);
+        NotchWidgets.coinInput(ctx, x + WANT_MONEY_X, y + MONEY_Y, MONEY_W);
         NotchWidgets.centerText(ctx, this.font, NotchWidgets.coinName() + " wanted", x + 171, y + 112, NotchTheme.TEXT_MUTED, false);
         ctx.drawString(this.font, "To", x + 10, y + 136, NotchTheme.TEXT_DARK, false);
         NotchWidgets.inset(ctx, x + 26, y + 132, W - 34, 14, NotchTheme.DEEP);
@@ -127,13 +121,6 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
         NotchWidgets.smallCaps(ctx, label, cx - NotchWidgets.smallCapsWidth(label) / 2, y, NotchTheme.TEXT_DARK);
     }
 
-    private void moneyPill(GuiGraphics ctx, int mx, int my) {
-        int fx = mx + 8, fw = MONEY_W - 8;
-        NotchWidgets.roundBox(ctx, fx, my + 3, fw, 11, NotchTheme.OUTLINE);
-        ctx.fill(fx + 1, my + 4, fx + fw - 1, my + 13, NotchTheme.DEEP);
-        ctx.fill(fx + 1, my + 4, fx + fw - 1, my + 5, 0xFF181818);
-        ctx.renderItem(coin(), mx, my);
-    }
 
     //? if >=26.1 {
     /*@Override

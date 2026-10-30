@@ -19,10 +19,10 @@ import java.util.Map;
 
 public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHandler> {
 
-    private static final int W = 256, H = 238;
+    private static final int W = 256, H = 254;
     private static final int TAB_Y = 46, TAB_H = 14;
-    private static final int LIST_X = 10, LIST_Y = 66, CARD_W = 210, CARD_H = 26, CARD_STEP = 28, VISIBLE = 3;
-    private static final int SB_X = 226, SB_Y = 66, SB_W = 8, SB_H = 80;
+    private static final int LIST_X = 10, LIST_Y = 66, CARD_W = 236, CARD_H = 26, CARD_STEP = 28, VISIBLE = 3;
+    private static final int PG_LX = 98, PG_RX = 145, PG_Y = 151, PG_BW = 13, PG_H = 12;
 
     private static ItemStack coin;
 
@@ -33,7 +33,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
 
     private int tab = 0;
     private int scroll = 0;
-    private boolean draggingScroll;
     private ItemStack planFor = ItemStack.EMPTY;
     private EnchanterManager.UncraftPlan plan;
 
@@ -126,7 +125,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             NotchWidgets.tab(ctx, this.font, tx, y + TAB_Y, 76, TAB_H, tabs[i], i == tab, hover);
         }
 
-        NotchWidgets.inset(ctx, x + 6, y + 63, 234, 86, NotchTheme.PANEL_MID);
+        NotchWidgets.inset(ctx, x + 6, y + 63, 244, 102, NotchTheme.PANEL_MID);
 
         if (tab == 2) {
             drawUncraft(ctx, mouseX, mouseY, stack);
@@ -134,7 +133,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             drawCards(ctx, mouseX, mouseY, stack);
         }
 
-        NotchWidgets.divider(ctx, x + 8, y + 151, W - 16);
+        NotchWidgets.divider(ctx, x + 8, y + 167, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 NotchWidgets.slot(ctx, x + EnchanterScreenHandler.INV_X + col * 18 - 1,
@@ -179,10 +178,11 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
             NotchWidgets.coinField(ctx, this.font, coin(), x + LIST_X + CARD_W - 6 - costW, cy + 5, c.cost(), NotchWidgets.COIN_GOLD);
         }
 
-        NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
-        if (cards.size() > VISIBLE) {
-            int th = thumbH(cards.size());
-            NotchWidgets.button(ctx, x + SB_X + 1, thumbY(cards.size()), SB_W - 2, th, false, false);
+        int pages = NotchWidgets.pages(cards.size(), VISIBLE);
+        if (pages > 1) {
+            NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, y + PG_Y, PG_BW, PG_H, scroll / VISIBLE + 1, pages,
+                    over(mouseX, mouseY, x + PG_LX, y + PG_Y, PG_BW, PG_H),
+                    over(mouseX, mouseY, x + PG_RX, y + PG_Y, PG_BW, PG_H));
         }
     }
 
@@ -224,12 +224,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                 over(mouseX, mouseY, x + 12, y + 126, 150, 18));
     }
 
-    private int thumbH(int count) { return Math.max(14, SB_H * VISIBLE / Math.max(VISIBLE, count)); }
-
-    private int thumbY(int count) {
-        int max = Math.max(1, count - VISIBLE);
-        return this.topPos + SB_Y + (int) ((scroll / (double) max) * (SB_H - thumbH(count)));
-    }
 
     //? if >=26.1 {
     /*@Override
@@ -312,10 +306,15 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
                     }
                 }
                 int count = cards.size();
-                if (count > VISIBLE && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
-                    if (my < thumbY(count)) { NotchWidgets.tick(); scroll--; }
-                    else if (my >= thumbY(count) + thumbH(count)) { NotchWidgets.tick(); scroll++; }
-                    else draggingScroll = true;
+                if (count > VISIBLE && over(mx, my, leftPos + PG_LX, topPos + PG_Y, PG_BW, PG_H)) {
+                    if (scroll > 0) NotchWidgets.tick();
+                    scroll -= VISIBLE;
+                    clampScroll(count);
+                    return true;
+                }
+                if (count > VISIBLE && over(mx, my, leftPos + PG_RX, topPos + PG_Y, PG_BW, PG_H)) {
+                    if (scroll + VISIBLE < count) NotchWidgets.tick();
+                    scroll += VISIBLE;
                     clampScroll(count);
                     return true;
                 }
@@ -328,49 +327,6 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
         //?}
     }
 
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-    //?}
-        if (draggingScroll) {
-            int count = cards().size();
-            int track = SB_H - thumbH(count);
-            if (track > 0) {
-                int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH(count) / 2;
-                scroll = Math.round(rel / (float) track * Math.max(0, count - VISIBLE));
-                clampScroll(count);
-            }
-            return true;
-        }
-        //? if >=1.21.11 {
-        /*return super.mouseDragged(event, dx, dy);
-        *///?} else {
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    //?}
-        draggingScroll = false;
-        //? if >=1.21.11 {
-        /*return super.mouseReleased(event);
-        *///?} else {
-        return super.mouseReleased(mouseX, mouseY, button);
-        //?}
-    }
-
     @Override
     //? if >=1.21 {
     /*public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
@@ -378,7 +334,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
         if (tab != 2) {
-            scroll -= (int) Math.signum(amount);
+            scroll -= (int) Math.signum(amount) * VISIBLE;
             clampScroll(cards().size());
             return true;
         }
@@ -390,7 +346,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     }
 
     private void clampScroll(int count) {
-        scroll = Math.max(0, Math.min(scroll, Math.max(0, count - VISIBLE)));
+        scroll = NotchWidgets.pageStart(Math.max(0, scroll), count, VISIBLE);
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

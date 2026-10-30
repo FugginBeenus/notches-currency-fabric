@@ -15,10 +15,10 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
 
-    private static final int W = 200, H = 158;
-    private static final int FIELD_X = 60, FIELD_Y = 92, FIELD_W = 128, FIELD_H = 14;
-    private static final int BORROW_X = 12, REPAY_X = 102, BTN_Y = 112, BTN_W = 86, BTN_H = 16;
-    private static final int ALL_X = 12, ALL_Y = 132, ALL_W = 176, ALL_H = 14;
+    private static final int W = 200, H = 168;
+    private static final int FIELD_X = 60, FIELD_Y = 103, FIELD_W = 128;
+    private static final int BORROW_X = 12, REPAY_X = 102, BTN_Y = 124, BTN_W = 86, BTN_H = 16;
+    private static final int ALL_X = 12, ALL_Y = 144, ALL_W = 176, ALL_H = 14;
 
     private EditBox amountField;
 
@@ -37,10 +37,11 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
     @Override
     protected void init() {
         super.init();
-        amountField = new EditBox(this.font, this.leftPos + FIELD_X + 2, this.topPos + FIELD_Y + 3,
-                FIELD_W - 4, FIELD_H - 5, Component.literal("Amount"));
+        amountField = new EditBox(this.font, this.leftPos + FIELD_X + 18, this.topPos + FIELD_Y + 5,
+                FIELD_W - 21, 9, Component.literal("Amount"));
         amountField.setMaxLength(12);
         amountField.setBordered(false);
+        amountField.setTextColor(NotchWidgets.COIN_GOLD);
         amountField.setHint(Component.literal("amount").withStyle(ChatFormatting.DARK_GRAY));
         net.fugginbeenus.notchcurrency.compat.Render.setFilter(amountField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         addRenderableWidget(amountField);
@@ -69,23 +70,23 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
         int term = menu.prop(LoanScreenHandler.P_TERM);
         int daysLeft = menu.prop(LoanScreenHandler.P_DAYS_LEFT);
 
-        ctx.drawString(this.font, "You owe: " + debt + " " + NotchWidgets.coinName(), x + 12, y + 26, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font, "Borrowing limit: " + max + " " + NotchWidgets.coinName(), x + 12, y + 38, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font, "Interest: " + interest + "% per cycle", x + 12, y + 50, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font, "Term: " + term + " days", x + 12, y + 62, NotchTheme.TEXT_DARK, false);
+        moneyRow(ctx, "You owe", debt, y + 21);
+        moneyRow(ctx, "Borrowing limit", max, y + 39);
+        ctx.drawString(this.font, "Interest: " + interest + "% per cycle", x + 12, y + 58, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Term: " + term + " days", x + 12, y + 70, NotchTheme.TEXT_DARK, false);
 
         if (debt <= 0) {
-            ctx.drawString(this.font, "No active loan.", x + 12, y + 74, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "No active loan.", x + 12, y + 84, NotchTheme.TEXT_MUTED, false);
         } else if (daysLeft <= 0) {
-            ctx.drawString(this.font, Component.literal("⚠ OVERDUE - penalty interest!").withStyle(ChatFormatting.RED), x + 12, y + 74, 0xFFFFFFFF, false);
+            ctx.drawString(this.font, Component.literal("⚠ OVERDUE - penalty interest!").withStyle(ChatFormatting.RED), x + 12, y + 84, 0xFFFFFFFF, false);
         } else {
-            ctx.drawString(this.font, "Due in " + daysLeft + " day" + (daysLeft == 1 ? "" : "s"), x + 12, y + 74, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "Due in " + daysLeft + " day" + (daysLeft == 1 ? "" : "s"), x + 12, y + 84, NotchTheme.TEXT_MUTED, false);
         }
 
-        NotchWidgets.divider(ctx, x + 8, y + 88, W - 16);
+        NotchWidgets.divider(ctx, x + 8, y + 97, W - 16);
 
-        ctx.drawString(this.font, "Amount:", x + 12, y + FIELD_Y + 3, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W, FIELD_H, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Amount:", x + 12, y + FIELD_Y + 5, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.coinInput(ctx, x + FIELD_X, y + FIELD_Y, FIELD_W);
 
         NotchWidgets.primaryButton(ctx, this.font, x + BORROW_X, y + BTN_Y, BTN_W, BTN_H, "Borrow",
                 over(mouseX, mouseY, x + BORROW_X, y + BTN_Y, BTN_W, BTN_H));
@@ -97,6 +98,13 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
+    }
+
+    private void moneyRow(GuiGraphics ctx, String label, long amount, int ry) {
+        ctx.drawString(this.font, label, this.leftPos + 12, ry + 5, NotchTheme.TEXT_DARK, false);
+        String text = String.format(java.util.Locale.ROOT, "%,d", amount);
+        int w = 18 + this.font.width(text) - 1 + 4;
+        NotchWidgets.coinField(ctx, this.font, this.leftPos + W - 12 - w, ry, text, NotchWidgets.COIN_GOLD);
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {

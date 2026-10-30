@@ -19,9 +19,19 @@ import java.util.List;
 public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScreenHandler> {
 
     private static final int W = 248, H = 240;
-    private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 148, ROW_H = 20, ROW_STEP = 21;
-    private static final int SB_X = 160, SB_Y = 22, SB_W = 8, SB_H = 126;
+    private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 158, ROW_H = 20, ROW_STEP = 21;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
+    private static final int PG_LX = 174, PG_RX = 229, PG_Y = 136, PG_BW = 13, PG_H = 13;
+    private static final int HELP_X = W - 17, HELP_Y = 4, HELP_S = 13;
+    private static final String EXAMPLE = """
+            {
+              "name": "Party Hat",
+              "icon": "minecraft:leather_helmet",
+              "price": 250,
+              "one_time": true,
+              "reward": { "type": "item", "item": "minecraft:leather_helmet", "count": 1 }
+            }
+            """;
 
     private static ItemStack coin;
 
@@ -31,7 +41,6 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     }
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
-    private boolean draggingScroll;
 
     public CosmeticShopScreen(CosmeticShopScreenHandler handler, Inventory inv, Component title) {
         //? if >=26.1 {
@@ -70,8 +79,19 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
         NotchWidgets.title(ctx, this.font, "Cosmetics", x + W / 2, y + 7, NotchWidgets.Plate.WOOD);
-        NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
-        NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
+        if (menu.isAdmin()) {
+            NotchWidgets.button(ctx, x + HELP_X, y + HELP_Y, HELP_S, HELP_S,
+                    over(mouseX, mouseY, x + HELP_X, y + HELP_Y, HELP_S, HELP_S), false);
+            NotchWidgets.centerText(ctx, this.font, "?", x + HELP_X + 7, y + HELP_Y + 3, NotchTheme.TEXT_DARK, false);
+        }
+        NotchWidgets.inset(ctx, x + 6, y + 20, 162, 130, NotchTheme.PANEL_MID);
+        if (menu.prop(CosmeticShopScreenHandler.P_COUNT) == 0) {
+            NotchWidgets.centerText(ctx, this.font, "No cosmetics yet.", x + 87, y + 76, NotchTheme.TEXT_MUTED, false);
+            if (menu.isAdmin()) {
+                NotchWidgets.centerText(ctx, this.font, "Click ? to add some.", x + 87, y + 88, NotchTheme.TEXT_MUTED, false);
+            }
+        }
+        NotchWidgets.inset(ctx, x + 172, y + 20, 72, previewH() + 4, NotchTheme.PANEL_MID);
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c == null) continue;
@@ -89,11 +109,12 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
             ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
-        NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
         if (pages() > 1) {
-            NotchWidgets.button(ctx, x + SB_X + 1, thumbY(), SB_W - 2, thumbH(), false, false);
+            NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, y + PG_Y, PG_BW, PG_H, page() + 1, pages(),
+                    over(mouseX, mouseY, x + PG_LX, y + PG_Y, PG_BW, PG_H),
+                    over(mouseX, mouseY, x + PG_RX, y + PG_Y, PG_BW, PG_H));
         }
-        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
+        preview.draw(ctx, x + PV_X, y + PV_Y, PV_W, previewH(), menu.npcId());
 
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
         for (int row = 0; row < 3; row++) {
@@ -117,12 +138,7 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         }
     }
 
-    private int thumbH() { return Math.max(18, SB_H / pages()); }
-    private int thumbY() {
-        int tp = pages();
-        if (tp <= 1) return this.topPos + SB_Y;
-        return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
-    }
+    private int previewH() { return pages() > 1 ? PV_H - 16 : PV_H; }
 
     //? if >=26.1 {
     /*@Override
@@ -139,6 +155,16 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+        if (menu.isAdmin() && over(mouseX, mouseY, leftPos + HELP_X, topPos + HELP_Y, HELP_S, HELP_S)) {
+            List<Component> lines = new ArrayList<>();
+            lines.add(Component.literal("Edit this shop (admins only)"));
+            lines.add(Component.literal("1. Make a data pack.").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.literal("2. Add data/<pack>/cosmetics/<name>.json").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.literal("3. Run /reload.").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.literal("Click to copy an example file.").withStyle(ChatFormatting.YELLOW));
+            ctx.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+            return;
+        }
         for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
             if (c != null && over(mouseX, mouseY, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
@@ -164,6 +190,16 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (menu.isAdmin() && over(mx, my, leftPos + HELP_X, topPos + HELP_Y, HELP_S, HELP_S)) {
+                NotchWidgets.click();
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.keyboardHandler.setClipboard(EXAMPLE);
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, Component.literal(
+                                    "Example copied. Save it in a data pack as data/<pack>/cosmetics/<name>.json, then run /reload.")
+                            .withStyle(ChatFormatting.GREEN));
+                }
+                return true;
+            }
             for (int i = 0; i < CosmeticShopScreenHandler.VIS_ROWS; i++) {
                 Cell c = cell(i);
                 if (c != null && !c.owned() && over(mx, my, leftPos + LIST_X, rowY(i), ROW_W, ROW_H)) {
@@ -172,10 +208,12 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
                     return true;
                 }
             }
-            if (pages() > 1 && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
-                if (my < thumbY()) { NotchWidgets.tick(); clickButton(0); return true; }
-                if (my >= thumbY() + thumbH()) { NotchWidgets.tick(); clickButton(1); return true; }
-                draggingScroll = true;
+            if (pages() > 1 && over(mx, my, leftPos + PG_LX, topPos + PG_Y, PG_BW, PG_H)) {
+                if (page() > 0) { NotchWidgets.tick(); clickButton(0); }
+                return true;
+            }
+            if (pages() > 1 && over(mx, my, leftPos + PG_RX, topPos + PG_Y, PG_BW, PG_H)) {
+                if (page() + 1 < pages()) { NotchWidgets.tick(); clickButton(1); }
                 return true;
             }
         }
@@ -183,47 +221,6 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
         /*return super.mouseClicked(event, doubleClick);
         *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-    //?}
-        if (draggingScroll && pages() > 1) {
-            int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH() / 2;
-            int track = SB_H - thumbH();
-            int target = track <= 0 ? 0 : Math.round(rel / (float) track * (pages() - 1));
-            target = Math.max(0, Math.min(pages() - 1, target));
-            if (target != page()) clickButton(target > page() ? 1 : 0);
-            return true;
-        }
-        //? if >=1.21.11 {
-        /*return super.mouseDragged(event, dx, dy);
-        *///?} else {
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    //?}
-        draggingScroll = false;
-        //? if >=1.21.11 {
-        /*return super.mouseReleased(event);
-        *///?} else {
-        return super.mouseReleased(mouseX, mouseY, button);
         //?}
     }
 

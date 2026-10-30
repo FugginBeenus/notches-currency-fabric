@@ -20,9 +20,9 @@ import java.util.UUID;
 public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHandler> {
 
     private static final int W = 248, H = 240;
-    private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 148, ROW_H = 20, ROW_STEP = 21;
-    private static final int SB_X = 160, SB_Y = 22, SB_W = 8, SB_H = 126;
+    private static final int LIST_X = 8, LIST_Y = 22, ROW_W = 158, ROW_H = 20, ROW_STEP = 21;
     private static final int PV_X = 174, PV_Y = 22, PV_W = 68, PV_H = 126;
+    private static final int PG_LX = 174, PG_RX = 229, PG_Y = 136, PG_BW = 13, PG_H = 13;
 
     private static ItemStack coin;
 
@@ -32,7 +32,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     }
 
     private final NpcPreviewWidget preview = new NpcPreviewWidget();
-    private boolean draggingScroll;
 
     public ShopBrowseScreen(ShopBrowseScreenHandler handler, Inventory inv, Component title) {
         //? if >=26.1 {
@@ -86,8 +85,8 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                 NotchWidgets.colorize(menu.shopName()), x + W / 2, y + 7 - 14);
 
         boolean canBuy = open();
-        NotchWidgets.inset(ctx, x + 6, y + 20, 152, 130, NotchTheme.PANEL_MID);
-        NotchWidgets.inset(ctx, x + 172, y + 20, 72, 130, NotchTheme.PANEL_MID);
+        NotchWidgets.inset(ctx, x + 6, y + 20, 162, 130, NotchTheme.PANEL_MID);
+        NotchWidgets.inset(ctx, x + 172, y + 20, 72, previewH() + 4, NotchTheme.PANEL_MID);
 
         for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
             Cell c = cell(i);
@@ -121,7 +120,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             }
 
             if (soldOut) {
-                NotchWidgets.stamp(ctx, this.font, x + LIST_X + 86, ry + 5, "SOLD OUT", NotchTheme.ACCENT_RED, 0x26B23030);
+                NotchWidgets.stamp(ctx, this.font, x + LIST_X + ROW_W / 2 + 12, ry + 5, "SOLD OUT", NotchTheme.ACCENT_RED, 0x26B23030);
                 ctx.renderItem(c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
                 continue;
             }
@@ -130,14 +129,13 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             ctx.renderItemDecorations(this.font, c.icon(), x + LIST_X + ROW_W - 20, ry + 2);
         }
 
-        NotchWidgets.slot(ctx, x + SB_X, y + SB_Y, SB_W, SB_H);
-        int tp = pages();
-        if (tp > 1) {
-            int th = thumbH(), ty = thumbY();
-            NotchWidgets.button(ctx, x + SB_X + 1, ty, SB_W - 2, th, false, false);
+        if (pages() > 1) {
+            NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, y + PG_Y, PG_BW, PG_H, page() + 1, pages(),
+                    over(mouseX, mouseY, x + PG_LX, y + PG_Y, PG_BW, PG_H),
+                    over(mouseX, mouseY, x + PG_RX, y + PG_Y, PG_BW, PG_H));
         }
 
-        preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, PV_H, menu.npcId());
+        preview.drawBust(ctx, x + PV_X, y + PV_Y, PV_W, previewH(), menu.npcId());
         NotchWidgets.divider(ctx, x + 8, y + 153, W - 16);
 
         for (int row = 0; row < 3; row++) {
@@ -152,8 +150,8 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         if (!canBuy) {
             String msg = menu.prop(ShopBrowseScreenHandler.P_STATUS) == ShopBrowseScreenHandler.STATUS_RENT_PAUSED
                     ? "Sales paused (rent due)" : "Shop is closed";
-            ctx.fill(x + 7, y + 21, x + 157, y + 149, 0xC0202020);
-            NotchWidgets.centerText(ctx, this.font, msg, x + 82, y + 80, NotchTheme.TEXT_RED, true);
+            ctx.fill(x + 7, y + 21, x + 167, y + 149, 0xC0202020);
+            NotchWidgets.centerText(ctx, this.font, msg, x + 87, y + 80, NotchTheme.TEXT_RED, true);
         }
         //? if >=26.1 {
         /*
@@ -168,12 +166,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         }
     }
 
-    private int thumbH() { return Math.max(18, SB_H / pages()); }
-    private int thumbY() {
-        int tp = pages();
-        if (tp <= 1) return this.topPos + SB_Y;
-        return this.topPos + SB_Y + (int) ((page() / (double) (tp - 1)) * (SB_H - thumbH()));
-    }
+    private int previewH() { return pages() > 1 ? PV_H - 16 : PV_H; }
 
     //? if >=26.1 {
     /*@Override
@@ -219,7 +212,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
             }
         }
         String greeting = menu.greeting();
-        if (!greeting.isEmpty() && over(mouseX, mouseY, leftPos + PV_X, topPos + PV_Y, PV_W, PV_H)) {
+        if (!greeting.isEmpty() && over(mouseX, mouseY, leftPos + PV_X, topPos + PV_Y, PV_W, previewH())) {
             ctx.renderTooltip(this.font, Component.literal(greeting), mouseX, mouseY);
         }
     }
@@ -262,10 +255,12 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                     }
                 }
             }
-            if (pages() > 1 && over(mx, my, leftPos + SB_X, topPos + SB_Y, SB_W, SB_H)) {
-                if (my < thumbY()) { NotchWidgets.tick(); clickButton(0); return true; }
-                if (my >= thumbY() + thumbH()) { NotchWidgets.tick(); clickButton(1); return true; }
-                draggingScroll = true;
+            if (pages() > 1 && over(mx, my, leftPos + PG_LX, topPos + PG_Y, PG_BW, PG_H)) {
+                if (page() > 0) { NotchWidgets.tick(); clickButton(0); }
+                return true;
+            }
+            if (pages() > 1 && over(mx, my, leftPos + PG_RX, topPos + PG_Y, PG_BW, PG_H)) {
+                if (page() + 1 < pages()) { NotchWidgets.tick(); clickButton(1); }
                 return true;
             }
         }
@@ -273,47 +268,6 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
         /*return super.mouseClicked(event, doubleClick);
         *///?} else {
         return super.mouseClicked(mouseX, mouseY, button);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-    //?}
-        if (draggingScroll && pages() > 1) {
-            int rel = (int) mouseY - (this.topPos + SB_Y) - thumbH() / 2;
-            int track = SB_H - thumbH();
-            int target = track <= 0 ? 0 : Math.round(rel / (float) track * (pages() - 1));
-            target = Math.max(0, Math.min(pages() - 1, target));
-            if (target != page()) clickButton(target > page() ? 1 : 0);
-            return true;
-        }
-        //? if >=1.21.11 {
-        /*return super.mouseDragged(event, dx, dy);
-        *///?} else {
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
-        //?}
-    }
-
-    //? if >=1.21.11 {
-    /*@Override
-    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
-        double mouseX = event.x(), mouseY = event.y();
-        int button = event.button();
-    *///?} else {
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    //?}
-        draggingScroll = false;
-        //? if >=1.21.11 {
-        /*return super.mouseReleased(event);
-        *///?} else {
-        return super.mouseReleased(mouseX, mouseY, button);
         //?}
     }
 

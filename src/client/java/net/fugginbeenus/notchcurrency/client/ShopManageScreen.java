@@ -3,7 +3,6 @@ package net.fugginbeenus.notchcurrency.client;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
-import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
 import net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler;
 import net.minecraft.ChatFormatting;
@@ -12,7 +11,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
@@ -154,21 +152,26 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         ctx.drawString(this.font, status, x + 74, y + 24, statusColor, false);
         int rentCost = menu.prop(ShopManageScreenHandler.P_RENT_COST);
         if (rentCost > 0 && !adminMode) {
-            MutableComponent rent = Component.literal("Rent ").append(NotchCurrency.coins(rentCost));
-            ctx.drawString(this.font, rent, x + 248 - this.font.width(rent), y + 24,
+            int rw = NotchWidgets.coinFieldWidth(this.font, rentCost);
+            NotchWidgets.coinField(ctx, this.font, NotchWidgets.coinStack(), x + 248 - rw, y + 19, rentCost,
+                    NotchWidgets.COIN_GOLD);
+            ctx.drawString(this.font, "Rent", x + 244 - rw - this.font.width("Rent"), y + 24,
                     NotchTheme.TEXT_MUTED, false);
         }
 
         long pending = menu.pendingBalance();
         int barterItems = menu.prop(ShopManageScreenHandler.P_BARTER_COUNT);
-        NotchWidgets.pill(ctx, x + 8, y + 40, 160, 15);
         if (adminMode) {
-            ctx.drawString(this.font, "No earnings to collect", x + 14, y + 44, NotchTheme.TEXT_MUTED, false);
+            ctx.drawString(this.font, "No earnings to collect", x + 10, y + 44, NotchTheme.TEXT_MUTED, false);
             NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
         } else {
-            MutableComponent earnings = Component.literal("Earnings ").append(NotchCurrency.coins(pending));
-            if (barterItems > 0) earnings.append(Component.literal(" +" + barterItems + " barter"));
-            ctx.drawString(this.font, earnings, x + 14, y + 44, NotchTheme.TEXT_GOLD, false);
+            ctx.drawString(this.font, "Earnings", x + 10, y + 44, NotchTheme.TEXT_DARK, false);
+            int ex = x + 14 + this.font.width("Earnings");
+            ex += NotchWidgets.coinField(ctx, this.font, NotchWidgets.coinStack(), ex, y + 39, pending,
+                    NotchWidgets.COIN_GOLD);
+            if (barterItems > 0) {
+                ctx.drawString(this.font, "+" + barterItems + " barter", ex + 4, y + 44, NotchTheme.TEXT_MUTED, false);
+            }
             boolean canCollect = pending > 0 || barterItems > 0;
             if (canCollect) {
                 NotchWidgets.goldButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect",

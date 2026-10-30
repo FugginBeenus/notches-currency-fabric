@@ -5,7 +5,6 @@ import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
-import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.ChatFormatting;
@@ -18,7 +17,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -31,71 +29,54 @@ import java.util.UUID;
 
 public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScreenHandler> {
 
-    private static final ResourceLocation TEX =
-            NotchCurrency.id("textures/gui/auction/main_browser.png");
-
-    private static final ResourceLocation USER_POPUP_TEX =
-            NotchCurrency.id("textures/gui/auction/userauctions.png");
-
-    private static final int TEX_W = 256;
-    private static final int TEX_H = 256;
+    private static final int W = 178;
+    private static final int H = 219;
     private static final int MY_X = 8;
-    private static final int MY_Y = 7;
+    private static final int MY_Y = 14;
     private static final int MY_W = 80;
     private static final int MY_H = 17;
     private static final int HELP_X = 153;
-    private static final int HELP_Y = 7;
-    private static final int HELP_W = 16;
+    private static final int HELP_Y = 14;
+    private static final int HELP_W = 17;
     private static final int HELP_H = 17;
-    private static final int RELOAD_X = 135;
-    private static final int RELOAD_Y = 7;
-    private static final int RELOAD_W = 16;
+    private static final int RELOAD_X = 134;
+    private static final int RELOAD_Y = 14;
+    private static final int RELOAD_W = 17;
     private static final int RELOAD_H = 17;
-    private static final int PREV_X = 9;
-    private static final int PREV_Y = 102;
-    private static final int PREV_W = 41;
-    private static final int PREV_H = 17;
-    private static final int NEXT_X = PREV_X + PREV_W * 2;
-    private static final int NEXT_Y = 102;
-    private static final int NEXT_W = 41;
-    private static final int NEXT_H = 17;
-    private static final int STAR_X = 135;
-    private static final int STAR_Y = 102;
-    private static final int STAR_W = 16;
+    private static final int PG_LX = 8;
+    private static final int PG_RX = 116;
+    private static final int PG_Y = 110;
+    private static final int PG_BW = 16;
+    private static final int PG_H = 17;
+    private static final int STAR_X = 134;
+    private static final int STAR_Y = 110;
+    private static final int STAR_W = 17;
     private static final int STAR_H = 17;
     private static final int CLOCK_X = 153;
-    private static final int CLOCK_Y = 102;
-    private static final int CLOCK_W = 16;
+    private static final int CLOCK_Y = 110;
+    private static final int CLOCK_W = 17;
     private static final int CLOCK_H = 17;
-    private static final int LIST_X = 99;
-    private static final int LIST_Y = 7;
-    private static final int LIST_W = 16;
+    private static final int LIST_X = 96;
+    private static final int LIST_Y = 14;
+    private static final int LIST_W = 17;
     private static final int LIST_H = 17;
-    private static final int RAFFLE_X = 117;
-    private static final int RAFFLE_Y = 7;
-    private static final int RAFFLE_W = 16;
+    private static final int RAFFLE_X = 115;
+    private static final int RAFFLE_Y = 14;
+    private static final int RAFFLE_W = 17;
     private static final int RAFFLE_H = 17;
-    private static final int PAGE_TEXT_X = 70;
-    private static final int PAGE_TEXT_Y = 107;
-    private static final int POPUP_W = 176;
-    private static final int POPUP_H = 96;
-    private static final int POPUP_LOCAL_X = 40;
-    private static final int POPUP_LOCAL_Y = 24 + 15;
-    private static final int POPUP_NAME_X = 12;
-    private static final int POPUP_NAME_Y = 10;
-    private static final int POPUP_CLOSE_X = 83;
-    private static final int POPUP_CLOSE_Y = 5;
+    private static final int POPUP_W = 107;
+    private static final int POPUP_H = 69;
+    private static final int POPUP_LOCAL_X = (W - POPUP_W) / 2;
+    private static final int POPUP_LOCAL_Y = 36;
+    private static final int POPUP_CLOSE_X = 85;
+    private static final int POPUP_CLOSE_Y = 6;
     private static final int POPUP_CLOSE_W = 14;
     private static final int POPUP_CLOSE_H = 15;
     private static final int POPUP_SLOT_LOCAL_X = 9;
-    private static final int POPUP_SLOT_LOCAL_Y = 22;
+    private static final int POPUP_SLOT_LOCAL_Y = 25;
     private static final int POPUP_SLOT_SIZE = 18;
     private static final int POPUP_SLOT_SPACING = 18;
     private static final int POPUP_DIM_COLOR = 0x66000000;
-    private static final int DIM_MARGIN_LEFT = 1;
-    private static final int DIM_MARGIN_TOP = 1;
-    private static final int DIM_MARGIN_RIGHT = 79;
-    private static final int DIM_MARGIN_BOTTOM = 47;
     private static final boolean DEBUG_MAIN = false;
     private static final boolean DEBUG_POPUP_BUTTON = false;
     private static final boolean DEBUG_POPUP_SLOTS = false;
@@ -136,7 +117,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     private Button listItemButton;
     private Button raffleButton;
     private boolean showUserPopup = false;
-    private static final int BID_X = 19, BID_Y = 62, BID_W = 140, BID_H = 86;
+    private static final int BID_W = 150, BID_H = 110, BID_X = (W - BID_W) / 2, BID_Y = (H - BID_H) / 2,
+            BID_BTN_W = (BID_W - 24) / 2;
     private boolean showBidPopup = false;
     private UUID bidListingId = null;
     private String bidItemName = "";
@@ -148,11 +130,11 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                               Inventory inv,
                               Component title) {
         //? if >=26.1 {
-        /*super(handler, inv, title, TEX_W, TEX_H);
+        /*super(handler, inv, title, W, H);
         *///?} else {
         super(handler, inv, title);
-        this.imageWidth = TEX_W;
-        this.imageHeight = TEX_H;
+        this.imageWidth = W;
+        this.imageHeight = H;
         //?}
 
         this.titleLabelX = -1000;
@@ -162,11 +144,6 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     @Override
     protected void init() {
         super.init();
-
-        int xNudge = 40;
-        int yNudge = 10;
-        this.leftPos = (this.width - this.imageWidth) / 2 + xNudge;
-        this.topPos = (this.height - this.imageHeight) / 2 + yNudge;
 
         this.clearWidgets();
         showUserPopup = false;
@@ -191,7 +168,10 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 Component message = Component.literal("Need help? ").withStyle(ChatFormatting.YELLOW).append(linkText);
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(this.minecraft.player, message);
             }
-        }).bounds(this.leftPos + HELP_X, this.topPos + HELP_Y, HELP_W, HELP_H).build();
+        }).bounds(this.leftPos + HELP_X, this.topPos + HELP_Y, HELP_W, HELP_H)
+                .tooltip(net.minecraft.client.gui.components.Tooltip.create(
+                        Component.literal("Get the guide link in chat")))
+                .build();
         helpButton.setAlpha(0.0f);
         addRenderableWidget(helpButton);
 
@@ -201,6 +181,8 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                     }
                 })
                 .bounds(this.leftPos + RELOAD_X, this.topPos + RELOAD_Y, RELOAD_W, RELOAD_H)
+                .tooltip(net.minecraft.client.gui.components.Tooltip.create(
+                        Component.literal("Refresh the list")))
                 .build();
         reloadButton.setAlpha(0.0f);
         addRenderableWidget(reloadButton);
@@ -210,7 +192,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                         this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0);
                     }
                 })
-                .bounds(this.leftPos + PREV_X, this.topPos + PREV_Y, PREV_W, PREV_H)
+                .bounds(this.leftPos + PG_LX, this.topPos + PG_Y, PG_BW, PG_H)
                 .build();
         prevButton.setAlpha(0.0f);
         addRenderableWidget(prevButton);
@@ -220,7 +202,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                         this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 1);
                     }
                 })
-                .bounds(this.leftPos + NEXT_X, this.topPos + NEXT_Y, NEXT_W, NEXT_H)
+                .bounds(this.leftPos + PG_RX, this.topPos + PG_Y, PG_BW, PG_H)
                 .build();
         nextButton.setAlpha(0.0f);
         addRenderableWidget(nextButton);
@@ -279,7 +261,11 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     //?}
         final int x = this.leftPos, y = this.topPos;
 
-        NotchWidgets.panel(ctx, x, y, 178, 210);
+        final int gridY = AuctionHouseScreenHandler.LISTING_START_Y;
+        final int invY = AuctionHouseScreenHandler.PLAYER_INV_START_Y;
+
+        NotchWidgets.panel(ctx, x, y, W, H);
+        NotchWidgets.title(ctx, this.font, "Auction House", x + W / 2, y + 7, NotchWidgets.Plate.BRASS);
         greenBar(ctx, x + MY_X, y + MY_Y, MY_W, MY_H,
                 over(mouseX, mouseY, x + MY_X, y + MY_Y, MY_W, MY_H));
         iconButton(ctx, x + LIST_X, y + LIST_Y, LIST_W, LIST_H,
@@ -288,29 +274,29 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 over(mouseX, mouseY, x + RAFFLE_X, y + RAFFLE_Y, RAFFLE_W, RAFFLE_H), ICON_TICKET);
         iconButton(ctx, x + RELOAD_X, y + RELOAD_Y, RELOAD_W, RELOAD_H,
                 over(mouseX, mouseY, x + RELOAD_X, y + RELOAD_Y, RELOAD_W, RELOAD_H), ICON_RELOAD);
-        helpButton(ctx, x + HELP_X, y + HELP_Y, HELP_W, HELP_H,
-                over(mouseX, mouseY, x + HELP_X, y + HELP_Y, HELP_W, HELP_H));
+        iconButton(ctx, x + HELP_X, y + HELP_Y, HELP_W, HELP_H,
+                over(mouseX, mouseY, x + HELP_X, y + HELP_Y, HELP_W, HELP_H), ICON_HELP);
         for (int row = 0; row < AuctionHouseScreenHandler.LISTING_ROWS; row++) {
             for (int col = 0; col < AuctionHouseScreenHandler.LISTING_COLUMNS; col++) {
-                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 28 + row * 18 - 1);
+                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + gridY + row * 18 - 1);
             }
         }
-        wideArrow(ctx, x + PREV_X, y + PREV_Y, PREV_W, PREV_H,
-                over(mouseX, mouseY, x + PREV_X, y + PREV_Y, PREV_W, PREV_H), true);
-        wideArrow(ctx, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H,
-                over(mouseX, mouseY, x + NEXT_X, y + NEXT_Y, NEXT_W, NEXT_H), false);
-        ctx.fill(x + PREV_X + PREV_W, y + PREV_Y, x + NEXT_X, y + PREV_Y + PREV_H, NotchTheme.DEEP);
+        NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, y + PG_Y, PG_BW, PG_H,
+                menu.getPage() + 1, Math.max(1, menu.getTotalPages()),
+                over(mouseX, mouseY, x + PG_LX, y + PG_Y, PG_BW, PG_H),
+                over(mouseX, mouseY, x + PG_RX, y + PG_Y, PG_BW, PG_H));
         iconButton(ctx, x + STAR_X, y + STAR_Y, STAR_W, STAR_H,
                 over(mouseX, mouseY, x + STAR_X, y + STAR_Y, STAR_W, STAR_H), ICON_STAR);
         iconButton(ctx, x + CLOCK_X, y + CLOCK_Y, CLOCK_W, CLOCK_H,
-                over(mouseX, mouseY, x + CLOCK_X, y + CLOCK_Y, CLOCK_W, CLOCK_H), ICON_CLOCK);
+                over(mouseX, mouseY, x + CLOCK_X, y + CLOCK_Y, CLOCK_W, CLOCK_H), ICON_SORT);
+        NotchWidgets.divider(ctx, x + 8, y + invY - 6, W - 16);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 127 + row * 18 - 1);
+                NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + invY + row * 18 - 1);
             }
         }
         for (int col = 0; col < 9; col++) {
-            NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + 185 - 1);
+            NotchWidgets.slot(ctx, x + 9 + col * 18 - 1, y + invY + 58 - 1);
         }
         //? if >=26.1 {
         /*
@@ -341,34 +327,13 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     private void greenBar(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov) {
         NotchWidgets.colorButton(ctx, bx, by, w, h, NotchTheme.ACCENT_GREEN, 0xFF8FD07A, 0xFF3C6E2F, hov);
         String s = "MY LISTINGS";
-        ctx.drawString(this.font, s, bx + (w - this.font.width(s)) / 2,
-                by + (h - 8) / 2, 0xFFFFFFFF, true);
+        int tx = bx + (w - NotchWidgets.smallCapsWidth(s)) / 2, ty = by + (h - 5) / 2;
+        NotchWidgets.smallCaps(ctx, s, tx + 1, ty + 1, 0xFF2C5A22);
+        NotchWidgets.smallCaps(ctx, s, tx, ty, 0xFFFFFFFF);
     }
 
-    private void helpButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov) {
-        NotchWidgets.button(ctx, bx, by, w, h, hov, false);
-        String s = "?";
-        ctx.drawString(this.font, s, bx + (w - this.font.width(s)) / 2,
-                by + (h - 8) / 2, NotchTheme.TEXT_DARK, false);
-    }
-
-    private void wideArrow(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov, boolean left) {
-        NotchWidgets.buttonSel(ctx, bx, by, w, h, hov, left, !left, left, !left);
-        int cx = bx + w / 2, cy = by + h / 2;
-        for (int i = 0; i <= 4; i++) {
-            int half = 4 - i;
-            if (left) ctx.fill(cx + 2 - i, cy - half, cx + 3 - i, cy + half + 1, NotchTheme.TEXT_DARK);
-            else      ctx.fill(cx - 2 + i, cy - half, cx - 1 + i, cy + half + 1, NotchTheme.TEXT_DARK);
-        }
-    }
-
-    private void redX(GuiGraphics ctx, int bx, int by, int w, int h) {
-        ctx.fill(bx, by, bx + w, by + h, NotchTheme.OUTLINE);
-        ctx.fill(bx + 1, by + 1, bx + w - 1, by + h - 1, 0xFFB23030);
-        ctx.fill(bx + 1, by + 1, bx + w - 1, by + 2, 0xFFD86060);
-        ctx.fill(bx + 1, by + 1, bx + 2, by + h - 1, 0xFFD86060);
-        ctx.fill(bx + 1, by + h - 2, bx + w - 1, by + h - 1, 0xFF7A1818);
-        ctx.fill(bx + w - 2, by + 1, bx + w - 1, by + h - 1, 0xFF7A1818);
+    private void redX(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov) {
+        NotchWidgets.colorButton(ctx, bx, by, w, h, NotchTheme.ACCENT_RED, NotchTheme.RED_HI, NotchTheme.RED_LO, hov);
         int cx = bx + w / 2, cy = by + h / 2;
         for (int i = -2; i <= 2; i++) {
             ctx.fill(cx + i, cy + i, cx + i + 1, cy + i + 1, NotchTheme.TEXT_LIGHT);
@@ -376,83 +341,78 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         }
     }
 
-    private void iconButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov, String[] icon) {
+    private void iconButton(GuiGraphics ctx, int bx, int by, int w, int h, boolean hov, Icon icon) {
         NotchWidgets.button(ctx, bx, by, w, h, hov, false);
-        drawIcon(ctx, bx, by, w, h, icon, NotchTheme.TEXT_DARK);
-    }
-
-    private void drawIcon(GuiGraphics ctx, int bx, int by, int bw, int bh, String[] rows, int color) {
-        int iw = rows[0].length(), ih = rows.length;
-        int ox = bx + (bw - iw) / 2;
-        int oy = by + (bh - ih) / 2;
-        for (int r = 0; r < ih; r++) {
-            String row = rows[r];
-            for (int c = 0; c < iw; c++) {
-                if (row.charAt(c) == '#') {
-                    ctx.fill(ox + c, oy + r, ox + c + 1, oy + r + 1, color);
-                }
+        int iw = 0;
+        for (String row : icon.rows()) iw = Math.max(iw, row.length());
+        int ox = bx + (w - iw) / 2, oy = by + (h - icon.rows().length) / 2;
+        for (int r = 0; r < icon.rows().length; r++) {
+            String row = icon.rows()[r];
+            for (int c = 0; c < row.length(); c++) {
+                int k = icon.marks().indexOf(row.charAt(c));
+                if (k >= 0) ctx.fill(ox + c, oy + r, ox + c + 1, oy + r + 1, icon.colors()[k]);
             }
         }
     }
 
-    private static final String[] ICON_STAR = {
-            "....#....",
-            "...###...",
-            "#########",
-            ".#######.",
-            "..#####..",
-            ".##.#.##.",
-            ".#.....#.",
-    };
-    private static final String[] ICON_CLOCK = {
-            "..#####..",
-            ".#.....#.",
-            "#...#...#",
-            "#...#...#",
-            "#...####.",
-            "#.......#",
-            ".#.....#.",
-            "..#####..",
-    };
-    private static final String[] ICON_RELOAD = {
-            "...###.#.",
-            "..#...###",
-            ".#.....#.",
-            "#........",
-            "#........",
-            ".#.....#.",
-            "..#####..",
-    };
-    private static final String[] ICON_PLUS = {
-            "...#...",
-            "...#...",
-            "...#...",
-            "#######",
-            "...#...",
-            "...#...",
-            "...#...",
-    };
-    private static final String[] ICON_TICKET = {
-            "#########",
-            "#.......#",
-            "#.#####.#",
-            "#.......#",
-            "#########",
-    };
+    private record Icon(String marks, int[] colors, String... rows) {}
 
-    @Override
-    protected void renderLabels(GuiGraphics ctx, int mouseX, int mouseY) {
-        int page = menu.getPage() + 1;
-        int total = Math.max(1, menu.getTotalPages());
-        String txt = page + "/" + total;
-        ctx.drawCenteredString(
-                this.font,
-                Component.literal(txt),
-                PAGE_TEXT_X,
-                PAGE_TEXT_Y,
-                0xFFFFFF
-        );
-    }
+    private static final Icon ICON_PLUS = new Icon("ogG", new int[]{0xFF2C5A22, 0xFF61A04F, 0xFF8FD07A},
+            "...ooo...",
+            "...oGo...",
+            "...ogo...",
+            "oooogoooo",
+            "oGGgggggo",
+            "oooogoooo",
+            "...ogo...",
+            "...ogo...",
+            "...ooo...");
+    private static final Icon ICON_TICKET = new Icon("orcy", new int[]{0xFF962A24, 0xFFD8433A, 0xFFF5ECD2, 0xFFF3B93F},
+            "ooooooooo",
+            "orrrrrrro",
+            ".rcccccr.",
+            ".rccyccr.",
+            ".rcccccr.",
+            "orrrrrrro",
+            "ooooooooo");
+    private static final Icon ICON_RELOAD = new Icon("o", new int[]{0xFF3A3A3A},
+            "...ooo.o.",
+            ".oo...oo.",
+            ".o...ooo.",
+            "o........",
+            "o........",
+            "o.......o",
+            ".o.....o.",
+            ".oo...oo.",
+            "...ooo...");
+    private static final Icon ICON_HELP = new Icon("o", new int[]{0xFF3A3A3A},
+            ".ooooo.",
+            "oo...oo",
+            "oo...oo",
+            "....oo.",
+            "...oo..",
+            "..ooo..",
+            "..ooo..",
+            ".......",
+            "..ooo..");
+    private static final Icon ICON_STAR = new Icon("oyYs", new int[]{0xFF8A5A1E, 0xFFF3B93F, 0xFFFFE08A, 0xFFC4842A},
+            "....o....",
+            "...oYo...",
+            "...oYo...",
+            "ooooyoooo",
+            "oYYyyyyso",
+            ".oyyyyso.",
+            "..oyyso..",
+            ".oysoyso.",
+            ".ooo.ooo.");
+    private static final Icon ICON_SORT = new Icon("ow", new int[]{0xFF3A3A3A, 0xFFF5ECD2},
+            "..ooo....o.",
+            ".owwwo...o.",
+            "owwowwo..o.",
+            "owwoowo..o.",
+            "owwwwwo.ooo",
+            ".owwwo...o.",
+            "..ooo......");
 
     private void drawListTooltip(GuiGraphics ctx,
                                  int mouseX, int mouseY,
@@ -513,15 +473,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     @Override
     protected void renderTooltip(GuiGraphics ctx, int mouseX, int mouseY) {
     //?}
-        if (showUserPopup) {
-            if (hoveredPopupSlot(mouseX, mouseY) >= 0) return;
-            int px = this.leftPos + POPUP_LOCAL_X;
-            int py = this.topPos + POPUP_LOCAL_Y;
-            if (mouseX >= px && mouseX < px + POPUP_W &&
-                    mouseY >= py && mouseY < py + POPUP_H) {
-                return;
-            }
-        }
+        if (showUserPopup || showBidPopup) return;
         int sortX = this.leftPos + CLOCK_X;
         int sortY = this.topPos + CLOCK_Y;
         if (mouseX >= sortX && mouseX < sortX + CLOCK_W &&
@@ -785,7 +737,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         this.renderTooltip(ctx, mouseX, mouseY);
 
         if (showUserPopup) {
-            drawUserPopup(ctx);
+            drawUserPopup(ctx, mouseX, mouseY);
             drawPopupCancelTooltip(ctx, mouseX, mouseY);
         }
 
@@ -812,36 +764,42 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     }
 
     private void drawBidPopup(GuiGraphics ctx, int mouseX, int mouseY) {
-        var matrices = ctx.pose();
         net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
         net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
         ctx.fill(0, 0, this.width, this.height, 0x88000000);
         int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
         NotchWidgets.panel(ctx, px, py, BID_W, BID_H);
-        NotchWidgets.title(ctx, this.font, "Place a Bid", px + BID_W / 2, py + 6, NotchWidgets.Plate.WOOD);
-        NotchWidgets.centerText(ctx, this.font, bidItemName, px + BID_W / 2, py + 18, NotchTheme.TEXT_LIGHT, true);
+        NotchWidgets.title(ctx, this.font, "Place a Bid", px + BID_W / 2, py + 6, NotchWidgets.Plate.BRASS);
+        String name = bidItemName;
+        while (name.length() > 3 && this.font.width(name) > BID_W - 16) name = name.substring(0, name.length() - 2) + "…";
+        NotchWidgets.centerText(ctx, this.font, name, px + BID_W / 2, py + 15, NotchTheme.TEXT_DARK, false);
         long cur = bidHighest > 0 ? bidHighest : bidStartPrice;
-        long min = cur + 1;
-        ctx.drawString(this.font, (bidHighest > 0 ? "Current bid: " : "Start price: ") + cur,
-                px + 10, py + 32, NotchTheme.TEXT_DARK, false);
-        ctx.drawString(this.font, "Min next bid: " + min, px + 10, py + 42, NotchTheme.TEXT_DARK, false);
+        bidRow(ctx, px, py + 28, bidHighest > 0 ? "Current bid" : "Start price", cur);
+        bidRow(ctx, px, py + 47, "Min next bid", cur + 1);
 
-        NotchWidgets.inset(ctx, px + 10, py + 52, BID_W - 20, 14, NotchTheme.DEEP);
-        boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
+        NotchWidgets.coinInput(ctx, px + 10, py + 69, BID_W - 20);
         if (bidInput.isEmpty()) {
-            ctx.drawString(this.font, Component.literal("amount").withStyle(ChatFormatting.DARK_GRAY),
-                    px + 14, py + 55, 0xFF555555, false);
-            if (blink) ctx.drawString(this.font, "_", px + 14, py + 55, 0xFFFFFFFF, false);
+            ctx.drawString(this.font, "amount", px + 28, py + 74, 0xFF555555, false);
         } else {
-            ctx.drawString(this.font, bidInput + (blink ? "_" : ""), px + 14, py + 55, 0xFFFFFFFF, false);
+            ctx.drawString(this.font, bidInput, px + 28, py + 74, NotchWidgets.COIN_GOLD, false);
+        }
+        if ((System.currentTimeMillis() / 500) % 2 == 0) {
+            ctx.drawString(this.font, "_", px + 28 + this.font.width(bidInput), py + 74, 0xFFFFFFFF, false);
         }
 
-        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 68, 58, 14, "Bid",
-                over(mouseX, mouseY, px + 10, py + 68, 58, 14));
-        NotchWidgets.dangerButton(ctx, this.font, px + 72, py + 68, 58, 14, "Cancel",
-                over(mouseX, mouseY, px + 72, py + 68, 58, 14));
+        NotchWidgets.primaryButton(ctx, this.font, px + 10, py + 90, BID_BTN_W, 14, "Bid",
+                over(mouseX, mouseY, px + 10, py + 90, BID_BTN_W, 14));
+        NotchWidgets.dangerButton(ctx, this.font, px + 14 + BID_BTN_W, py + 90, BID_BTN_W, 14, "Cancel",
+                over(mouseX, mouseY, px + 14 + BID_BTN_W, py + 90, BID_BTN_W, 14));
 
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
+    }
+
+    private void bidRow(GuiGraphics ctx, int px, int ry, String label, long amount) {
+        ctx.drawString(this.font, label, px + 10, ry + 5, NotchTheme.TEXT_DARK, false);
+        String text = String.format(java.util.Locale.ROOT, "%,d", amount);
+        int w = 18 + this.font.width(text) - 1 + 4;
+        NotchWidgets.coinField(ctx, this.font, px + BID_W - 10 - w, ry, text, NotchWidgets.COIN_GOLD);
     }
 
     private void submitBid() {
@@ -875,6 +833,10 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
+        if (showUserPopup && keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+            showUserPopup = false;
+            return true;
+        }
         if (showBidPopup) {
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) { showBidPopup = false; return true; }
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) { submitBid(); return true; }
@@ -937,33 +899,18 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         net.fugginbeenus.notchcurrency.compat.Render.popGui(ctx);
     }
 
-    private void drawUserPopup(GuiGraphics ctx) {
+    private void drawUserPopup(GuiGraphics ctx, int mouseX, int mouseY) {
         net.fugginbeenus.notchcurrency.compat.Render.pushGui(ctx);
         net.fugginbeenus.notchcurrency.compat.Render.translateGui(ctx, 0.0F, 0.0F);
 
-        int dimX1 = this.leftPos + DIM_MARGIN_LEFT;
-        int dimY1 = this.topPos + DIM_MARGIN_TOP;
-        int dimX2 = this.leftPos + this.imageWidth - DIM_MARGIN_RIGHT;
-        int dimY2 = this.topPos + this.imageHeight - DIM_MARGIN_BOTTOM;
-        ctx.fill(dimX1, dimY1, dimX2, dimY2, POPUP_DIM_COLOR);
+        ctx.fill(this.leftPos + 1, this.topPos + 1, this.leftPos + W - 1, this.topPos + H - 1, POPUP_DIM_COLOR);
 
         int px = this.leftPos + POPUP_LOCAL_X;
         int py = this.topPos + POPUP_LOCAL_Y;
-        NotchWidgets.panel(ctx, px, py, 107, 70);
-
-        if (this.minecraft != null && this.minecraft.player != null) {
-            String name = this.minecraft.player.getName().getString();
-            ctx.drawString(
-                    this.font,
-                    name,
-                    px + POPUP_NAME_X,
-                    py + POPUP_NAME_Y,
-                    NotchTheme.TEXT_DARK,
-                    false
-            );
-        }
-
-        redX(ctx, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H);
+        NotchWidgets.panel(ctx, px, py, POPUP_W, POPUP_H);
+        NotchWidgets.smallCaps(ctx, "MY LISTINGS", px + POPUP_SLOT_LOCAL_X, py + POPUP_CLOSE_Y + 5, NotchTheme.TEXT_DARK);
+        redX(ctx, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H,
+                over(mouseX, mouseY, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H));
 
         SimpleContainer inv = menu.getUserPopupInventory();
         int index = 0;
@@ -1009,19 +956,24 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     //?}
         if (showBidPopup) {
             int px = this.leftPos + BID_X, py = this.topPos + BID_Y;
-            if (over((int) mouseX, (int) mouseY, px + 10, py + 68, 58, 14)) { submitBid(); return true; }
-            if (over((int) mouseX, (int) mouseY, px + 72, py + 68, 58, 14)) { showBidPopup = false; return true; }
+            if (over((int) mouseX, (int) mouseY, px + 10, py + 90, BID_BTN_W, 14)) {
+                NotchWidgets.click();
+                submitBid();
+                return true;
+            }
+            if (over((int) mouseX, (int) mouseY, px + 14 + BID_BTN_W, py + 90, BID_BTN_W, 14)) {
+                NotchWidgets.click();
+                showBidPopup = false;
+                return true;
+            }
             return true;
         }
         if (showUserPopup) {
             int px = this.leftPos + POPUP_LOCAL_X;
             int py = this.topPos + POPUP_LOCAL_Y;
-            int cx1 = px + POPUP_CLOSE_X;
-            int cy1 = py + POPUP_CLOSE_Y;
-            int cx2 = cx1 + POPUP_CLOSE_W;
-            int cy2 = cy1 + POPUP_CLOSE_H;
-
-            if (mouseX >= cx1 && mouseX < cx2 && mouseY >= cy1 && mouseY < cy2) {
+            if (over((int) mouseX, (int) mouseY, px + POPUP_CLOSE_X, py + POPUP_CLOSE_Y, POPUP_CLOSE_W, POPUP_CLOSE_H)
+                    || !over((int) mouseX, (int) mouseY, px, py, POPUP_W, POPUP_H)) {
+                NotchWidgets.click();
                 showUserPopup = false;
                 return true;
             }
@@ -1036,10 +988,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 }
                 return true;
             }
-            if (mouseX >= px && mouseX < px + POPUP_W &&
-                    mouseY >= py && mouseY < py + POPUP_H) {
-                return true;
-            }
+            return true;
         }
         if (button == 0 && !showUserPopup && this.minecraft != null && this.minecraft.player != null) {
             Slot clickedSlot = this.hoveredSlot;

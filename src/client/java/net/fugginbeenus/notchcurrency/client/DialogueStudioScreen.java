@@ -22,6 +22,7 @@ public class DialogueStudioScreen extends Screen {
 
     private static final int W = 400, H = 260;
     private static final int LIST_X = 8, LIST_Y = 40, LIST_W = 100, ROW_H = 14, LIST_ROWS = 12;
+    private static final int PG_Y = H - 25, PG_BW = 13, PG_H = 13;
     private static final int ED_X = 116, ED_W = 276;
     private static final int MAX_NODES = 24, MAX_CHOICES = 5;
     private static final int COND_W = 90;
@@ -287,10 +288,9 @@ public class DialogueStudioScreen extends Screen {
     }
 
     private void drawPageList(GuiGraphics ctx, int mx, int my) {
-        ctx.drawString(this.font, "Pages:", px + LIST_X, py + 28, NotchTheme.TEXT_DARK, false);
+        ctx.drawString(this.font, "Pages " + tree.size() + "/" + MAX_NODES, px + LIST_X, py + 28, NotchTheme.TEXT_DARK, false);
         List<String> ids = new ArrayList<>(tree.nodes().keySet());
-        int maxScroll = Math.max(0, ids.size() - LIST_ROWS);
-        if (listScroll > maxScroll) listScroll = maxScroll;
+        listScroll = NotchWidgets.pageStart(listScroll, ids.size(), LIST_ROWS);
         for (int i = 0; i < LIST_ROWS; i++) {
             int idx = listScroll + i;
             if (idx >= ids.size()) break;
@@ -307,8 +307,13 @@ public class DialogueStudioScreen extends Screen {
             NotchWidgets.neutralButton(ctx, this.font, px + LIST_X, py + H - 42, LIST_W, 14, "+ Add Page",
                     over(mx, my, px + LIST_X, py + H - 42, LIST_W, 14));
         }
-        NotchWidgets.centerText(ctx, this.font, tree.size() + "/" + MAX_NODES,
-                px + LIST_X + LIST_W / 2, py + H - 24, NotchTheme.TEXT_MUTED, false);
+        int pages = NotchWidgets.pages(ids.size(), LIST_ROWS);
+        if (pages > 1) {
+            NotchWidgets.pager(ctx, this.font, px + LIST_X, px + LIST_X + LIST_W - PG_BW, py + PG_Y, PG_BW, PG_H,
+                    listScroll / LIST_ROWS + 1, pages,
+                    over(mx, my, px + LIST_X, py + PG_Y, PG_BW, PG_H),
+                    over(mx, my, px + LIST_X + LIST_W - PG_BW, py + PG_Y, PG_BW, PG_H));
+        }
     }
 
     private String pageLabel(String id) {
@@ -660,6 +665,16 @@ public class DialogueStudioScreen extends Screen {
                 addPage();
                 return true;
             }
+            if (ids.size() > LIST_ROWS && over(mx, my, px + LIST_X, py + PG_Y, PG_BW, PG_H)) {
+                if (listScroll > 0) NotchWidgets.tick();
+                listScroll = NotchWidgets.pageStart(Math.max(0, listScroll - LIST_ROWS), ids.size(), LIST_ROWS);
+                return true;
+            }
+            if (ids.size() > LIST_ROWS && over(mx, my, px + LIST_X + LIST_W - PG_BW, py + PG_Y, PG_BW, PG_H)) {
+                if (listScroll + LIST_ROWS < ids.size()) NotchWidgets.tick();
+                listScroll = NotchWidgets.pageStart(listScroll + LIST_ROWS, ids.size(), LIST_ROWS);
+                return true;
+            }
 
             if (choiceIdx < 0 ? clickNodeEditor(mx, my) : clickChoiceEditor(mx, my)) {
                 NotchWidgets.tick();
@@ -929,8 +944,8 @@ public class DialogueStudioScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
         if (mouseX >= px + LIST_X && mouseX < px + LIST_X + LIST_W) {
-            int maxScroll = Math.max(0, tree.size() - LIST_ROWS);
-            listScroll = Math.max(0, Math.min(maxScroll, listScroll - (int) Math.signum(amount)));
+            listScroll = NotchWidgets.pageStart(Math.max(0, listScroll - (int) Math.signum(amount) * LIST_ROWS),
+                    tree.size(), LIST_ROWS);
             return true;
         }
         //? if >=1.21 {

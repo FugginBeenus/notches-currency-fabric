@@ -17,7 +17,7 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
 
     private static final int W = 176, H = 224;
 
-    private static final int PRICE_X = 8, PRICE_Y = 54, PRICE_W = 160, PRICE_H = 16;
+    private static final int PRICE_X = 8, PRICE_Y = 54, PRICE_W = 160;
     private static final int SEG_Y = 86, SEG_H = 15;
     private static final int[] DURATIONS = {0, 1, 3, 7};
     private static final String[] SEG_LABELS = {"Buy Now", "1d", "3d", "7d"};
@@ -44,10 +44,11 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
     @Override
     protected void init() {
         super.init();
-        priceField = new EditBox(this.font, this.leftPos + PRICE_X + 2, this.topPos + PRICE_Y + 4,
-                PRICE_W - 4, PRICE_H - 6, Component.literal("Price"));
+        priceField = new EditBox(this.font, this.leftPos + PRICE_X + 18, this.topPos + PRICE_Y + 5,
+                PRICE_W - 21, 9, Component.literal("Price"));
         priceField.setMaxLength(12);
         priceField.setBordered(false);
+        priceField.setTextColor(NotchWidgets.COIN_GOLD);
         priceField.setHint(Component.literal("Type a price…").withStyle(ChatFormatting.DARK_GRAY));
         net.fugginbeenus.notchcurrency.compat.Render.setFilter(priceField, s -> s.isEmpty() || s.chars().allMatch(Character::isDigit));
         addRenderableWidget(priceField);
@@ -64,12 +65,12 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
         final int x = this.leftPos, y = this.topPos;
         NotchWidgets.panel(ctx, x, y, W, H);
 
-        NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8, NotchWidgets.Plate.WOOD);
+        NotchWidgets.title(ctx, this.font, "List an Item", x + W / 2, y + 8, NotchWidgets.Plate.BRASS);
         ctx.drawString(this.font, "Item to sell:", x + 16, y + AuctionListingScreenHandler.INPUT_Y + 4,
                 NotchTheme.TEXT_DARK, false);
         NotchWidgets.slot(ctx, x + AuctionListingScreenHandler.INPUT_X - 1, y + AuctionListingScreenHandler.INPUT_Y - 1);
-        ctx.drawString(this.font, "Price (" + NotchWidgets.coinName() + "):", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, x + PRICE_X, y + PRICE_Y, PRICE_W, PRICE_H, NotchTheme.DEEP);
+        ctx.drawString(this.font, "Price", x + 8, y + 44, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.coinInput(ctx, x + PRICE_X, y + PRICE_Y, PRICE_W);
         ctx.drawString(this.font, "Auction Duration", x + 8, y + 76, NotchTheme.TEXT_DARK, false);
         for (int i = 0; i < DURATIONS.length; i++) {
             boolean hov = over(mouseX, mouseY, x + SEG_X[i], y + SEG_Y, SEG_W[i], SEG_H);

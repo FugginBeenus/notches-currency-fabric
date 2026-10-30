@@ -73,13 +73,6 @@ public final class NotchWidgets {
         ctx.fill(x + w - 2, y + r, x + w - 1, y + h - r, NotchTheme.EDGE);
     }
 
-    public static void pill(GuiGraphics ctx, int x, int y, int w, int h) {
-        final int r = 1;
-        fillRound(ctx, x, y, w, h, r, NotchTheme.OUTLINE);
-        fillRound(ctx, x + 1, y + 1, w - 2, h - 2, r - 1, NotchTheme.DEEP);
-        ctx.fill(x + r, y + 1, x + w - r, y + 2, NotchTheme.OUTLINE);
-    }
-
     public static void primaryButton(GuiGraphics ctx, Font tr, int x, int y, int w, int h, String label, boolean hovered) {
         colorButton(ctx, x, y, w, h, NotchTheme.ACCENT_GREEN, NotchTheme.GREEN_HI, NotchTheme.GREEN_LO, hovered);
         ctx.drawCenteredString(tr, Component.literal(label), x + w / 2, y + (h - 8) / 2, NotchTheme.TEXT_LIGHT);
@@ -323,6 +316,13 @@ public final class NotchWidgets {
         ctx.renderItem(coinStack(), x, y);
         ctx.drawString(tr, text, x + 18, y + 5, color, true);
         return w;
+    }
+
+    public static void coinInput(GuiGraphics ctx, int x, int y, int w) {
+        fillRound(ctx, x + 8, y + 3, w - 8, 11, 1, NotchTheme.OUTLINE);
+        ctx.fill(x + 9, y + 4, x + w - 1, y + 13, NotchTheme.DEEP);
+        ctx.fill(x + 9, y + 4, x + w - 1, y + 5, 0xFF181818);
+        ctx.renderItem(coinStack(), x, y);
     }
 
     public static void blit(GuiGraphics ctx, net.minecraft.resources.ResourceLocation tex, int x, int y,

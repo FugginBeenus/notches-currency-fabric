@@ -126,8 +126,8 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         NotchWidgets.arrowRight(ctx, ax, y + 42, NotchTheme.SLOT_FILL);
         arrowLeft(ctx, ax, y + 53, NotchTheme.SLOT_FILL);
 
-        moneyPill(ctx, x + SELF_MONEY_X, y + MONEY_Y);
-        moneyPill(ctx, x + OTHER_MONEY_X, y + MONEY_Y);
+        NotchWidgets.coinInput(ctx, x + SELF_MONEY_X, y + MONEY_Y, MONEY_W);
+        NotchWidgets.coinInput(ctx, x + OTHER_MONEY_X, y + MONEY_Y, MONEY_W);
         long other = this.menu.getProperties().get(1);
         String shown = Long.toString(other);
         if (this.font.width(shown) > MONEY_W - 22) shown = NotchWidgets.compactCount(other);
@@ -163,14 +163,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         if (isReady) {
             NotchWidgets.smallCaps(ctx, "Ready", gx + 54 - NotchWidgets.smallCapsWidth("Ready"), y + LABEL_Y, READY_INK);
         }
-    }
-
-    private static void moneyPill(GuiGraphics ctx, int mx, int my) {
-        int fx = mx + 8, fw = MONEY_W - 8;
-        NotchWidgets.roundBox(ctx, fx, my + 3, fw, 11, NotchTheme.OUTLINE);
-        ctx.fill(fx + 1, my + 4, fx + fw - 1, my + 13, NotchTheme.DEEP);
-        ctx.fill(fx + 1, my + 4, fx + fw - 1, my + 5, 0xFF181818);
-        ctx.renderItem(NotchWidgets.coinStack(), mx, my);
     }
 
     private static void arrowLeft(GuiGraphics ctx, int x, int y, int color) {

@@ -29,6 +29,7 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
 
     private final Inventory playerInv;
     @Nullable private final UUID npcId;
+    private final boolean admin;
     private final SimpleContainer rowInv = new SimpleContainer(PER_PAGE);
     private final ContainerData props = new SimpleContainerData(PROP_COUNT);
     private int page = 0;
@@ -40,13 +41,14 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
     }
 
     public CosmeticShopScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
-        this(containerId, inv, buf.readBoolean() ? buf.readUUID() : null);
+        this(containerId, inv, buf.readBoolean() ? buf.readUUID() : null, buf.readBoolean());
     }
 
-    public CosmeticShopScreenHandler(int containerId, Inventory inv, @Nullable UUID npcId) {
+    public CosmeticShopScreenHandler(int containerId, Inventory inv, @Nullable UUID npcId, boolean admin) {
         super(ModScreenHandlers.COSMETIC_SHOP, containerId);
         this.playerInv = inv;
         this.npcId = npcId;
+        this.admin = admin;
         this.addDataSlots(props);
         for (int i = 0; i < PER_PAGE; i++) {
             this.addSlot(new ReadOnlySlot(rowInv, i, -10000, -10000));
@@ -64,17 +66,20 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
     }
 
     public static void open(ServerPlayer sp, @Nullable UUID npcId) {
+        boolean admin = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal("Cosmetics"),
-                (containerId, inv, p) -> new CosmeticShopScreenHandler(containerId, inv, npcId),
+                (containerId, inv, p) -> new CosmeticShopScreenHandler(containerId, inv, npcId, admin),
                 buf -> {
                     buf.writeBoolean(npcId != null);
                     if (npcId != null) buf.writeUUID(npcId);
+                    buf.writeBoolean(admin);
                 });
     }
 
     public ItemStack rowStack(int i) { return rowInv.getItem(i); }
     public int prop(int i) { return props.get(i); }
     @Nullable public UUID npcId() { return npcId; }
+    public boolean isAdmin() { return admin; }
 
     private void refresh() {
         if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;

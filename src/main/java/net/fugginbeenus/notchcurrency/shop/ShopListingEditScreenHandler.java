@@ -71,7 +71,12 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
 
         addSlot(new Slot(samples, SLOT_SALE, SALE_X, SALE_Y));
         addSlot(new Slot(samples, SLOT_BARTER, BARTER_X, BARTER_Y));
-        addSlot(new Slot(samples, SLOT_STOCK, STOCK_X, STOCK_Y));
+        addSlot(new Slot(samples, SLOT_STOCK, STOCK_X, STOCK_Y) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return hasListing();
+            }
+        });
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInv, col + row * 9 + 9, INV_X + col * 18, INV_Y + row * 18));
@@ -343,11 +348,13 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack stack = slot.getItem();
             result = stack.copy();
-            if (index < SLOT_COUNT) {
-                if (!this.moveItemStackTo(stack, SLOT_COUNT, this.slots.size(), true)) return ItemStack.EMPTY;
-            } else {
-                if (!this.moveItemStackTo(stack, SLOT_STOCK, SLOT_STOCK + 1, false)) return ItemStack.EMPTY;
-            }
+            int hotbar = SLOT_COUNT + 27, end = this.slots.size();
+            boolean moved;
+            if (index < SLOT_COUNT) moved = this.moveItemStackTo(stack, SLOT_COUNT, end, true);
+            else if (hasListing()) moved = this.moveItemStackTo(stack, SLOT_STOCK, SLOT_STOCK + 1, false);
+            else if (index < hotbar) moved = this.moveItemStackTo(stack, hotbar, end, false);
+            else moved = this.moveItemStackTo(stack, SLOT_COUNT, hotbar, false);
+            if (!moved) return ItemStack.EMPTY;
             if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
             else slot.setChanged();
         }

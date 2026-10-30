@@ -16,6 +16,7 @@ public class ParticlePickerScreen extends Screen {
 
     private static final int W = 340, H = 232;
     private static final int LIST_Y = 60, ROW_H = 17, ROWS = 8;
+    private static final int PG_LX = W - 70, PG_RX = W - 23, PG_BW = 13, PG_H = 16;
 
     private final String current;
     private final java.util.function.Consumer<String> onPick;
@@ -59,7 +60,7 @@ public class ParticlePickerScreen extends Screen {
             if (!q.isEmpty() && !e.name().toLowerCase().contains(q) && !e.id().contains(q)) continue;
             shown.add(e);
         }
-        scroll = Math.max(0, Math.min(scroll, Math.max(0, shown.size() - ROWS)));
+        scroll = NotchWidgets.pageStart(scroll, shown.size(), ROWS);
     }
 
     private boolean over(int mx, int my, int x, int y, int w, int h) {
@@ -117,15 +118,14 @@ public class ParticlePickerScreen extends Screen {
                     NotchTheme.TEXT_MUTED, false);
         }
 
-        if (shown.size() > ROWS) {
-            int barTop = py + LIST_Y, barH = ROWS * ROW_H - 2;
-            int thumb = Math.max(10, barH * ROWS / shown.size());
-            int at = barTop + (barH - thumb) * scroll / Math.max(1, shown.size() - ROWS);
-            ctx.fill(px + W - 8, barTop, px + W - 5, barTop + barH, 0x40000000);
-            ctx.fill(px + W - 8, at, px + W - 5, at + thumb, 0xFF6FC274);
+        int pages = NotchWidgets.pages(shown.size(), ROWS);
+        if (pages > 1) {
+            NotchWidgets.pager(ctx, this.font, px + PG_LX, px + PG_RX, py + H - 22, PG_BW, PG_H, scroll / ROWS + 1, pages,
+                    over(mouseX, mouseY, px + PG_LX, py + H - 22, PG_BW, PG_H),
+                    over(mouseX, mouseY, px + PG_RX, py + H - 22, PG_BW, PG_H));
         }
 
-        NotchWidgets.centerText(ctx, this.font, "Scroll to browse. Click one to use it.",
+        NotchWidgets.centerText(ctx, this.font, "Click one to use it.",
                 px + W / 2, py + H - 32, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.neutralButton(ctx, this.font, px + W / 2 - 50, py + H - 22, 100, 16, "Back",
                 over(mouseX, mouseY, px + W / 2 - 50, py + H - 22, 100, 16));
@@ -156,8 +156,7 @@ public class ParticlePickerScreen extends Screen {
     *///?} else {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
     //?}
-        int max = Math.max(0, shown.size() - ROWS);
-        scroll = Math.max(0, Math.min(max, scroll - (int) Math.signum(amount)));
+        scroll = NotchWidgets.pageStart(Math.max(0, scroll - (int) Math.signum(amount) * ROWS), shown.size(), ROWS);
         return true;
     }
 
@@ -193,6 +192,16 @@ public class ParticlePickerScreen extends Screen {
             if (over(mx, my, px + W / 2 - 50, py + H - 22, 100, 16)) {
                 NotchWidgets.click();
                 if (onBack != null) onBack.run(); else this.onClose();
+                return true;
+            }
+            if (shown.size() > ROWS && over(mx, my, px + PG_LX, py + H - 22, PG_BW, PG_H)) {
+                if (scroll > 0) NotchWidgets.tick();
+                scroll = NotchWidgets.pageStart(Math.max(0, scroll - ROWS), shown.size(), ROWS);
+                return true;
+            }
+            if (shown.size() > ROWS && over(mx, my, px + PG_RX, py + H - 22, PG_BW, PG_H)) {
+                if (scroll + ROWS < shown.size()) NotchWidgets.tick();
+                scroll = NotchWidgets.pageStart(scroll + ROWS, shown.size(), ROWS);
                 return true;
             }
         }

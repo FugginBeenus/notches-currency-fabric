@@ -78,10 +78,10 @@ final class ConfigEntries {
         e.add(new NumberEntry(c, "Bounty tracker Y offset", cfg.hud.bountyTrackerY, 6, -500, 500,
                 v -> cfg.hud.bountyTrackerY = v.intValue(),
                 "Pixels inward from the top or bottom edge."));
-        e.add(new SliderEntry(c, "Bounty tracker scale", cfg.hud.bountyTrackerScale, 100, 50, 200, "%",
+        e.add(new SliderEntry(c, "Bounty tracker scale", cfg.hud.bountyTrackerScale, 60, 50, 200, "%",
                 v -> cfg.hud.bountyTrackerScale = v,
                 "Shrink or grow the whole tracker."));
-        e.add(new SliderEntry(c, "Bounty tracker opacity", cfg.hud.bountyTrackerOpacity, 85, 0, 100, "%",
+        e.add(new SliderEntry(c, "Bounty tracker opacity", cfg.hud.bountyTrackerOpacity, 25, 0, 100, "%",
                 v -> cfg.hud.bountyTrackerOpacity = v,
                 "Background darkness of the pills."));
 

@@ -267,10 +267,10 @@ public class AnimationEditorScreen extends Screen {
                     held ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
             NotchWidgets.inset(ctx, px + RX + 12, ry, SLIDER_W, 14, NotchTheme.DEEP);
             float pct = (value + limit()) / (float) (limit() * 2);
-            NotchWidgets.pill(ctx, px + RX + 12 + Math.round(pct * (SLIDER_W - 6)), ry + 1, 6, 12);
+            NotchWidgets.button(ctx, px + RX + 12 + Math.round(pct * (SLIDER_W - 6)), ry + 1, 6, 12, false, false);
             NotchWidgets.centerText(ctx, this.font, (held ? "" : "~") + value,
                     px + RX + 12 + SLIDER_W / 2, ry + 3,
-                    held ? NotchTheme.TEXT_DARK : NotchTheme.TEXT_MUTED, false);
+                    held ? 0xFFE6E6E6 : 0xFF8A8A8A, false);
         }
         NotchWidgets.dangerButton(ctx, this.font, px + RX, py + 180, RW, 14, "Clear this part",
                 over(mouseX, mouseY, px + RX, py + 180, RW, 14));

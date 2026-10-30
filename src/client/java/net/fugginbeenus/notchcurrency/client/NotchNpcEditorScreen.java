@@ -603,13 +603,13 @@ public class NotchNpcEditorScreen extends Screen {
             if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
             else NotchWidgets.neutralButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
         }
-        NotchWidgets.divider(ctx, px + 8, py + 158, W - 16);
-        NotchWidgets.primaryButton(ctx, this.font, px + 40, py + 164, 220, 16, "Faction...",
-                over(mx, my, px + 40, py + 164, 220, 16));
+        NotchWidgets.divider(ctx, px + 8, py + 165, W - 16);
+        NotchWidgets.primaryButton(ctx, this.font, px + 40, py + 172, 220, 16, "Faction...",
+                over(mx, my, px + 40, py + 172, 220, 16));
         NotchWidgets.centerText(ctx, this.font, "Recruiters sign players up.",
-                px + W / 2, py + 184, NotchTheme.TEXT_MUTED, false);
+                px + W / 2, py + 192, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.centerText(ctx, this.font, "Guards use it to tell friend from foe.",
-                px + W / 2, py + 194, NotchTheme.TEXT_MUTED, false);
+                px + W / 2, py + 202, NotchTheme.TEXT_MUTED, false);
 
         if (pendingRole != null) {
             int by = py + H - 54;
@@ -1029,7 +1029,7 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 1 && clickBehavior(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 3 && clickVoiceRow(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 2) {
-                if (pendingRole == null && over(mx, my, px + 40, py + 164, 220, 16)) {
+                if (pendingRole == null && over(mx, my, px + 40, py + 172, 220, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendFactionPick(npcId,
                             net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_LIST, "");

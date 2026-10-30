@@ -33,6 +33,7 @@ public class CosmeticLoader implements SimpleSynchronousResourceReloadListener {
             try (InputStream is = e.getValue().open();
                  InputStreamReader reader = new InputStreamReader(is)) {
                 JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+                if (o.has("enabled") && !o.get("enabled").getAsBoolean()) continue;
                 CosmeticRegistry.put(CosmeticOffer.fromJson(offerId, o));
             } catch (Exception ex) {
                 LOGGER.warn("Failed to load cosmetic {}: {}", offerId, ex.getMessage());

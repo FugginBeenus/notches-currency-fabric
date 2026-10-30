@@ -81,9 +81,10 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
             int ry = y + ROWS_Y + i * ROW_H;
             NotchWidgets.inset(ctx, x + ROW_X, ry, ROW_W, ROW_H - 1, NotchTheme.DEEP);
 
-            String amount = (r.delta() > 0 ? "+" : "") + r.delta() + "c";
-            int color = r.delta() > 0 ? NotchTheme.TEXT_GREEN : NotchTheme.TEXT_RED;
-            ctx.drawString(this.font, amount, x + ROW_X + 6, ry + 5, color, false);
+            String amount = (r.delta() > 0 ? "+" : "-") + NotchWidgets.compactCount(Math.abs(r.delta()));
+            int color = r.delta() > 0 ? NotchWidgets.COIN_GREEN : NotchTheme.TEXT_RED;
+            ctx.renderItem(NotchWidgets.coinStack(), x + ROW_X + 3, ry);
+            ctx.drawString(this.font, amount, x + ROW_X + 21, ry + 5, color, true);
 
             String lbl = label(r);
             if (lbl.length() > 26) lbl = lbl.substring(0, 25) + "…";

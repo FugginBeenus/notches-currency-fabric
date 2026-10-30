@@ -24,7 +24,7 @@ import java.util.Map;
 public class EnchanterScreenHandler extends AbstractContainerMenu {
 
     public static final int INPUT_X = 12, INPUT_Y = 22;
-    public static final int INV_X = 47, INV_Y = 156, HOTBAR_Y = 214;
+    public static final int INV_X = 47, INV_Y = 172, HOTBAR_Y = 230;
     public static final int P_REPAIR_COST = 0, P_MULTIPLIER = 1, P_EXTRACT_COST = 2, P_TREASURE = 3,
             P_UNCRAFT_COST = 4, P_COST_COMMON = 5, P_COST_UNCOMMON = 6, P_COST_RARE = 7,
             P_COST_VERY_RARE = 8, P_TREASURE_MULT = 9, P_EXTRACT_VALUE_PCT = 10;
