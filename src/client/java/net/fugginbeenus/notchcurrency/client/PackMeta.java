@@ -18,12 +18,16 @@ public final class PackMeta {
             //?}
 
     public static String json(String description) {
-        String fields = FORMAT >= 82
+        String fields = FORMAT >= 65
                 ? "\"min_format\": " + FORMAT + ",\n    \"max_format\": " + FORMAT
                 : FORMAT >= 17
                 ? "\"pack_format\": " + FORMAT + ",\n    \"supported_formats\": [" + FORMAT + ", " + FORMAT + "]"
                 : "\"pack_format\": " + FORMAT;
         return "{\n  \"pack\": {\n    " + fields
                 + ",\n    \"description\": \"" + description + "\"\n  }\n}\n";
+    }
+
+    public static String stamp() {
+        return Integer.toHexString(json("").hashCode());
     }
 }

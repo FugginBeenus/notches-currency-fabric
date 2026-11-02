@@ -7,6 +7,7 @@ import net.fugginbeenus.notchcurrency.item.RaffleTicketItem;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 
 public final class ModItems {
 
@@ -25,7 +26,7 @@ public final class ModItems {
     public static final Item RAFFLE_TICKET = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("raffle_ticket"),
-            new RaffleTicketItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("raffle_ticket"))
+            new RaffleTicketItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("raffle_ticket").rarity(Rarity.UNCOMMON))
     );
 
     public static final Item PARCEL = Registry.register(
@@ -52,7 +53,7 @@ public final class ModItems {
     public static final Item CRATE_KEY = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("crate_key"),
-            new CrateKeyItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("crate_key"))
+            new CrateKeyItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("crate_key").rarity(Rarity.UNCOMMON))
     );
 
     public static final Item COIN_TAILS = Registry.register(
@@ -70,7 +71,7 @@ public final class ModItems {
     public static final Item NOTCH_NPC_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("notch_npc"),
-            new NotchNpcItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("notch_npc"))
+            new NotchNpcItem(net.fugginbeenus.notchcurrency.compat.Reg.itemProps("notch_npc").rarity(Rarity.RARE))
     );
 
     public static final Item ROUTE_PLANNER = Registry.register(
@@ -83,7 +84,7 @@ public final class ModItems {
             BuiltInRegistries.ITEM,
             NotchCurrency.id("heart_crystal"),
             new net.fugginbeenus.notchcurrency.item.HeartCrystalItem(
-                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("heart_crystal"))
+                    net.fugginbeenus.notchcurrency.compat.Reg.itemProps("heart_crystal").rarity(Rarity.EPIC))
     );
 
     public static final Item GOLDEN_CACHE = ModBlocks.GOLDEN_CACHE_ITEM;

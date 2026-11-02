@@ -12,6 +12,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
@@ -45,7 +46,7 @@ public final class ModBlocks {
     public static final Item GOLDEN_CACHE_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
             NotchCurrency.id("golden_cache"),
-            new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache"))
+            new BlockItem(GOLDEN_CACHE, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("golden_cache").rarity(Rarity.RARE))
     );
 
     public static final java.util.List<Block> MAILBOXES = new java.util.ArrayList<>();
@@ -139,14 +140,14 @@ public final class ModBlocks {
             new BlockItem(COIN_FLIP, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("coin_flip"))
     );
 
-    public static final Block COMMON_CRATE = registerCrate("common_crate", "common");
-    public static final Block RARE_CRATE = registerCrate("rare_crate", "rare");
-    public static final Block EPIC_CRATE = registerCrate("epic_crate", "epic");
+    public static final Block COMMON_CRATE = registerCrate("common_crate", "common", Rarity.COMMON);
+    public static final Block RARE_CRATE = registerCrate("rare_crate", "rare", Rarity.RARE);
+    public static final Block EPIC_CRATE = registerCrate("epic_crate", "epic", Rarity.EPIC);
 
-    private static Block registerCrate(String blockId, String crateType) {
+    private static Block registerCrate(String blockId, String crateType, Rarity rarity) {
         Block block = Registry.register(BuiltInRegistries.BLOCK, NotchCurrency.id(blockId),
                 new CrateBlock(net.fugginbeenus.notchcurrency.compat.Reg.blockProps(blockId).strength(2.0f).requiresCorrectToolForDrops().noOcclusion(), crateType));
-        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps(blockId)));
+        Registry.register(BuiltInRegistries.ITEM, NotchCurrency.id(blockId), new BlockItem(block, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps(blockId).rarity(rarity)));
         return block;
     }
 

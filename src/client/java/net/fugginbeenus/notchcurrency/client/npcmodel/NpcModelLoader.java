@@ -144,7 +144,7 @@ public final class NpcModelLoader {
             }
         }
         return Integer.toHexString(sig.toString().hashCode()) + "-" + sig.length()
-                + "-" + net.fugginbeenus.notchcurrency.client.PackMeta.FORMAT;
+                + "-" + net.fugginbeenus.notchcurrency.client.PackMeta.stamp();
     }
 
     private static String writtenStamp() {

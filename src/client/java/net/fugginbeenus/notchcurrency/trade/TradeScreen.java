@@ -17,10 +17,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
     private static final int PANEL_W = 228, PANEL_H = 215;
     private static final int SELF_GRID_X = 34, OTHER_GRID_X = 142, GRID_Y = 25;
     private static final int PLAYER_INV_X = 34, PLAYER_INV_Y = 135, HOTBAR_Y = PLAYER_INV_Y + 58;
-    private static final int LABEL_Y = 15, MONEY_Y = 84, MONEY_W = 70;
-    private static final int SELF_MONEY_X = 33, OTHER_MONEY_X = 125;
+    private static final int LABEL_Y = 15, MONEY_Y = 86, MONEY_W = 54;
+    private static final int SELF_MONEY_X = SELF_GRID_X - 1, OTHER_MONEY_X = OTHER_GRID_X - 1;
     private static final int CONFIRM_W = 60, CONFIRM_H = 16;
-    private static final int CONFIRM_X = (PANEL_W - CONFIRM_W) / 2, CONFIRM_Y = 108;
+    private static final int CONFIRM_X = (PANEL_W - CONFIRM_W) / 2, CONFIRM_Y = 110;
     private static final int READY_INK = 0xFF2E8B3A;
 
     private EditBox selfMoneyField;
@@ -101,6 +101,15 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         super.render(ctx, mouseX, mouseY, delta);
         renderTooltip(ctx, mouseX, mouseY);
         //?}
+        long other = this.menu.getProperties().get(1);
+        int ox = (this.width - imageWidth) / 2 + OTHER_MONEY_X, oy = (this.height - imageHeight) / 2 + MONEY_Y;
+        if (otherShortened(other) && mouseX >= ox && mouseX < ox + MONEY_W && mouseY >= oy && mouseY < oy + 16) {
+            ctx.renderTooltip(this.font, Component.literal(String.format("%,d", other)), mouseX, mouseY);
+        }
+    }
+
+    private boolean otherShortened(long other) {
+        return this.font.width(Long.toString(other)) > MONEY_W - 22;
     }
 
     //? if >=26.1 {
@@ -129,8 +138,7 @@ public class TradeScreen extends AbstractContainerScreen<TradeScreenHandler> {
         NotchWidgets.coinInput(ctx, x + SELF_MONEY_X, y + MONEY_Y, MONEY_W);
         NotchWidgets.coinInput(ctx, x + OTHER_MONEY_X, y + MONEY_Y, MONEY_W);
         long other = this.menu.getProperties().get(1);
-        String shown = Long.toString(other);
-        if (this.font.width(shown) > MONEY_W - 22) shown = NotchWidgets.compactCount(other);
+        String shown = otherShortened(other) ? NotchWidgets.compactCount(other) : Long.toString(other);
         ctx.drawString(this.font, shown, x + OTHER_MONEY_X + 18, y + MONEY_Y + 5, NotchWidgets.COIN_GOLD, true);
 
         int bx = x + CONFIRM_X, by = y + CONFIRM_Y;

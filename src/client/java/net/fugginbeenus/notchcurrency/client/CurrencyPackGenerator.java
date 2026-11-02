@@ -156,7 +156,7 @@ public final class CurrencyPackGenerator {
 
             String stamp = itemName + "|" + (coin == null ? -1 : java.util.Arrays.hashCode(coin))
                     + "|" + (tails == null ? -1 : java.util.Arrays.hashCode(tails))
-                    + "|" + PackMeta.FORMAT;
+                    + "|" + PackMeta.stamp();
             Path stampFile = pack.resolve("sync_stamp.txt");
             if (!empty && Files.isRegularFile(stampFile) && stamp.equals(Files.readString(stampFile))) {
                 enableServerPack(client, false);

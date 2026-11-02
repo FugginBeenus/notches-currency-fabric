@@ -6,7 +6,6 @@ import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
-import net.fugginbeenus.notchcurrency.registry.ModItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -562,29 +561,24 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
                 ChatFormatting rarityColor;
                 String rarityName;
 
-                if (stack.is(ModItems.NOTCH_COIN)) {
-                    rarityColor = ChatFormatting.GOLD;
-                    rarityName = "Legendary";
-                } else {
-                    switch (stack.getRarity()) {
-                        case UNCOMMON:
-                            rarityColor = ChatFormatting.GREEN;
-                            rarityName = "Uncommon";
-                            break;
-                        case RARE:
-                            rarityColor = ChatFormatting.BLUE;
-                            rarityName = "Rare";
-                            break;
-                        case EPIC:
-                            rarityColor = ChatFormatting.LIGHT_PURPLE;
-                            rarityName = "Epic";
-                            break;
-                        case COMMON:
-                        default:
-                            rarityColor = ChatFormatting.GRAY;
-                            rarityName = "Common";
-                            break;
-                    }
+                switch (net.fugginbeenus.notchcurrency.auction.AuctionRarity.of(stack)) {
+                    case UNCOMMON:
+                        rarityColor = ChatFormatting.GREEN;
+                        rarityName = "Uncommon";
+                        break;
+                    case RARE:
+                        rarityColor = ChatFormatting.AQUA;
+                        rarityName = "Rare";
+                        break;
+                    case EPIC:
+                        rarityColor = ChatFormatting.LIGHT_PURPLE;
+                        rarityName = "Epic";
+                        break;
+                    case COMMON:
+                    default:
+                        rarityColor = ChatFormatting.WHITE;
+                        rarityName = "Common";
+                        break;
                 }
 
                 long displayPrice = (timedAuction && highestBid > 0L) ? highestBid : startPrice;
