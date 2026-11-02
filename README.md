@@ -39,6 +39,8 @@ Requires Fabric API, and GeckoLib for the animated NPC model.
 - Flexible pricing: sell for coins, for a bartered item, or both at once
 - Live earnings collection, name/greeting/open controls, and optional shop rent as a sink
 - Color the shop title with `&`-codes in the name (`&6Golden Goods`), using the same codes as dialogue
+- Pick one of 32 signs for the shop's name, from wood and brass to a flickering neon; a resource
+  pack can add more
 - Each shop is run by an NPC with the Shop role; add dialogue and shoppers get the conversation
   first with a "Browse the shop" option, plus an optional goodbye line when they close the screen
 - **Server shops are the same thing.** Tick *Admin shop* on any shop and it gains endless stock and
@@ -50,9 +52,10 @@ Requires Fabric API, and GeckoLib for the animated NPC model.
 - Buy-now and timed auctions with bidding, offline-safe outbid refunds, and a winnings mailbox
 - GUI-first flow: browse, list, bid, and cancel in-screen
 - Scaling fees: listing fee (flat + percent, capped) and sale tax, both configurable
+- Every listing shows a rarity that follows how valuable the item is
 
 ### Mail
-A mailbox block. Place one and it's yours: it puts its flag up when something is waiting, and
+A mailbox block, in every wood. Place one and it's yours: it puts its flag up when something is waiting, and
 mounts on the floor or on a wall depending where you put it. Break it and the mail is still there
 when you put a new one down.
 
@@ -83,6 +86,7 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Particles: a designer with six shapes, spin and rise, four layers, tame versions of vanilla's awkward particles, and eight slots for your own pictures
 - Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance
 - Floating signs: up to four lines hovering above an NPC, for shop boards and titles
+- Name plates: pick the sign an NPC's name sits on in its talk window
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
 - Ownership-gated editing, a "pick up" that repacks the config into the item, and saveable presets
 - A public API (`NotchNpcApi`) for other mods to spawn NPCs and register custom roles
@@ -150,7 +154,7 @@ Every feature has a physical, hand-modeled block or table to build a casino/mark
 - **Slot Machine**: animated marquee lights; bet and spin the reels
 - **Coin Flip table**: a 3D coin sits on the felt, then pops up, tumbles, and lands on the result
 - **Crates** (Common / Rare / Epic): arched treasure chests whose lids swing open on a win
-- **Mailbox**: floor or wall mounted, flag up when something is waiting
+- **Mailbox**: in eleven woods, floor or wall mounted, flag up when something is waiting
 - Plus the Golden Cache and balloon crates that spawn around the world
 
 ### World events and rare finds

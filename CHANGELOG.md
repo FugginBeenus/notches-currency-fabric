@@ -1,23 +1,95 @@
 # Changelog
 
-## Unreleased
+## 0.13.0: The new look
 
-Housekeeping from a pass over the whole mod. Nothing you were doing changes.
+Every screen in the mod got a new coat of paint, shops and NPCs got signs to put their names on,
+and the mailbox comes in every wood. Under that sits a pile of fixes, including one that kept
+custom NPC models, NPC sounds and custom coin art from loading on 1.21.11.
 
-- Renaming the coin now shows up the moment you press Save. The pack it builds was never switched
-  on for you, so nothing changed until you went and ticked it in Options yourself. The server pack
-  and the NPC assets pack already did this; the coin pack is the one that got missed.
-- A renamed coin now reaches five places that still said "coins" or "Notch Coins" out loud: the ATM
-  message, `/givnotches`, the mailbox amount box, a shop tooltip and the raffle jackpot title.
+### A new look
+
+- **Title plates that fit the screen.** Steel for builder tools, brass for the bank, a light-up
+  marquee for the games, a stamp for mail, parchment for quests, and wood for shops.
+- **The slot machine, coin flip, mailbox, bounty board and ATM screens look like their blocks.**
+  The mailbox screen uses the wood of the mailbox you opened.
+- **Bounty notes are pinned to a cork board.** Click a note to take it. The notes slide and swing
+  when you turn the page.
+- **Money shows as the real coin on a dark field**, so a custom coin shows there too. Price boxes
+  in shops, the Auction House and the trade screens use the same coin field.
+- **Page bars on every list that has pages**, in place of the old scroll bars, and a white line
+  under the active tab.
+- **Waiting badges** for mail on the Inbox and Outbox tabs, uncollected money in the Shop Manager,
+  and finished bounties.
+- **A SOLD OUT stamp** on empty shop listings.
+- The NPC editor's Talk tab is grouped into labelled boxes.
+- The settings screen got real ON/OFF buttons, clearer value boxes, and a background on 1.21 and up.
+- The coins floating above the ATM bob and spin, each on its own timing.
+
+### Signs and name plates
+
+- Shop owners pick a sign for their shop's name with the **Sign...** button in the Shop Manager.
+- NPC builders pick the plate an NPC's name sits on in its talk window, on the Name tab of Appearance.
+- **32 signs** come with the mod, including Copper, Cherry, Chalkboard, Ribbon, a flickering Neon
+  and a twinkling Mystic, and a Painted sign in all 16 dye colours.
+- Signs are pictures, so a resource pack can add more. The wiki shows how.
+
+### Mailboxes in every wood
+
+- Oak, spruce, birch, jungle, acacia, dark oak, mangrove, cherry, bamboo, crimson and warped.
+- A smaller, simpler mailbox made from Minecraft's own textures. Placed mailboxes keep working and
+  just change their look.
+- New recipe: five planks around a red dye, with a log of the same wood underneath.
+- Axes break mailboxes faster, and each wood makes its own sound.
+
+### Auction House
+
+- The brass plate, new button icons, the shared page bar, and tooltips on the refresh and help
+  buttons. List an Item and Place a Bid got the same treatment.
+- Place a Bid shows the current and next bid as coins, and you type your bid in a coin field.
+- **Rarity follows how valuable an item is.** Diamonds are Rare, netherite and Elytra are Epic, and
+  an enchanted item goes up one step instead of two. The mod's own items have rarities now too:
+  the Heart Crystal is Epic, a crate's rarity matches its name, and so on.
+
+### Trading
+
+- The trade screens got the brass plate, coin fields, and a Ready mark for both players.
+- If either player changes the trade after the other confirmed, both confirms clear.
+- Hover the other player's coin amount to see the exact number when it is shortened.
+
+### Fixed
+
+- On 1.21.11, custom NPC models, NPC sounds and custom coin art did not load. Packs already built
+  on your computer rebuild by themselves.
+- Amounts over 32,767 showed wrong on the slot machine, coin flip, loan, raffle, enchanter, auction
+  listing, trade and shop screens.
+- With My Listings open, a click on an item behind the popup could still buy it.
+- The HUD coin and the bounty tracker's icon drew over chat messages. On 1.21.11 and up, the whole
+  balance, route and bounty tracker HUDs did. Chat stays on top now.
+- Renaming the coin did nothing until you turned its resource pack on by hand, and a renamed coin
+  still said "coins" in five places.
 - Claiming one auction listing with `/ah claim <id>` showed up in `/receipts` as "unspecified".
-  It says "auction" now, like every other auction payout. `[Claim All]` was already right.
-- Removed a leftover auction screen that nothing could open. The "my listings" view has lived
-  inside the Auction House screen for a long time.
-- Removed two network ids that nothing sent, and the listener behind one of them.
-- Every config option is now applied from one place instead of two lists kept in step by hand.
-  A new option could previously work at startup and do nothing after a Save, and that happened once.
-- Docs: the Modrinth page now covers sounds and particles, the README lists the starting balance
-  and savings interest, and the wiki folder in the repo holds all 18 pages instead of 10.
+- Text typed into the settings search box did not show.
+- A fifth offer of your own hung off the Trade Offers window, and offers six to ten could not be
+  reached.
+- On a new shop listing, Shift-click put items in the stock bin before the listing existed.
+- The Appearance screen was blurred on 1.21 and up.
+- Switching mailbox tabs threw the mouse to the middle of the screen.
+- Plenty of spacing: page arrows a pixel off center, names that touched the bottom of their signs,
+  the Raffle prize text, the Trade screen coin fields, and buttons that hung out of their rows.
+- The bounty tracker started too big and too dark. It now starts at 60% size and 25% opacity.
+
+### Also new
+
+- Admins see a **?** on the Cosmetics shop with the steps to add cosmetics, and a cosmetic file
+  with `"enabled": false` is hidden, so the two built-in examples can be turned off.
+- The Raffle screen's Claim prize and Redeem ticket share one row and grey out when you can't use
+  them.
+
+### Removed
+
+- The iron mailbox recipe.
+- The balance HUD no longer hides itself for 10 seconds after a long chat message.
+- Old unused pictures and an auction screen that nothing could open.
 
 ## 0.12.6: Talk bubble
 

@@ -1,18 +1,18 @@
-<!-- Paste this into the Modrinth description box. Replace every IMAGE line with a real upload. -->
+<!-- The full Modrinth description. Paste it into the description box to update the live page. -->
 
 # Notch Currency
 
 **Money that means something, and villagers worth talking to.**
+
+### THANK YOU FOR 2k DOWNLOADS!!!
 
 Give your server a real economy: coins players earn and spend, shops they run themselves, and NPCs
 you build by hand who hand out work, tell a story, and remember who did what.
 
 No commands to memorise. Everything is a screen in game.
 
-<!-- IMAGE: a busy town square. Two or three NPCs with floating name signs, a shop NPC mid-sale,
-     the coin HUD visible in the corner. This is the hero shot, make it look lived in. -->
+![A living town of NPCs!](https://cdn.modrinth.com/data/cached_images/4e87c9d94283231c02070094de7af395ffd23d6f_0.webp)
 
----
 
 ## Coins, and somewhere for them to go
 
@@ -22,25 +22,47 @@ You can even **rename the currency and draw your own coin**. Call them Crowns, C
 whatever. The art and the name follow it everywhere, and every player on the server gets it
 automatically.
 
-<!-- IMAGE: the currency creator screen with a custom coin, plus the HUD showing that coin. -->
+![Custom Currency Options](https://cdn.modrinth.com/data/cached_images/bb3ad8789cd9a2778f6c45b244c8c56a354f89da_0.webp)
 
 An economy only works if money leaves as fast as it arrives, so there is plenty to spend it on:
 an **auction house**, a **casino**, **crates**, **loans**, **raffles**, an **enchanter**, and
 **cosmetics**. Server owners can add rent, tax and fees on top.
 
+**Includes all the blocks an economy will need!**
+(ATM, Loot caches, Currency leaderboard, Bounty board, Loot crates, Slots, Coin flip table, Loot balloons)
+
+![ATM, Loot caches, Currency leaderboard, Bounty board, Loot crates, Slots, Coin flip table, Loot balloons](https://cdn.modrinth.com/data/cached_images/1b3c84df8a8979b5c7a753dec5422133c3d96b7a_0.webp)
+
+
+## Player-to-Player Mail and Trading
+
+Send items, coins, and messages to players as parcels!
+
+![Send Mail](https://cdn.modrinth.com/data/cached_images/4d801da6569956ad20e048c61b7f16e427be5277.png)
+
+A great way for servers to facilitate easy shop-less trading and item sharing. Mailboxes come in 11
+wood types, and the red flag goes up when mail is waiting.
+
+![Mailboxes](https://cdn.modrinth.com/data/cached_images/4880e4dbc749a49f38f35f259f88a08a52e26a43_0.webp)
+
+Or trade face to face: both players put in items and coins, and nothing changes hands until both
+confirm.
+
+---
+## NPCs
 ---
 
 ## Shops players actually run
 
-Anyone can open a shop. Set a price in coins, in items, or both at once.
+Anyone can open a shop. Set a price in coins, in items, or both at once. Then pick one of
+**32 signs** for its name, including a Painted sign in all 16 dye colours.
 
-<!-- IMAGE: a player shop's browse screen with a few listings and prices. -->
+![NPC Shops](https://cdn.modrinth.com/data/cached_images/acef0026c7945cae55ad71d2a07f9d0267263900.png)
 
 Servers get the same shop with endless stock, so there is one system to learn, not two. Shops can
 restock on a timer, cap how much one person buys, drift their prices with demand, and buy things
 *from* players instead of only selling.
 
----
 
 ## NPCs you build yourself
 
@@ -50,14 +72,11 @@ Choose how they look, from a vanilla skin to **your own Blockbench model**, or d
 mob in the game. Tint them, fade them to a ghost, resize them. Give them a name in colour and a
 floating sign above their head.
 
-<!-- IMAGE: the NPC editor open on the Look tab, live preview visible. -->
+![Customizable](https://cdn.modrinth.com/data/cached_images/d079df0a529ee1abc53c7f46f67a9c1292e6c3e9_0.webp)
 
 Then decide what they do. Stand still, wander, follow you, patrol a route, or guard the place.
 Give them a **daily schedule** so the shopkeeper opens up in the morning and walks home at dusk.
 
-<!-- IMAGE: three or four visibly different NPCs side by side, showing the range. -->
-
----
 
 ## Give them something to say
 
@@ -67,13 +86,12 @@ Give them a **daily schedule** so the shopkeeper opens up in the morning and wal
 should. A page can check what the player has done, so an NPC greets a stranger differently from
 someone who has been running errands for them all week.
 
-<!-- IMAGE: the Dialogue Studio with a few pages listed and choices on screen. -->
+![Branching Dialogue](https://cdn.modrinth.com/data/cached_images/26d1e596354ce1b566ba440061e2082bd1d0f4d2.png)
 
 **Reactions** for everything else. An NPC can respond when it is talked to, when someone walks up,
 when it is hit, when it kills something, even when another NPC wanders past. Every response can
 check a condition first, so one NPC handles the whole arc without a single tree.
 
----
 
 ## Quests
 
@@ -88,22 +106,19 @@ Write a job once, and any NPC can hand it out.
 Pay in coins, items, or both. Chain them together so finishing one starts the next. Gate one behind
 another. Make it repeatable or once in a lifetime.
 
-<!-- IMAGE: the quest editor, ideally on a Deliver quest so several fields are filled in. -->
+![Custom Quests](https://cdn.modrinth.com/data/cached_images/49758be70c2ef50a0178156232e21f954cc293ca_0.webp)
 
 **Faction quests** are for guilds: only members can take them, and anyone from your faction nearby
 shares the progress, so clearing a cave together counts for everyone.
 
 Players get a tracker on screen and a `/quests` log. Servers can restyle the tracker to match.
 
-<!-- IMAGE: the on-screen quest tracker with a quest part way through. -->
-
----
 
 ## Animate them, in game
 
 Build a loop of poses on a timeline. No modelling software, no files, nothing to install.
 
-<!-- IMAGE: the animation editor. Show the dope sheet at the bottom and the mannequin mid-pose. -->
+![Animate in-game](https://cdn.modrinth.com/data/cached_images/3d47485f6838152d44d0a2ec5c1b5ed7419bfc44.gif)
 
 Drop keyframes anywhere in time, drag a limb on the mannequin to pose it, and let the game slide
 between them. Every keyframe can ease in and out, which is the difference between a wave that looks
@@ -114,16 +129,11 @@ left and right, which halves the work on a walk cycle.
 
 Then hand it to any NPC: loop it forever as an idle, or play it once when something happens.
 
-<!-- IMAGE (optional but worth it): a short GIF of an NPC playing an animation in the world. -->
-
----
 
 ## Give them a voice
 
 Six sound slots per NPC: a **voice** for when it is spoken to, an **ambient** sound on a timer, and
 one each for hurt, death, footsteps and landing a hit.
-
-<!-- IMAGE: the Sounds screen, a few slots filled in. -->
 
 **Pitch** shifts every sound on that NPC at once, so one villager noise becomes a whole cast. The
 boxes fill themselves in as you type, and a typo is refused in chat rather than saved quietly.
@@ -136,13 +146,10 @@ an Exact timed animation to the same gap and the clang lands with the hammer, ev
 import goes up on the spot and every other player gets it on their next join. Nothing is pushed to
 players already online, on purpose, so a bad upload cannot be used to grief a full server.
 
----
 
 ## Particles, designed in game
 
 A wizard trailing motes. A ghost bleeding wisps. A blacksmith throwing sparks.
-
-<!-- IMAGE: the particle editor with the live preview showing a ring of glyphs around the NPC. -->
 
 Build an effect from up to **four layers**, each with its own particle, shape and motion. Six
 shapes: point, ring, ball, cone, column, spiral. The shape can sit still, **spin** around the NPC,
@@ -168,17 +175,30 @@ nothing, and three guards keep it cheap: a 32 block range, a cap per shape, and 
 
 - **Fabric**, for **1.20.1, 1.21.1, 1.21.11, 26.1.2 and 26.2**
 - Needs **Fabric API** and **GeckoLib**
-- **ModMenu** optional, for the settings screen
-- **Waystones** optional, to charge for teleports
+- **ModMenu** optional, but VERY useful for the settings screen
+- **Waystones** optional, integration built in to charge for teleports
 - Nearly everything is configurable, with a searchable settings screen in game
 - Money in and money out are both tunable: wealth tax, shop rent and fees on one side, optional
   savings interest and a starting balance for new players on the other
-- Single player works fine, but this is built for servers
+- Server-focused but singleplayer compatible
 
----
 
-## Links
+### Links
 
 - [Wiki](https://github.com/FugginBeenus/notches-currency-fabric/wiki) - every screen explained
 - [Discord](https://discord.gg/fMpb6retYA) - questions, bugs, ideas
-- [Source](https://github.com/FugginBeenus/notches-currency-fabric)
+- [Source and Issue Reporting](https://github.com/FugginBeenus/notches-currency-fabric)
+
+
+<details>
+<summary>CREDITS!</summary>
+
+## HUGE THANKS TO
+
+- **fflash_** - Some models, art, animations, and sprites
+- **raboy13/ Raboy** - Some models and animations
+- **kuky_1/ Lopolycookie** - Created the actual Notch Coin sprite!
+- **seanencabo/ Filbyte** - Some of APP.ly's animations
+- **MunsterDuck** - GambaPVP integration
+
+</details>
