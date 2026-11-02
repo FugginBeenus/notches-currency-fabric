@@ -1,0 +1,10 @@
+{
+  "name": "Cherry",
+  "order": 12,
+  "left": 12,
+  "right": 12,
+  "padding": 12,
+  "top": 5,
+  "color": "#5B2E3B",
+  "shadow": false
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Copper",
+  "order": 11,
+  "left": 8,
+  "right": 8,
+  "padding": 10,
+  "top": 0,
+  "color": "#FFF1E6",
+  "shadow": true
+}

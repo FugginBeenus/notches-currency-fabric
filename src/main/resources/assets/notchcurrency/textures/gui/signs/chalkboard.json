@@ -1,0 +1,10 @@
+{
+  "name": "Chalkboard",
+  "order": 13,
+  "left": 6,
+  "right": 8,
+  "padding": 9,
+  "top": 0,
+  "color": "#EEF0E8",
+  "shadow": false
+}

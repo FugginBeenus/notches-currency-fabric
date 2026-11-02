@@ -1,0 +1,13 @@
+{
+  "name": "Neon",
+  "order": 15,
+  "left": 6,
+  "right": 6,
+  "padding": 9,
+  "top": 0,
+  "frames": 6,
+  "frametime": 4,
+  "color": "#FF4A4A",
+  "shadow": false,
+  "outline": "#5A0E0E"
+}
