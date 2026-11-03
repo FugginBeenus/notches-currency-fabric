@@ -58,6 +58,9 @@ public final class ClientInit implements ClientModInitializer {
         net.fabricmc.fabric.api.resource.ResourceManagerHelper
                 .get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
                 .registerReloadListener(net.fugginbeenus.notchcurrency.client.ui.Signs.LOADER);
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper
+                .get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+                .registerReloadListener(net.fugginbeenus.notchcurrency.client.bounty.BookPaper.LOADER);
 
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.fugginbeenus.notchcurrency.registry.ModBlockEntities.ATM,

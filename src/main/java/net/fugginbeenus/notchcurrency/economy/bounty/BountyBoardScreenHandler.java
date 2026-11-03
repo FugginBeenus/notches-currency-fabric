@@ -21,7 +21,7 @@ import java.util.List;
 
 public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
-    public static final int OFFER_SLOTS = 5;
+    public static final int OFFER_SLOTS = 4;
     public static final int TAKEN_SLOTS = 5;
 
     public static final int P_TAKE_LIMIT = 0;
@@ -116,6 +116,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         }
         t.putString("rar", b.getRarity().name());
         t.putString("typ", b.getType().name());
+        t.putString("tgt", String.valueOf(b.getTarget()));
         t.putInt("prog", progress);
         t.putInt("req", b.getRequired());
         t.putLong("exp", expiry);
