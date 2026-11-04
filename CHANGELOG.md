@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.13.1: Paper notes
+
+The Bounty Board screen is rebuilt so it looks like part of Minecraft, made from the game's own
+materials.
+
+- **Notes are real pages.** Each one is made from the game's book page, with torn edges, small
+  tears and a folded corner. Every note tears differently.
+- **Notes follow your texture pack.** The paper and the folded corner come from your pack's book,
+  and the edge and text colours are read from it too. The frame and cork come from your pack's
+  stripped oak and brown concrete powder.
+- **Four bigger notes per page**, each with its type (Wanted, Help wanted, Delivery, Message or
+  Scouting), who posted it, the reward and the time left. If a long task leaves no room for the
+  name, hover the note to see it.
+- **A thin oak frame and a shaded cork backdrop** replace the plank board.
+- **A solid TAKE stamp** shows when you hover a note, or a red FULL when you are already carrying
+  all the bounties you can.
+- **The page arrows moved to the bottom** of the board, under your bounties.
+
+Servers and players should update together, because the board now sends four notes per page.
+
 ## 0.13.0: The new look
 
 Every screen in the mod got a new coat of paint, shops and NPCs got signs to put their names on,
