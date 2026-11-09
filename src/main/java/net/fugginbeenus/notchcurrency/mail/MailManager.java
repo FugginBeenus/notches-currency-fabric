@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.mail;
 
+import net.fugginbeenus.notchcurrency.compat.Chat;
 import net.fugginbeenus.notchcurrency.compat.Msg;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CurrencyText;
@@ -8,6 +9,7 @@ import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -27,21 +29,33 @@ public final class MailManager {
 
         ServerPlayer online = server.getPlayerList().getPlayer(recipient);
         if (online != null) {
-            Msg.chat(online, Component.literal("Mail from " + item.sender() + ". ")
+            Msg.chat(online, withCollect(state, online, Component.literal("Mail from " + item.sender() + ". ")
                     .withStyle(ChatFormatting.AQUA)
                     .append(Component.literal("Open any mailbox to collect it.")
-                            .withStyle(ChatFormatting.GRAY)));
+                            .withStyle(ChatFormatting.GRAY))));
             online.playSound(SoundEvents.ITEM_PICKUP, 0.6F, 1.4F);
         }
         return true;
     }
 
     public static void greet(ServerPlayer player) {
-        int waiting = MailState.get(player.level().getServer()).count(player.getUUID());
+        MailState state = MailState.get(player.level().getServer());
+        int waiting = state.count(player.getUUID());
         if (waiting <= 0) return;
-        Msg.chat(player, Component.literal("You have " + waiting + (waiting == 1 ? " parcel" : " parcels"))
+        Msg.chat(player, withCollect(state, player, Component.literal("You have " + waiting + (waiting == 1 ? " parcel" : " parcels"))
                 .withStyle(ChatFormatting.AQUA)
-                .append(Component.literal(" waiting in the mail.").withStyle(ChatFormatting.GRAY)));
+                .append(Component.literal(" waiting in the mail.").withStyle(ChatFormatting.GRAY))));
+    }
+
+    // Players with their own mailbox go to it instead.
+    private static MutableComponent withCollect(MailState state, ServerPlayer player, MutableComponent line) {
+        if (state.hasMailbox(player.getUUID())) return line;
+        return line.append(Component.literal(" "))
+                .append(Component.literal("[Collect]")
+                        .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+                        .withStyle(style -> style
+                                .withClickEvent(Chat.runCommand("/ah claim"))
+                                .withHoverEvent(Chat.showText(Component.literal("Collect all your mail now")))));
     }
 
     public static boolean collect(ServerPlayer player, UUID itemId) {

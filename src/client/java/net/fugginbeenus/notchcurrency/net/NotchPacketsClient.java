@@ -955,12 +955,13 @@ public final class NotchPacketsClient {
             int fee = buf.readVarInt();
             boolean open = buf.readBoolean();
             boolean canManage = buf.readBoolean();
+            boolean locked = buf.readBoolean();
             client.execute(() -> {
                 net.minecraft.ChatFormatting color = net.fugginbeenus.notchcurrency.compat.Colors.byName(colorName);
                 Minecraft.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen(npcId, factionId,
                                 factionName, color == null ? net.minecraft.ChatFormatting.WHITE : color,
-                                members, alreadyIn, canFound, motto, fee, open, canManage));
+                                members, alreadyIn, canFound, motto, fee, open, canManage, locked));
             });
         });
     }
@@ -1043,6 +1044,12 @@ public final class NotchPacketsClient {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);
         NetClient.sendToServer(NotchPackets.NPC_DELETE, buf);
+    }
+
+    public static void sendNpcTransfer(UUID npcId) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        NetClient.sendToServer(NotchPackets.NPC_TRANSFER, buf);
     }
 
 }

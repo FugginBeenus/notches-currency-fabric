@@ -8,6 +8,9 @@ import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
+import net.fugginbeenus.notchcurrency.economy.Treasury;
+import net.fugginbeenus.notchcurrency.mail.MailItem;
+import net.fugginbeenus.notchcurrency.mail.MailManager;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -330,10 +333,10 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
         ServerPlayer sellerPlayer =
                 buyer.level().getServer().getPlayerList().getPlayer(listing.sellerUuid);
 
-        boolean sellerPaidNow = false;
         long gross = price;
         long net = AuctionConfig.applySaleTax(gross);
         long tax = gross - net;
+        Treasury.collect(buyer.level().getServer(), tax, "auction sale tax");
 
         if (sellerPlayer != null) {
             if (net > 0) {
@@ -365,7 +368,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
             Msg.chat(sellerPlayer, sellerMsg);
             sellerPlayer.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
-            sellerPaidNow = true;
+        } else {
+            payOfflineSeller(buyer.level().getServer(), listing.sellerUuid, net, listing.stack);
         }
 
         ItemStack prize = listing.stack.copy();
@@ -381,7 +385,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                     listing.sellerName,
                     buyer.getName().getString(),
                     prize.copy(),
-                    sellerPaidNow ? 0L : net
+                    0L
             );
             addPending(pw);
 
@@ -418,8 +422,13 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
         Msg.chat(buyer, buyerMsg);
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+    }
 
-        if (!sellerPaidNow && sellerPlayer == null) {
+    private static void payOfflineSeller(MinecraftServer server, UUID seller, long amount, ItemStack sold) {
+        if (amount <= 0L) return;
+        MailItem payout = MailItem.payout("Auction House", "Sale of " + sold.getHoverName().getString(), amount);
+        if (!MailManager.post(server, seller, payout)) {
+            BalanceStore.add(server, seller, amount, TransactionReason.AUCTION, "auction sale payout (offline)");
         }
     }
 
@@ -582,12 +591,11 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                 long gross = finalPrice;
                 long net = AuctionConfig.applySaleTax(gross);
                 long tax = gross - net;
+                Treasury.collect(world.getServer(), tax, "auction sale tax");
 
                 ItemStack prize = listing.stack.copy();
                 stripAuctionTags(prize);
                 Component itemName = listing.stack.getHoverName().copy().withStyle(ChatFormatting.WHITE);
-
-                boolean sellerPaidNow = false;
 
                 if (seller != null) {
                     if (net > 0) {
@@ -615,7 +623,8 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
 
                     Msg.chat(seller, sellerMsg);
                     seller.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
-                    sellerPaidNow = true;
+                } else {
+                    payOfflineSeller(world.getServer(), listing.sellerUuid, net, listing.stack);
                 }
 
                 if (winner != null) {
@@ -642,7 +651,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                         ? listing.highestBidderName
                                         : winner.getName().getString(),
                                 prize,
-                                sellerPaidNow ? 0L : net
+                                0L
                         );
                         addPending(pw);
 
@@ -677,7 +686,7 @@ public final class AuctionState extends SavedData implements net.fugginbeenus.no
                                     ? listing.highestBidderName
                                     : "Unknown",
                             prize,
-                            sellerPaidNow ? 0L : net
+                            0L
                     );
                     addPending(pw);
                 }

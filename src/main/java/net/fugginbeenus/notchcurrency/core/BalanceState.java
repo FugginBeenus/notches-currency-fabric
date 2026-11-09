@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.core;
 
 import net.fugginbeenus.notchcurrency.compat.StateData;
+import net.fugginbeenus.notchcurrency.economy.Treasury;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -44,8 +45,10 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
     public long subtract(UUID id, long delta) {
         return add(id, -Math.max(0L, delta));
     }
-    public java.util.Map<UUID, Long> snapshot() {
-        return java.util.Map.copyOf(balances);
+    public Map<UUID, Long> snapshot() {
+        Map<UUID, Long> players = new HashMap<>(balances);
+        players.remove(Treasury.ID);
+        return Map.copyOf(players);
     }
 
     public long totalSupply() {
@@ -56,7 +59,9 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
 
     public int accountCount() {
         int n = 0;
-        for (long v : balances.values()) if (v > 0) n++;
+        for (Map.Entry<UUID, Long> e : balances.entrySet()) {
+            if (e.getValue() > 0 && !Treasury.ID.equals(e.getKey())) n++;
+        }
         return n;
     }
 

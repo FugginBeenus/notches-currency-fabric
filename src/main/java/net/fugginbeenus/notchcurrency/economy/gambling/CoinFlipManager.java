@@ -99,7 +99,7 @@ public final class CoinFlipManager {
                 return;
             }
         }
-        if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Coin flip bet")) {
+        if (!CurrencyApi.withdraw(sp, bet, TransactionReason.GAMBLING, "Coin flip bet")) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED));
             return;
         }
@@ -157,7 +157,7 @@ public final class CoinFlipManager {
 
         long payout = won ? Math.round(bet * (payoutPercent / 100.0)) : 0L;
         if (payout > 0) {
-            CurrencyApi.deposit(world.getServer(), player, payout, TransactionReason.FAUCET, "Coin flip win");
+            CurrencyApi.deposit(world.getServer(), player, payout, TransactionReason.GAMBLING, "Coin flip win");
         }
 
         ServerPlayer sp = world.getServer().getPlayerList().getPlayer(player);

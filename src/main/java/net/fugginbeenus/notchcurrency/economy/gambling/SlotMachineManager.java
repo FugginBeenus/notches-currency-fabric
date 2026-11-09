@@ -77,7 +77,7 @@ public final class SlotMachineManager {
                     + " and " + GamblingManager.getMaxBet() + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".").withStyle(ChatFormatting.RED));
             return SpinResult.fail();
         }
-        if (!CurrencyApi.withdraw(sp, bet, TransactionReason.SINK, "Slots bet")) {
+        if (!CurrencyApi.withdraw(sp, bet, TransactionReason.GAMBLING, "Slots bet")) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You don't have " + bet + " " + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + " to bet.").withStyle(ChatFormatting.RED));
             return SpinResult.fail();
         }
@@ -86,7 +86,7 @@ public final class SlotMachineManager {
         double rawMult = rawMultiplier(r0, r1, r2);
         long payout = Math.round(bet * rawMult * norm);
         if (payout > 0) {
-            CurrencyApi.deposit(sp, payout, TransactionReason.FAUCET, "Slots win");
+            CurrencyApi.deposit(sp, payout, TransactionReason.GAMBLING, "Slots win");
         }
 
         return new SpinResult(r0, r1, r2, payout, true);

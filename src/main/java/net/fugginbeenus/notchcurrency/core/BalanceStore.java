@@ -1,7 +1,9 @@
 package net.fugginbeenus.notchcurrency.core;
 
 import net.fugginbeenus.notchcurrency.economy.EconomyLedger;
+import net.fugginbeenus.notchcurrency.economy.ReceiptState;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
+import net.fugginbeenus.notchcurrency.economy.Treasury;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.UUID;
@@ -22,8 +24,10 @@ public final class BalanceStore {
         BalanceState st = state(server);
         long before = st.get(id);
         long after = op.apply(st);
-        EconomyLedger.record(server, id, after - before, after, reason, detail);
-        net.fugginbeenus.notchcurrency.economy.ReceiptState.record(server, id, after - before, after, reason, detail);
+        long delta = after - before;
+        reason = Treasury.settle(server, id, delta, reason, detail);
+        EconomyLedger.record(server, id, delta, after, reason, detail);
+        ReceiptState.record(server, id, delta, after, reason, detail);
         return after;
     }
 

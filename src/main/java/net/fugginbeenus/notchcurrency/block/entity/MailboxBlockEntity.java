@@ -47,14 +47,33 @@ public class MailboxBlockEntity extends BlockEntity {
         this.owner = player;
         this.ownerName = name == null ? "" : name;
         setChanged();
+        if (getLevel() instanceof ServerLevel server) {
+            MailState.get(server.getServer()).addMailbox(player, getBlockPos());
+        }
     }
+
+    public void unregister() {
+        if (owner != null && getLevel() instanceof ServerLevel server) {
+            MailState.get(server.getServer()).removeMailbox(owner, getBlockPos());
+        }
+    }
+
+    //? if >=1.21.11 {
+    /*@Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+        unregister();
+    }
+    *///?}
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, MailboxBlockEntity box) {
         if (box.owner == null || !(level instanceof ServerLevel server)) return;
         if (++box.sinceCheck < CHECK_EVERY_TICKS) return;
         box.sinceCheck = 0;
 
-        boolean waiting = MailState.get(server.getServer()).count(box.owner) > 0;
+        MailState mail = MailState.get(server.getServer());
+        mail.addMailbox(box.owner, pos);
+        boolean waiting = mail.count(box.owner) > 0;
         if (state.getValue(MailboxBlock.FLAG) != waiting) {
             level.setBlock(pos, state.setValue(MailboxBlock.FLAG, waiting),
                     net.minecraft.world.level.block.Block.UPDATE_ALL);

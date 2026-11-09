@@ -19,6 +19,18 @@ public final class NotchConfig {
     public Cosmetic cosmetic = new Cosmetic();
     public Hud hud = new Hud();
     public VillagerTrades villagerTrades = new VillagerTrades();
+    public Treasury treasury = new Treasury();
+    public Factions factions = new Factions();
+
+    public static final class Treasury {
+        public boolean enabled = false;
+        public boolean collectGambling = false;
+        public boolean fundRewards = false;
+    }
+
+    public static final class Factions {
+        public boolean permanentMembership = false;
+    }
 
     public static final class VillagerTrades {
         public boolean enabled = true;

@@ -17,6 +17,14 @@ public final class Chat {
         //?}
     }
 
+    public static ClickEvent suggestCommand(String command) {
+        //? if >=1.21.11 {
+        /*return new ClickEvent.SuggestCommand(command);
+        *///?} else {
+        return new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command);
+        //?}
+    }
+
     public static ClickEvent copyToClipboard(String text) {
         //? if >=1.21.11 {
         /*return new ClickEvent.CopyToClipboard(text);

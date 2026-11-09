@@ -2,12 +2,14 @@ package net.fugginbeenus.notchcurrency.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.LongArgumentType;
+import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.core.BalanceState;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.EconomyLeaderboard;
 import net.fugginbeenus.notchcurrency.economy.EconomyLedger;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
+import net.fugginbeenus.notchcurrency.economy.Treasury;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -72,7 +74,54 @@ public final class EcoCommands {
                                                         LongArgumentType.getLong(ctx, "amount"), Mode.SET)))))
                         .then(Commands.literal("stats")
                                 .executes(ctx -> stats(ctx.getSource())))
+                        .then(Commands.literal("treasury")
+                                .executes(ctx -> treasury(ctx.getSource()))
+                                .then(Commands.literal("pay")
+                                        .then(Commands.argument("target", EntityArgument.player())
+                                                .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                                        .executes(ctx -> treasuryPay(ctx.getSource(),
+                                                                EntityArgument.getPlayer(ctx, "target"),
+                                                                LongArgumentType.getLong(ctx, "amount"))))))
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(0))
+                                                .executes(ctx -> treasurySet(ctx.getSource(),
+                                                        LongArgumentType.getLong(ctx, "amount"))))))
         );
+    }
+
+    private static int treasury(CommandSourceStack src) {
+        long held = Treasury.balance(src.getServer());
+        src.sendSuccess(() -> Component.literal("Treasury: ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(held + " ").withStyle(ChatFormatting.GOLD))
+                .append(coinIcon()), false);
+        if (!NotchConfigIO.get().treasury.enabled) {
+            src.sendSuccess(() -> Component.literal("Collecting is off. Turn on Treasury in the config.")
+                    .withStyle(ChatFormatting.GRAY), false);
+        }
+        return 1;
+    }
+
+    private static int treasuryPay(CommandSourceStack src, ServerPlayer target, long amount) {
+        if (!Treasury.pay(target, amount, "treasury payment by " + src.getTextName())) {
+            src.sendFailure(Component.literal("The treasury only holds " + Treasury.balance(src.getServer()) + "."));
+            return 0;
+        }
+        long left = Treasury.balance(src.getServer());
+        src.sendSuccess(() -> Component.literal("Paid ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(amount + " ").withStyle(ChatFormatting.GOLD))
+                .append(coinIcon())
+                .append(Component.literal(" to ").withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(target.getName().getString()).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" from the treasury (" + left + " left)").withStyle(ChatFormatting.GRAY)), true);
+        return 1;
+    }
+
+    private static int treasurySet(CommandSourceStack src, long amount) {
+        long now = Treasury.set(src.getServer(), amount, "set by " + src.getTextName());
+        src.sendSuccess(() -> Component.literal("Set the treasury to ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(now + " ").withStyle(ChatFormatting.GOLD))
+                .append(coinIcon()), true);
+        return 1;
     }
 
     private enum Mode { GIVE, TAKE, SET }
@@ -111,6 +160,11 @@ public final class EcoCommands {
         src.sendSuccess(() -> Component.literal("─── Economy Stats ───").withStyle(ChatFormatting.GOLD), false);
         src.sendSuccess(() -> Component.literal("Money supply: ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(supply + " ").withStyle(ChatFormatting.GOLD)).append(coinIcon()), false);
+        long held = Treasury.balance(server);
+        if (held > 0 || NotchConfigIO.get().treasury.enabled) {
+            src.sendSuccess(() -> Component.literal("Treasury: ").withStyle(ChatFormatting.GRAY)
+                    .append(Component.literal(held + " ").withStyle(ChatFormatting.GOLD)).append(coinIcon()), false);
+        }
         src.sendSuccess(() -> Component.literal("Accounts: ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(String.valueOf(accounts)).withStyle(ChatFormatting.WHITE)), false);
         src.sendSuccess(() -> Component.literal("Since restart - created: ").withStyle(ChatFormatting.GRAY)

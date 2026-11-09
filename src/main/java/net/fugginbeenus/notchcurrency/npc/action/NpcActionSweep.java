@@ -16,13 +16,13 @@ public final class NpcActionSweep {
 
     private NpcActionSweep() {}
 
-    public static void sweep(NotchNpcEntity npc) {
-        if (npc.getActionSweepVersion() >= CURRENT_VERSION) return;
+    public static int sweep(NotchNpcEntity npc) {
+        if (npc.getActionSweepVersion() >= CURRENT_VERSION) return 0;
         MinecraftServer server = npc.level().getServer();
-        if (server == null) return;
+        if (server == null) return 0;
         npc.setActionSweepVersion(CURRENT_VERSION);
 
-        if (NpcActionRunner.ownerMayRunCommands(npc, server)) return;
+        if (NpcActionRunner.ownerMayRunCommands(npc, server)) return 0;
 
         int removed = 0;
         for (DialogueNode node : npc.getDialogue().nodes().values()) {
@@ -44,6 +44,7 @@ public final class NpcActionSweep {
             LOGGER.info("Removed {} admin-only action(s) from NPC {} - its owner ({}) isn't an operator",
                     removed, npc.getUUID(), npc.getOwnerName().isEmpty() ? "unknown" : npc.getOwnerName());
         }
+        return removed;
     }
 
     private static int strip(java.util.List<DialogueAction> actions) {

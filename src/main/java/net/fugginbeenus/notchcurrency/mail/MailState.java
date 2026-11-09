@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.mail;
 
 import net.fugginbeenus.notchcurrency.compat.Nbt;
 import net.fugginbeenus.notchcurrency.compat.StateData;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -12,8 +13,10 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class MailState extends SavedData implements net.fugginbeenus.notchcurrency.compat.NbtState {
@@ -23,6 +26,7 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
 
     private final Map<UUID, List<MailItem>> boxes = new LinkedHashMap<>();
     private final Map<UUID, String> knownBoxes = new LinkedHashMap<>();
+    private final Map<UUID, Set<Long>> mailboxes = new LinkedHashMap<>();
 
     public static MailState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
@@ -48,6 +52,21 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
 
     public Map<UUID, String> knownMailboxes() {
         return Map.copyOf(knownBoxes);
+    }
+
+    public void addMailbox(UUID owner, BlockPos pos) {
+        if (mailboxes.computeIfAbsent(owner, key -> new LinkedHashSet<>()).add(pos.asLong())) setDirty();
+    }
+
+    public void removeMailbox(UUID owner, BlockPos pos) {
+        Set<Long> owned = mailboxes.get(owner);
+        if (owned == null || !owned.remove(pos.asLong())) return;
+        if (owned.isEmpty()) mailboxes.remove(owner);
+        setDirty();
+    }
+
+    public boolean hasMailbox(UUID owner) {
+        return mailboxes.containsKey(owner);
     }
 
     public List<MailItem> inbox(UUID player) {
@@ -107,6 +126,14 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
                 state.knownBoxes.put(Nbt.getUuid(entry, "Player"), entry.getString("Name"));
             }
         }
+        ListTag placed = nbt.getList("Mailboxes", Tag.TAG_COMPOUND);
+        for (int i = 0; i < placed.size(); i++) {
+            CompoundTag entry = placed.getCompound(i);
+            if (Nbt.hasUuid(entry, "Player")) {
+                state.mailboxes.computeIfAbsent(Nbt.getUuid(entry, "Player"), key -> new LinkedHashSet<>())
+                        .add(entry.getLong("Pos"));
+            }
+        }
         return state;
     }
 
@@ -131,6 +158,17 @@ public class MailState extends SavedData implements net.fugginbeenus.notchcurren
             known.add(one);
         }
         nbt.put("Known", known);
+
+        ListTag placed = new ListTag();
+        for (Map.Entry<UUID, Set<Long>> entry : mailboxes.entrySet()) {
+            for (long pos : entry.getValue()) {
+                CompoundTag one = new CompoundTag();
+                Nbt.putUuid(one, "Player", entry.getKey());
+                one.putLong("Pos", pos);
+                placed.add(one);
+            }
+        }
+        nbt.put("Mailboxes", placed);
         return nbt;
     }
 

@@ -8,6 +8,7 @@ import net.fugginbeenus.notchcurrency.npc.faction.FactionState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -37,7 +38,57 @@ public final class FactionCommands {
                 .then(Commands.literal("create")
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> create(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "name"))))));
+                                        StringArgumentType.getString(ctx, "name")))))
+                .then(Commands.literal("admin")
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .then(Commands.literal("move")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("faction", StringArgumentType.word())
+                                                .executes(ctx -> adminMove(ctx.getSource(),
+                                                        EntityArgument.getPlayer(ctx, "player"),
+                                                        StringArgumentType.getString(ctx, "faction"))))))
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> adminRemove(ctx.getSource(),
+                                                EntityArgument.getPlayer(ctx, "player")))))));
+    }
+
+    private static int adminMove(CommandSourceStack source, ServerPlayer target, String factionId) {
+        FactionState state = FactionState.get(source.getServer());
+        Faction faction = state.get(factionId);
+        if (faction == null) {
+            source.sendFailure(Component.literal("No faction by that name."));
+            return 0;
+        }
+        state.join(target.getUUID(), faction.id());
+        String name = target.getName().getString();
+        source.sendSuccess(() -> Component.literal("Moved " + name + " to ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(faction.displayName()).withStyle(faction.color())), true);
+        if (source.getEntity() != target) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(target, Component.literal("An admin moved you to ")
+                    .withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(faction.displayName()).withStyle(faction.color())));
+        }
+        return 1;
+    }
+
+    private static int adminRemove(CommandSourceStack source, ServerPlayer target) {
+        FactionState state = FactionState.get(source.getServer());
+        Faction faction = state.factionOf(target.getUUID());
+        String name = target.getName().getString();
+        if (faction == null) {
+            source.sendFailure(Component.literal(name + " isn't with a faction."));
+            return 0;
+        }
+        state.leave(target.getUUID());
+        source.sendSuccess(() -> Component.literal("Removed " + name + " from ").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(faction.displayName()).withStyle(faction.color())), true);
+        if (source.getEntity() != target) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(target, Component.literal("An admin removed you from ")
+                    .withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(faction.displayName()).withStyle(faction.color())));
+        }
+        return 1;
     }
 
     private static int list(CommandSourceStack source) {

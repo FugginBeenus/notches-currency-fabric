@@ -290,7 +290,10 @@ public final class PlayerShopManager {
         }
 
         if (needsCoins && !CurrencyApi.withdraw(buyer, totalCoinCost,
-                net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE, "shop purchase")) {
+                shop.isAdminMode()
+                        ? net.fugginbeenus.notchcurrency.economy.TransactionReason.SINK
+                        : net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE,
+                "shop purchase")) {
             if (!shop.isAdminMode()) listing.addStock(totalItems);
             return PurchaseResult.INSUFFICIENT_FUNDS;
         }

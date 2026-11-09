@@ -309,6 +309,26 @@ final class ConfigEntries {
         e.add(new BoolEntry(c, "Announce to paid players", cfg.savings.announce, true,
                 v -> cfg.savings.announce = v));
 
+        c = "Treasury";
+        e.add(new BoolEntry(c, "Treasury enabled", cfg.treasury.enabled, false,
+                v -> cfg.treasury.enabled = v,
+                "Money that would vanish (taxes, fees, rent) goes to a server bank instead.",
+                "Admins check and spend it with /eco treasury."));
+        e.add(new BoolEntry(c, "Treasury is the house", cfg.treasury.collectGambling, false,
+                v -> cfg.treasury.collectGambling = v,
+                "Gambling bets go to the treasury, and wins are paid from it while it has enough.",
+                "Off: gambling skips the treasury, the same as before."));
+        e.add(new BoolEntry(c, "Pay rewards from treasury", cfg.treasury.fundRewards, false,
+                v -> cfg.treasury.fundRewards = v,
+                "Money the mod hands out (bounties, interest, loans, NPC rewards) comes from",
+                "the treasury while it has enough. Off: that money is new."));
+
+        c = "Factions";
+        e.add(new BoolEntry(c, "Permanent membership", cfg.factions.permanentMembership, false,
+                v -> cfg.factions.permanentMembership = v,
+                "Players (ops too) can't leave or switch faction once they join.",
+                "Disbanding still frees everyone. Ops can use /faction admin."));
+
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,
                 v -> cfg.cosmetic.enabled = v,

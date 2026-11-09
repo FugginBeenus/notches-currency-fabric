@@ -24,7 +24,8 @@ public final class CoinEconomy {
     public static long withdrawFromBalanceToInventory(ServerPlayer player, int amount) {
         if (player == null || amount <= 0) return 0;
 
-        boolean ok = CurrencyApi.withdraw(player, amount);
+        boolean ok = CurrencyApi.withdraw(player, amount,
+                net.fugginbeenus.notchcurrency.economy.TransactionReason.ATM_WITHDRAW, "ATM withdraw");
         if (!ok) {
             LOGGER.info("[CoinEconomy] withdrawFromBalanceToInventory FAILED for {} (need {}, has {})",
                     player.getName().getString(), amount, CurrencyApi.getBalance(player));

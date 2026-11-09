@@ -71,6 +71,7 @@ public final class ShopRent {
 
             if (available >= rent) {
                 long fromPending = shop.payFromPending(rent);
+                Treasury.collect(server, fromPending, "shop rent: " + shop.getShopName());
                 long fromOwner = rent - fromPending;
                 if (fromOwner > 0) {
                     ServerPlayer online = server.getPlayerList().getPlayer(owner);

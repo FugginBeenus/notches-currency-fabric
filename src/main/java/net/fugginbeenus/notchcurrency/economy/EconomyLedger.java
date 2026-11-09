@@ -44,7 +44,7 @@ public final class EconomyLedger {
         switch (reason) {
             case FAUCET -> { if (delta > 0) sessionCreated.addAndGet(delta); }
             case SINK -> { if (delta < 0) sessionDestroyed.addAndGet(-delta); }
-            case ADMIN -> {
+            case ADMIN, GAMBLING -> {
                 if (delta > 0) sessionCreated.addAndGet(delta);
                 else sessionDestroyed.addAndGet(-delta);
             }
@@ -70,6 +70,7 @@ public final class EconomyLedger {
     public static long getSessionCreated() { return sessionCreated.get(); }
     public static long getSessionDestroyed() { return sessionDestroyed.get(); }
     private static String resolveName(MinecraftServer server, UUID id) {
+        if (Treasury.ID.equals(id)) return "Treasury";
         try {
             var name = net.fugginbeenus.notchcurrency.compat.Profiles.nameOf(server, id);
             if (name.isPresent()) return name.get();

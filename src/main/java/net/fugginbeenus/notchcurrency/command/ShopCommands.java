@@ -342,8 +342,20 @@ public final class ShopCommands {
                                                             UUID shopId = findShopByIdOrNameAdmin(p, raw, state);
                                                             if (shopId == null) return 0;
 
-                                                            boolean success = net.fugginbeenus.notchcurrency.shop.PlayerShopManager.transferOwnership(
-                                                                    p.level().getServer(), shopId, newOwner.getUUID(), newOwner.getName().getString());
+                                                            var server = p.level().getServer();
+                                                            var shop = state.getShop(shopId);
+                                                            UUID npcId = shop == null ? null : shop.getLinkedNpcId();
+                                                            var npc = npcId == null ? null : net.fugginbeenus.notchcurrency.npc.NpcTransfer.find(server, npcId);
+                                                            if (npcId != null && npc == null) {
+                                                                net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("This shop's NPC isn't loaded. Go near it and try again. If the NPC is gone for good, run /shop admin cleanup first.")
+                                                                        .withStyle(ChatFormatting.RED));
+                                                                return 0;
+                                                            }
+                                                            boolean success = shop != null;
+                                                            if (success) {
+                                                                net.fugginbeenus.notchcurrency.npc.NpcTransfer.handOver(server, npc, shop,
+                                                                        newOwner.getUUID(), newOwner.getName().getString());
+                                                            }
 
                                                             if (success) {
                                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("✓ Transferred shop to " + newOwner.getName().getString())

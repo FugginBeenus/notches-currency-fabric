@@ -38,6 +38,7 @@ public final class RecruiterManager {
         buf.writeVarInt(faction == null ? 0 : faction.joinFee());
         buf.writeBoolean(faction == null || faction.isOpenToJoin());
         buf.writeBoolean(faction != null && FactionManager.canManage(sp, faction));
+        buf.writeBoolean(FactionManager.membershipLocked(sp));
         Net.sendToClient(sp, NotchPackets.NPC_RECRUITER_OPEN, buf);
     }
 

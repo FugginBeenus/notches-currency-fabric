@@ -1,5 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc.faction;
 
+import net.fugginbeenus.notchcurrency.compat.Perms;
+import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -13,15 +15,27 @@ import java.util.UUID;
 
 public final class FactionManager {
 
+    private static final String PERMANENT = "Faction membership is permanent on this server.";
+
     private FactionManager() {}
 
+    public static boolean membershipLocked(ServerPlayer sp) {
+        return NotchConfigIO.get().factions.permanentMembership
+                && FactionState.get(sp.serverLevel()).factionOf(sp.getUUID()) != null;
+    }
+
+    private static String permanent(ServerPlayer sp) {
+        return Perms.isOperator(sp) ? PERMANENT + " Ops can move players with /faction admin." : PERMANENT;
+    }
+
     public static boolean canFound(ServerPlayer sp) {
-        if (net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) return true;
+        if (membershipLocked(sp)) return false;
+        if (Perms.isOperator(sp)) return true;
         return FactionState.get(sp.serverLevel()).foundedBy(sp.getUUID()) == null;
     }
 
     public static boolean canManage(ServerPlayer sp, Faction faction) {
-        return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp) || faction.isFoundedBy(sp.getUUID());
+        return Perms.isOperator(sp) || faction.isFoundedBy(sp.getUUID());
     }
 
     @Nullable
@@ -38,6 +52,10 @@ public final class FactionManager {
         }
         if (state.count() >= FactionState.MAX_FACTIONS) {
             msg(sp, "This server has as many factions as it can hold.", ChatFormatting.RED);
+            return null;
+        }
+        if (membershipLocked(sp)) {
+            msg(sp, permanent(sp), ChatFormatting.RED);
             return null;
         }
         if (!canFound(sp)) {
@@ -85,6 +103,11 @@ public final class FactionManager {
             msg(sp, "You're already with " + faction.displayName() + ".", ChatFormatting.YELLOW);
             return;
         }
+        if (membershipLocked(sp)) {
+            msg(sp, "You're with " + state.factionOf(sp.getUUID()).displayName() + ". " + permanent(sp),
+                    ChatFormatting.RED);
+            return;
+        }
 
         if (!faction.isOpenToJoin() && !canManage(sp, faction)) {
             msg(sp, faction.displayName() + " isn't taking new members.", ChatFormatting.RED);
@@ -114,9 +137,13 @@ public final class FactionManager {
             return;
         }
 
-        if (faction.isFoundedBy(sp.getUUID()) && !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
+        if (faction.isFoundedBy(sp.getUUID()) && !Perms.isOperator(sp)) {
             msg(sp, "You founded " + faction.displayName() + " - disband it rather than walking out.",
                     ChatFormatting.RED);
+            return;
+        }
+        if (membershipLocked(sp)) {
+            msg(sp, permanent(sp), ChatFormatting.RED);
             return;
         }
         state.leave(sp.getUUID());

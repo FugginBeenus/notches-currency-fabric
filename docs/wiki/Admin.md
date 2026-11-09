@@ -10,9 +10,30 @@ Most admin commands require **permission level 2** (op).
 | `/eco take <player> <amount>` | Remove coins from a player (sink) |
 | `/eco set <player> <amount>` | Set a player's balance |
 | `/eco stats` | Supply, account count, created/destroyed totals, inflation warning |
+| `/eco treasury` | Show how much the treasury holds |
+| `/eco treasury pay <player> <amount>` | Pay a player out of the treasury |
+| `/eco treasury set <amount>` | Set the treasury's balance |
 | `/baltop` | Richest players (also available to everyone) |
 
 There is also a **Ledger Board** block that shows the top balances in-world.
+
+### Treasury
+
+The treasury is a server bank. It is off by default. Turn on **Treasury enabled** in the config to use it.
+
+While it is on, money that would otherwise vanish goes into the treasury instead: taxes, fees, rent,
+loan interest, crate keys, the raffle house cut, the auction sale tax and purchases from admin shops.
+Players pay the same as before. Only the place the money ends up changes.
+
+Two more settings build on it:
+
+- **Treasury is the house**: gambling bets go into the treasury, and wins are paid out of it while it
+  has enough.
+- **Pay rewards from treasury**: bounty rewards, interest, loans and other payouts come out of the
+  treasury while it has enough. When it runs low, they are new money again.
+
+The treasury is not a player. Wealth tax, savings interest and `/baltop` skip it, and `/eco stats`
+shows its balance on its own line.
 
 ### NPC Administration
 
@@ -25,6 +46,22 @@ There is also a **Ledger Board** block that shows the top balances in-world.
 
 Admin economy roles (banker, auctioneer, admin shop, etc.) are op-gated; players may set the shop role
 on their own NPCs.
+
+`/shop admin transfer <shop> <player>` gives a shop to a player straight away, with no offer to
+accept. The shop's NPC moves with it, so the NPC has to be loaded. The old owner gets the shop's
+unpaid earnings first. Players give NPCs away with the **Transfer** button instead (see
+[NPCs](08.-NPCs)).
+
+### Factions
+
+Turn on **Permanent membership** in the config to make faction membership stick. Players can't
+leave, switch or found a new faction once they join one. Disbanding a faction still frees its
+members. Ops are locked in too, but these commands can move anyone, themselves included:
+
+| Command | Description |
+| --- | --- |
+| `/faction admin move <player> <faction>` | Move a player into a faction |
+| `/faction admin remove <player>` | Take a player out of their faction |
 
 ### Admin Shops
 
@@ -92,6 +129,21 @@ categories, config keys, and datapack paths.
   "auctionListingFeeMax": 0,
   "auctionSaleTaxPercent": 0,
   "auctionSaleTaxMax": 0
+}
+```
+
+**Treasury and factions**
+
+```json
+{
+  "treasury": {
+    "enabled": false,
+    "collectGambling": false,
+    "fundRewards": false
+  },
+  "factions": {
+    "permanentMembership": false
+  }
 }
 ```
 

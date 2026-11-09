@@ -964,36 +964,45 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, "Owner: " + (ownerName.isEmpty() ? "server" : ownerName),
                 px + W / 2, py + 50, NotchTheme.TEXT_DARK, false);
         NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 64, 160, 16, "Pick Up", over(mx, my, px + 70, py + 64, 160, 16));
-        NotchWidgets.centerText(ctx, this.font, "Returns the NPC as an item to place elsewhere.",
-                px + W / 2, py + 84, NotchTheme.TEXT_MUTED, false);
-        NotchWidgets.dangerButton(ctx, this.font, px + 70, py + 96, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 96, 160, 16));
+        NotchWidgets.neutralButton(ctx, this.font, px + 70, py + 84, 160, 16, "Transfer", over(mx, my, px + 70, py + 84, 160, 16));
+        NotchWidgets.dangerButton(ctx, this.font, px + 70, py + 104, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 104, 160, 16));
 
-        NotchWidgets.divider(ctx, px + 8, py + 120, W - 16);
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 126, 160, 16, "Edit Stats & Abilities",
-                over(mx, my, px + 70, py + 126, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 146, 160, 16, "Open Equipment",
-                over(mx, my, px + 70, py + 146, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 166, 160, 16, "Reactions",
-                over(mx, my, px + 70, py + 166, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 186, 160, 16, "Presets",
-                over(mx, my, px + 70, py + 186, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 206, 160, 16, "Quests",
-                over(mx, my, px + 70, py + 206, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 226, 160, 16, "Animations",
-                over(mx, my, px + 70, py + 226, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 246, 160, 16, "Particles",
-                over(mx, my, px + 70, py + 246, 160, 16));
-        if (over(mx, my, px + 70, py + 246, 160, 16)) {
+        NotchWidgets.divider(ctx, px + 8, py + 128, W - 16);
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 134, 160, 16, "Edit Stats & Abilities",
+                over(mx, my, px + 70, py + 134, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 154, 160, 16, "Open Equipment",
+                over(mx, my, px + 70, py + 154, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 174, 160, 16, "Reactions",
+                over(mx, my, px + 70, py + 174, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 194, 160, 16, "Presets",
+                over(mx, my, px + 70, py + 194, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 214, 160, 16, "Quests",
+                over(mx, my, px + 70, py + 214, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 234, 160, 16, "Animations",
+                over(mx, my, px + 70, py + 234, 160, 16));
+        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 254, 160, 16, "Particles",
+                over(mx, my, px + 70, py + 254, 160, 16));
+        if (over(mx, my, px + 70, py + 64, 160, 16)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Pick Up").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Returns the NPC as an item to place elsewhere.").withStyle(ChatFormatting.GRAY));
+        } else if (over(mx, my, px + 70, py + 84, 160, 16)) {
+            tooltip = java.util.List.of(
+                    Component.literal("Transfer").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Give this NPC, and its shop if it has one,").withStyle(ChatFormatting.GRAY),
+                    Component.literal("to another player. They have to accept.").withStyle(ChatFormatting.GRAY));
+        }
+        if (over(mx, my, px + 70, py + 254, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Particles").withStyle(ChatFormatting.WHITE),
                     Component.literal("Build a look, then pick which one this").withStyle(ChatFormatting.GRAY),
                     Component.literal("NPC wears all the time.").withStyle(ChatFormatting.GRAY));
         }
-        if (over(mx, my, px + 70, py + 166, 160, 16)) {
+        if (over(mx, my, px + 70, py + 174, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Reactions").withStyle(ChatFormatting.WHITE),
                     Component.literal("What this NPC does when things happen to it.").withStyle(ChatFormatting.GRAY));
-        } else if (over(mx, my, px + 70, py + 206, 160, 16)) {
+        } else if (over(mx, my, px + 70, py + 214, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Quests").withStyle(ChatFormatting.WHITE),
                     Component.literal("Write quests once, then hand them out from any").withStyle(ChatFormatting.GRAY),
@@ -1068,43 +1077,44 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 3 && clickTalk(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 4 && clickPose(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 5) {
+                if (over(mx, my, px + 70, py + 84, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcTransfer(npcId); this.onClose(); return true; }
                 if (over(mx, my, px + 70, py + 64, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcPickup(npcId); this.onClose(); return true; }
-                if (over(mx, my, px + 70, py + 96, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcDelete(npcId); this.onClose(); return true; }
-                if (over(mx, my, px + 70, py + 126, 160, 16)) {
+                if (over(mx, my, px + 70, py + 104, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcDelete(npcId); this.onClose(); return true; }
+                if (over(mx, my, px + 70, py + 134, 160, 16)) {
                     NotchWidgets.click();
                     Minecraft.getInstance().setScreen(
                             new NpcStatsScreen(npcId, statsBits, maxHealth, speedPct, regen, currentFlyCeiling));
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 146, 160, 16)) {
+                if (over(mx, my, px + 70, py + 154, 160, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendNpcOpenEquip(npcId);
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 166, 160, 16)) {
+                if (over(mx, my, px + 70, py + 174, 160, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendNpcActionsOpen(npcId);
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 206, 160, 16)) {
+                if (over(mx, my, px + 70, py + 214, 160, 16)) {
                     NotchWidgets.click();
                     net.fugginbeenus.notchcurrency.client.QuestDesignerScreen.cameFromNpc = npcId;
                     NotchPacketsClient.sendQuestDesign();
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 226, 160, 16)) {
+                if (over(mx, my, px + 70, py + 234, 160, 16)) {
                     NotchWidgets.click();
                     net.fugginbeenus.notchcurrency.client.AnimationDesignerScreen.cameFromNpc = npcId;
                     NotchPacketsClient.sendAnimDesign();
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 246, 160, 16)) {
+                if (over(mx, my, px + 70, py + 254, 160, 16)) {
                     NotchWidgets.click();
                     net.fugginbeenus.notchcurrency.client.ParticleDesignerScreen.cameFromNpc = npcId;
                     NotchPacketsClient.sendParticleDesign();
                     return true;
                 }
-                if (over(mx, my, px + 70, py + 186, 160, 16)) {
+                if (over(mx, my, px + 70, py + 194, 160, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendNpcPreset(npcId,
                             net.fugginbeenus.notchcurrency.npc.NpcPresetManager.ACTION_OPEN, "");

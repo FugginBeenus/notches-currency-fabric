@@ -291,6 +291,16 @@ public final class ServerPacketHandlers {
             });
         });
 
+        Net.registerServerReceiver(NotchPackets.NPC_TRANSFER, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NpcTransfer.choose(player, npc);
+                }
+            });
+        });
+
         Net.registerServerReceiver(NotchPackets.NPC_DIALOGUE_CHOICE, (server, player, buf) -> {
             UUID id = buf.readUUID();
             String nodeId = buf.readUtf(64);

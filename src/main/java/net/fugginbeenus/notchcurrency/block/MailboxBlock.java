@@ -196,6 +196,16 @@ public class MailboxBlock extends Block implements EntityBlock {
         //?}
     }
 
+    //? if <1.21.11 {
+    @Override
+    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
+        if (!state.is(newState.getBlock()) && world.getBlockEntity(pos) instanceof MailboxBlockEntity box) {
+            box.unregister();
+        }
+        super.onRemove(state, world, pos, newState, moved);
+    }
+    //?}
+
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state,

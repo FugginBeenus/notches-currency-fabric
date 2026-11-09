@@ -32,6 +32,7 @@ public class NpcRecruiterScreen extends Screen {
     private final boolean alreadyIn;
     private final boolean canFound;
     private final boolean canManage;
+    private final boolean locked;
 
     private Mode mode;
     private int colorIdx;
@@ -44,7 +45,7 @@ public class NpcRecruiterScreen extends Screen {
 
     public NpcRecruiterScreen(UUID npcId, String factionId, String factionName, ChatFormatting factionColor,
                               int memberCount, boolean alreadyIn, boolean canFound,
-                              String motto, int fee, boolean openToJoin, boolean canManage) {
+                              String motto, int fee, boolean openToJoin, boolean canManage, boolean locked) {
         super(Component.literal("Recruiter"));
         this.npcId = npcId;
         this.factionId = factionId;
@@ -53,6 +54,7 @@ public class NpcRecruiterScreen extends Screen {
         this.alreadyIn = alreadyIn;
         this.canFound = canFound;
         this.canManage = canManage;
+        this.locked = locked;
         this.motto = motto == null ? "" : motto;
         this.fee = fee;
         this.openToJoin = openToJoin;
@@ -145,8 +147,16 @@ public class NpcRecruiterScreen extends Screen {
         if (alreadyIn) {
             NotchWidgets.centerText(ctx, this.font, "You're one of them.",
                     px + W / 2, y, NotchTheme.TEXT_DARK, false);
-            NotchWidgets.dangerButton(ctx, this.font, px + PAD, y + 16, BTN_W, ROW_H, "Leave",
-                    over(mx, my, px + PAD, y + 16, BTN_W, ROW_H));
+            if (locked) {
+                NotchWidgets.centerText(ctx, this.font, "Membership is permanent.",
+                        px + W / 2, y + 20, NotchTheme.TEXT_MUTED, false);
+            } else {
+                NotchWidgets.dangerButton(ctx, this.font, px + PAD, y + 16, BTN_W, ROW_H, "Leave",
+                        over(mx, my, px + PAD, y + 16, BTN_W, ROW_H));
+            }
+        } else if (locked) {
+            NotchWidgets.centerText(ctx, this.font, "You're with another faction.",
+                    px + W / 2, y + 4, NotchTheme.TEXT_MUTED, false);
         } else if (!openToJoin) {
             NotchWidgets.centerText(ctx, this.font, "Not taking new members.",
                     px + W / 2, y + 4, NotchTheme.TEXT_MUTED, false);
@@ -215,12 +225,12 @@ public class NpcRecruiterScreen extends Screen {
             int mx = (int) mouseX, my = (int) mouseY;
 
             if (mode == Mode.VIEW) {
-                if (hasFaction() && alreadyIn && over(mx, my, px + PAD, py + 100, BTN_W, ROW_H)) {
+                if (hasFaction() && alreadyIn && !locked && over(mx, my, px + PAD, py + 100, BTN_W, ROW_H)) {
                     NotchWidgets.click();
                     send(RecruiterManager.ACTION_LEAVE, "");
                     return true;
                 }
-                if (hasFaction() && !alreadyIn && openToJoin && over(mx, my, px + PAD, py + 84, BTN_W, 18)) {
+                if (hasFaction() && !alreadyIn && !locked && openToJoin && over(mx, my, px + PAD, py + 84, BTN_W, 18)) {
                     NotchWidgets.click();
                     send(RecruiterManager.ACTION_JOIN, "");
                     return true;
