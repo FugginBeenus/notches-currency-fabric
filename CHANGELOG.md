@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.13.2: Player bounties and permissions
+
+Players can post their own bounties now, servers can hand out admin rights with LuckPerms, and a
+server bank can keep the money that used to vanish. The new economy settings start turned off.
+
+### Player bounties
+
+- **Post your own bounties** at a Bounty Board: a monster to hunt or an item to collect, with a
+  reward in coins, an item, or both. Pick the monster from a list you can type to search.
+- The reward is held until someone finishes the job, so player bounties move money between
+  players and never make new money.
+- One hunter at a time can work on a player bounty. Items handed in go to the poster, by mail if
+  they are offline.
+- Take a bounty down while nobody is on it to get the reward back. If nobody finishes it in time,
+  the reward comes back on its own.
+- **PvP bounties** put a price on another player's head. The hunter who takes it and kills that
+  player gets the reward. They have their own setting.
+- Set **Live bounties on the board** to 0 to show only bounties that players post.
+
+### Permissions
+
+- **Works with LuckPerms**, or any mod that uses the Fabric Permissions API. Without one, nothing
+  changes.
+- One admin permission per area, from the economy to NPCs, covers that area's commands and its
+  admin powers in game. Ops keep all of them.
+- Every player command has a permission that everyone has, so a server can take one away.
+- Admins can make an NPC need a permission before players can use it.
+- The full list is on the wiki's Admin page.
+
+### Server bank and factions
+
+- **Treasury**: money that would vanish, like taxes, fees and rent, goes to a server bank instead.
+  It can also be the house for gambling and pay out rewards. Admins check and spend it with
+  `/eco treasury`.
+- **Permanent faction membership**: once players join a faction, they stay. Admins can still move
+  people with `/faction admin`.
+
+### NPCs, shops and mail
+
+- A **Transfer** button on the NPC editor's Manage tab gives an NPC, and its shop, to another
+  player. They have to accept.
+- `/shop admin transfer` now moves the shop's NPC as well.
+- Players without a mailbox get a **[Collect]** button on mail notices.
+
+### Fixes
+
+- On 1.21.11 and newer, every NPC with a player skin showed the same skin.
+- The Goodbye line never showed for NPCs that only talk. It now plays when you close the window,
+  when the talk ends, or when you walk away.
+- Offline auction sellers now get paid. Before, a sale could pay nobody when the buyer had room in
+  their inventory. The money now arrives by mail.
+
+Servers and players should update together.
+
 ## 0.13.1: Paper notes
 
 The Bounty Board screen is rebuilt so it looks like part of Minecraft, made from the game's own

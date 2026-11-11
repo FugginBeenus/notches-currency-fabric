@@ -150,7 +150,8 @@ Every feature has a physical, hand-modeled block or table to build a casino/mark
 - **ATM**: deposit coins / withdraw balance
 - **Ledger Board**: a wide monument that renders the live balance leaderboard right on its face,
   Create-display-board style (updates in real time; no GUI needed)
-- **Bounty Board**: a two-tall notice board that opens the rotating bounty list
+- **Bounty Board**: a two-tall notice board that opens the rotating bounty list. Players can post
+  their own bounties there too, and servers can allow bounties on players
 - **Slot Machine**: animated marquee lights; bet and spin the reels
 - **Coin Flip table**: a 3D coin sits on the felt, then pops up, tumbles, and lands on the result
 - **Crates** (Common / Rare / Epic): arched treasure chests whose lids swing open on a win
@@ -175,6 +176,10 @@ placeable via ModMenu so it dodges other mods' overlays.
 - `/eco give|take|set|stats`, a `/baltop` leaderboard, and a physical Ledger Board block
 - Optional Discord webhook for admin-relevant transactions
 - A full in-game settings screen (ModMenu) with live search; nearly everything is configurable
+- LuckPerms support: one permission per admin area and one per player command. Without a
+  permissions mod, ops run things as before
+- An optional treasury that keeps taxes, fees and rent in a server bank instead of destroying them,
+  and optional permanent faction membership
 
 ## Commands (quick reference)
 - `/pay <player> <amount>`: send coins
@@ -197,6 +202,7 @@ placeable via ModMenu so it dodges other mods' overlays.
 - GeckoLib (required): the NPC system is built on it
 - ModMenu (optional): opens the config screen
 - Waystones (optional): enables the teleport fee, shown when you hover a destination in the waystone menu
+- LuckPerms (optional): permissions for every admin area and player command
 - Trinkets (optional): adds accessory slots to NPCs on the equipment screen
 
 ## Development Setup
