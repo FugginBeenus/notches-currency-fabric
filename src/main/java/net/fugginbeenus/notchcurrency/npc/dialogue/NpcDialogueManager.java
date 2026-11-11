@@ -31,6 +31,7 @@ public final class NpcDialogueManager {
                     ? npc.getCustomName().getString() : "NPC";
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
                     .withStyle(ChatFormatting.WHITE));
+            watchForFarewell(sp, npc);
             if (hasRoleScreen(npc)) {
                 pendingOpens.add(new PendingOpen(sp.getUUID(), npc.getUUID(), GREETING_DELAY_TICKS));
             }
@@ -44,6 +45,7 @@ public final class NpcDialogueManager {
             start = pages.get(sp.getRandom().nextInt(pages.size()));
         }
         sendNode(sp, npc, start);
+        watchForFarewell(sp, npc);
         return true;
     }
 
@@ -86,6 +88,10 @@ public final class NpcDialogueManager {
     }
 
     public static void choose(ServerPlayer sp, UUID npcId, String nodeId, int choiceIndex) {
+        if (choiceIndex == -1) {
+            sayFarewell(sp, npcId);
+            return;
+        }
         if (!(sp.serverLevel().getEntity(npcId) instanceof NotchNpcEntity npc)) return;
         if (sp.distanceToSqr(npc) > MAX_TALK_DIST_SQ) return;
         DialogueNode node = npc.getDialogue().get(nodeId);
@@ -105,6 +111,7 @@ public final class NpcDialogueManager {
             sendNode(sp, npc, next);
         } else {
             sendClose(sp);
+            sayFarewell(sp, npc.getUUID());
         }
     }
 
@@ -143,10 +150,11 @@ public final class NpcDialogueManager {
     }
 
     private static final class FarewellWatch {
+        final UUID npc;
         final String npcName, farewell;
         boolean sawScreen;
         int ttl = FAREWELL_TTL_TICKS;
-        FarewellWatch(String npcName, String farewell) { this.npcName = npcName; this.farewell = farewell; }
+        FarewellWatch(UUID npc, String npcName, String farewell) { this.npc = npc; this.npcName = npcName; this.farewell = farewell; }
     }
 
     private static final List<PendingOpen> pendingOpens = new ArrayList<>();
@@ -168,7 +176,19 @@ public final class NpcDialogueManager {
         if (farewell == null || farewell.isBlank()) return;
         String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString() : "NPC";
-        farewells.put(sp.getUUID(), new FarewellWatch(npcName, farewell));
+        farewells.put(sp.getUUID(), new FarewellWatch(npc.getUUID(), npcName, farewell));
+    }
+
+    private static void sayFarewell(ServerPlayer sp, UUID npcId) {
+        FarewellWatch w = farewells.get(sp.getUUID());
+        if (w == null || !w.npc.equals(npcId)) return;
+        farewells.remove(sp.getUUID());
+        say(sp, w);
+    }
+
+    private static void say(ServerPlayer sp, FarewellWatch w) {
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
+                .withStyle(ChatFormatting.WHITE));
     }
 
     public static void tick(net.minecraft.server.MinecraftServer server) {
@@ -197,9 +217,12 @@ public final class NpcDialogueManager {
                 boolean inScreen = sp.containerMenu != sp.inventoryMenu;
                 if (inScreen) {
                     w.sawScreen = true;
-                } else if (w.sawScreen) {
-                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
-                            .withStyle(ChatFormatting.WHITE));
+                    continue;
+                }
+                boolean gone = !(sp.serverLevel().getEntity(w.npc) instanceof NotchNpcEntity npc)
+                        || sp.distanceToSqr(npc) > MAX_TALK_DIST_SQ;
+                if (w.sawScreen || gone) {
+                    say(sp, w);
                     it.remove();
                 }
             }

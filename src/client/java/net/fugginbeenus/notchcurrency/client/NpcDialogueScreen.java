@@ -160,6 +160,12 @@ public class NpcDialogueScreen extends Screen {
         //?}
     }
 
+    @Override
+    public void onClose() {
+        NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, -1);
+        super.onClose();
+    }
+
     protected void onChoice(int i) {
         chose = true;
         NotchPacketsClient.sendNpcDialogueChoice(npcId, nodeId, indices[i]);

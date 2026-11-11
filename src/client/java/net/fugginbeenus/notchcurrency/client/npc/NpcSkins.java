@@ -95,9 +95,12 @@ public final class NpcSkins {
                         + Integer.toHexString(url.hashCode()) + "_" + url.length());
                 //? if >=1.21.11 {
                 /*Minecraft mc = Minecraft.getInstance();
+                java.nio.file.Path skins = mc.gameDirectory.toPath().resolve("assets/skins");
+                if (java.nio.file.Files.isRegularFile(skins)) java.nio.file.Files.delete(skins);
+                java.nio.file.Path file = skins.resolve(Integer.toHexString(url.hashCode()) + "_" + url.length() + ".png");
                 new net.minecraft.client.renderer.texture.SkinTextureDownloader(
                         mc.getProxy(), mc.getTextureManager(), mc)
-                        .downloadAndRegisterSkin(id, mc.gameDirectory.toPath().resolve("assets/skins"), url, true)
+                        .downloadAndRegisterSkin(id, file, url, true)
                         .whenComplete((asset, error) -> mc.execute(() -> {
                             if (error != null || asset == null) {
                                 LOGGER.warn("skin download failed for {}", key, error);
