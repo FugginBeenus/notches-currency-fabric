@@ -82,6 +82,8 @@ public final class NotchNpcManager {
         buf.writeUtf(npc.getAmbientSoundId());
         buf.writeVarInt(npc.getAmbientEvery());
         buf.writeBoolean(npc.isAmbientRandom());
+        buf.writeUtf(npc.getRequiredPermission());
+        net.fugginbeenus.notchcurrency.net.AdminFlags.send(sp);
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
     }
 
@@ -403,7 +405,7 @@ public final class NotchNpcManager {
             return;
         }
         var clean = new net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree();
-        boolean allowCommands = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+        boolean allowCommands = net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC_COMMANDS);
         boolean strippedCommands = false;
         for (var node : tree.nodes().values()) {
             if (node.id().isBlank() || node.id().length() > 32) continue;
@@ -435,6 +437,7 @@ public final class NotchNpcManager {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
         buf.writeNbt(npc.getActions().toNbt());
+        net.fugginbeenus.notchcurrency.net.AdminFlags.send(sp);
         Net.sendToClient(sp, NotchPackets.NPC_ACTIONS_DATA, buf);
     }
 
@@ -444,7 +447,7 @@ public final class NotchNpcManager {
         if (nbt == null) return;
         var actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(nbt);
         boolean stripped = false;
-        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC_COMMANDS);
         for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
             var kept = new java.util.ArrayList<>(actions.get(trigger));
             if (!allowAdminActions) {
@@ -481,7 +484,7 @@ public final class NotchNpcManager {
         if (nbt == null) return;
         var schedule = net.fugginbeenus.notchcurrency.npc.schedule.NpcSchedule.fromNbt(nbt);
         boolean stripped = false;
-        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+        boolean allowAdminActions = net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC_COMMANDS);
 
         var cleaned = new java.util.ArrayList<net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry>();
         for (var entry : schedule.entries()) {
@@ -691,6 +694,25 @@ public final class NotchNpcManager {
         if (trimmed.length() > 150) trimmed = trimmed.substring(0, 150);
         npc.setFarewellText(trimmed);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(trimmed.isEmpty() ? "Goodbye line cleared." : "Goodbye line saved.")
+                .withStyle(ChatFormatting.GREEN));
+    }
+
+    public static void setPermission(ServerPlayer sp, NotchNpcEntity npc, String text) {
+        if (!guard(sp, npc)) return;
+        if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only admins can choose who may use an NPC.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
+        String node = text == null ? "" : text.trim().toLowerCase(java.util.Locale.ROOT);
+        if (node.length() > 128 || !node.matches("[a-z0-9_.\\-]*")) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "A permission can only use letters, numbers, dots, dashes and underscores.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        npc.setRequiredPermission(node);
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(node.isEmpty()
+                ? "Anyone can use this NPC now." : "Players now need " + node + " to use this NPC.")
                 .withStyle(ChatFormatting.GREEN));
     }
 

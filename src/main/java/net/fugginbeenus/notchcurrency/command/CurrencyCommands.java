@@ -69,7 +69,7 @@ public final class CurrencyCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("givnotches")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.ECO))
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayer();
@@ -82,7 +82,7 @@ public final class CurrencyCommands {
         );
 
         dispatcher.register(
-                Commands.literal("balance")
+                Commands.literal("balance").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("balance"))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             long bal = BalanceStore.get(p);
@@ -93,7 +93,7 @@ public final class CurrencyCommands {
                         })
         );
         dispatcher.register(
-                Commands.literal("bal")
+                Commands.literal("bal").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("balance"))
                         .executes(ctx -> {
                             ctx.getSource().getServer().getCommands()
                                     .performPrefixedCommand(ctx.getSource(), "balance");
@@ -102,7 +102,7 @@ public final class CurrencyCommands {
         );
 
         dispatcher.register(
-                Commands.literal("pay")
+                Commands.literal("pay").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("pay"))
                         .then(Commands.argument("target", EntityArgument.player())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                         .executes(ctx -> {

@@ -122,7 +122,7 @@ public final class ServerPacketHandlers {
                     boolean enabled = buf.readBoolean();
                     long coinsPool = buf.readVarLong();
                     server.execute(() -> {
-                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE)) return;
                         boolean wasEnabled = net.fugginbeenus.notchcurrency.economy.raffle.RaffleManager.isEnabled();
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
@@ -182,7 +182,7 @@ public final class ServerPacketHandlers {
                     int takeLimit = buf.readVarInt();
                     int durationMinutes = buf.readVarInt();
                     server.execute(() -> {
-                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                        if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.BOUNTY)) return;
                         net.fugginbeenus.notchcurrency.config.NotchConfig cfg =
                                 net.fugginbeenus.notchcurrency.config.NotchConfigIO.get();
                         cfg.bounty.enabled = enabled;
@@ -267,6 +267,17 @@ public final class ServerPacketHandlers {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setFarewell(player, npc, text);
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.NPC_SET_PERMISSION, (server, player, buf) -> {
+            UUID id = buf.readUUID();
+            String text = buf.readUtf(160);
+            server.execute(() -> {
+                net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
+                if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
+                    net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setPermission(player, npc, text);
                 }
             });
         });
@@ -540,7 +551,7 @@ public final class ServerPacketHandlers {
             var incoming = new net.fugginbeenus.notchcurrency.config.NotchConfig();
             net.fugginbeenus.notchcurrency.crate.BalloonConfigWire.read(buf, incoming);
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.CRATE)) return;
                 net.fugginbeenus.notchcurrency.crate.DailyCrateManager.applyToWorld(server, incoming);
                 for (net.minecraft.server.level.ServerPlayer other : server.getPlayerList().getPlayers()) {
                     net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(other);
@@ -556,7 +567,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_TEXTURE_DROP, (server, player, buf) -> {
             int slot = buf.readVarInt();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 String problem = net.fugginbeenus.notchcurrency.npctexture.NpcTextureStore.remove(server, slot);
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
                         problem == null ? "Cleared slot " + slot + " on this server." : problem)
@@ -585,7 +596,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_SOUND_DROP, (server, player, buf) -> {
             String id = buf.readUtf(64);
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 String problem = net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore
                         .remove(server, id);
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(
@@ -667,7 +678,7 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (!(e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) return;
-                if (!npc.isOwnedBy(player) && !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!npc.isOwnedBy(player) && !net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 switch (field) {
                     case 0 -> npc.setTint(value);
                     case 1 -> npc.setAlpha(value / 100.0f);
@@ -809,7 +820,7 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.QUEST_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST)) return;
             sendQuestNames(player, server);
             Net.sendToClient(player, NotchPackets.QUEST_DESIGN, Net.emptyBuf());
         }));
@@ -817,7 +828,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.QUEST_DELETE, (server, player, buf) -> {
             String key = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST)) return;
                 if (net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.delete(server, key)) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(player,
                             net.minecraft.network.chat.Component.literal("Deleted quest: " + key)
@@ -863,7 +874,7 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.PARTICLE_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
             net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncTo(player, server);
             Net.sendToClient(player, NotchPackets.PARTICLE_DESIGN, Net.emptyBuf());
         }));
@@ -871,7 +882,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.PARTICLE_OPEN, (server, player, buf) -> {
             String name = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 var fx = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server).get(name);
                 var out = Net.buf();
                 out.writeUtf(name);
@@ -884,7 +895,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.PARTICLE_SAVE, (server, player, buf) -> {
             net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC) || nbt == null) return;
                 var fx = net.fugginbeenus.notchcurrency.npc.particle.ParticleEffect.fromNbt(nbt);
                 if (fx.name().isBlank()) return;
                 var state = net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server);
@@ -903,7 +914,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.PARTICLE_DELETE, (server, player, buf) -> {
             String name = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 net.fugginbeenus.notchcurrency.npc.particle.NpcParticleState.get(server).remove(name);
                 net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncAll(server);
                 Net.sendToClient(player, NotchPackets.PARTICLE_DESIGN, Net.emptyBuf());
@@ -914,7 +925,7 @@ public final class ServerPacketHandlers {
             UUID npcId = buf.readUUID();
             net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC) || nbt == null) return;
                 if (player.serverLevel().getEntity(npcId)
                         instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.particle.ParticleSprayer.burst(player.serverLevel(),
@@ -936,7 +947,7 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.ANIM_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
             net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncTo(player, server);
             Net.sendToClient(player, NotchPackets.ANIM_DESIGN, Net.emptyBuf());
         }));
@@ -944,7 +955,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.ANIM_OPEN, (server, player, buf) -> {
             String name = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 var anim = net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).get(name);
                 var out = Net.buf();
                 out.writeUtf(name);
@@ -957,7 +968,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.ANIM_SAVE, (server, player, buf) -> {
             net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC) || nbt == null) return;
                 var anim = net.fugginbeenus.notchcurrency.npc.anim.NpcAnimation.fromNbt(nbt);
                 if (anim.name().isBlank()) return;
                 net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).put(anim);
@@ -971,7 +982,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.ANIM_DELETE, (server, player, buf) -> {
             String name = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
                 net.fugginbeenus.notchcurrency.npc.anim.NpcAnimationState.get(server).remove(name);
                 net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncAll(server);
                 Net.sendToClient(player, NotchPackets.ANIM_DESIGN, Net.emptyBuf());
@@ -981,7 +992,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.QUEST_OPEN, (server, player, buf) -> {
             String key = buf.readUtf();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player)) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST)) return;
                 net.fugginbeenus.notchcurrency.economy.bounty.Bounty q =
                         net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.find(server, key);
                 var out = Net.buf();
@@ -998,7 +1009,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.QUEST_SAVE, (server, player, buf) -> {
             net.minecraft.nbt.CompoundTag nbt = buf.readNbt();
             server.execute(() -> {
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player) || nbt == null) return;
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST) || nbt == null) return;
                 net.fugginbeenus.notchcurrency.economy.bounty.Bounty q =
                         net.fugginbeenus.notchcurrency.economy.bounty.Bounty.fromNbt(nbt);
                 if (!q.isQuest() || q.getQuestKey().isBlank()) return;

@@ -66,7 +66,7 @@ public class CosmeticShopScreenHandler extends AbstractContainerMenu {
     }
 
     public static void open(ServerPlayer sp, @Nullable UUID npcId) {
-        boolean admin = net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+        boolean admin = net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.COSMETICS);
         net.fugginbeenus.notchcurrency.compat.Screens.openExtended(sp, Component.literal("Cosmetics"),
                 (containerId, inv, p) -> new CosmeticShopScreenHandler(containerId, inv, npcId, admin),
                 buf -> {

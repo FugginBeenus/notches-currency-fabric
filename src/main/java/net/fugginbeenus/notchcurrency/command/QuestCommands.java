@@ -12,20 +12,21 @@ public final class QuestCommands {
     private QuestCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("quests")
+        dispatcher.register(Commands.literal("quests").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("quests"))
                 .executes(ctx -> {
                     ServerPlayer p = ctx.getSource().getPlayer();
                     if (p == null) {
                         ctx.getSource().sendFailure(Component.literal("Run as a player."));
                         return 0;
                     }
+                    net.fugginbeenus.notchcurrency.net.AdminFlags.send(p);
                     net.fugginbeenus.notchcurrency.compat.Net.sendToClient(p,
                             net.fugginbeenus.notchcurrency.net.NotchPackets.QUEST_LOG,
                             net.fugginbeenus.notchcurrency.compat.Net.emptyBuf());
                     return 1;
                 })
                 .then(Commands.literal("list")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.QUEST))
                         .executes(ctx -> {
                             var server = ctx.getSource().getServer();
                             var all = net.fugginbeenus.notchcurrency.economy.bounty.QuestManager.allQuests(server);

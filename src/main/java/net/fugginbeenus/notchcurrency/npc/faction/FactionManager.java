@@ -25,17 +25,17 @@ public final class FactionManager {
     }
 
     private static String permanent(ServerPlayer sp) {
-        return Perms.isOperator(sp) ? PERMANENT + " Ops can move players with /faction admin." : PERMANENT;
+        return Perms.isAdmin(sp, Perms.FACTION) ? PERMANENT + " You can move players with /faction admin." : PERMANENT;
     }
 
     public static boolean canFound(ServerPlayer sp) {
         if (membershipLocked(sp)) return false;
-        if (Perms.isOperator(sp)) return true;
+        if (Perms.isAdmin(sp, Perms.FACTION)) return true;
         return FactionState.get(sp.serverLevel()).foundedBy(sp.getUUID()) == null;
     }
 
     public static boolean canManage(ServerPlayer sp, Faction faction) {
-        return Perms.isOperator(sp) || faction.isFoundedBy(sp.getUUID());
+        return Perms.isAdmin(sp, Perms.FACTION) || faction.isFoundedBy(sp.getUUID());
     }
 
     @Nullable
@@ -137,7 +137,7 @@ public final class FactionManager {
             return;
         }
 
-        if (faction.isFoundedBy(sp.getUUID()) && !Perms.isOperator(sp)) {
+        if (faction.isFoundedBy(sp.getUUID()) && !Perms.isAdmin(sp, Perms.FACTION)) {
             msg(sp, "You founded " + faction.displayName() + " - disband it rather than walking out.",
                     ChatFormatting.RED);
             return;

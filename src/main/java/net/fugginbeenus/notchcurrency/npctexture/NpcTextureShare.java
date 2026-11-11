@@ -21,7 +21,7 @@ public final class NpcTextureShare {
     public static void greet(ServerPlayer player) {
         Map<Integer, NpcTextureStore.Held> held = NpcTextureStore.all();
         var buf = Net.buf();
-        buf.writeBoolean(Perms.isOperator(player));
+        buf.writeBoolean(Perms.isAdmin(player, Perms.NPC));
         buf.writeVarInt(held.size());
         for (NpcTextureStore.Held h : held.values()) {
             buf.writeVarInt(h.slot());
@@ -61,7 +61,7 @@ public final class NpcTextureShare {
     }
 
     public static void receiveUpload(ServerPlayer player, int phase, String key, byte[] part, int announced) {
-        if (!Perms.isOperator(player)) return;
+        if (!Perms.isAdmin(player, Perms.NPC)) return;
         String sender = player.getUUID().toString();
         int dash = key.indexOf('-');
         int slot;

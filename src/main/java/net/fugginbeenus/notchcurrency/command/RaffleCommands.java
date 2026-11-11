@@ -15,7 +15,7 @@ public final class RaffleCommands {
     private RaffleCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("raffle")
+        dispatcher.register(Commands.literal("raffle").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("raffle"))
                 .executes(ctx -> info(ctx.getSource()))
                 .then(Commands.literal("info")
                         .executes(ctx -> info(ctx.getSource())))
@@ -37,7 +37,7 @@ public final class RaffleCommands {
                             return 1;
                         }))
                 .then(Commands.literal("draw")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE))
                         .executes(ctx -> {
                             boolean drawn = RaffleManager.draw(ctx.getSource().getServer(), true);
                             ctx.getSource().sendSuccess(() -> Component.literal(drawn
@@ -45,7 +45,7 @@ public final class RaffleCommands {
                             return drawn ? 1 : 0;
                         }))
                 .then(Commands.literal("admin")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
@@ -53,7 +53,7 @@ public final class RaffleCommands {
                             return 1;
                         }))
                 .then(Commands.literal("setprize")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player (uses your held item).")); return 0; }
@@ -61,7 +61,7 @@ public final class RaffleCommands {
                             return 1;
                         }))
                 .then(Commands.literal("clearprize")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
@@ -69,7 +69,7 @@ public final class RaffleCommands {
                             return 1;
                         }))
                 .then(Commands.literal("reset")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.RAFFLE))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p != null) {

@@ -18,10 +18,10 @@ public final class HeartCommands {
     private HeartCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("hearts")
+        dispatcher.register(Commands.literal("hearts").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("hearts"))
                 .executes(ctx -> show(ctx.getSource()))
                 .then(Commands.literal("loseondeath")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.HEARTS))
                         .executes(ctx -> {
                             HeartState state = HeartState.get(ctx.getSource().getServer());
                             ctx.getSource().sendSuccess(() -> Component.literal("Dying costs a heart: "
@@ -39,7 +39,7 @@ public final class HeartCommands {
                                     return 1;
                                 })))
                 .then(Commands.literal("set")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.HEARTS))
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.argument("hearts", IntegerArgumentType.integer(0, HeartState.MAX_CRYSTALS))
                                         .executes(ctx -> {

@@ -32,7 +32,7 @@ public final class EcoCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("baltop")
+                Commands.literal("baltop").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("baltop"))
                         .executes(ctx -> {
                             CommandSourceStack src = ctx.getSource();
                             for (Component line : EconomyLeaderboard.topLines(src.getServer(), TOP_LIMIT)) {
@@ -43,7 +43,7 @@ public final class EcoCommands {
         );
 
         dispatcher.register(
-                Commands.literal("receipts")
+                Commands.literal("receipts").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("receipts"))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p != null) net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler.open(p);
@@ -53,7 +53,7 @@ public final class EcoCommands {
 
         dispatcher.register(
                 Commands.literal("eco")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.ECO))
                         .then(Commands.literal("give")
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .then(Commands.argument("amount", LongArgumentType.longArg(1))

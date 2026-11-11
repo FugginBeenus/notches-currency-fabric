@@ -10,5 +10,5 @@ public record NpcEditorState(UUID npcId, int roleOrdinal, String name, String ow
                              int patrolWaitIdx, int poseId, int poseAnim, int maxHealth, int speedPct,
                              int regen, String followName, int movesBits, String farewell,
                              String billboard, String subtitle, String voice, int voicePitch,
-                             NpcSounds sounds, int flyCeiling) {
+                             NpcSounds sounds, int flyCeiling, String permission) {
 }

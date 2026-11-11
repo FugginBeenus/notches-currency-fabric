@@ -213,7 +213,7 @@ public final class NpcActionRunner {
         UUID owner = npc.getOwner();
         if (owner == null) return false;
         ServerPlayer online = server.getPlayerList().getPlayer(owner);
-        if (online != null) return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(online);
+        if (online != null) return net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(online, net.fugginbeenus.notchcurrency.compat.Perms.NPC_COMMANDS);
         return net.fugginbeenus.notchcurrency.compat.Profiles.isOp(server, owner);
     }
 

@@ -22,7 +22,7 @@ public final class NpcSoundShare {
         Map<String, String> hashes = NpcSoundStore.hashes();
 
         var buf = Net.buf();
-        buf.writeBoolean(Perms.isOperator(player));
+        buf.writeBoolean(Perms.isAdmin(player, Perms.NPC));
         buf.writeVarInt(hashes.size());
         for (Map.Entry<String, String> sound : hashes.entrySet()) {
             buf.writeUtf(sound.getKey(), 64);
@@ -61,7 +61,7 @@ public final class NpcSoundShare {
 
     public static void receiveUpload(ServerPlayer player, int phase, String id, byte[] part,
                                      int announcedBytes) {
-        if (!Perms.isOperator(player)) return;
+        if (!Perms.isAdmin(player, Perms.NPC)) return;
 
         String sender = player.getUUID().toString();
         switch (phase) {

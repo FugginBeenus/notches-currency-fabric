@@ -41,7 +41,7 @@ public final class AuctionCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("ah")
+                Commands.literal("ah").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("ah"))
 
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayer();

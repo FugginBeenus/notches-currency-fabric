@@ -906,7 +906,7 @@ public class DialogueStudioScreen extends Screen {
     }
 
     private static boolean adminActionsAllowed() {
-        return net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator();
+        return net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.NPC_COMMANDS);
     }
 
     private void cycleAction() {

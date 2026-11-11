@@ -24,7 +24,7 @@ public final class NpcActionEditing {
     };
 
     public static boolean adminActionsAllowed() {
-        return net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator();
+        return net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.NPC_COMMANDS);
     }
 
     public static boolean needsValue(DialogueAction.Type t) {

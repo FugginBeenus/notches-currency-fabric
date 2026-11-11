@@ -32,6 +32,10 @@ public final class NotchPacketsClient {
     }
 
     public static void registerNpcEditorReceiver() {
+        NetClient.registerClientReceiver(NotchPackets.ADMIN_FLAGS, (client, buf) -> {
+            int bits = buf.readVarInt();
+            client.execute(() -> net.fugginbeenus.notchcurrency.compat.PermsClient.setFlags(bits));
+        });
         NetClient.registerClientReceiver(NotchPackets.NPC_EDITOR_OPEN, (client, buf) -> {
             UUID npcId = buf.readUUID();
             int roleOrdinal = buf.readVarInt();
@@ -71,12 +75,14 @@ public final class NotchPacketsClient {
             var sounds = new net.fugginbeenus.notchcurrency.client.npc.NpcSounds(
                     voice, voicePitch, buf.readUtf(128), buf.readUtf(128), buf.readUtf(128),
                     buf.readUtf(128), buf.readUtf(128), buf.readVarInt(), buf.readBoolean());
+            String permission = buf.readUtf(128);
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
                     scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
-                    regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch, sounds, flyCeiling);
+                    regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch, sounds, flyCeiling,
+                    permission);
             client.execute(() -> Minecraft.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });
@@ -1025,6 +1031,13 @@ public final class NotchPacketsClient {
         buf.writeUUID(npcId);
         buf.writeUtf(name);
         NetClient.sendToServer(NotchPackets.NPC_SET_NAME, buf);
+    }
+
+    public static void sendNpcSetPermission(UUID npcId, String node) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeUUID(npcId);
+        buf.writeUtf(node);
+        NetClient.sendToServer(NotchPackets.NPC_SET_PERMISSION, buf);
     }
 
     public static void sendNpcSetFarewell(UUID npcId, String text) {

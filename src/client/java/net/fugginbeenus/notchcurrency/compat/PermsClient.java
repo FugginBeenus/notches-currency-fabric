@@ -6,6 +6,16 @@ public final class PermsClient {
 
     private PermsClient() {}
 
+    private static int flags = -1;
+
+    public static void setFlags(int bits) {
+        flags = bits;
+    }
+
+    public static boolean can(int flag) {
+        return flags >= 0 ? (flags & flag) != 0 : isOperator();
+    }
+
     public static boolean isOperator() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return false;

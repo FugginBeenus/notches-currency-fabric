@@ -17,7 +17,7 @@ public final class CrateKeyCommands {
     private CrateKeyCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("crate")
+        dispatcher.register(Commands.literal("crate").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("crate"))
                 .then(Commands.literal("buykey")
                         .executes(ctx -> buyKey(ctx.getSource(), 1))
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
@@ -31,7 +31,7 @@ public final class CrateKeyCommands {
                                     return 1;
                                 })))
                 .then(Commands.literal("givekey")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.CRATE))
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
                                         .executes(ctx -> {

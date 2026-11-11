@@ -14,7 +14,7 @@ public final class GamblingCommands {
     private GamblingCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("slots")
+        dispatcher.register(Commands.literal("slots").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("slots"))
                 .executes(ctx -> {
                     ServerPlayer p = ctx.getSource().getPlayer();
                     if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }
@@ -22,7 +22,7 @@ public final class GamblingCommands {
                     return 1;
                 }));
 
-        dispatcher.register(Commands.literal("coinflip")
+        dispatcher.register(Commands.literal("coinflip").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("coinflip"))
                 .then(Commands.literal("heads")
                         .then(Commands.argument("bet", LongArgumentType.longArg(1))
                                 .executes(ctx -> coinflip(ctx.getSource(), true, LongArgumentType.getLong(ctx, "bet")))))

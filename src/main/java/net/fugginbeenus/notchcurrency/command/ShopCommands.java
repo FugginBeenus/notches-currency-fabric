@@ -36,7 +36,7 @@ public final class ShopCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("shop")
+                Commands.literal("shop").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("shop"))
                         .then(Commands.literal("create")
                                 .then(Commands.argument("name", StringArgumentType.greedyString())
                                         .executes(ctx -> {
@@ -168,7 +168,7 @@ public final class ShopCommands {
                         )
 
                         .then(Commands.literal("linknpc")
-                                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                                .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.SHOP))
                                 .then(Commands.argument("shopId", StringArgumentType.word())
                                         .executes(ctx -> {
                                             ServerPlayer p = ctx.getSource().getPlayer();
@@ -225,7 +225,7 @@ public final class ShopCommands {
                                 )
                         )
                         .then(Commands.literal("admin")
-                                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                                .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.SHOP))
 
                                 .then(Commands.literal("list")
                                         .executes(ctx -> {

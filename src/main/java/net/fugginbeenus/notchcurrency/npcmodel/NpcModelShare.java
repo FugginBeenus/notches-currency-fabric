@@ -22,7 +22,7 @@ public final class NpcModelShare {
         Map<String, String> hashes = NpcModelServerStore.hashes();
 
         var buf = Net.buf();
-        buf.writeBoolean(Perms.isOperator(player));
+        buf.writeBoolean(Perms.isAdmin(player, Perms.NPC));
         buf.writeVarInt(hashes.size());
         for (Map.Entry<String, String> model : hashes.entrySet()) {
             buf.writeUtf(model.getKey(), 64);
@@ -61,7 +61,7 @@ public final class NpcModelShare {
 
     public static void receiveUpload(ServerPlayer player, int phase, String id, byte[] part,
                                      int announcedBytes) {
-        if (!Perms.isOperator(player)) return;
+        if (!Perms.isAdmin(player, Perms.NPC)) return;
 
         String sender = player.getUUID().toString();
         switch (phase) {

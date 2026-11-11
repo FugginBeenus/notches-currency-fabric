@@ -519,7 +519,7 @@ public final class PlayerShopManager {
     public static boolean canManage(ServerPlayer player, PlayerShop shop) {
         if (shop == null) return false;
         if (shop.getOwnerId().equals(player.getUUID())) return true;
-        return shop.isAdminMode() && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
+        return shop.isAdminMode() && net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.SHOP);
     }
 
     public enum PurchaseResult {

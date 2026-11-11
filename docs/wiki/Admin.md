@@ -1,6 +1,7 @@
 ## Admin
 
-Most admin commands require **permission level 2** (op).
+Most admin commands require **permission level 2** (op). With LuckPerms you can hand out admin
+rights without making anyone an op. See [Permissions](#permissions) below.
 
 ### Economy Administration
 
@@ -51,6 +52,40 @@ on their own NPCs.
 accept. The shop's NPC moves with it, so the NPC has to be loaded. The old owner gets the shop's
 unpaid earnings first. Players give NPCs away with the **Transfer** button instead (see
 [NPCs](08.-NPCs)).
+
+### Permissions
+
+Notch Currency works with **LuckPerms**, or any other mod that uses the Fabric Permissions API. You
+do not need to set anything up. Without a permissions mod, nothing changes: ops can do the admin
+things, and everyone can use the player commands.
+
+**Admin areas.** Each node covers that area's commands and its admin powers in game. Ops have all of
+them unless you take one away.
+
+| Node | Covers |
+| --- | --- |
+| `notchcurrency.admin.eco` | `/eco`, `/givnotches` and the treasury |
+| `notchcurrency.admin.crate` | Balloon and cache commands, `/crate givekey`, balloon settings |
+| `notchcurrency.admin.raffle` | The raffle admin commands and screen |
+| `notchcurrency.admin.bounty` | `/bounty admin` and the bounty admin screen |
+| `notchcurrency.admin.quest` | Designing quests, `/quests list` |
+| `notchcurrency.admin.shop` | `/shop admin`, `/shop linknpc` and admin shops |
+| `notchcurrency.admin.faction` | `/faction admin`, managing any faction |
+| `notchcurrency.admin.npc` | `/npc`, `/npcfx`, editing anyone's NPC, uploading models, sounds and textures, the particle and animation designers |
+| `notchcurrency.admin.npc.commands` | NPC dialogue and reactions that run commands. Anyone with this can run any command through an NPC, so give it only to people you would make op. |
+| `notchcurrency.admin.hearts` | `/hearts` admin commands |
+| `notchcurrency.admin.cosmetics` | The cosmetics shop admin mode |
+
+Give `notchcurrency.admin.*` to hand out all of them at once.
+
+**Player commands.** Everyone has these unless you take one away, for example to stop a group
+using `/pay`: `notchcurrency.command.` followed by `ah`, `balance` (also `/bal`), `pay`, `baltop`,
+`receipts`, `bounty`, `crate`, `faction`, `slots`, `coinflip`, `hearts`, `loan`, `npcmodels`,
+`npctransfer`, `quests`, `raffle`, `shop` or `trade`.
+
+**NPCs that need a permission.** On the NPC editor's **Role** tab, admins can type a permission into
+the box at the bottom and press **Set**. Only players who have it can use that NPC. The NPC's owner
+and admins always can. Leave the box empty so anyone can.
 
 ### Factions
 

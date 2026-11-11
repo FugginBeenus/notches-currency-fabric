@@ -38,7 +38,7 @@ public final class CrateCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("balloon")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.CRATE))
                         .then(Commands.literal("spawn")
                                 .executes(ctx -> {
                                     var src = ctx.getSource();
@@ -182,7 +182,7 @@ public final class CrateCommands {
 
         dispatcher.register(
                 Commands.literal("cache")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.CRATE))
                         .then(Commands.literal("spawn")
                                 .then(Commands.argument("radius", IntegerArgumentType.integer(8, 256))
                                         .executes(ctx -> {

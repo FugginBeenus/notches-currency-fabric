@@ -15,7 +15,7 @@ public final class NpcTransferCommands {
     private NpcTransferCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("npctransfer")
+        dispatcher.register(Commands.literal("npctransfer").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("npctransfer"))
                 .then(Commands.literal("offer")
                         .then(Commands.argument("npc", StringArgumentType.word())
                                 .then(Commands.argument("player", EntityArgument.player())

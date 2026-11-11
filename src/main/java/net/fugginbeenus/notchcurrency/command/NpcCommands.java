@@ -64,7 +64,7 @@ public final class NpcCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("npcmodels")
+                Commands.literal("npcmodels").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("npcmodels"))
                         .then(Commands.literal("sync")
                                 .executes(ctx -> {
                                     net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();
@@ -79,7 +79,7 @@ public final class NpcCommands {
 
         dispatcher.register(
                 Commands.literal("npcfx")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.NPC))
                         .then(Commands.literal("starters")
                                 .executes(ctx -> {
                                     net.minecraft.server.level.ServerPlayer p = ctx.getSource().getPlayer();
@@ -110,7 +110,7 @@ public final class NpcCommands {
                                                                         com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "motion")))))))));
 
         dispatcher.register(Commands.literal("npc")
-                .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.NPC))
                 .then(Commands.literal("setrole")
                         .then(Commands.literal("banker").executes(ctx -> setRole(ctx.getSource(), NpcRole.BANKER, null)))
                         .then(Commands.literal("auctioneer").executes(ctx -> setRole(ctx.getSource(), NpcRole.AUCTIONEER, null)))

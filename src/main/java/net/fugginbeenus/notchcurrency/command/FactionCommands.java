@@ -17,7 +17,7 @@ public final class FactionCommands {
     private FactionCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("faction")
+        dispatcher.register(Commands.literal("faction").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("faction"))
                 .executes(ctx -> list(ctx.getSource()))
                 .then(Commands.literal("list").executes(ctx -> list(ctx.getSource())))
                 .then(Commands.literal("leave").executes(ctx -> leave(ctx.getSource())))
@@ -40,7 +40,7 @@ public final class FactionCommands {
                                 .executes(ctx -> create(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "name")))))
                 .then(Commands.literal("admin")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.FACTION))
                         .then(Commands.literal("move")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("faction", StringArgumentType.word())

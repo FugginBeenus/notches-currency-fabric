@@ -29,7 +29,7 @@ public final class BountyCommands {
     private BountyCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("bounty")
+        dispatcher.register(Commands.literal("bounty").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("bounty"))
                 .executes(ctx -> open(ctx.getSource()))
                 .then(Commands.literal("list").executes(ctx -> open(ctx.getSource())))
                 .then(Commands.literal("take")
@@ -69,7 +69,7 @@ public final class BountyCommands {
                                 })))
 
                 .then(Commands.literal("admin")
-                        .requires(net.fugginbeenus.notchcurrency.compat.Perms::isOperator)
+                        .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.BOUNTY))
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
                             if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }

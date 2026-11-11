@@ -34,7 +34,7 @@ public final class TradeCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("trade")
+                Commands.literal("trade").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("trade"))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer from = ctx.getSource().getPlayer();

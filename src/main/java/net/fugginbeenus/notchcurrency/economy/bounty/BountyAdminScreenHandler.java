@@ -105,7 +105,7 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
-        if (!(player instanceof ServerPlayer sp) || !net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) return false;
+        if (!(player instanceof ServerPlayer sp) || !net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.BOUNTY)) return false;
         if (id == 0) {
             persistDecrees(sp);
             BountyManager.regenerate(sp.level().getServer());
@@ -144,6 +144,6 @@ public class BountyAdminScreenHandler extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
+        return net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.BOUNTY);
     }
 }

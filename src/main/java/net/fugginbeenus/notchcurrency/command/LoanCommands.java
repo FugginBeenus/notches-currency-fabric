@@ -13,7 +13,7 @@ public final class LoanCommands {
     private LoanCommands() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("loan")
+        dispatcher.register(Commands.literal("loan").requires(net.fugginbeenus.notchcurrency.compat.Perms.command("loan"))
                 .executes(ctx -> {
                     ServerPlayer p = ctx.getSource().getPlayer();
                     if (p == null) { ctx.getSource().sendFailure(Component.literal("Run as a player.")); return 0; }

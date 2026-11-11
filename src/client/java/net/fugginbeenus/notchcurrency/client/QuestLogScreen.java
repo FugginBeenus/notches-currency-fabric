@@ -86,7 +86,7 @@ public class QuestLogScreen extends Screen {
                     over(mouseX, mouseY, px + 116, py + H - 26, 18, 16), over(mouseX, mouseY, px + 166, py + H - 26, 18, 16));
         }
 
-        boolean admin = net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator();
+        boolean admin = net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.QUEST);
         if (admin) {
             NotchWidgets.neutralButton(ctx, this.font, px + 12, py + H - 26, 100, 16, "Design quests",
                     over(mouseX, mouseY, px + 12, py + H - 26, 100, 16));
@@ -138,7 +138,7 @@ public class QuestLogScreen extends Screen {
                     return true;
                 }
             }
-            if (net.fugginbeenus.notchcurrency.compat.PermsClient.isOperator()
+            if (net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.QUEST)
                     && over(mx, my, px + 12, py + H - 26, 100, 16)) {
                 NotchWidgets.click();
                 net.fugginbeenus.notchcurrency.net.NotchPacketsClient.sendQuestDesign();

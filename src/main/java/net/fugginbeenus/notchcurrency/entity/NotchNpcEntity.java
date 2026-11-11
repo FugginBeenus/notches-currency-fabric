@@ -189,6 +189,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private net.fugginbeenus.notchcurrency.npc.action.NpcActions actions =
             new net.fugginbeenus.notchcurrency.npc.action.NpcActions();
     private String farewellText = "";
+    private String requiredPermission = "";
 
     private boolean protectedNpc = true;
     private boolean opensDoors = false;
@@ -865,6 +866,9 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public String getFarewellText() { return farewellText; }
     public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
+
+    public String getRequiredPermission() { return requiredPermission; }
+    public void setRequiredPermission(String node) { this.requiredPermission = node == null ? "" : node; }
 
     public boolean isProtectedNpc() { return protectedNpc; }
     public void setProtectedNpc(boolean p) { this.protectedNpc = p; }
@@ -1619,7 +1623,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public boolean canEdit(ServerPlayer player) {
-        return isOwnedBy(player) || net.fugginbeenus.notchcurrency.compat.Perms.isOperator(player);
+        return isOwnedBy(player) || net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player,
+                net.fugginbeenus.notchcurrency.compat.Perms.NPC);
     }
 
     @Override
@@ -1633,6 +1638,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         if (player instanceof ServerPlayer sp) {
             if (isRuleHidden() && !canEdit(sp)) {
                 return InteractionResult.PASS;
+            }
+            if (!requiredPermission.isEmpty() && !canEdit(sp) && !net.fugginbeenus.notchcurrency.compat.Perms.has(
+                    sp, requiredPermission, net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp))) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You need permission to use this NPC.")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+                return InteractionResult.SUCCESS;
             }
             if (sp.isShiftKeyDown() && canEdit(sp)) {
                 NotchNpcManager.openEditor(sp, this);
@@ -1779,6 +1790,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.put("Dialogue", dialogue.toNbt());
         nbt.putString("DialogueMode", dialogueMode.name());
         nbt.putString("Farewell", farewellText);
+        if (!requiredPermission.isEmpty()) nbt.putString("NeedsPermission", requiredPermission);
         if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
         if (schedule.isEnabled() || !schedule.isEmpty()) nbt.put("Schedule", schedule.toNbt());
         if (poseBeforeSchedule >= 0) nbt.putInt("PoseBeforeSchedule", poseBeforeSchedule);
@@ -1893,6 +1905,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             dialogue = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(nbt.getCompound("Dialogue"));
         }
         if (nbt.contains("Farewell")) farewellText = nbt.getString("Farewell");
+        requiredPermission = nbt.contains("NeedsPermission") ? nbt.getString("NeedsPermission") : "";
         actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(
                 nbt.contains("Actions") ? nbt.getCompound("Actions") : null);
         poseBeforeSchedule = nbt.contains("PoseBeforeSchedule") ? nbt.getInt("PoseBeforeSchedule") : -1;

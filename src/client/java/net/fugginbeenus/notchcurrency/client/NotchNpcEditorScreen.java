@@ -66,6 +66,8 @@ public class NotchNpcEditorScreen extends Screen {
     private EditBox urlField;
     private EditBox followField;
     private EditBox farewellField;
+    private EditBox permissionField;
+    private String currentPermission;
     private String currentFarewell;
     private String currentBillboard;
     private NotchNpcEntity preview;
@@ -80,6 +82,7 @@ public class NotchNpcEditorScreen extends Screen {
         this.currentRole = roleFromOrdinal(state.roleOrdinal());
         this.currentName = state.name() == null ? "" : state.name();
         this.currentFarewell = state.farewell() == null ? "" : state.farewell();
+        this.currentPermission = state.permission() == null ? "" : state.permission();
         this.currentBillboard = state.billboard() == null ? "" : state.billboard();
         this.currentSubtitle = state.subtitle() == null ? "" : state.subtitle();
         this.currentVoice = state.voice() == null ? "" : state.voice();
@@ -121,6 +124,10 @@ public class NotchNpcEditorScreen extends Screen {
         this.poseAnim = state.poseAnim();
     }
 
+    private static boolean accessAllowed() {
+        return net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.NPC);
+    }
+
     private static NpcRole roleFromOrdinal(int ord) {
         NpcRole[] all = NpcRole.values();
         return (ord >= 0 && ord < all.length) ? all[ord] : NpcRole.NONE;
@@ -143,6 +150,13 @@ public class NotchNpcEditorScreen extends Screen {
         farewellField.setHint(Component.literal("(optional)").withStyle(ChatFormatting.DARK_GRAY));
         farewellField.setValue(currentFarewell);
         addRenderableWidget(farewellField);
+
+        permissionField = new EditBox(this.font, px + 24, py + 223, 212, 9, Component.literal("Permission"));
+        permissionField.setMaxLength(128);
+        permissionField.setBordered(false);
+        permissionField.setHint(Component.literal("anyone").withStyle(ChatFormatting.DARK_GRAY));
+        permissionField.setValue(currentPermission);
+        addRenderableWidget(permissionField);
 
         playerField = new EditBox(this.font, px + 152, py + 159, 134, 9, Component.literal("Player"));
         playerField.setMaxLength(16);
@@ -171,6 +185,7 @@ public class NotchNpcEditorScreen extends Screen {
     private void updateWidgetVisibility() {
         nameField.visible = (tab == 0);
         farewellField.visible = (tab == 3);
+        permissionField.visible = (tab == 2 && pendingRole == null && accessAllowed());
         nameField.setCanLoseFocus(tab == 0);
         boolean hum = (tab == 0 && isHumanoid());
         playerField.visible = hum;
@@ -611,6 +626,22 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.centerText(ctx, this.font, "Guards use it to tell friend from foe.",
                 px + W / 2, py + 202, NotchTheme.TEXT_MUTED, false);
 
+        if (pendingRole == null && accessAllowed()) {
+            NotchWidgets.divider(ctx, px + 8, py + 214, W - 16);
+            NotchWidgets.inset(ctx, px + 20, py + 221, 220, 13, NotchTheme.PANEL_MID);
+            boolean setHover = over(mx, my, px + 246, py + 221, 34, 13);
+            NotchWidgets.neutralButton(ctx, this.font, px + 246, py + 221, 34, 13, "Set", setHover);
+            NotchWidgets.centerText(ctx, this.font, "Only players with this permission can use it.",
+                    px + W / 2, py + 239, NotchTheme.TEXT_MUTED, false);
+            if (setHover || over(mx, my, px + 20, py + 221, 220, 13)) {
+                tooltip = java.util.List.of(
+                        Component.literal("Permission needed").withStyle(ChatFormatting.WHITE),
+                        Component.literal("Leave it empty so anyone can use this NPC.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("Give the permission out with LuckPerms.").withStyle(ChatFormatting.GRAY),
+                        Component.literal("The owner and admins can always use it.").withStyle(ChatFormatting.GRAY));
+            }
+        }
+
         if (pendingRole != null) {
             int by = py + H - 54;
             NotchWidgets.centerText(ctx, this.font, "Switch to " + roleLabel(pendingRole) + "?",
@@ -1038,6 +1069,12 @@ public class NotchNpcEditorScreen extends Screen {
             if (tab == 1 && clickBehavior(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 3 && clickVoiceRow(mx, my)) { NotchWidgets.tick(); return true; }
             if (tab == 2) {
+                if (pendingRole == null && accessAllowed() && over(mx, my, px + 246, py + 221, 34, 13)) {
+                    NotchWidgets.click();
+                    currentPermission = permissionField.getValue().trim();
+                    NotchPacketsClient.sendNpcSetPermission(npcId, currentPermission);
+                    return true;
+                }
                 if (pendingRole == null && over(mx, my, px + 40, py + 172, 220, 16)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendFactionPick(npcId,
@@ -1050,12 +1087,14 @@ public class NotchNpcEditorScreen extends Screen {
                         NotchWidgets.click();
                         currentRole = pendingRole;
                         pendingRole = null;
+                        updateWidgetVisibility();
                         NotchPacketsClient.sendNpcSetRole(npcId, currentRole.ordinal());
                         return true;
                     }
                     if (over(mx, my, px + 160, by + 24, 100, 16)) {
                         NotchWidgets.click();
                         pendingRole = null;
+                        updateWidgetVisibility();
                         return true;
                     }
                 }
@@ -1066,6 +1105,7 @@ public class NotchNpcEditorScreen extends Screen {
                         NotchWidgets.tick();
                         if (currentRole == NpcRole.SHOP) {
                             pendingRole = picked;
+                            updateWidgetVisibility();
                         } else {
                             currentRole = picked;
                             NotchPacketsClient.sendNpcSetRole(npcId, currentRole.ordinal());

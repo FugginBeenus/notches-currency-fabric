@@ -91,7 +91,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         props.set(P_ADMIN_MODE, shop.isAdminMode() ? 1 : 0);
         SignStyles.write(props, P_SIGN, shop.getSign());
         boolean op = viewer instanceof net.minecraft.server.level.ServerPlayer sp
-                && net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp);
+                && net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.SHOP);
         props.set(P_IS_OP, (op && ShopRules.adminShops) ? 1 : 0);
 
         List<ShopListing> listings = shop.getListings();
@@ -123,7 +123,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Admin shops are switched off on this server.").withStyle(ChatFormatting.RED));
                     return;
                 }
-                if (!net.fugginbeenus.notchcurrency.compat.Perms.isOperator(sp)) {
+                if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.SHOP)) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Only a server operator can do that.").withStyle(ChatFormatting.RED));
                     return;
                 }
