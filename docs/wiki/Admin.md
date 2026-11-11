@@ -82,6 +82,8 @@ Give `notchcurrency.admin.*` to hand out all of them at once.
 using `/pay`: `notchcurrency.command.` followed by `ah`, `balance` (also `/bal`), `pay`, `baltop`,
 `receipts`, `bounty`, `crate`, `faction`, `slots`, `coinflip`, `hearts`, `loan`, `npcmodels`,
 `npctransfer`, `quests`, `raffle`, `shop` or `trade`.
+`notchcurrency.bounty.post` lets a player post bounties at a Bounty Board, when player bounties
+are on. Everyone has it too.
 
 **NPCs that need a permission.** On the NPC editor's **Role** tab, admins can type a permission into
 the box at the bottom and press **Set**. Only players who have it can use that NPC. The NPC's owner

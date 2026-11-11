@@ -1,10 +1,10 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import net.fugginbeenus.notchcurrency.client.bounty.BoardArt;
 import net.fugginbeenus.notchcurrency.client.bounty.BookPaper;
 import net.fugginbeenus.notchcurrency.client.bounty.PaperNote;
 import net.fugginbeenus.notchcurrency.client.bounty.Requester;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
-import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.compat.Render;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -17,7 +17,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import java.nio.charset.StandardCharsets;
@@ -34,12 +33,11 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     private static final int TAKEN_Y = 169, ROW_W = 220;
     private static final int BTN_W = 48, BTN_H = 14;
     private static final int PG_LX = 88, PG_RX = 134, PG_Y = 270, PG_BW = 18, PG_H = 14;
+    private static final int POST_X = 188, POST_Y = 7, POST_W = 44, POST_H = 14;
     private static final long SLIDE_MS = 380L, SETTLE_MS = 1400L, ROW_SALT = 0x5DEECE66DL;
     private static final int[] ROW_OFF = {0, 1, -1, 1, 0};
     private static final int[][] SPOTS = {{12, 24, 104, 60}, {124, 23, 104, 61}, {13, 88, 103, 60}, {124, 89, 104, 59}};
-    private static final int FRAME = 0xFF1E140C, WANTED = 0xFF7A2E22, LABEL = 0xFFEADFC8, LABEL_SHADOW = 0xFF1A120B;
-    private static final ResourceLocation LOG = Reg.id("minecraft", "textures/block/stripped_oak_log.png");
-    private static final ResourceLocation CORK = Reg.id("minecraft", "textures/block/brown_concrete_powder.png");
+    private static final int WANTED = BoardArt.WANTED, LABEL = BoardArt.LABEL;
 
     private record Note(int slot, int index, int x, int y, int w, int h, ItemStack stack) {}
 
@@ -84,7 +82,11 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         for (int i = 0; i < shown.length; i++) shown[i] = menu.offerStack(i);
 
         drawBoard(ctx, x, y);
-        label(ctx, "Available", x + 12, y + 11);
+        BoardArt.label(ctx, "Available", x + 12, y + 11);
+        if (canPost()) {
+            NotchWidgets.neutralButton(ctx, this.font, x + POST_X, y + POST_Y, POST_W, POST_H, "Post",
+                    over(mouseX, mouseY, x + POST_X, y + POST_Y, POST_W, POST_H));
+        }
         int totalPages = menu.prop(BountyBoardScreenHandler.P_TOTAL_PAGES);
         if (totalPages > 1) {
             NotchWidgets.pager(ctx, this.font, x + PG_LX, x + PG_RX, y + PG_Y, PG_BW, PG_H, page + 1, totalPages,
@@ -118,7 +120,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         ctx.disableScissor();
 
         String yours = "Your bounties " + countTaken() + "/" + menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT);
-        label(ctx, yours, x + 12, y + LOW_Y + 5);
+        BoardArt.label(ctx, yours, x + 12, y + LOW_Y + 5);
         NotchWidgets.badge(ctx, this.font, x + 16 + NotchWidgets.smallCapsWidth(yours), y + LOW_Y + 3, countReady());
         for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
             drawTakenRow(ctx, i, menu.takenStack(i), mouseX, mouseY);
@@ -210,61 +212,10 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     }
 
     private void drawBoard(GuiGraphics ctx, int x, int y) {
-        ctx.fill(x, y, x + W, y + H, FRAME);
-        logAcross(ctx, x + 1, y + 1, W - 2, 0);
-        logAcross(ctx, x + 1, y + H - 5, W - 2, 12);
-        logDown(ctx, x + 1, y + 5, H - 10, 0);
-        logDown(ctx, x + W - 5, y + 5, H - 10, 12);
-        ctx.fill(x + 1, y + 1, x + W - 1, y + 2, 0x40FFFFFF);
-        ctx.fill(x + 1, y + H - 2, x + W - 1, y + H - 1, 0x50000000);
-        cork(ctx, x + CORK_X, y + TOP_Y, CORK_W, TOP_H);
-        cork(ctx, x + CORK_X, y + LOW_Y, CORK_W, LOW_H);
-        logAcross(ctx, x + CORK_X, y + TOP_Y + TOP_H + 1, CORK_W, 6);
-    }
-
-    private static void logAcross(GuiGraphics ctx, int x, int y, int len, int u) {
-        for (int dx = 0; dx < len; dx += 16) {
-            Render.pushGui(ctx);
-            Render.translateGui(ctx, x + dx, y + 4);
-            Render.rotateGui(ctx, -90f);
-            NotchWidgets.blit(ctx, LOG, 0, 0, u, 0, 4, Math.min(16, len - dx), 16, 16);
-            Render.popGui(ctx);
-        }
-    }
-
-    private static void logDown(GuiGraphics ctx, int x, int y, int len, int u) {
-        for (int dy = 0; dy < len; dy += 16) {
-            NotchWidgets.blit(ctx, LOG, x, y + dy, u, 0, 4, Math.min(16, len - dy), 16, 16);
-        }
-    }
-
-    private static void cork(GuiGraphics ctx, int x, int y, int w, int h) {
-        NotchWidgets.tile(ctx, CORK, x, y, w, h);
-        ctx.fill(x, y, x + w, y + h, 0xB2523E2A);
-        ctx.fillGradient(x, y, x + w, y + h, 0x10FFFFFF, 0x00FFFFFF);
-        ctx.fillGradient(x, y, x + w, y + h, 0x00000000, 0x18000000);
-        int[] near = {0x88, 0x64, 0x4A, 0x36, 0x26, 0x1A, 0x10, 0x08};
-        for (int i = 0; i < near.length; i++) {
-            ctx.fill(x, y + i, x + w, y + i + 1, near[i] << 24);
-            ctx.fill(x + i, y, x + i + 1, y + h, near[i] << 24);
-        }
-        int[] far = {0x4C, 0x34, 0x22, 0x14, 0x0A};
-        for (int i = 0; i < far.length; i++) {
-            ctx.fill(x, y + h - 1 - i, x + w, y + h - i, far[i] << 24);
-            ctx.fill(x + w - 1 - i, y, x + w - i, y + h, far[i] << 24);
-        }
-    }
-
-    private static void label(GuiGraphics ctx, String s, int x, int y) {
-        NotchWidgets.smallCaps(ctx, s, x + 1, y + 1, LABEL_SHADOW);
-        NotchWidgets.smallCaps(ctx, s, x, y, LABEL);
-    }
-
-    private static void pin(GuiGraphics ctx, int cx, int y) {
-        ctx.fill(cx, y + 2, cx + 2, y + 3, 0x55000000);
-        ctx.fill(cx - 1, y - 1, cx + 2, y + 2, 0xFF7A7F8A);
-        ctx.fill(cx - 1, y - 1, cx + 1, y + 1, 0xFFD8DCE4);
-        ctx.fill(cx + 1, y + 1, cx + 2, y + 2, 0xFF3A3E46);
+        BoardArt.frame(ctx, x, y, W, H);
+        BoardArt.cork(ctx, x + CORK_X, y + TOP_Y, CORK_W, TOP_H);
+        BoardArt.cork(ctx, x + CORK_X, y + LOW_Y, CORK_W, LOW_H);
+        BoardArt.logAcross(ctx, x + CORK_X, y + TOP_Y + TOP_H + 1, CORK_W, 6);
     }
 
     private static void seal(GuiGraphics ctx, int cx, int cy, int color) {
@@ -340,10 +291,10 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         }
         int by = y + 16 + lines.size() * 9;
         if (by + 8 <= y + h - 20) {
-            String who = Requester.name(id);
-            String line = "by " + who + ", " + Requester.trade(type, t.getString("tgt"), id);
-            if (this.font.width(line) > w - 12) line = "by " + who;
-            ctx.drawString(this.font, line, x + 6, by, sheet.faint, false);
+            String who = Requester.name(id), poster = t.getString("poster");
+            String line = poster.isEmpty() ? "by " + who + ", " + Requester.trade(type, t.getString("tgt"), id) : "by " + poster;
+            if (poster.isEmpty() && this.font.width(line) > w - 12) line = "by " + who;
+            ctx.drawString(this.font, this.font.plainSubstrByWidth(line, w - 12), x + 6, by, sheet.faint, false);
         }
         long coins = t.getLong("rewc");
         ItemStack item = t.contains("rews") ? StackData.readStack(t.getCompound("rews")) : ItemStack.EMPTY;
@@ -359,9 +310,10 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         }
         String left = timeLeft(t.getLong("exp"));
         if (!left.isEmpty()) ctx.drawString(this.font, left, x + w - 19 - this.font.width(left), y + h - 14, sheet.faint, false);
-        if (hover) stamp(ctx, x + w / 2, y + h / 2, full ? "FULL" : "TAKE", full);
+        boolean own = t.getBoolean("own");
+        if (hover) stamp(ctx, x + w / 2, y + h / 2, own ? "TAKE DOWN" : full ? "FULL" : "TAKE", own || full);
         Render.popGui(ctx);
-        pin(ctx, pin, y + 2);
+        BoardArt.pin(ctx, pin, y + 2);
     }
 
     private void stamp(GuiGraphics ctx, int cx, int cy, String text, boolean full) {
@@ -423,7 +375,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             boolean hov = over(mouseX, mouseY, btnX, buttonY(i), BTN_W, BTN_H);
             NotchWidgets.primaryButton(ctx, this.font, btnX, buttonY(i), BTN_W, BTN_H, kill ? "Collect" : "Turn in", hov);
         }
-        pin(ctx, nx + ROW_W / 2, ry + 1);
+        BoardArt.pin(ctx, nx + ROW_W / 2, ry + 1);
     }
 
     private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
@@ -468,7 +420,18 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         return ItemStack.EMPTY;
     }
 
+    private boolean canPost() {
+        return menu.prop(BountyBoardScreenHandler.P_CAN_POST) == 1;
+    }
+
     private void drawHoverDetails(GuiGraphics ctx, int mouseX, int mouseY) {
+        if (canPost() && over(mouseX, mouseY, this.leftPos + POST_X, this.topPos + POST_Y, POST_W, POST_H)) {
+            ctx.renderComponentTooltip(this.font, List.of(
+                    Component.literal("Post a bounty").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Put up a reward to get a job done.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("Someone takes it from the board.").withStyle(ChatFormatting.GRAY)), mouseX, mouseY);
+            return;
+        }
         ItemStack stack = hovered(mouseX, mouseY);
         if (stack.isEmpty() || !StackData.hasData(stack)) return;
         CompoundTag t = StackData.getData(stack);
@@ -479,8 +442,9 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         lines.add(Component.literal(t.getString("desc")).withStyle(rarity.color()));
         lines.add(Component.literal("Reward: " + t.getString("rew")).withStyle(ChatFormatting.GOLD));
         lines.add(Component.literal(rarity.name().charAt(0) + rarity.name().substring(1).toLowerCase()).withStyle(rarity.color()));
-        lines.add(Component.literal("Posted by " + Requester.name(id) + ", "
-                + Requester.trade(t.getString("typ"), t.getString("tgt"), id)).withStyle(ChatFormatting.GRAY));
+        String poster = t.getString("poster");
+        lines.add(Component.literal("Posted by " + (poster.isEmpty() ? Requester.name(id) + ", "
+                + Requester.trade(t.getString("typ"), t.getString("tgt"), id) : poster)).withStyle(ChatFormatting.GRAY));
         long exp = t.getLong("exp");
         if (exp > 0 && this.minecraft != null && this.minecraft.level != null) {
             long mins = Math.max(0, (exp - this.minecraft.level.getGameTime()) / 20L / 60L);
@@ -500,6 +464,12 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     //?}
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (canPost() && this.minecraft != null && this.minecraft.gameMode != null
+                    && over(mx, my, this.leftPos + POST_X, this.topPos + POST_Y, POST_W, POST_H)) {
+                NotchWidgets.click();
+                this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 2);
+                return true;
+            }
             if (menu.prop(BountyBoardScreenHandler.P_TOTAL_PAGES) > 1 && this.minecraft != null && this.minecraft.gameMode != null) {
                 if (over(mx, my, this.leftPos + PG_LX, this.topPos + PG_Y, PG_BW, PG_H)) {
                     if (menu.prop(BountyBoardScreenHandler.P_PAGE) > 0) {
@@ -519,7 +489,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             if (!sliding()) {
                 for (Note n : notesFor(shown, 0)) {
                     if (over(mx, my, n.x(), n.y(), n.w(), n.h())) {
-                        action(n.stack(), 0);
+                        action(n.stack(), StackData.getData(n.stack()).getBoolean("own") ? 3 : 0);
                         return true;
                     }
                 }

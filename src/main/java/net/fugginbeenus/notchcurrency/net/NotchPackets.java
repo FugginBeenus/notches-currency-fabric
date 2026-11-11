@@ -31,6 +31,7 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_TRANSFER = NotchCurrency.id("npc_transfer");
     public static final ResourceLocation NPC_SET_PERMISSION = NotchCurrency.id("npc_set_permission");
     public static final ResourceLocation ADMIN_FLAGS = NotchCurrency.id("admin_flags");
+    public static final ResourceLocation BOUNTY_POST = NotchCurrency.id("bounty_post");
     public static final ResourceLocation NPC_SET_APPEARANCE = NotchCurrency.id("npc_set_appearance");
     public static final ResourceLocation NPC_SET_BEHAVIOR = NotchCurrency.id("npc_set_behavior");
     public static final ResourceLocation NPC_SET_STATS = NotchCurrency.id("npc_set_stats");

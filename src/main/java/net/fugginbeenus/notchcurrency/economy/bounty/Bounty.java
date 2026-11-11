@@ -30,6 +30,10 @@ public class Bounty {
     private final boolean factionOnly;
     private final String needsFaction;
     private final String nextQuest;
+    private UUID poster;
+    private String posterName = "";
+    private UUID targetPlayer;
+    private String targetPlayerName = "";
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
@@ -80,6 +84,22 @@ public class Bounty {
     public boolean isFactionOnly() { return factionOnly || !needsFaction.isEmpty(); }
     public String getNeedsFaction() { return needsFaction; }
     public String getNextQuest() { return nextQuest; }
+    public UUID getPoster() { return poster; }
+    public String getPosterName() { return posterName; }
+    public boolean isPosted() { return poster != null; }
+    public UUID getTargetPlayer() { return targetPlayer; }
+
+    public Bounty onPlayer(UUID who, String name) {
+        this.targetPlayer = who;
+        this.targetPlayerName = name == null ? "" : name;
+        return this;
+    }
+
+    public Bounty postedBy(UUID who, String name) {
+        this.poster = who;
+        this.posterName = name == null ? "" : name;
+        return this;
+    }
 
     public static UUID idForKey(String key) {
         return UUID.nameUUIDFromBytes(("notchquest:" + (key == null ? "" : key.trim().toLowerCase()))
@@ -94,6 +114,7 @@ public class Bounty {
         if (type == BountyType.TALK_TO || type == BountyType.VISIT) {
             return Component.literal(targetText);
         }
+        if (targetPlayer != null) return Component.literal(targetPlayerName);
         if (type == BountyType.KILL) {
             EntityType<?> et = BuiltInRegistries.ENTITY_TYPE.get(target);
             return et.getDescription();
@@ -103,6 +124,7 @@ public class Bounty {
 
     public String describe() {
         if (!description.isEmpty()) return description;
+        if (targetPlayer != null) return "Kill " + targetPlayerName;
         return switch (type) {
             case KILL -> "Kill " + required + " " + targetName().getString();
             case FETCH -> "Collect " + required + " " + targetName().getString();
@@ -143,12 +165,20 @@ public class Bounty {
         if (factionOnly) o.putBoolean("FactionOnly", true);
         if (!needsFaction.isEmpty()) o.putString("NeedsFaction", needsFaction);
         if (!nextQuest.isEmpty()) o.putString("NextQuest", nextQuest);
+        if (poster != null) {
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Poster", poster);
+            o.putString("PosterName", posterName);
+        }
+        if (targetPlayer != null) {
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "TargetPlayer", targetPlayer);
+            o.putString("TargetPlayerName", targetPlayerName);
+        }
         return o;
     }
 
     public static Bounty fromNbt(CompoundTag o) {
         ItemStack reward = o.contains("RewardItem") ? StackData.readStack(o.getCompound("RewardItem")) : ItemStack.EMPTY;
-        return new Bounty(
+        Bounty b = new Bounty(
                 net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Id"),
                 BountyType.valueOf(o.getString("Type")),
                 Reg.parse(o.getString("Target")),
@@ -167,5 +197,12 @@ public class Bounty {
                 o.getBoolean("FactionOnly"),
                 o.getString("NeedsFaction"),
                 o.getString("NextQuest"));
+        if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(o, "Poster")) {
+            b.postedBy(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "Poster"), o.getString("PosterName"));
+        }
+        if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(o, "TargetPlayer")) {
+            b.onPlayer(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "TargetPlayer"), o.getString("TargetPlayerName"));
+        }
+        return b;
     }
 }

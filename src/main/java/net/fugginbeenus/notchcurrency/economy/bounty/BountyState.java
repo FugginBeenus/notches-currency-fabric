@@ -32,6 +32,7 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
     private final Map<UUID, Map<UUID, TakenBounty>> taken = new HashMap<>();
     private final Map<UUID, Set<UUID>> completed = new HashMap<>();
     private final List<ItemStack> decrees = new ArrayList<>();
+    private final Map<UUID, UUID> reserved = new HashMap<>();
 
     public static BountyState get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
@@ -48,9 +49,26 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         boolean removed = offers.remove(id) != null;
         if (removed) {
             for (Set<UUID> s : completed.values()) s.remove(id);
+            reserved.remove(id);
             setDirty();
         }
         return removed;
+    }
+
+    @Nullable
+    public UUID reservedBy(UUID offerId) {
+        return reserved.get(offerId);
+    }
+
+    public void reserve(UUID offerId, UUID player) {
+        reserved.put(offerId, player);
+        setDirty();
+    }
+
+    public int postedCount(UUID player) {
+        int n = 0;
+        for (Bounty b : offers.values()) if (player.equals(b.getPoster())) n++;
+        return n;
     }
 
     public boolean hasCompletedOffer(UUID player, UUID offerId) {
@@ -109,7 +127,11 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         Map<UUID, TakenBounty> m = taken.get(player);
         if (m == null) return 0;
         int before = m.size();
-        m.values().removeIf(tb -> tb.isExpired(now));
+        m.values().removeIf(tb -> {
+            if (!tb.isExpired(now)) return false;
+            if (player.equals(reserved.get(tb.bounty().getId()))) reserved.remove(tb.bounty().getId());
+            return true;
+        });
         int dropped = before - m.size();
         if (dropped > 0) setDirty();
         return dropped;
@@ -187,6 +209,15 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         ListTag decreeList = new ListTag();
         for (ItemStack s : decrees) decreeList.add(StackData.writeStack(s));
         nbt.put("Decrees", decreeList);
+
+        ListTag reservedList = new ListTag();
+        for (Map.Entry<UUID, UUID> e : reserved.entrySet()) {
+            CompoundTag o = new CompoundTag();
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Offer", e.getKey());
+            net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Player", e.getValue());
+            reservedList.add(o);
+        }
+        nbt.put("Reserved", reservedList);
         return nbt;
     }
 
@@ -234,6 +265,15 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         for (int i = 0; i < decreeList.size(); i++) {
             ItemStack s = StackData.readStack(decreeList.getCompound(i));
             if (!s.isEmpty()) state.decrees.add(s);
+        }
+
+        ListTag reservedList = nbt.getList("Reserved", Tag.TAG_COMPOUND);
+        for (int i = 0; i < reservedList.size(); i++) {
+            CompoundTag o = reservedList.getCompound(i);
+            try {
+                state.reserved.put(Nbt.getUuid(o, "Offer"), Nbt.getUuid(o, "Player"));
+            } catch (IllegalArgumentException ignored) {
+            }
         }
         return state;
     }

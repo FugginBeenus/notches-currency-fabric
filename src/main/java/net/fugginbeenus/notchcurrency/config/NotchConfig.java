@@ -116,6 +116,10 @@ public final class NotchConfig {
         public int durationMinutes = 30;
         public int rewardMultiplierPercent = 100;
         public long maxCoinReward = 250;
+        public boolean playerBounties = false;
+        public int playerPostLimit = 3;
+        public int playerPostHours = 24;
+        public boolean pvpBounties = false;
     }
 
     public static final class Raffle {

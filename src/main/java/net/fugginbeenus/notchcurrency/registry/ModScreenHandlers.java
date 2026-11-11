@@ -33,6 +33,7 @@ public final class ModScreenHandlers {
     public static MenuType<net.fugginbeenus.notchcurrency.mail.MailInboxMenu> MAIL_INBOX;
     public static MenuType<net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler> MAIL_POST;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler> TRADE_OFFER_CREATE;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.bounty.BountyPostScreenHandler> BOUNTY_POST;
     public static MenuType<net.fugginbeenus.notchcurrency.trade.TradeOffersScreenHandler> TRADE_OFFERS;
     public static MenuType<net.fugginbeenus.notchcurrency.economy.ReceiptsScreenHandler> RECEIPTS;
     public static MenuType<net.fugginbeenus.notchcurrency.shop.ShopBrowseScreenHandler> SHOP_BROWSE;
@@ -140,6 +141,10 @@ public final class ModScreenHandlers {
                 net.fugginbeenus.notchcurrency.mail.MailPostScreenHandler::new
         );
 
+        BOUNTY_POST = simple(
+                NotchCurrency.id("bounty_post"),
+                net.fugginbeenus.notchcurrency.economy.bounty.BountyPostScreenHandler::new
+        );
         TRADE_OFFER_CREATE = simple(
                 NotchCurrency.id("trade_offer_create"),
                 net.fugginbeenus.notchcurrency.trade.TradeOfferCreateScreenHandler::new

@@ -1033,6 +1033,15 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SET_NAME, buf);
     }
 
+    public static void sendBountyPost(int type, String mob, int amount, long coins) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeVarInt(type);
+        buf.writeUtf(mob);
+        buf.writeVarInt(amount);
+        buf.writeVarLong(coins);
+        NetClient.sendToServer(NotchPackets.BOUNTY_POST, buf);
+    }
+
     public static void sendNpcSetPermission(UUID npcId, String node) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npcId);

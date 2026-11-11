@@ -27,7 +27,8 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
     public static final int P_TAKE_LIMIT = 0;
     public static final int P_PAGE = 1;
     public static final int P_TOTAL_PAGES = 2;
-    private static final int PROP_COUNT = 3;
+    public static final int P_CAN_POST = 3;
+    private static final int PROP_COUNT = 4;
 
     private int page = 0;
 
@@ -72,14 +73,17 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         long now = BountyManager.worldTime(sp.level().getServer());
 
         props.set(P_TAKE_LIMIT, BountyManager.getTakeLimit());
+        props.set(P_CAN_POST, BountyManager.canPost(sp) ? 1 : 0);
 
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
             if (b.isQuest()) continue;
             if (b.isExpired(now) || state.hasTaken(sp.getUUID(), b.getId())
                     || state.hasCompletedOffer(sp.getUUID(), b.getId())) continue;
+            if (b.isPosted() && state.reservedBy(b.getId()) != null) continue;
             avail.add(b);
         }
+        avail.sort(java.util.Comparator.comparing((Bounty b) -> !b.isPosted()));
         int totalPages = Math.max(1, (avail.size() + OFFER_SLOTS - 1) / OFFER_SLOTS);
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
@@ -90,7 +94,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < OFFER_SLOTS; i++) {
             int idx = start + i;
             boardInv.setItem(i, idx < avail.size()
-                    ? display(avail.get(idx), false, 0, avail.get(idx).getExpiresGameTime())
+                    ? display(avail.get(idx), false, 0, avail.get(idx).getExpiresGameTime(), sp.getUUID())
                     : ItemStack.EMPTY);
         }
 
@@ -99,12 +103,12 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         for (TakenBounty tb : mine) {
             if (tb.bounty().isQuest()) continue;
             if (t >= TAKEN_SLOTS) break;
-            boardInv.setItem(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime()));
+            boardInv.setItem(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime(), sp.getUUID()));
         }
         while (t < TAKEN_SLOTS) boardInv.setItem(OFFER_SLOTS + t++, ItemStack.EMPTY);
     }
 
-    private static ItemStack display(Bounty b, boolean mine, int progress, long expiry) {
+    private static ItemStack display(Bounty b, boolean mine, int progress, long expiry, java.util.UUID viewer) {
         ItemStack carrier = !b.getRewardItem().isEmpty() ? b.getRewardItem().copy() : new ItemStack(ModItems.NOTCH_COIN);
         CompoundTag t = StackData.editData(carrier);
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "bid", b.getId());
@@ -121,6 +125,10 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         t.putInt("req", b.getRequired());
         t.putLong("exp", expiry);
         t.putBoolean("mine", mine);
+        if (b.isPosted()) {
+            t.putString("poster", b.getPosterName());
+            if (b.getPoster().equals(viewer)) t.putBoolean("own", true);
+        }
         StackData.commitData(carrier, t);
         return carrier;
     }
@@ -134,6 +142,10 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (!(player instanceof ServerPlayer)) return false;
+        if (id == 2) {
+            BountyManager.openPost((ServerPlayer) player);
+            return true;
+        }
         if (id == 0) page = Math.max(0, page - 1);
         else if (id == 1) page = page + 1; // clamped in refresh()
         else return false;

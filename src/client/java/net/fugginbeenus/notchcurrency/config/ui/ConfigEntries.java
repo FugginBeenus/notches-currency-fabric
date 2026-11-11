@@ -92,7 +92,8 @@ final class ConfigEntries {
                 "A coin/item FAUCET. Rewards are created money."));
         e.add(new NumberEntry(c, "Live bounties on the board", cfg.bounty.activeCount, 5, 0, 20,
                 v -> cfg.bounty.activeCount = v.intValue(),
-                "How many generated bounties are available at once."));
+                "How many generated bounties are available at once.",
+                "Set it to 0 to show only bounties that players post."));
         e.add(new NumberEntry(c, "Bounties per player", cfg.bounty.takeLimit, 3, 1, 5,
                 v -> cfg.bounty.takeLimit = v.intValue(),
                 "How many bounties a player may have in progress at a time."));
@@ -105,6 +106,20 @@ final class ConfigEntries {
         e.add(new NumberEntry(c, "Max coin reward", cfg.bounty.maxCoinReward, 250, 0, 10_000_000,
                 v -> cfg.bounty.maxCoinReward = v,
                 "Hard cap on the coins one bounty can pay (after scaling). 0 = no cap."));
+        e.add(new BoolEntry(c, "Player bounties", cfg.bounty.playerBounties, false,
+                v -> cfg.bounty.playerBounties = v,
+                "Let players post their own bounties at a Bounty Board.",
+                "The reward is held until someone finishes the job, then paid to them."));
+        e.add(new NumberEntry(c, "Bounties a player can post", cfg.bounty.playerPostLimit, 3, 1, 20,
+                v -> cfg.bounty.playerPostLimit = v.intValue(),
+                "How many open bounties one player can have on the board."));
+        e.add(new NumberEntry(c, "Player bounty lifetime (hours)", cfg.bounty.playerPostHours, 24, 1, 720,
+                v -> cfg.bounty.playerPostHours = v.intValue(),
+                "How long a posted bounty stays up. If nobody finishes it, the reward goes back."));
+        e.add(new BoolEntry(c, "PvP bounties", cfg.bounty.pvpBounties, false,
+                v -> cfg.bounty.pvpBounties = v,
+                "Let players put a bounty on another player. Needs Player bounties on.",
+                "The hunter who takes it and kills that player gets the reward."));
 
         c = "Enchanter";
         e.add(new BoolEntry(c, "Enchanter enabled", cfg.enchanter.enabled, true,

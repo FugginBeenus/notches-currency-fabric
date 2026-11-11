@@ -168,11 +168,24 @@ public final class ServerPacketHandlers {
                             case 0 -> net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.take(player, bountyId);
                             case 1 -> net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.claim(player, bountyId);
                             case 2 -> net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.turnIn(player, bountyId);
+                            case 3 -> net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.cancelPost(player, bountyId);
                             default -> { }
                         }
                     });
                 }
         );
+
+        Net.registerServerReceiver(NotchPackets.BOUNTY_POST, (server, player, buf) -> {
+            int type = buf.readVarInt();
+            String mob = buf.readUtf(128);
+            int amount = buf.readVarInt();
+            long coins = buf.readVarLong();
+            server.execute(() -> {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.economy.bounty.BountyPostScreenHandler h) {
+                    net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.post(player, h, type, mob, amount, coins);
+                }
+            });
+        });
 
         Net.registerServerReceiver(
                 NotchPackets.BOUNTY_ADMIN_SAVE,

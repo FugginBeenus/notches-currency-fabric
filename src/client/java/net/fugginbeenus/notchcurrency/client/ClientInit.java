@@ -100,6 +100,7 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.RAFFLE_ADMIN, RaffleAdminScreen::new);
         MenuScreens.register(ModScreenHandlers.AUCTION_LISTING, AuctionListingScreen::new);
         MenuScreens.register(ModScreenHandlers.BOUNTY_BOARD, BountyBoardScreen::new);
+        MenuScreens.register(ModScreenHandlers.BOUNTY_POST, BountyPostScreen::new);
         MenuScreens.register(ModScreenHandlers.BOUNTY_ADMIN, BountyAdminScreen::new);
         MenuScreens.register(ModScreenHandlers.LOAN, LoanScreen::new);
         MenuScreens.register(ModScreenHandlers.SLOT_MACHINE, SlotMachineScreen::new);
