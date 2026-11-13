@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fugginbeenus.notchcurrency.compat.Reg;
 import net.fugginbeenus.notchcurrency.client.npc.NpcAppearances;
@@ -1050,7 +1051,7 @@ public class NotchNpcEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (tab == 0 && over(mx, my, px + 118, py + 230, 174, 18)) {
                 NotchWidgets.click();
@@ -1259,7 +1260,7 @@ public class NotchNpcEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        if (keyCode == 257 || keyCode == 335) {
+        if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
             if (playerField != null && playerField.isFocused() && NotchNpcEntity.SKIN_PLAYER.equals(currentSkinType)) {
                 currentSkinValue = playerField.getValue().trim();
                 sendAppearance();

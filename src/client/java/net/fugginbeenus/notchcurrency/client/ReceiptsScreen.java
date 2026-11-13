@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.ReceiptState;
@@ -126,7 +127,7 @@ public class ReceiptsScreen extends AbstractContainerScreen<ReceiptsScreenHandle
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && totalPages() > 1) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && totalPages() > 1) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, leftPos + 190, topPos + 15, 14, 13)) { NotchWidgets.tick(); page = Math.max(0, page - 1); return true; }
             if (over(mx, my, leftPos + 226, topPos + 15, 14, 13)) { NotchWidgets.tick(); page = Math.min(totalPages() - 1, page + 1); return true; }

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
@@ -8,7 +9,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.lwjgl.glfw.GLFW;
 
 public final class NotchWidgets {
 
@@ -641,16 +641,24 @@ public final class NotchWidgets {
         return any ? t : Component.literal("free");
     }
 
+    private static boolean ctrlOrCmd(int modifiers) {
+        //? if >=1.21.11 {
+        /*return (modifiers & (InputConstants.MOD_CONTROL | InputConstants.MOD_SUPER)) != 0;
+        *///?} else {
+        return (modifiers & (org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL | org.lwjgl.glfw.GLFW.GLFW_MOD_SUPER)) != 0;
+        //?}
+    }
+
     public static boolean typingInField(int keyCode, int scanCode, int modifiers, EditBox... fields) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false;
+        if (keyCode == InputConstants.KEY_ESCAPE) return false;
         for (EditBox f : fields) {
             if (f != null && f.isFocused() && f.isVisible()) {
-                boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
+                boolean combo = ctrlOrCmd(modifiers);
                 boolean editKey = combo
-                        || keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE
-                        || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
-                        || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
-                        || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+                        || keyCode == InputConstants.KEY_BACKSPACE || keyCode == InputConstants.KEY_DELETE
+                        || keyCode == InputConstants.KEY_LEFT || keyCode == InputConstants.KEY_RIGHT
+                        || keyCode == InputConstants.KEY_HOME || keyCode == InputConstants.KEY_END
+                        || keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER;
                 //? if >=1.21.11 {
                 /*if (editKey) f.keyPressed(new net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers));
                 *///?} else {
@@ -664,16 +672,16 @@ public final class NotchWidgets {
 
     public static boolean typingInEditBox(int keyCode, int scanCode, int modifiers,
                                           net.minecraft.client.gui.components.MultiLineEditBox box) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) return false;
+        if (keyCode == InputConstants.KEY_ESCAPE) return false;
         if (box == null || !box.isFocused() || !box.visible) return false;
-        boolean combo = (modifiers & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SUPER)) != 0;
+        boolean combo = ctrlOrCmd(modifiers);
         boolean editKey = combo
-                || keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE
-                || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
-                || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN
-                || keyCode == GLFW.GLFW_KEY_PAGE_UP || keyCode == GLFW.GLFW_KEY_PAGE_DOWN
-                || keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END
-                || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER;
+                || keyCode == InputConstants.KEY_BACKSPACE || keyCode == InputConstants.KEY_DELETE
+                || keyCode == InputConstants.KEY_LEFT || keyCode == InputConstants.KEY_RIGHT
+                || keyCode == InputConstants.KEY_UP || keyCode == InputConstants.KEY_DOWN
+                || keyCode == InputConstants.KEY_PAGEUP || keyCode == InputConstants.KEY_PAGEDOWN
+                || keyCode == InputConstants.KEY_HOME || keyCode == InputConstants.KEY_END
+                || keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER;
         //? if >=1.21.11 {
         /*if (editKey) box.keyPressed(new net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers));
         *///?} else {

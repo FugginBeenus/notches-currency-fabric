@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -582,7 +583,7 @@ public class NpcActionsScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
 
             if (typeMenuFor >= 0) return clickTypeMenu(mx, my);

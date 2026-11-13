@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.crate;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -127,7 +128,7 @@ public final class CrateManager {
             int n = randRange(loot.min(), loot.max());
             ItemStack reward = new ItemStack(BuiltInRegistries.ITEM.get(loot.itemId()), n);
             rewardText = Component.literal(n + "x ").append(reward.getHoverName().copy().withStyle(ChatFormatting.WHITE));
-            player.getInventory().placeItemBackInInventory(reward);
+            Give.placeBack(player, reward);
         } else {
             CurrencyApi.deposit(player, loot.coins(), TransactionReason.FAUCET, "crate: " + def.name());
             rewardText = NotchCurrency.coins(loot.coins());
@@ -182,7 +183,7 @@ public final class CrateManager {
 
     public static void giveKeys(ServerPlayer player, int amount) {
         ItemStack keys = new ItemStack(ModItems.CRATE_KEY, amount);
-        player.getInventory().placeItemBackInInventory(keys);
+        Give.placeBack(player, keys);
     }
 
     public static long getKeyPrice() {

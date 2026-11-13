@@ -1,9 +1,9 @@
 package net.fugginbeenus.notchcurrency.client.bounty;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,13 +109,13 @@ public final class PickList {
     public boolean key(int keyCode) {
         if (!isOpen()) return false;
         List<String> m = matches();
-        if (keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_UP) {
-            highlight = Math.max(0, Math.min(m.size() - 1, highlight + (keyCode == GLFW.GLFW_KEY_DOWN ? 1 : -1)));
+        if (keyCode == InputConstants.KEY_DOWN || keyCode == InputConstants.KEY_UP) {
+            highlight = Math.max(0, Math.min(m.size() - 1, highlight + (keyCode == InputConstants.KEY_DOWN ? 1 : -1)));
             if (highlight < scroll) scroll = highlight;
             if (highlight >= scroll + ROWS) scroll = highlight - ROWS + 1;
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_TAB) {
+        if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER || keyCode == InputConstants.KEY_TAB) {
             pick(m.get(Math.min(highlight, m.size() - 1)));
             return true;
         }

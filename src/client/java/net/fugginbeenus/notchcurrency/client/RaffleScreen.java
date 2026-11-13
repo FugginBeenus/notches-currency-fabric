@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.raffle.RaffleScreenHandler;
@@ -234,7 +235,7 @@ public class RaffleScreen extends AbstractContainerScreen<RaffleScreenHandler> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && this.minecraft != null && this.minecraft.gameMode != null) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && this.minecraft != null && this.minecraft.gameMode != null) {
             int id = buttonAt(mouseX, mouseY);
             if (id >= 0) {
                 NotchWidgets.click();

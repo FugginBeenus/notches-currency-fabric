@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -322,7 +323,7 @@ public class SlotMachineScreen extends AbstractContainerScreen<SlotMachineScreen
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && !spinning
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && !spinning
                 && over((int) mouseX, (int) mouseY, this.leftPos + SPIN_X, this.topPos + SPIN_Y, SPIN_W, SPIN_H)) {
             NotchWidgets.click();
             if (menu.prop(SlotMachineScreenHandler.P_ENABLED) == 0) {

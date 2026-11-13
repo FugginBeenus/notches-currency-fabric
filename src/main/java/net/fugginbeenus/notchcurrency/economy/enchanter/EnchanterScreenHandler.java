@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.economy.enchanter;
 
 import net.fugginbeenus.notchcurrency.compat.Ench;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
@@ -118,7 +119,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         stack.shrink(plan.consumed());
         input.setChanged();
         for (ItemStack ret : plan.returns()) {
-            sp.getInventory().placeItemBackInInventory(ret.copy());
+            Give.placeBack(sp, ret.copy());
         }
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 0.8f);
@@ -183,7 +184,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         Ench.set(map, stack);
         input.setChanged();
         ItemStack book = Ench.enchantedBook(ench, level);
-        sp.getInventory().placeItemBackInInventory(book);
+        Give.placeBack(sp, book);
         broadcastChanges();
         sp.level().playSound(null, sp.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 1.1f);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Extracted ").withStyle(ChatFormatting.GREEN)
@@ -214,7 +215,7 @@ public class EnchanterScreenHandler extends AbstractContainerMenu {
         if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
             ItemStack leftover = input.removeItemNoUpdate(0);
             if (!player.getInventory().add(leftover)) {
-                player.drop(leftover, false);
+                Give.drop(player, leftover);
             }
         }
     }

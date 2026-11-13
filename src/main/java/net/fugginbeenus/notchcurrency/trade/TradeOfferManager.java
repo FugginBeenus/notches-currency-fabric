@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
@@ -178,7 +179,7 @@ public final class TradeOfferManager {
         while (!stack.isEmpty()) {
             ItemStack chunk = stack.split(Math.min(stack.getCount(), stack.getMaxStackSize()));
             if (!player.getInventory().add(chunk) && !chunk.isEmpty()) {
-                player.drop(chunk, false);
+                Give.drop(player, chunk);
             }
         }
     }

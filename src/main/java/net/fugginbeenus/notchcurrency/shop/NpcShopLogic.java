@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.shop;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -37,7 +38,7 @@ public final class NpcShopLogic {
         toGive.setCount(quantity);
 
         if (!buyer.getInventory().add(toGive)) {
-            buyer.drop(toGive, false);
+            Give.drop(buyer, toGive);
         }
 
         buyer.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.2F);

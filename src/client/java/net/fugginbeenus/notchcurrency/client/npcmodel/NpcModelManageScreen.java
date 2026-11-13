@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client.npcmodel;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.NotchNpcModelPickerScreen;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -144,7 +145,7 @@ public class NpcModelManageScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             List<NpcModelBundle> models = installed();
             int pgY = py + LIST_Y + VISIBLE * ROW_H + 3;

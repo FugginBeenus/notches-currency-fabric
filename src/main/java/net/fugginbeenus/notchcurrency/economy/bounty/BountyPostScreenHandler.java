@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.bounty;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
@@ -77,7 +78,7 @@ public class BountyPostScreenHandler extends AbstractContainerMenu {
         if (!player.level().isClientSide) {
             for (int i = 0; i < held.getContainerSize(); i++) {
                 ItemStack st = held.removeItemNoUpdate(i);
-                if (!st.isEmpty() && !player.getInventory().add(st)) player.drop(st, false);
+                if (!st.isEmpty() && !player.getInventory().add(st)) Give.drop(player, st);
             }
         }
     }

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.raffle;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.config.NotchConfigIO;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
@@ -93,7 +94,7 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
             ItemStack previous = state.getPrizeItem().copy();
             state.setPrizeItem(template.copy());
             inputInv.setItem(0, ItemStack.EMPTY);
-            if (!previous.isEmpty()) sp.getInventory().placeItemBackInInventory(previous);
+            if (!previous.isEmpty()) Give.placeBack(sp, previous);
         }
     }
 
@@ -146,7 +147,7 @@ public class RaffleAdminScreenHandler extends AbstractContainerMenu {
         if (!player.level().isClientSide && !inputInv.getItem(0).isEmpty()) {
             ItemStack leftover = inputInv.removeItemNoUpdate(0);
             if (!player.getInventory().add(leftover)) {
-                player.drop(leftover, false);
+                Give.drop(player, leftover);
             }
         }
     }

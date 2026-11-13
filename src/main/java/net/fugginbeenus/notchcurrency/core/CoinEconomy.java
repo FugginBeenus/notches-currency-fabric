@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.core;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.LogManager;
@@ -68,7 +69,7 @@ public final class CoinEconomy {
             int n = Math.min(coins.getCount(), coins.getMaxStackSize());
             net.minecraft.world.item.ItemStack drop = coins.copy();
             drop.setCount(n);
-            player.drop(drop, false);
+            Give.drop(player, drop);
             coins.shrink(n);
         }
 

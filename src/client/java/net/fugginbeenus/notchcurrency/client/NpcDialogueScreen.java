@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -138,7 +139,7 @@ public class NpcDialogueScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && !chose) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && !chose) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (labels.length == 0 && over(mx, my, px + TEXT_X, choiceY(0), TEXT_W, CHOICE_H)) {
                 NotchWidgets.tick();

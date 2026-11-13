@@ -5,7 +5,9 @@ public final class PackMeta {
     private PackMeta() {}
 
     public static final int FORMAT =
-            //? if >=26.2 {
+            //? if >=26.3 {
+            /*97;
+            *///?} elif >=26.2 {
             /*88;
             *///?} elif >=26.1 {
             /*84;

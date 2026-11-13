@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.npc;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
@@ -285,7 +286,7 @@ public final class NotchNpcManager {
                 StackData.putUuid(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_KEY, npc.getUUID());
                 StackData.putString(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.NPC_NAME_KEY, npcName);
                 if (!sp.getInventory().add(tool)) {
-                    sp.drop(tool, false);
+                    Give.drop(sp, tool);
                 }
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Route tool added - walk the route and right-click the ground to drop waypoints.")
                         .withStyle(ChatFormatting.GREEN));
@@ -533,7 +534,7 @@ public final class NotchNpcManager {
                 net.fugginbeenus.notchcurrency.npc.NpcText.npcName(npc));
         StackData.putInt(tool, net.fugginbeenus.notchcurrency.item.RoutePlannerItem.ENTRY_KEY, entryIndex);
         if (!sp.getInventory().add(tool)) {
-            sp.drop(tool, false);
+            Give.drop(sp, tool);
         }
         boolean bed = entry.stance() == net.fugginbeenus.notchcurrency.npc.schedule.NpcStance.SLEEP;
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(bed
@@ -739,7 +740,7 @@ public final class NotchNpcManager {
         StackData.putCompound(stack, ITEM_TAG, npc.writeToItem());
         npc.discard();
         if (!sp.getInventory().add(stack)) {
-            sp.drop(stack, false);
+            Give.drop(sp, stack);
         }
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Picked up the NPC - place the item to set it down again.").withStyle(ChatFormatting.GREEN));
     }

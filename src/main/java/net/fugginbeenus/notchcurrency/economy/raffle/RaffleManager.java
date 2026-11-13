@@ -2,6 +2,7 @@ package net.fugginbeenus.notchcurrency.economy.raffle;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -169,7 +170,7 @@ public final class RaffleManager {
         if (existing != null) {
             RaffleTicketItem.setEntries(existing, have);
         } else {
-            player.getInventory().placeItemBackInInventory(RaffleTicketItem.create(roundNow, have,
+            Give.placeBack(player, RaffleTicketItem.create(roundNow, have,
                     player.getUUID(), player.getName().getString()));
         }
     }
@@ -227,7 +228,7 @@ public final class RaffleManager {
             rounds.add(r.round);
             if (!r.prizeItem.isEmpty()) {
                 ItemStack give = r.prizeItem.copy();
-                player.getInventory().placeItemBackInInventory(give);
+                Give.placeBack(player, give);
             }
         }
         consumeTicketsForRounds(player, rounds);
@@ -250,7 +251,7 @@ public final class RaffleManager {
 
         if (held.isEmpty()) {
             state.setPrizeItem(ItemStack.EMPTY);
-            if (!previous.isEmpty()) admin.getInventory().placeItemBackInInventory(previous);
+            if (!previous.isEmpty()) Give.placeBack(admin, previous);
             net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal(previous.isEmpty() ? "No prize was set."
                     : "Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW));
             return;
@@ -259,7 +260,7 @@ public final class RaffleManager {
         ItemStack prize = held.copy();
         held.shrink(held.getCount());
         state.setPrizeItem(prize);
-        if (!previous.isEmpty()) admin.getInventory().placeItemBackInInventory(previous);
+        if (!previous.isEmpty()) Give.placeBack(admin, previous);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("Raffle prize set to ").withStyle(ChatFormatting.GREEN)
                 .append(prize.getHoverName().copy().withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(prize.getCount() > 1 ? " x" + prize.getCount() : "").withStyle(ChatFormatting.GRAY))
@@ -273,7 +274,7 @@ public final class RaffleManager {
         ItemStack previous = state.getPrizeItem().copy();
         state.setPrizeItem(ItemStack.EMPTY);
         if (!previous.isEmpty()) {
-            admin.getInventory().placeItemBackInInventory(previous);
+            Give.placeBack(admin, previous);
             net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("Prize cleared and returned to you.").withStyle(ChatFormatting.YELLOW));
         } else {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(admin, Component.literal("No prize set.").withStyle(ChatFormatting.YELLOW));
@@ -286,7 +287,7 @@ public final class RaffleManager {
         RaffleState state = RaffleState.get(server);
         ItemStack prize = state.getPrizeItem().copy();
         state.resetRound();
-        if (!prize.isEmpty()) admin.getInventory().placeItemBackInInventory(prize);
+        if (!prize.isEmpty()) Give.placeBack(admin, prize);
         refreshAllOnline(server);
     }
 

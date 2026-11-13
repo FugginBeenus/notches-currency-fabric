@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.npc.action;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleDispatch;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -203,7 +204,7 @@ public final class NpcActionRunner {
         int remaining = (int) Math.min(a.amount(), 64L * 9L);
         while (remaining > 0) {
             int give = Math.min(remaining, new ItemStack(item).getMaxStackSize());
-            sp.getInventory().placeItemBackInInventory(new ItemStack(item, give));
+            Give.placeBack(sp, new ItemStack(item, give));
             remaining -= give;
         }
     }

@@ -1,7 +1,7 @@
 # Notch Currency Mod - Wiki
 
 **Version:** 0.12.6
-**Minecraft:** 1.20.1, 1.21.1, 1.21.11, 26.1.2, 26.2
+**Minecraft:** 1.20.1, 1.21.1, 1.21.11, 26.1.2, 26.2, 26.3
 **Mod Loader:** Fabric
 **Dependencies:** Fabric API (required), GeckoLib (required), ModMenu (optional, config GUI), Waystones (optional, teleport fee)
 

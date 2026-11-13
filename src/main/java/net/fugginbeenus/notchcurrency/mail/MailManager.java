@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.mail;
 
 import net.fugginbeenus.notchcurrency.compat.Chat;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.Msg;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CurrencyText;
@@ -202,7 +203,7 @@ public final class MailManager {
             Msg.chat(sender, Component.literal("Their mailbox is full. Nothing was sent.")
                     .withStyle(ChatFormatting.RED));
             for (ItemStack stack : goods) {
-                if (!sender.getInventory().add(stack)) sender.drop(stack, false);
+                if (!sender.getInventory().add(stack)) Give.drop(sender, stack);
             }
             if (money > 0L) {
                 BalanceStore.add(sender, money, TransactionReason.PAY, "parcel came back");

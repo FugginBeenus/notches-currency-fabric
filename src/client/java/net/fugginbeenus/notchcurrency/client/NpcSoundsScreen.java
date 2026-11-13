@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.npc.NpcSounds;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -245,7 +246,7 @@ public class NpcSoundsScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < 6; i++) {
                 if (over(mx, my, px + PICK_X, rowY(i), PICK_W, 14)) {
@@ -332,7 +333,7 @@ public class NpcSoundsScreen extends Screen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
     //?}
-        if (key == 258 || key == 262) {
+        if (key == InputConstants.KEY_TAB || key == InputConstants.KEY_RIGHT) {
             for (EditBox box : fields) {
                 if (box != null && box.isFocused() && IdSuggest.accept(box, IdSuggest.KIND_SOUND)) {
                     return true;

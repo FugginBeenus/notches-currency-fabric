@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
@@ -305,7 +306,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             ItemStack chunk = template.copy();
             chunk.setCount(Math.min(count, template.getMaxStackSize()));
             count -= chunk.getCount();
-            sp.getInventory().placeItemBackInInventory(chunk);
+            Give.placeBack(sp, chunk);
         }
     }
 
@@ -335,7 +336,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
             for (int i = 0; i < samples.getContainerSize(); i++) {
                 ItemStack st = samples.removeItemNoUpdate(i);
                 if (!st.isEmpty() && !player.getInventory().add(st)) {
-                    player.drop(st, false);
+                    Give.drop(player, st);
                 }
             }
         }

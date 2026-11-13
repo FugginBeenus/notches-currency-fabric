@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.net;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
@@ -84,7 +85,7 @@ public final class ServerPacketHandlers {
                             else StackData.commitData(toReturn, tag);
                         }
                         if (!sp.getInventory().add(toReturn) && !toReturn.isEmpty()) {
-                            sp.drop(toReturn, false);
+                            Give.drop(sp, toReturn);
                         }
 
                         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Cancelled listing for ").withStyle(ChatFormatting.GREEN)
@@ -1274,7 +1275,7 @@ public final class ServerPacketHandlers {
                                     ItemStack toGive = item.copy();
                                     toGive.setCount(giveCount);
                                     if (!sp.getInventory().add(toGive)) {
-                                        sp.drop(toGive, false);
+                                        Give.drop(sp, toGive);
                                     }
                                     remaining -= giveCount;
                                 }

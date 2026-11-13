@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -188,7 +189,7 @@ public class CosmeticShopScreen extends AbstractContainerScreen<CosmeticShopScre
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (menu.isAdmin() && over(mx, my, leftPos + HELP_X, topPos + HELP_Y, HELP_S, HELP_S)) {
                 NotchWidgets.click();

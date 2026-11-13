@@ -1,6 +1,6 @@
 # Notch Currency Mod
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1%20%7C%201.21.11%20%7C%2026.1.2%20%7C%2026.2-green.svg)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1%20%7C%201.21.11%20%7C%2026.1.2%20%7C%2026.2%20%7C%2026.3-green.svg)](https://www.minecraft.net/)
 [![Fabric API](https://img.shields.io/badge/Fabric_API-required-blue.svg)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/FugginBeenus/notches-currency-fabric)](https://github.com/FugginBeenus/notches-currency-fabric/releases)
@@ -21,6 +21,7 @@ have the same features.
 | 1.21.11 | `notchcurrency-<version>+1.21.11.jar` |
 | 26.1.2 | `notchcurrency-<version>+26.1.2.jar` |
 | 26.2 | `notchcurrency-<version>+26.2.jar` |
+| 26.3 | `notchcurrency-<version>+26.3.jar` |
 
 Requires Fabric API, and GeckoLib for the animated NPC model.
 

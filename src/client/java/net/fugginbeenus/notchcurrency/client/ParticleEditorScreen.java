@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -421,18 +422,18 @@ public class ParticleEditorScreen extends Screen {
     //?}
         int mx = (int) mouseX, my = (int) mouseY;
         if (hidden) {
-            if (button == 0 && over(mx, my, px + W / 2 - 60, py + H - 20, 120, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, px + W / 2 - 60, py + H - 20, 120, 16)) {
                 NotchWidgets.click();
                 hidden = false;
             }
             return true;
         }
-        if (button == 0 || button == 1) {
-            int dir = button == 1 ? -1 : 1;
+        if (button == InputConstants.MOUSE_BUTTON_LEFT || button == InputConstants.MOUSE_BUTTON_RIGHT) {
+            int dir = button == InputConstants.MOUSE_BUTTON_RIGHT ? -1 : 1;
             boolean big = net.fugginbeenus.notchcurrency.compat.Render.shiftDown();
 
             for (int i = 0; i < TABS.length; i++) {
-                if (button == 0 && over(mx, my, px + 10 + i * 58, py + TAB_Y, 54, TAB_H)) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, px + 10 + i * 58, py + TAB_Y, 54, TAB_H)) {
                     NotchWidgets.click();
                     pullParticle();
                     tab = i;
@@ -464,7 +465,7 @@ public class ParticleEditorScreen extends Screen {
                 }
             }
 
-            if (tab == 0 && button == 0 && over(mx, my, px + ROW_X + ROW_W - 40, rowY(0), 40, 14)) {
+            if (tab == 0 && button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, px + ROW_X + ROW_W - 40, rowY(0), 40, 14)) {
                 NotchWidgets.click();
                 pullParticle();
                 final ParticleEditorScreen self = this;
@@ -504,7 +505,7 @@ public class ParticleEditorScreen extends Screen {
             }
 
             int by = py + H - 22;
-            if (button == 0 && over(mx, my, buttonX(0), by, 72, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, buttonX(0), by, 72, 16)) {
                 NotchWidgets.click();
                 pullParticle();
                 var doll = wornNpc();
@@ -516,7 +517,7 @@ public class ParticleEditorScreen extends Screen {
                 }
                 return true;
             }
-            if (button == 0 && over(mx, my, buttonX(1), by, 72, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, buttonX(1), by, 72, 16)) {
                 NotchWidgets.click();
                 pullParticle();
                 java.util.UUID id = ParticleDesignerScreen.cameFromNpc;
@@ -535,20 +536,20 @@ public class ParticleEditorScreen extends Screen {
                 }
                 return true;
             }
-            if (button == 0 && over(mx, my, buttonX(2), by, 72, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, buttonX(2), by, 72, 16)) {
                 NotchWidgets.click();
                 pullParticle();
                 hidden = true;
                 return true;
             }
-            if (button == 0 && over(mx, my, buttonX(3), by, 72, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, buttonX(3), by, 72, 16)) {
                 NotchWidgets.click();
                 pullParticle();
                 NotchPacketsClient.sendParticleSave(effect.toNbt());
                 status = "Saved.";
                 return true;
             }
-            if (button == 0 && over(mx, my, buttonX(4), by, 72, 16)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && over(mx, my, buttonX(4), by, 72, 16)) {
                 NotchWidgets.click();
                 NotchPacketsClient.sendParticleDesign();
                 return true;
@@ -569,7 +570,7 @@ public class ParticleEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
     //?}
-        if ((key == 258 || key == 262) && particleField != null && particleField.isFocused()
+        if ((key == InputConstants.KEY_TAB || key == InputConstants.KEY_RIGHT) && particleField != null && particleField.isFocused()
                 && IdSuggest.accept(particleField, IdSuggest.KIND_PARTICLE)) {
             pullParticle();
             return true;

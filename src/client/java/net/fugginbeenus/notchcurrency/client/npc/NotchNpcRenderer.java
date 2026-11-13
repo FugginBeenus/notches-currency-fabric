@@ -121,6 +121,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             if (r == null) return;
             state.proxyRenderer = r;
             state.proxyState = r.createRenderState(le, partialTick);
+            copySwing(npc, state.proxyState, partialTick);
         } catch (Exception ignored) {
             state.proxyRenderer = null;
         }
@@ -274,11 +275,25 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
         ((net.fugginbeenus.notchcurrency.mixin.LimbAnimatorAccessor) (Object) le.walkAnimation)
                 .notchcurrency$setPrevSpeed(npc.walkAnimation.speed(0.0f));
 
+        //? if <26.3 {
         le.swinging = npc.swinging;
         le.swingTime = npc.swingTime;
         le.attackAnim = npc.attackAnim;
         le.oAttackAnim = npc.oAttackAnim;
+        //?}
     }
+
+    //? if >=26.3 {
+    /*private static void copySwing(NotchNpcEntity npc, Object state, float partialTick) {
+        if (state instanceof net.minecraft.client.renderer.entity.state.ArmedEntityRenderState armed) {
+            armed.currentSwing = npc.getCurrentSwing();
+            armed.swingAnimation = npc.getSwingAnimation(partialTick);
+        }
+    }
+    *///?} elif >=1.21.11 {
+    /*private static void copySwing(NotchNpcEntity npc, Object state, float partialTick) {
+    }
+    *///?}
 
     private static final String BUBBLE_GLYPH = "\uE001";
     private static final int BUBBLE_LIGHT = 0xF000F0;

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -226,7 +227,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 1 && open()) {
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT && open()) {
             int rmx = (int) mouseX, rmy = (int) mouseY;
             for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {
                 Cell c = cell(i);
@@ -238,7 +239,7 @@ public class ShopBrowseScreen extends AbstractContainerScreen<ShopBrowseScreenHa
                 return true;
             }
         }
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (open()) {
                 for (int i = 0; i < ShopBrowseScreenHandler.VIS_ROWS; i++) {

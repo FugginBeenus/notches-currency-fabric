@@ -22,11 +22,6 @@
     },
     {
       "rolls": 1,
-      "bonus_rolls": {
-        "type": "minecraft:binomial",
-        "n": 1,
-        "p": 0.75
-      },
       "entries": [
         {
           "type": "minecraft:item",

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.enchanter.EnchanterManager;
@@ -269,7 +270,7 @@ public class EnchanterScreen extends AbstractContainerScreen<EnchanterScreenHand
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (menu.repairCostProp() > 0 && over(mx, my, leftPos + 156, topPos + 21, 92, 18)) {
                 NotchWidgets.click();

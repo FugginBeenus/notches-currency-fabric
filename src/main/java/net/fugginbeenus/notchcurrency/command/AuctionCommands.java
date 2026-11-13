@@ -9,6 +9,7 @@ import net.fugginbeenus.notchcurrency.auction.AuctionConfig;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.auction.AuctionListing;
 import net.fugginbeenus.notchcurrency.auction.AuctionState;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.core.CoinEconomy;
@@ -198,7 +199,7 @@ public final class AuctionCommands {
                                                 }
                                                 boolean inserted = p.getInventory().add(toGive);
                                                 if (!inserted && !toGive.isEmpty()) {
-                                                    p.drop(toGive, false);
+                                                    Give.drop(p, toGive);
                                                 }
 
                                                 net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Claimed item: ")
@@ -366,7 +367,7 @@ public final class AuctionCommands {
                                             }
                                             boolean inserted = p.getInventory().add(toReturn);
                                             if (!inserted && !toReturn.isEmpty()) {
-                                                p.drop(toReturn, false);
+                                                Give.drop(p, toReturn);
                                             }
 
                                             net.fugginbeenus.notchcurrency.compat.Msg.chat(p, Component.literal("Cancelled listing for ")

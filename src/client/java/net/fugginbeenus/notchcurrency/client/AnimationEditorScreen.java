@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -359,7 +360,7 @@ public class AnimationEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
 
             int handleY = py + TL_TOP + 6 * LANE_H + 1;
@@ -622,9 +623,9 @@ public class AnimationEditorScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
         boolean typing = lengthField != null && lengthField.isFocused();
-        if (!typing && (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT
-                || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT)) {
-            int by = keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT ? -1 : 1;
+        if (!typing && (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT
+                || keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_RIGHT)) {
+            int by = keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT ? -1 : 1;
             if (net.fugginbeenus.notchcurrency.compat.Render.shiftDown()) by *= SNAP;
             NpcAnimation.Frame held = current();
             held.time = Math.max(0, Math.min(anim.lengthTicks(), held.time + by));

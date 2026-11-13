@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client.npcmodel;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.minecraft.ChatFormatting;
@@ -221,9 +222,9 @@ public class NpcModelCreateScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
         int mx = (int) mouseX, my = (int) mouseY;
-        int step = button == 1 ? -1 : 1; // right-click walks back through a long list
+        int step = button == InputConstants.MOUSE_BUTTON_RIGHT ? -1 : 1; // right-click walks back through a long list
 
-        if (button == 0 || button == 1) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT || button == InputConstants.MOUSE_BUTTON_RIGHT) {
             if (rowHit(mx, my, 1)) { modelAt += step; return click(); }
             if (rowHit(mx, my, 2)) { textureAt += step; return click(); }
             if (rowHit(mx, my, 3)) { animAt += step; reloadClips(); return click(); }
@@ -232,7 +233,7 @@ public class NpcModelCreateScreen extends Screen {
             if (rowHit(mx, my, 6)) { specialAt += step; return click(); }
         }
 
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int by = py + H - 26;
             if (over(mx, my, px + 12, by, 76, 16)) {
                 openImportFolder();

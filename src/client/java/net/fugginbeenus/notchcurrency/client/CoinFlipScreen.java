@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -212,7 +213,7 @@ public class CoinFlipScreen extends AbstractContainerScreen<CoinFlipScreenHandle
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, this.leftPos + HEADS_X, this.topPos + SIDE_Y, SIDE_W, SIDE_H)) { NotchWidgets.tick(); selectedHeads = true; return true; }
             if (over(mx, my, this.leftPos + TAILS_X, this.topPos + SIDE_Y, SIDE_W, SIDE_H)) { NotchWidgets.tick(); selectedHeads = false; return true; }

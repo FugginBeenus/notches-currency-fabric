@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.entity.NotchNpcEntity;
@@ -277,7 +278,7 @@ public class NpcLooksScreen extends Screen {
             }
             return true;
         }
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             NotchNpcEntity npc = findNpc();
 
             for (int i = 0; i < TABS.length; i++) {
@@ -377,7 +378,7 @@ public class NpcLooksScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        if (platePicker.isOpen() && keyCode == 256) {
+        if (platePicker.isOpen() && keyCode == InputConstants.KEY_ESCAPE) {
             platePicker.close();
             return true;
         }

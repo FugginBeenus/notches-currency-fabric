@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.bounty.BoardArt;
 import net.fugginbeenus.notchcurrency.client.bounty.BookPaper;
 import net.fugginbeenus.notchcurrency.client.bounty.PaperNote;
@@ -324,7 +325,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     }
 
     private int rowX(int i) { return this.leftPos + 10 + ROW_OFF[i % ROW_OFF.length]; }
-    private int rowH() { return menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT) >= 5 ? 18 : 20; }
+    private int rowH() { return Math.max(menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT), countTaken()) >= 5 ? 18 : 20; }
     private int rowY(int i) { return this.topPos + TAKEN_Y + i * (rowH() + 2); }
     private int buttonY(int i) { return rowY(i) + (rowH() - BTN_H) / 2; }
     private int buttonX(int i) { return rowX(i) + ROW_W - 64; }
@@ -462,7 +463,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (canPost() && this.minecraft != null && this.minecraft.gameMode != null
                     && over(mx, my, this.leftPos + POST_X, this.topPos + POST_Y, POST_W, POST_H)) {

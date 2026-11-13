@@ -3,6 +3,7 @@ package net.fugginbeenus.notchcurrency.economy.bounty;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.minecraft.ChatFormatting;
@@ -58,7 +59,7 @@ public final class BountyManager {
         NotchConfig.Bounty b = cfg.bounty;
         enabled = b.enabled;
         activeCount = Math.max(0, b.activeCount);
-        takeLimit = Math.max(1, b.takeLimit);
+        takeLimit = Math.max(1, Math.min(BountyBoardScreenHandler.TAKEN_SLOTS, b.takeLimit));
         durationTicks = Math.max(1L, (long) b.durationMinutes) * 60L * 20L;
         rewardMultPercent = Math.max(0, b.rewardMultiplierPercent);
         maxCoinReward = Math.max(0, b.maxCoinReward);
@@ -302,7 +303,7 @@ public final class BountyManager {
                     b.isPosted() ? TransactionReason.BOUNTY : TransactionReason.FAUCET, "bounty: " + b.describe());
         }
         if (!b.getRewardItem().isEmpty()) {
-            player.getInventory().placeItemBackInInventory(b.getRewardItem().copy());
+            Give.placeBack(player, b.getRewardItem().copy());
         }
     }
 
@@ -521,7 +522,7 @@ public final class BountyManager {
     static void giveOrDrop(ServerPlayer player, ItemStack stack) {
         while (!stack.isEmpty()) {
             ItemStack chunk = stack.split(Math.min(stack.getCount(), stack.getMaxStackSize()));
-            if (!player.getInventory().add(chunk) && !chunk.isEmpty()) player.drop(chunk, false);
+            if (!player.getInventory().add(chunk) && !chunk.isEmpty()) Give.drop(player, chunk);
         }
     }
 

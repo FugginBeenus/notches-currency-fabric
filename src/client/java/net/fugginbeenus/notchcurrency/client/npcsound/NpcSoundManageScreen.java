@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client.npcsound;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -174,7 +175,7 @@ public class NpcSoundManageScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             List<String> all = NpcSoundLoader.names();
             boolean ops = NpcSoundDownloads.mayShare();

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.config.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
@@ -354,7 +355,7 @@ public final class NotchConfigScreen extends Screen {
             return true;
         }
         if (e instanceof SelectEntry sel && mouseX >= right - 110 && mouseX < right) {
-            sel.cycle(button == 1 || net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? -1 : 1);
+            sel.cycle(button == InputConstants.MOUSE_BUTTON_RIGHT || net.fugginbeenus.notchcurrency.compat.Render.shiftDown() ? -1 : 1);
             NotchWidgets.tick();
             return true;
         }
@@ -468,12 +469,12 @@ public final class NotchConfigScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
         if (editing != null) {
-            if (keyCode == 257 || keyCode == 335) {
+            if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
                 closeEdit(true);
                 NotchWidgets.tick();
                 return true;
             }
-            if (keyCode == 256) {
+            if (keyCode == InputConstants.KEY_ESCAPE) {
                 closeEdit(false);
                 return true;
             }

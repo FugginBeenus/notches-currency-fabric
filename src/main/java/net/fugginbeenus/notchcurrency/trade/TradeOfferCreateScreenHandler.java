@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -86,7 +87,7 @@ public class TradeOfferCreateScreenHandler extends AbstractContainerMenu {
             for (int i = 0; i < samples.getContainerSize(); i++) {
                 ItemStack st = samples.removeItemNoUpdate(i);
                 if (!st.isEmpty() && !player.getInventory().add(st)) {
-                    player.drop(st, false);
+                    Give.drop(player, st);
                 }
             }
         }

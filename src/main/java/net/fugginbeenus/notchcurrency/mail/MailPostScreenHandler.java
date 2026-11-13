@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.mail;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -80,7 +81,7 @@ public class MailPostScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < parcel.getContainerSize(); i++) {
             ItemStack stack = parcel.removeItemNoUpdate(i);
             if (!stack.isEmpty() && !player.getInventory().add(stack)) {
-                player.drop(stack, false);
+                Give.drop(player, stack);
             }
         }
     }

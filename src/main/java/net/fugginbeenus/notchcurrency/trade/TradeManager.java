@@ -1,6 +1,7 @@
 package net.fugginbeenus.notchcurrency.trade;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.Net;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -195,8 +196,8 @@ public final class TradeManager {
 
             var aItems = aHandler.takeItemsForCompletion();
             var bItems = bHandler.takeItemsForCompletion();
-            for (ItemStack s : aItems) if (!s.isEmpty()) b.getInventory().placeItemBackInInventory(s.copy());
-            for (ItemStack s : bItems) if (!s.isEmpty()) a.getInventory().placeItemBackInInventory(s.copy());
+            for (ItemStack s : aItems) if (!s.isEmpty()) Give.placeBack(b, s.copy());
+            for (ItemStack s : bItems) if (!s.isEmpty()) Give.placeBack(a, s.copy());
 
             BalanceStore.subtract(a, aMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
             BalanceStore.add(b, aMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -124,7 +125,7 @@ public class LoanScreen extends AbstractContainerScreen<LoanScreenHandler> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, this.leftPos + BORROW_X, this.topPos + BTN_Y, BTN_W, BTN_H)) { NotchWidgets.click(); send(0, amount()); return true; }
             if (over(mx, my, this.leftPos + REPAY_X, this.topPos + BTN_Y, BTN_W, BTN_H)) { NotchWidgets.click(); send(1, amount()); return true; }

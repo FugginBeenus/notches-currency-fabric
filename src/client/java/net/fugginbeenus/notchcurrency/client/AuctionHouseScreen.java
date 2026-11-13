@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.auction.AuctionHouseScreenHandler;
 import net.fugginbeenus.notchcurrency.compat.StackData;
@@ -827,14 +828,14 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        if (showUserPopup && keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+        if (showUserPopup && keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) {
             showUserPopup = false;
             return true;
         }
         if (showBidPopup) {
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) { showBidPopup = false; return true; }
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) { submitBid(); return true; }
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+            if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) { showBidPopup = false; return true; }
+            if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_RETURN || keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_NUMPADENTER) { submitBid(); return true; }
+            if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_BACKSPACE) {
                 if (!bidInput.isEmpty()) bidInput = bidInput.substring(0, bidInput.length() - 1);
                 return true;
             }
@@ -984,7 +985,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
             }
             return true;
         }
-        if (button == 0 && !showUserPopup && this.minecraft != null && this.minecraft.player != null) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && !showUserPopup && this.minecraft != null && this.minecraft.player != null) {
             Slot clickedSlot = this.hoveredSlot;
             if (clickedSlot != null
                     && clickedSlot.hasItem()
@@ -1014,7 +1015,7 @@ public class AuctionHouseScreen extends AbstractContainerScreen<AuctionHouseScre
         *///?} else {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
         //?}
-        if (button == 0 && !showUserPopup && this.minecraft != null) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && !showUserPopup && this.minecraft != null) {
             Slot clicked = this.hoveredSlot;
             if (clicked != null
                     && clicked.hasItem()

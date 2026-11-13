@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.mail.MailInboxMenu;
@@ -176,7 +177,7 @@ public class MailInboxScreen extends AbstractContainerScreen<MailInboxMenu> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (MailTabs.click(this.leftPos, this.topPos, MailTabs.INBOX, mx, my)) return true;
             if (this.menu.waiting() > 0 && over(mx, my, takeX(), takeY(), TAKE_W, TAKE_H)) {

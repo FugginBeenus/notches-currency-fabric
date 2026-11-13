@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.shop;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.compat.StackData;
 
 import net.fugginbeenus.notchcurrency.api.CurrencyApi;
@@ -387,7 +388,7 @@ public final class PlayerShopManager {
             toGive.setCount(giveCount);
 
             if (!player.getInventory().add(toGive)) {
-                player.drop(toGive, false);
+                Give.drop(player, toGive);
             }
             remaining -= giveCount;
         }

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.auction;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
 import net.fugginbeenus.notchcurrency.net.NotchPackets;
@@ -111,7 +112,7 @@ public class AuctionListingScreenHandler extends AbstractContainerMenu {
         if (!player.level().isClientSide && !input.getItem(0).isEmpty()) {
             ItemStack leftover = input.removeItemNoUpdate(0);
             if (!player.getInventory().add(leftover)) {
-                player.drop(leftover, false);
+                Give.drop(player, leftover);
             }
         }
     }

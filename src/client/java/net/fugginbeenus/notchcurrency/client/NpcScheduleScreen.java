@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -300,9 +301,9 @@ public class NpcScheduleScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
         //? if >=1.21.11 {
-        /*if (button != 0) return super.mouseClicked(event, doubleClick);
+        /*if (button != InputConstants.MOUSE_BUTTON_LEFT) return super.mouseClicked(event, doubleClick);
         *///?} else {
-        if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
+        if (button != InputConstants.MOUSE_BUTTON_LEFT) return super.mouseClicked(mouseX, mouseY, button);
         //?}
         int mx = (int) mouseX, my = (int) mouseY;
         int px = px(), py = py();

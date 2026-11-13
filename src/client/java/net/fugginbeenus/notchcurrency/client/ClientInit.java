@@ -142,11 +142,11 @@ public final class ClientInit implements ClientModInitializer {
                 //?}
                 //? if >=1.21.11 {
                 /*new net.minecraft.client.KeyMapping("key.notchcurrency.bounty_tracker",
-                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
+                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, com.mojang.blaze3d.platform.InputConstants.KEY_B,
                         net.minecraft.client.KeyMapping.Category.MISC));
                 *///?} else {
                 new net.minecraft.client.KeyMapping("key.notchcurrency.bounty_tracker",
-                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_B,
+                        com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, com.mojang.blaze3d.platform.InputConstants.KEY_B,
                         "key.categories.notchcurrency"));
                 //?}
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(

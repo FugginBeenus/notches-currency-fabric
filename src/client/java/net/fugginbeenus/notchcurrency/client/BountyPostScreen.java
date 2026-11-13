@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.bounty.BoardArt;
 import net.fugginbeenus.notchcurrency.client.bounty.BookPaper;
 import net.fugginbeenus.notchcurrency.client.bounty.PaperNote;
@@ -264,7 +265,7 @@ public class BountyPostScreen extends AbstractContainerScreen<BountyPostScreenHa
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
         int mx = (int) mouseX, my = (int) mouseY, x = this.leftPos, y = this.topPos;
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (pick.click(mouseX, mouseY)) {
                 NotchWidgets.tick();
                 return true;

@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
@@ -149,7 +150,7 @@ public class TradeOfferCreateScreen extends AbstractContainerScreen<TradeOfferCr
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && over((int) mouseX, (int) mouseY, leftPos + 8, topPos + 150, W - 16, 16)) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && over((int) mouseX, (int) mouseY, leftPos + 8, topPos + 150, W - 16, 16)) {
             NotchWidgets.click();
             NotchPacketsClient.sendTradeOfferCreate(parse(priceField), parse(giveCoinsField),
                     targetField.getValue().trim());

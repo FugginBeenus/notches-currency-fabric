@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
 import net.fugginbeenus.notchcurrency.economy.bounty.BountyRarity;
@@ -267,8 +268,8 @@ public class QuestEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_TAB
-                || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT) {
+        if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_TAB
+                || keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_RIGHT) {
             if (targetField.isFocused() && IdSuggest.accept(targetField,
                     type.usesItem() ? IdSuggest.KIND_ITEM : IdSuggest.KIND_MOB)) {
                 return true;
@@ -293,7 +294,7 @@ public class QuestEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, px + FX, py + 44, FW, 14)) {
                 NotchWidgets.click();

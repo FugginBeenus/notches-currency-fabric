@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.auction.AuctionListingScreenHandler;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -137,7 +138,7 @@ public class AuctionListingScreen extends AbstractContainerScreen<AuctionListing
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             for (int i = 0; i < DURATIONS.length; i++) {
                 if (over((int) mouseX, (int) mouseY, this.leftPos + SEG_X[i], this.topPos + SEG_Y, SEG_W[i], SEG_H)) {
                     if (durationIndex != i) NotchWidgets.tick();

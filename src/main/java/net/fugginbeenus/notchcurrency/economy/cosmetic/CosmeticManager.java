@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.economy.cosmetic;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.config.NotchConfig;
 import net.fugginbeenus.notchcurrency.core.BalanceStore;
 import net.fugginbeenus.notchcurrency.economy.TransactionReason;
@@ -64,7 +65,7 @@ public final class CosmeticManager {
             sp.level().getServer().getCommands().performPrefixedCommand(sp.level().getServer().createCommandSourceStack(), cmd);
         } else if (!offer.itemReward().isEmpty()) {
             ItemStack reward = offer.itemReward().copy();
-            sp.getInventory().placeItemBackInInventory(reward);
+            Give.placeBack(sp, reward);
         }
 
         if (offer.oneTime()) {

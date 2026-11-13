@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.client.NotchHud;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
@@ -12,7 +13,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import org.lwjgl.glfw.GLFW;
 
 public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
 
@@ -250,7 +250,7 @@ public class ATMScreen extends AbstractContainerScreen<ATMTestScreenHandler> {
         *///?} else {
         if (withdrawField != null && withdrawField.keyPressed(keyCode, scanCode, modifiers)) {
         //?}
-            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+            if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
                 onWithdrawClicked();
                 return true;
             }

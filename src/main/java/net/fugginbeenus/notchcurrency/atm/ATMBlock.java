@@ -80,7 +80,7 @@ public class ATMBlock extends HorizontalDirectionalBlock implements EntityBlock 
         return SHAPE;
     }
 
-    //? if >=1.21 {
+    //? if >=1.21 && <26.3 {
     /*@Override
     protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.block.HorizontalDirectionalBlock> codec() {
         return simpleCodec(ATMBlock::new);

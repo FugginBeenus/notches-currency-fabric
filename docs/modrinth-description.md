@@ -173,7 +173,7 @@ nothing, and three guards keep it cheap: a 32 block range, a cap per shape, and 
 
 ## Good to know
 
-- **Fabric**, for **1.20.1, 1.21.1, 1.21.11, 26.1.2 and 26.2**
+- **Fabric**, for **1.20.1, 1.21.1, 1.21.11, 26.1.2, 26.2 and 26.3**
 - Needs **Fabric API** and **GeckoLib**
 - **ModMenu** optional, but VERY useful for the settings screen
 - **Waystones** optional, integration built in to charge for teleports

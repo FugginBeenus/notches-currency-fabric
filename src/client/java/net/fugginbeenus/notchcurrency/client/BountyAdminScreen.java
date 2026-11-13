@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.compat.NetClient;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
@@ -141,7 +142,7 @@ public class BountyAdminScreen extends AbstractContainerScreen<BountyAdminScreen
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
     //?}
-        if (button == 0 && this.minecraft != null && this.minecraft.gameMode != null) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && this.minecraft != null && this.minecraft.gameMode != null) {
             int mx = (int) mouseX, my = (int) mouseY;
             if (over(mx, my, this.leftPos + TG_X, this.topPos + TG_Y, TG_W, TG_H)) { NotchWidgets.tick(); enabledToggle = !enabledToggle; return true; }
             if (over(mx, my, this.leftPos + SV_X, this.topPos + SV_Y, SV_W, SV_H)) { NotchWidgets.click(); save(); return true; }

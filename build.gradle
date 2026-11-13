@@ -103,6 +103,19 @@ if (atLeast([26, 2])) {
         }
     }
 }
+if (atLeast([26, 3])) {
+    stonecutter {
+        replacements {
+            string(true) {
+                replace("event.scancode()", "event.keycode()")
+                replace("matrices.mulPose(", "matrices.rotate(")
+                replace("InputConstants.Type.KEYSYM", "InputConstants.Type.KEYBOARD")
+                replace("net.minecraft.util.Util.getPlatform().openPath(", "com.mojang.blaze3d.Blaze3D.openPath(")
+                replace("state.attackTime", "state.swingAnimation")
+            }
+        }
+    }
+}
 if (unobfuscated) {
     stonecutter {
         replacements {

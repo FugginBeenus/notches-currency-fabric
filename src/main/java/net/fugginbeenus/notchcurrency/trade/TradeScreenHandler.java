@@ -1,5 +1,6 @@
 package net.fugginbeenus.notchcurrency.trade;
 
+import net.fugginbeenus.notchcurrency.compat.Give;
 import net.fugginbeenus.notchcurrency.registry.ModScreenHandlers;
 import net.minecraft.world.Container;
 //? if <26.1 {
@@ -209,7 +210,7 @@ public class TradeScreenHandler extends AbstractContainerMenu {
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
             if (!s.isEmpty()) {
-                to.getInventory().placeItemBackInInventory(s);
+                Give.placeBack(to, s);
                 inv.setItem(i, ItemStack.EMPTY);
             }
         }
