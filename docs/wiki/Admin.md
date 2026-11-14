@@ -45,7 +45,7 @@ shows its balance on its own line.
 | `/npc clearrole` | Remove a role |
 | `/npc info` / `/npc debug` | Inspect the looked-at NPC |
 
-Admin economy roles (banker, auctioneer, admin shop, etc.) are op-gated; players may set the shop role
+Admin economy roles (banker, auctioneer, etc.) are op-gated; players may set the shop role
 on their own NPCs.
 
 `/shop admin transfer <shop> <player>` gives a shop to a player straight away, with no offer to
@@ -102,12 +102,9 @@ members. Ops are locked in too, but these commands can move anyone, themselves i
 
 ### Admin Shops
 
-| Command | Description |
-| --- | --- |
-| `/adminshop create\|delete\|list <shop>` | Manage admin shops |
-| `/adminshop additem <shop> <buy> <sell> [dynamic]` | Add an item (hold it) |
-| `/adminshop removeitem` / `info` | Edit an admin shop |
-| `/npc setrole adminshop <shop>` | Bind an admin shop to the looked-at NPC |
+Admin shops have no commands of their own. Make one in game: give an NPC the **Shop** role, open its
+**Shop Manager** and press **Admin**. You need the `notchcurrency.admin.shop` permission, which ops
+have. See [Shops](04.-Shops#admin-shops) for what an admin shop does.
 
 ### World Events
 

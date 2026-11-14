@@ -133,6 +133,10 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
                     return;
                 }
                 shop.setAdminMode(!shop.isAdminMode());
+                if (shop.isAdminMode()) {
+                    shop.setRentPaused(false);
+                    shop.setUnpaidRentCycles(0);
+                }
                 state.markDirtyAndSave();
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, shop.isAdminMode()
                         ? Component.literal("This shop is now an admin shop. Stock never runs out and nobody is paid.").withStyle(ChatFormatting.GOLD)
