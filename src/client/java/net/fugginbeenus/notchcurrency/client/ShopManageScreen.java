@@ -164,7 +164,8 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         int barterItems = menu.prop(ShopManageScreenHandler.P_BARTER_COUNT);
         if (adminMode) {
             ctx.drawString(this.font, "No earnings to collect", x + 10, y + 44, NotchTheme.TEXT_MUTED, false);
-            NotchWidgets.neutralButton(ctx, this.font, x + 176, y + 40, 72, 15, "Collect", false);
+            NotchWidgets.primaryButton(ctx, this.font, x + 176, y + 40, 72, 15, "Shop",
+                    over(mouseX, mouseY, x + 176, y + 40, 72, 15));
         } else {
             ctx.drawString(this.font, "Earnings", x + 10, y + 44, NotchTheme.TEXT_DARK, false);
             int ex = x + 14 + this.font.width("Earnings");
@@ -298,7 +299,13 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         }
 
         if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0
-                && over(mouseX, mouseY, leftPos + 8, topPos + 40, 240, 15)) {
+                && over(mouseX, mouseY, leftPos + 176, topPos + 40, 72, 15)) {
+            ctx.renderComponentTooltip(this.font, List.of(
+                    Component.literal("Shop here").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Opens the buy screen players see.").withStyle(ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        } else if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0
+                && over(mouseX, mouseY, leftPos + 8, topPos + 40, 164, 15)) {
             ctx.renderComponentTooltip(this.font, List.of(
                     Component.literal("Admin shops do not earn").withStyle(ChatFormatting.GOLD),
                     Component.literal("What buyers pay leaves the economy.").withStyle(ChatFormatting.GRAY),
@@ -374,6 +381,12 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                                 ShopManageScreenHandler.P_SIGN, net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
                         net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT,
                         NotchWidgets.colorize(nameField == null ? menu.shopName() : nameField.getValue()));
+                return true;
+            }
+            if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0
+                    && over(mx, my, leftPos + 176, topPos + 40, 72, 15)) {
+                NotchWidgets.click();
+                NotchPacketsClient.sendShopManageAction(ShopManageScreenHandler.ACTION_BROWSE, "", null);
                 return true;
             }
             if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) == 0

@@ -28,7 +28,8 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     private static final int PROP_COUNT = P_SIGN + SignStyles.SLOTS;
 
     public static final int ACTION_RENAME = 0, ACTION_GREETING = 1, ACTION_TOGGLE_OPEN = 2,
-            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5, ACTION_SIGN = 6;
+            ACTION_EDIT_LISTING = 3, ACTION_NEW_LISTING = 4, ACTION_TOGGLE_ADMIN = 5, ACTION_SIGN = 6,
+            ACTION_BROWSE = 7;
 
     private final UUID shopId;
     private final String shopName;
@@ -118,6 +119,10 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
         }
         ShopState state = ShopState.get(sp.serverLevel());
         switch (action) {
+            case ACTION_BROWSE -> {
+                if (shop.isAdminMode()) NpcShopLogic.openShopBrowser(sp, shop.getShopId());
+                return;
+            }
             case ACTION_TOGGLE_ADMIN -> {
                 if (!ShopRules.adminShops) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Admin shops are switched off on this server.").withStyle(ChatFormatting.RED));

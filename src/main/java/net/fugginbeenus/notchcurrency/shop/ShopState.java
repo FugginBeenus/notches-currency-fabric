@@ -64,13 +64,7 @@ public class ShopState extends SavedData implements net.fugginbeenus.notchcurren
         setDirty();
     }
 
-    public PlayerShop createShop(UUID ownerId, String ownerName, String shopName, int maxShopsPerPlayer) {
-        Set<UUID> existing = ownerShops.getOrDefault(ownerId, Collections.emptySet());
-        if (existing.size() >= maxShopsPerPlayer) {
-            LOGGER.info("Player {} has reached shop limit ({})", ownerName, maxShopsPerPlayer);
-            return null;
-        }
-
+    public PlayerShop createShop(UUID ownerId, String ownerName, String shopName) {
         PlayerShop shop = new PlayerShop(ownerId, ownerName, shopName);
         shops.put(shop.getShopId(), shop);
         ownerShops.computeIfAbsent(ownerId, k -> new HashSet<>()).add(shop.getShopId());

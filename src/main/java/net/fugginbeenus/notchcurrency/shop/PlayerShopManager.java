@@ -23,29 +23,20 @@ import java.util.UUID;
 public final class PlayerShopManager {
 
     private static final Logger LOGGER = LogManager.getLogger("NotchCurrency-PlayerShopManager");
-    public static int MAX_SHOPS_PER_PLAYER = 3;
     public static double SALES_TAX_PERCENT = 0.0;
     public static int MIN_PRICE = 0;
     public static int MAX_PRICE = 1_000_000;
 
     private PlayerShopManager() {}
 
-    @Nullable
     public static PlayerShop createShop(ServerPlayer player, String shopName) {
         ShopState state = ShopState.get(player.serverLevel());
 
         PlayerShop shop = state.createShop(
                 player.getUUID(),
                 player.getName().getString(),
-                shopName,
-                MAX_SHOPS_PER_PLAYER
+                shopName
         );
-
-        if (shop == null) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You've reached the maximum number of shops (" + MAX_SHOPS_PER_PLAYER + ")!")
-                    .withStyle(ChatFormatting.RED));
-            return null;
-        }
 
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Created shop: ")
                 .append(Component.literal(shopName).withStyle(ChatFormatting.GOLD))
@@ -243,7 +234,7 @@ public final class PlayerShopManager {
 
         if (shop == null) return PurchaseResult.SHOP_NOT_FOUND;
         if (!shop.isOpen() || shop.isRentPaused()) return PurchaseResult.SHOP_CLOSED;
-        if (shop.getOwnerId().equals(buyer.getUUID())) return PurchaseResult.OWN_SHOP;
+        if (!shop.isAdminMode() && shop.getOwnerId().equals(buyer.getUUID())) return PurchaseResult.OWN_SHOP;
 
         ShopListing listing = shop.getListing(listingId);
         if (listing == null) return PurchaseResult.LISTING_NOT_FOUND;

@@ -76,10 +76,6 @@ public final class NpcTransfer {
             say(giver, "You already have it.", ChatFormatting.YELLOW);
             return;
         }
-        if (atShopLimit(npc, target)) {
-            say(giver, target.getName().getString() + " already has the most shops allowed.", ChatFormatting.RED);
-            return;
-        }
 
         OFFERS.put(target.getUUID(), new Offer(npc.getUUID(), giver.getUUID(), giver.getName().getString(),
                 npc.getOwner(), System.currentTimeMillis() + OFFER_MILLIS));
@@ -114,10 +110,6 @@ public final class NpcTransfer {
         }
         if (!Objects.equals(npc.getOwner(), offer.ownerAtOffer())) {
             say(target, "That NPC changed hands before you accepted.", ChatFormatting.RED);
-            return;
-        }
-        if (atShopLimit(npc, target)) {
-            say(target, "You already have the most shops allowed.", ChatFormatting.RED);
             return;
         }
 
@@ -180,12 +172,6 @@ public final class NpcTransfer {
             return false;
         }
         return true;
-    }
-
-    private static boolean atShopLimit(NotchNpcEntity npc, ServerPlayer target) {
-        return shopOf(npc) != null
-                && ShopState.get(target.level().getServer()).getShopsByOwner(target.getUUID()).size()
-                >= PlayerShopManager.MAX_SHOPS_PER_PLAYER;
     }
 
     @Nullable
