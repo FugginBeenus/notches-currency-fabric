@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.13.4: Shop fixes
+
+Two fixes for servers that run their shops through NPCs.
+
+### Fixes
+
+- **No more shop limit.** Everyone can now have as many shops as they like. Before, there was a cap
+  of 3.
+- **Admins can buy from admin shops.** Before, clicking an admin shop as an admin always opened the
+  Shop Manager, so you could never buy there. The Shop Manager of an admin shop now has a **Shop**
+  button that opens the buy screen players see.
+- **Admin shops no longer pay rent.** The Shop Manager already said so, but when shop rent was
+  on, admin shops were still charged, and could freeze or close if the rent went unpaid.
+
+### Clearer docs
+
+- **What an admin shop is**: a normal shop with its **Admin** switch on. It has endless stock and
+  endless coins, and nobody is paid. The wiki's Shops page now explains it in full, and the old
+  admin shop commands are gone from the docs, since that system was replaced.
+
+Servers and players should update together.
+
 ## 0.13.3: Minecraft 26.3
 
 Notch Currency now runs on Minecraft 26.3. This release also fixes APP.ly on 26.3 and a Bounty
