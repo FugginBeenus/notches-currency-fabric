@@ -14,10 +14,16 @@ public final class RecruiterManager {
     public static final int ACTION_LEAVE = 1;
     public static final int ACTION_FOUND = 2;
     public static final int ACTION_SETTINGS = 3;
+    public static final int ACTION_DEPOSIT = 4;
+    public static final int ACTION_WITHDRAW = 5;
 
     private RecruiterManager() {}
 
     public static void open(ServerPlayer sp, NotchNpcEntity npc) {
+        open(sp, npc, false);
+    }
+
+    public static void open(ServerPlayer sp, NotchNpcEntity npc, boolean bankPage) {
         FactionState state = FactionState.get(sp.serverLevel());
         String factionId = npc.getFactionId();
         Faction faction = state.get(factionId);
@@ -39,6 +45,14 @@ public final class RecruiterManager {
         buf.writeBoolean(faction == null || faction.isOpenToJoin());
         buf.writeBoolean(faction != null && FactionManager.canManage(sp, faction));
         buf.writeBoolean(FactionManager.membershipLocked(sp));
+        boolean bank = faction != null && net.fugginbeenus.notchcurrency.economy.FactionBank.enabled()
+                && (net.fugginbeenus.notchcurrency.economy.FactionBank.isMember(sp, faction)
+                    || net.fugginbeenus.notchcurrency.economy.FactionBank.canWithdraw(sp, faction));
+        buf.writeBoolean(bank);
+        buf.writeVarLong(bank ? net.fugginbeenus.notchcurrency.economy.FactionBank.balance(sp.level().getServer(), faction) : 0L);
+        buf.writeBoolean(bank && net.fugginbeenus.notchcurrency.economy.FactionBank.isMember(sp, faction));
+        buf.writeBoolean(bank && net.fugginbeenus.notchcurrency.economy.FactionBank.canWithdraw(sp, faction));
+        buf.writeBoolean(bank && bankPage);
         Net.sendToClient(sp, NotchPackets.NPC_RECRUITER_OPEN, buf);
     }
 
@@ -140,6 +154,23 @@ public final class RecruiterManager {
                 if (chosen != null && net.fugginbeenus.notchcurrency.compat.Colors.isColor(chosen)) faction.setColor(chosen);
                 state.touch();
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Saved.").withStyle(ChatFormatting.GREEN));
+            }
+            case ACTION_DEPOSIT, ACTION_WITHDRAW -> {
+                Faction faction = state.get(factionId);
+                if (faction == null) return;
+                long amount;
+                try {
+                    amount = Long.parseLong(name.trim());
+                } catch (NumberFormatException e) {
+                    amount = 0L;
+                }
+                if (action == ACTION_DEPOSIT) {
+                    net.fugginbeenus.notchcurrency.economy.FactionBank.deposit(sp, faction, amount);
+                } else {
+                    net.fugginbeenus.notchcurrency.economy.FactionBank.withdraw(sp, faction, amount);
+                }
+                open(sp, npc, true);
+                return;
             }
             default -> { return; }
         }

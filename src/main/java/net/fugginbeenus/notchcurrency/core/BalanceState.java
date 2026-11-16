@@ -48,6 +48,7 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
     public Map<UUID, Long> snapshot() {
         Map<UUID, Long> players = new HashMap<>(balances);
         players.remove(Treasury.ID);
+        players.keySet().removeIf(net.fugginbeenus.notchcurrency.economy.FactionBank::isAccount);
         return Map.copyOf(players);
     }
 
@@ -60,7 +61,8 @@ public class BalanceState extends SavedData implements net.fugginbeenus.notchcur
     public int accountCount() {
         int n = 0;
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
-            if (e.getValue() > 0 && !Treasury.ID.equals(e.getKey())) n++;
+            if (e.getValue() > 0 && !Treasury.ID.equals(e.getKey())
+                    && !net.fugginbeenus.notchcurrency.economy.FactionBank.isAccount(e.getKey())) n++;
         }
         return n;
     }

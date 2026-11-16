@@ -100,6 +100,24 @@ members. Ops are locked in too, but these commands can move anyone, themselves i
 | `/faction admin move <player> <faction>` | Move a player into a faction |
 | `/faction admin remove <player>` | Take a player out of their faction |
 
+**Faction banks.** Turn on **Faction banks** in the config to give every faction its own bank.
+
+- Join fees go into the bank, instead of disappearing or going to the Treasury.
+- Members see the balance and deposit at the faction's recruiter NPC: open it and press **Bank**.
+- The founder and admins can withdraw there too.
+- Bank money stays out of `/baltop`, wealth tax and savings interest.
+- When a faction is disbanded, its bank pays out to the founder.
+- If the setting is turned off later, the money stays saved and comes back when it is turned on again.
+
+| Command | Who | Description |
+| --- | --- | --- |
+| `/faction bank` | members | Show your faction's balance |
+| `/faction bank deposit <amount>` | members | Put coins in |
+| `/faction bank withdraw <amount>` | founder, admins | Take coins out to your wallet |
+| `/faction bank pay <player> <amount>` | founder, admins | Pay a player from the bank |
+| `/faction admin bank <faction>` | admins | Show any faction's balance |
+| `/faction admin bank <faction> add\|take <amount>` | admins | Add to or take from a bank (no wallet involved) |
+
 ### Admin Shops
 
 Admin shops have no commands of their own. Make one in game: give an NPC the **Shop** role, open its
@@ -176,7 +194,8 @@ categories, config keys, and datapack paths.
     "fundRewards": false
   },
   "factions": {
-    "permanentMembership": false
+    "permanentMembership": false,
+    "factionBanks": false
   }
 }
 ```

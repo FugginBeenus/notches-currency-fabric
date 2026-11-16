@@ -86,6 +86,7 @@ public final class FactionManager {
             msg(sp, "That isn't your faction to disband.", ChatFormatting.RED);
             return false;
         }
+        net.fugginbeenus.notchcurrency.economy.FactionBank.payOutOnDisband(sp.level().getServer(), faction, sp);
         clearFromNpcs(sp.level().getServer(), factionId);
         state.remove(factionId);
         msg(sp, "Disbanded " + faction.displayName() + ".", ChatFormatting.YELLOW);
@@ -115,11 +116,17 @@ public final class FactionManager {
         }
         int fee = faction.joinFee();
         if (fee > 0 && !canManage(sp, faction)) {
-            if (!net.fugginbeenus.notchcurrency.api.CurrencyApi.withdraw(sp, fee,
-                    net.fugginbeenus.notchcurrency.economy.TransactionReason.SINK, "faction dues")) {
+            boolean banked = net.fugginbeenus.notchcurrency.economy.FactionBank.enabled();
+            if (!net.fugginbeenus.notchcurrency.api.CurrencyApi.withdraw(sp, fee, banked
+                    ? net.fugginbeenus.notchcurrency.economy.TransactionReason.FACTION
+                    : net.fugginbeenus.notchcurrency.economy.TransactionReason.SINK, "faction dues")) {
                 msg(sp, "Joining costs " + fee + " "
                         + net.fugginbeenus.notchcurrency.core.CurrencyText.word() + ".", ChatFormatting.RED);
                 return;
+            }
+            if (banked) {
+                net.fugginbeenus.notchcurrency.economy.FactionBank.addDues(sp.level().getServer(), faction, fee,
+                        sp.getName().getString());
             }
         }
         state.join(sp.getUUID(), factionId);

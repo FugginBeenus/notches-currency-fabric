@@ -24,7 +24,7 @@ public class NpcRecruiterScreen extends Screen {
             ChatFormatting.AQUA, ChatFormatting.BLUE, ChatFormatting.LIGHT_PURPLE, ChatFormatting.DARK_PURPLE, ChatFormatting.GRAY,
     };
 
-    private enum Mode { VIEW, FOUND, SETTINGS }
+    private enum Mode { VIEW, FOUND, SETTINGS, BANK }
 
     private final UUID npcId;
     private final String factionId;
@@ -34,6 +34,10 @@ public class NpcRecruiterScreen extends Screen {
     private final boolean canFound;
     private final boolean canManage;
     private final boolean locked;
+    private final boolean bank;
+    private final long balance;
+    private final boolean canDeposit;
+    private final boolean canWithdraw;
 
     private Mode mode;
     private int colorIdx;
@@ -43,10 +47,12 @@ public class NpcRecruiterScreen extends Screen {
 
     private int px, py;
     private EditBox textField;
+    private EditBox amountField;
 
     public NpcRecruiterScreen(UUID npcId, String factionId, String factionName, ChatFormatting factionColor,
                               int memberCount, boolean alreadyIn, boolean canFound,
-                              String motto, int fee, boolean openToJoin, boolean canManage, boolean locked) {
+                              String motto, int fee, boolean openToJoin, boolean canManage, boolean locked,
+                              boolean bank, long balance, boolean canDeposit, boolean canWithdraw, boolean bankPage) {
         super(Component.literal("Recruiter"));
         this.npcId = npcId;
         this.factionId = factionId;
@@ -59,7 +65,11 @@ public class NpcRecruiterScreen extends Screen {
         this.motto = motto == null ? "" : motto;
         this.fee = fee;
         this.openToJoin = openToJoin;
-        this.mode = factionId.isEmpty() && canFound ? Mode.FOUND : Mode.VIEW;
+        this.bank = bank;
+        this.balance = balance;
+        this.canDeposit = canDeposit;
+        this.canWithdraw = canWithdraw;
+        this.mode = bank && bankPage ? Mode.BANK : factionId.isEmpty() && canFound ? Mode.FOUND : Mode.VIEW;
         for (int i = 0; i < COLORS.length; i++) {
             if (COLORS[i] == factionColor) { colorIdx = i; break; }
         }
@@ -84,7 +94,18 @@ public class NpcRecruiterScreen extends Screen {
             addRenderableWidget(textField);
             setInitialFocus(textField);
         }
+        if (mode == Mode.BANK) {
+            amountField = new EditBox(this.font, px + PAD + 4, py + 101, BTN_W - 8, 10, Component.literal("Amount"));
+            amountField.setMaxLength(12);
+            amountField.setBordered(false);
+            amountField.setHint(Component.literal("how many").withStyle(ChatFormatting.DARK_GRAY));
+            addRenderableWidget(amountField);
+            setInitialFocus(amountField);
+        }
     }
+
+    private int bankButtonY() { return py + H - 70; }
+    private int bankActionY() { return py + 124; }
 
     private int rowLabel() { return py + 38; }
     private int rowColor() { return py + 76; }
@@ -106,16 +127,18 @@ public class NpcRecruiterScreen extends Screen {
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.font,
-                mode == Mode.FOUND ? "New Faction" : mode == Mode.SETTINGS ? "Faction Settings" : "Recruiter",
+                mode == Mode.FOUND ? "New Faction" : mode == Mode.SETTINGS ? "Faction Settings"
+                        : mode == Mode.BANK ? "Faction Bank" : "Recruiter",
                 px + W / 2, py + 8);
 
         switch (mode) {
             case VIEW -> renderView(ctx, mouseX, mouseY);
             case FOUND, SETTINGS -> renderEditor(ctx, mouseX, mouseY);
+            case BANK -> renderBank(ctx, mouseX, mouseY);
         }
 
         NotchWidgets.neutralButton(ctx, this.font, px + PAD, py + H - 26, BTN_W, ROW_H,
-                mode == Mode.SETTINGS ? "Back" : "Close",
+                mode == Mode.SETTINGS || mode == Mode.BANK ? "Back" : "Close",
                 over(mouseX, mouseY, px + PAD, py + H - 26, BTN_W, ROW_H));
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -167,10 +190,49 @@ public class NpcRecruiterScreen extends Screen {
                     over(mx, my, px + PAD, y, BTN_W, 18));
         }
 
+        if (bank) {
+            String label = "Bank";
+            NotchWidgets.neutralButton(ctx, this.font, px + PAD, bankButtonY(), BTN_W, ROW_H, label,
+                    over(mx, my, px + PAD, bankButtonY(), BTN_W, ROW_H));
+            int cw = NotchWidgets.coinFieldWidth(this.font, balance);
+            NotchWidgets.coinField(ctx, this.font, NotchWidgets.coinStack(), px + PAD + BTN_W - cw - 4,
+                    bankButtonY() - 1, balance, NotchWidgets.COIN_GOLD);
+        }
         if (canManage) {
             NotchWidgets.neutralButton(ctx, this.font, px + PAD, py + H - 48, BTN_W, ROW_H, "Settings",
                     over(mx, my, px + PAD, py + H - 48, BTN_W, ROW_H));
         }
+    }
+
+    private void renderBank(GuiGraphics ctx, int mx, int my) {
+        ctx.drawCenteredString(this.font,
+                Component.literal(factionName).withStyle(color()), px + W / 2, py + 30, 0xFFFFFF);
+        NotchWidgets.centerText(ctx, this.font, "In the bank", px + W / 2, py + 50, NotchTheme.TEXT_MUTED, false);
+        int cw = NotchWidgets.coinFieldWidth(this.font, balance);
+        NotchWidgets.coinField(ctx, this.font, NotchWidgets.coinStack(), px + W / 2 - cw / 2, py + 60, balance,
+                NotchWidgets.COIN_GOLD);
+
+        ctx.drawString(this.font, "Amount:", px + PAD, py + 86, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + PAD, py + 98, BTN_W, 15, NotchTheme.DEEP);
+
+        int y = bankActionY();
+        if (canDeposit && canWithdraw) {
+            int half = (BTN_W - 6) / 2;
+            NotchWidgets.primaryButton(ctx, this.font, px + PAD, y, half, 18, "Deposit",
+                    over(mx, my, px + PAD, y, half, 18));
+            NotchWidgets.goldButton(ctx, this.font, px + PAD + half + 6, y, half, 18, "Withdraw",
+                    over(mx, my, px + PAD + half + 6, y, half, 18));
+        } else if (canDeposit) {
+            NotchWidgets.primaryButton(ctx, this.font, px + PAD, y, BTN_W, 18, "Deposit",
+                    over(mx, my, px + PAD, y, BTN_W, 18));
+        } else if (canWithdraw) {
+            NotchWidgets.goldButton(ctx, this.font, px + PAD, y, BTN_W, 18, "Withdraw",
+                    over(mx, my, px + PAD, y, BTN_W, 18));
+        }
+        String hint = canDeposit && canWithdraw ? "Deposit takes from your wallet. Withdraw pays into it."
+                : canDeposit ? "Deposit takes the coins from your wallet."
+                : "Withdraw puts the coins in your wallet.";
+        NotchWidgets.centerText(ctx, this.font, hint, px + W / 2, y + 24, NotchTheme.TEXT_MUTED, false);
     }
 
     private void renderEditor(GuiGraphics ctx, int mx, int my) {
@@ -242,6 +304,27 @@ public class NpcRecruiterScreen extends Screen {
                     rebuildPane();
                     return true;
                 }
+                if (bank && over(mx, my, px + PAD, bankButtonY(), BTN_W, ROW_H)) {
+                    NotchWidgets.click();
+                    mode = Mode.BANK;
+                    rebuildPane();
+                    return true;
+                }
+            } else if (mode == Mode.BANK) {
+                int y = bankActionY();
+                int half = (BTN_W - 6) / 2;
+                boolean both = canDeposit && canWithdraw;
+                boolean depositHit = canDeposit && over(mx, my, px + PAD, y, both ? half : BTN_W, 18);
+                boolean withdrawHit = canWithdraw && (both
+                        ? over(mx, my, px + PAD + half + 6, y, half, 18)
+                        : !canDeposit && over(mx, my, px + PAD, y, BTN_W, 18));
+                if (depositHit || withdrawHit) {
+                    String amount = amountField == null ? "" : amountField.getValue().trim();
+                    if (!amount.matches("[0-9]{1,12}")) return true;
+                    NotchWidgets.click();
+                    send(depositHit ? RecruiterManager.ACTION_DEPOSIT : RecruiterManager.ACTION_WITHDRAW, amount);
+                    return true;
+                }
             } else {
                 if (over(mx, my, px + 76, rowColor(), 100, 15)) {
                     NotchWidgets.tick();
@@ -275,7 +358,7 @@ public class NpcRecruiterScreen extends Screen {
 
             if (over(mx, my, px + PAD, py + H - 26, BTN_W, ROW_H)) {
                 NotchWidgets.click();
-                if (mode == Mode.SETTINGS) {
+                if (mode == Mode.SETTINGS || mode == Mode.BANK) {
                     mode = Mode.VIEW;
                     rebuildPane();
                 } else {
@@ -312,7 +395,7 @@ public class NpcRecruiterScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     //?}
-        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, textField)) return true;
+        if (NotchWidgets.typingInField(keyCode, scanCode, modifiers, textField, amountField)) return true;
         //? if >=1.21.11 {
         /*return super.keyPressed(event);
         *///?} else {

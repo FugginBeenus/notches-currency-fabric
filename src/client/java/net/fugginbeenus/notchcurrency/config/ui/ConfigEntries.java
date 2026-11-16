@@ -343,6 +343,10 @@ final class ConfigEntries {
                 v -> cfg.factions.permanentMembership = v,
                 "Players (ops too) can't leave or switch faction once they join.",
                 "Disbanding still frees everyone. Ops can use /faction admin."));
+        e.add(new BoolEntry(c, "Faction banks", cfg.factions.factionBanks, false,
+                v -> cfg.factions.factionBanks = v,
+                "Each faction gets a bank. Join fees go into it, members",
+                "deposit at the faction NPC, founders and admins withdraw."));
 
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,

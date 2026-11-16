@@ -486,7 +486,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_RECRUITER_ACTION, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            String name = buf.readUtf(32);
+            String name = buf.readUtf(64);
             String color = buf.readUtf(24);
             int fee = buf.readVarInt();
             boolean open = buf.readBoolean();

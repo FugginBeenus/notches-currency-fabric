@@ -17,7 +17,8 @@ public enum TransactionReason {
     FAUCET(false),
     ADMIN(true),
     GAMBLING(false),
-    TREASURY(false);
+    TREASURY(false),
+    FACTION(false);
 
     private final boolean adminRelevant;
 

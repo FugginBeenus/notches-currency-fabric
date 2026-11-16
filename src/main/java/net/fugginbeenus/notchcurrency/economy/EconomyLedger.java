@@ -71,6 +71,10 @@ public final class EconomyLedger {
     public static long getSessionDestroyed() { return sessionDestroyed.get(); }
     private static String resolveName(MinecraftServer server, UUID id) {
         if (Treasury.ID.equals(id)) return "Treasury";
+        if (FactionBank.isAccount(id)) {
+            String faction = FactionBank.nameOf(server, id);
+            return faction == null ? "Faction bank" : "Bank of " + faction;
+        }
         try {
             var name = net.fugginbeenus.notchcurrency.compat.Profiles.nameOf(server, id);
             if (name.isPresent()) return name.get();

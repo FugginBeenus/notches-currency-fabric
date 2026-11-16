@@ -30,6 +30,7 @@ public final class NotchConfig {
 
     public static final class Factions {
         public boolean permanentMembership = false;
+        public boolean factionBanks = false;
     }
 
     public static final class VillagerTrades {

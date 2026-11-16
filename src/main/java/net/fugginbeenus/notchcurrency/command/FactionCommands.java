@@ -1,7 +1,9 @@
 package net.fugginbeenus.notchcurrency.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import net.fugginbeenus.notchcurrency.economy.FactionBank;
 import net.fugginbeenus.notchcurrency.npc.faction.Faction;
 import net.fugginbeenus.notchcurrency.npc.faction.FactionManager;
 import net.fugginbeenus.notchcurrency.npc.faction.FactionState;
@@ -39,8 +41,38 @@ public final class FactionCommands {
                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                 .executes(ctx -> create(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "name")))))
+                .then(Commands.literal("bank")
+                        .executes(ctx -> bankShow(ctx.getSource()))
+                        .then(Commands.literal("deposit")
+                                .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                        .executes(ctx -> bankMove(ctx.getSource(), true,
+                                                LongArgumentType.getLong(ctx, "amount")))))
+                        .then(Commands.literal("withdraw")
+                                .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                        .executes(ctx -> bankMove(ctx.getSource(), false,
+                                                LongArgumentType.getLong(ctx, "amount")))))
+                        .then(Commands.literal("pay")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                                .executes(ctx -> bankPay(ctx.getSource(),
+                                                        EntityArgument.getPlayer(ctx, "player"),
+                                                        LongArgumentType.getLong(ctx, "amount")))))))
                 .then(Commands.literal("admin")
                         .requires(net.fugginbeenus.notchcurrency.compat.Perms.admin(net.fugginbeenus.notchcurrency.compat.Perms.FACTION))
+                        .then(Commands.literal("bank")
+                                .then(Commands.argument("faction", StringArgumentType.word())
+                                        .executes(ctx -> adminBank(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "faction"), 0L))
+                                        .then(Commands.literal("add")
+                                                .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                                        .executes(ctx -> adminBank(ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "faction"),
+                                                                LongArgumentType.getLong(ctx, "amount")))))
+                                        .then(Commands.literal("take")
+                                                .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                                        .executes(ctx -> adminBank(ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "faction"),
+                                                                -LongArgumentType.getLong(ctx, "amount")))))))
                         .then(Commands.literal("move")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("faction", StringArgumentType.word())
@@ -51,6 +83,61 @@ public final class FactionCommands {
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> adminRemove(ctx.getSource(),
                                                 EntityArgument.getPlayer(ctx, "player")))))));
+    }
+
+    private static Faction ownBank(CommandSourceStack source) {
+        ServerPlayer sp = source.getPlayer();
+        if (sp == null) return null;
+        if (!FactionBank.enabled()) {
+            source.sendFailure(Component.literal("Faction banks are off on this server."));
+            return null;
+        }
+        Faction faction = FactionState.get(source.getServer()).factionOf(sp.getUUID());
+        if (faction == null) source.sendFailure(Component.literal("You're not in a faction."));
+        return faction;
+    }
+
+    private static int bankShow(CommandSourceStack source) {
+        Faction faction = ownBank(source);
+        if (faction == null) return 0;
+        long balance = FactionBank.balance(source.getServer(), faction);
+        source.sendSuccess(() -> Component.literal("Bank of ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+                .append(net.fugginbeenus.notchcurrency.core.NotchCurrency.coins(balance)), false);
+        return 1;
+    }
+
+    private static int bankMove(CommandSourceStack source, boolean deposit, long amount) {
+        Faction faction = ownBank(source);
+        if (faction == null) return 0;
+        ServerPlayer sp = source.getPlayer();
+        boolean done = deposit ? FactionBank.deposit(sp, faction, amount) : FactionBank.withdraw(sp, faction, amount);
+        return done ? 1 : 0;
+    }
+
+    private static int bankPay(CommandSourceStack source, ServerPlayer target, long amount) {
+        Faction faction = ownBank(source);
+        if (faction == null) return 0;
+        return FactionBank.pay(source.getPlayer(), faction, target, amount) ? 1 : 0;
+    }
+
+    private static int adminBank(CommandSourceStack source, String factionId, long delta) {
+        Faction faction = FactionState.get(source.getServer()).get(factionId);
+        if (faction == null) {
+            source.sendFailure(Component.literal("No faction by that name."));
+            return 0;
+        }
+        if (delta != 0 && !FactionBank.adjust(source.getServer(), faction, delta)) {
+            source.sendFailure(Component.literal("The bank doesn't have that much."));
+            return 0;
+        }
+        long balance = FactionBank.balance(source.getServer(), faction);
+        source.sendSuccess(() -> Component.literal("Bank of ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                .append(Component.literal(" now holds ").withStyle(ChatFormatting.GRAY))
+                .append(net.fugginbeenus.notchcurrency.core.NotchCurrency.coins(balance)), delta != 0);
+        return 1;
     }
 
     private static int adminMove(CommandSourceStack source, ServerPlayer target, String factionId) {

@@ -963,12 +963,18 @@ public final class NotchPacketsClient {
             boolean open = buf.readBoolean();
             boolean canManage = buf.readBoolean();
             boolean locked = buf.readBoolean();
+            boolean bank = buf.readBoolean();
+            long balance = buf.readVarLong();
+            boolean canDeposit = buf.readBoolean();
+            boolean canWithdraw = buf.readBoolean();
+            boolean bankPage = buf.readBoolean();
             client.execute(() -> {
                 net.minecraft.ChatFormatting color = net.fugginbeenus.notchcurrency.compat.Colors.byName(colorName);
                 Minecraft.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen(npcId, factionId,
                                 factionName, color == null ? net.minecraft.ChatFormatting.WHITE : color,
-                                members, alreadyIn, canFound, motto, fee, open, canManage, locked));
+                                members, alreadyIn, canFound, motto, fee, open, canManage, locked,
+                                bank, balance, canDeposit, canWithdraw, bankPage));
             });
         });
     }
