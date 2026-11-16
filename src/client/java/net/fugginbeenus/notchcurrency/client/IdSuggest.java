@@ -91,11 +91,32 @@ public final class IdSuggest {
                 .getHoverName().getString();
     }
 
+    private static boolean listKind(int kind) {
+        return kind == KIND_SOUND;
+    }
+
+    private static String lastOf(String value) {
+        int c = value.lastIndexOf(',');
+        return (c < 0 ? value : value.substring(c + 1)).trim();
+    }
+
+    private static String headOf(String value) {
+        int c = value.lastIndexOf(',');
+        return c < 0 ? "" : value.substring(0, c + 1).trim() + " ";
+    }
+
+    private static boolean allKnown(String value, int kind) {
+        for (String part : value.split(",")) {
+            if (!part.isBlank() && !known(part.trim(), kind)) return false;
+        }
+        return true;
+    }
+
     public static void tip(GuiGraphics ctx, Font font, EditBox box, int kind, int mx, int my) {
         if (box == null || !box.isVisible()) return;
         if (mx < box.getX() - 2 || mx > box.getX() + box.getWidth() + 2) return;
         if (my < box.getY() - 4 || my > box.getY() + 14) return;
-        String typed = box.getValue();
+        String typed = listKind(kind) ? lastOf(box.getValue()) : box.getValue();
         if (typed.isBlank()) return;
         java.util.List<net.minecraft.network.chat.Component> lines = new java.util.ArrayList<>();
         if (known(typed, kind)) {
@@ -122,13 +143,15 @@ public final class IdSuggest {
 
     public static void draw(GuiGraphics ctx, Font font, EditBox box, int kind) {
         if (box == null || !box.isVisible()) return;
-        String typed = box.getValue();
-        if (typed.isBlank()) return;
-        String hit = box.isFocused() ? best(typed, kind) : "";
-        int colour = known(typed, kind) ? 0xFF6FC274 : 0xFFD06B5A;
+        String full = box.getValue();
+        if (full.isBlank()) return;
+        String typed = listKind(kind) ? lastOf(full) : full;
+        String hit = box.isFocused() && !typed.isBlank() ? best(typed, kind) : "";
+        boolean ok = listKind(kind) ? allKnown(full, kind) : known(full, kind);
+        int colour = ok ? 0xFF6FC274 : 0xFFD06B5A;
         if (!hit.isEmpty() && hit.length() > typed.trim().length()) {
             String tail = hit.substring(typed.trim().length());
-            int at = box.getX() + font.width(typed);
+            int at = box.getX() + font.width(full);
             int room = box.getX() + box.getWidth() - at;
             if (room > 4) {
                 if (font.width(tail) > room) tail = font.plainSubstrByWidth(tail, room);
@@ -141,9 +164,12 @@ public final class IdSuggest {
     public static boolean accept(EditBox box, int kind) {
         if (box == null || !box.isVisible() || box.getValue().isBlank()) return false;
         if (box.getCursorPosition() < box.getValue().length()) return false;
-        String hit = best(box.getValue(), kind);
-        if (hit.isEmpty() || hit.equals(box.getValue().trim())) return false;
-        box.setValue(hit);
+        String full = box.getValue();
+        String typed = listKind(kind) ? lastOf(full) : full;
+        if (typed.isBlank()) return false;
+        String hit = best(typed, kind);
+        if (hit.isEmpty() || hit.equals(typed.trim())) return false;
+        box.setValue(listKind(kind) ? headOf(full) + hit : hit);
         return true;
     }
 }

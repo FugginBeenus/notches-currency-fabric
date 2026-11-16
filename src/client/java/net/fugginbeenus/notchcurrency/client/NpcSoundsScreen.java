@@ -16,11 +16,12 @@ import java.util.UUID;
 
 public class NpcSoundsScreen extends Screen {
 
-    private static final int W = 328, H = 250;
+    private static final int W = 328, H = 272;
     private static final int ROW_Y = 40, ROW_H = 22;
-    private static final int BOX_X = 74, BOX_W = 174, PICK_X = 254, PICK_W = 60;
+    private static final int BOX_X = 74, BOX_W = 156, PLAY_X = 234, PLAY_W = 14, PICK_X = 254, PICK_W = 60;
 
     private static final String[] LABELS = {"Voice", "Ambient", "Hurt", "Death", "Step", "Angry"};
+    private static final String[] LIST_MODES = {"One at random", "All at once", "In order"};
 
     private static final String[][] BANK = {
             {"entity.villager.ambient", "entity.villager.trade", "entity.wandering_trader.ambient",
@@ -48,6 +49,7 @@ public class NpcSoundsScreen extends Screen {
     private int px, py;
     private int pickingFor = 1;
     private final EditBox[] fields = new EditBox[6];
+    private final int[] previewTurn = new int[6];
 
     public NpcSoundsScreen(UUID npcId, NpcSounds sounds, java.util.function.Consumer<NpcSounds> onBack) {
         super(Component.literal("Sounds"));
@@ -84,7 +86,7 @@ public class NpcSoundsScreen extends Screen {
             String old = fields[i] == null ? valueAt(i) : fields[i].getValue();
             EditBox box = new EditBox(this.font, px + BOX_X + 4, py + ROW_Y + i * ROW_H + 4,
                     BOX_W - 8, 10, Component.empty());
-            box.setMaxLength(120);
+            box.setMaxLength(400);
             box.setBordered(false);
             box.setHint(Component.literal("none").withStyle(ChatFormatting.DARK_GRAY));
             box.setValue(old);
@@ -99,14 +101,46 @@ public class NpcSoundsScreen extends Screen {
 
     private int rowY(int i) { return py + ROW_Y + i * ROW_H; }
 
-    private void cycle(int i) {
-        String[] bank = BANK[i];
-        String current = fields[i].getValue().trim();
-        int at = -1;
-        for (int k = 0; k < bank.length; k++) {
-            if (bank[k].equals(current)) { at = k; break; }
+    private static String withLast(String value, String id) {
+        int c = value.lastIndexOf(',');
+        return c < 0 ? id : value.substring(0, c + 1).trim() + " " + id;
+    }
+
+    private void previewBox(int i) {
+        List<String> ids = net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.soundIds(fields[i].getValue());
+        if (ids.isEmpty()) return;
+        float pitch = sounds.pitch() / 100.0f;
+        switch (sounds.listMode()) {
+            case net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.SOUNDS_ALL -> {
+                for (String id : ids) net.fugginbeenus.notchcurrency.client.npcsound.SoundBrowserScreen.play(id, pitch, false);
+            }
+            case net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.SOUNDS_IN_ORDER ->
+                    net.fugginbeenus.notchcurrency.client.npcsound.SoundBrowserScreen.play(
+                            ids.get(Math.floorMod(previewTurn[i]++, ids.size())), pitch, true);
+            default -> net.fugginbeenus.notchcurrency.client.npcsound.SoundBrowserScreen.play(
+                    ids.get(new java.util.Random().nextInt(ids.size())), pitch, true);
         }
-        fields[i].setValue(bank[(at + 1) % bank.length]);
+    }
+
+    private List<Component> boxTip(int i) {
+        List<String> ids = net.fugginbeenus.notchcurrency.entity.NotchNpcEntity.soundIds(fields[i].getValue());
+        if (ids.isEmpty()) return null;
+        List<Component> lines = new java.util.ArrayList<>();
+        for (String id : ids) {
+            boolean ok = IdSuggest.known(id, IdSuggest.KIND_SOUND);
+            lines.add(Component.literal(ok ? net.fugginbeenus.notchcurrency.client.npcsound.SoundCatalog.nameOf(id)
+                    : "Unknown: " + id).withStyle(ok ? ChatFormatting.WHITE : ChatFormatting.RED));
+        }
+        String last = ids.get(ids.size() - 1);
+        if (!IdSuggest.known(last, IdSuggest.KIND_SOUND)) {
+            String hit = IdSuggest.best(last, IdSuggest.KIND_SOUND);
+            if (!hit.isEmpty()) {
+                lines.add(Component.literal("Tab to fill: "
+                        + net.fugginbeenus.notchcurrency.client.npcsound.SoundCatalog.shortId(hit))
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+        return lines;
     }
 
     private void save() {
@@ -123,7 +157,7 @@ public class NpcSoundsScreen extends Screen {
     //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.font, "Sounds", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
-        NotchWidgets.centerText(ctx, this.font, "Type a sound id, or press Pick to cycle good ones.",
+        NotchWidgets.centerText(ctx, this.font, "Press Pick to browse sounds, or type ids with commas.",
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
         NotchWidgets.divider(ctx, px + 8, py + 34, W - 16);
 
@@ -132,17 +166,32 @@ public class NpcSoundsScreen extends Screen {
             int ry = rowY(i);
             ctx.drawString(this.font, LABELS[i], px + 12, ry + 4, NotchTheme.TEXT_DARK, false);
             NotchWidgets.inset(ctx, px + BOX_X, ry, BOX_W, 14, NotchTheme.DEEP);
+            boolean playHover = over(mouseX, mouseY, px + PLAY_X, ry, PLAY_W, 14);
+            NotchWidgets.neutralButton(ctx, this.font, px + PLAY_X, ry, PLAY_W, 14, "", playHover);
+            for (int r = 0; r < 7; r++) {
+                int w = r <= 3 ? r + 1 : 7 - r;
+                ctx.fill(px + PLAY_X + 5, ry + 4 + r, px + PLAY_X + 5 + w, ry + 5 + r, NotchTheme.TEXT_DARK);
+            }
+            if (playHover) {
+                tip = List.of(Component.literal("Hear this box").withStyle(ChatFormatting.WHITE),
+                        Component.literal("Plays it the way the NPC will, using").withStyle(ChatFormatting.GRAY),
+                        Component.literal("Lists play: " + LIST_MODES[Math.max(0, Math.min(2, sounds.listMode()))])
+                                .withStyle(ChatFormatting.GRAY));
+            }
             boolean pickHover = over(mouseX, mouseY, px + PICK_X, ry, PICK_W, 14);
             NotchWidgets.neutralButton(ctx, this.font, px + PICK_X, ry, PICK_W, 14, "Pick", pickHover);
             if (i == pickingFor) {
-                NotchWidgets.centerText(ctx, this.font, ">", px + PICK_X - 6, ry + 4,
+                NotchWidgets.centerText(ctx, this.font, ">", px + 7, ry + 4,
                         NotchTheme.TEXT_DARK, false);
             }
             if (over(mouseX, mouseY, px + 12, ry, 56, 14)) tip = help(i);
             IdSuggest.draw(ctx, this.font, fields[i], IdSuggest.KIND_SOUND);
         }
         for (int i = 0; i < 6; i++) {
-            IdSuggest.tip(ctx, this.font, fields[i], IdSuggest.KIND_SOUND, mouseX, mouseY);
+            if (over(mouseX, mouseY, px + BOX_X, rowY(i), BOX_W, 14)) {
+                List<Component> names = boxTip(i);
+                if (names != null) tip = names;
+            }
         }
 
         int ay = py + ROW_Y + 6 * ROW_H + 4;
@@ -186,6 +235,20 @@ public class NpcSoundsScreen extends Screen {
                     Component.literal("Pitch").withStyle(ChatFormatting.WHITE),
                     Component.literal("Low for big and slow, high for small").withStyle(ChatFormatting.GRAY),
                     Component.literal("and quick. It shifts every sound here.").withStyle(ChatFormatting.GRAY));
+        }
+
+        int ly = fy + 22;
+        ctx.drawString(this.font, "Lists play", px + 12, ly + 4, NotchTheme.TEXT_DARK, false);
+        boolean listHover = over(mouseX, mouseY, px + 88, ly, 120, 14);
+        NotchWidgets.neutralButton(ctx, this.font, px + 88, ly, 120, 14,
+                LIST_MODES[Math.max(0, Math.min(2, sounds.listMode()))], listHover);
+        if (listHover) {
+            tip = List.of(
+                    Component.literal("Lists play").withStyle(ChatFormatting.WHITE),
+                    Component.literal("For boxes with more than one sound.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("One at random: picks one each time.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("All at once: plays them together.").withStyle(ChatFormatting.GRAY),
+                    Component.literal("In order: the next one each time.").withStyle(ChatFormatting.GRAY));
         }
 
         int by = py + H - 26;
@@ -249,10 +312,26 @@ public class NpcSoundsScreen extends Screen {
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
             for (int i = 0; i < 6; i++) {
+                if (over(mx, my, px + PLAY_X, rowY(i), PLAY_W, 14)) {
+                    NotchWidgets.click();
+                    pullFields();
+                    previewBox(i);
+                    return true;
+                }
                 if (over(mx, my, px + PICK_X, rowY(i), PICK_W, 14)) {
                     NotchWidgets.click();
-                    cycle(i);
+                    pullFields();
                     pickingFor = i;
+                    final NpcSoundsScreen self = this;
+                    final int slot = i;
+                    net.minecraft.client.Minecraft.getInstance().setScreen(
+                            new net.fugginbeenus.notchcurrency.client.npcsound.SoundBrowserScreen(
+                                    LABELS[i], List.of(BANK[i]), fields[i].getValue(), sounds.pitch(),
+                                    value -> {
+                                        self.fields[slot].setValue(value);
+                                        net.minecraft.client.Minecraft.getInstance().setScreen(self);
+                                    },
+                                    () -> net.minecraft.client.Minecraft.getInstance().setScreen(self)));
                     return true;
                 }
                 if (over(mx, my, px + BOX_X, rowY(i), BOX_W, 14)) pickingFor = i;
@@ -291,6 +370,12 @@ public class NpcSoundsScreen extends Screen {
                 sounds = sounds.withPitch(Math.min(200, sounds.pitch() + pStep));
                 return true;
             }
+            if (over(mx, my, px + 88, fy + 22, 120, 14)) {
+                NotchWidgets.click();
+                pullFields();
+                sounds = sounds.withListMode((sounds.listMode() + 1) % LIST_MODES.length);
+                return true;
+            }
             if (over(mx, my, px + W - 108, fy, 96, 14)) {
                 NotchWidgets.click();
                 pullFields();
@@ -299,7 +384,8 @@ public class NpcSoundsScreen extends Screen {
                 net.minecraft.client.Minecraft.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundManageScreen(
                                 chosen -> {
-                                    self.fields[Math.max(0, slot)].setValue(chosen);
+                                    EditBox box = self.fields[Math.max(0, slot)];
+                                    box.setValue(withLast(box.getValue(), chosen));
                                     net.minecraft.client.Minecraft.getInstance().setScreen(self);
                                 },
                                 () -> net.minecraft.client.Minecraft.getInstance().setScreen(self)));

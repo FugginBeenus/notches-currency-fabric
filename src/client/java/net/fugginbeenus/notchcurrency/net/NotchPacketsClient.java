@@ -69,12 +69,12 @@ public final class NotchPacketsClient {
             String farewell = buf.readUtf(160);
             String billboard = buf.readUtf(400);
             String subtitle = buf.readUtf(64);
-            String voice = buf.readUtf(128);
+            String voice = buf.readUtf(1024);
             int voicePitch = buf.readVarInt();
             int flyCeiling = buf.readVarInt();
             var sounds = new net.fugginbeenus.notchcurrency.client.npc.NpcSounds(
-                    voice, voicePitch, buf.readUtf(128), buf.readUtf(128), buf.readUtf(128),
-                    buf.readUtf(128), buf.readUtf(128), buf.readVarInt(), buf.readBoolean());
+                    voice, voicePitch, buf.readUtf(1024), buf.readUtf(1024), buf.readUtf(1024),
+                    buf.readUtf(1024), buf.readUtf(1024), buf.readVarInt(), buf.readBoolean(), buf.readVarInt());
             String permission = buf.readUtf(128);
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
@@ -289,6 +289,7 @@ public final class NotchPacketsClient {
         buf.writeUtf(s.ambient());
         buf.writeVarInt(s.every());
         buf.writeBoolean(s.random());
+        buf.writeVarInt(s.listMode());
         NetClient.sendToServer(NotchPackets.NPC_SET_SOUNDS, buf);
     }
 

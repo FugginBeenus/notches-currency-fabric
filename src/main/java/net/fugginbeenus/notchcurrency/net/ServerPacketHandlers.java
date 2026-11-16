@@ -1065,7 +1065,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_SET_FLAVOR, (server, player, buf) -> {
             UUID id = buf.readUUID();
             String subtitle = buf.readUtf(64);
-            String voice = buf.readUtf(128);
+            String voice = buf.readUtf(1024);
             int pitch = buf.readVarInt();
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
@@ -1088,20 +1088,21 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_SOUNDS, (server, player, buf) -> {
             UUID id = buf.readUUID();
-            String voice = buf.readUtf(128);
+            String voice = buf.readUtf(1024);
             int pitch = buf.readVarInt();
-            String hurt = buf.readUtf(128);
-            String death = buf.readUtf(128);
-            String step = buf.readUtf(128);
-            String angry = buf.readUtf(128);
-            String ambient = buf.readUtf(128);
+            String hurt = buf.readUtf(1024);
+            String death = buf.readUtf(1024);
+            String step = buf.readUtf(1024);
+            String angry = buf.readUtf(1024);
+            String ambient = buf.readUtf(1024);
             int every = buf.readVarInt();
             boolean random = buf.readBoolean();
+            int listMode = buf.readVarInt();
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
                     net.fugginbeenus.notchcurrency.npc.NotchNpcManager.setSounds(player, npc, voice, pitch,
-                            hurt, death, step, angry, ambient, every, random);
+                            hurt, death, step, angry, ambient, every, random, listMode);
                 }
             });
         });

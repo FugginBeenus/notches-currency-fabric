@@ -83,6 +83,7 @@ public final class NotchNpcManager {
         buf.writeUtf(npc.getAmbientSoundId());
         buf.writeVarInt(npc.getAmbientEvery());
         buf.writeBoolean(npc.isAmbientRandom());
+        buf.writeVarInt(npc.getSoundListMode());
         buf.writeUtf(npc.getRequiredPermission());
         net.fugginbeenus.notchcurrency.net.AdminFlags.send(sp);
         Net.sendToClient(sp, NotchPackets.NPC_EDITOR_OPEN, buf);
@@ -582,28 +583,40 @@ public final class NotchNpcManager {
     }
 
     private static String validSound(ServerPlayer sp, String raw, String current) {
-        String cleaned = raw == null ? "" : raw.trim();
-        if (cleaned.isEmpty()) return "";
+        java.util.List<String> ids = NotchNpcEntity.soundIds(raw);
+        if (ids.isEmpty()) return "";
+        if (ids.size() > NotchNpcEntity.MAX_SOUNDS) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "A sound box holds up to " + NotchNpcEntity.MAX_SOUNDS + " sounds.").withStyle(ChatFormatting.RED));
+            return current;
+        }
+        for (String id : ids) {
+            if (!validSoundId(sp, id)) return current;
+        }
+        return String.join(", ", ids);
+    }
+
+    private static boolean validSoundId(ServerPlayer sp, String cleaned) {
         net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(cleaned);
         if (id == null) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
                     "'" + cleaned + "' is not a sound name.").withStyle(ChatFormatting.RED));
-            return current;
+            return false;
         }
-        if (net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(id)) return cleaned;
+        if (net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(id)) return true;
         if (id.getNamespace().equals("notchcurrency")
                 && net.fugginbeenus.notchcurrency.npcsound.NpcSoundStore.has(id.getPath())) {
-            return cleaned;
+            return true;
         }
         if (id.getNamespace().equals("minecraft")) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
                     "No sound called '" + cleaned + "'.").withStyle(ChatFormatting.RED));
-            return current;
+            return false;
         }
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
                 "'" + cleaned + "' is not built in. It plays only for players who have a resource pack with it.")
                 .withStyle(ChatFormatting.YELLOW));
-        return cleaned;
+        return true;
     }
 
     public static void setFlyCeiling(ServerPlayer sp, NotchNpcEntity npc, int y) {
@@ -613,7 +626,7 @@ public final class NotchNpcManager {
 
     public static void setSounds(ServerPlayer sp, NotchNpcEntity npc, String voice, int pitch,
                                  String hurt, String death, String step, String angry,
-                                 String ambient, int every, boolean random) {
+                                 String ambient, int every, boolean random, int listMode) {
         if (!guard(sp, npc)) return;
         npc.setVoice(validSound(sp, voice, npc.getVoice()));
         npc.setVoicePitchPercent(pitch);
@@ -624,20 +637,15 @@ public final class NotchNpcManager {
         npc.setAmbientSoundId(validSound(sp, ambient, npc.getAmbientSoundId()));
         npc.setAmbientEvery(every);
         npc.setAmbientRandom(random);
+        npc.setSoundListMode(listMode);
     }
 
     public static void setFlavor(ServerPlayer sp, NotchNpcEntity npc,
                                  String subtitle, String voice, int voicePitch) {
         if (!guard(sp, npc)) return;
         npc.setSubtitle(subtitle);
-        String cleaned = voice == null ? "" : voice.trim();
-        if (!cleaned.isEmpty()) {
-            net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(cleaned);
-            if (id == null || !net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(id)) {
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("No sound called '" + cleaned + "'.").withStyle(ChatFormatting.RED));
-                cleaned = npc.getVoice();
-            }
-        }
+        String cleaned = String.join(", ", NotchNpcEntity.soundIds(voice));
+        if (!cleaned.equals(npc.getVoice())) cleaned = validSound(sp, cleaned, npc.getVoice());
         npc.setVoice(cleaned);
         npc.setVoicePitchPercent(voicePitch);
         npc.playVoice();
