@@ -3,8 +3,6 @@ package net.fugginbeenus.notchcurrency.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fugginbeenus.notchcurrency.api.NotchNpcApi;
-import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShop;
-import net.fugginbeenus.notchcurrency.economy.adminshop.AdminShopState;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRole;
 import net.fugginbeenus.notchcurrency.economy.npc.NpcRoleState;
 import net.fugginbeenus.notchcurrency.npc.NpcPresetManager;
@@ -118,15 +116,7 @@ public final class NpcCommands {
                         .then(Commands.literal("raffle").executes(ctx -> setRole(ctx.getSource(), NpcRole.RAFFLE, null)))
                         .then(Commands.literal("bounty").executes(ctx -> setRole(ctx.getSource(), NpcRole.BOUNTY, null)))
                         .then(Commands.literal("dealer").executes(ctx -> setRole(ctx.getSource(), NpcRole.DEALER, null)))
-                        .then(Commands.literal("cosmetics").executes(ctx -> setRole(ctx.getSource(), NpcRole.COSMETICS, null)))
-                        .then(Commands.literal("adminshop")
-                                .then(Commands.argument("shop", StringArgumentType.greedyString())
-                                        .executes(ctx -> {
-                                            AdminShop shop = AdminShopState.get(ctx.getSource().getServer())
-                                                    .getByName(StringArgumentType.getString(ctx, "shop"));
-                                            if (shop == null) { ctx.getSource().sendFailure(Component.literal("No such admin shop.")); return 0; }
-                                            return setRole(ctx.getSource(), NpcRole.ADMIN_SHOP, shop.getId());
-                                        }))))
+                        .then(Commands.literal("cosmetics").executes(ctx -> setRole(ctx.getSource(), NpcRole.COSMETICS, null))))
                 .then(Commands.literal("clearrole")
                         .executes(ctx -> {
                             ServerPlayer p = ctx.getSource().getPlayer();
