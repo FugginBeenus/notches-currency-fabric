@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LEL",
+    "PBP",
+    "S S"
+  ],
+  "key": {
+    "L": {
+      "tag": "minecraft:logs"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "minecraft:book"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "notchcurrency:bounty_board",
+    "id": "notchcurrency:bounty_board",
+    "count": 1
+  }
+}

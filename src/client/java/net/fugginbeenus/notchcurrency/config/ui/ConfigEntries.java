@@ -90,6 +90,10 @@ final class ConfigEntries {
                 v -> cfg.bounty.enabled = v,
                 "Auto-generate rotating kill/deliver bounties from datapack pools.",
                 "A coin/item FAUCET. Rewards are created money."));
+        e.add(new BoolEntry(c, "Bounty boards in villages", cfg.bounty.villageBoards, true,
+                v -> cfg.bounty.villageBoards = v,
+                "Put one Bounty Board by the bell of each new village, modded ones too.",
+                "A board that gets broken does not come back."));
         e.add(new NumberEntry(c, "Live bounties on the board", cfg.bounty.activeCount, 5, 0, 20,
                 v -> cfg.bounty.activeCount = v.intValue(),
                 "How many generated bounties are available at once.",

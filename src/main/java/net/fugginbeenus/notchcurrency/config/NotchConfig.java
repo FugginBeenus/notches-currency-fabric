@@ -112,6 +112,7 @@ public final class NotchConfig {
 
     public static final class Bounty {
         public boolean enabled = true;
+        public boolean villageBoards = true;
         public int activeCount = 5;
         public int takeLimit = 3;
         public int durationMinutes = 30;

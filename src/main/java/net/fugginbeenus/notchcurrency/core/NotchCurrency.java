@@ -94,6 +94,7 @@ public class NotchCurrency implements ModInitializer {
         ShopRent.init();
         RaffleManager.init();
         BountyManager.init();
+        net.fugginbeenus.notchcurrency.economy.bounty.VillageBoards.init();
         net.fugginbeenus.notchcurrency.economy.loan.LoanManager.init();
         net.fugginbeenus.notchcurrency.economy.gambling.GamblingManager.init();
         NpcRoleInteractionHandler.register();
