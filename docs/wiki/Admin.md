@@ -118,6 +118,34 @@ members. Ops are locked in too, but these commands can move anyone, themselves i
 | `/faction admin bank <faction>` | admins | Show any faction's balance |
 | `/faction admin bank <faction> add\|take <amount>` | admins | Add to or take from a bank (no wallet involved) |
 
+**Faction Board.** A notice board for one faction's jobs. Craft one by putting any banner on top of a
+Bounty Board. Its cloth takes the faction's color.
+
+- A founder right-clicks a board with no faction to claim it for their faction.
+- An admin right-clicks a board with no faction and picks one from a list. On a claimed board, admins
+  press **Faction** at the bottom of its screen to change it.
+- Anyone can look at the board. Only members take jobs or post.
+- When the faction changes its color, its boards follow. When it is disbanded, they go back to white.
+
+The board shows two kinds of jobs:
+
+- **Faction quests** are quests set to **Show on: Faction Board** in the Quest Designer (see
+  [Quests](13.-Quests)). They show on every Faction Board, or only on one faction's boards if the
+  quest's **Who** names that faction.
+- **Requests** are jobs that members post with **Post**, like player bounties. They need **Player
+  bounties** on, and they show only on that faction's boards, never on a Bounty Board. The founder
+  and admins can switch **I pay** to **Bank pays** to pay the reward from the bank.
+
+With faction banks off, faction quests pay like any other quest. With faction banks on, the bank pays
+their coins:
+
+- Taking the job sets the coins aside. If the bank is short, the note says **BANK SHORT** and nobody
+  can take it.
+- Finishing the job pays the set-aside coins. Item rewards work as usual.
+- **Give up** on the board drops the job and puts the coins back. Leaving the faction does the same.
+- Disbanding the faction cancels its jobs and requests. The refunds go back first, then the bank pays
+  the founder.
+
 ### Admin Shops
 
 Admin shops have no commands of their own. Make one in game: give an NPC the **Shop** role, open its

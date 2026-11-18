@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A",
+    "B"
+  ],
+  "key": {
+    "A": {
+      "tag": "minecraft:banners"
+    },
+    "B": {
+      "item": "notchcurrency:bounty_board"
+    }
+  },
+  "result": {
+    "item": "notchcurrency:faction_board",
+    "id": "notchcurrency:faction_board",
+    "count": 1
+  }
+}

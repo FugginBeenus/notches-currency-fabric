@@ -11,6 +11,9 @@
     "notchcurrency:cherry_mailbox",
     "notchcurrency:bamboo_mailbox",
     "notchcurrency:crimson_mailbox",
-    "notchcurrency:warped_mailbox"
+    "notchcurrency:warped_mailbox",
+    "notchcurrency:bounty_board",
+    "notchcurrency:ledger_board",
+    "notchcurrency:faction_board"
   ]
 }

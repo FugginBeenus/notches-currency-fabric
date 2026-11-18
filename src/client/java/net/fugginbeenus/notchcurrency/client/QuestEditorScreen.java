@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 
 public class QuestEditorScreen extends Screen {
 
-    private static final int W = 300, H = 296;
+    private static final int W = 300, H = 316;
     private static final int LX = 12, FX = 96, FW = 150;
 
     public static java.util.UUID cameFromNpc = null;
@@ -25,6 +25,7 @@ public class QuestEditorScreen extends Screen {
     private boolean repeatable;
     private boolean handIn;
     private boolean factionOnly;
+    private boolean onBoard;
     private EditBox factionField;
     private EditBox rewardItemField;
     private EditBox rewardCountField;
@@ -54,6 +55,7 @@ public class QuestEditorScreen extends Screen {
             this.repeatable = existing.getBoolean("Repeatable");
             this.handIn = existing.getBoolean("HandIn");
             this.factionOnly = existing.getBoolean("FactionOnly") || !existing.getString("NeedsFaction").isBlank();
+            this.onBoard = existing.getBoolean("OnBoard");
             this.loadFaction = existing.getString("NeedsFaction");
             this.loadNext = existing.getString("NextQuest");
             if (existing.contains("RewardItem")) {
@@ -93,7 +95,7 @@ public class QuestEditorScreen extends Screen {
         rewardItemField = fieldAt(px + FX + 42, py + 128, 84, loadRewardItem, "item id");
         rewardCountField = fieldAt(px + FX + 130, py + 128, 24,
                 loadRewardCount <= 0 ? "" : Integer.toString(loadRewardCount), "1");
-        nextField = field(py + 236, FW - 44, loadNext, "quest that follows");
+        nextField = field(py + 256, FW - 44, loadNext, "quest that follows");
         radiusField = field(py + 108, 60, loadRadius(), "6");
         syncFields();
     }
@@ -201,11 +203,27 @@ public class QuestEditorScreen extends Screen {
         boolean endHover = over(mouseX, mouseY, px + FX + 78, py + 196, 72, 14);
         NotchWidgets.neutralButton(ctx, this.font, px + FX + 78, py + 196, 72, 14,
                 (handIn || forced) ? "Hand back" : "Pays now", endHover && !forced);
-        ctx.drawString(this.font, "Then:", px + LX, py + 240, NotchTheme.TEXT_DARK, false);
-        NotchWidgets.inset(ctx, px + FX, py + 236, FW - 44, 14, NotchTheme.DEEP);
-        NotchWidgets.neutralButton(ctx, this.font, px + FX + FW - 40, py + 236, 40, 14, "Pick",
-                over(mouseX, mouseY, px + FX + FW - 40, py + 236, 40, 14));
-        if (over(mouseX, mouseY, px + LX, py + 236, FX + FW - LX, 14)) {
+        ctx.drawString(this.font, "Show on:", px + LX, py + 240, NotchTheme.TEXT_DARK, false);
+        boolean showHover = over(mouseX, mouseY, px + FX, py + 236, 104, 14);
+        if (onBoard) {
+            NotchWidgets.primaryButton(ctx, this.font, px + FX, py + 236, 104, 14, "Faction Board", showHover);
+        } else {
+            NotchWidgets.neutralButton(ctx, this.font, px + FX, py + 236, 104, 14, "NPC", showHover);
+        }
+        ctx.drawString(this.font, "Then:", px + LX, py + 260, NotchTheme.TEXT_DARK, false);
+        NotchWidgets.inset(ctx, px + FX, py + 256, FW - 44, 14, NotchTheme.DEEP);
+        NotchWidgets.neutralButton(ctx, this.font, px + FX + FW - 40, py + 256, 40, 14, "Pick",
+                over(mouseX, mouseY, px + FX + FW - 40, py + 256, 40, 14));
+        if (showHover) {
+            ctx.renderComponentTooltip(this.font, java.util.List.of(
+                    Component.literal("Show on").withStyle(net.minecraft.ChatFormatting.WHITE),
+                    Component.literal("NPC: an NPC hands it out with a Give quest action.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Faction Board: members take it at a Faction Board.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Name a faction in Who to show it").withStyle(net.minecraft.ChatFormatting.DARK_GRAY),
+                    Component.literal("on that faction's boards only.").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                    mouseX, mouseY);
+        }
+        if (over(mouseX, mouseY, px + LX, py + 256, FX + FW - LX, 14)) {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Then").withStyle(net.minecraft.ChatFormatting.WHITE),
                     Component.literal("Name a quest and finishing this one hands it").withStyle(net.minecraft.ChatFormatting.GRAY),
@@ -234,8 +252,8 @@ public class QuestEditorScreen extends Screen {
             ctx.renderComponentTooltip(this.font, java.util.List.of(
                     Component.literal("Ends").withStyle(net.minecraft.ChatFormatting.WHITE),
                     Component.literal("On its own: pays the moment the goal is met.").withStyle(net.minecraft.ChatFormatting.GRAY),
-                    Component.literal("Hand it back: the player returns to an NPC with").withStyle(net.minecraft.ChatFormatting.GRAY),
-                    Component.literal("a Turn in quest action.").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Hand it back: the player turns it in at an NPC").withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("(Turn in quest action) or at a Faction Board.").withStyle(net.minecraft.ChatFormatting.GRAY),
                     forced ? Component.literal("Collect always hands back, so someone gets the items.")
                             .withStyle(net.minecraft.ChatFormatting.RED)
                             : Component.literal("").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
@@ -339,7 +357,12 @@ public class QuestEditorScreen extends Screen {
                 syncFields();
                 return true;
             }
-            if (over(mx, my, px + FX + FW - 40, py + 236, 40, 14)) {
+            if (over(mx, my, px + FX, py + 236, 104, 14)) {
+                NotchWidgets.click();
+                onBoard = !onBoard;
+                return true;
+            }
+            if (over(mx, my, px + FX + FW - 40, py + 256, 40, 14)) {
                 NotchWidgets.click();
                 nextField.setValue(nextQuestName(nextField.getValue()));
                 return true;
@@ -393,6 +416,7 @@ public class QuestEditorScreen extends Screen {
         o.putBoolean("Repeatable", repeatable);
         o.putBoolean("HandIn", handIn);
         o.putBoolean("FactionOnly", factionOnly);
+        o.putBoolean("OnBoard", onBoard);
         o.putString("NeedsFaction", factionOnly ? factionField.getValue().trim() : "");
         o.putLong("Expires", 0L);
         o.putString("Desc", descField.getValue().trim());

@@ -181,9 +181,10 @@ public final class ServerPacketHandlers {
             String mob = buf.readUtf(128);
             int amount = buf.readVarInt();
             long coins = buf.readVarLong();
+            boolean fromBank = buf.readBoolean();
             server.execute(() -> {
                 if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.economy.bounty.BountyPostScreenHandler h) {
-                    net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.post(player, h, type, mob, amount, coins);
+                    net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.post(player, h, type, mob, amount, coins, fromBank);
                 }
             });
         });
@@ -479,6 +480,23 @@ public final class ServerPacketHandlers {
                     } else {
                         net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.pick(player, npc, action, factionId);
                     }
+                }
+            });
+        });
+
+        Net.registerServerReceiver(NotchPackets.FACTION_BOARD_LINK, (server, player, buf) -> {
+            net.minecraft.core.BlockPos pos = buf.readBlockPos();
+            String factionId = buf.readUtf(32);
+            server.execute(() -> net.fugginbeenus.notchcurrency.npc.faction.FactionBoards.link(player, pos, factionId));
+        });
+
+        Net.registerServerReceiver(NotchPackets.FACTION_BOARD_ACTION, (server, player, buf) -> {
+            UUID questId = buf.readUUID();
+            int action = buf.readVarInt();
+            server.execute(() -> {
+                if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.economy.bounty.FactionBoardScreenHandler h
+                        && h.board() != null) {
+                    net.fugginbeenus.notchcurrency.npc.faction.FactionBoards.act(player, h.board(), questId, action);
                 }
             });
         });

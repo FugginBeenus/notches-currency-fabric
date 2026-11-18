@@ -70,7 +70,7 @@ public final class FactionManager {
             return null;
         }
 
-        state.join(sp.getUUID(), id);
+        changeMembership(sp.level().getServer(), sp.getUUID(), id);
         msg(sp, "Founded " + faction.displayName() + ".", ChatFormatting.GREEN);
         return faction;
     }
@@ -86,6 +86,8 @@ public final class FactionManager {
             msg(sp, "That isn't your faction to disband.", ChatFormatting.RED);
             return false;
         }
+        FactionBoards.dropAllJobs(sp.level().getServer(), factionId);
+        net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.takeDownFactionPosts(sp.level().getServer(), factionId);
         net.fugginbeenus.notchcurrency.economy.FactionBank.payOutOnDisband(sp.level().getServer(), faction, sp);
         clearFromNpcs(sp.level().getServer(), factionId);
         state.remove(factionId);
@@ -129,7 +131,7 @@ public final class FactionManager {
                         sp.getName().getString());
             }
         }
-        state.join(sp.getUUID(), factionId);
+        changeMembership(sp.level().getServer(), sp.getUUID(), factionId);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You joined ")
                 .withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(faction.displayName()).withStyle(faction.color()))
@@ -153,8 +155,20 @@ public final class FactionManager {
             msg(sp, permanent(sp), ChatFormatting.RED);
             return;
         }
-        state.leave(sp.getUUID());
+        changeMembership(sp.level().getServer(), sp.getUUID(), null);
         msg(sp, "You left " + faction.displayName() + ".", ChatFormatting.YELLOW);
+    }
+
+    public static void changeMembership(net.minecraft.server.MinecraftServer server, java.util.UUID player,
+                                        @Nullable String newFactionId) {
+        FactionState state = FactionState.get(server);
+        String old = state.factionIdOf(player);
+        if (old != null && !old.equals(newFactionId)) FactionBoards.dropJobs(server, player, old);
+        if (newFactionId == null) {
+            state.leave(player);
+        } else {
+            state.join(player, newFactionId);
+        }
     }
 
     public static boolean sameFaction(@Nullable String a, @Nullable String b) {

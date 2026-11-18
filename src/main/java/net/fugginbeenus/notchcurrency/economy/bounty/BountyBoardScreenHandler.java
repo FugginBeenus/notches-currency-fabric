@@ -30,21 +30,25 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
     public static final int P_CAN_POST = 3;
     private static final int PROP_COUNT = 4;
 
-    private int page = 0;
+    protected int page = 0;
 
-    private final Inventory playerInv;
+    protected final Inventory playerInv;
     private final Level world;
-    private final SimpleContainer boardInv = new SimpleContainer(OFFER_SLOTS + TAKEN_SLOTS);
-    private final ContainerData props = new SimpleContainerData(PROP_COUNT);
+    protected final SimpleContainer boardInv = new SimpleContainer(OFFER_SLOTS + TAKEN_SLOTS);
+    protected final ContainerData props = new SimpleContainerData(PROP_COUNT);
 
-    private static final class ReadOnlySlot extends Slot {
+    static final class ReadOnlySlot extends Slot {
         ReadOnlySlot(Container inv, int i, int x, int y) { super(inv, i, x, y); }
         @Override public boolean mayPlace(ItemStack s) { return false; }
         @Override public boolean mayPickup(Player p) { return false; }
     }
 
     public BountyBoardScreenHandler(int containerId, Inventory inv) {
-        super(ModScreenHandlers.BOUNTY_BOARD, containerId);
+        this(ModScreenHandlers.BOUNTY_BOARD, containerId, inv);
+    }
+
+    protected BountyBoardScreenHandler(net.minecraft.world.inventory.MenuType<?> type, int containerId, Inventory inv) {
+        super(type, containerId);
         this.playerInv = inv;
         this.world = inv.player.level();
         this.addDataSlots(props);
@@ -66,7 +70,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         return props.get(i);
     }
 
-    private void refresh() {
+    protected void refresh() {
         if (!(world instanceof ServerLevel)) return;
         if (!(playerInv.player instanceof ServerPlayer sp) || sp.level().getServer() == null) return;
         BountyState state = BountyState.get(sp.level().getServer());
@@ -77,7 +81,7 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
 
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
-            if (b.isQuest()) continue;
+            if (b.isQuest() || b.isFactionPost()) continue;
             if (b.isExpired(now) || state.hasTaken(sp.getUUID(), b.getId())
                     || state.hasCompletedOffer(sp.getUUID(), b.getId())) continue;
             if (b.isPosted() && state.reservedBy(b.getId()) != null) continue;
@@ -101,14 +105,14 @@ public class BountyBoardScreenHandler extends AbstractContainerMenu {
         List<TakenBounty> mine = state.getTakenAll(sp.getUUID());
         int t = 0;
         for (TakenBounty tb : mine) {
-            if (tb.bounty().isQuest()) continue;
+            if (tb.bounty().isQuest() || tb.bounty().isFactionPost()) continue;
             if (t >= TAKEN_SLOTS) break;
             boardInv.setItem(OFFER_SLOTS + t++, display(tb.bounty(), true, tb.progress(), tb.expiresGameTime(), sp.getUUID()));
         }
         while (t < TAKEN_SLOTS) boardInv.setItem(OFFER_SLOTS + t++, ItemStack.EMPTY);
     }
 
-    private static ItemStack display(Bounty b, boolean mine, int progress, long expiry, java.util.UUID viewer) {
+    protected static ItemStack display(Bounty b, boolean mine, int progress, long expiry, java.util.UUID viewer) {
         ItemStack carrier = !b.getRewardItem().isEmpty() ? b.getRewardItem().copy() : new ItemStack(ModItems.NOTCH_COIN);
         CompoundTag t = StackData.editData(carrier);
         net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(t, "bid", b.getId());

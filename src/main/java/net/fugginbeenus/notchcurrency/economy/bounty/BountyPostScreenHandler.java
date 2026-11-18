@@ -16,13 +16,26 @@ public class BountyPostScreenHandler extends AbstractContainerMenu {
     public static final int INV_X = 20, INV_Y = 134, HOTBAR_Y = 192;
 
     private final SimpleContainer held = new SimpleContainer(2);
-    private final net.minecraft.world.inventory.ContainerData flags = new net.minecraft.world.inventory.SimpleContainerData(1);
+    public static final int KIND_BOUNTY = 0, KIND_REQUEST = 1, KIND_REQUEST_BANK = 2;
+    private final net.minecraft.world.inventory.ContainerData flags = new net.minecraft.world.inventory.SimpleContainerData(2);
+    @org.jetbrains.annotations.Nullable
+    private final net.minecraft.core.BlockPos board;
+    @org.jetbrains.annotations.Nullable
+    private final String factionId;
     private boolean fetchMode;
 
     public BountyPostScreenHandler(int containerId, Inventory inv) {
+        this(containerId, inv, null, null, false);
+    }
+
+    public BountyPostScreenHandler(int containerId, Inventory inv, @org.jetbrains.annotations.Nullable net.minecraft.core.BlockPos board,
+                                   @org.jetbrains.annotations.Nullable String factionId, boolean bankOption) {
         super(ModScreenHandlers.BOUNTY_POST, containerId);
+        this.board = board;
+        this.factionId = factionId;
         addDataSlots(flags);
         if (inv.player instanceof ServerPlayer sp && BountyManager.pvpAllowed(sp)) flags.set(0, 1);
+        flags.set(1, factionId == null ? KIND_BOUNTY : bankOption ? KIND_REQUEST_BANK : KIND_REQUEST);
         addSlot(new Slot(held, 0, SAMPLE_X, SAMPLE_Y) {
             @Override
             public boolean isActive() {
@@ -49,6 +62,20 @@ public class BountyPostScreenHandler extends AbstractContainerMenu {
         return flags.get(0) == 1;
     }
 
+    public int kind() {
+        return flags.get(1);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public net.minecraft.core.BlockPos board() {
+        return board;
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public String factionId() {
+        return factionId;
+    }
+
     public void setFetchMode(boolean on) {
         this.fetchMode = on;
     }
@@ -68,7 +95,11 @@ public class BountyPostScreenHandler extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (id != 0 || !(player instanceof ServerPlayer sp)) return false;
-        BountyManager.openScreen(sp);
+        if (board != null) {
+            net.fugginbeenus.notchcurrency.npc.faction.FactionBoards.use(sp, board);
+        } else {
+            BountyManager.openScreen(sp);
+        }
         return true;
     }
 

@@ -207,7 +207,16 @@ public final class QuestManager {
     }
 
     private static void payOut(ServerPlayer player, Bounty q, BountyState state) {
-        BountyManager.giveReward(player, q);
+        TakenBounty held = state.getTaken(player.getUUID(), q.getId());
+        if (held != null && held.held() > 0) {
+            net.fugginbeenus.notchcurrency.api.CurrencyApi.deposit(player, held.held(),
+                    net.fugginbeenus.notchcurrency.economy.TransactionReason.FACTION, "job: " + q.describe());
+            if (!q.getRewardItem().isEmpty()) {
+                net.fugginbeenus.notchcurrency.compat.Give.placeBack(player, q.getRewardItem().copy());
+            }
+        } else {
+            BountyManager.giveReward(player, q);
+        }
         state.removeTaken(player.getUUID(), q.getId());
         state.markOfferCompleted(player.getUUID(), q.getId());
         JUST_SETTLED.put(java.util.UUID.nameUUIDFromBytes(

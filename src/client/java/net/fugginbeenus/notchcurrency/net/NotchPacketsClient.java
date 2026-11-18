@@ -932,8 +932,46 @@ public final class NotchPacketsClient {
                         id, name, color == null ? net.minecraft.ChatFormatting.WHITE : color, members));
             }
             client.execute(() -> Minecraft.getInstance().setScreen(
-                    new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen(npcId, currentId, entries)));
+                    new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen(
+                            "Who this NPC stands with.", "Back", currentId, entries,
+                            id -> sendFactionPick(npcId, net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_SET, id),
+                            () -> sendFactionPick(npcId, net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager.PICK_CLEAR, ""),
+                            () -> sendNpcEditorReopen(npcId, 2))));
         });
+        NetClient.registerClientReceiver(NotchPackets.FACTION_BOARD_PICKER, (client, buf) -> {
+            net.minecraft.core.BlockPos pos = buf.readBlockPos();
+            String currentId = buf.readUtf();
+            int count = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen.Entry> entries =
+                    new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                String id = buf.readUtf();
+                String name = buf.readUtf();
+                net.minecraft.ChatFormatting color = net.fugginbeenus.notchcurrency.compat.Colors.byName(buf.readUtf());
+                int members = buf.readVarInt();
+                entries.add(new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen.Entry(
+                        id, name, color == null ? net.minecraft.ChatFormatting.WHITE : color, members));
+            }
+            client.execute(() -> Minecraft.getInstance().setScreen(
+                    new net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen(
+                            "Who this board belongs to.", "Close", currentId, entries,
+                            id -> {
+                                sendFactionBoardLink(pos, id);
+                                Minecraft.getInstance().setScreen(null);
+                            },
+                            () -> {
+                                sendFactionBoardLink(pos, "");
+                                Minecraft.getInstance().setScreen(null);
+                            },
+                            () -> Minecraft.getInstance().setScreen(null))));
+        });
+    }
+
+    public static void sendFactionBoardLink(net.minecraft.core.BlockPos pos, String factionId) {
+        FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
+        buf.writeBlockPos(pos);
+        buf.writeUtf(factionId);
+        NetClient.sendToServer(NotchPackets.FACTION_BOARD_LINK, buf);
     }
 
     public static void sendRecruiterAction(UUID npcId, int action, String name, String color,
@@ -1040,12 +1078,13 @@ public final class NotchPacketsClient {
         NetClient.sendToServer(NotchPackets.NPC_SET_NAME, buf);
     }
 
-    public static void sendBountyPost(int type, String mob, int amount, long coins) {
+    public static void sendBountyPost(int type, String mob, int amount, long coins, boolean fromBank) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeVarInt(type);
         buf.writeUtf(mob);
         buf.writeVarInt(amount);
         buf.writeVarLong(coins);
+        buf.writeBoolean(fromBank);
         NetClient.sendToServer(NotchPackets.BOUNTY_POST, buf);
     }
 

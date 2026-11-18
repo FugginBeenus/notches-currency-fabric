@@ -34,6 +34,7 @@ public class BountyPostScreen extends AbstractContainerScreen<BountyPostScreenHa
     private static final List<String> MOB_NAMES = new ArrayList<>();
 
     private int mode;
+    private boolean fromBank;
     private EditBox amountField;
     private EditBox coinsField;
     private EditBox targetField;
@@ -182,6 +183,10 @@ public class BountyPostScreen extends AbstractContainerScreen<BountyPostScreenHa
 
         NotchWidgets.neutralButton(ctx, this.font, x + 20, y + BTN_Y, 40, 14, "Back", over(mouseX, mouseY, x + 20, y + BTN_Y, 40, 14));
         NotchWidgets.primaryButton(ctx, this.font, x + 124, y + BTN_Y, 48, 14, "Post", over(mouseX, mouseY, x + 124, y + BTN_Y, 48, 14));
+        if (menu.kind() == BountyPostScreenHandler.KIND_REQUEST_BANK) {
+            NotchWidgets.neutralButton(ctx, this.font, x + 63, y + BTN_Y, 58, 14, fromBank ? "Bank pays" : "I pay",
+                    over(mouseX, mouseY, x + 63, y + BTN_Y, 58, 14));
+        }
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -192,7 +197,8 @@ public class BountyPostScreen extends AbstractContainerScreen<BountyPostScreenHa
         for (int col = 0; col < 9; col++) {
             NotchWidgets.slot(ctx, x + BountyPostScreenHandler.INV_X + col * 18 - 1, y + BountyPostScreenHandler.HOTBAR_Y - 1);
         }
-        NotchWidgets.title(ctx, this.font, "Post a Bounty", x + W / 2, y + 8, NotchWidgets.Plate.PARCHMENT);
+        NotchWidgets.title(ctx, this.font, menu.kind() == BountyPostScreenHandler.KIND_BOUNTY ? "Post a Bounty" : "Post a Request",
+                x + W / 2, y + 8, NotchWidgets.Plate.PARCHMENT);
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
@@ -282,9 +288,15 @@ public class BountyPostScreen extends AbstractContainerScreen<BountyPostScreenHa
                 this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0);
                 return true;
             }
+            if (menu.kind() == BountyPostScreenHandler.KIND_REQUEST_BANK && over(mx, my, x + 63, y + BTN_Y, 58, 14)) {
+                NotchWidgets.click();
+                fromBank = !fromBank;
+                return true;
+            }
             if (over(mx, my, x + 124, y + BTN_Y, 48, 14)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendBountyPost(mode, wanted(), (int) Math.min(999, parse(amountField)), parse(coinsField));
+                NotchPacketsClient.sendBountyPost(mode, wanted(), (int) Math.min(999, parse(amountField)), parse(coinsField),
+                        fromBank && menu.kind() == BountyPostScreenHandler.KIND_REQUEST_BANK);
                 return true;
             }
         }

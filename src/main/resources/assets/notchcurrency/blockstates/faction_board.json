@@ -1,0 +1,274 @@
+{
+  "variants": {
+    "color=none,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/none"
+    },
+    "color=black,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/black"
+    },
+    "color=dark_blue,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_blue"
+    },
+    "color=dark_green,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_green"
+    },
+    "color=dark_aqua,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_aqua"
+    },
+    "color=dark_red,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_red"
+    },
+    "color=dark_purple,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_purple"
+    },
+    "color=gold,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/gold"
+    },
+    "color=gray,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/gray"
+    },
+    "color=dark_gray,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_gray"
+    },
+    "color=blue,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/blue"
+    },
+    "color=green,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/green"
+    },
+    "color=aqua,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/aqua"
+    },
+    "color=red,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/red"
+    },
+    "color=light_purple,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/light_purple"
+    },
+    "color=yellow,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/yellow"
+    },
+    "color=white,facing=north,half=lower": {
+      "model": "notchcurrency:block/faction_board/white"
+    },
+    "color=none,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/none",
+      "y": 90
+    },
+    "color=black,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/black",
+      "y": 90
+    },
+    "color=dark_blue,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_blue",
+      "y": 90
+    },
+    "color=dark_green,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_green",
+      "y": 90
+    },
+    "color=dark_aqua,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_aqua",
+      "y": 90
+    },
+    "color=dark_red,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_red",
+      "y": 90
+    },
+    "color=dark_purple,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_purple",
+      "y": 90
+    },
+    "color=gold,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/gold",
+      "y": 90
+    },
+    "color=gray,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/gray",
+      "y": 90
+    },
+    "color=dark_gray,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_gray",
+      "y": 90
+    },
+    "color=blue,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/blue",
+      "y": 90
+    },
+    "color=green,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/green",
+      "y": 90
+    },
+    "color=aqua,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/aqua",
+      "y": 90
+    },
+    "color=red,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/red",
+      "y": 90
+    },
+    "color=light_purple,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/light_purple",
+      "y": 90
+    },
+    "color=yellow,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/yellow",
+      "y": 90
+    },
+    "color=white,facing=east,half=lower": {
+      "model": "notchcurrency:block/faction_board/white",
+      "y": 90
+    },
+    "color=none,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/none",
+      "y": 180
+    },
+    "color=black,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/black",
+      "y": 180
+    },
+    "color=dark_blue,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_blue",
+      "y": 180
+    },
+    "color=dark_green,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_green",
+      "y": 180
+    },
+    "color=dark_aqua,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_aqua",
+      "y": 180
+    },
+    "color=dark_red,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_red",
+      "y": 180
+    },
+    "color=dark_purple,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_purple",
+      "y": 180
+    },
+    "color=gold,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/gold",
+      "y": 180
+    },
+    "color=gray,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/gray",
+      "y": 180
+    },
+    "color=dark_gray,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_gray",
+      "y": 180
+    },
+    "color=blue,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/blue",
+      "y": 180
+    },
+    "color=green,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/green",
+      "y": 180
+    },
+    "color=aqua,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/aqua",
+      "y": 180
+    },
+    "color=red,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/red",
+      "y": 180
+    },
+    "color=light_purple,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/light_purple",
+      "y": 180
+    },
+    "color=yellow,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/yellow",
+      "y": 180
+    },
+    "color=white,facing=south,half=lower": {
+      "model": "notchcurrency:block/faction_board/white",
+      "y": 180
+    },
+    "color=none,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/none",
+      "y": 270
+    },
+    "color=black,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/black",
+      "y": 270
+    },
+    "color=dark_blue,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_blue",
+      "y": 270
+    },
+    "color=dark_green,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_green",
+      "y": 270
+    },
+    "color=dark_aqua,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_aqua",
+      "y": 270
+    },
+    "color=dark_red,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_red",
+      "y": 270
+    },
+    "color=dark_purple,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_purple",
+      "y": 270
+    },
+    "color=gold,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/gold",
+      "y": 270
+    },
+    "color=gray,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/gray",
+      "y": 270
+    },
+    "color=dark_gray,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/dark_gray",
+      "y": 270
+    },
+    "color=blue,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/blue",
+      "y": 270
+    },
+    "color=green,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/green",
+      "y": 270
+    },
+    "color=aqua,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/aqua",
+      "y": 270
+    },
+    "color=red,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/red",
+      "y": 270
+    },
+    "color=light_purple,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/light_purple",
+      "y": 270
+    },
+    "color=yellow,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/yellow",
+      "y": 270
+    },
+    "color=white,facing=west,half=lower": {
+      "model": "notchcurrency:block/faction_board/white",
+      "y": 270
+    },
+    "facing=north,half=upper": {
+      "model": "notchcurrency:block/bounty_board_upper"
+    },
+    "facing=east,half=upper": {
+      "model": "notchcurrency:block/bounty_board_upper",
+      "y": 90
+    },
+    "facing=south,half=upper": {
+      "model": "notchcurrency:block/bounty_board_upper",
+      "y": 180
+    },
+    "facing=west,half=upper": {
+      "model": "notchcurrency:block/bounty_board_upper",
+      "y": 270
+    }
+  }
+}

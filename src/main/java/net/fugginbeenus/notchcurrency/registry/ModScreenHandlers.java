@@ -23,6 +23,7 @@ public final class ModScreenHandlers {
     public static MenuType<RaffleAdminScreenHandler> RAFFLE_ADMIN;
     public static MenuType<AuctionListingScreenHandler> AUCTION_LISTING;
     public static MenuType<BountyBoardScreenHandler> BOUNTY_BOARD;
+    public static MenuType<net.fugginbeenus.notchcurrency.economy.bounty.FactionBoardScreenHandler> FACTION_BOARD;
     public static MenuType<BountyAdminScreenHandler> BOUNTY_ADMIN;
     public static MenuType<net.fugginbeenus.notchcurrency.economy.loan.LoanScreenHandler> LOAN;
     public static MenuType<net.fugginbeenus.notchcurrency.economy.gambling.SlotMachineScreenHandler> SLOT_MACHINE;
@@ -83,6 +84,11 @@ public final class ModScreenHandlers {
         BOUNTY_BOARD = simple(
                 NotchCurrency.id("bounty_board"),
                 BountyBoardScreenHandler::new
+        );
+
+        FACTION_BOARD = simple(
+                NotchCurrency.id("faction_board"),
+                net.fugginbeenus.notchcurrency.economy.bounty.FactionBoardScreenHandler::new
         );
 
         BOUNTY_ADMIN = simple(

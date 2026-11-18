@@ -118,6 +118,10 @@ public class BountyState extends SavedData implements net.fugginbeenus.notchcurr
         return m == null ? new ArrayList<>() : new ArrayList<>(m.values());
     }
 
+    public Set<UUID> playersWithTaken() {
+        return new HashSet<>(taken.keySet());
+    }
+
     public void removeTaken(UUID player, UUID offerId) {
         Map<UUID, TakenBounty> m = taken.get(player);
         if (m != null && m.remove(offerId) != null) setDirty();

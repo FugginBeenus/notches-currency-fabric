@@ -147,7 +147,7 @@ public final class FactionCommands {
             source.sendFailure(Component.literal("No faction by that name."));
             return 0;
         }
-        state.join(target.getUUID(), faction.id());
+        net.fugginbeenus.notchcurrency.npc.faction.FactionManager.changeMembership(source.getServer(), target.getUUID(), faction.id());
         String name = target.getName().getString();
         source.sendSuccess(() -> Component.literal("Moved " + name + " to ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(faction.displayName()).withStyle(faction.color())), true);
@@ -167,7 +167,7 @@ public final class FactionCommands {
             source.sendFailure(Component.literal(name + " isn't with a faction."));
             return 0;
         }
-        state.leave(target.getUUID());
+        net.fugginbeenus.notchcurrency.npc.faction.FactionManager.changeMembership(source.getServer(), target.getUUID(), null);
         source.sendSuccess(() -> Component.literal("Removed " + name + " from ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(faction.displayName()).withStyle(faction.color())), true);
         if (source.getEntity() != target) {

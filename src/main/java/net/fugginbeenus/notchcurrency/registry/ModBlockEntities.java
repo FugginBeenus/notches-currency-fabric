@@ -20,6 +20,12 @@ public final class ModBlockEntities {
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("ledger_board"),
                     FabricBlockEntityTypeBuilder.create(LedgerBoardBlockEntity::new, ModBlocks.LEDGER_BOARD).build());
 
+    public static final BlockEntityType<net.fugginbeenus.notchcurrency.block.entity.FactionBoardBlockEntity> FACTION_BOARD =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("faction_board"),
+                    FabricBlockEntityTypeBuilder.create(
+                            net.fugginbeenus.notchcurrency.block.entity.FactionBoardBlockEntity::new,
+                            ModBlocks.FACTION_BOARD).build());
+
     public static final BlockEntityType<CoinFlipBlockEntity> COIN_FLIP =
             Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, NotchCurrency.id("coin_flip"),
                     FabricBlockEntityTypeBuilder.create(CoinFlipBlockEntity::new, ModBlocks.COIN_FLIP).build());

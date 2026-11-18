@@ -147,6 +147,15 @@ public final class FactionBank {
         }
     }
 
+    public static boolean hold(MinecraftServer server, Faction faction, long amount, String detail) {
+        return amount > 0 && take(server, faction, amount, detail);
+    }
+
+    public static void giveBack(MinecraftServer server, String factionId, long amount, String detail) {
+        if (amount <= 0 || factionId == null || factionId.isEmpty()) return;
+        BalanceStore.add(server, account(factionId), amount, TransactionReason.FACTION, detail);
+    }
+
     private static boolean take(MinecraftServer server, Faction faction, long amount, String detail) {
         if (balance(server, faction) < amount) return false;
         BalanceStore.add(server, account(faction.id()), -amount, TransactionReason.FACTION, detail);

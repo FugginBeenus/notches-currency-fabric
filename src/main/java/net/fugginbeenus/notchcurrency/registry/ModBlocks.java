@@ -110,6 +110,22 @@ public final class ModBlocks {
             new BlockItem(BOUNTY_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("bounty_board"))
     );
 
+    public static final Block FACTION_BOARD = Registry.register(
+            BuiltInRegistries.BLOCK,
+            NotchCurrency.id("faction_board"),
+            new net.fugginbeenus.notchcurrency.block.FactionBoardBlock(
+                    net.fugginbeenus.notchcurrency.compat.Reg.blockProps("faction_board")
+                    .strength(2.0f)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion())
+    );
+
+    public static final Item FACTION_BOARD_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            NotchCurrency.id("faction_board"),
+            new BlockItem(FACTION_BOARD, net.fugginbeenus.notchcurrency.compat.Reg.blockItemProps("faction_board"))
+    );
+
     public static final Block SLOT_MACHINE = Registry.register(
             BuiltInRegistries.BLOCK,
             NotchCurrency.id("slot_machine"),

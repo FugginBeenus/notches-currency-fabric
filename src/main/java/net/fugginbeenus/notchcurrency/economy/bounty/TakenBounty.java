@@ -8,6 +8,8 @@ public class TakenBounty {
     private final long expiresGameTime;
     private int progress;
     private String giver = "";
+    private String boardFaction = "";
+    private long held;
 
     public TakenBounty(Bounty bounty, long expiresGameTime, int progress) {
         this.bounty = bounty;
@@ -20,6 +22,13 @@ public class TakenBounty {
     public int progress() { return progress; }
     public String giver() { return giver; }
     public void setGiver(String name) { this.giver = name == null ? "" : name; }
+    public String boardFaction() { return boardFaction; }
+    public long held() { return held; }
+
+    public void setBoard(String faction, long coins) {
+        this.boardFaction = faction == null ? "" : faction;
+        this.held = Math.max(0L, coins);
+    }
 
     public int addProgress(int amount) {
         progress = Math.min(bounty.getRequired(), progress + amount);
@@ -40,6 +49,8 @@ public class TakenBounty {
         o.putLong("Expires", expiresGameTime);
         o.putInt("Progress", progress);
         if (!giver.isEmpty()) o.putString("Giver", giver);
+        if (!boardFaction.isEmpty()) o.putString("BoardFaction", boardFaction);
+        if (held > 0) o.putLong("Held", held);
         return o;
     }
 
@@ -47,6 +58,7 @@ public class TakenBounty {
         TakenBounty tb = new TakenBounty(Bounty.fromNbt(o.getCompound("Bounty")),
                 o.getLong("Expires"), o.getInt("Progress"));
         tb.setGiver(o.getString("Giver"));
+        tb.setBoard(o.getString("BoardFaction"), o.getLong("Held"));
         return tb;
     }
 }

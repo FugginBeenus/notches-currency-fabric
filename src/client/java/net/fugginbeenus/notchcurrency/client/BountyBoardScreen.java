@@ -29,11 +29,11 @@ import java.util.UUID;
 
 public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreenHandler> {
 
-    private static final int W = 240, H = 290;
-    private static final int CORK_X = 5, CORK_W = 230, TOP_Y = 5, TOP_H = 146, LOW_Y = 157, LOW_H = 128;
+    protected static final int W = 240, H = 290;
+    protected static final int CORK_X = 5, CORK_W = 230, TOP_Y = 5, TOP_H = 146, LOW_Y = 157, LOW_H = 128;
     private static final int TAKEN_Y = 169, ROW_W = 220;
     private static final int BTN_W = 48, BTN_H = 14;
-    private static final int PG_LX = 88, PG_RX = 134, PG_Y = 270, PG_BW = 18, PG_H = 14;
+    protected static final int PG_LX = 88, PG_RX = 134, PG_Y = 270, PG_BW = 18, PG_H = 14;
     private static final int POST_X = 188, POST_Y = 7, POST_W = 44, POST_H = 14;
     private static final long SLIDE_MS = 380L, SETTLE_MS = 1400L, ROW_SALT = 0x5DEECE66DL;
     private static final int[] ROW_OFF = {0, 1, -1, 1, 0};
@@ -83,7 +83,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         for (int i = 0; i < shown.length; i++) shown[i] = menu.offerStack(i);
 
         drawBoard(ctx, x, y);
-        BoardArt.label(ctx, "Available", x + 12, y + 11);
+        BoardArt.label(ctx, offersLabel(), x + 12, y + 11);
         if (canPost()) {
             NotchWidgets.neutralButton(ctx, this.font, x + POST_X, y + POST_Y, POST_W, POST_H, "Post",
                     over(mouseX, mouseY, x + POST_X, y + POST_Y, POST_W, POST_H));
@@ -95,7 +95,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                     over(mouseX, mouseY, x + PG_RX, y + PG_Y, PG_BW, PG_H));
         }
 
-        boolean full = countTaken() >= menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT);
+        boolean full = isFull();
         long u = now - slideT0;
         ctx.enableScissor(x + CORK_X, y + TOP_Y, x + CORK_X + CORK_W, y + TOP_Y + TOP_H);
         if (slid && u < SLIDE_MS) {
@@ -114,26 +114,27 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                 drawNote(ctx, n, hover, full, swing(now, n.index(), page));
             }
             if (notes.isEmpty()) {
-                NotchWidgets.centerText(ctx, this.font, "All done - check back later!",
+                NotchWidgets.centerText(ctx, this.font, emptyText(),
                         x + W / 2, y + TOP_Y + TOP_H / 2 - 4, LABEL, true);
             }
         }
         ctx.disableScissor();
 
-        String yours = "Your bounties " + countTaken() + "/" + menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT);
+        String yours = yoursLabel();
         BoardArt.label(ctx, yours, x + 12, y + LOW_Y + 5);
         NotchWidgets.badge(ctx, this.font, x + 16 + NotchWidgets.smallCapsWidth(yours), y + LOW_Y + 3, countReady());
         for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
             drawTakenRow(ctx, i, menu.takenStack(i), mouseX, mouseY);
         }
-        NotchWidgets.title(ctx, this.font, "Bounty Board", x + W / 2, y + 8, NotchWidgets.Plate.PARCHMENT);
+        drawExtras(ctx, x, y, mouseX, mouseY);
+        drawTitle(ctx, x, y);
         //? if >=26.1 {
         /*
         super.extractContents(ctx, mouseX, mouseY, delta);
         *///?}
     }
 
-    private int countTaken() {
+    protected int countTaken() {
         int n = 0;
         for (int i = 0; i < BountyBoardScreenHandler.TAKEN_SLOTS; i++) {
             if (!menu.takenStack(i).isEmpty()) n++;
@@ -147,7 +148,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             ItemStack s = menu.takenStack(i);
             if (s.isEmpty() || !StackData.hasData(s)) continue;
             CompoundTag t = StackData.getData(s);
-            if ("KILL".equals(t.getString("typ")) && t.getInt("prog") >= t.getInt("req")) n++;
+            if (rowReady(t)) n++;
         }
         return n;
     }
@@ -311,8 +312,8 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         }
         String left = timeLeft(t.getLong("exp"));
         if (!left.isEmpty()) ctx.drawString(this.font, left, x + w - 19 - this.font.width(left), y + h - 14, sheet.faint, false);
-        boolean own = t.getBoolean("own");
-        if (hover) stamp(ctx, x + w / 2, y + h / 2, own ? "TAKE DOWN" : full ? "FULL" : "TAKE", own || full);
+        String mark = stampText(t, full);
+        if (hover) stamp(ctx, x + w / 2, y + h / 2, mark, !"TAKE".equals(mark));
         Render.popGui(ctx);
         BoardArt.pin(ctx, pin, y + 2);
     }
@@ -369,17 +370,22 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             ctx.drawString(this.font, task, textX, line, sheet.ink, false);
         }
 
-        if (kill && prog < req) {
+        String btn = rowButton(t);
+        if (btn == null) {
             String left = timeLeft(t.getLong("exp"));
             if (!left.isEmpty()) ctx.drawString(this.font, left, nx + ROW_W - 19 - this.font.width(left), line, sheet.faint, false);
         } else {
             boolean hov = over(mouseX, mouseY, btnX, buttonY(i), BTN_W, BTN_H);
-            NotchWidgets.primaryButton(ctx, this.font, btnX, buttonY(i), BTN_W, BTN_H, kill ? "Collect" : "Turn in", hov);
+            if (rowDanger(t)) {
+                NotchWidgets.dangerButton(ctx, this.font, btnX, buttonY(i), BTN_W, BTN_H, btn, hov);
+            } else {
+                NotchWidgets.primaryButton(ctx, this.font, btnX, buttonY(i), BTN_W, BTN_H, btn, hov);
+            }
         }
         BoardArt.pin(ctx, nx + ROW_W / 2, ry + 1);
     }
 
-    private boolean over(int mx, int my, int bx, int by, int bw, int bh) {
+    protected boolean over(int mx, int my, int bx, int by, int bw, int bh) {
         return mx >= bx && mx < bx + bw && my >= by && my < by + bh;
     }
 
@@ -421,11 +427,12 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         return ItemStack.EMPTY;
     }
 
-    private boolean canPost() {
+    protected boolean canPost() {
         return menu.prop(BountyBoardScreenHandler.P_CAN_POST) == 1;
     }
 
     private void drawHoverDetails(GuiGraphics ctx, int mouseX, int mouseY) {
+        if (tooltipExtras(ctx, mouseX, mouseY)) return;
         if (canPost() && over(mouseX, mouseY, this.leftPos + POST_X, this.topPos + POST_Y, POST_W, POST_H)) {
             ctx.renderComponentTooltip(this.font, List.of(
                     Component.literal("Post a bounty").withStyle(ChatFormatting.WHITE),
@@ -465,6 +472,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
     //?}
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (clickExtras(mx, my)) return true;
             if (canPost() && this.minecraft != null && this.minecraft.gameMode != null
                     && over(mx, my, this.leftPos + POST_X, this.topPos + POST_Y, POST_W, POST_H)) {
                 NotchWidgets.click();
@@ -490,7 +498,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
             if (!sliding()) {
                 for (Note n : notesFor(shown, 0)) {
                     if (over(mx, my, n.x(), n.y(), n.w(), n.h())) {
-                        action(n.stack(), StackData.getData(n.stack()).getBoolean("own") ? 3 : 0);
+                        action(n.stack(), noteAction(StackData.getData(n.stack())));
                         return true;
                     }
                 }
@@ -499,10 +507,7 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
                 ItemStack s = menu.takenStack(i);
                 if (s.isEmpty() || !over(mx, my, buttonX(i), buttonY(i), BTN_W, BTN_H)) continue;
                 if (!StackData.hasData(s)) continue;
-                CompoundTag t = StackData.getData(s);
-                boolean kill = "KILL".equals(t.getString("typ"));
-                if (kill && t.getInt("prog") < t.getInt("req")) return true;
-                action(s, kill ? 1 : 2);
+                rowClicked(s, StackData.getData(s));
                 return true;
             }
         }
@@ -513,15 +518,78 @@ public class BountyBoardScreen extends AbstractContainerScreen<BountyBoardScreen
         //?}
     }
 
-    private void action(ItemStack stack, int action) {
+    protected void action(ItemStack stack, int action) {
         CompoundTag t = StackData.getData(stack);
         if (!net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(t, "bid")) return;
         NotchWidgets.click();
-        UUID id = net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "bid");
+        sendAction(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(t, "bid"), action);
+    }
+
+    protected void sendAction(UUID id, int action) {
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(id);
         buf.writeVarInt(action);
         NetClient.sendToServer(NotchPackets.BOUNTY_ACTION, buf);
+    }
+
+    protected void drawTitle(GuiGraphics ctx, int x, int y) {
+        NotchWidgets.title(ctx, this.font, "Bounty Board", x + W / 2, y + 8, NotchWidgets.Plate.PARCHMENT);
+    }
+
+    protected String offersLabel() {
+        return "Available";
+    }
+
+    protected String yoursLabel() {
+        return "Your bounties " + countTaken() + "/" + menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT);
+    }
+
+    protected String emptyText() {
+        return "All done - check back later!";
+    }
+
+    protected boolean isFull() {
+        return countTaken() >= menu.prop(BountyBoardScreenHandler.P_TAKE_LIMIT);
+    }
+
+    protected String stampText(CompoundTag t, boolean full) {
+        return t.getBoolean("own") ? "TAKE DOWN" : full ? "FULL" : "TAKE";
+    }
+
+    protected int noteAction(CompoundTag t) {
+        return t.getBoolean("own") ? 3 : 0;
+    }
+
+    protected boolean rowReady(CompoundTag t) {
+        return "KILL".equals(t.getString("typ")) && t.getInt("prog") >= t.getInt("req");
+    }
+
+    protected String rowButton(CompoundTag t) {
+        if (!"KILL".equals(t.getString("typ"))) return "Turn in";
+        return t.getInt("prog") >= t.getInt("req") ? "Collect" : null;
+    }
+
+    protected int rowAction(CompoundTag t) {
+        return "KILL".equals(t.getString("typ")) ? 1 : 2;
+    }
+
+    protected boolean rowDanger(CompoundTag t) {
+        return false;
+    }
+
+    protected void rowClicked(ItemStack stack, CompoundTag t) {
+        if (rowButton(t) != null) action(stack, rowAction(t));
+    }
+
+    protected void drawExtras(GuiGraphics ctx, int x, int y, int mouseX, int mouseY) {
+    }
+
+    protected boolean clickExtras(int mx, int my) {
+        return false;
+    }
+
+    protected boolean tooltipExtras(GuiGraphics ctx, int mx, int my) {
+        return false;
     }
 
     //? if >=1.21.11 {

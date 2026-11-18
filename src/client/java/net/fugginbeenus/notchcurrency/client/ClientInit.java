@@ -82,12 +82,14 @@ public final class ClientInit implements ClientModInitializer {
         /*net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap.putBlocks(
                 net.minecraft.client.renderer.chunk.ChunkSectionLayer.CUTOUT,
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
-                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP,
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.FACTION_BOARD);
         *///?} else {
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlocks(
                 net.minecraft.client.renderer.RenderType.cutout(),
                 net.fugginbeenus.notchcurrency.registry.ModBlocks.LEDGER_BOARD,
-                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP);
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.COIN_FLIP,
+                net.fugginbeenus.notchcurrency.registry.ModBlocks.FACTION_BOARD);
         //?}
 
         BarrelCleanupManager.init();
@@ -100,6 +102,9 @@ public final class ClientInit implements ClientModInitializer {
         MenuScreens.register(ModScreenHandlers.RAFFLE_ADMIN, RaffleAdminScreen::new);
         MenuScreens.register(ModScreenHandlers.AUCTION_LISTING, AuctionListingScreen::new);
         MenuScreens.register(ModScreenHandlers.BOUNTY_BOARD, BountyBoardScreen::new);
+        MenuScreens.<net.fugginbeenus.notchcurrency.economy.bounty.BountyBoardScreenHandler, BountyBoardScreen>register(ModScreenHandlers.FACTION_BOARD,
+                (handler, inv, title) -> new FactionBoardScreen(
+                        (net.fugginbeenus.notchcurrency.economy.bounty.FactionBoardScreenHandler) handler, inv, title));
         MenuScreens.register(ModScreenHandlers.BOUNTY_POST, BountyPostScreen::new);
         MenuScreens.register(ModScreenHandlers.BOUNTY_ADMIN, BountyAdminScreen::new);
         MenuScreens.register(ModScreenHandlers.LOAN, LoanScreen::new);

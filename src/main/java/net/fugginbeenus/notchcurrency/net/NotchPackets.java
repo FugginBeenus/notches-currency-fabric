@@ -84,6 +84,9 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_BILLBOARD = NotchCurrency.id("npc_billboard");
     public static final ResourceLocation NPC_FACTION_PICK = NotchCurrency.id("npc_faction_pick");
     public static final ResourceLocation NPC_FACTION_LIST = NotchCurrency.id("npc_faction_list");
+    public static final ResourceLocation FACTION_BOARD_PICKER = NotchCurrency.id("faction_board_picker");
+    public static final ResourceLocation FACTION_BOARD_LINK = NotchCurrency.id("faction_board_link");
+    public static final ResourceLocation FACTION_BOARD_ACTION = NotchCurrency.id("faction_board_action");
     public static final ResourceLocation MAIL_RECIPIENTS = NotchCurrency.id("mail_recipients");
     public static final ResourceLocation MAIL_TAB = NotchCurrency.id("mail_tab");
     public static final ResourceLocation MAIL_POST_OPEN = NotchCurrency.id("mail_post_open");

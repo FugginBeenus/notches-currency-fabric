@@ -34,6 +34,9 @@ public class Bounty {
     private String posterName = "";
     private UUID targetPlayer;
     private String targetPlayerName = "";
+    private boolean onBoard;
+    private String postFaction = "";
+    private boolean fromBank;
 
     public Bounty(UUID id, BountyType type, ResourceLocation target, int required, long rewardCoins,
                   ItemStack rewardItem, BountyRarity rarity, boolean repeatable, long expiresGameTime,
@@ -88,6 +91,22 @@ public class Bounty {
     public String getPosterName() { return posterName; }
     public boolean isPosted() { return poster != null; }
     public UUID getTargetPlayer() { return targetPlayer; }
+    public boolean isOnBoard() { return onBoard; }
+
+    public Bounty showOnBoard(boolean on) {
+        this.onBoard = on;
+        return this;
+    }
+
+    public String getPostFaction() { return postFaction; }
+    public boolean isFactionPost() { return !postFaction.isEmpty(); }
+    public boolean isFromBank() { return fromBank; }
+
+    public Bounty forFaction(String faction, boolean bank) {
+        this.postFaction = faction == null ? "" : faction;
+        this.fromBank = bank;
+        return this;
+    }
 
     public Bounty onPlayer(UUID who, String name) {
         this.targetPlayer = who;
@@ -165,6 +184,9 @@ public class Bounty {
         if (factionOnly) o.putBoolean("FactionOnly", true);
         if (!needsFaction.isEmpty()) o.putString("NeedsFaction", needsFaction);
         if (!nextQuest.isEmpty()) o.putString("NextQuest", nextQuest);
+        if (onBoard) o.putBoolean("OnBoard", true);
+        if (!postFaction.isEmpty()) o.putString("PostFaction", postFaction);
+        if (fromBank) o.putBoolean("FromBank", true);
         if (poster != null) {
             net.fugginbeenus.notchcurrency.compat.Nbt.putUuid(o, "Poster", poster);
             o.putString("PosterName", posterName);
@@ -203,6 +225,8 @@ public class Bounty {
         if (net.fugginbeenus.notchcurrency.compat.Nbt.hasUuid(o, "TargetPlayer")) {
             b.onPlayer(net.fugginbeenus.notchcurrency.compat.Nbt.getUuid(o, "TargetPlayer"), o.getString("TargetPlayerName"));
         }
+        if (o.getBoolean("OnBoard")) b.showOnBoard(true);
+        if (!o.getString("PostFaction").isEmpty()) b.forFaction(o.getString("PostFaction"), o.getBoolean("FromBank"));
         return b;
     }
 }

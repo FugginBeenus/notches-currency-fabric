@@ -3,14 +3,12 @@ package net.fugginbeenus.notchcurrency.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fugginbeenus.notchcurrency.client.ui.NotchTheme;
 import net.fugginbeenus.notchcurrency.client.ui.NotchWidgets;
-import net.fugginbeenus.notchcurrency.net.NotchPacketsClient;
-import net.fugginbeenus.notchcurrency.npc.faction.RecruiterManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import java.util.List;
-import java.util.UUID;
+import java.util.function.Consumer;
 
 public class NpcFactionPickerScreen extends Screen {
 
@@ -19,18 +17,27 @@ public class NpcFactionPickerScreen extends Screen {
     private static final int W = 280, H = 210;
     private static final int LIST_X = 12, LIST_Y = 44, ROW_H = 18, VISIBLE = 6;
 
-    private final UUID npcId;
+    private final String subtitle;
+    private final String backLabel;
     private final String currentId;
     private final List<Entry> factions;
+    private final Consumer<String> onPick;
+    private final Runnable onClear;
+    private final Runnable onBack;
 
     private int px, py;
     private int scroll;
 
-    public NpcFactionPickerScreen(UUID npcId, String currentId, List<Entry> factions) {
+    public NpcFactionPickerScreen(String subtitle, String backLabel, String currentId, List<Entry> factions,
+                                  Consumer<String> onPick, Runnable onClear, Runnable onBack) {
         super(Component.literal("Faction"));
-        this.npcId = npcId;
+        this.subtitle = subtitle;
+        this.backLabel = backLabel;
         this.currentId = currentId == null ? "" : currentId;
         this.factions = factions;
+        this.onPick = onPick;
+        this.onClear = onClear;
+        this.onBack = onBack;
     }
 
     @Override
@@ -55,7 +62,7 @@ public class NpcFactionPickerScreen extends Screen {
         //?}
         NotchWidgets.panel(ctx, px, py, W, H);
         NotchWidgets.title(ctx, this.font, "Faction", px + W / 2, py + 8, NotchWidgets.Plate.STEEL);
-        NotchWidgets.centerText(ctx, this.font, "Who this NPC stands with.",
+        NotchWidgets.centerText(ctx, this.font, subtitle,
                 px + W / 2, py + 22, NotchTheme.TEXT_MUTED, false);
 
         NotchWidgets.inset(ctx, px + LIST_X - 2, py + LIST_Y - 4, W - 20, VISIBLE * ROW_H + 6, NotchTheme.PANEL_MID);
@@ -90,7 +97,7 @@ public class NpcFactionPickerScreen extends Screen {
 
         NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
                 over(mouseX, mouseY, px + 12, py + H - 26, 120, 16));
-        NotchWidgets.neutralButton(ctx, this.font, px + W - 132, py + H - 26, 120, 16, "Back",
+        NotchWidgets.neutralButton(ctx, this.font, px + W - 132, py + H - 26, 120, 16, backLabel,
                 over(mouseX, mouseY, px + W - 132, py + H - 26, 120, 16));
         //? if >=26.1 {
         /*super.extractRenderState(ctx, mouseX, mouseY, delta);
@@ -128,19 +135,18 @@ public class NpcFactionPickerScreen extends Screen {
             for (int i = 0; i < VISIBLE && i + scroll < factions.size(); i++) {
                 if (over(mx, my, px + LIST_X, rowY(i), W - 24, ROW_H - 2)) {
                     NotchWidgets.click();
-                    NotchPacketsClient.sendFactionPick(npcId, RecruiterManager.PICK_SET,
-                            factions.get(i + scroll).id());
+                    onPick.accept(factions.get(i + scroll).id());
                     return true;
                 }
             }
             if (over(mx, my, px + 12, py + H - 26, 120, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendFactionPick(npcId, RecruiterManager.PICK_CLEAR, "");
+                onClear.run();
                 return true;
             }
             if (over(mx, my, px + W - 132, py + H - 26, 120, 16)) {
                 NotchWidgets.click();
-                NotchPacketsClient.sendNpcEditorReopen(npcId, 2);
+                onBack.run();
                 return true;
             }
         }

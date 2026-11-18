@@ -113,6 +113,23 @@ public final class NotchWidgets {
         plate(ctx, tr, plate, label, cx, y - 14);
     }
 
+    public static void clothTitle(GuiGraphics ctx, Font tr, String label, int cx, int y, int cloth) {
+        int top = y - 14, w = tr.width(label) + 24, h = 15, x = cx - w / 2;
+        shell(ctx, x, top, w, h, scaleRgb(cloth, 0.45f), cloth, scaleRgb(cloth, 1.25f), scaleRgb(cloth, 0.7f));
+        ctx.fill(x + 3, top + 3, x + w - 3, top + 4, GOLD);
+        ctx.fill(x + 3, top + h - 4, x + w - 3, top + h - 3, GOLD_LO);
+        int r = (cloth >> 16) & 255, g = (cloth >> 8) & 255, b = cloth & 255;
+        boolean light = r * 299 + g * 587 + b * 114 > 160_000;
+        ctx.drawString(tr, label, x + 12, top + 4, light ? INK : 0xFFFFFFFF, !light);
+    }
+
+    private static int scaleRgb(int argb, float f) {
+        int r = Math.min(255, Math.round(((argb >> 16) & 255) * f));
+        int g = Math.min(255, Math.round(((argb >> 8) & 255) * f));
+        int b = Math.min(255, Math.round((argb & 255) * f));
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
     public static void plate(GuiGraphics ctx, Font tr, Plate kind, String label, int cx, int top) {
         int tw = tr.width(label);
         switch (kind) {
