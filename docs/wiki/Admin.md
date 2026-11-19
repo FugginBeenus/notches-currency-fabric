@@ -98,6 +98,16 @@ on **NPC crafting**.
 **NPC crafting** has 3 choices: **Off** (the default), **Single player only** (this also covers LAN
 worlds) and **Everywhere**. A change takes effect after `/reload` or a restart.
 
+**Max NPCs per player** (in the **NPCs** section) limits how many NPCs one player can own at a time.
+0, the default, means no limit.
+
+- Only NPCs that stand in the world count. A packed NPC in an inventory does not count until it is
+  placed.
+- A player at the limit cannot place another NPC, and a Transfer to that player is refused.
+- Admins have no limit, and `notchcurrency.npc.nolimit` gives a group no limit.
+- Players who are already over the limit keep their NPCs. They cannot place more until they are
+  under it.
+
 **Who can do what**
 
 | | Admins | NPC owners | Other players |

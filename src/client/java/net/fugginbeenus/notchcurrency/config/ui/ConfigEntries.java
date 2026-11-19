@@ -372,6 +372,10 @@ final class ConfigEntries {
                 v -> cfg.npcs.crafting = v,
                 "Players craft a blank NPC from an armor stand and 4 emeralds.",
                 "Single player also covers LAN worlds. Takes effect after /reload or a restart."));
+        e.add(new NumberEntry(c, "Max NPCs per player", cfg.npcs.maxPerPlayer, 0, 0, 1000,
+                v -> cfg.npcs.maxPerPlayer = v.intValue(),
+                "How many NPCs one player can own at a time. 0 = no limit.",
+                "Admins have no limit. LuckPerms: notchcurrency.npc.nolimit"));
 
         c = "NPC look";
         e.add(new BoolEntry(c, "Change the name", cfg.npcs.editName, true,

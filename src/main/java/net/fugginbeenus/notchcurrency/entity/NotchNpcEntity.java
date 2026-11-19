@@ -1428,6 +1428,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             tickSchedule();
             tickScheduleSleep();
             net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(this);
+            if (!ownerIndexed && this.level().getServer() != null) {
+                ownerIndexed = true;
+                net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.get(this.level().getServer()).track(this.getUUID(), this.owner);
+            }
         }
     }
 
@@ -1669,6 +1673,17 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         this.owner = uuid;
         this.ownerName = name == null ? "" : name;
         this.ownerType = uuid == null ? OwnerType.SERVER : OwnerType.PLAYER;
+        this.ownerIndexed = false;
+    }
+
+    private boolean ownerIndexed = false;
+
+    @Override
+    public void remove(net.minecraft.world.entity.Entity.RemovalReason reason) {
+        super.remove(reason);
+        if (reason.shouldDestroy() && !this.level().isClientSide && this.level().getServer() != null) {
+            net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.get(this.level().getServer()).untrack(this.getUUID());
+        }
     }
 
     public boolean isOwnedBy(Player player) {

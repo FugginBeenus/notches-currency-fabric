@@ -61,7 +61,15 @@ public class NotchNpcItem extends Item {
             npc.setCustomNameVisible(true);
         }
         npc.setHome(pos);
+        if (player instanceof ServerPlayer sp && sp.getUUID().equals(npc.getOwner())
+                && net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.full(sp)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You own "
+                    + net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.countOf(sp) + " NPCs. The limit is "
+                    + net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.max() + ".").withStyle(ChatFormatting.RED));
+            return InteractionResult.FAIL;
+        }
         sw.addFreshEntity(npc);
+        net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.get(sw.getServer()).track(npc.getUUID(), npc.getOwner());
 
         boolean shopBack = false;
         if (npc.getRole() == NpcRole.SHOP && player instanceof ServerPlayer sp) {
@@ -79,6 +87,12 @@ public class NotchNpcItem extends Item {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC placed. ").withStyle(ChatFormatting.GREEN)
                     .append(Component.literal("Sneak + right-click").withStyle(ChatFormatting.YELLOW))
                     .append(Component.literal(" it to configure.").withStyle(ChatFormatting.GREEN)));
+        }
+        if (player instanceof ServerPlayer sp && sp.getUUID().equals(npc.getOwner())
+                && !net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.unlimited(sp)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("You own "
+                    + net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.countOf(sp) + " of "
+                    + net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.max() + " NPCs.").withStyle(ChatFormatting.GRAY));
         }
         return InteractionResult.CONSUME;
     }

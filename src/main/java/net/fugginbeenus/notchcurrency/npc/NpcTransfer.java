@@ -113,6 +113,14 @@ public final class NpcTransfer {
             return;
         }
 
+        if (NpcOwnerIndex.full(target)) {
+            say(target, "You own " + NpcOwnerIndex.countOf(target) + " NPCs. The limit is "
+                    + NpcOwnerIndex.max() + ", so you can't take another one.", ChatFormatting.RED);
+            if (giver != null) {
+                say(giver, target.getName().getString() + " already owns the most NPCs allowed.", ChatFormatting.RED);
+            }
+            return;
+        }
         int removed = handOver(server, npc, shopOf(npc), target.getUUID(), target.getName().getString());
         say(target, "You now own " + name(npc) + ".", ChatFormatting.GREEN);
         if (giver != null) {
@@ -148,6 +156,7 @@ public final class NpcTransfer {
         }
         if (npc == null) return 0;
         npc.setOwner(newOwner, newOwnerName);
+        NpcOwnerIndex.get(server).track(npc.getUUID(), newOwner);
         npc.setActionSweepVersion(0);
         return NpcActionSweep.sweep(npc);
     }

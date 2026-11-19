@@ -25,6 +25,7 @@ public final class NotchConfig {
 
     public static final class Npcs {
         public String crafting = "OFF";
+        public int maxPerPlayer = 0;
         public String roles = "ALL";
         public boolean editName = true;
         public boolean editSkin = true;
