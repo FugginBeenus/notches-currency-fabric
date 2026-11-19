@@ -351,6 +351,13 @@ final class ConfigEntries {
                 v -> cfg.factions.factionBanks = v,
                 "Each faction gets a bank. Join fees go into it, members",
                 "deposit at the faction NPC, founders and admins withdraw."));
+        e.add(new BoolEntry(c, "Houses", cfg.factions.houses, false,
+                v -> cfg.factions.houses = v,
+                "Founders and admins can make Houses: small groups inside a faction.",
+                "Off: nobody can make a new House. Houses that exist keep working."));
+        e.add(new NumberEntry(c, "Max Houses per faction", cfg.factions.maxHouses, 5, 1, 20,
+                v -> cfg.factions.maxHouses = v.intValue(),
+                "How many Houses one faction can have."));
 
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,

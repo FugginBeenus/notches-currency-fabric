@@ -8,6 +8,7 @@ import net.fugginbeenus.notchcurrency.core.NotchCurrency;
 import net.fugginbeenus.notchcurrency.npc.faction.Faction;
 import net.fugginbeenus.notchcurrency.npc.faction.FactionManager;
 import net.fugginbeenus.notchcurrency.npc.faction.FactionState;
+import net.fugginbeenus.notchcurrency.npc.faction.FactionText;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -38,8 +39,12 @@ public final class FactionBank {
 
     @Nullable
     public static String nameOf(MinecraftServer server, UUID id) {
-        for (Faction faction : FactionState.get(server).all()) {
+        FactionState state = FactionState.get(server);
+        for (Faction faction : state.all()) {
             if (account(faction.id()).equals(id)) return faction.displayName();
+        }
+        for (Faction house : state.allHouses()) {
+            if (account(house.id()).equals(id)) return FactionText.plain(server, house);
         }
         return null;
     }
@@ -49,7 +54,7 @@ public final class FactionBank {
     }
 
     public static boolean isMember(ServerPlayer sp, Faction faction) {
-        return faction.id().equals(FactionState.get(sp.level().getServer()).factionIdOf(sp.getUUID()));
+        return FactionState.get(sp.level().getServer()).isIn(sp.getUUID(), faction.id());
     }
 
     public static boolean canWithdraw(ServerPlayer sp, Faction faction) {
@@ -72,7 +77,7 @@ public final class FactionBank {
         Msg.chat(sp, Component.literal("You put ").withStyle(ChatFormatting.GREEN)
                 .append(NotchCurrency.coins(amount))
                 .append(Component.literal(" in the bank of ").withStyle(ChatFormatting.GREEN))
-                .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                .append(FactionText.name(sp.level().getServer(), faction))
                 .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
         return true;
     }
@@ -80,7 +85,8 @@ public final class FactionBank {
     public static boolean withdraw(ServerPlayer sp, Faction faction, long amount) {
         if (!ready(sp, amount)) return false;
         if (!canWithdraw(sp, faction)) {
-            tell(sp, "Only the founder or an admin can take money out.");
+            tell(sp, faction.isHouse() ? "Only the leader, the founder or an admin can take money out."
+                    : "Only the founder or an admin can take money out.");
             return false;
         }
         MinecraftServer server = sp.level().getServer();
@@ -92,7 +98,7 @@ public final class FactionBank {
         Msg.chat(sp, Component.literal("You took ").withStyle(ChatFormatting.GREEN)
                 .append(NotchCurrency.coins(amount))
                 .append(Component.literal(" from the bank of ").withStyle(ChatFormatting.GREEN))
-                .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                .append(FactionText.name(sp.level().getServer(), faction))
                 .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
         return true;
     }
@@ -100,7 +106,8 @@ public final class FactionBank {
     public static boolean pay(ServerPlayer sp, Faction faction, ServerPlayer target, long amount) {
         if (!ready(sp, amount)) return false;
         if (!canWithdraw(sp, faction)) {
-            tell(sp, "Only the founder or an admin can pay from the bank.");
+            tell(sp, faction.isHouse() ? "Only the leader, the founder or an admin can pay from the bank."
+                    : "Only the founder or an admin can pay from the bank.");
             return false;
         }
         MinecraftServer server = sp.level().getServer();
@@ -145,6 +152,14 @@ public final class FactionBank {
                     .append(NotchCurrency.coins(left))
                     .append(Component.literal(".").withStyle(ChatFormatting.YELLOW)));
         }
+    }
+
+    public static long moveAll(MinecraftServer server, Faction from, Faction to, String detail) {
+        long left = balance(server, from);
+        if (left <= 0) return 0L;
+        BalanceStore.add(server, account(from.id()), -left, TransactionReason.FACTION, detail);
+        BalanceStore.add(server, account(to.id()), left, TransactionReason.FACTION, detail);
+        return left;
     }
 
     public static boolean hold(MinecraftServer server, Faction faction, long amount, String detail) {

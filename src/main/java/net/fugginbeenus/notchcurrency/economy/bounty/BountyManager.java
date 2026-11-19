@@ -121,9 +121,11 @@ public final class BountyManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("That bounty is no longer available.").withStyle(ChatFormatting.RED));
             return;
         }
-        if (offer.isFactionPost() && !net.fugginbeenus.notchcurrency.npc.faction.FactionManager.sameFaction(offer.getPostFaction(),
-                net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server).factionIdOf(player.getUUID()))) {
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Only members of that faction can take this.").withStyle(ChatFormatting.RED));
+        if (offer.isFactionPost() && !net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
+                .isIn(player.getUUID(), offer.getPostFaction())) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal(net.fugginbeenus.notchcurrency.npc.faction.Faction
+                    .isHouseId(offer.getPostFaction()) ? "Only members of that House can take this."
+                    : "Only members of that faction can take this.").withStyle(ChatFormatting.RED));
             return;
         }
         if (state.hasTaken(player.getUUID(), offerId)) {
@@ -545,24 +547,26 @@ public final class BountyManager {
         BountyState state = BountyState.get(server);
         List<Bounty> posts = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
-            if (factionId.equals(b.getPostFaction())) posts.add(b);
+            if (net.fugginbeenus.notchcurrency.npc.faction.Faction.within(b.getPostFaction(), factionId)) posts.add(b);
         }
+        String why = net.fugginbeenus.notchcurrency.npc.faction.Faction.isHouseId(factionId)
+                ? "its House was ended" : "its faction was disbanded";
         for (Bounty b : posts) {
             for (UUID player : state.playersWithTaken()) state.removeTaken(player, b.getId());
             ServerPlayer poster = server.getPlayerList().getPlayer(b.getPoster());
             if (poster != null) {
                 refund(poster, b);
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(poster, Component.literal("Your request came down because its faction was disbanded: "
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(poster, Component.literal("Your request came down because " + why + ": "
                         + b.describe() + ".").withStyle(ChatFormatting.YELLOW));
             } else {
                 if (b.isFromBank()) {
-                    net.fugginbeenus.notchcurrency.economy.FactionBank.giveBack(server, factionId, b.getRewardCoins(), "request taken down");
+                    net.fugginbeenus.notchcurrency.economy.FactionBank.giveBack(server, b.getPostFaction(), b.getRewardCoins(), "request taken down");
                 } else if (b.getRewardCoins() > 0) {
                     net.fugginbeenus.notchcurrency.core.BalanceStore.add(server, b.getPoster(), b.getRewardCoins(), TransactionReason.BOUNTY, "request refund");
                 }
                 if (!b.getRewardItem().isEmpty()) {
                     net.fugginbeenus.notchcurrency.mail.MailManager.post(server, b.getPoster(),
-                            net.fugginbeenus.notchcurrency.mail.MailItem.parcel("Bounty Board", "Faction disbanded: " + b.describe(),
+                            net.fugginbeenus.notchcurrency.mail.MailItem.parcel("Bounty Board", "Request taken down: " + b.describe(),
                                     List.of(b.getRewardItem().copy()), 0L));
                 }
             }

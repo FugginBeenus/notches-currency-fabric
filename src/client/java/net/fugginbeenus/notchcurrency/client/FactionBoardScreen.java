@@ -24,6 +24,7 @@ public class FactionBoardScreen extends BountyBoardScreen {
     private static final int LINK_X = 8, LINK_W = 52, LINK_H = 14;
 
     private static final long CONFIRM_MS = 3000L;
+    private static final int SUB_MAX_W = 136;
 
     private final FactionBoardScreenHandler board;
     private UUID armed;
@@ -49,6 +50,12 @@ public class FactionBoardScreen extends BountyBoardScreen {
         String name = h.getString("fname");
         int cloth = h.contains("cloth") ? h.getInt("cloth") : BoardColor.NONE.argb();
         NotchWidgets.clothTitle(ctx, this.font, name.isEmpty() ? "Faction Board" : name, x + W / 2, y + 8, cloth);
+        String sub = h.getString("fsub");
+        if (sub.isEmpty()) return;
+        while (sub.length() > 4 && NotchWidgets.smallCapsWidth(sub) > SUB_MAX_W) {
+            sub = sub.substring(0, sub.length() - 4) + "...";
+        }
+        BoardArt.label(ctx, sub, x + W / 2 - NotchWidgets.smallCapsWidth(sub) / 2, y + 12);
     }
 
     @Override

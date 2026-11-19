@@ -941,6 +941,7 @@ public final class NotchPacketsClient {
         NetClient.registerClientReceiver(NotchPackets.FACTION_BOARD_PICKER, (client, buf) -> {
             net.minecraft.core.BlockPos pos = buf.readBlockPos();
             String currentId = buf.readUtf();
+            boolean canClear = buf.readBoolean();
             int count = buf.readVarInt();
             java.util.List<net.fugginbeenus.notchcurrency.client.NpcFactionPickerScreen.Entry> entries =
                     new java.util.ArrayList<>();
@@ -959,10 +960,10 @@ public final class NotchPacketsClient {
                                 sendFactionBoardLink(pos, id);
                                 Minecraft.getInstance().setScreen(null);
                             },
-                            () -> {
+                            canClear ? () -> {
                                 sendFactionBoardLink(pos, "");
                                 Minecraft.getInstance().setScreen(null);
-                            },
+                            } : null,
                             () -> Minecraft.getInstance().setScreen(null))));
         });
     }
@@ -1005,14 +1006,36 @@ public final class NotchPacketsClient {
             long balance = buf.readVarLong();
             boolean canDeposit = buf.readBoolean();
             boolean canWithdraw = buf.readBoolean();
-            boolean bankPage = buf.readBoolean();
+            int page = buf.readVarInt();
+            boolean isHouse = buf.readBoolean();
+            boolean canMakeHouses = buf.readBoolean();
+            boolean runsHouses = buf.readBoolean();
+            int houseCount = buf.readVarInt();
+            java.util.List<net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen.House> houses = new java.util.ArrayList<>();
+            for (int i = 0; i < houseCount; i++) {
+                String id = buf.readUtf();
+                String name = buf.readUtf();
+                int houseMembers = buf.readVarInt();
+                int houseFee = buf.readVarInt();
+                boolean houseOpen = buf.readBoolean();
+                long cost = buf.readVarLong();
+                int status = buf.readVarInt();
+                boolean canEdit = buf.readBoolean();
+                String leader = buf.readUtf();
+                int n = buf.readVarInt();
+                java.util.List<String> names = new java.util.ArrayList<>();
+                for (int k = 0; k < n; k++) names.add(buf.readUtf());
+                houses.add(new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen.House(id, name, houseMembers,
+                        houseFee, houseOpen, cost, status, canEdit, leader, names));
+            }
             client.execute(() -> {
                 net.minecraft.ChatFormatting color = net.fugginbeenus.notchcurrency.compat.Colors.byName(colorName);
                 Minecraft.getInstance().setScreen(
                         new net.fugginbeenus.notchcurrency.client.NpcRecruiterScreen(npcId, factionId,
                                 factionName, color == null ? net.minecraft.ChatFormatting.WHITE : color,
                                 members, alreadyIn, canFound, motto, fee, open, canManage, locked,
-                                bank, balance, canDeposit, canWithdraw, bankPage));
+                                bank, balance, canDeposit, canWithdraw, page,
+                                isHouse, canMakeHouses, runsHouses, houses));
             });
         });
     }

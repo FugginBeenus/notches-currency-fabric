@@ -101,11 +101,11 @@ public final class QuestManager {
                         .withStyle(ChatFormatting.RED));
             } else {
                 var want = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
-                        .get(q.getNeedsFaction());
+                        .get(q.getNeedsFaction().toLowerCase(java.util.Locale.ROOT));
                 Msg.chat(player, Component.literal("That is for ").withStyle(ChatFormatting.RED)
                         .append(want == null
                                 ? Component.literal(q.getNeedsFaction()).withStyle(ChatFormatting.WHITE)
-                                : Component.literal(want.displayName()).withStyle(want.color()))
+                                : net.fugginbeenus.notchcurrency.npc.faction.FactionText.name(server, want))
                         .append(Component.literal(".").withStyle(ChatFormatting.RED)));
             }
             return;
@@ -136,9 +136,9 @@ public final class QuestManager {
         MinecraftServer server = player.level().getServer();
         if (server == null) return false;
         String mine = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server)
-                .factionIdOf(player.getUUID());
+                .groupIdOf(player.getUUID());
         if (mine == null || mine.isBlank()) return false;
-        return q.getNeedsFaction().isBlank() || mine.equalsIgnoreCase(q.getNeedsFaction());
+        return q.getNeedsFaction().isBlank() || net.fugginbeenus.notchcurrency.npc.faction.Faction.within(mine, q.getNeedsFaction());
     }
 
     static void shareProgress(ServerPlayer source, Bounty q, String what) {

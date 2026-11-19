@@ -31,6 +31,8 @@ public final class NotchConfig {
     public static final class Factions {
         public boolean permanentMembership = false;
         public boolean factionBanks = false;
+        public boolean houses = false;
+        public int maxHouses = 5;
     }
 
     public static final class VillagerTrades {

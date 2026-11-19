@@ -1,0 +1,479 @@
+{
+  "format_version": "1.21.11",
+  "credit": "Made by FugginBeenus)",
+  "texture_size": [
+    128,
+    128
+  ],
+  "textures": {
+    "0": "notchcurrency:block/faction_board/aqua",
+    "1": "notchcurrency:block/faction_board/banner_house_aqua",
+    "particle": "notchcurrency:block/faction_board/aqua"
+  },
+  "elements": [
+    {
+      "name": "leg west",
+      "from": [
+        2,
+        0,
+        7
+      ],
+      "to": [
+        4,
+        16,
+        9
+      ],
+      "rotation": {
+        "angle": 0,
+        "axis": "y",
+        "origin": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "faces": {
+        "north": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0",
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "name": "leg east",
+      "from": [
+        12,
+        0,
+        7
+      ],
+      "to": [
+        14,
+        16,
+        9
+      ],
+      "rotation": {
+        "angle": 0,
+        "axis": "y",
+        "origin": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "faces": {
+        "north": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            15,
+            0,
+            16,
+            8
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0",
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "name": "notice panel",
+      "from": [
+        1,
+        6,
+        6.75
+      ],
+      "to": [
+        15,
+        30,
+        9.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            7,
+            12
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            14,
+            0,
+            15,
+            12
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            7,
+            0,
+            14,
+            12
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            14,
+            0,
+            15,
+            12
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            0,
+            12,
+            7,
+            13
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "name": "header beam",
+      "from": [
+        0.5,
+        30,
+        6.25
+      ],
+      "to": [
+        15.5,
+        32,
+        9.75
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            13,
+            7.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            7.5,
+            13,
+            9.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            0,
+            13,
+            7.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            7.5,
+            13,
+            9.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            0,
+            14,
+            7.5,
+            16
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            0,
+            14,
+            7.5,
+            16
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "name": "banner rod",
+      "from": [
+        3.5,
+        5.25,
+        7.5
+      ],
+      "to": [
+        12.5,
+        6,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            9.5,
+            13,
+            10.5,
+            14
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "name": "banner",
+      "from": [
+        4,
+        0.5,
+        7.85
+      ],
+      "to": [
+        12,
+        6,
+        8.15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            11
+          ],
+          "texture": "#1"
+        },
+        "south": {
+          "uv": [
+            16,
+            0,
+            0,
+            11
+          ],
+          "texture": "#1"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        -135,
+        0
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        -135,
+        0
+      ],
+      "translation": [
+        0,
+        -2.5,
+        0
+      ],
+      "scale": [
+        0.33,
+        0.33,
+        0.33
+      ]
+    },
+    "fixed": {
+      "translation": [
+        0,
+        -1.5,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  }
+}

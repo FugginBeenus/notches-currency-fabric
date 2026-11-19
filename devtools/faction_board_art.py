@@ -26,6 +26,7 @@ COLORS = {
     "white": (233, 236, 236),
 }
 FACINGS = {"north": 0, "east": 90, "south": 180, "west": 270}
+CREAM = (226, 222, 210)
 
 
 def tone(c, k):
@@ -98,11 +99,41 @@ def banner(color):
     return im
 
 
-def model(base_model, name):
+def house_banner(color):
+    accent = color if sum(color) < 600 else tone(color, 0.62)
+    W, H, side = 32, 22, 14
+    im = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    px = im.load()
+    edge, dark, light = tone(accent, 0.6), tone(CREAM, 0.82), tone(CREAM, 1.1)
+    for x in range(W):
+        cx = abs(x - (W - 1) / 2)
+        bottom = side + int(round((H - 1 - side) * (1 - cx / ((W - 1) / 2))))
+        for y in range(bottom + 1):
+            c = CREAM
+            if x in (9, 22):
+                c = dark
+            if x in (10, 23):
+                c = light
+            if y == 0:
+                c = edge
+            if y in (2, 3):
+                c = accent
+            if x == 0 or x == W - 1 or y == bottom:
+                c = edge
+            px[x, y] = c + (255,)
+    mx, my = 16, 10
+    for dy in range(-4, 5):
+        span = 4 - abs(dy)
+        for dx in range(-span - 1, span + 1):
+            px[mx + dx, my + dy] = (tone(accent, 0.7) if dx in (-span - 1, span) else accent) + (255,)
+    return im
+
+
+def model(base_model, name, banner_name=None):
     m = json.loads(json.dumps(base_model))
     m["textures"] = {
         "0": f"notchcurrency:block/faction_board/{name}",
-        "1": f"notchcurrency:block/faction_board/banner_{name}",
+        "1": f"notchcurrency:block/faction_board/{banner_name or 'banner_' + name}",
         "particle": f"notchcurrency:block/faction_board/{name}",
     }
     m["elements"].append({
@@ -123,10 +154,11 @@ def blockstate():
     variants = {}
     for facing, y in FACINGS.items():
         for name in COLORS:
-            v = {"model": f"notchcurrency:block/faction_board/{name}"}
-            if y:
-                v["y"] = y
-            variants[f"color={name},facing={facing},half=lower"] = v
+            for house in (False, True):
+                v = {"model": f"notchcurrency:block/faction_board/{'house_' + name if house else name}"}
+                if y:
+                    v["y"] = y
+                variants[f"color={name},facing={facing},half=lower,house={str(house).lower()}"] = v
     for facing, y in FACINGS.items():
         v = {"model": "notchcurrency:block/bounty_board_upper"}
         if y:
@@ -150,6 +182,8 @@ def main():
         board_sheet(base, color).save(os.path.join(TEX_OUT, f"{name}.png"))
         banner(color).save(os.path.join(TEX_OUT, f"banner_{name}.png"))
         write_json(os.path.join(MODEL_OUT, f"{name}.json"), model(base_model, name))
+        house_banner(color).save(os.path.join(TEX_OUT, f"banner_house_{name}.png"))
+        write_json(os.path.join(MODEL_OUT, f"house_{name}.json"), model(base_model, name, f"banner_house_{name}"))
     write_json(os.path.join(ASSETS, "blockstates/faction_board.json"), blockstate())
     write_json(os.path.join(ASSETS, "models/item/faction_board.json"), {"parent": "notchcurrency:block/faction_board/none"})
     write_json(os.path.join(ASSETS, "items/faction_board.json"),

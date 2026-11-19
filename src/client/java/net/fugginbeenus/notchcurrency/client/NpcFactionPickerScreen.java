@@ -82,8 +82,14 @@ public class NpcFactionPickerScreen extends Screen {
             } else {
                 NotchWidgets.button(ctx, px + LIST_X, ry, W - 24, ROW_H - 2, hover, false);
             }
-            ctx.drawString(this.font, Component.literal(f.name()).withStyle(f.color()),
-                    px + LIST_X + 6, ry + 4, 0xFFFFFFFF, selected);
+            int nameX = px + LIST_X + 6;
+            if (f.id().indexOf('.') > 0) {
+                ctx.drawString(this.font, Component.literal(">").withStyle(ChatFormatting.GRAY), nameX + 6, ry + 4,
+                        0xFFFFFFFF, selected);
+                nameX += 16;
+            }
+            ctx.drawString(this.font, Component.literal(this.font.plainSubstrByWidth(f.name(), px + W - 98 - nameX))
+                    .withStyle(f.color()), nameX, ry + 4, 0xFFFFFFFF, selected);
             String members = f.members() == 1 ? "1 member" : f.members() + " members";
             ctx.drawString(this.font, members, px + W - 92, ry + 4,
                     selected ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_MUTED, false);
@@ -95,8 +101,10 @@ public class NpcFactionPickerScreen extends Screen {
                     over(mouseX, mouseY, px + W / 2 - 38, by, 20, 13), over(mouseX, mouseY, px + W / 2 + 18, by, 20, 13));
         }
 
-        NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
-                over(mouseX, mouseY, px + 12, py + H - 26, 120, 16));
+        if (onClear != null) {
+            NotchWidgets.dangerButton(ctx, this.font, px + 12, py + H - 26, 120, 16, "No faction",
+                    over(mouseX, mouseY, px + 12, py + H - 26, 120, 16));
+        }
         NotchWidgets.neutralButton(ctx, this.font, px + W - 132, py + H - 26, 120, 16, backLabel,
                 over(mouseX, mouseY, px + W - 132, py + H - 26, 120, 16));
         //? if >=26.1 {
@@ -139,7 +147,7 @@ public class NpcFactionPickerScreen extends Screen {
                     return true;
                 }
             }
-            if (over(mx, my, px + 12, py + H - 26, 120, 16)) {
+            if (onClear != null && over(mx, my, px + 12, py + H - 26, 120, 16)) {
                 NotchWidgets.click();
                 onClear.run();
                 return true;

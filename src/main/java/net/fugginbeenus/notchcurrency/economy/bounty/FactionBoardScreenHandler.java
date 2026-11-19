@@ -78,7 +78,7 @@ public class FactionBoardScreenHandler extends BountyBoardScreenHandler {
         BountyState state = BountyState.get(server);
         List<Bounty> avail = new ArrayList<>();
         for (Bounty b : state.allOffers()) {
-            if (!faction.id().equals(b.getPostFaction()) || b.isExpired(now)) continue;
+            if (!FactionBoards.showsRequest(faction, b) || b.isExpired(now)) continue;
             if (state.hasTaken(me, b.getId()) || state.hasCompletedOffer(me, b.getId())) continue;
             if (state.reservedBy(b.getId()) != null) continue;
             avail.add(b);
@@ -93,11 +93,10 @@ public class FactionBoardScreenHandler extends BountyBoardScreenHandler {
         page = Math.max(0, Math.min(page, totalPages - 1));
         props.set(P_PAGE, page);
         props.set(P_TOTAL_PAGES, totalPages);
-        long balance = FactionBank.enabled() ? FactionBank.balance(server, faction) : 0L;
         for (int i = 0; i < OFFER_SLOTS; i++) {
             int idx = page * OFFER_SLOTS + i;
             boardInv.setItem(i, idx >= avail.size() ? ItemStack.EMPTY
-                    : avail.get(idx).isQuest() ? note(avail.get(idx), faction, me, balance)
+                    : avail.get(idx).isQuest() ? note(server, avail.get(idx), faction, me)
                     : display(avail.get(idx), false, 0, avail.get(idx).getExpiresGameTime(), me));
         }
 
@@ -105,7 +104,7 @@ public class FactionBoardScreenHandler extends BountyBoardScreenHandler {
         for (TakenBounty tb : state.getTakenAll(me)) {
             Bounty q = tb.bounty();
             if (t >= TAKEN_SLOTS) break;
-            if (faction.id().equals(q.getPostFaction())) {
+            if (FactionBoards.showsRequest(faction, q)) {
                 boardInv.setItem(OFFER_SLOTS + t++, display(q, true, tb.progress(), tb.expiresGameTime(), me));
                 continue;
             }
@@ -123,10 +122,12 @@ public class FactionBoardScreenHandler extends BountyBoardScreenHandler {
         while (t < TAKEN_SLOTS) boardInv.setItem(OFFER_SLOTS + t++, ItemStack.EMPTY);
     }
 
-    private static ItemStack note(Bounty q, Faction faction, UUID viewer, long balance) {
+    private static ItemStack note(MinecraftServer server, Bounty q, Faction board, UUID viewer) {
+        Faction payer = FactionBoards.payer(server, board, q);
+        long balance = FactionBank.enabled() ? FactionBank.balance(server, payer) : 0L;
         ItemStack s = display(q, false, 0, 0L, viewer);
         CompoundTag tag = StackData.editData(s);
-        tag.putString("poster", faction.displayName());
+        tag.putString("poster", payer.displayName());
         tag.putBoolean("quest", true);
         long cost = FactionBoards.cost(q);
         tag.putBoolean("short", cost > 0 && cost > balance);
@@ -138,6 +139,9 @@ public class FactionBoardScreenHandler extends BountyBoardScreenHandler {
         ItemStack head = new ItemStack(Items.PAPER);
         CompoundTag tag = StackData.editData(head);
         tag.putString("fname", faction.displayName());
+        Faction parent = faction.isHouse()
+                ? net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server).get(faction.parent()) : null;
+        if (parent != null) tag.putString("fsub", "of " + parent.displayName());
         tag.putInt("cloth", BoardColor.of(faction.color()).argb());
         tag.putBoolean("member", member);
         tag.putBoolean("admin", Perms.isAdmin(sp, Perms.FACTION));

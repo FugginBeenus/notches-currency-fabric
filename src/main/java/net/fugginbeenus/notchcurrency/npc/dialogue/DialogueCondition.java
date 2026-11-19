@@ -72,8 +72,8 @@ public class DialogueCondition {
         String wanted = value == null || value.isBlank() ? npc.getFactionId() : value.trim();
         if (wanted.isEmpty()) return false;
         String theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
-                .get(sp.serverLevel()).factionIdOf(sp.getUUID());
-        return wanted.equals(theirs);
+                .get(sp.serverLevel()).groupIdOf(sp.getUUID());
+        return net.fugginbeenus.notchcurrency.npc.faction.Faction.within(theirs, wanted);
     }
 
     private long countItem(ServerPlayer sp) {

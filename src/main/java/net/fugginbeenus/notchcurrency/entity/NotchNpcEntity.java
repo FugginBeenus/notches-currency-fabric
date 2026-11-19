@@ -1013,9 +1013,12 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public boolean isAlly(@Nullable net.minecraft.world.entity.Entity other) {
         if (factionId.isEmpty() || other == null) return false;
-        if (other instanceof NotchNpcEntity npc) return factionId.equals(npc.getFactionId());
+        String mine = net.fugginbeenus.notchcurrency.npc.faction.Faction.rootId(factionId);
+        if (other instanceof NotchNpcEntity npc) {
+            return mine.equals(net.fugginbeenus.notchcurrency.npc.faction.Faction.rootId(npc.getFactionId()));
+        }
         if (other instanceof ServerPlayer sp) {
-            return factionId.equals(net.fugginbeenus.notchcurrency.npc.faction.FactionState
+            return mine.equals(net.fugginbeenus.notchcurrency.npc.faction.FactionState
                     .get(sp.serverLevel()).factionIdOf(sp.getUUID()));
         }
         return false;
@@ -1030,7 +1033,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             theirs = net.fugginbeenus.notchcurrency.npc.faction.FactionState
                     .get(sp.serverLevel()).factionIdOf(sp.getUUID());
         }
-        return theirs != null && !theirs.isEmpty() && !theirs.equals(factionId);
+        return theirs != null && !theirs.isEmpty() && !net.fugginbeenus.notchcurrency.npc.faction.Faction.rootId(theirs)
+                .equals(net.fugginbeenus.notchcurrency.npc.faction.Faction.rootId(factionId));
     }
 
     public int getActionSweepVersion() { return actionSweepVersion; }

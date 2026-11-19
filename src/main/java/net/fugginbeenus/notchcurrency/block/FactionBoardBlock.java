@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
@@ -26,16 +27,17 @@ import org.jetbrains.annotations.Nullable;
 public class FactionBoardBlock extends BountyBoardBlock implements EntityBlock {
 
     public static final EnumProperty<BoardColor> COLOR = EnumProperty.create("color", BoardColor.class);
+    public static final BooleanProperty HOUSE = BooleanProperty.create("house");
 
     public FactionBoardBlock(Properties settings) {
         super(settings);
-        registerDefaultState(defaultBlockState().setValue(COLOR, BoardColor.NONE));
+        registerDefaultState(defaultBlockState().setValue(COLOR, BoardColor.NONE).setValue(HOUSE, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        builder.add(COLOR);
+        builder.add(COLOR, HOUSE);
     }
 
     @Override

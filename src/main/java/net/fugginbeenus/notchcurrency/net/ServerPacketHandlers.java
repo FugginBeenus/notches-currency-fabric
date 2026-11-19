@@ -471,7 +471,7 @@ public final class ServerPacketHandlers {
         Net.registerServerReceiver(NotchPackets.NPC_FACTION_PICK, (server, player, buf) -> {
             UUID id = buf.readUUID();
             int action = buf.readVarInt();
-            String factionId = buf.readUtf(32);
+            String factionId = buf.readUtf(64);
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
@@ -486,7 +486,7 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.FACTION_BOARD_LINK, (server, player, buf) -> {
             net.minecraft.core.BlockPos pos = buf.readBlockPos();
-            String factionId = buf.readUtf(32);
+            String factionId = buf.readUtf(64);
             server.execute(() -> net.fugginbeenus.notchcurrency.npc.faction.FactionBoards.link(player, pos, factionId));
         });
 
@@ -1350,7 +1350,8 @@ public final class ServerPacketHandlers {
             names.writeUtf(q.getQuestKey());
             names.writeUtf(q.describe());
         }
-        var factions = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server).all();
+        var factionState = net.fugginbeenus.notchcurrency.npc.faction.FactionState.get(server);
+        var factions = net.fugginbeenus.notchcurrency.npc.faction.FactionBoards.pickerList(factionState, factionState.all());
         names.writeVarInt(factions.size());
         for (var f : factions) names.writeUtf(f.id());
         Net.sendToClient(player, NotchPackets.QUEST_NAMES, names);

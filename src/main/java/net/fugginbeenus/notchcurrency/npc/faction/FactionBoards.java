@@ -59,11 +59,41 @@ public final class FactionBoards {
     public static List<Bounty> quests(MinecraftServer server, Faction faction) {
         List<Bounty> out = new ArrayList<>();
         for (Bounty q : QuestManager.allQuests(server)) {
-            if (q.isOnBoard() && (q.getNeedsFaction().isBlank() || q.getNeedsFaction().equalsIgnoreCase(faction.id()))) {
+            if (q.isOnBoard() && (q.getNeedsFaction().isBlank() || Faction.within(faction.id(), q.getNeedsFaction()))) {
                 out.add(q);
             }
         }
         return out;
+    }
+
+    public static Faction payer(MinecraftServer server, Faction board, Bounty q) {
+        if (q.getNeedsFaction().isBlank()) return board;
+        Faction named = FactionState.get(server).get(q.getNeedsFaction().toLowerCase(java.util.Locale.ROOT));
+        return named == null ? board : named;
+    }
+
+    public static boolean showsRequest(Faction board, Bounty request) {
+        return request.isFactionPost() && Faction.within(board.id(), request.getPostFaction());
+    }
+
+    private static List<Faction> claimable(ServerPlayer sp, FactionState state) {
+        List<Faction> out = new ArrayList<>();
+        Faction founded = state.foundedBy(sp.getUUID());
+        if (founded != null) {
+            out.add(founded);
+            out.addAll(state.housesOf(founded.id()));
+            return out;
+        }
+        Faction house = state.houseOf(sp.getUUID());
+        if (house != null && house.isFoundedBy(sp.getUUID())) out.add(house);
+        return out;
+    }
+
+    private static boolean canClaim(ServerPlayer sp, Faction group) {
+        if (group.isFoundedBy(sp.getUUID())) return true;
+        if (!group.isHouse()) return false;
+        Faction parent = FactionState.get(sp.level().getServer()).get(group.parent());
+        return parent != null && parent.isFoundedBy(sp.getUUID());
     }
 
     public static void use(ServerPlayer sp, BlockPos lower) {
@@ -79,15 +109,19 @@ public final class FactionBoards {
             return;
         }
         if (admin) {
-            sendPicker(sp, lower, "");
+            sendPicker(sp, lower, "", pickerList(FactionState.get(server), FactionState.get(server).all()), true);
             return;
         }
-        Faction mine = FactionState.get(server).foundedBy(sp.getUUID());
-        if (mine != null) {
-            link(sp, lower, mine.id());
+        List<Faction> mine = claimable(sp, FactionState.get(server));
+        if (mine.size() == 1) {
+            link(sp, lower, mine.get(0).id());
             return;
         }
-        Msg.chat(sp, Component.literal("This Faction Board has no faction yet. A faction founder can claim it.")
+        if (mine.size() > 1) {
+            sendPicker(sp, lower, "", mine, false);
+            return;
+        }
+        Msg.chat(sp, Component.literal("This Faction Board has no faction yet. A faction founder or a House leader can claim it.")
                 .withStyle(ChatFormatting.GRAY));
     }
 
@@ -100,7 +134,7 @@ public final class FactionBoards {
         if (factionId.isEmpty()) {
             if (!admin) return;
             be.setFactionId("");
-            paint(level, lower, BoardColor.NONE);
+            paint(level, lower, BoardColor.NONE, false);
             Msg.chat(sp, Component.literal("This board has no faction now.").withStyle(ChatFormatting.YELLOW));
             return;
         }
@@ -110,7 +144,7 @@ public final class FactionBoards {
             return;
         }
         if (!admin) {
-            if (!faction.isFoundedBy(sp.getUUID())) {
+            if (!canClaim(sp, faction)) {
                 Msg.chat(sp, Component.literal("That isn't your faction.").withStyle(ChatFormatting.RED));
                 return;
             }
@@ -120,9 +154,9 @@ public final class FactionBoards {
             }
         }
         be.setFactionId(faction.id());
-        paint(level, lower, BoardColor.of(faction.color()));
+        paint(level, lower, BoardColor.of(faction.color()), faction.isHouse());
         Msg.chat(sp, Component.literal("This board now belongs to ").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                .append(FactionText.name(server, faction))
                 .append(Component.literal(".").withStyle(ChatFormatting.GREEN)));
     }
 
@@ -137,7 +171,8 @@ public final class FactionBoards {
     public static void relink(ServerPlayer sp, BlockPos lower) {
         FactionBoardBlockEntity be = board(sp.level(), lower);
         if (be == null || !Perms.isAdmin(sp, Perms.FACTION)) return;
-        sendPicker(sp, lower, be.factionId());
+        FactionState state = FactionState.get(sp.level().getServer());
+        sendPicker(sp, lower, be.factionId(), pickerList(state, state.all()), true);
     }
 
     public static void act(ServerPlayer sp, BlockPos lower, UUID questId, int action) {
@@ -145,7 +180,7 @@ public final class FactionBoards {
         Faction faction = factionAt(sp.level(), lower);
         if (server == null || faction == null) return;
         Bounty request = BountyState.get(server).getOffer(questId);
-        if (request != null && faction.id().equals(request.getPostFaction())) {
+        if (request != null && showsRequest(faction, request)) {
             if (action == TAKE_DOWN) {
                 BountyManager.cancelPost(sp, questId);
                 return;
@@ -158,7 +193,7 @@ public final class FactionBoards {
         }
         if (!FactionBank.isMember(sp, faction)) {
             Msg.chat(sp, Component.literal("Only members of ").withStyle(ChatFormatting.RED)
-                    .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                    .append(FactionText.name(server, faction))
                     .append(Component.literal(" can take jobs here.").withStyle(ChatFormatting.RED)));
             return;
         }
@@ -179,11 +214,12 @@ public final class FactionBoards {
         return FactionBank.enabled() ? q.getRewardCoins() : 0L;
     }
 
-    private static void take(ServerPlayer sp, MinecraftServer server, Faction faction, Bounty q) {
+    private static void take(ServerPlayer sp, MinecraftServer server, Faction board, Bounty q) {
+        Faction faction = payer(server, board, q);
         long cost = cost(q);
         if (cost > 0 && FactionBank.balance(server, faction) < cost) {
             Msg.chat(sp, Component.literal("The bank of ").withStyle(ChatFormatting.RED)
-                    .append(Component.literal(faction.displayName()).withStyle(faction.color()))
+                    .append(FactionText.name(server, faction))
                     .append(Component.literal(" can't pay this job right now.").withStyle(ChatFormatting.RED)));
             return;
         }
@@ -229,7 +265,7 @@ public final class FactionBoards {
         BountyState state = BountyState.get(server);
         int dropped = 0;
         for (TakenBounty tb : state.getTakenAll(player)) {
-            if (!factionId.equals(tb.boardFaction())) continue;
+            if (!Faction.within(tb.boardFaction(), factionId)) continue;
             release(server, tb, "job dropped");
             state.removeTaken(player, tb.bounty().getId());
             dropped++;
@@ -251,26 +287,39 @@ public final class FactionBoards {
         if (server == null) return;
         Faction faction = factionOf(server, be);
         if (faction == null && !be.factionId().isEmpty()) be.setFactionId("");
-        paint(level, lower, faction == null ? BoardColor.NONE : BoardColor.of(faction.color()));
+        paint(level, lower, faction == null ? BoardColor.NONE : BoardColor.of(faction.color()),
+                faction != null && faction.isHouse());
     }
 
-    private static void paint(Level level, BlockPos lower, BoardColor color) {
+    private static void paint(Level level, BlockPos lower, BoardColor color, boolean house) {
         for (BlockPos part : new BlockPos[]{lower, lower.above()}) {
             BlockState state = level.getBlockState(part);
-            if (state.getBlock() instanceof FactionBoardBlock && state.getValue(FactionBoardBlock.COLOR) != color) {
-                level.setBlock(part, state.setValue(FactionBoardBlock.COLOR, color), Block.UPDATE_CLIENTS);
+            if (state.getBlock() instanceof FactionBoardBlock
+                    && (state.getValue(FactionBoardBlock.COLOR) != color || state.getValue(FactionBoardBlock.HOUSE) != house)) {
+                level.setBlock(part, state.setValue(FactionBoardBlock.COLOR, color).setValue(FactionBoardBlock.HOUSE, house),
+                        Block.UPDATE_CLIENTS);
             }
         }
     }
 
-    private static void sendPicker(ServerPlayer sp, BlockPos lower, String currentId) {
+    public static List<Faction> pickerList(FactionState state, List<Faction> factions) {
+        List<Faction> out = new ArrayList<>();
+        for (Faction f : factions) {
+            out.add(f);
+            out.addAll(state.housesOf(f.id()));
+        }
+        return out;
+    }
+
+    private static void sendPicker(ServerPlayer sp, BlockPos lower, String currentId, List<Faction> entries,
+                                   boolean canClear) {
         FactionState state = FactionState.get(sp.level().getServer());
-        List<Faction> all = state.all();
         FriendlyByteBuf buf = Net.buf();
         buf.writeBlockPos(lower);
         buf.writeUtf(currentId);
-        buf.writeVarInt(all.size());
-        for (Faction f : all) {
+        buf.writeBoolean(canClear);
+        buf.writeVarInt(entries.size());
+        for (Faction f : entries) {
             buf.writeUtf(f.id());
             buf.writeUtf(f.displayName());
             buf.writeUtf(Colors.name(f.color()));

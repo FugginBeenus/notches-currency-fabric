@@ -20,6 +20,7 @@ public class Faction {
     private String motto = "";
     private int joinFee = 0;
     private boolean openToJoin = true;
+    private String parent = "";
 
     public Faction(String id, String displayName, ChatFormatting color, @Nullable UUID founder) {
         this.id = id;
@@ -35,6 +36,13 @@ public class Faction {
     public String motto() { return motto; }
     public int joinFee() { return joinFee; }
     public boolean isOpenToJoin() { return openToJoin; }
+    public String parent() { return parent; }
+    public boolean isHouse() { return !parent.isEmpty(); }
+
+    public Faction asHouseOf(String parentId) {
+        this.parent = parentId == null ? "" : parentId;
+        return this;
+    }
 
     public void setMotto(String motto) {
         String next = motto == null ? "" : motto.trim();
@@ -70,6 +78,27 @@ public class Faction {
         return id.length() > MAX_ID_LENGTH ? id.substring(0, MAX_ID_LENGTH) : id;
     }
 
+    public static boolean isHouseId(@Nullable String id) {
+        return id != null && id.indexOf('.') > 0;
+    }
+
+    public static String rootId(@Nullable String id) {
+        if (id == null) return "";
+        int dot = id.indexOf('.');
+        return dot < 0 ? id : id.substring(0, dot);
+    }
+
+    public static boolean within(@Nullable String id, @Nullable String group) {
+        if (id == null || group == null || id.isBlank() || group.isBlank()) return false;
+        return isHouseId(group) ? id.equalsIgnoreCase(group) : rootId(id).equalsIgnoreCase(group);
+    }
+
+    @Nullable
+    public static String houseId(String parentId, String name) {
+        String part = toId(name);
+        return part == null ? null : parentId + "." + part;
+    }
+
     public CompoundTag toNbt() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("Id", id);
@@ -79,6 +108,7 @@ public class Faction {
         nbt.putString("Motto", motto);
         nbt.putInt("JoinFee", joinFee);
         nbt.putBoolean("Open", openToJoin);
+        if (isHouse()) nbt.putString("Parent", parent);
         return nbt;
     }
 
@@ -95,6 +125,7 @@ public class Faction {
         f.setMotto(nbt.getString("Motto"));
         f.setJoinFee(nbt.getInt("JoinFee"));
         f.setOpenToJoin(!nbt.contains("Open") || nbt.getBoolean("Open"));
+        f.asHouseOf(nbt.getString("Parent"));
         return f;
     }
 }
