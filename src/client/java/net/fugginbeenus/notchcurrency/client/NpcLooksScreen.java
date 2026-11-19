@@ -49,10 +49,21 @@ public class NpcLooksScreen extends Screen {
     private static final String[] TABS = {"Colour", "Size", "Name"};
     private static final int BIT_GLOWING = 4, BIT_NAMEPLATE = 8, BIT_INVISIBLE = 128, BIT_BUBBLE = 2048;
 
-    public NpcLooksScreen(UUID npcId, int statsBits) {
+    private final int lockedBits;
+    private static final int[] TAB_PARTS = {net.fugginbeenus.notchcurrency.npc.NpcEditLocks.EFFECTS, net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SIZE, net.fugginbeenus.notchcurrency.npc.NpcEditLocks.PLATE};
+
+    public NpcLooksScreen(UUID npcId, int statsBits, int lockedBits) {
         super(Component.literal("Appearance"));
         this.npcId = npcId;
         this.statsBits = statsBits;
+        this.lockedBits = lockedBits;
+        for (int i = 0; i < TAB_PARTS.length; i++) {
+            if (!tabLocked(i)) { tab = i; break; }
+        }
+    }
+
+    private boolean tabLocked(int i) {
+        return (lockedBits & TAB_PARTS[i]) != 0;
     }
 
     private void toggleBit(int bit) {
@@ -146,6 +157,16 @@ public class NpcLooksScreen extends Screen {
         for (int i = 0; i < TABS.length; i++) {
             int tx = px + 9 + i * 47;
             boolean hov = over(mouseX, mouseY, tx, py + TAB_Y, TAB_W, TAB_H);
+            if (tabLocked(i)) {
+                NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, "", false, false);
+                int lx = tx + (TAB_W - this.font.width(TABS[i]) - 9) / 2;
+                ctx.fill(lx + 1, py + TAB_Y + 4, lx + 5, py + TAB_Y + 5, 0xFF5A5A5A);
+                ctx.fill(lx + 1, py + TAB_Y + 4, lx + 2, py + TAB_Y + 7, 0xFF5A5A5A);
+                ctx.fill(lx + 4, py + TAB_Y + 4, lx + 5, py + TAB_Y + 7, 0xFF5A5A5A);
+                ctx.fill(lx, py + TAB_Y + 7, lx + 6, py + TAB_Y + 12, 0xFF5A5A5A);
+                ctx.drawString(this.font, TABS[i], lx + 9, py + TAB_Y + 5, NotchTheme.TEXT_MUTED, false);
+                continue;
+            }
             NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, TABS[i], i == tab, hov);
         }
         NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
@@ -283,6 +304,7 @@ public class NpcLooksScreen extends Screen {
 
             for (int i = 0; i < TABS.length; i++) {
                 if (over(mx, my, px + 9 + i * 47, py + TAB_Y, TAB_W, TAB_H)) {
+                    if (tabLocked(i)) return true;
                     NotchWidgets.click();
                     tab = i;
                     return true;

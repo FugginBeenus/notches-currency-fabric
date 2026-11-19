@@ -711,6 +711,7 @@ public final class ServerPacketHandlers {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (!(e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc)) return;
                 if (!npc.isOwnedBy(player) && !net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
+                if (!net.fugginbeenus.notchcurrency.npc.NpcEditLocks.check(player, field == 4 ? net.fugginbeenus.notchcurrency.npc.NpcEditLocks.STATS : field >= 2 ? net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SIZE : net.fugginbeenus.notchcurrency.npc.NpcEditLocks.EFFECTS)) return;
                 switch (field) {
                     case 0 -> npc.setTint(value);
                     case 1 -> npc.setAlpha(value / 100.0f);
@@ -852,7 +853,11 @@ public final class ServerPacketHandlers {
         });
 
         Net.registerServerReceiver(NotchPackets.QUEST_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.QUEST)) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, net.minecraft.network.chat.Component.literal(
+                        "Only admins can write quests." + net.fugginbeenus.notchcurrency.compat.Perms.singlePlayerTip(player)).withStyle(net.minecraft.ChatFormatting.RED));
+                return;
+            }
             sendQuestNames(player, server);
             Net.sendToClient(player, NotchPackets.QUEST_DESIGN, Net.emptyBuf());
         }));
@@ -885,7 +890,7 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                        && npc.canEdit(player)) {
+                        && npc.canEdit(player) && net.fugginbeenus.notchcurrency.npc.NpcEditLocks.check(player, net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSES)) {
                     npc.setTimedAnimation(name);
                     npc.setTimedEvery(every);
                     npc.setTimedRandom(random);
@@ -899,14 +904,18 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                        && npc.canEdit(player)) {
+                        && npc.canEdit(player) && net.fugginbeenus.notchcurrency.npc.NpcEditLocks.check(player, net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSES)) {
                     npc.setIdleAnimation(name);
                 }
             });
         });
 
         Net.registerServerReceiver(NotchPackets.PARTICLE_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, net.minecraft.network.chat.Component.literal(
+                        "Only admins can make particle looks." + net.fugginbeenus.notchcurrency.compat.Perms.singlePlayerTip(player)).withStyle(net.minecraft.ChatFormatting.RED));
+                return;
+            }
             net.fugginbeenus.notchcurrency.npc.particle.ParticleEffectManager.syncTo(player, server);
             Net.sendToClient(player, NotchPackets.PARTICLE_DESIGN, Net.emptyBuf());
         }));
@@ -972,14 +981,18 @@ public final class ServerPacketHandlers {
             server.execute(() -> {
                 if (player.serverLevel().getEntity(npcId)
                         instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc
-                        && npc.canEdit(player)) {
+                        && npc.canEdit(player) && net.fugginbeenus.notchcurrency.npc.NpcEditLocks.check(player, net.fugginbeenus.notchcurrency.npc.NpcEditLocks.EFFECTS)) {
                     npc.setParticleFx(name);
                 }
             });
         });
 
         Net.registerServerReceiver(NotchPackets.ANIM_DESIGN, (server, player, buf) -> server.execute(() -> {
-            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) return;
+            if (!net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(player, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) {
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, net.minecraft.network.chat.Component.literal(
+                        "Only admins can make animations." + net.fugginbeenus.notchcurrency.compat.Perms.singlePlayerTip(player)).withStyle(net.minecraft.ChatFormatting.RED));
+                return;
+            }
             net.fugginbeenus.notchcurrency.npc.anim.AnimationManager.syncTo(player, server);
             Net.sendToClient(player, NotchPackets.ANIM_DESIGN, Net.emptyBuf());
         }));

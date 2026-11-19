@@ -23,7 +23,8 @@ There is also a **Ledger Board** block that shows the top balances in-world.
 The treasury is a server bank. It is off by default. Turn on **Treasury enabled** in the config to use it.
 
 While it is on, money that would otherwise vanish goes into the treasury instead: taxes, fees, rent,
-loan interest, crate keys, the raffle house cut, the auction sale tax and purchases from admin shops.
+loan payments, NPC charges, crate keys, the raffle house cut, the auction sale tax and purchases from
+admin shops.
 Players pay the same as before. Only the place the money ends up changes.
 
 Two more settings build on it:
@@ -32,6 +33,8 @@ Two more settings build on it:
   has enough.
 - **Pay rewards from treasury**: bounty rewards, interest, loans and other payouts come out of the
   treasury while it has enough. When it runs low, they are new money again.
+- **Loans need treasury money** (in the Loans settings): loans come only out of the treasury. If the
+  treasury has too little, the loan is refused, and the player is told how much the bank can lend.
 
 The treasury is not a player. Wealth tax, savings interest and `/baltop` skip it, and `/eco stats`
 shows its balance on its own line.
@@ -45,13 +48,71 @@ shows its balance on its own line.
 | `/npc clearrole` | Remove a role |
 | `/npc info` / `/npc debug` | Inspect the looked-at NPC |
 
-Admin economy roles (banker, auctioneer, etc.) are op-gated; players may set the shop role
-on their own NPCs.
+The `/npc` commands are for admins. NPC owners pick a role on the editor's **Role** tab. The
+**Roles owners can pick** setting limits which roles they can pick (see [NPC editing](#npc-editing)).
 
 `/shop admin transfer <shop> <player>` gives a shop to a player straight away, with no offer to
 accept. The shop's NPC moves with it, so the NPC has to be loaded. The old owner gets the shop's
 unpaid earnings first. Players give NPCs away with the **Transfer** button instead (see
 [NPCs](08.-NPCs)).
+
+### NPC editing
+
+The **NPC owners** group in the config controls what NPC owners can change in the NPC editor. Every
+setting is on by default, so owners can change everything until you turn one off.
+
+| Section | Setting | LuckPerms node |
+| --- | --- | --- |
+| NPC look | **Change the name** | `notchcurrency.npc.edit.name` |
+| NPC look | **Change skin and model** (preset, player and web-link skins, models, mob disguises) | `notchcurrency.npc.edit.skin` |
+| NPC look | **Change size and hitbox** | `notchcurrency.npc.edit.size` |
+| NPC look | **Change effects** (tint, fade, glowing, invisible) | `notchcurrency.npc.edit.effects` |
+| NPC look | **Change the name plate and sign** (name plate, name height, talk bubble, floating text) | `notchcurrency.npc.edit.plate` |
+| NPC moves | **Change movement** (wander, follow, patrol, guard, schedules) | `notchcurrency.npc.edit.movement` |
+| NPC moves | **Change fighting** (protect owner, fight monsters, **Fight players**, fight back, fight rivals) | `notchcurrency.npc.edit.fighting` |
+| NPC role | **Roles owners can pick**: **All roles**, **Shop only** or **None** | `notchcurrency.npc.role.<role>` |
+| NPC talk | **Change dialogue** (pages, quick lines, window or chat, goodbye line) | `notchcurrency.npc.edit.dialogue` |
+| NPC talk | **Change sounds and voice** | `notchcurrency.npc.edit.sounds` |
+| NPC pose | **Change poses and animations** | `notchcurrency.npc.edit.poses` |
+| NPC pose | **Move and turn the NPC** (the Move and Rotate tool) | `notchcurrency.npc.edit.move` |
+| NPC manage | **Change stats and abilities** | `notchcurrency.npc.edit.stats` |
+| NPC manage | **Change equipment** | `notchcurrency.npc.edit.equipment` |
+| NPC manage | **Change reactions** | `notchcurrency.npc.edit.reactions` |
+| NPC manage | **Use presets and share codes** | `notchcurrency.npc.edit.presets` |
+
+- **Shop only** lets owners pick **Shop** or **Basic**. A role node looks like
+  `notchcurrency.npc.role.dealer`.
+- A LuckPerms node set for a group wins over the setting. For example, turn a setting off for
+  everyone, then give its node to a VIP group.
+- Admins skip every lock. **Pick Up**, **Transfer** and **Delete** always work for the owner.
+- Loading a preset or a share code changes the whole NPC, so it needs every setting on.
+- In the editor, a locked part shows a lock. A tab shows a lock only when every part on it is locked.
+  The server also refuses the change.
+- A shop owner runs the shop with a plain right-click, so a shop keeps working with every part locked.
+
+**For player shops:** turn off everything except the two you want players to keep, for example
+**Change the name** and **Change skin and model**, and set **Roles owners can pick** to **Shop
+only**. Give players NPCs from an admin shop (see [Shops](04.-Shops#ready-made-shop-npcs)), or turn
+on **NPC crafting**.
+
+**NPC crafting** has 3 choices: **Off** (the default), **Single player only** (this also covers LAN
+worlds) and **Everywhere**. A change takes effect after `/reload` or a restart.
+
+**Who can do what**
+
+| | Admins | NPC owners | Other players |
+| --- | --- | --- | --- |
+| Get an NPC item | Creative tab or `/npc spawn` | Buy one, or craft it when NPC crafting is on | The same as owners |
+| Edit an NPC | Any NPC | Their own NPCs, except locked parts | No |
+| Pick a role | Any role | The roles that **Roles owners can pick** allows | No |
+| Pay or charge coins, give items or effects, teleport, run commands | Yes | No | No |
+| Quests, Animations and Particles libraries | Yes | No | No |
+| Choose who may use an NPC | Yes | No | No |
+| Pick Up, Transfer, Delete | Any NPC | Their own NPCs | No |
+| Shops | Run any shop, make admin shops | Run their own shop | Buy from shops |
+
+Admins are ops, or players with `notchcurrency.admin.npc`. In single player, you are an admin only
+when cheats are on.
 
 ### Permissions
 
@@ -84,6 +145,9 @@ using `/pay`: `notchcurrency.command.` followed by `ah`, `balance` (also `/bal`)
 `npctransfer`, `quests`, `raffle`, `shop` or `trade`.
 `notchcurrency.bounty.post` lets a player post bounties at a Bounty Board, when player bounties
 are on. Everyone has it too.
+
+**NPC editor locks.** `notchcurrency.npc.edit.<part>` and `notchcurrency.npc.role.<role>` lock parts of
+the NPC editor for NPC owners. See [NPC editing](#npc-editing).
 
 **NPCs that need a permission.** On the NPC editor's **Role** tab, admins can type a permission into
 the box at the bottom and press **Set**. Only players who have it can use that NPC. The NPC's owner
@@ -304,6 +368,16 @@ I E I
 I G I
 
 I = Iron Ingot   E = Emerald   G = Gold Block
+```
+
+**Notch NPC** (only when **NPC crafting** is on)
+
+```
+  E
+E A E
+  E
+
+E = Emerald   A = Armor Stand
 ```
 
 Other blocks and items are available in the **Notch Currency** creative tab.

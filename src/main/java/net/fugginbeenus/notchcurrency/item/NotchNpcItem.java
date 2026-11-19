@@ -45,8 +45,16 @@ public class NotchNpcItem extends Item {
         npc.setYBodyRot(yaw);
 
         ItemStack stack = context.getItemInHand();
-        if (StackData.has(stack, NotchNpcManager.ITEM_TAG)) {
-            npc.readFromItem(StackData.getCompound(stack, NotchNpcManager.ITEM_TAG));
+        CompoundTag packed = StackData.has(stack, NotchNpcManager.ITEM_TAG)
+                ? StackData.getCompound(stack, NotchNpcManager.ITEM_TAG) : null;
+        if (packed != null) {
+            npc.readFromItem(packed);
+            if (player instanceof ServerPlayer sp && !sp.getUUID().equals(npc.getOwner())
+                    && !net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) {
+                npc.setOwner(sp.getUUID(), sp.getName().getString());
+                npc.setActionSweepVersion(0);
+                net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(npc);
+            }
         } else if (player != null) {
             npc.setOwner(player.getUUID(), player.getName().getString());
             npc.setCustomName(Component.literal("NPC"));
@@ -55,14 +63,19 @@ public class NotchNpcItem extends Item {
         npc.setHome(pos);
         sw.addFreshEntity(npc);
 
+        boolean shopBack = false;
         if (npc.getRole() == NpcRole.SHOP && player instanceof ServerPlayer sp) {
-            NotchNpcManager.ensureShopForNpc(sw, npc, sp);
+            shopBack = packed != null && NotchNpcManager.restorePackedShop(sw, npc, packed);
+            if (!shopBack) NotchNpcManager.ensureShopForNpc(sw, npc, sp);
         }
 
         if (player != null && !player.getAbilities().instabuild) {
             stack.shrink(1);
         }
-        if (player instanceof ServerPlayer sp) {
+        if (shopBack && player instanceof ServerPlayer sp) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(
+                    "NPC placed. Its shop is back, with all its listings.").withStyle(ChatFormatting.GREEN));
+        } else if (player instanceof ServerPlayer sp) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC placed. ").withStyle(ChatFormatting.GREEN)
                     .append(Component.literal("Sneak + right-click").withStyle(ChatFormatting.YELLOW))
                     .append(Component.literal(" it to configure.").withStyle(ChatFormatting.GREEN)));
@@ -88,6 +101,10 @@ public class NotchNpcItem extends Item {
             String role = tag.contains("Role") ? tag.getString("Role") : "NONE";
             tooltip.add(Component.literal("Packed NPC: " + name).withStyle(ChatFormatting.AQUA));
             tooltip.add(Component.literal("Role: " + role).withStyle(ChatFormatting.GRAY));
+            if (tag.contains(NotchNpcManager.PACKED_SHOP_NAME)) {
+                tooltip.add(Component.literal("Shop: " + tag.getString(NotchNpcManager.PACKED_SHOP_NAME)
+                        + " (listings kept)").withStyle(ChatFormatting.GOLD));
+            }
             tooltip.add(Component.literal("Place to set it down.").withStyle(ChatFormatting.DARK_GRAY));
         } else {
             tooltip.add(Component.literal("Places a blank NPC you own.").withStyle(ChatFormatting.GRAY));

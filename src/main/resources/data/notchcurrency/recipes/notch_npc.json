@@ -1,0 +1,26 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "notchcurrency:npc_crafting"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " E ",
+    "EAE",
+    " E "
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "A": {
+      "item": "minecraft:armor_stand"
+    }
+  },
+  "result": {
+    "item": "notchcurrency:notch_npc",
+    "id": "notchcurrency:notch_npc",
+    "count": 1
+  }
+}

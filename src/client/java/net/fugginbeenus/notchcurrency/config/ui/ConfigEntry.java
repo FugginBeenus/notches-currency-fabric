@@ -93,17 +93,28 @@ public abstract class ConfigEntry {
 
     public static final class SelectEntry extends ConfigEntry {
         public final String[] options;
+        private final String[] labels;
         public int index;
         private final int defIndex;
         private final Consumer<String> setter;
 
         public SelectEntry(String category, String label, String[] options, String current,
                            String def, Consumer<String> setter, String... tooltip) {
+            this(category, label, options, null, current, def, setter, tooltip);
+        }
+
+        public SelectEntry(String category, String label, String[] options, String[] labels, String current,
+                           String def, Consumer<String> setter, String... tooltip) {
             super(category, label, tooltip);
             this.options = options;
+            this.labels = labels;
             this.index = Math.max(0, indexOf(options, current));
             this.defIndex = Math.max(0, indexOf(options, def));
             this.setter = setter;
+        }
+
+        public String display() {
+            return labels != null && index < labels.length ? labels[index] : options[index];
         }
 
         private static int indexOf(String[] arr, String v) {

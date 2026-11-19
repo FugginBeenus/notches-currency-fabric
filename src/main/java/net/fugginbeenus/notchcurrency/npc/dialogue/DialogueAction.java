@@ -24,8 +24,8 @@ public class DialogueAction {
     }
 
     public static boolean isAdminOnly(Type t) {
-        return t == Type.PAY_COINS || t == Type.GIVE_ITEM || t == Type.GIVE_EFFECT || t == Type.TELEPORT
-                || t == Type.RUN_COMMAND || t == Type.RUN_COMMAND_AS_PLAYER;
+        return t == Type.PAY_COINS || t == Type.CHARGE_COINS || t == Type.GIVE_ITEM || t == Type.GIVE_EFFECT
+                || t == Type.TELEPORT || t == Type.RUN_COMMAND || t == Type.RUN_COMMAND_AS_PLAYER;
     }
 
     private Type type = Type.NONE;

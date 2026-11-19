@@ -30,9 +30,12 @@ public final class NpcPresetManager {
 
     public static void action(ServerPlayer sp, NotchNpcEntity npc, int action, String name) {
         if (!NotchNpcManager.guard(sp, npc)) return;
+        if (!NpcEditLocks.check(sp, NpcEditLocks.PRESETS)) return;
         switch (action) {
             case ACTION_SAVE -> save(sp, npc, name);
-            case ACTION_LOAD -> load(sp, npc, name);
+            case ACTION_LOAD -> {
+                if (NpcEditLocks.checkReplaceAll(sp)) load(sp, npc, name);
+            }
             case ACTION_DELETE -> delete(sp, name);
         }
         sendList(sp, npc);

@@ -23,6 +23,20 @@ public final class NotchConfigScreen extends Screen {
 
     private static final int ROW_H = 17, HEADER_H = 18, TOGGLE_W = 34;
     private static final Set<String> COLLAPSED = new HashSet<>();
+    private static final int RAIL_W = 122, RAIL_ROW = 17;
+    private record Group(String name, List<String> sections) {}
+    private static final List<Group> GROUPS = List.of(
+            new Group("Money", List.of("Economy", "Currency", "Treasury", "Loans", "Savings Interest",
+                    "Wealth Tax", "Audit Log")),
+            new Group("Shops", List.of("Shops", "Shop Rent", "Villager Trades")),
+            new Group("Services", List.of("Enchanter", "Cosmetics", "Waystone Fee")),
+            new Group("Games", List.of("Gambling", "Raffle", "Crates")),
+            new Group("Bounties", List.of("Bounty Board")),
+            new Group("NPCs and factions", List.of("NPCs", "Factions")),
+            new Group("NPC owners", List.of("NPC look", "NPC moves", "NPC role", "NPC talk", "NPC pose",
+                    "NPC manage")),
+            new Group("World and HUD", List.of("Balloon Crates", "Golden Cache", "HUD")));
+    private static int lastGroup = 0;
 
     private final Screen parent;
     private final NotchConfig cfg;
@@ -39,6 +53,9 @@ public final class NotchConfigScreen extends Screen {
     private record Row(String header, ConfigEntry entry, int y) {}
     private final List<Row> rows = new ArrayList<>();
     private int contentH;
+    private boolean rail;
+    private int lx;
+    private final int[] groupCounts = new int[GROUPS.size() + 1];
 
     public static Screen create(Screen parent) {
         return new NotchConfigScreen(parent);
@@ -53,9 +70,12 @@ public final class NotchConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        pw = Math.min(400, this.width - 8);
+        pw = Math.min(530, this.width - 8);
+        rail = pw >= 500;
+        if (!rail) pw = Math.min(400, this.width - 8);
         ph = this.height - 16;
         px = (this.width - pw) / 2;
+        lx = rail ? px + RAIL_W + 10 : px;
         py = 8;
         listTop = py + 42;
         listBottom = py + ph - 28;
@@ -74,11 +94,22 @@ public final class NotchConfigScreen extends Screen {
         rows.clear();
         String query = search.getValue().trim().toLowerCase();
         boolean searching = !query.isEmpty();
+        java.util.Arrays.fill(groupCounts, 0);
+        for (ConfigEntry e : entries) {
+            if (!searching || e.matches(query)) groupCounts[groupOf(e.category)]++;
+        }
+        if (rail && !searching && groupCounts[lastGroup] == 0) {
+            for (int i = 0; i < groupCounts.length; i++) {
+                if (groupCounts[i] > 0) { lastGroup = i; break; }
+            }
+        }
         int y = 0;
         String open = null;
         for (ConfigEntry e : entries) {
             if (searching && !e.matches(query)) continue;
+            if (rail && !searching && groupOf(e.category) != lastGroup) continue;
             if (!e.category.equals(open)) {
+                if (open != null) y += 6;
                 open = e.category;
                 rows.add(new Row(open, null, y));
                 y += HEADER_H;
@@ -88,6 +119,54 @@ public final class NotchConfigScreen extends Screen {
             y += ROW_H;
         }
         contentH = y;
+    }
+
+    private static int groupOf(String category) {
+        for (int i = 0; i < GROUPS.size(); i++) {
+            if (GROUPS.get(i).sections().contains(category)) return i;
+        }
+        return GROUPS.size();
+    }
+
+    private int railY(int i) { return listTop + 3 + i * RAIL_ROW; }
+
+    private void drawRail(GuiGraphics ctx, int mouseX, int mouseY) {
+        boolean searching = !search.getValue().trim().isEmpty();
+        int x = px + 11;
+        NotchWidgets.inset(ctx, x, listTop, RAIL_W, listBottom - listTop, 0xFFC6C6C6);
+        for (int i = 0; i < groupCounts.length; i++) {
+            if (i == GROUPS.size() && groupCounts[i] == 0) break;
+            String name = i < GROUPS.size() ? GROUPS.get(i).name() : "Other";
+            String count = Integer.toString(groupCounts[i]);
+            int ry = railY(i);
+            boolean selected = !searching && i == lastGroup;
+            boolean hover = hit(mouseX, mouseY, x + 2, ry, RAIL_W - 4, RAIL_ROW - 1);
+            int text = groupCounts[i] == 0 ? NotchTheme.TEXT_MUTED : NotchTheme.TEXT_DARK;
+            if (selected) {
+                NotchWidgets.primaryButton(ctx, this.font, x + 2, ry, RAIL_W - 4, RAIL_ROW - 1, "", hover);
+                text = NotchTheme.TEXT_LIGHT;
+            } else if (hover) {
+                ctx.fill(x + 2, ry, x + RAIL_W - 2, ry + RAIL_ROW - 1, 0x20000000);
+            }
+            String shown = this.font.plainSubstrByWidth(name, RAIL_W - 12 - this.font.width(count) - 4);
+            ctx.drawString(this.font, shown, x + 6, ry + 4, text, selected);
+            ctx.drawString(this.font, count, x + RAIL_W - 6 - this.font.width(count), ry + 4,
+                    selected ? NotchTheme.TEXT_LIGHT : NotchTheme.TEXT_MUTED, selected);
+        }
+    }
+
+    private boolean clickRail(double mouseX, double mouseY) {
+        if (!rail) return false;
+        for (int i = 0; i < groupCounts.length; i++) {
+            if (i == GROUPS.size() && groupCounts[i] == 0) break;
+            if (!hit((int) mouseX, (int) mouseY, px + 13, railY(i), RAIL_W - 4, RAIL_ROW - 1)) continue;
+            if (!search.getValue().isEmpty()) search.setValue("");
+            if (lastGroup != i) NotchWidgets.tick();
+            lastGroup = i;
+            scroll = 0;
+            return true;
+        }
+        return false;
     }
 
     private double maxScroll() {
@@ -118,12 +197,13 @@ public final class NotchConfigScreen extends Screen {
         NotchWidgets.title(ctx, this.font, "Notch Currency", px + pw / 2, py + 7, NotchWidgets.Plate.STEEL);
         NotchWidgets.inset(ctx, px + 11, py + 19, pw - 22, 18, NotchTheme.DEEP);
         magnifier(ctx, px + 16, py + 23, 0xFFA0A0A0);
+        if (rail) drawRail(ctx, mouseX, mouseY);
 
         ConfigEntry hoveredEntry = null;
         boolean hoveredReset = false;
         int stripe = 0;
 
-        ctx.enableScissor(px + 1, listTop, px + pw - 1, listBottom);
+        ctx.enableScissor(lx + 1, listTop, px + pw - 1, listBottom);
         for (Row row : rows) {
             int ry = listTop + row.y() - (int) scroll;
             if (ry + HEADER_H < listTop || ry > listBottom) continue;
@@ -131,22 +211,23 @@ public final class NotchConfigScreen extends Screen {
             if (row.header() != null) {
                 stripe = 0;
                 boolean folded = COLLAPSED.contains(row.header());
-                NotchWidgets.triangle(ctx, px + 19, ry + 7, folded, NotchTheme.TEXT_MUTED);
-                ctx.drawString(this.font, row.header(), px + 28, ry + 5, NotchTheme.TEXT_DARK, false);
-                int tw = this.font.width(row.header());
-                NotchWidgets.divider(ctx, px + 34 + tw, ry + 8, pw - 56 - tw);
+                Component title = Component.literal(row.header()).withStyle(net.minecraft.ChatFormatting.BOLD);
+                ctx.fill(lx + 8, ry + 1, px + pw - 18, ry + HEADER_H - 1, 0xFFBDBDBD);
+                ctx.fill(lx + 8, ry + HEADER_H - 2, px + pw - 18, ry + HEADER_H - 1, 0xFF9A9A9A);
+                NotchWidgets.triangle(ctx, lx + 19, ry + 7, folded, NotchTheme.TEXT_DARK);
+                ctx.drawString(this.font, title, lx + 28, ry + 5, NotchTheme.TEXT_DARK, false);
             } else {
                 ConfigEntry e = row.entry();
                 boolean rowHover = mouseY >= ry && mouseY < ry + ROW_H
-                        && mouseX >= px + 8 && mouseX < px + pw - 18
+                        && mouseX >= lx + 8 && mouseX < px + pw - 18
                         && mouseY >= listTop && mouseY < listBottom;
-                if (stripe++ % 2 == 1) ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x10000000);
+                if (stripe++ % 2 == 1) ctx.fill(lx + 8, ry, px + pw - 18, ry + ROW_H, 0x10000000);
                 if (rowHover) {
-                    ctx.fill(px + 8, ry, px + pw - 18, ry + ROW_H, 0x18000000);
+                    ctx.fill(lx + 8, ry, px + pw - 18, ry + ROW_H, 0x18000000);
                     hoveredEntry = e;
                 }
                 ctx.drawString(this.font,
-                        this.font.plainSubstrByWidth(e.label, labelW()), px + 16, ry + 4,
+                        this.font.plainSubstrByWidth(e.label, labelW()), lx + 16, ry + 4,
                         NotchTheme.TEXT_DARK, false);
                 if (!e.isDefault()) {
                     boolean rh = rowHover && mouseX >= resetX() && mouseX < resetX() + 13;
@@ -229,7 +310,7 @@ public final class NotchConfigScreen extends Screen {
                     draggingSlider == s || (rowHover && mouseX >= tx && mouseX < tx + tw), false);
         } else if (e instanceof SelectEntry sel) {
             int bx = right - 110;
-            NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, 110, 13, sel.value(),
+            NotchWidgets.neutralButton(ctx, this.font, bx, ry + 2, 110, 13, sel.display(),
                     rowHover && mouseX >= bx);
             leftTriangle(ctx, bx + 7, ry + 8, NotchTheme.TEXT_MUTED);
             rightTriangle(ctx, bx + 103, ry + 8, NotchTheme.TEXT_MUTED);
@@ -268,7 +349,7 @@ public final class NotchConfigScreen extends Screen {
         ctx.fill(x + 6, y + 6, x + 9, y + 9, color);
     }
 
-    private int labelW() { return pw - 200; }
+    private int labelW() { return px + pw - 200 - lx; }
     private int resetX() { return px + pw - 160; }
     private int sliderX() { return px + pw - 142; }
     private int sliderW() { return 88; }
@@ -307,6 +388,8 @@ public final class NotchConfigScreen extends Screen {
             return true;
         }
 
+        if (clickRail(mouseX, mouseY)) return true;
+
         if (maxScroll() > 0 && mouseX >= px + pw - 16 && mouseX <= px + pw - 6
                 && mouseY >= listTop && mouseY <= listBottom) {
             draggingBar = true;
@@ -318,7 +401,7 @@ public final class NotchConfigScreen extends Screen {
             for (Row row : rows) {
                 int ry = listTop + row.y() - (int) scroll;
                 if (row.header() != null) {
-                    if (mouseY >= ry && mouseY < ry + HEADER_H && mouseX >= px + 8 && mouseX < px + pw - 18
+                    if (mouseY >= ry && mouseY < ry + HEADER_H && mouseX >= lx + 8 && mouseX < px + pw - 18
                             && search.getValue().trim().isEmpty()) {
                         if (!COLLAPSED.remove(row.header())) COLLAPSED.add(row.header());
                         NotchWidgets.tick();

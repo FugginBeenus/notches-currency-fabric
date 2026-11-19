@@ -68,6 +68,7 @@ final class ConfigEntries {
         c = "HUD";
         e.add(new SelectEntry(c, "Bounty tracker position",
                 new String[]{"TOP_LEFT", "TOP_CENTER", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"},
+                new String[]{"Top left", "Top center", "Top right", "Bottom left", "Bottom center", "Bottom right"},
                 cfg.hud.bountyTrackerCorner, "TOP_RIGHT",
                 v -> cfg.hud.bountyTrackerCorner = v,
                 "Screen anchor for the bounty tracker pills.",
@@ -224,6 +225,10 @@ final class ConfigEntries {
                 "Interest is a SINK. Off by default - it creates money."));
         e.add(new NumberEntry(c, "Borrowing limit (max debt)", cfg.loan.maxDebt, 10_000, 0, 1_000_000_000,
                 v -> cfg.loan.maxDebt = v));
+        e.add(new BoolEntry(c, "Loans need treasury money", cfg.loan.needsTreasury, false,
+                v -> cfg.loan.needsTreasury = v,
+                "Loans come out of the treasury. If it has too little, the loan is refused.",
+                "Needs Treasury enabled. Off: loans are paid the same as before."));
         e.add(new SliderEntry(c, "Interest per cycle", cfg.loan.interestPercentPerCycle, 5, 0, 100, "%",
                 v -> cfg.loan.interestPercentPerCycle = v));
         e.add(new NumberEntry(c, "Interest interval (minutes)", cfg.loan.intervalMinutes, 1440, 1, 100_000,
@@ -358,6 +363,94 @@ final class ConfigEntries {
         e.add(new NumberEntry(c, "Max Houses per faction", cfg.factions.maxHouses, 5, 1, 20,
                 v -> cfg.factions.maxHouses = v.intValue(),
                 "How many Houses one faction can have."));
+
+        c = "NPCs";
+        e.add(new SelectEntry(c, "NPC crafting",
+                new String[]{"OFF", "SINGLE_PLAYER", "EVERYWHERE"},
+                new String[]{"Off", "Single player only", "Everywhere"},
+                cfg.npcs.crafting, "OFF",
+                v -> cfg.npcs.crafting = v,
+                "Players craft a blank NPC from an armor stand and 4 emeralds.",
+                "Single player also covers LAN worlds. Takes effect after /reload or a restart."));
+
+        c = "NPC look";
+        e.add(new BoolEntry(c, "Change the name", cfg.npcs.editName, true,
+                v -> cfg.npcs.editName = v,
+                "Owners rename their NPC.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.name"));
+        e.add(new BoolEntry(c, "Change skin and model", cfg.npcs.editSkin, true,
+                v -> cfg.npcs.editSkin = v,
+                "Preset, player and web-link skins, models and mob disguises.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.skin"));
+        e.add(new BoolEntry(c, "Change size and hitbox", cfg.npcs.editSize, true,
+                v -> cfg.npcs.editSize = v,
+                "Model size, body height and the hitbox.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.size"));
+        e.add(new BoolEntry(c, "Change effects", cfg.npcs.editEffects, true,
+                v -> cfg.npcs.editEffects = v,
+                "Tint, fade, glowing and invisible.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.effects"));
+        e.add(new BoolEntry(c, "Change the name plate and sign", cfg.npcs.editPlate, true,
+                v -> cfg.npcs.editPlate = v,
+                "Name plate, name height, talk bubble, floating text and subtitle.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.plate"));
+
+        c = "NPC moves";
+        e.add(new BoolEntry(c, "Change movement", cfg.npcs.editMovement, true,
+                v -> cfg.npcs.editMovement = v,
+                "Stationary, wander, follow, patrol, guard, schedules, avoid monsters, watch players.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.movement"));
+        e.add(new BoolEntry(c, "Change fighting", cfg.npcs.editFighting, true,
+                v -> cfg.npcs.editFighting = v,
+                "Protect owner, fight monsters, Fight players, fight back and fight rivals.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.fighting"));
+
+        c = "NPC role";
+        e.add(new SelectEntry(c, "Roles owners can pick",
+                new String[]{"ALL", "SHOP", "NONE"},
+                new String[]{"All roles", "Shop only", "None"},
+                cfg.npcs.roles, "ALL",
+                v -> cfg.npcs.roles = v,
+                "Shop only lets owners pick Shop or Basic.",
+                "Admins can always pick. LuckPerms: notchcurrency.npc.role.<role>"));
+
+        c = "NPC talk";
+        e.add(new BoolEntry(c, "Change dialogue", cfg.npcs.editDialogue, true,
+                v -> cfg.npcs.editDialogue = v,
+                "Dialogue pages, quick lines, window or chat, and the goodbye line.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.dialogue"));
+        e.add(new BoolEntry(c, "Change sounds and voice", cfg.npcs.editSounds, true,
+                v -> cfg.npcs.editSounds = v,
+                "The voice, its pitch and the sound slots.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.sounds"));
+
+        c = "NPC pose";
+        e.add(new BoolEntry(c, "Change poses and animations", cfg.npcs.editPoses, true,
+                v -> cfg.npcs.editPoses = v,
+                "Poses, the pose editor, idle style, animations and clips.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.poses"));
+        e.add(new BoolEntry(c, "Move and turn the NPC", cfg.npcs.editMove, true,
+                v -> cfg.npcs.editMove = v,
+                "The Move and Rotate tool.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.move"));
+
+        c = "NPC manage";
+        e.add(new BoolEntry(c, "Change stats and abilities", cfg.npcs.editStats, true,
+                v -> cfg.npcs.editStats = v,
+                "Health, speed, protected, gravity, doors, visibility, boss bar and more.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.stats"));
+        e.add(new BoolEntry(c, "Change equipment", cfg.npcs.editEquipment, true,
+                v -> cfg.npcs.editEquipment = v,
+                "What the NPC wears and holds.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.equipment"));
+        e.add(new BoolEntry(c, "Change reactions", cfg.npcs.editReactions, true,
+                v -> cfg.npcs.editReactions = v,
+                "What the NPC does when things happen to it.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.reactions"));
+        e.add(new BoolEntry(c, "Use presets and share codes", cfg.npcs.editPresets, true,
+                v -> cfg.npcs.editPresets = v,
+                "Loading one changes the whole NPC, so it also needs every other part on.",
+                "Admins can always do this. LuckPerms: notchcurrency.npc.edit.presets"));
 
         c = "Cosmetics";
         e.add(new BoolEntry(c, "Cosmetics shop enabled", cfg.cosmetic.enabled, true,

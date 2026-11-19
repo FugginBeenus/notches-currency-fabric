@@ -21,6 +21,27 @@ public final class NotchConfig {
     public VillagerTrades villagerTrades = new VillagerTrades();
     public Treasury treasury = new Treasury();
     public Factions factions = new Factions();
+    public Npcs npcs = new Npcs();
+
+    public static final class Npcs {
+        public String crafting = "OFF";
+        public String roles = "ALL";
+        public boolean editName = true;
+        public boolean editSkin = true;
+        public boolean editSize = true;
+        public boolean editEffects = true;
+        public boolean editPlate = true;
+        public boolean editMovement = true;
+        public boolean editFighting = true;
+        public boolean editDialogue = true;
+        public boolean editSounds = true;
+        public boolean editPoses = true;
+        public boolean editMove = true;
+        public boolean editStats = true;
+        public boolean editEquipment = true;
+        public boolean editReactions = true;
+        public boolean editPresets = true;
+    }
 
     public static final class Treasury {
         public boolean enabled = false;
@@ -105,6 +126,7 @@ public final class NotchConfig {
         public int lateFeePercent = 10;
         public int overdueInterestPercent = 20;
         public int debtCeilingMultiplier = 3;
+        public boolean needsTreasury = false;
     }
 
     public static final class Crate {

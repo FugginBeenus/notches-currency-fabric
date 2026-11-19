@@ -71,6 +71,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.compat.Net.declareChannels();
         net.fugginbeenus.notchcurrency.compat.Geo.init();
         net.fugginbeenus.notchcurrency.config.ExampleDatapack.write();
+        net.fugginbeenus.notchcurrency.npc.NpcCrafting.register();
         net.fugginbeenus.notchcurrency.registry.ModParticles.register();
         ModBlocks.register();
         net.fugginbeenus.notchcurrency.registry.ModBlockEntities.register();

@@ -8,32 +8,38 @@ import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Predicate;
+
 public final class NpcActionSweep {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("NotchCurrency-NpcSweep");
 
-    public static final int CURRENT_VERSION = 1;
+    public static final int CURRENT_VERSION = 2;
 
     private NpcActionSweep() {}
 
     public static int sweep(NotchNpcEntity npc) {
-        if (npc.getActionSweepVersion() >= CURRENT_VERSION) return 0;
+        int from = npc.getActionSweepVersion();
+        if (from >= CURRENT_VERSION) return 0;
         MinecraftServer server = npc.level().getServer();
         if (server == null) return 0;
         npc.setActionSweepVersion(CURRENT_VERSION);
 
         if (NpcActionRunner.ownerMayRunCommands(npc, server)) return 0;
 
+        Predicate<DialogueAction.Type> drop = from < 1
+                ? DialogueAction::isAdminOnly
+                : t -> t == DialogueAction.Type.CHARGE_COINS;
         int removed = 0;
         for (DialogueNode node : npc.getDialogue().nodes().values()) {
             for (DialogueChoice choice : node.choices()) {
-                removed += strip(choice.actions());
+                removed += strip(choice.actions(), drop);
             }
         }
         for (NpcTrigger trigger : NpcTrigger.values()) {
             var kept = new java.util.ArrayList<>(npc.getActions().get(trigger));
             int before = kept.size();
-            strip(kept);
+            strip(kept, drop);
             if (kept.size() != before) {
                 removed += before - kept.size();
                 npc.getActions().set(trigger, kept);
@@ -47,9 +53,9 @@ public final class NpcActionSweep {
         return removed;
     }
 
-    private static int strip(java.util.List<DialogueAction> actions) {
+    private static int strip(java.util.List<DialogueAction> actions, Predicate<DialogueAction.Type> drop) {
         int before = actions.size();
-        actions.removeIf(a -> DialogueAction.isAdminOnly(a.type()));
+        actions.removeIf(a -> drop.test(a.type()));
         return before - actions.size();
     }
 }

@@ -44,6 +44,13 @@ public final class Perms {
         return has(source, "notchcurrency.admin." + area, isOperator(source));
     }
 
+    public static String singlePlayerTip(ServerPlayer sp) {
+        net.minecraft.server.MinecraftServer server = sp.level().getServer();
+        if (server == null || !server.isSingleplayer() || isOperator(sp)
+                || !Profiles.isSingleplayerOwner(server, sp)) return "";
+        return " In single player, turn on cheats to use this.";
+    }
+
     public static Predicate<CommandSourceStack> admin(String area) {
         return source -> isAdmin(source, area);
     }

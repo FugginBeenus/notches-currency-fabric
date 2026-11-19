@@ -74,12 +74,16 @@ public class NotchNpcEditorScreen extends Screen {
     private NotchNpcEntity preview;
 
     public static int reopenAtTab = 0;
+    private final int lockedBits;
+    private final long allowedRoles;
 
     public NotchNpcEditorScreen(net.fugginbeenus.notchcurrency.client.npc.NpcEditorState state) {
         super(Component.literal("NPC Editor"));
         this.tab = Math.max(0, Math.min(5, reopenAtTab));
         reopenAtTab = 0;
         this.npcId = state.npcId();
+        this.lockedBits = state.lockedBits();
+        this.allowedRoles = state.allowedRoles();
         this.currentRole = roleFromOrdinal(state.roleOrdinal());
         this.currentName = state.name() == null ? "" : state.name();
         this.currentFarewell = state.farewell() == null ? "" : state.farewell();
@@ -129,6 +133,109 @@ public class NotchNpcEditorScreen extends Screen {
         return net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.NPC);
     }
 
+    private boolean partLocked(int bit) {
+        return (lockedBits & bit) != 0;
+    }
+
+    private boolean allLocked(int mask) {
+        return (lockedBits & mask) == mask;
+    }
+
+    private record LockZone(int mask, int x, int y, int w, int h) {}
+
+    private java.util.List<LockZone> lockZones() {
+        java.util.List<LockZone> z = new java.util.ArrayList<>();
+        switch (tab) {
+            case 0 -> {
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.NAME, px + 116, py + 44, 176, 36));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SKIN, px + 116, py + 98, 176, 92));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.PLATE, px + RX, signRow() - 1, signWidth(), 17));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SIZE | net.fugginbeenus.notchcurrency.npc.NpcEditLocks.EFFECTS | net.fugginbeenus.notchcurrency.npc.NpcEditLocks.PLATE, px + 118, py + 230, 174, 18));
+            }
+            case 1 -> {
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVEMENT, px + BEH_X, py + 48, BEH_W, 100));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVEMENT, px + BEH_X, py + 150, BEH_W, 38));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVEMENT, px + BEH_X, movesRow1(), BEH_W, TOGGLE_H));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.FIGHTING, px + BEH_X, movesRow2(), BEH_W, movesRow4() + TOGGLE_H - movesRow2()));
+            }
+            case 3 -> {
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.DIALOGUE, px + 8, py + 46, W - 16, 166));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SOUNDS, px + 8, py + 218, W - 16, 58));
+            }
+            case 4 -> {
+                int d = usesGeo() ? 0 : -30;
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSES, px + 30, py + 48, 242, 20));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSES, px + POSE_CTL_X, py + 76, POSE_CTL_W, 92 + d));
+                z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVE, px + POSE_CTL_X, py + 170 + d, POSE_CTL_W, 18));
+                if (!usesGeo()) z.add(new LockZone(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSES, px + POSE_CTL_X, py + 194 + d, POSE_CTL_W, 80));
+            }
+            default -> { }
+        }
+        z.removeIf(zone -> !allLocked(zone.mask()));
+        return z;
+    }
+
+    private void drawLockZones(GuiGraphics ctx, int mx, int my) {
+        for (LockZone zone : lockZones()) {
+            ctx.fill(zone.x(), zone.y(), zone.x() + zone.w(), zone.y() + zone.h(), 0xDCC6C6C6);
+            int pw = this.font.width("Locked") + 15, ph = 12;
+            int bx = zone.x() + 2, by = zone.y() + Math.max(0, (zone.h() - ph) / 2);
+            ctx.fill(bx, by, bx + pw, by + ph, 0xFF8A8A8A);
+            ctx.fill(bx + 1, by + 1, bx + pw - 1, by + ph - 1, 0xFFE6E6E6);
+            drawLock(ctx, bx + 3, by + 2, 0xFF5A5A5A);
+            ctx.drawString(this.font, "Locked", bx + 12, by + 2, 0xFF4A4A4A, false);
+            if (over(mx, my, zone.x(), zone.y(), zone.w(), zone.h())) tooltip = LOCK_TIP;
+        }
+    }
+
+    private boolean inLockZone(int mx, int my) {
+        for (LockZone zone : lockZones()) {
+            if (over(mx, my, zone.x(), zone.y(), zone.w(), zone.h())) return true;
+        }
+        return false;
+    }
+
+    private boolean roleAllowed(NpcRole role) {
+        return role == currentRole || (allowedRoles & (1L << role.ordinal())) != 0;
+    }
+
+    private boolean roleTabLocked() {
+        if (accessAllowed()) return false;
+        for (NpcRole role : SELECTABLE) {
+            if (role != currentRole && roleAllowed(role)) return false;
+        }
+        return true;
+    }
+
+    private boolean tabLocked(int i) {
+        return switch (i) {
+            case 0 -> allLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.LOOK_PARTS);
+            case 1 -> allLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVES_PARTS);
+            case 2 -> roleTabLocked();
+            case 3 -> allLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.TALK_PARTS);
+            case 4 -> allLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.POSE_PARTS);
+            default -> false;
+        };
+    }
+
+    private static final java.util.List<Component> LOCK_TIP = java.util.List.of(
+            Component.literal("Locked").withStyle(ChatFormatting.WHITE),
+            Component.literal("An admin turned this off for NPC owners.").withStyle(ChatFormatting.GRAY));
+
+    private static void drawLock(GuiGraphics ctx, int x, int y, int color) {
+        ctx.fill(x + 1, y, x + 5, y + 1, color);
+        ctx.fill(x + 1, y, x + 2, y + 3, color);
+        ctx.fill(x + 4, y, x + 5, y + 3, color);
+        ctx.fill(x, y + 3, x + 6, y + 8, color);
+    }
+
+    private void lockedButton(GuiGraphics ctx, int x, int y, int w, int h, String label) {
+        NotchWidgets.disabledButton(ctx, x, y, w, h);
+        int lx = x + (w - this.font.width(label)) / 2 + 5;
+        drawLock(ctx, lx - 10, y + (h - 8) / 2, 0xFF5A5A5A);
+        ctx.drawString(this.font, label, lx, y + (h - 8) / 2 + 1, 0xFF6E6E6E, false);
+    }
+
     private static NpcRole roleFromOrdinal(int ord) {
         NpcRole[] all = NpcRole.values();
         return (ord >= 0 && ord < all.length) ? all[ord] : NpcRole.NONE;
@@ -136,6 +243,11 @@ public class NotchNpcEditorScreen extends Screen {
 
     @Override
     protected void init() {
+        if (tabLocked(tab)) {
+            for (int i = 0; i < 6; i++) {
+                if (!tabLocked(i)) { tab = i; break; }
+            }
+        }
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
         nameField = new EditBox(this.font, px + 152, py + 49, 136, 9, Component.literal("Name"));
@@ -192,6 +304,11 @@ public class NotchNpcEditorScreen extends Screen {
         playerField.visible = hum;
         urlField.visible = hum;
         followField.visible = (tab == 1 && currentBehavior == NotchNpcEntity.Behavior.FOLLOW_OWNER);
+        nameField.setEditable(!partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.NAME));
+        playerField.setEditable(!partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SKIN));
+        urlField.setEditable(!partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.SKIN));
+        followField.setEditable(!partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.MOVEMENT));
+        farewellField.setEditable(!partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.DIALOGUE));
     }
 
     //? if >=26.1 {
@@ -223,6 +340,7 @@ public class NotchNpcEditorScreen extends Screen {
         *///?} else {
         super.render(ctx, mouseX, mouseY, delta);
         //?}
+        drawLockZones(ctx, mouseX, mouseY);
         if (tooltip != null) {
             ctx.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }
@@ -236,6 +354,14 @@ public class NotchNpcEditorScreen extends Screen {
         for (int i = 0; i < 6; i++) {
             int tx = tabX(i);
             boolean hover = over(mx, my, tx, py + TAB_Y, TAB_W, TAB_H);
+            if (tabLocked(i)) {
+                NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, "", false, false);
+                int lx = tx + (TAB_W - this.font.width(names[i]) - 9) / 2;
+                drawLock(ctx, lx, py + TAB_Y + 4, 0xFF5A5A5A);
+                ctx.drawString(this.font, names[i], lx + 9, py + TAB_Y + 5, NotchTheme.TEXT_MUTED, false);
+                if (hover) tooltip = LOCK_TIP;
+                continue;
+            }
             NotchWidgets.tab(ctx, this.font, tx, py + TAB_Y, TAB_W, TAB_H, names[i], i == tab, hover);
         }
         if (tab != 3) NotchWidgets.divider(ctx, px + 8, py + 42, W - 16);
@@ -616,6 +742,11 @@ public class NotchNpcEditorScreen extends Screen {
             int rx = roleX(i), ry = roleY(i);
             boolean hover = over(mx, my, rx, ry, ROLE_W, ROLE_H);
             String label = roleLabel(SELECTABLE[i]);
+            if (!roleAllowed(SELECTABLE[i])) {
+                lockedButton(ctx, rx, ry, ROLE_W, ROLE_H, label);
+                if (hover) tooltip = LOCK_TIP;
+                continue;
+            }
             if (SELECTABLE[i] == currentRole) NotchWidgets.primaryButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
             else NotchWidgets.neutralButton(ctx, this.font, rx, ry, ROLE_W, ROLE_H, label, hover);
         }
@@ -1000,20 +1131,13 @@ public class NotchNpcEditorScreen extends Screen {
         NotchWidgets.dangerButton(ctx, this.font, px + 70, py + 104, 160, 16, "Delete NPC", over(mx, my, px + 70, py + 104, 160, 16));
 
         NotchWidgets.divider(ctx, px + 8, py + 128, W - 16);
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 134, 160, 16, "Edit Stats & Abilities",
-                over(mx, my, px + 70, py + 134, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 154, 160, 16, "Open Equipment",
-                over(mx, my, px + 70, py + 154, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 174, 160, 16, "Reactions",
-                over(mx, my, px + 70, py + 174, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 194, 160, 16, "Presets",
-                over(mx, my, px + 70, py + 194, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 214, 160, 16, "Quests",
-                over(mx, my, px + 70, py + 214, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 234, 160, 16, "Animations",
-                over(mx, my, px + 70, py + 234, 160, 16));
-        NotchWidgets.primaryButton(ctx, this.font, px + 70, py + 254, 160, 16, "Particles",
-                over(mx, my, px + 70, py + 254, 160, 16));
+        toolButton(ctx, mx, my, 134, "Edit Stats & Abilities");
+        toolButton(ctx, mx, my, 154, "Open Equipment");
+        toolButton(ctx, mx, my, 174, "Reactions");
+        toolButton(ctx, mx, my, 194, "Presets");
+        toolButton(ctx, mx, my, 214, "Quests");
+        toolButton(ctx, mx, my, 234, "Animations");
+        toolButton(ctx, mx, my, 254, "Particles");
         if (over(mx, my, px + 70, py + 64, 160, 16)) {
             tooltip = java.util.List.of(
                     Component.literal("Pick Up").withStyle(ChatFormatting.WHITE),
@@ -1040,6 +1164,45 @@ public class NotchNpcEditorScreen extends Screen {
                     Component.literal("Write quests once, then hand them out from any").withStyle(ChatFormatting.GRAY),
                     Component.literal("NPC by name, from Reactions or from dialogue.").withStyle(ChatFormatting.GRAY));
         }
+        int lockedY = lockedToolAt(mx, my);
+        if (lockedY >= 0) tooltip = adminTool(lockedY) ? adminTip() : LOCK_TIP;
+    }
+
+    private static final int[] TOOL_YS = {134, 154, 174, 194, 214, 234, 254};
+
+    private static java.util.List<Component> adminTip() {
+        java.util.List<Component> lines = new java.util.ArrayList<>();
+        lines.add(Component.literal("Admins only").withStyle(ChatFormatting.WHITE));
+        lines.add(Component.literal("Only admins can use this.").withStyle(ChatFormatting.GRAY));
+        if (Minecraft.getInstance().hasSingleplayerServer()) {
+            lines.add(Component.literal("In single player, turn on cheats.").withStyle(ChatFormatting.GRAY));
+        }
+        return lines;
+    }
+
+    private static boolean adminTool(int y) {
+        return y == 214 || y == 234 || y == 254;
+    }
+
+    private boolean toolLocked(int y) {
+        if (y == 214) return !net.fugginbeenus.notchcurrency.compat.PermsClient.can(net.fugginbeenus.notchcurrency.net.AdminFlags.QUEST);
+        if (y == 234 || y == 254) return !accessAllowed();
+        if (y == 134) return partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.STATS);
+        if (y == 154) return partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.EQUIPMENT);
+        if (y == 174) return partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.REACTIONS);
+        return partLocked(net.fugginbeenus.notchcurrency.npc.NpcEditLocks.PRESETS);
+    }
+
+    private void toolButton(GuiGraphics ctx, int mx, int my, int y, String label) {
+        if (toolLocked(y)) lockedButton(ctx, px + 70, py + y, 160, 16, label);
+        else NotchWidgets.primaryButton(ctx, this.font, px + 70, py + y, 160, 16, label, over(mx, my, px + 70, py + y, 160, 16));
+    }
+
+    private int lockedToolAt(int mx, int my) {
+        for (int y : TOOL_YS) {
+            if (toolLocked(y) && over(mx, my, px + 70, py + y, 160, 16)) return y;
+        }
+        return -1;
     }
 
     //? if >=1.21.11 {
@@ -1053,13 +1216,15 @@ public class NotchNpcEditorScreen extends Screen {
     //?}
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             int mx = (int) mouseX, my = (int) mouseY;
+            if (inLockZone(mx, my)) return true;
             if (tab == 0 && over(mx, my, px + 118, py + 230, 174, 18)) {
                 NotchWidgets.click();
-                net.minecraft.client.Minecraft.getInstance().setScreen(new NpcLooksScreen(npcId, statsBits));
+                net.minecraft.client.Minecraft.getInstance().setScreen(new NpcLooksScreen(npcId, statsBits, lockedBits));
                 return true;
             }
             for (int i = 0; i < 6; i++) {
                 if (over(mx, my, tabX(i), py + TAB_Y, TAB_W, TAB_H)) {
+                    if (tabLocked(i)) return true;
                     if (tab != i) NotchWidgets.tick();
                     tab = i;
                     updateWidgetVisibility();
@@ -1102,7 +1267,7 @@ public class NotchNpcEditorScreen extends Screen {
                 for (int i = 0; i < SELECTABLE.length; i++) {
                     if (over(mx, my, roleX(i), roleY(i), ROLE_W, ROLE_H)) {
                         NpcRole picked = SELECTABLE[i];
-                        if (picked == currentRole) return true;
+                        if (picked == currentRole || !roleAllowed(picked)) return true;
                         NotchWidgets.tick();
                         if (currentRole == NpcRole.SHOP) {
                             pendingRole = picked;
@@ -1121,6 +1286,7 @@ public class NotchNpcEditorScreen extends Screen {
                 if (over(mx, my, px + 70, py + 84, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcTransfer(npcId); this.onClose(); return true; }
                 if (over(mx, my, px + 70, py + 64, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcPickup(npcId); this.onClose(); return true; }
                 if (over(mx, my, px + 70, py + 104, 160, 16)) { NotchWidgets.click(); NotchPacketsClient.sendNpcDelete(npcId); this.onClose(); return true; }
+                if (lockedToolAt(mx, my) >= 0) return true;
                 if (over(mx, my, px + 70, py + 134, 160, 16)) {
                     NotchWidgets.click();
                     Minecraft.getInstance().setScreen(

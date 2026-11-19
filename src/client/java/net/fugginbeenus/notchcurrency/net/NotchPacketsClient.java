@@ -76,13 +76,15 @@ public final class NotchPacketsClient {
                     voice, voicePitch, buf.readUtf(1024), buf.readUtf(1024), buf.readUtf(1024),
                     buf.readUtf(1024), buf.readUtf(1024), buf.readVarInt(), buf.readBoolean(), buf.readVarInt());
             String permission = buf.readUtf(128);
+            int lockedBits = buf.readVarInt();
+            long allowedRoles = buf.readVarLong();
             var state = new net.fugginbeenus.notchcurrency.client.npc.NpcEditorState(
                     npcId, roleOrdinal, name, ownerName, canEdit, model, skinType, skinValue, slim,
                     scale, scaleY, scaleZ, nameOffset,
                     behaviorOrdinal, wanderRadius, dialogueNodes, dialogueFlat, statsBits, dialogueMode,
                     waypoints, patrolSpeedIdx, patrolWaitIdx, poseId, poseAnim, maxHealth, speedPct,
                     regen, followName, movesBits, farewell, billboard, subtitle, voice, voicePitch, sounds, flyCeiling,
-                    permission);
+                    permission, lockedBits, allowedRoles);
             client.execute(() -> Minecraft.getInstance().setScreen(
                     new net.fugginbeenus.notchcurrency.client.NotchNpcEditorScreen(state)));
         });

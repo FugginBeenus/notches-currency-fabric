@@ -29,6 +29,7 @@ public final class LoanManager {
     private static int lateFeePercent = 10;
     private static int overdueInterestPercent = 20;
     private static int debtCeilingMultiplier = 3;
+    private static boolean needsTreasury = false;
 
     private static long tickAccum = 0;
 
@@ -50,6 +51,7 @@ public final class LoanManager {
         lateFeePercent = Math.max(0, l.lateFeePercent);
         overdueInterestPercent = Math.max(0, l.overdueInterestPercent);
         debtCeilingMultiplier = Math.max(0, l.debtCeilingMultiplier);
+        needsTreasury = l.needsTreasury;
     }
 
     public static long debtCeiling() {
@@ -90,7 +92,19 @@ public final class LoanManager {
             return;
         }
 
-        CurrencyApi.deposit(player, amount, TransactionReason.FAUCET, "loan borrow");
+        if (needsTreasury && net.fugginbeenus.notchcurrency.config.NotchConfigIO.get().treasury.enabled) {
+            if (!net.fugginbeenus.notchcurrency.economy.Treasury.pay(player, amount, "loan borrow")) {
+                long left = net.fugginbeenus.notchcurrency.economy.Treasury.balance(server);
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(player, left > 0
+                        ? Component.literal("The bank can't lend that much right now. It can lend up to ").withStyle(ChatFormatting.RED)
+                                .append(NotchCurrency.coins(left))
+                                .append(Component.literal(".").withStyle(ChatFormatting.RED))
+                        : Component.literal("The bank has nothing to lend right now.").withStyle(ChatFormatting.RED));
+                return;
+            }
+        } else {
+            CurrencyApi.deposit(player, amount, TransactionReason.FAUCET, "loan borrow");
+        }
         state.borrow(player.getUUID(), amount, worldTime(server) + termTicks);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("Borrowed ").withStyle(ChatFormatting.GREEN)
                 .append(NotchCurrency.coins(amount))

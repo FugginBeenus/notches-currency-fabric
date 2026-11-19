@@ -22,11 +22,16 @@ public final class NpcShareManager {
 
     public static void action(ServerPlayer sp, NotchNpcEntity npc, int action, String payload) {
         if (!NotchNpcManager.guard(sp, npc)) return;
+        if (!NpcEditLocks.check(sp, NpcEditLocks.PRESETS)) return;
         switch (action) {
             case ACTION_COPY -> copy(sp, npc);
-            case ACTION_PASTE -> paste(sp, npc, payload);
+            case ACTION_PASTE -> {
+                if (NpcEditLocks.checkReplaceAll(sp)) paste(sp, npc, payload);
+            }
             case ACTION_SAVE_FILE -> saveFile(sp, npc, payload);
-            case ACTION_LOAD_FILE -> loadFile(sp, npc, payload);
+            case ACTION_LOAD_FILE -> {
+                if (NpcEditLocks.checkReplaceAll(sp)) loadFile(sp, npc, payload);
+            }
         }
     }
 
