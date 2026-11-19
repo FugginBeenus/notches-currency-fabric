@@ -308,6 +308,12 @@ Three things bit on the way, all now fixed:
    the vanilla nameplate, and this path already draws its own. The vanilla one is cleared after.
 3. **Three GeckoLib package layouts, not two.** See the table above.
 
+GeckoLib 5.5.7 (26.3) pairs keyframe 0 with keyframe 1 for any time before a track's first
+keyframe, and its linear path lerps with no clamp, so the first move runs backwards and overshoots.
+`NpcModelLoader.addStartKeys` adds a `0.0` key holding the first keyframe's value to every bone track
+that lacks one, in the copy written into the pack. That matches Blockbench, which shows the first
+keyframe's value before it. The source files are left alone.
+
 Still unmeasured:
 
 - **Reload cost** with a realistic bundle count. The loader stamps the source folders and skips the

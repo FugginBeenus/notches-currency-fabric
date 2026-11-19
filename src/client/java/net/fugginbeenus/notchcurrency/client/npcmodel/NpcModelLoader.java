@@ -67,7 +67,7 @@ public final class NpcModelLoader {
                         .forEach(folders::add);
             }
 
-            String stamp = stampOf(folders)
+            String stamp = stampOf(folders) + "-k0"
                     + net.fugginbeenus.notchcurrency.client.npcsound.NpcSoundLoader.stampPart()
                     + net.fugginbeenus.notchcurrency.client.npctexture.NpcTextureLoader.stampPart();
             if (stamp.equals(writtenStamp())) {
@@ -323,12 +323,74 @@ public final class NpcModelLoader {
         Files.writeString(assets.resolve("geckolib").resolve("models").resolve(asset + ".geo.json"), geoText);
         Files.writeString(assets.resolve("geo").resolve(asset + ".geo.json"), geoText);
         if (animFile != null) {
-            byte[] anim = Files.readAllBytes(animFile);
+            byte[] anim = addStartKeys(Files.readAllBytes(animFile));
             Files.write(assets.resolve("geckolib").resolve("animations").resolve(asset + ".json"), anim);
             Files.write(assets.resolve("animations").resolve(asset + ".animation.json"), anim);
         }
         Files.copy(texFile, assets.resolve("textures").resolve("entity").resolve(asset + ".png"),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private static final String[] TRACKS = {"rotation", "position", "scale"};
+
+    static byte[] addStartKeys(byte[] raw) {
+        try {
+            JsonElement parsed = JsonParser.parseString(new String(raw, StandardCharsets.UTF_8));
+            if (!parsed.isJsonObject()) return raw;
+            JsonElement animations = parsed.getAsJsonObject().get("animations");
+            if (animations == null || !animations.isJsonObject()) return raw;
+            boolean changed = false;
+            for (var anim : animations.getAsJsonObject().entrySet()) {
+                if (!anim.getValue().isJsonObject()) continue;
+                JsonElement bones = anim.getValue().getAsJsonObject().get("bones");
+                if (bones == null || !bones.isJsonObject()) continue;
+                for (var bone : bones.getAsJsonObject().entrySet()) {
+                    if (!bone.getValue().isJsonObject()) continue;
+                    JsonObject channels = bone.getValue().getAsJsonObject();
+                    for (String track : TRACKS) {
+                        JsonElement keys = channels.get(track);
+                        if (keys == null || !keys.isJsonObject()) continue;
+                        JsonObject fixed = withStartKey(keys.getAsJsonObject());
+                        if (fixed == null) continue;
+                        channels.add(track, fixed);
+                        changed = true;
+                    }
+                }
+            }
+            return changed ? parsed.toString().getBytes(StandardCharsets.UTF_8) : raw;
+        } catch (Exception unreadable) {
+            return raw;
+        }
+    }
+
+    private static JsonObject withStartKey(JsonObject keys) {
+        java.util.TreeMap<Double, String> times = new java.util.TreeMap<>();
+        for (String key : keys.keySet()) {
+            try {
+                times.put(Double.parseDouble(key), key);
+            } catch (NumberFormatException notATime) {
+                return null;
+            }
+        }
+        if (times.isEmpty() || times.firstKey() <= 0.0001) return null;
+        JsonElement first = keys.get(times.firstEntry().getValue());
+        JsonElement start = null;
+        if (first.isJsonArray() || first.isJsonPrimitive()) {
+            start = first.deepCopy();
+        } else if (first.isJsonObject()) {
+            JsonObject frame = first.getAsJsonObject();
+            for (String part : new String[]{"pre", "post", "vector"}) {
+                if (frame.has(part)) {
+                    start = frame.get(part).deepCopy();
+                    break;
+                }
+            }
+        }
+        if (start == null) return null;
+        JsonObject out = new JsonObject();
+        out.add("0.0", start);
+        for (var entry : times.entrySet()) out.add(entry.getValue(), keys.get(entry.getValue()));
+        return out;
     }
 
     private static void writePackMeta() throws Exception {
