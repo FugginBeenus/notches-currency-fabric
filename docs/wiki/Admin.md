@@ -97,7 +97,7 @@ members. Ops are locked in too, but these commands can move anyone, themselves i
 
 | Command | Description |
 | --- | --- |
-| `/faction admin move <player> <faction>` | Move a player into a faction |
+| `/faction admin move <player> <faction>` | Move a player into a faction, or into a House like `red_kingdom.miners` |
 | `/faction admin remove <player>` | Take a player out of their faction |
 
 **Faction banks.** Turn on **Faction banks** in the config to give every faction its own bank.
@@ -145,6 +145,66 @@ their coins:
 - **Give up** on the board drops the job and puts the coins back. Leaving the faction does the same.
 - Disbanding the faction cancels its jobs and requests. The refunds go back first, then the bank pays
   the founder.
+
+**Houses.** A House is a small group inside a faction, like Miners in Red Kingdom. Turn on **Houses**
+in the config to allow them. It is off by default. **Max Houses per faction** sets how many one
+faction can have (5).
+
+- Only the founder and admins make a House, end it, and pick its leader. Make one on the Recruiter:
+  press **Houses**, then **New House**. Or use `/faction house create <name>`.
+- A House has a name, a join fee, open or closed, an optional leader, and its own bank. It has no
+  color of its own. It uses the faction's color.
+- Two factions can both have a House called Miners. In commands a House is written
+  `faction.house`, like `red_kingdom.miners`. Press Tab to fill it in.
+- Players join a House on the Recruiter's **Houses** page. Joining a House also joins its faction. A
+  player who is new to the faction pays the faction fee and the House fee. Each fee goes to its own
+  bank.
+- A player is in one House at most. Leaving a House keeps them in the faction. Leaving the faction
+  takes them out of their House too.
+- **Permanent membership** still locks players to their faction, but they can move between its
+  Houses.
+- The leader presses **Edit** on the Houses page to change the House fee and open or closed. The
+  leader can also take money out of the House bank. The founder and admins can do all of this for
+  every House.
+- An NPC can recruit for one House. Pick the House in the NPC's faction list. Its Recruiter screen
+  then shows that House, with **Join**, **Leave House**, **Bank** and **Settings**.
+- Turning **Houses** off only stops new Houses. Houses that exist keep working.
+
+The whole faction still counts as one team. NPC friends and rivals, quests and dialogue checks that
+name the faction, shared quest progress, the faction bank and the faction's boards treat every House
+member as a faction member. A quest's **Who** or a dialogue check can name a House instead. Then only
+that House counts.
+
+**House boards.** A Faction Board set to a House is a House board. It keeps the faction's cloth, gets
+a light banner, and its title says "of" and the faction's name.
+
+- The House leader right-clicks a board with no faction to claim it for their House. The founder
+  right-clicks one and picks the faction or one of its Houses.
+- A House board shows the House's jobs and the faction's jobs. Only members of that House take jobs
+  there. Requests posted on the faction's board show on its House boards too.
+- The faction bank pays faction jobs. The House bank pays House jobs. Jobs with no **Who** are paid by
+  the bank of the board they were taken from. On a House board, **Bank pays** uses the House bank.
+- When a player moves to another House, the jobs their old House pays for end and the coins go back.
+  Faction jobs stay.
+
+**Ending a House.** Its members stay in the faction. Its jobs and requests end, with refunds. Its bank
+money moves to the faction bank. Its boards go blank, and its NPCs go back to the faction.
+Disbanding a faction ends all its Houses first. Then the faction bank pays the founder, as before.
+
+| Command | Who | Description |
+| --- | --- | --- |
+| `/faction house list` | anyone | Show your faction's Houses, or every faction's if you have none |
+| `/faction house join <house>` | anyone | Join a House |
+| `/faction house leave` | House members | Leave your House and stay in the faction |
+| `/faction house bank` | House members | Show your House's balance |
+| `/faction house bank deposit <amount>` | House members | Put coins in your House's bank |
+| `/faction house bank withdraw <amount>` | leader, founder | Take coins out of your House's bank |
+| `/faction house create <name>` | founder | Make a House in your faction |
+| `/faction house leader <house> <player>` | founder, admins | Pick the leader. Use `none` for no leader |
+| `/faction house disband <house>` | founder, admins | End a House |
+| `/faction admin house create <faction> <name>` | admins | Make a House in any faction |
+
+`/faction list` shows each faction's Houses under it. `/faction admin bank` works on a House too.
 
 ### Admin Shops
 
