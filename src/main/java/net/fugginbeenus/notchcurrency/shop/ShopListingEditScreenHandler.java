@@ -45,7 +45,7 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
     @Nullable private UUID listingId;
 
     public ShopListingEditScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
-        this(containerId, inv, buf.readBoolean(), buf.readUtf(64), buf.readUtf(64),
+        this(containerId, inv, buf.readBoolean(), buf.readUtf(256), buf.readUtf(256),
                 buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
                 buf.readVarInt(), buf.readBoolean(), null, null);
     }
@@ -88,13 +88,17 @@ public class ShopListingEditScreenHandler extends AbstractContainerMenu {
         }
     }
 
+    private static String cap(String s) {
+        return s.length() > 256 ? s.substring(0, 256) : s;
+    }
+
     public static void open(ServerPlayer sp, PlayerShop shop, @Nullable UUID listingId) {
         ShopListing listing = listingId == null ? null : shop.getListing(listingId);
         boolean has = listing != null;
-        String saleDesc = has ? listing.getItemForSale().getCount() + "×"
-                + listing.getItemForSale().getHoverName().getString() : "";
-        String barterDesc = has && listing.acceptsBarter() ? listing.getItemPriceCount() + "×"
-                + listing.getItemPrice().getHoverName().getString() : "";
+        String saleDesc = has ? cap(listing.getItemForSale().getCount() + "×"
+                + listing.getItemForSale().getHoverName().getString()) : "";
+        String barterDesc = has && listing.acceptsBarter() ? cap(listing.getItemPriceCount() + "×"
+                + listing.getItemPrice().getHoverName().getString()) : "";
         int price = has ? listing.getCoinPrice() : 0;
         int stock = has ? listing.getStockQuantitySafe() : 0;
         int restockMode = has ? listing.getRestockMode().ordinal() : 0;
