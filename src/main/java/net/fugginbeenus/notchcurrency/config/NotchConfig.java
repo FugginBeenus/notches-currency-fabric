@@ -23,6 +23,11 @@ public final class NotchConfig {
     public Factions factions = new Factions();
     public Npcs npcs = new Npcs();
     public Text text = new Text();
+    public Trade trade = new Trade();
+
+    public static final class Trade {
+        public boolean live = true;
+    }
 
     public static final class Text {
         public boolean tags = true;

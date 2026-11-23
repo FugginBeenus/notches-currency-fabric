@@ -32,6 +32,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private static final int SEARCH_Y = 40, SEARCH_H = 12;
     private static final int ROW_Y = 56, ROW_H = 15, VISIBLE = 4;
     private static List<Recipient> knownRecipients = List.of();
+    private static boolean liveTrade = true;
     private static UUID preselected;
     private List<Recipient> shown = new ArrayList<>();
     private UUID chosen;
@@ -54,8 +55,9 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         this.inventoryLabelX = -1000;
     }
 
-    public static void setRecipients(List<Recipient> recipients) {
+    public static void setRecipients(List<Recipient> recipients, boolean live) {
         knownRecipients = recipients;
+        liveTrade = live;
     }
     public static void preselect(UUID recipient) {
         preselected = recipient;
@@ -131,11 +133,18 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
     private int toY() { return this.topPos + TO_Y; }
     private int sendY() { return this.topPos + SEND_Y; }
     private boolean canTrade() {
-        if (chosen == null) return false;
+        if (chosen == null || !liveTrade) return false;
         for (Recipient r : knownRecipients) {
             if (r.id().equals(chosen)) return r.online();
         }
         return false;
+    }
+
+    private boolean nearChosen() {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        if (chosen == null || mc.level == null || mc.player == null) return false;
+        net.minecraft.world.entity.player.Player other = mc.level.getPlayerByUUID(chosen);
+        return other != null && other.distanceTo(mc.player) <= 10.0f;
     }
 
     private int sendW() { return canTrade() ? INNER_W - TRADE_W - SPLIT_GAP : INNER_W; }
@@ -200,9 +209,11 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
             NotchWidgets.primaryButton(ctx, this.font, x + EDGE, sendY(), sendW, SEND_H,
                     fit("Send to " + nameOf(chosen), sendW - 8), sendHover);
         }
-        if (canTrade()) {
+        if (canTrade() && nearChosen()) {
             NotchWidgets.goldButton(ctx, this.font, tradeX(), sendY(), TRADE_W, SEND_H, "Trade",
                     !picking && over(mouseX, mouseY, tradeX(), sendY(), TRADE_W, SEND_H));
+        } else if (canTrade()) {
+            NotchWidgets.neutralButton(ctx, this.font, tradeX(), sendY(), TRADE_W, SEND_H, "Trade", false);
         }
     }
 
@@ -333,7 +344,7 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
                     search.setFocused(true);
                     return true;
                 }
-                if (canTrade() && over(mx, my, tradeX(), sendY(), TRADE_W, SEND_H)) {
+                if (canTrade() && nearChosen() && over(mx, my, tradeX(), sendY(), TRADE_W, SEND_H)) {
                     NotchWidgets.click();
                     NotchPacketsClient.sendMailTrade(chosen);
                     return true;
@@ -388,6 +399,13 @@ public class MailPostScreen extends AbstractContainerScreen<MailPostScreenHandle
         *///?} else {
         renderTooltip(ctx, mouseX, mouseY);
         //?}
+        if (!picking && canTrade() && !nearChosen() && over(mouseX, mouseY, tradeX(), sendY(), TRADE_W, SEND_H)) {
+            ctx.renderComponentTooltip(this.font, List.of(
+                    Component.literal("Stand within 10 blocks of " + nameOf(chosen) + " to trade live.")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.literal("Or type /trade " + nameOf(chosen) + " anywhere.")
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)), mouseX, mouseY);
+        }
     }
 
 

@@ -483,6 +483,12 @@ final class ConfigEntries {
                 v -> cfg.waystone.announce = v,
                 "Tell the player how much they paid after each teleport."));
 
+        c = "Trading";
+        e.add(new BoolEntry(c, "Live trading", cfg.trade.live, true,
+                v -> cfg.trade.live = v,
+                "Players swap items and coins in a shared window, with /trade or the Mailbox.",
+                "Off: /trade and the Mailbox Trade button stop. Offline trade offers still work."));
+
         c = "Audit Log";
         e.add(new BoolEntry(c, "Write audit file", cfg.ledger.fileLogEnabled, true,
                 v -> cfg.ledger.fileLogEnabled = v,

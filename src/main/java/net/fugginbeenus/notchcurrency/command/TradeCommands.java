@@ -63,6 +63,13 @@ public final class TradeCommands {
                                         })
                                 )
                         )
+                        .then(Commands.literal("cancel")
+                                .executes(ctx -> {
+                                    ServerPlayer p = ctx.getSource().getPlayer();
+                                    if (p != null) TradeManager.cancelBy(p);
+                                    return 1;
+                                })
+                        )
                         .then(Commands.literal("offer")
                                 .executes(ctx -> {
                                     ServerPlayer p = ctx.getSource().getPlayer();

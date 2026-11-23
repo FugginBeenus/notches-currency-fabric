@@ -919,7 +919,8 @@ public final class NotchPacketsClient {
                 boolean online = buf.readBoolean();
                 list.add(new net.fugginbeenus.notchcurrency.client.MailPostScreen.Recipient(id, name, online));
             }
-            client.execute(() -> net.fugginbeenus.notchcurrency.client.MailPostScreen.setRecipients(list));
+            boolean liveTrade = buf.readBoolean();
+            client.execute(() -> net.fugginbeenus.notchcurrency.client.MailPostScreen.setRecipients(list, liveTrade));
         });
     }
 

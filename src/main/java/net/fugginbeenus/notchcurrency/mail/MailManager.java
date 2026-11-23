@@ -163,6 +163,7 @@ public final class MailManager {
             buf.writeUtf(entry.getValue(), 32);
             buf.writeBoolean(server.getPlayerList().getPlayer(entry.getKey()) != null);
         }
+        buf.writeBoolean(net.fugginbeenus.notchcurrency.config.NotchConfigIO.get().trade.live);
         net.fugginbeenus.notchcurrency.compat.Net.sendToClient(
                 player, NotchPackets.MAIL_RECIPIENTS, buf);
     }

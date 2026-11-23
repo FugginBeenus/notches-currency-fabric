@@ -89,6 +89,10 @@ public final class TradeOfferManager {
         for (ItemStack st : offer.offeredItems()) {
             giveOrDrop(accepter, st.copy());
         }
+        net.fugginbeenus.notchcurrency.economy.EconomyLedger.recordItems(server, offer.creatorUuid(), accepter.getUUID(),
+                offer.offeredItems(), "trade offer");
+        net.fugginbeenus.notchcurrency.economy.EconomyLedger.recordItems(server, accepter.getUUID(), offer.creatorUuid(),
+                wants, "trade offer");
         if (offer.offeredCoins() > 0) {
             CurrencyApi.deposit(accepter, offer.offeredCoins(), TransactionReason.TRADE, "trade offer payout");
             NotchPackets.sendBalance(accepter, BalanceStore.get(accepter));

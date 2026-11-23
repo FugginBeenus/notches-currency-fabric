@@ -19,6 +19,7 @@ public final class TradeManager {
 
     private static final Map<UUID, TradeSession> sessions = new HashMap<>();
     private static final int TIMEOUT_TICKS = 20 * 60 * 5;
+    private static final int INVITE_TICKS = 20 * 60;
     private static final double MAX_DISTANCE = 10.0;
     private static boolean INITIALIZED = false;
 
@@ -54,6 +55,14 @@ public final class TradeManager {
     }
 
     public static void invite(ServerPlayer from, ServerPlayer to) {
+        invite(from, to, false);
+    }
+
+    public static void invite(ServerPlayer from, ServerPlayer to, boolean nearOnly) {
+        if (!net.fugginbeenus.notchcurrency.config.NotchConfigIO.get().trade.live) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Live trading is off on this server.").withStyle(ChatFormatting.RED));
+            return;
+        }
         if (from == to) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("You cannot trade yourself.").withStyle(ChatFormatting.RED));
             return;
@@ -62,7 +71,13 @@ public final class TradeManager {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Either you or the target is already trading.").withStyle(ChatFormatting.RED));
             return;
         }
-        TradeSession sess = new TradeSession(from, to);
+        if (nearOnly && (from.level() != to.level() || from.position().distanceTo(to.position()) > MAX_DISTANCE)) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal(to.getName().getString()
+                    + " is too far away. Stand within 10 blocks to trade from a Mailbox, or use /trade "
+                    + to.getName().getString() + ".").withStyle(ChatFormatting.RED));
+            return;
+        }
+        TradeSession sess = new TradeSession(from, to, nearOnly);
         sessions.put(from.getUUID(), sess);
         sessions.put(to.getUUID(), sess);
 
@@ -77,15 +92,23 @@ public final class TradeManager {
         );
         net.fugginbeenus.notchcurrency.compat.Msg.chat(to, Component.literal(from.getName().getString() + " wants to trade: ")
                 .append(accept).append(Component.literal(" ")).append(decline));
-        net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Trade invite sent to " + to.getName().getString()).withStyle(ChatFormatting.GRAY));
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(from, Component.literal("Trade invite sent to " + to.getName().getString()
+                + ". It ends in 60 seconds, or use /trade cancel.").withStyle(ChatFormatting.GRAY));
     }
 
     public static void accept(ServerPlayer target, String inviterName) {
         TradeSession sess = get(target.getUUID());
-        if (sess == null || !sess.involves(inviterName)) {
+        if (sess == null || sess.b != target || !sess.a.getName().getString().equals(inviterName)) {
             net.fugginbeenus.notchcurrency.compat.Msg.chat(target, Component.literal("No pending trade with " + inviterName + ".").withStyle(ChatFormatting.RED));
             return;
         }
+        if (sess.accepted) return;
+        if (!net.fugginbeenus.notchcurrency.config.NotchConfigIO.get().trade.live) {
+            sess.cancel("Live trading is off");
+            return;
+        }
+        sess.accepted = true;
+        sess.ticks = 0;
         sess.openScreens();
     }
 
@@ -96,17 +119,31 @@ public final class TradeManager {
         }
     }
 
+    public static void cancelBy(ServerPlayer player) {
+        TradeSession sess = get(player.getUUID());
+        if (sess == null) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(player, Component.literal("You have no trade to cancel.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        sess.cancel(sess.accepted ? "Cancelled by " + player.getName().getString()
+                : player == sess.a ? "Invite taken back" : "Declined");
+    }
+
     private static void tickSessions() {
         if (sessions.isEmpty()) return;
         for (TradeSession s : new HashSet<>(sessions.values())) {
             if (s.closed) continue;
 
             s.ticks++;
+            if (!s.accepted && s.ticks > INVITE_TICKS) {
+                s.cancel("Invite ran out");
+                continue;
+            }
             if (s.ticks > TIMEOUT_TICKS) {
                 s.cancel("Timed out");
                 continue;
             }
-            if (!s.sameWorld() || s.distance() > MAX_DISTANCE) {
+            if (s.nearOnly && (!s.sameWorld() || s.distance() > MAX_DISTANCE)) {
                 s.cancel("Too far apart");
             }
         }
@@ -126,12 +163,15 @@ public final class TradeManager {
         boolean aReady = false, bReady = false;
         int ticks = 0;
         boolean closed = false;
+        boolean accepted = false;
+        final boolean nearOnly;
 
         TradeScreenHandler aHandler, bHandler;
 
-        TradeSession(ServerPlayer a, ServerPlayer b) {
+        TradeSession(ServerPlayer a, ServerPlayer b, boolean nearOnly) {
             this.a = a;
             this.b = b;
+            this.nearOnly = nearOnly;
         }
 
         boolean isClosed() { return closed; }
@@ -198,6 +238,9 @@ public final class TradeManager {
             var bItems = bHandler.takeItemsForCompletion();
             for (ItemStack s : aItems) if (!s.isEmpty()) Give.placeBack(b, s.copy());
             for (ItemStack s : bItems) if (!s.isEmpty()) Give.placeBack(a, s.copy());
+            net.minecraft.server.MinecraftServer server = a.level().getServer();
+            net.fugginbeenus.notchcurrency.economy.EconomyLedger.recordItems(server, a.getUUID(), b.getUUID(), aItems, "live trade");
+            net.fugginbeenus.notchcurrency.economy.EconomyLedger.recordItems(server, b.getUUID(), a.getUUID(), bItems, "live trade");
 
             BalanceStore.subtract(a, aMoney, TransactionReason.TRADE, "trade with " + b.getName().getString());
             BalanceStore.add(b, aMoney, TransactionReason.TRADE, "trade with " + a.getName().getString());

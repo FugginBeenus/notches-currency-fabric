@@ -27,7 +27,7 @@ public final class NotchConfigScreen extends Screen {
     private record Group(String name, List<String> sections) {}
     private static final List<Group> GROUPS = List.of(
             new Group("Money", List.of("Economy", "Currency", "Treasury", "Loans", "Savings Interest",
-                    "Wealth Tax", "Audit Log")),
+                    "Wealth Tax", "Trading", "Audit Log")),
             new Group("Shops", List.of("Shops", "Shop Rent", "Villager Trades")),
             new Group("Services", List.of("Enchanter", "Cosmetics", "Waystone Fee")),
             new Group("Games", List.of("Gambling", "Raffle", "Crates")),

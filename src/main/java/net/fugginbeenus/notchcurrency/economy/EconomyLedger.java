@@ -83,6 +83,44 @@ public final class EconomyLedger {
         return id.toString();
     }
 
+    public static void recordItems(MinecraftServer server, UUID from, UUID to,
+                                   java.util.List<net.minecraft.world.item.ItemStack> items, String detail) {
+        if (server == null || from == null || to == null || !NotchConfigIO.get().ledger.fileLogEnabled) return;
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        for (net.minecraft.world.item.ItemStack stack : items) {
+            if (stack == null || stack.isEmpty()) continue;
+            StringBuilder b = new StringBuilder();
+            b.append(stack.getCount()).append(' ').append(stack.getHoverName().getString()).append(" (")
+                    .append(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()));
+            for (var e : net.fugginbeenus.notchcurrency.compat.Ench.get(stack).entrySet()) {
+                b.append(", ").append(net.fugginbeenus.notchcurrency.compat.Ench.name(e.getKey(), e.getValue()).getString());
+            }
+            parts.add(b.append(')').toString());
+        }
+        if (parts.isEmpty()) return;
+        try {
+            JsonObject o = new JsonObject();
+            o.addProperty("ts", Instant.now().toString());
+            o.addProperty("uuid", from.toString());
+            o.addProperty("name", resolveName(server, from));
+            o.addProperty("reason", "TRADE_ITEMS");
+            o.addProperty("to", resolveName(server, to));
+            o.addProperty("toUuid", to.toString());
+            o.addProperty("items", String.join(", ", parts));
+            if (detail != null && !detail.isBlank()) o.addProperty("detail", detail);
+            synchronized (FILE_LOCK) {
+                BufferedWriter w = writerFor(server);
+                if (w != null) {
+                    w.write(o.toString());
+                    w.newLine();
+                    w.flush();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to write economy ledger entry", e);
+        }
+    }
+
     private static void appendToFile(MinecraftServer server, UUID id, String name, long delta,
                                      long newBalance, TransactionReason reason, @Nullable String detail) {
         try {

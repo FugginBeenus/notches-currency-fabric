@@ -379,9 +379,17 @@ categories, config keys, and datapack paths.
 
 ### Audit Log & Webhook
 
-Every balance change is written to a per-day audit file under `<world>/notchcurrency/ledger/`. An
+Every balance change is written to a per-day audit file under `<world>/notchcurrency/ledger/`. When
+a live trade or an offline trade offer finishes, the file also gets a `TRADE_ITEMS` line for each
+player: the items they gave, with amounts, item ids and enchantments, and who got them. Use it to
+check a scam claim. An
 optional **Discord webhook** mirrors admin-relevant and large transactions - enable it and paste a
 webhook URL in the config.
+
+### Live trading
+
+**Money → Trading → Live trading** turns `/trade` and the Mailbox **Trade** button on or off. It is
+ON by default (`"trade": { "live": true }`). When it is OFF, offline trade offers still work.
 
 ### Recipes
 

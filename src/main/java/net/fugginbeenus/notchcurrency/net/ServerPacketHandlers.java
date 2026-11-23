@@ -454,7 +454,7 @@ public final class ServerPacketHandlers {
                     return;
                 }
                 player.closeContainer();
-                net.fugginbeenus.notchcurrency.trade.TradeManager.invite(player, other);
+                net.fugginbeenus.notchcurrency.trade.TradeManager.invite(player, other, true);
             });
         });
 
