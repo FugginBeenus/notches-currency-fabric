@@ -1,5 +1,113 @@
 # Changelog
 
+## 0.14.0: Faction banks, Houses and text styles
+
+Factions get banks, Houses and their own board, villages get Bounty Boards, and names, signs and
+dialogue can use MiniMessage styles. The new economy settings start turned off.
+
+### Factions
+
+- **Faction banks** (a setting, off by default). Join fees go into the faction's bank. The
+  Recruiter NPC gets a Bank page: members see the balance and deposit, and the founder and admins
+  withdraw. `/faction bank` deposits, withdraws and pays, and `/faction admin bank` checks or
+  changes any bank. A disbanded faction's bank pays out to its founder. Bank money stays out of
+  `/baltop`, wealth tax and interest.
+- **Houses** (a setting, off by default): small groups inside a faction, with their own name,
+  leader, join fee and bank. Only the founder and admins make Houses, end them and pick a leader.
+  Joining a House also joins its faction. The Recruiter gets a Houses page, and an NPC can recruit
+  for one House. `/faction house` has list, join, leave, bank, create, leader and disband.
+- **The Faction Board**: a Bounty Board with cloth and a banner in the faction's color. Founders
+  claim one by right-clicking it, and admins pick its faction from a list. Faction quests can live
+  on the board with Show on: NPC / Faction Board in the Quest Designer.
+- With banks on, the faction bank pays the board's jobs and sets the coins aside when a job is
+  taken. Members can post their own requests, paid from their wallet, or from the bank for
+  founders and admins.
+- A board set to a House gets a light banner, and only that House's members take its jobs. The
+  House bank pays House jobs.
+- Name a House in a quest's Who or a dialogue check to make it House only.
+- Leaving or disbanding a faction drops its board jobs and refunds what was held. Ending a House
+  refunds its jobs and moves its bank to the faction bank.
+- Tab fills in faction and House names in `/faction` commands.
+
+### Bounty Boards
+
+- **Villages**: every new village gets a Bounty Board next to its bell, modded villages too. It has
+  its own setting, on by default. The `notchcurrency:village_board_ground` block tag lets
+  datapacks add modded paving.
+- **A recipe**: logs, an emerald, paper, a book and sticks.
+- **An example datapack**: the mod now writes a ready-to-use datapack with the default bounties,
+  loot crates and cosmetics offers to `config/notchcurrency/examples/`. Copy it into a world's
+  `datapacks` folder and edit it there. The wiki's Configuration page lists every field.
+
+### Text styles
+
+- **MiniMessage tags** work in NPC names, subtitles, talk lines, floating signs, dialogue and shop
+  titles: `<bold>`, `<#ff8800>`, `<gradient:red:blue>` and more. Old `&` codes still work, also
+  mixed with tags.
+- Tags don't count against length limits. A name can show 48 letters and a shop name 32.
+- Only admins can save click tags. For other players, and for share codes or presets they load, a
+  click tag stays plain text.
+- **Text tags** setting in World and HUD, on by default. Off shows tags as plain text. The server
+  sends its choice to players when they join.
+- The library is bundled under the mod's own package name, so it can't clash with other mods that
+  carry it.
+
+### NPCs
+
+- **Sound lists**: up to 8 sounds per sound slot, played at random, all at once or in order. A
+  sound browser with names, categories, search and previews, and a play button on each row.
+- **Owner locks**: 15 switches in the config for what NPC owners can change in the editor, each
+  with a LuckPerms node. Locked parts fade and show a Locked tag, and the server refuses locked
+  changes. Owners can be allowed all roles, Shop only or none.
+- **Max NPCs per player** (a setting, off by default). Admins and the `notchcurrency.npc.nolimit`
+  node have no limit.
+- **NPC crafting** (a setting, off by default, for single player only or everywhere): an armor
+  stand and 4 emeralds make a blank NPC.
+- **Pick Up keeps a shop**: a shop NPC keeps its shop, listings and stock, and placing it again
+  opens the same shop. A player who places a packed NPC owns it, and its admin-only actions are
+  removed.
+- Charge coins is now admin-only, like Pay coins, so player NPCs can't take coins from people
+  walking by.
+
+### Trading
+
+- `/trade` works at any distance, even from another world.
+- An unanswered invite ends after 60 seconds, and `/trade cancel` takes it back or ends an open
+  trade.
+- The Mailbox **Trade** button is grey until the other player is within 10 blocks, with a tooltip
+  that says why.
+- **Live trading** setting in Money, on by default. Off stops `/trade` and the Mailbox Trade button.
+- The audit log lists the items each player gave in a live trade or a trade offer.
+
+### Money and settings
+
+- **Loans need treasury money** (a setting, off by default). Loans come out of the treasury and are
+  refused when it runs low.
+- The settings screen has groups down the left side and bold section titles.
+- In single player, admin-only messages say to turn on cheats.
+
+### Fixes
+
+- The player who sent a trade invite could accept it for the other player.
+- Quests, Animations and Particles did nothing for players who aren't admins. They now show a lock,
+  and the server says why.
+- A shop listing for an item with a long name would not open its edit screen.
+- On 26.3, a part of an imported model with no keyframe at 0 seconds swung past its pose at the
+  start of each loop.
+- The faction name on the Recruiter was invisible on 1.21.11 and newer.
+- Recruiter mottos over 32 letters failed to save.
+- Bounty and Ledger Boards now drop when broken with an axe.
+- Choice settings in the config show plain names.
+
+### Removed
+
+- `/npc setrole adminshop`, which pointed at the old admin shop system.
+
+The wiki covers all of it: Houses and banks on the Admin page, text formatting on the NPCs page, and
+a datapack guide on the Configuration page.
+
+Servers and players should update together.
+
 ## 0.13.4: Shop fixes
 
 Two fixes for servers that run their shops through NPCs.

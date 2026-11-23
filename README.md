@@ -39,7 +39,8 @@ Requires Fabric API, and GeckoLib for the animated NPC model.
 - Code-drawn browse, manage, and listing-editor screens, fully paginated (up to 27 listings)
 - Flexible pricing: sell for coins, for a bartered item, or both at once
 - Live earnings collection, name/greeting/open controls, and optional shop rent as a sink
-- Color the shop title with `&`-codes in the name (`&6Golden Goods`), using the same codes as dialogue
+- Style the shop title with MiniMessage tags or `&` codes (`<gradient:gold:yellow>Golden Goods</gradient>`
+  or `&6Golden Goods`), the same as NPC names and dialogue
 - Pick one of 32 signs for the shop's name, from wood and brass to a flickering neon; a resource
   pack can add more
 - Each shop is run by an NPC with the Shop role; add dialogue and shoppers get the conversation
@@ -67,7 +68,8 @@ chest, handed to somebody, or opened whenever you like.
 - **Inbox**: a grid of parcels. Drag one out, or Take all to unwrap the lot
 - **Outbox**: pick a recipient from everyone with a mailbox, fill the slots, add coins and a note
 - Auction winnings arrive as a parcel from the Auction House, so there's one place to look
-- If the person you picked is online, a **Trade** button opens a live trade with them instead
+- If the person you picked is online and within 10 blocks, a **Trade** button opens a live trade
+  with them instead. `/trade` works from anywhere
 
 ### Deep NPC System
 A single blank-slate Notch NPC item spawns a fully customizable NPC (built on GeckoLib):
@@ -83,10 +85,14 @@ A single blank-slate Notch NPC item spawns a fully customizable NPC (built on Ge
 - Quests: jobs an NPC hands out (kill, collect, talk to, go to, deliver), with rewards, chains and
   shared progress for faction mates
 - Animations: build a loop of poses on a timeline in game, then give it to any NPC
-- Sounds: a voice and five more per NPC, an ambient sound on a timer, and your own .ogg files shared server-wide
+- Sounds: a voice and five more per NPC, up to eight sounds per slot, a sound browser with previews,
+  an ambient sound on a timer, and your own .ogg files shared server-wide
 - Particles: a designer with six shapes, spin and rise, four layers, tame versions of vanilla's awkward particles, and eight slots for your own pictures
-- Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance
+- Factions: found one at a Recruiter NPC; guards tell friend from foe, dialogue gates on allegiance.
+  Optional faction banks, Houses inside a faction, and a Faction Board for faction jobs
 - Floating signs: up to four lines hovering above an NPC, for shop boards and titles
+- Text styles: MiniMessage tags like `<bold>`, `<#ff8800>` and `<gradient:red:blue>` in names,
+  signs, talk lines and dialogue, with the old `&` codes still working
 - Name plates: pick the sign an NPC's name sits on in its talk window
 - Stats & abilities (health/speed/regen sliders, protection, doors, leashing, day/night visibility)
 - Ownership-gated editing, a "pick up" that repacks the config into the item, and saveable presets
@@ -126,6 +132,7 @@ Two ways to give an NPC a voice (editor → Talk tab):
 | `%npc%` | the NPC's name |
 | `%balance%` | the player's coin balance |
 | `&` color codes | standard Minecraft colors, e.g. `&6gold`, `&lbold` |
+| MiniMessage tags | styles, e.g. `<gold>`, `<bold>`, `<gradient:red:blue>` |
 
 Styles: **Window** opens the conversation screen; **Chat** prints one random page to chat and then
 opens the NPC's job (shop, bank, …). Quick Lines auto-selects Chat.
@@ -152,7 +159,8 @@ Every feature has a physical, hand-modeled block or table to build a casino/mark
 - **Ledger Board**: a wide monument that renders the live balance leaderboard right on its face,
   Create-display-board style (updates in real time; no GUI needed)
 - **Bounty Board**: a two-tall notice board that opens the rotating bounty list. Players can post
-  their own bounties there too, and servers can allow bounties on players
+  their own bounties there too, and servers can allow bounties on players. New villages get one
+  next to the bell, and a faction can claim one as its Faction Board
 - **Slot Machine**: animated marquee lights; bet and spin the reels
 - **Coin Flip table**: a 3D coin sits on the felt, then pops up, tumbles, and lands on the result
 - **Crates** (Common / Rare / Epic): arched treasure chests whose lids swing open on a win
@@ -181,16 +189,22 @@ placeable via ModMenu so it dodges other mods' overlays.
   permissions mod, ops run things as before
 - An optional treasury that keeps taxes, fees and rent in a server bank instead of destroying them,
   and optional permanent faction membership
+- Owner locks: pick what NPC owners can change in the editor, each with a LuckPerms node, plus an
+  optional NPC limit per player
+- An example datapack in `config/notchcurrency/examples` with the default bounties, crates and
+  cosmetics, ready to copy into a world
 
 ## Commands (quick reference)
 - `/pay <player> <amount>`: send coins
 - `/receipts`: your transaction history
 - `/baltop`: richest players
-- `/trade <player>`: live trade; `/trade offer` / `/trade offers`: offline trade offers
+- `/trade <player>`: live trade from anywhere; `/trade cancel`; `/trade offer` / `/trade offers`:
+  offline trade offers
 - `/ah`, `/shop`, `/raffle`, `/bounty`, `/crate`, `/loan`, `/slots`, `/coinflip`: feature entry points
 - `/shop relink <id>`: lost the NPC running one of your shops? Look at a new one and run this. The
   shop and everything in it was never deleted, it just had nobody standing behind it
-- `/faction`: list, join, leave; found, rename or disband your own
+- `/faction`: list, join, leave; found, rename or disband your own; `bank` and `house` when those
+  are on
 - `/bal` / `/balance`: your balance in chat
 - `/hearts`: your extra hearts, and whether this server takes one when you die
 - `/quests`: your quest log, with a hand-in button for anything ready
