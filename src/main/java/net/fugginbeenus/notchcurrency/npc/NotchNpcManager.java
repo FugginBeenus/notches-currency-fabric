@@ -893,7 +893,7 @@ public final class NotchNpcManager {
             for (var s : stranded) {
                 net.fugginbeenus.notchcurrency.compat.Msg.chat(fallbackOwner, Component.literal(
                         "  /shop relink " + s.getShopId().toString().substring(0, 8)
-                                + "   (" + s.getShopName() + ")").withStyle(ChatFormatting.GRAY));
+                                + "   (" + s.plainName() + ")").withStyle(ChatFormatting.GRAY));
             }
         }
 

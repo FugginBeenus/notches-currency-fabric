@@ -266,7 +266,7 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.NPC_SET_NAME, (server, player, buf) -> {
             UUID id = buf.readUUID();
-            String name = buf.readUtf(64);
+            String name = buf.readUtf(256);
             server.execute(() -> {
                 net.minecraft.world.entity.Entity e = player.serverLevel().getEntity(id);
                 if (e instanceof net.fugginbeenus.notchcurrency.entity.NotchNpcEntity npc) {
@@ -782,7 +782,7 @@ public final class ServerPacketHandlers {
 
         Net.registerServerReceiver(NotchPackets.SHOP_MANAGE_ACTION, (server, player, buf) -> {
             int action = buf.readVarInt();
-            String text = buf.readUtf(160);
+            String text = buf.readUtf(256);
             UUID listingId = buf.readBoolean() ? buf.readUUID() : null;
             server.execute(() -> {
                 if (player.containerMenu instanceof net.fugginbeenus.notchcurrency.shop.ShopManageScreenHandler h) {

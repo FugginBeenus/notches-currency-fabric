@@ -70,6 +70,21 @@ public class PlayerShop {
     public String getOwnerName() {
         return ownerName;
     }
+    public String plainName() {
+        return net.fugginbeenus.notchcurrency.text.TextTags.plain(getShopName());
+    }
+
+    public boolean nameIs(String input) {
+        return input != null && (getShopName().equalsIgnoreCase(input) || plainName().equalsIgnoreCase(input));
+    }
+
+    public boolean nameHas(String input) {
+        if (input == null) return false;
+        String want = input.toLowerCase(java.util.Locale.ROOT);
+        return getShopName().toLowerCase(java.util.Locale.ROOT).contains(want)
+                || plainName().toLowerCase(java.util.Locale.ROOT).contains(want);
+    }
+
     public String getShopName() {
         return shopName;
     }

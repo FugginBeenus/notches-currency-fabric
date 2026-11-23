@@ -81,7 +81,7 @@ public final class NpcTransfer {
                 npc.getOwner(), System.currentTimeMillis() + OFFER_MILLIS));
 
         PlayerShop shop = shopOf(npc);
-        String what = name(npc) + (shop == null ? "" : " and its shop, " + shop.getShopName());
+        String what = name(npc) + (shop == null ? "" : " and its shop, " + shop.plainName());
         Msg.chat(target, Component.literal(giver.getName().getString() + " wants to give you " + what + ". ")
                 .withStyle(ChatFormatting.GOLD)
                 .append(button("[Accept]", ChatFormatting.GREEN, Chat.runCommand("/npctransfer accept"), "Take it"))
@@ -150,7 +150,7 @@ public final class NpcTransfer {
             long till = shop.withdrawBalance();
             if (till > 0) {
                 CurrencyApi.deposit(server, shop.getOwnerId(), till, TransactionReason.SHOP_PAYOUT,
-                        "shop handed over: " + shop.getShopName());
+                        "shop handed over: " + shop.plainName());
             }
             PlayerShopManager.transferOwnership(server, shop.getShopId(), newOwner, newOwnerName);
         }

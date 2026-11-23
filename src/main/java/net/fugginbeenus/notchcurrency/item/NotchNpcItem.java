@@ -116,7 +116,7 @@ public class NotchNpcItem extends Item {
             tooltip.add(Component.literal("Packed NPC: " + name).withStyle(ChatFormatting.AQUA));
             tooltip.add(Component.literal("Role: " + role).withStyle(ChatFormatting.GRAY));
             if (tag.contains(NotchNpcManager.PACKED_SHOP_NAME)) {
-                tooltip.add(Component.literal("Shop: " + tag.getString(NotchNpcManager.PACKED_SHOP_NAME)
+                tooltip.add(Component.literal("Shop: " + net.fugginbeenus.notchcurrency.text.TextTags.plain(tag.getString(NotchNpcManager.PACKED_SHOP_NAME))
                         + " (listings kept)").withStyle(ChatFormatting.GOLD));
             }
             tooltip.add(Component.literal("Place to set it down.").withStyle(ChatFormatting.DARK_GRAY));
