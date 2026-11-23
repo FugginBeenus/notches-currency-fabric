@@ -78,6 +78,16 @@ public final class NotchWidgets {
         ctx.drawCenteredString(tr, Component.literal(label), x + w / 2, y + (h - 8) / 2, NotchTheme.TEXT_LIGHT);
     }
 
+    public static void primaryButton(GuiGraphics ctx, Font tr, int x, int y, int w, int h, Component label, boolean hovered) {
+        colorButton(ctx, x, y, w, h, NotchTheme.ACCENT_GREEN, NotchTheme.GREEN_HI, NotchTheme.GREEN_LO, hovered);
+        ctx.drawCenteredString(tr, label, x + w / 2, y + (h - 8) / 2, NotchTheme.TEXT_LIGHT);
+    }
+
+    public static void styledLine(GuiGraphics ctx, Font tr, Component text, int x, int y, int maxW, int color, boolean shadow) {
+        ctx.drawString(tr, net.minecraft.locale.Language.getInstance().getVisualOrder(tr.substrByWidth(text, maxW)),
+                x, y, color, shadow);
+    }
+
     public static void dangerButton(GuiGraphics ctx, Font tr, int x, int y, int w, int h, String label, boolean hovered) {
         colorButton(ctx, x, y, w, h, NotchTheme.ACCENT_RED, NotchTheme.RED_HI, NotchTheme.RED_LO, hovered);
         ctx.drawCenteredString(tr, Component.literal(label), x + w / 2, y + (h - 8) / 2, NotchTheme.TEXT_LIGHT);
@@ -577,10 +587,6 @@ public final class NotchWidgets {
         net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
                 net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                         net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), 1.35f, 0.5f));
-    }
-
-    public static String colorize(String s) {
-        return s == null ? "" : s.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
     }
 
     public static void arrowRight(GuiGraphics ctx, int x, int y, int color) {

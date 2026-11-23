@@ -58,7 +58,7 @@ public final class SignPicker {
         for (int k = 0; k < PER_PAGE && start + k < all.size(); k++) {
             if (over(mx, my, cellX(k), cellY(k), CELL_W, CELL_H)) shown = all.get(start + k).id();
         }
-        Signs.draw(ctx, font, shown, fallback, preview, left + W / 2, top + 24);
+        Signs.draw(ctx, font, shown, fallback, net.fugginbeenus.notchcurrency.text.TextTags.parse(preview), left + W / 2, top + 24);
         for (int k = 0; k < PER_PAGE && start + k < all.size(); k++) {
             Signs.Sign s = all.get(start + k);
             int cx = cellX(k), cy = cellY(k);

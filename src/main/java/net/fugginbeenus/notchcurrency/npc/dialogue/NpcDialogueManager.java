@@ -29,7 +29,8 @@ public final class NpcDialogueManager {
             DialogueNode pick = pages.get(sp.getRandom().nextInt(pages.size()));
             String npcName = (npc.hasCustomName() && npc.getCustomName() != null)
                     ? npc.getCustomName().getString() : "NPC";
-            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + npcName + "> " + substitute(pick.text(), sp, npcName))
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + npcName + "> ")
+                    .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(substitute(pick.text(), sp, npcName)))
                     .withStyle(ChatFormatting.WHITE));
             watchForFarewell(sp, npc);
             if (hasRoleScreen(npc)) {
@@ -187,7 +188,8 @@ public final class NpcDialogueManager {
     }
 
     private static void say(ServerPlayer sp, FarewellWatch w) {
-        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + w.npcName + "> " + substitute(w.farewell, sp, w.npcName))
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("<" + w.npcName + "> ")
+                .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(substitute(w.farewell, sp, w.npcName)))
                 .withStyle(ChatFormatting.WHITE));
     }
 
@@ -240,6 +242,6 @@ public final class NpcDialogueManager {
     }
 
     private static String substitute(String text, ServerPlayer sp, String npcName) {
-        return NpcText.substitute(text, sp, npcName);
+        return NpcText.fill(text, sp, npcName);
     }
 }

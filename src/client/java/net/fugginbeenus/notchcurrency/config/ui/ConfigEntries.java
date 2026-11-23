@@ -65,6 +65,13 @@ final class ConfigEntries {
                 "Coin price for each emerald of the original trade.",
                 "Trades too pricey to fit the two buy slots stay emerald-priced."));
 
+        c = "Text";
+        e.add(new BoolEntry(c, "Text tags (MiniMessage)", cfg.text.tags, true,
+                v -> cfg.text.tags = v,
+                "NPC names, subtitles, talk lines, floating signs and shop titles can use",
+                "tags like <bold> or <gradient:red:blue>. Off: tags show as plain text.",
+                "& color codes work either way. Only admins can save click tags."));
+
         c = "HUD";
         e.add(new SelectEntry(c, "Bounty tracker position",
                 new String[]{"TOP_LEFT", "TOP_CENTER", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"},

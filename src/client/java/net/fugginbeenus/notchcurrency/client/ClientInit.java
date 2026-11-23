@@ -209,6 +209,7 @@ public final class ClientInit implements ClientModInitializer {
                 (handler, client) -> {
                     net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelDownloads.reset();
                     net.fugginbeenus.notchcurrency.client.npcmodel.NpcModelHint.reset();
+                    net.fugginbeenus.notchcurrency.text.TextTags.setSynced(null);
                 });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

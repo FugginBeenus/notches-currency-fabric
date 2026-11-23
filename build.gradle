@@ -66,6 +66,87 @@ dependencies {
         modCompileOnly "dev.emi:trinkets:${property('trinkets_version')}"
     }
 }
+
+configurations {
+    kyori { transitive = false }
+}
+
+dependencies {
+    kyori "net.kyori:adventure-text-minimessage:4.26.1"
+    kyori "net.kyori:adventure-api:4.26.1"
+    kyori "net.kyori:adventure-key:4.26.1"
+    kyori "net.kyori:examination-api:1.3.0"
+    kyori "net.kyori:examination-string:1.3.0"
+}
+
+def kyoriJar = layout.buildDirectory.file("kyori/kyori-relocated.jar")
+
+def relocateKyori = tasks.register("relocateKyori") {
+    inputs.files(configurations.kyori)
+    outputs.file(kyoriJar)
+    doLast {
+        String oldPath = "net/kyori/"
+        String newPath = "net/fugginbeenus/notchcurrency/lib/kyori/"
+        String oldName = "net.kyori."
+        String newName = "net.fugginbeenus.notchcurrency.lib.kyori."
+        def remapper = new org.objectweb.asm.commons.Remapper() {
+            @Override
+            String map(String name) {
+                return name.startsWith(oldPath) ? newPath + name.substring(oldPath.length()) : name
+            }
+
+            @Override
+            Object mapValue(Object value) {
+                if (value instanceof String) {
+                    String s = (String) value
+                    if (s.startsWith(oldName)) return newName + s.substring(oldName.length())
+                    if (s.startsWith(oldPath)) return newPath + s.substring(oldPath.length())
+                }
+                return super.mapValue(value)
+            }
+        }
+        long stamp = new GregorianCalendar(1980, 1, 1).timeInMillis
+        File out = kyoriJar.get().asFile
+        out.parentFile.mkdirs()
+        Set<String> seen = new HashSet<>()
+        new java.util.zip.ZipOutputStream(new FileOutputStream(out)).withCloseable { zos ->
+            configurations.kyori.files.sort { it.name }.each { File lib ->
+                new java.util.zip.ZipFile(lib).withCloseable { zip ->
+                    zip.entries().toList().sort { it.name }.each { e ->
+                        String name = e.name
+                        if (e.isDirectory() || name.endsWith("module-info.class") || name.startsWith("META-INF/versions/")
+                                || name == "META-INF/MANIFEST.MF" || name.startsWith("META-INF/maven/")) return
+                        byte[] data = zip.getInputStream(e).bytes
+                        if (name.endsWith(".class")) {
+                            def writer = new org.objectweb.asm.ClassWriter(0)
+                            new org.objectweb.asm.ClassReader(data).accept(new org.objectweb.asm.commons.ClassRemapper(writer, remapper), 0)
+                            data = writer.toByteArray()
+                            name = remapper.map(name.substring(0, name.length() - 6)) + ".class"
+                        } else if (name.startsWith("META-INF/services/")) {
+                            name = name.replace(oldName, newName)
+                            data = new String(data, "UTF-8").replace(oldName, newName).getBytes("UTF-8")
+                        } else if (name.startsWith("META-INF/")) {
+                            name = "META-INF/licenses/kyori/" + lib.name.replace(".jar", "") + "/" + name.substring(9)
+                        } else if (name.startsWith(oldPath)) {
+                            name = newPath + name.substring(oldPath.length())
+                        }
+                        if (!seen.add(name)) return
+                        def entry = new java.util.zip.ZipEntry(name)
+                        entry.setTime(stamp)
+                        zos.putNextEntry(entry)
+                        zos.write(data)
+                        zos.closeEntry()
+                    }
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation files(kyoriJar).builtBy(relocateKyori)
+}
+
 loom {
     splitEnvironmentSourceSets()
 
@@ -352,6 +433,8 @@ modJar.configure {
 }
 
 tasks.jar {
+    dependsOn(relocateKyori)
+    from(zipTree(kyoriJar))
     from("LICENSE") { rename { "${it}_${base.archivesName.get()}" } }
     manifest {
         attributes(

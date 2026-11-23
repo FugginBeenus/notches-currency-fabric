@@ -88,10 +88,9 @@ public class NpcBillboardScreen extends Screen {
 
         for (int i = 0; i < fields.length; i++) {
             NotchWidgets.inset(ctx, px + PAD, rowY(i), W - PAD * 2, 15, NotchTheme.DEEP);
-            String preview = NotchWidgets.colorize(lines[i]);
-            if (!preview.isBlank()) {
-                ctx.drawString(this.font, this.font.plainSubstrByWidth(preview, W - PAD * 2 - 8),
-                        px + PAD + 4, rowY(i) + 17, 0xFFFFFFFF, true);
+            if (!lines[i].isBlank()) {
+                NotchWidgets.styledLine(ctx, this.font, net.fugginbeenus.notchcurrency.text.TextTags.parse(lines[i]), px + PAD + 4, rowY(i) + 17,
+                        W - PAD * 2 - 8, 0xFFFFFFFF, true);
             }
         }
 
@@ -102,8 +101,8 @@ public class NpcBillboardScreen extends Screen {
         if (title.isEmpty()) {
             ctx.drawString(this.font, "Blacksmith", px + PAD + 4, titleRow() + 4, 0xFF555555, false);
         } else {
-            ctx.drawString(this.font, NotchWidgets.colorize(title), px + PAD + 4, titleRow() + 20,
-                    0xFFFFFFFF, true);
+            NotchWidgets.styledLine(ctx, this.font, net.fugginbeenus.notchcurrency.text.TextTags.parse(title), px + PAD + 4, titleRow() + 20,
+                    W - PAD * 2 - 8, 0xFFFFFFFF, true);
         }
 
         NotchWidgets.centerText(ctx, this.font, "&-colours, %player%, %npc% and %balance% all work.",

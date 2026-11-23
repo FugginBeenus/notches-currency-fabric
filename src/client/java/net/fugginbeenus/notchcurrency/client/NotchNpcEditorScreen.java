@@ -251,7 +251,7 @@ public class NotchNpcEditorScreen extends Screen {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
         nameField = new EditBox(this.font, px + 152, py + 49, 136, 9, Component.literal("Name"));
-        nameField.setMaxLength(48);
+        nameField.setMaxLength(256);
         nameField.setBordered(false);
         nameField.setValue(currentName);
         addRenderableWidget(nameField);

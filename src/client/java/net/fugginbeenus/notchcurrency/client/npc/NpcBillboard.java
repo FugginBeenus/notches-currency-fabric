@@ -34,6 +34,6 @@ public final class NpcBillboard {
         if (out.contains("%balance%")) {
             out = out.replace("%balance%", Long.toString(NotchHud.getBalance()));
         }
-        return out.replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
+        return out;
     }
 }

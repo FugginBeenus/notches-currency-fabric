@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import java.util.List;
@@ -51,7 +50,7 @@ public class NpcDialogueScreen extends Screen {
     protected void init() {
         px = (this.width - W) / 2;
         py = (this.height - H) / 2;
-        wrapped = this.font.split(FormattedText.of(text), TEXT_W);
+        wrapped = this.font.split(net.fugginbeenus.notchcurrency.text.TextTags.parse(text), TEXT_W);
     }
 
     private int choiceY(int i) {
@@ -109,10 +108,10 @@ public class NpcDialogueScreen extends Screen {
             int cy = choiceY(i);
             boolean hover = enabled[i] && over(mouseX, mouseY, px + TEXT_X, cy, TEXT_W, CHOICE_H);
             if (enabled[i]) {
-                NotchWidgets.primaryButton(ctx, this.font, px + TEXT_X, cy, TEXT_W, CHOICE_H, labels[i], hover);
+                NotchWidgets.primaryButton(ctx, this.font, px + TEXT_X, cy, TEXT_W, CHOICE_H, net.fugginbeenus.notchcurrency.text.TextTags.parse(labels[i]), hover);
             } else {
                 NotchWidgets.button(ctx, px + TEXT_X, cy, TEXT_W, CHOICE_H, false, false);
-                NotchWidgets.centerText(ctx, this.font, labels[i] + " (locked)",
+                NotchWidgets.centerText(ctx, this.font, net.fugginbeenus.notchcurrency.text.TextTags.plain(labels[i]) + " (locked)",
                         px + TEXT_X + TEXT_W / 2, cy + (CHOICE_H - 8) / 2, NotchTheme.TEXT_MUTED, false);
             }
         }

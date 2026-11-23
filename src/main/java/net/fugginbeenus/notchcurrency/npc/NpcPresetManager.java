@@ -111,6 +111,9 @@ public final class NpcPresetManager {
         NotchNpcEntity.OwnerType ownerType = npc.getOwnerType();
         tag.putString("Role", NpcRole.NONE.name());
         npc.readFromItem(tag);
+        if (actor != null && !net.fugginbeenus.notchcurrency.compat.Perms.isAdmin(actor, net.fugginbeenus.notchcurrency.compat.Perms.NPC)) {
+            npc.escapeClickTags();
+        }
         npc.setOwnerType(ownerType);
         npc.setOwner(owner, ownerName);
         if (role == NpcRole.SHOP && actor == null) {

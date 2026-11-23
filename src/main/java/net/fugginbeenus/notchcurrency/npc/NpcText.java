@@ -25,11 +25,16 @@ public final class NpcText {
     public static void sendLine(ServerPlayer sp, NotchNpcEntity npc, String line) {
         if (sp == null || line == null || line.isBlank()) return;
         String name = npcName(npc);
-        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, net.minecraft.network.chat.Component.literal("<" + name + "> " + substitute(line, sp, name))
+        net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, net.minecraft.network.chat.Component.literal("<" + name + "> ")
+                .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(fill(line, sp, name)))
                 .withStyle(net.minecraft.ChatFormatting.WHITE));
     }
 
     public static String substitute(String text, @Nullable ServerPlayer sp, String npcName) {
+        return colorize(fill(text, sp, npcName));
+    }
+
+    public static String fill(String text, @Nullable ServerPlayer sp, String npcName) {
         if (text == null) return "";
         String out = text
                 .replace("%player%", sp == null ? "someone" : sp.getName().getString())
@@ -37,7 +42,7 @@ public final class NpcText {
         if (out.contains("%balance%")) {
             out = out.replace("%balance%", sp == null ? "0" : Long.toString(CurrencyApi.getBalance(sp)));
         }
-        return colorize(out);
+        return out;
     }
 
     public static String colorize(String text) {

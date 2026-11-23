@@ -22,6 +22,11 @@ public final class NotchConfig {
     public Treasury treasury = new Treasury();
     public Factions factions = new Factions();
     public Npcs npcs = new Npcs();
+    public Text text = new Text();
+
+    public static final class Text {
+        public boolean tags = true;
+    }
 
     public static final class Npcs {
         public String crafting = "OFF";

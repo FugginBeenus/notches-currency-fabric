@@ -493,7 +493,7 @@ public final class PlayerShopManager {
                 shop.isAdminMode()
                         ? net.fugginbeenus.notchcurrency.economy.TransactionReason.FAUCET
                         : net.fugginbeenus.notchcurrency.economy.TransactionReason.SHOP_SALE,
-                "sold to shop: " + shop.getShopName());
+                "sold to shop: " + net.fugginbeenus.notchcurrency.text.TextTags.plain(shop.getShopName()));
 
         if (!shop.isAdminMode()) listing.addStock(totalItems);
         listing.recordSupply(quantity);

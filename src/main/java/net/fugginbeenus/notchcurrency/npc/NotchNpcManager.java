@@ -35,7 +35,8 @@ public final class NotchNpcManager {
             return;
         }
 
-        String name = (npc.hasCustomName() && npc.getCustomName() != null)
+        String name = !npc.getRawName().isEmpty() ? npc.getRawName()
+                : (npc.hasCustomName() && npc.getCustomName() != null)
                 ? npc.getCustomName().getString().replace('\u00a7', '&') : "";
         FriendlyByteBuf buf = net.fugginbeenus.notchcurrency.compat.Net.buf();
         buf.writeUUID(npc.getUUID());
@@ -188,7 +189,7 @@ public final class NotchNpcManager {
     public static void setBillboard(ServerPlayer sp, NotchNpcEntity npc, String text) {
         if (!guard(sp, npc)) return;
         if (!NpcEditLocks.check(sp, NpcEditLocks.PLATE)) return;
-        npc.setBillboard(text);
+        npc.setBillboard(net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, text));
     }
 
     public static void setPose(ServerPlayer sp, NotchNpcEntity npc, int pose) {
@@ -455,7 +456,9 @@ public final class NotchNpcManager {
         for (var node : tree.nodes().values()) {
             if (node.id().isBlank() || node.id().length() > 32) continue;
             if (node.text().length() > 500) node.setText(node.text().substring(0, 500));
+            node.setText(net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, node.text()));
             while (node.choices().size() > 6) node.choices().remove(node.choices().size() - 1);
+            for (var choice : node.choices()) choice.setLabel(net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, choice.label()));
             if (!allowCommands) {
                 for (var choice : node.choices()) {
                     strippedCommands |= choice.actions().removeIf(a ->
@@ -504,6 +507,7 @@ public final class NotchNpcManager {
             }
             for (var a : kept) {
                 if (a.value().length() > 200) a.setValue(a.value().substring(0, 200));
+                a.setValue(net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, a.value()));
                 if (a.amount() < 0) a.setAmount(0);
             }
             actions.set(trigger, kept);
@@ -546,10 +550,12 @@ public final class NotchNpcManager {
             }
             for (var a : kept) {
                 if (a.value().length() > 200) a.setValue(a.value().substring(0, 200));
+                a.setValue(net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, a.value()));
                 if (a.amount() < 0) a.setAmount(0);
             }
             String closed = entry.closedLine();
             if (closed.length() > 200) closed = closed.substring(0, 200);
+            closed = net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, closed);
             cleaned.add(entry.withActions(kept).withClosedLine(closed));
         }
         schedule.setEntries(cleaned);
@@ -697,6 +703,7 @@ public final class NotchNpcManager {
     public static void setFlavor(ServerPlayer sp, NotchNpcEntity npc,
                                  String subtitle, String voice, int voicePitch) {
         if (!guard(sp, npc)) return;
+        subtitle = net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, subtitle);
         boolean voiceChanged = !String.join(", ", NotchNpcEntity.soundIds(voice)).equals(npc.getVoice())
                 || voicePitch != npc.getVoicePitchPercent();
         if (!java.util.Objects.equals(subtitle, npc.getSubtitle()) && !NpcEditLocks.check(sp, NpcEditLocks.PLATE)) return;
@@ -764,6 +771,7 @@ public final class NotchNpcManager {
         if (!NpcEditLocks.check(sp, NpcEditLocks.DIALOGUE)) return;
         String trimmed = text == null ? "" : text.trim();
         if (trimmed.length() > 150) trimmed = trimmed.substring(0, 150);
+        trimmed = net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, trimmed);
         npc.setFarewellText(trimmed);
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal(trimmed.isEmpty() ? "Goodbye line cleared." : "Goodbye line saved.")
                 .withStyle(ChatFormatting.GREEN));
@@ -792,13 +800,21 @@ public final class NotchNpcManager {
         if (!guard(sp, npc)) return;
         if (!NpcEditLocks.check(sp, NpcEditLocks.NAME)) return;
         String trimmed = name == null ? "" : name.trim();
-        if (trimmed.length() > 48) trimmed = trimmed.substring(0, 48);
+        if (trimmed.length() > 256) trimmed = trimmed.substring(0, 256);
+        trimmed = net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp, net.fugginbeenus.notchcurrency.compat.Perms.NPC, trimmed);
+        if (net.fugginbeenus.notchcurrency.text.TextTags.plain(trimmed).length() > 48) {
+            net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("A name can show up to 48 letters. Tags do not count.")
+                    .withStyle(ChatFormatting.RED));
+            return;
+        }
         boolean hadName = npc.getCustomName() != null;
         if (trimmed.isEmpty()) {
+            npc.setRawName("");
             npc.setCustomName(null);
             npc.setCustomNameVisible(false);
         } else {
-            npc.setCustomName(Component.literal(NpcText.colorize(trimmed)));
+            npc.setRawName(trimmed);
+            npc.setCustomName(net.fugginbeenus.notchcurrency.text.TextTags.parse(trimmed));
             if (!hadName) npc.setCustomNameVisible(true);
         }
         net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("NPC name updated.").withStyle(ChatFormatting.GREEN));

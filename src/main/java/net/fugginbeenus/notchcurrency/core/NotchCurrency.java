@@ -72,6 +72,7 @@ public class NotchCurrency implements ModInitializer {
         net.fugginbeenus.notchcurrency.compat.Geo.init();
         net.fugginbeenus.notchcurrency.config.ExampleDatapack.write();
         net.fugginbeenus.notchcurrency.npc.NpcCrafting.register();
+        net.fugginbeenus.notchcurrency.text.TextTags.init();
         net.fugginbeenus.notchcurrency.registry.ModParticles.register();
         ModBlocks.register();
         net.fugginbeenus.notchcurrency.registry.ModBlockEntities.register();
@@ -158,6 +159,7 @@ public class NotchCurrency implements ModInitializer {
             net.fugginbeenus.notchcurrency.mail.MailSweep.run(server);
             net.fugginbeenus.notchcurrency.mail.MailManager.greet(sp);
             net.fugginbeenus.notchcurrency.currency.CurrencyServerSync.send(sp);
+            net.fugginbeenus.notchcurrency.text.TextTags.sendTo(sp);
             net.fugginbeenus.notchcurrency.economy.bounty.BountyManager.syncTracker(sp);
             net.fugginbeenus.notchcurrency.crate.DailyCrateManager.sendTo(sp);
             net.fugginbeenus.notchcurrency.npcmodel.NpcModelShare.greet(sp);

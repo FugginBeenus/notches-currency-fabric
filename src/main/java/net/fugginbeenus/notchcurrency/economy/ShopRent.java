@@ -71,14 +71,14 @@ public final class ShopRent {
 
             if (available >= rent) {
                 long fromPending = shop.payFromPending(rent);
-                Treasury.collect(server, fromPending, "shop rent: " + shop.getShopName());
+                Treasury.collect(server, fromPending, "shop rent: " + net.fugginbeenus.notchcurrency.text.TextTags.plain(shop.getShopName()));
                 long fromOwner = rent - fromPending;
                 if (fromOwner > 0) {
                     ServerPlayer online = server.getPlayerList().getPlayer(owner);
                     if (online != null) {
-                        CurrencyApi.withdraw(online, fromOwner, TransactionReason.SINK, "shop rent: " + shop.getShopName());
+                        CurrencyApi.withdraw(online, fromOwner, TransactionReason.SINK, "shop rent: " + net.fugginbeenus.notchcurrency.text.TextTags.plain(shop.getShopName()));
                     } else {
-                        BalanceStore.add(server, owner, -fromOwner, TransactionReason.SINK, "shop rent: " + shop.getShopName());
+                        BalanceStore.add(server, owner, -fromOwner, TransactionReason.SINK, "shop rent: " + net.fugginbeenus.notchcurrency.text.TextTags.plain(shop.getShopName()));
                     }
                 }
                 shop.setRentPaused(false);
@@ -86,7 +86,7 @@ public final class ShopRent {
                 notify(server, owner, Component.literal("Rent of ").withStyle(ChatFormatting.GRAY)
                         .append(NotchCurrency.coins(rent))
                         .append(Component.literal(" was paid for ").withStyle(ChatFormatting.GRAY))
-                        .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                        .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(shop.getShopName()).withStyle(ChatFormatting.WHITE))
                         .append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
             } else {
                 shop.setRentPaused(true);
@@ -98,11 +98,11 @@ public final class ShopRent {
                     shop.setRentPaused(false);
                     shop.setUnpaidRentCycles(0);
                     notify(server, owner, Component.literal("Your shop ")
-                            .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                            .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(shop.getShopName()).withStyle(ChatFormatting.WHITE))
                             .append(Component.literal(" was closed for unpaid rent. Reopen it with /shop toggle.").withStyle(ChatFormatting.RED)));
                 } else {
                     notify(server, owner, Component.literal("⚠ ")
-                            .append(Component.literal(shop.getShopName()).withStyle(ChatFormatting.WHITE))
+                            .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(shop.getShopName()).withStyle(ChatFormatting.WHITE))
                             .append(Component.literal(" is frozen - couldn't pay rent of ").withStyle(ChatFormatting.YELLOW))
                             .append(NotchCurrency.coins(rent))
                             .append(Component.literal(" (" + cycles + "/" + (graceCycles + 1) + ").").withStyle(ChatFormatting.YELLOW)));

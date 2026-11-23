@@ -189,6 +189,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     private net.fugginbeenus.notchcurrency.npc.action.NpcActions actions =
             new net.fugginbeenus.notchcurrency.npc.action.NpcActions();
     private String farewellText = "";
+    private String rawName = "";
+    private int textGen = -1;
     private String requiredPermission = "";
 
     private boolean protectedNpc = true;
@@ -914,6 +916,37 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public String getFarewellText() { return farewellText; }
+
+    public String getRawName() { return rawName; }
+
+    public void setRawName(String raw) {
+        this.rawName = raw == null ? "" : raw;
+        this.textGen = net.fugginbeenus.notchcurrency.text.TextTags.generation();
+    }
+
+    public void escapeClickTags() {
+        java.util.function.UnaryOperator<String> esc = net.fugginbeenus.notchcurrency.text.TextTags::escapeClicks;
+        if (!rawName.isEmpty()) {
+            setRawName(esc.apply(rawName));
+            setCustomName(net.fugginbeenus.notchcurrency.text.TextTags.parse(rawName));
+        }
+        setSubtitle(esc.apply(getSubtitle()));
+        setBillboard(esc.apply(getBillboard()));
+        farewellText = esc.apply(farewellText);
+        for (var node : dialogue.nodes().values()) {
+            node.setText(esc.apply(node.text()));
+            for (var choice : node.choices()) choice.setLabel(esc.apply(choice.label()));
+        }
+        for (var trigger : net.fugginbeenus.notchcurrency.npc.action.NpcTrigger.values()) {
+            for (var a : actions.get(trigger)) a.setValue(esc.apply(a.value()));
+        }
+        var entries = new java.util.ArrayList<net.fugginbeenus.notchcurrency.npc.schedule.ScheduleEntry>();
+        for (var entry : schedule.entries()) {
+            for (var a : entry.onBegin()) a.setValue(esc.apply(a.value()));
+            entries.add(entry.withClosedLine(esc.apply(entry.closedLine())));
+        }
+        schedule.setEntries(entries);
+    }
     public void setFarewellText(String text) { this.farewellText = text == null ? "" : text; }
 
     public String getRequiredPermission() { return requiredPermission; }
@@ -1428,6 +1461,10 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             tickSchedule();
             tickScheduleSleep();
             net.fugginbeenus.notchcurrency.npc.action.NpcActionSweep.sweep(this);
+            if (!rawName.isEmpty() && textGen != net.fugginbeenus.notchcurrency.text.TextTags.generation()) {
+                textGen = net.fugginbeenus.notchcurrency.text.TextTags.generation();
+                this.setCustomName(net.fugginbeenus.notchcurrency.text.TextTags.parse(rawName));
+            }
             if (!ownerIndexed && this.level().getServer() != null) {
                 ownerIndexed = true;
                 net.fugginbeenus.notchcurrency.npc.NpcOwnerIndex.get(this.level().getServer()).track(this.getUUID(), this.owner);
@@ -1858,6 +1895,7 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
         nbt.put("Dialogue", dialogue.toNbt());
         nbt.putString("DialogueMode", dialogueMode.name());
         nbt.putString("Farewell", farewellText);
+        if (!rawName.isEmpty()) nbt.putString("RawName", rawName);
         if (!requiredPermission.isEmpty()) nbt.putString("NeedsPermission", requiredPermission);
         if (!actions.isEmpty()) nbt.put("Actions", actions.toNbt());
         if (schedule.isEnabled() || !schedule.isEmpty()) nbt.put("Schedule", schedule.toNbt());
@@ -1974,6 +2012,8 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
             dialogue = net.fugginbeenus.notchcurrency.npc.dialogue.DialogueTree.fromNbt(nbt.getCompound("Dialogue"));
         }
         if (nbt.contains("Farewell")) farewellText = nbt.getString("Farewell");
+        rawName = nbt.contains("RawName") ? nbt.getString("RawName") : "";
+        textGen = -1;
         requiredPermission = nbt.contains("NeedsPermission") ? nbt.getString("NeedsPermission") : "";
         actions = net.fugginbeenus.notchcurrency.npc.action.NpcActions.fromNbt(
                 nbt.contains("Actions") ? nbt.getCompound("Actions") : null);
@@ -2062,7 +2102,11 @@ public class NotchNpcEntity extends PathfinderMob implements GeoEntity {
 
     public void readFromItem(CompoundTag tag) {
         readConfig(tag);
-        if (tag.contains("Name")) {
+        if (!rawName.isEmpty()) {
+            this.setCustomName(net.fugginbeenus.notchcurrency.text.TextTags.parse(rawName));
+            this.textGen = net.fugginbeenus.notchcurrency.text.TextTags.generation();
+            if (!tag.contains("StatNameVisible")) this.setCustomNameVisible(true);
+        } else if (tag.contains("Name")) {
             this.setCustomName(Component.literal(tag.getString("Name")));
             if (!tag.contains("StatNameVisible")) this.setCustomNameVisible(true);
         }

@@ -72,6 +72,7 @@ public final class NotchPackets {
     public static final ResourceLocation NPC_SET_ANIM = NotchCurrency.id("npc_set_anim");
     public static final ResourceLocation BOUNTY_TRACKER = NotchCurrency.id("bounty_tracker");
     public static final ResourceLocation CURRENCY_SYNC = NotchCurrency.id("currency_sync");
+    public static final ResourceLocation TEXT_TAGS = NotchCurrency.id("text_tags");
     public static final ResourceLocation NPC_DIALOGUE_OPEN = NotchCurrency.id("npc_dialogue_open");
     public static final ResourceLocation NPC_DIALOGUE_CHOICE = NotchCurrency.id("npc_dialogue_choice");
     public static final ResourceLocation NPC_DIALOGUE_TEMPLATE = NotchCurrency.id("npc_dialogue_template");

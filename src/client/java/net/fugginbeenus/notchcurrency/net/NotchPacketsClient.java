@@ -638,6 +638,11 @@ public final class NotchPacketsClient {
             client.execute(() -> net.fugginbeenus.notchcurrency.client.WaystoneFees.set(enabled, fee, dimensionalFee));
         });
 
+        NetClient.registerClientReceiver(NotchPackets.TEXT_TAGS, (client, buf) -> {
+            boolean on = buf.readBoolean();
+            client.execute(() -> net.fugginbeenus.notchcurrency.text.TextTags.setSynced(on));
+        });
+
         NetClient.registerClientReceiver(NotchPackets.CURRENCY_SYNC, (client, buf) -> {
             String itemName = buf.readUtf(64);
             byte[] coin = buf.readBoolean() ? buf.readByteArray() : null;

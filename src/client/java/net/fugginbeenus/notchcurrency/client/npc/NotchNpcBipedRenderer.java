@@ -106,17 +106,17 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
                 matrices.translate(0.0, y, 0.0);
                 //? if >=26.2 {
                 /*collector.submitNameTag(matrices, state.nameTagAttachment, 0,
-                        net.minecraft.network.chat.Component.literal(line), !state.isDiscrete,
+                        net.fugginbeenus.notchcurrency.text.TextTags.parse(line), !state.isDiscrete,
                         state.lightCoords, camera);
                 *///?} elif >=1.21.11 {
                 /*collector.submitNameTag(matrices, state.nameTagAttachment, 0,
-                        net.minecraft.network.chat.Component.literal(line), !state.isDiscrete,
+                        net.fugginbeenus.notchcurrency.text.TextTags.parse(line), !state.isDiscrete,
                         state.lightCoords, state.distanceToCameraSq, camera);
                 *///?} elif >=1.21 {
-                /*super.renderNameTag(entity, net.minecraft.network.chat.Component.literal(line), matrices,
+                /*super.renderNameTag(entity, net.fugginbeenus.notchcurrency.text.TextTags.parse(line), matrices,
                         vertexConsumers, light, tickDelta);
                 *///?} else {
-                super.renderNameTag(entity, net.minecraft.network.chat.Component.literal(line), matrices,
+                super.renderNameTag(entity, net.fugginbeenus.notchcurrency.text.TextTags.parse(line), matrices,
                         vertexConsumers, light);
                 //?}
                 matrices.popPose();
@@ -263,8 +263,7 @@ public class NotchNpcBipedRenderer extends LivingEntityRenderer<NotchNpcEntity, 
         if (!subtitle.isEmpty()) {
             matrices.pushPose();
             matrices.translate(0.0, entity.getNameOffset() - NpcBillboard.LINE_HEIGHT, 0.0);
-            net.minecraft.network.chat.Component line = net.minecraft.network.chat.Component.literal(
-                    net.fugginbeenus.notchcurrency.npc.NpcText.colorize(subtitle));
+            net.minecraft.network.chat.Component line = net.fugginbeenus.notchcurrency.text.TextTags.parse(subtitle);
             //? if >=26.2 {
             /*collector.submitNameTag(matrices, state.nameTagAttachment, 0, line,
                     !state.isDiscrete, state.lightCoords, camera);

@@ -82,7 +82,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
         super.init();
         String oldName = nameField == null ? menu.shopName() : nameField.getValue();
         nameField = new EditBox(this.font, this.leftPos + 45, this.topPos + 61, 160, 10, Component.literal("Name"));
-        nameField.setMaxLength(48);
+        nameField.setMaxLength(256);
         nameField.setWidth(144);
         nameField.setBordered(false);
         nameField.setValue(oldName);
@@ -380,7 +380,7 @@ public class ShopManageScreen extends AbstractContainerScreen<ShopManageScreenHa
                 signPicker.open(net.fugginbeenus.notchcurrency.shop.SignStyles.read(menu::prop,
                                 ShopManageScreenHandler.P_SIGN, net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT),
                         net.fugginbeenus.notchcurrency.shop.SignStyles.SHOP_DEFAULT,
-                        NotchWidgets.colorize(nameField == null ? menu.shopName() : nameField.getValue()));
+                        nameField == null ? menu.shopName() : nameField.getValue());
                 return true;
             }
             if (menu.prop(ShopManageScreenHandler.P_ADMIN_MODE) != 0

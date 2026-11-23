@@ -171,7 +171,7 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
             if (!line.isBlank()) {
                 matrices.pushPose();
                 matrices.translate(0.0, signY, 0.0);
-                submitLine(anchor, net.minecraft.network.chat.Component.literal(line), matrices, collector, camera);
+                submitLine(anchor, net.fugginbeenus.notchcurrency.text.TextTags.parse(line), matrices, collector, camera);
                 matrices.popPose();
             }
             signY += NpcBillboard.LINE_HEIGHT;
@@ -244,10 +244,10 @@ public class NotchNpcRenderer extends EntityRenderer<NotchNpcEntity> {
                 matrices.pushPose();
                 matrices.translate(0.0, signY, 0.0);
                 //? if >=1.21 {
-                /*this.renderNameTag(npc, net.minecraft.network.chat.Component.literal(line), matrices, vcp,
+                /*this.renderNameTag(npc, net.fugginbeenus.notchcurrency.text.TextTags.parse(line), matrices, vcp,
                         light, tickDelta);
                 *///?} else {
-                this.renderNameTag(npc, net.minecraft.network.chat.Component.literal(line), matrices, vcp, light);
+                this.renderNameTag(npc, net.fugginbeenus.notchcurrency.text.TextTags.parse(line), matrices, vcp, light);
                 //?}
                 matrices.popPose();
             }

@@ -36,5 +36,6 @@ public final class NotchConfigApply {
         CosmeticManager.applyConfig(cfg);
         WaystoneFeeHandler.applyConfig(cfg);
         VillagerCoinTrades.applyConfig(cfg);
+        net.fugginbeenus.notchcurrency.text.TextTags.applyConfig(cfg);
     }
 }

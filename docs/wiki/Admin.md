@@ -303,6 +303,21 @@ have. See [Shops](04.-Shops#admin-shops) for what an admin shop does.
 - **Bounties:** `/bounty admin` opens the setup GUI; create/remove offers and place decrees.
 - **Crates:** `/crate givekey <targets> <n>`.
 
+### Text tags
+
+NPC names, subtitles, talk lines, floating signs, dialogue and shop titles read **MiniMessage** tags
+(see [NPCs](08.-NPCs#text-formatting)). The switch is **World and HUD → Text → Text tags
+(MiniMessage)**, ON by default (`"text": { "tags": true }`). When it is OFF, tags show as plain text.
+`&` color codes work either way. The server sends its setting to players when they join.
+
+A click tag (`<click:...>`) can run a command as the player who clicks it. So only admins can save
+click tags: `notchcurrency.admin.npc` for NPC text and `notchcurrency.admin.shop` for shop names.
+When anyone else saves text, a click tag stays as plain text. Text from share codes and presets that
+a non-admin loads is cleaned the same way.
+
+The tag reader is the official MiniMessage library. It sits inside the mod under its own package
+name, so it cannot clash with other mods that carry Adventure or MiniMessage.
+
 ### Configuration
 
 Config file: `config/notchcurrency.json`. With **ModMenu** installed, use the in-game GUI

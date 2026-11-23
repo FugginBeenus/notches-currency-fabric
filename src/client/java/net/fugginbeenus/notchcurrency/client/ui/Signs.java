@@ -91,11 +91,17 @@ public final class Signs implements SimpleSynchronousResourceReloadListener {
     }
 
     public static void draw(GuiGraphics ctx, Font font, String id, String fallback, String label, int cx, int top) {
+        draw(ctx, font, id, fallback, net.minecraft.network.chat.Component.literal(label), cx, top);
+    }
+
+    public static void draw(GuiGraphics ctx, Font font, String id, String fallback,
+                            net.minecraft.network.chat.Component label, int cx, int top) {
         Sign s = find(id, fallback);
         if (s == null) {
-            NotchWidgets.plate(ctx, font, NotchWidgets.Plate.PLAIN, label, cx, top);
+            NotchWidgets.plate(ctx, font, NotchWidgets.Plate.PLAIN, label.getString(), cx, top);
             return;
         }
+        net.minecraft.network.chat.Component flat = net.minecraft.network.chat.Component.literal(label.getString());
         int w = Math.max(s.left() + s.right() + 1, font.width(label) + s.padding() * 2);
         int x = cx - w / 2, y = top - s.top(), mid = s.texW() - s.left() - s.right();
         int v = s.frameV(), h = s.frameHeight();
@@ -108,12 +114,12 @@ public final class Signs implements SimpleSynchronousResourceReloadListener {
                 s.right(), h, s.texW(), s.texH());
         int tx = x + s.padding(), ty = top + s.textY();
         if (s.outline() != 0) {
-            ctx.drawString(font, label, tx - 1, ty, s.outline(), false);
-            ctx.drawString(font, label, tx + 1, ty, s.outline(), false);
-            ctx.drawString(font, label, tx, ty - 1, s.outline(), false);
-            ctx.drawString(font, label, tx, ty + 1, s.outline(), false);
+            ctx.drawString(font, flat, tx - 1, ty, s.outline(), false);
+            ctx.drawString(font, flat, tx + 1, ty, s.outline(), false);
+            ctx.drawString(font, flat, tx, ty - 1, s.outline(), false);
+            ctx.drawString(font, flat, tx, ty + 1, s.outline(), false);
         }
-        if (s.emboss() != 0) ctx.drawString(font, label, tx, ty + 1, s.emboss(), false);
+        if (s.emboss() != 0) ctx.drawString(font, flat, tx, ty + 1, s.emboss(), false);
         ctx.drawString(font, label, tx, ty, s.color(), s.shadow());
     }
 

@@ -68,7 +68,7 @@ public final class NpcShopLogic {
 
         runRestock(state, shop, player.serverLevel());
 
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, Component.literal(shop.getShopName()),
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(player, net.fugginbeenus.notchcurrency.text.TextTags.parse(shop.getShopName()),
                 (containerId, playerInventory, p) -> new ShopBrowseScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
                 buf -> {
@@ -108,7 +108,7 @@ public final class NpcShopLogic {
             return;
         }
 
-        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Component.literal("Manage: " + shop.getShopName()),
+        net.fugginbeenus.notchcurrency.compat.Screens.openExtended(owner, Component.literal("Manage: ").append(net.fugginbeenus.notchcurrency.text.TextTags.parse(shop.getShopName())),
                 (containerId, playerInventory, p) -> new ShopManageScreenHandler(containerId, playerInventory, shopId,
                         shop.getShopName(), shop.getShopkeeperDialog(), shop.getLinkedNpcId(), shop),
                 buf -> {

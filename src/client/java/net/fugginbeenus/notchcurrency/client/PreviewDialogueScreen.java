@@ -55,8 +55,7 @@ public class PreviewDialogueScreen extends NpcDialogueScreen {
         String playerName = c.player != null ? c.player.getName().getString() : "player";
         return text.replace("%player%", playerName)
                 .replace("%npc%", npcName)
-                .replace("%balance%", Long.toString(NotchHud.getBalance()))
-                .replace('&', '§');
+                .replace("%balance%", Long.toString(NotchHud.getBalance()));
     }
 
     @Override

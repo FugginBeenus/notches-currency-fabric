@@ -144,14 +144,22 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
                 refresh();
             }
             case ACTION_RENAME -> {
-                String name = clean(text, 32);
+                String name = net.fugginbeenus.notchcurrency.text.TextTags.forSave(sp,
+                        net.fugginbeenus.notchcurrency.compat.Perms.SHOP, clean(text, 256));
                 if (name.isEmpty()) {
                     net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Give the shop a name first.").withStyle(ChatFormatting.RED));
                     return;
                 }
+                if (net.fugginbeenus.notchcurrency.text.TextTags.plain(name).length() > 32) {
+                    net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("A shop name can show up to 32 letters. Tags do not count.")
+                            .withStyle(ChatFormatting.RED));
+                    return;
+                }
                 shop.setShopName(name);
                 state.markDirtyAndSave();
-                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Shop renamed to '" + name + "'.").withStyle(ChatFormatting.GREEN));
+                net.fugginbeenus.notchcurrency.compat.Msg.chat(sp, Component.literal("Shop renamed to '").withStyle(ChatFormatting.GREEN)
+                        .append(net.fugginbeenus.notchcurrency.text.TextTags.parse(name))
+                        .append(Component.literal("'.").withStyle(ChatFormatting.GREEN)));
             }
             case ACTION_SIGN -> {
                 shop.setSign(text);

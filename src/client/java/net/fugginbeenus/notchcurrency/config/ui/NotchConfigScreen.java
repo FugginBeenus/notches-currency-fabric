@@ -35,7 +35,7 @@ public final class NotchConfigScreen extends Screen {
             new Group("NPCs and factions", List.of("NPCs", "Factions")),
             new Group("NPC owners", List.of("NPC look", "NPC moves", "NPC role", "NPC talk", "NPC pose",
                     "NPC manage")),
-            new Group("World and HUD", List.of("Balloon Crates", "Golden Cache", "HUD")));
+            new Group("World and HUD", List.of("Balloon Crates", "Golden Cache", "Text", "HUD")));
     private static int lastGroup = 0;
 
     private final Screen parent;
