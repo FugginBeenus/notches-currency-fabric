@@ -46,7 +46,7 @@ public class ShopBrowseScreenHandler extends AbstractContainerMenu {
     }
 
     public ShopBrowseScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
-        this(containerId, inv, buf.readUUID(), buf.readUtf(64), buf.readUtf(256), readNpcId(buf), null);
+        this(containerId, inv, buf.readUUID(), buf.readUtf(256), buf.readUtf(256), readNpcId(buf), null);
     }
 
     public ShopBrowseScreenHandler(int containerId, Inventory inv, UUID shopId, String shopName,

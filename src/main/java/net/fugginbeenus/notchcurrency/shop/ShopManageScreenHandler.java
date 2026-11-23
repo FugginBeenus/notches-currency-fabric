@@ -48,7 +48,7 @@ public class ShopManageScreenHandler extends AbstractContainerMenu {
     }
 
     public ShopManageScreenHandler(int containerId, Inventory inv, FriendlyByteBuf buf) {
-        this(containerId, inv, buf.readUUID(), buf.readUtf(64), buf.readUtf(256),
+        this(containerId, inv, buf.readUUID(), buf.readUtf(256), buf.readUtf(256),
                 ShopBrowseScreenHandler.readNpcId(buf), null);
     }
 
